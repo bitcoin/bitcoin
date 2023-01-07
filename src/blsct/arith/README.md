@@ -27,13 +27,19 @@ For instance, [RangeProofLogic](../range_proof/range_proof_logic.h) that current
 This effectively makes the [Mcl](../arith//mcl/mcl.h) implementation an interface.
 
 ## Adding a new implementation
+### Based on existing implementation
+1. Copy existing top-level structure and the headers of aliased classes to a different directory.
+2. Rename them.
+3. Add implementaion of all the functions defined in the headers.
+
+### From scratch
 Below is one way of developing a new implentation of `Generic Arith Classes`:
 
 1. Define the top-level structure that exposes aliases to its associated `Scalar`, `Point`, and `Initializer` classes. Let each alias point to an empty class.
 
 2. Define a user class that takes the top-level class as a type parameter.
 
-3. Obtain `Scalar`, `Point` and `Initializer` classes from the type parameter in the user class. If `Scalars` and/or `Points` class(es) are needed, use `Elements` class which is a helper class to generate a vector class of `Scalar` or `Point` with commonly used methods.
+3. Obtain `Scalar`, `Point` and `Initializer` classes from the type parameter in the user class. If `Scalars` and/or `Points` class(es) are needed, use `Elements` class which is a helper class to generate a vector class of `Scalar` or `Point` with commonly used functions.
 
    Below is an example taken from [range_proof_logic.h](../range_proof/range_proof_logic.h):
 
@@ -49,7 +55,7 @@ Below is one way of developing a new implentation of `Generic Arith Classes`:
         ...
     ```
 
-4. Implement logic in the user class using the `Generic Arith Classes` implementation classes adding methods to them as needed.
+4. Implement logic in the user class using the `Generic Arith Classes` implementation classes adding functions to them as needed.
 
 ## Example implementation and user class
 ### Implementation
@@ -64,6 +70,6 @@ Below is one way of developing a new implentation of `Generic Arith Classes`:
 ## Design candidates in the development process
 1. Interface based on abstract classes: it requires usage of pointers that makes the code harder to write and requires memory management. Also involves a cost of vtable look-up. Not adopted.
 
-2. CRTP (Curiously Recurring Template Pattern) pattern: it was hard to use for this use case involving nested classes that implemented arithmetic methods that returned an instance of a nested class. Not adopted
+2. CRTP (Curiously Recurring Template Pattern) pattern: it was hard to use for this use case involving nested classes that implemented arithmetic functions that returned an instance of a nested class. Not adopted
 
 3. Template class with associated classes: there will be no enfored interface and the usage will be based on duck-typing. But it allows local stack-based instances to be used and bears no additional run-time cost. Adopted.
