@@ -12,6 +12,7 @@ import hmac
 import os
 import random
 import unittest
+import typing as t
 
 from test_framework.crypto import secp256k1
 
@@ -126,8 +127,16 @@ def rfc6979_nonce(key):
 class ECKey:
     """A secp256k1 private key"""
 
-    def __init__(self):
+    def __init__(self,
+                 generate: bool = False,
+                 secret: t.Optional[bytes] = None,
+                 compressed: t.Optional[bool] = None):
         self.valid = False
+
+        if secret:
+            self.set(secret, compressed if compressed is not None else True)
+        elif generate:
+            self.generate()
 
     def set(self, secret, compressed):
         """Construct a private key object with given 32-byte secret and compressed flag."""
