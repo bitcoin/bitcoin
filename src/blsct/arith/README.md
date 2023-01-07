@@ -68,8 +68,8 @@ Below is one way of developing a new implentation of `Generic Arith Classes`:
 - [RangeProofLogic](../range_proof/range_proof.h) -- User class of `Mcl` classes
 
 ## Design candidates in the development process
-1. Interface based on abstract classes: it requires usage of pointers that makes the code harder to write and requires memory management. It also involves a cost of vtable look-up. Not adopted.
+1. Interface based on abstract classes: it requires usage of pointers that makes the code harder to write and requires memory management. It also involves a cost of vtable look-up. *Not adopted*.
 
-2. CRTP (Curiously Recurring Template Pattern) pattern: it was hard to use for this use case involving nested classes that implemented arithmetic functions that returned an instance of a nested class. Not adopted.
+2. CRTP (Curiously Recurring Template Pattern) pattern: it was hard to use for this use case involving nested classes that implemented arithmetic functions that returned an instance of a nested class. *Not adopted*.
 
-3. Template class with associated classes: there is no interface to enforce an API and the usage will be based on duck-typing. But it allows local stack-allocated instances to be used and bears no additional run-time cost. Adopted.
+3. Template class with associated classes: there is no interface to enforce an API and the usage will be based on duck-typing. But it allows local stack-allocated instances to be used and bears no additional run-time cost. *Adopted*.
