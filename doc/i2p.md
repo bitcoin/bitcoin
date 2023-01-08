@@ -16,8 +16,7 @@ enabled is required. Options include:
   Java
 - [i2pd (I2P Daemon)](https://github.com/PurpleI2P/i2pd)
   ([documentation](https://i2pd.readthedocs.io/en/latest)), a lighter
-  alternative in C++ (successfully tested with version 2.23 and up; version 2.36
-  or later recommended)
+  alternative in C++
 - [i2p-zero](https://github.com/i2p-zero/i2p-zero)
 - [other alternatives](https://en.wikipedia.org/wiki/I2P#Routers)
 
