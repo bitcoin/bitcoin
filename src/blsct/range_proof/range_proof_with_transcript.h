@@ -6,13 +6,18 @@
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/arith/range_proof/range_proof.h>
+#include <blsct/range_proof/range_proof.h>
 
+template <typename T>
 class RangeProofWithTranscript
 {
+    using Scalar = typename T::Scalar;
+    using Point = typename T::Point;
+    using Scalars = Elements<Scalar>;
+
 public:
     RangeProofWithTranscript(
-        const RangeProof& proof,
+        const RangeProof<T>& proof,
         const Scalar& x,
         const Scalar& y,
         const Scalar& z,
@@ -26,11 +31,11 @@ public:
         num_input_values_power_2(num_input_values_power_2),
         concat_input_values_in_bits(concat_input_values_in_bits) {}
 
-    static RangeProofWithTranscript Build(const RangeProof& proof);
+    static RangeProofWithTranscript<T> Build(const RangeProof<T>& proof);
 
     static size_t RecoverNumRounds(const size_t& num_input_values);
 
-    const RangeProof proof;
+    const RangeProof<T> proof;
 
     // transcript
     const Scalar x;  // x used in the main prove procedure

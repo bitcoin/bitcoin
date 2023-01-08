@@ -6,83 +6,83 @@
 
 #include <algorithm>
 #include <blsct/arith/elements.h>
-#include <blsct/arith/g1point.h>
-#include <blsct/arith/mcl_initializer.h>
-#include <blsct/arith/scalar.h>
+#include <blsct/arith/mcl/mcl_g1point.h>
+#include <blsct/arith/mcl/mcl_initializer.h>
+#include <blsct/arith/mcl/mcl_scalar.h>
 #include <boost/test/unit_test.hpp>
 #include <set>
 #include <streams.h>
 
-BOOST_FIXTURE_TEST_SUITE(g1point_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(mcl_g1point_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_g1point_constructors)
+BOOST_AUTO_TEST_CASE(test_constructors)
 {
     // Default
     {
-        G1Point p;
+        MclG1Point p;
         BOOST_CHECK(p.IsUnity() == true);
     }
 
     // std::vector<uint8_t>
     {
-        auto g = G1Point::GetBasePoint();
+        auto g = MclG1Point::GetBasePoint();
         auto vch = g.GetVch();
-        G1Point p(vch);
+        MclG1Point p(vch);
         BOOST_CHECK(g == p);
     }
 
     // G1Point
     {
-        auto g = G1Point::GetBasePoint();
-        G1Point p(g);
+        auto g = MclG1Point::GetBasePoint();
+        MclG1Point p(g);
         BOOST_CHECK(g == p);
     }
 
     // mclBnG1
     {
-        auto g = G1Point::GetBasePoint();
-        G1Point p(g.m_p);
+        auto g = MclG1Point::GetBasePoint();
+        MclG1Point p(g.m_p);
         BOOST_CHECK(g == p);
     }
 
     // uint256
     {
-        G1Point p(uint256::ONE);
+        MclG1Point p(uint256::ONE);
         auto s = p.GetString();
         BOOST_CHECK_EQUAL(s, "1 f6192bef86951fea27b115b4645cf5cf83bf067cf322647a1d1276c3d05208cb97cf72c5a0749fcfe631cf3fa246b9c 1764f91223eb414b6df18cc317537c17e242f678995b9894ef0d419725748a92ba0f5f58ecf5d403fae39cb41cc4e151");
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_assign_op)
+BOOST_AUTO_TEST_CASE(test_assign_op)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     auto b = g + g;
     auto c = b;
     BOOST_CHECK(b == c);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_point_add_sub)
+BOOST_AUTO_TEST_CASE(test_point_add_sub)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     auto p = g + g;
     auto q = p - g;
     BOOST_CHECK(q == g);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_point_mul)
+BOOST_AUTO_TEST_CASE(test_point_mul)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     auto p = g + g + g;
     auto q = g * 3;
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_points_mul)
+BOOST_AUTO_TEST_CASE(test_points_mul)
 {
-    auto scalars = std::vector<Scalar>({
-        Scalar(1), Scalar(2)
+    auto scalars = std::vector<MclScalar>({
+        MclScalar(1), MclScalar(2)
     });
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     auto p1 = g;
     auto p2 = g + g;
     auto qs = g * scalars;
@@ -90,18 +90,18 @@ BOOST_AUTO_TEST_CASE(test_g1point_points_mul)
     BOOST_CHECK(qs[1] == p2);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_point_equal_or_not_equal)
+BOOST_AUTO_TEST_CASE(test_point_equal_or_not_equal)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     BOOST_CHECK(g == g);
 
     auto p = g + g;
     BOOST_CHECK(g != p);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_double)
+BOOST_AUTO_TEST_CASE(test_double)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     auto g2 = g + g;
     auto gd = g.Double();
     BOOST_CHECK(g2 == gd);
@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(test_g1point_double)
     BOOST_CHECK(g4 == gdd);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_get_base_point)
+BOOST_AUTO_TEST_CASE(test_get_base_point)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     char g_act[1024];
     if (mclBnG1_getStr(g_act, sizeof(g_act), &g.m_p, 10) == 0) {
         BOOST_FAIL("Failed to get string representation of G");
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_g1point_get_base_point)
     BOOST_CHECK_EQUAL(g_exp, g_act);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_map_to_g1)
+BOOST_AUTO_TEST_CASE(test_map_to_g1)
 {
     // Different numbers should be mapped to different points
     std::set<std::string> xs;
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(test_g1point_map_to_g1)
         ss << i;
         std::string s = ss.str();
         std::vector<unsigned char> v(s.begin(), s.end());
-        auto p = G1Point::MapToG1(v);
+        auto p = MclG1Point::MapToG1(v);
         xs.insert(p.GetString());
     }
     BOOST_CHECK_EQUAL(xs.size(), num_xs);
@@ -188,14 +188,14 @@ BOOST_AUTO_TEST_CASE(test_g1point_map_to_g1)
         0xff,
         0xff,
     };
-    G1Point::MapToG1(num_48_byte);
+    MclG1Point::MapToG1(num_48_byte);
 
     // Empty vector should not be mapped to a point
     std::vector<uint8_t> empty_vec;
-    BOOST_CHECK_THROW(G1Point::MapToG1(empty_vec), std::runtime_error);
+    BOOST_CHECK_THROW(MclG1Point::MapToG1(empty_vec), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_hash_and_map)
+BOOST_AUTO_TEST_CASE(test_hash_and_map)
 {
     std::vector<uint8_t> vec{
         0x73,
@@ -262,93 +262,93 @@ BOOST_AUTO_TEST_CASE(test_g1point_hash_and_map)
     // mclBpFp_serialize serializes its value in big-endian
 
     // Then get g1 point from the hash
-    auto p = G1Point::MapToG1(hashedVec, Endianness::Big);
+    auto p = MclG1Point::MapToG1(hashedVec, Endianness::Big);
 
     // Next, directly get g1 point from the vec, using integrated hash function
-    auto q = G1Point::HashAndMap(vec);
+    auto q = MclG1Point::HashAndMap(vec);
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_rand)
+BOOST_AUTO_TEST_CASE(test_rand)
 {
     unsigned int num_tries = 1000;
     unsigned int num_dups = 0;
-    auto x = G1Point::Rand();
+    auto x = MclG1Point::Rand();
     for (size_t i = 0; i < num_tries; ++i) {
-        auto y = G1Point::Rand();
+        auto y = MclG1Point::Rand();
         if (x == y) ++num_dups;
     }
     auto dupRatio = num_dups / (float) num_tries;
     BOOST_CHECK(dupRatio < 0.001);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_is_unity)
+BOOST_AUTO_TEST_CASE(test_is_unity)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     BOOST_CHECK_EQUAL(g.IsUnity(), false);
 
     auto p = g - g;
     BOOST_CHECK_EQUAL(p.IsUnity(), true);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_get_set_vch)
+BOOST_AUTO_TEST_CASE(test_get_set_vch)
 {
-    G1Point p(uint256::ONE);
+    MclG1Point p(uint256::ONE);
     auto vec = p.GetVch();
 
-    G1Point q;
+    MclG1Point q;
     BOOST_CHECK(p != q);
 
     q.SetVch(vec);
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_get_string)
+BOOST_AUTO_TEST_CASE(test_get_string)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     const char* g_exp = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569";
     auto g_act = g.GetString(10);
     BOOST_CHECK(g_exp == g_act);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_get_serialize_size)
+BOOST_AUTO_TEST_CASE(test_get_serialize_size)
 {
-    G1Point p(uint256::ONE);
+    MclG1Point p(uint256::ONE);
     auto ser_size = p.GetSerializeSize();
-    BOOST_CHECK_EQUAL(ser_size, 49ul);
+    BOOST_CHECK_EQUAL(ser_size, 48ul);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_serialize_unserialize)
+BOOST_AUTO_TEST_CASE(test_serialize_unserialize)
 {
-    G1Point p(uint256::ONE);
+    MclG1Point p(uint256::ONE);
     CDataStream st(0, 0);
     p.Serialize(st);
-    BOOST_CHECK_EQUAL(st.size(), 49ul);
+    BOOST_CHECK_EQUAL(st.size(), 49ul); // TODO check why 49 instead of 48
 
-    G1Point q;
+    MclG1Point q;
     BOOST_CHECK(p != q);
 
     q.Unserialize(st);
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_get_hash_with_salt)
+BOOST_AUTO_TEST_CASE(test_get_hash_with_salt)
 {
-    auto g = G1Point::GetBasePoint();
+    auto g = MclG1Point::GetBasePoint();
     auto a = g.GetHashWithSalt(1);
     auto b = g.GetHashWithSalt(2);
     BOOST_CHECK(a != b);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_operator_mul_g1point_by_scalars)
+BOOST_AUTO_TEST_CASE(test_operator_mul_g1point_by_scalars)
 {
-    Scalar one(1);
-    Scalar two(2);
-    std::vector<Scalar> one_two { one, two };
-    auto g = G1Point::GetBasePoint();
+    MclScalar one(1);
+    MclScalar two(2);
+    std::vector<MclScalar> one_two { one, two };
+    auto g = MclG1Point::GetBasePoint();
 
     auto act = g * one_two;
-    std::vector<G1Point> exp { g, g + g };
+    std::vector<MclG1Point> exp { g, g + g };
 
     BOOST_CHECK(act == exp);
 }

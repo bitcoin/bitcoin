@@ -2,30 +2,30 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/arith/scalar.h>
+#include <blsct/arith/mcl/mcl_scalar.h>
 
-Scalar::Scalar(const int64_t& n)
+MclScalar::MclScalar(const int64_t& n)
 {
     mclBnFr_setInt(&m_fr, n);  // this takes int64_t
 }
 
-Scalar::Scalar(const std::vector<uint8_t> &v)
+MclScalar::MclScalar(const std::vector<uint8_t> &v)
 {
-    Scalar::SetVch(v);
+    MclScalar::SetVch(v);
 }
 
-Scalar::Scalar(const mclBnFr& other_fr)
+MclScalar::MclScalar(const mclBnFr& other_fr)
 {
     m_fr = other_fr;
 }
 
-Scalar::Scalar(const uint256& n)
+MclScalar::MclScalar(const uint256& n)
 {
     // uint256 deserialization is big-endian
     mclBnFr_setBigEndianMod(&m_fr, n.data(), 32);
 }
 
-Scalar::Scalar(const std::string& s, int radix)
+MclScalar::MclScalar(const std::string& s, int radix)
 {
     auto r = mclBnFr_setStr(&m_fr, s.c_str(), s.length(), radix);
     if (r == -1) {
@@ -33,43 +33,43 @@ Scalar::Scalar(const std::string& s, int radix)
     }
 }
 
-void Scalar::Init()
+void MclScalar::Init()
 {
     MclInitializer::Init();
 }
 
-Scalar Scalar::operator+(const Scalar &b) const
+MclScalar MclScalar::operator+(const MclScalar &rhs) const
 {
-    Scalar ret;
-    mclBnFr_add(&ret.m_fr, &m_fr, &b.m_fr);
+    MclScalar ret;
+    mclBnFr_add(&ret.m_fr, &m_fr, &rhs.m_fr);
     return ret;
 }
 
-Scalar Scalar::operator-(const Scalar &b) const
+MclScalar MclScalar::operator-(const MclScalar &rhs) const
 {
-    Scalar ret;
-    mclBnFr_sub(&ret.m_fr, &m_fr, &b.m_fr);
+    MclScalar ret;
+    mclBnFr_sub(&ret.m_fr, &m_fr, &rhs.m_fr);
     return ret;
 }
 
-Scalar Scalar::operator*(const Scalar &b) const
+MclScalar MclScalar::operator*(const MclScalar &rhs) const
 {
-    Scalar ret;
-    mclBnFr_mul(&ret.m_fr, &m_fr, &b.m_fr);
+    MclScalar ret;
+    mclBnFr_mul(&ret.m_fr, &m_fr, &rhs.m_fr);
     return ret;
 }
 
-Scalar Scalar::operator/(const Scalar &b) const
+MclScalar MclScalar::operator/(const MclScalar &rhs) const
 {
-    Scalar ret;
-    mclBnFr_div(&ret.m_fr, &m_fr, &b.m_fr);
+    MclScalar ret;
+    mclBnFr_div(&ret.m_fr, &m_fr, &rhs.m_fr);
     return ret;
 }
 
-Scalar Scalar::ApplyBitwiseOp(const Scalar& a, const Scalar& b,
+MclScalar MclScalar::ApplyBitwiseOp(const MclScalar& a, const MclScalar& b,
     std::function<uint8_t(uint8_t, uint8_t)> op) const
 {
-    Scalar ret;
+    MclScalar ret;
     auto a_vec = a.GetVch();
     auto b_vec = b.GetVch();
 
@@ -95,36 +95,35 @@ Scalar Scalar::ApplyBitwiseOp(const Scalar& a, const Scalar& b,
     return ret;
 }
 
-Scalar Scalar::operator|(const Scalar &b) const
+MclScalar MclScalar::operator|(const MclScalar &rhs) const
 {
     auto op = [](uint8_t a, uint8_t b) -> uint8_t { return a | b; };
-    return ApplyBitwiseOp(*this, b, op);
+    return ApplyBitwiseOp(*this, rhs, op);
 }
 
-Scalar Scalar::operator^(const Scalar &b) const
+MclScalar MclScalar::operator^(const MclScalar &rhs) const
 {
     auto op = [](uint8_t a, uint8_t b) -> uint8_t { return a ^ b; };
-    return ApplyBitwiseOp(*this, b, op);
+    return ApplyBitwiseOp(*this, rhs, op);
 }
 
-Scalar Scalar::operator&(const Scalar &b) const
+MclScalar MclScalar::operator&(const MclScalar &rhs) const
 {
     auto op = [](uint8_t a, uint8_t b) -> uint8_t { return a & b; };
-    return ApplyBitwiseOp(*this, b, op);
+    return ApplyBitwiseOp(*this, rhs, op);
 }
 
-Scalar Scalar::operator~() const
+MclScalar MclScalar::operator~() const
 {
-    // CHECK!
     // Getting complement of lower 8 bytes only since when 32-byte buffer is fully complemented,
     // mclBrFr_deserialize returns undesired result
     const int64_t n_complement_scalar = (int64_t) ~GetUint64();
-    Scalar ret(n_complement_scalar);
+    MclScalar ret(n_complement_scalar);
 
     return ret;
 }
 
-Scalar Scalar::operator<<(const uint32_t& shift) const
+MclScalar MclScalar::operator<<(const uint32_t& shift) const
 {
     mclBnFr next;
     mclBnFr prev = m_fr;
@@ -132,12 +131,12 @@ Scalar Scalar::operator<<(const uint32_t& shift) const
         mclBnFr_add(&next, &prev, &prev);
         prev = next;
     }
-    Scalar ret(prev);
+    MclScalar ret(prev);
 
     return ret;
 }
 
-Scalar Scalar::operator>>(const uint32_t& shift) const
+MclScalar MclScalar::operator>>(const uint32_t& shift) const
 {
     mclBnFr one;
     mclBnFr two;
@@ -154,83 +153,88 @@ Scalar Scalar::operator>>(const uint32_t& shift) const
         mclBnFr_div(&temp, &temp, &two);
         --n;
     }
-    Scalar ret(temp);
+    MclScalar ret(temp);
     return ret;
 }
 
-void Scalar::operator=(const int64_t& n)
+void MclScalar::operator=(const int64_t& n)
 {
     mclBnFr_setInt(&m_fr, n);
 }
 
-bool Scalar::operator==(const int32_t& b) const
+bool MclScalar::operator==(const int32_t& rhs) const
 {
-    Scalar temp;
-    temp = b;
+    MclScalar temp;
+    temp = rhs;
     return mclBnFr_isEqual(&m_fr, &temp.m_fr);
 }
 
-bool Scalar::operator==(const Scalar &b) const
+bool MclScalar::operator==(const MclScalar &rhs) const
 {
-    return mclBnFr_isEqual(&m_fr, &b.m_fr);
+    return mclBnFr_isEqual(&m_fr, &rhs.m_fr);
 }
 
-bool Scalar::operator!=(const int &b) const
-{
-    return !operator==(b);
-}
-
-bool Scalar::operator!=(const Scalar &b) const
+bool MclScalar::operator!=(const int &b) const
 {
     return !operator==(b);
 }
 
-bool Scalar::IsValid() const
+bool MclScalar::operator!=(const MclScalar &b) const
+{
+    return !operator==(b);
+}
+
+mclBnFr MclScalar::Underlying() const
+{
+    return m_fr;
+}
+
+bool MclScalar::IsValid() const
 {
     return mclBnFr_isValid(&m_fr) == 1;
 }
 
-Scalar Scalar::Invert() const
+MclScalar MclScalar::Invert() const
 {
     if (mclBnFr_isZero(&m_fr) == 1) {
         throw std::runtime_error("Inverse of zero is undefined");
     }
-    Scalar temp;
+    MclScalar temp;
     mclBnFr_inv(&temp.m_fr, &m_fr);
     return temp;
 }
 
-Scalar Scalar::Negate() const
+MclScalar MclScalar::Negate() const
 {
-    Scalar temp;
+    MclScalar temp;
     mclBnFr_neg(&temp.m_fr, &m_fr);
     return temp;
 }
 
-Scalar Scalar::Square() const
+MclScalar MclScalar::Square() const
 {
-    Scalar temp;
+    MclScalar temp;
     mclBnFr_sqr(&temp.m_fr, &m_fr);
     return temp;
 }
 
-Scalar Scalar::Cube() const
+MclScalar MclScalar::Cube() const
 {
-    Scalar temp(m_fr);
+    MclScalar temp(m_fr);
     temp = temp * temp.Square();
     return temp;
 }
 
-Scalar Scalar::Pow(const Scalar& n) const
+MclScalar MclScalar::Pow(const MclScalar& n) const
 {
     // A variant of double-and-add method
-    Scalar temp(1);
+    MclScalar temp(1);
     mclBnFr bit_val;
     bit_val = m_fr;
     auto bits = n.ToBinaryVec();
 
     for (auto it = bits.rbegin(); it != bits.rend(); ++it) {
-        Scalar s(bit_val);
+        MclScalar s(bit_val);
         if (*it) {
             mclBnFr_mul(&temp.m_fr, &temp.m_fr, &bit_val);
         }
@@ -239,9 +243,9 @@ Scalar Scalar::Pow(const Scalar& n) const
     return temp;
 }
 
-Scalar Scalar::Rand(bool exclude_zero)
+MclScalar MclScalar::Rand(bool exclude_zero)
 {
-    Scalar temp;
+    MclScalar temp;
 
     while (true) {
         if (mclBnFr_setByCSPRNG(&temp.m_fr) != 0) {
@@ -252,7 +256,7 @@ Scalar Scalar::Rand(bool exclude_zero)
     return temp;
 }
 
-uint64_t Scalar::GetUint64() const
+uint64_t MclScalar::GetUint64() const
 {
     uint64_t ret = 0;
     std::vector<uint8_t> vch = GetVch();
@@ -262,10 +266,11 @@ uint64_t Scalar::GetUint64() const
     return ret;
 }
 
-std::vector<uint8_t> Scalar::GetVch(const bool trim_preceeding_zeros) const
+std::vector<uint8_t> MclScalar::GetVch(const bool trim_preceeding_zeros) const
 {
-    std::vector<uint8_t> vec(Scalar::SERIALIZATION_SIZE_IN_BYTES);
-    if (mclBnFr_serialize(&vec[0], Scalar::SERIALIZATION_SIZE_IN_BYTES, &m_fr) == 0) {
+    auto seri_size = MclScalar::GetSerializeSize();
+    std::vector<uint8_t> vec(seri_size);
+    if (mclBnFr_serialize(&vec[0], seri_size, &m_fr) == 0) {
         throw std::runtime_error(std::string("Serialization failed"));
     }
     if (!trim_preceeding_zeros) return vec;
@@ -280,7 +285,7 @@ std::vector<uint8_t> Scalar::GetVch(const bool trim_preceeding_zeros) const
     return trimmed_vec;
 }
 
-void Scalar::SetVch(const std::vector<uint8_t> &v)
+void MclScalar::SetVch(const std::vector<uint8_t> &v)
 {
     if (v.size() == 0) {
         mclBnFr x;
@@ -293,10 +298,10 @@ void Scalar::SetVch(const std::vector<uint8_t> &v)
     }
 }
 
-void Scalar::SetPow2(const uint32_t& n)
+void MclScalar::SetPow2(const uint32_t& n)
 {
     uint32_t i = n;
-    Scalar temp = 1;
+    MclScalar temp = 1;
 
     while (i != 0) {
         temp = temp * 2;
@@ -305,7 +310,7 @@ void Scalar::SetPow2(const uint32_t& n)
     m_fr = temp.m_fr;
 }
 
-uint256 Scalar::GetHashWithSalt(const uint64_t& salt) const
+uint256 MclScalar::GetHashWithSalt(const uint64_t& salt) const
 {
     CHashWriter hasher(0,0);
     hasher << *this;
@@ -313,7 +318,7 @@ uint256 Scalar::GetHashWithSalt(const uint64_t& salt) const
     return hasher.GetHash();
 }
 
-std::string Scalar::GetString(const int8_t& radix) const
+std::string MclScalar::GetString(const int8_t& radix) const
 {
     char str[1024];
 
@@ -323,7 +328,7 @@ std::string Scalar::GetString(const int8_t& radix) const
     return std::string(str);
 }
 
-std::vector<bool> Scalar::ToBinaryVec() const
+std::vector<bool> MclScalar::ToBinaryVec() const
 {
     auto bitStr = GetString(2);
     std::vector<bool> vec;
@@ -336,10 +341,10 @@ std::vector<bool> Scalar::ToBinaryVec() const
 /**
  * Since GetVch returns 32-byte vector, maximum bit index is 8 * 32 - 1 = 255
  */
-bool Scalar::GetSeriBit(const uint8_t& n) const
+bool MclScalar::GetSeriBit(const uint8_t& n) const
 {
     std::vector<uint8_t> vch = GetVch();
-    assert(vch.size() == 32);
+    assert(vch.size() == SERIALIZATION_SIZE);
 
     const uint8_t vchIdx = 31 - n / 8;  // vch is little-endian
     const uint8_t bitIdx = n % 8;
@@ -349,7 +354,22 @@ bool Scalar::GetSeriBit(const uint8_t& n) const
     return bit;
 }
 
-unsigned int Scalar::GetSerializeSize() const
+unsigned int MclScalar::GetSerializeSize() const
 {
-    return ::GetSerializeSize(GetVch());
+    return SERIALIZATION_SIZE;
+}
+
+template <typename Stream>
+void MclScalar::Serialize(Stream& s) const
+{
+    ::Serialize(s, GetVch());
+}
+template void MclScalar::Serialize(CHashWriter& s) const;
+
+template <typename Stream>
+void MclScalar::Unserialize(Stream& s)
+{
+    std::vector<uint8_t> vch;
+    ::Unserialize(s, vch);
+    SetVch(vch);
 }

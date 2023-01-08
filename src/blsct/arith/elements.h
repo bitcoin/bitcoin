@@ -13,36 +13,25 @@
 #include <stdexcept>
 #include <vector>
 
-#include <bls/bls384_256.h> // must include this before bls/bls.h
-#include <bls/bls.h>
-
-#include <blsct/arith/g1point.h>
-#include <blsct/arith/scalar.h>
-
-/**
- * Designed to expect below instantiations only:
- * - Elements<G1Point>
- * - Elements<Scalar>
- */
 template <typename T>
 class Elements
 {
 public:
-    Elements() {}
-    Elements(const std::vector<T>& vec) : m_vec(vec) {}
+    Elements();
+    Elements(const std::vector<T>& vec);
     Elements(const size_t& size, const T& default_value);
-    Elements(const Elements &x);
+    Elements(const Elements& other);
 
     T Sum() const;
     T& operator[](const size_t& index);
     T operator[](const size_t& index) const;
     size_t Size() const;
-    bool Empty() const;
     void Add(const T& x);
+    bool Empty() const;
 
     void ConfirmIndexInsideRange(const uint32_t& index) const;
     void ConfirmSizesMatch(const size_t& other_size) const;
-    static Elements<T> FirstNPow(const Scalar& k, const size_t& n, const size_t& from_index = 0);
+    static Elements<T> FirstNPow(const T& k, const size_t& n, const size_t& from_index = 0);
     static Elements<T> RepeatN(const T& k, const size_t& n);
     static Elements<T> RandVec(const size_t& n, const bool exclude_zero = false);
 
@@ -53,38 +42,34 @@ public:
      * G1Points x Scalars
      * [p1, p2] * [a1, ba] = [p1*a1, p2*a2]
      */
-    Elements<T> operator*(const Elements<Scalar>& other) const;
+    template <typename Scalar>
+    Elements<T> operator*(const Elements<Scalar>& rhs) const;
 
     /**
      * Scalars x Scalar
-     * [s1, s2] * t = [s1*t, s2*t]
+     * [s1, s2] * s = [s1*s, s2*s]
      *
      * G1Points x Scalar
      * [p1, p2] ^ s = [p1*s, p2*s]
      */
-    Elements<T> operator*(const Scalar& s) const;
+    template <typename Scalar>
+    Elements<T> operator*(const Scalar& rhs) const;
 
     /**
      * [p1, p2] + [q1, q2] = [p1+q1, p2+q2]
      */
-    Elements<T> operator+(const Elements<T>& other) const;
+    Elements<T> operator+(const Elements<T>& rhs) const;
 
     /**
      * [p1, p2] - [q1, q2] = [p1-q1, p2-q2]
      */
-    Elements<T> operator-(const Elements<T>& other) const;
+    Elements<T> operator-(const Elements<T>& rhs) const;
 
-    void operator=(const Elements<T>& other);
+    void operator=(const Elements<T>& rhs);
 
-    bool operator==(const Elements<T>& other) const;
+    bool operator==(const Elements<T>& rhs) const;
 
-    bool operator!=(const Elements<T>& other) const;
-
-    /**
-     * MulVec is equivalent of (Elements<G1Point> * Elements<Scalar>).Sum(),
-     * but faster than that due to direct use of mcl library
-     */
-    G1Point MulVec(const Elements<Scalar>& scalars) const;
+    bool operator!=(const Elements<T>& rhs) const;
 
     /**
      * Returns elements slice [fromIndex, vec.size())
@@ -103,8 +88,5 @@ public:
 
     std::vector<T> m_vec;
 };
-
-using Scalars = Elements<Scalar>;
-using G1Points = Elements<G1Point>;
 
 #endif // NAVCOIN_BLSCT_ARITH_ELEMENTS_H

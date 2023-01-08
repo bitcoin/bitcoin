@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/range_proof/range_proof_logic.h>
+#include <blsct/arith/mcl/mcl.h>
 #include <test/util/setup_common.h>
-#include <blsct/arith/range_proof/range_proof_logic.h>
 
 #include <tinyformat.h>
 #include <boost/test/unit_test.hpp>
@@ -11,6 +12,10 @@
 
 BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
+using T = Mcl;
+using Point = T::Point;
+using Scalar = T::Scalar;
+using Scalars = Elements<Scalar>;
 using MsgPair = std::pair<std::string, std::vector<unsigned char>>;
 
 struct TestCase
@@ -24,10 +29,10 @@ struct TestCase
     MsgPair msg;
 };
 
-static G1Point GenNonce()
+static MclG1Point GenNonce()
 {
     std::string nonce_str("nonce");
-    G1Point nonce = G1Point::HashAndMap(std::vector<unsigned char> { nonce_str.begin(), nonce_str.end() });
+    MclG1Point nonce = MclG1Point::HashAndMap(std::vector<unsigned char> { nonce_str.begin(), nonce_str.end() });
     return nonce;
 }
 
@@ -56,10 +61,10 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
     Scalars vs;
     vs.Add(one);
 
-    RangeProofLogic rp;
+    RangeProofLogic<T> rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
 
-    auto is_valid = rp.Verify(std::vector<RangeProof> { p }, token_id);
+    auto is_valid = rp.Verify(std::vector<RangeProof<T>> { p }, token_id);
     BOOST_CHECK(is_valid);
 }
 
@@ -76,12 +81,12 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
     Scalars vs;
     vs.Add(one);
 
-    RangeProofLogic rp;
+    RangeProofLogic<T> rp;
     auto proof = rp.Prove(vs, nonce, msg.second, token_id);
 
     size_t index = 0;
-    auto req = AmountRecoveryRequest::of(proof, index, nonce);
-    auto reqs = std::vector<AmountRecoveryRequest> { req };
+    auto req = AmountRecoveryRequest<T>::of(proof, index, nonce);
+    auto reqs = std::vector<AmountRecoveryRequest<T>> { req };
     auto result = rp.RecoverAmounts(reqs, token_id);
 
     BOOST_CHECK(result.is_completed);
@@ -94,7 +99,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 
 static std::vector<TestCase> BuildTestCases()
 {
-    RangeProofLogic rp;
+    RangeProofLogic<T> rp;
 
     Scalar one(1);
     Scalar two(2);
@@ -255,13 +260,13 @@ static std::vector<TestCase> BuildTestCases()
 }
 
 static void RunTestCase(
-    RangeProofLogic& rp,
+    RangeProofLogic<T>& rp,
     TestCase& test_case
 ) {
     auto token_id = GenTokenId();
     auto nonce = GenNonce();
 
-    std::vector<RangeProof> proofs;
+    std::vector<RangeProof<T>> proofs;
 
     // calculate proofs
     if (test_case.is_batched) {
@@ -281,10 +286,10 @@ static void RunTestCase(
     BOOST_CHECK(verify_result == test_case.verify_result);
 
     // recover value, gamma and message
-    std::vector<AmountRecoveryRequest> reqs;
+    std::vector<AmountRecoveryRequest<T>> reqs;
 
     for (size_t i=0; i<proofs.size(); ++i) {
-        reqs.push_back(AmountRecoveryRequest::of(proofs[i], i, nonce));
+        reqs.push_back(AmountRecoveryRequest<T>::of(proofs[i], i, nonce));
     }
     auto recovery_result = rp.RecoverAmounts(reqs, token_id);
     BOOST_CHECK(recovery_result.is_completed == test_case.should_complete_recovery);
@@ -309,7 +314,7 @@ static void RunTestCase(
 BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 {
     auto test_cases = BuildTestCases();
-    RangeProofLogic rp;
+    RangeProofLogic<T> rp;
     for (auto test_case: test_cases) {
         RunTestCase(rp, test_case);
     }
@@ -317,11 +322,11 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
 {
-    RangeProofLogic rp;
+    RangeProofLogic<T> rp;
 
     Scalars values;
     values.Add(Scalar(1));
-    G1Point nonce = G1Point::GetBasePoint();
+    MclG1Point nonce = MclG1Point::GetBasePoint();
     TokenId token_id;
 
     {
@@ -345,8 +350,8 @@ BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
 {
-    RangeProofLogic rp;
-    G1Point nonce = G1Point::GetBasePoint();
+    RangeProofLogic<T> rp;
+    MclG1Point nonce = MclG1Point::GetBasePoint();
     std::vector<unsigned char> msg;
     TokenId token_id;
 
@@ -374,47 +379,47 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
 BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 {
     auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
-        RangeProof p;
+        RangeProof<T> p;
         auto n = Config::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
         for (size_t i=0; i<n; ++i) {
-            p.Vs.Add(G1Point::GetBasePoint());
+            p.Vs.Add(MclG1Point::GetBasePoint());
         }
-        auto num_rounds = RangeProofWithTranscript::RecoverNumRounds(n);
+        auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(n);
         for (size_t i=0; i<num_rounds; ++i) {
-            p.Ls.Add(G1Point::GetBasePoint());
-            p.Rs.Add(G1Point::GetBasePoint());
+            p.Ls.Add(MclG1Point::GetBasePoint());
+            p.Rs.Add(MclG1Point::GetBasePoint());
         }
         return p;
     };
 
-    RangeProofLogic rp;
+    RangeProofLogic<T> rp;
     {
         // no proof should validate fine
-        std::vector<RangeProof> proofs;
+        std::vector<RangeProof<T>> proofs;
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // no value commitment
-        RangeProof p;
-        std::vector<RangeProof> proofs { p };
+        RangeProof<T> p;
+        std::vector<RangeProof<T>> proofs { p };
         BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
     }
     {
         // minimum number of value commitments
         auto p = gen_valid_proof_wo_value_commitments(1);
-        std::vector<RangeProof> proofs { p };
+        std::vector<RangeProof<T>> proofs { p };
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // maximum number of value commitments
         auto p = gen_valid_proof_wo_value_commitments(Config::m_max_input_values);
-        std::vector<RangeProof> proofs { p };
+        std::vector<RangeProof<T>> proofs { p };
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // number of value commitments exceeding maximum
         auto p = gen_valid_proof_wo_value_commitments(Config::m_max_input_values + 1);
-        std::vector<RangeProof> proofs { p };
+        std::vector<RangeProof<T>> proofs { p };
         BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
     }
 }
