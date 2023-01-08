@@ -91,6 +91,19 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
+        if (pQuorumBaseBlockIndex->nHeight < (::ChainActive().Height() - GetLLMQParams(type).dkgInterval)) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is too old, peer=%d\n", __func__,
+                     qc.quorumHash.ToString(), pfrom->GetId());
+            // TODO: enable punishment in some future version when all/most nodes are running with this fix
+            // Misbehaving(peer.GetId(), 100);
+            return;
+        }
+        if (HasMinedCommitment(type, qc.quorumHash)) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum hash[%s], type[%d], quorumIndex[%d] is already mined, peer=%d\n",
+                     __func__, qc.quorumHash.ToString(), uint8_t(type), qc.quorumIndex, pfrom->GetId());
+            // NOTE: do not punish here
+            return;
+        }
     }
 
     {
