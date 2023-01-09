@@ -1199,7 +1199,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                         // (e.g. it wasn't generated on this node or we're restoring from backup)
                         // add it to the address book for proper transaction accounting
                         if (!*dest.internal && !FindAddressBookEntry(dest.dest, /* allow_change= */ false)) {
-                            SetAddressBook(dest.dest, "", "receive");
+                            SetAddressBook(dest.dest, "", AddressBookPurposes::RECEIVE);
                         }
                     }
                 }
@@ -1742,7 +1742,7 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
             CTxDestination dest;
             ExtractDestination(script, dest);
             if (IsValidDestination(dest)) {
-                SetAddressBookWithDB(batch, dest, label, "receive");
+                SetAddressBookWithDB(batch, dest, label, AddressBookPurposes::RECEIVE);
             }
         }
     }
@@ -2468,7 +2468,7 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
 
     auto op_dest = spk_man->GetNewDestination(type);
     if (op_dest) {
-        SetAddressBook(*op_dest, label, "receive");
+        SetAddressBook(*op_dest, label, AddressBookPurposes::RECEIVE);
     }
 
     return op_dest;
@@ -3750,7 +3750,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
             for (const auto& script : script_pub_keys) {
                 CTxDestination dest;
                 if (ExtractDestination(script, dest)) {
-                    SetAddressBook(dest, label, "receive");
+                    SetAddressBook(dest, label, AddressBookPurposes::RECEIVE);
                 }
             }
         }
@@ -3938,7 +3938,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     std::vector<CTxDestination> dests_to_delete;
     for (const auto& addr_pair : m_address_book) {
         // Labels applied to receiving addresses should go based on IsMine
-        if (addr_pair.second.purpose == "receive") {
+        if (addr_pair.second.purpose == AddressBookPurposes::RECEIVE) {
             if (!IsMine(addr_pair.first)) {
                 // Check the address book data is the watchonly wallet's
                 if (data.watchonly_wallet) {
@@ -4017,7 +4017,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             auto purpose{addr_book_data.purpose};
             auto label{addr_book_data.GetLabel()};
             // don't bother writing default values (unknown purpose, empty label)
-            if (purpose != "unknown") batch.WritePurpose(address, purpose);
+            if (purpose != AddressBookPurposes::UNKNOWN) batch.WritePurpose(address, purpose);
             if (!label.empty()) batch.WriteName(address, label);
         }
     };
@@ -4246,4 +4246,11 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     }
     return res;
 }
+
+namespace AddressBookPurposes {
+const std::string RECEIVE{"receive"};
+const std::string SEND{"send"};
+const std::string UNKNOWN{"unknown"};
+}
+
 } // namespace wallet

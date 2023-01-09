@@ -56,11 +56,11 @@ static AddressTableEntry::Type translateTransactionType(const QString &strPurpos
 {
     AddressTableEntry::Type addressType = AddressTableEntry::Hidden;
     // "refund" addresses aren't shown, and change addresses aren't returned by getAddresses at all.
-    if (strPurpose == "send")
+    if (strPurpose == QString::fromStdString(wallet::AddressBookPurposes::SEND))
         addressType = AddressTableEntry::Sending;
-    else if (strPurpose == "receive")
+    else if (strPurpose == QString::fromStdString(wallet::AddressBookPurposes::RECEIVE))
         addressType = AddressTableEntry::Receiving;
-    else if (strPurpose == "unknown" || strPurpose == "") // if purpose not set, guess
+    else if (strPurpose == QString::fromStdString(wallet::AddressBookPurposes::UNKNOWN) || strPurpose == "") // if purpose not set, guess
         addressType = (isMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending);
     return addressType;
 }
@@ -239,7 +239,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
     if(!index.isValid())
         return false;
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
-    std::string strPurpose = (rec->type == AddressTableEntry::Sending ? "send" : "receive");
+    std::string strPurpose = (rec->type == AddressTableEntry::Sending ? wallet::AddressBookPurposes::SEND : wallet::AddressBookPurposes::RECEIVE);
     editStatus = OK;
 
     if(role == Qt::EditRole)

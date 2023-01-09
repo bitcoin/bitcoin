@@ -280,7 +280,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
                 if (!m_wallet->getAddress(
                      dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr))
                 {
-                    m_wallet->setAddressBook(dest, strLabel, "send");
+                    m_wallet->setAddressBook(dest, strLabel, wallet::AddressBookPurposes::SEND);
                 }
                 else if (name != strLabel)
                 {

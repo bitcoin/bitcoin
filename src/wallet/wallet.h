@@ -200,6 +200,13 @@ public:
     void KeepDestination();
 };
 
+
+namespace AddressBookPurposes {
+extern const std::string RECEIVE;
+extern const std::string SEND;
+extern const std::string UNKNOWN;
+} // namespace AddressBookPurposes
+
 /** Address book data */
 class CAddressBookData
 {
@@ -209,7 +216,7 @@ private:
 public:
     std::string purpose;
 
-    CAddressBookData() : purpose("unknown") {}
+    CAddressBookData() : purpose(AddressBookPurposes::UNKNOWN) {}
 
     typedef std::map<std::string, std::string> StringMap;
     StringMap destdata;

@@ -141,9 +141,9 @@ RPCHelpMan setlabel()
     const std::string label{LabelFromValue(request.params[1])};
 
     if (pwallet->IsMine(dest)) {
-        pwallet->SetAddressBook(dest, label, "receive");
+        pwallet->SetAddressBook(dest, label, AddressBookPurposes::RECEIVE);
     } else {
-        pwallet->SetAddressBook(dest, label, "send");
+        pwallet->SetAddressBook(dest, label, AddressBookPurposes::SEND);
     }
 
     return UniValue::VNULL;
@@ -285,7 +285,7 @@ RPCHelpMan addmultisigaddress()
     // Construct using pay-to-script-hash:
     CScript inner;
     CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, spk_man, inner);
-    pwallet->SetAddressBook(dest, label, "send");
+    pwallet->SetAddressBook(dest, label, AddressBookPurposes::SEND);
 
     // Make the descriptor
     std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), spk_man);

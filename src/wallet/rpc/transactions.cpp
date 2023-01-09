@@ -338,7 +338,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("involvesWatchonly", true);
             }
             MaybePushAddress(entry, s.destination);
-            entry.pushKV("category", "send");
+            entry.pushKV("category", AddressBookPurposes::SEND);
             entry.pushKV("amount", ValueFromAmount(-s.amount));
             const auto* address_book_entry = wallet.FindAddressBookEntry(s.destination);
             if (address_book_entry) {
