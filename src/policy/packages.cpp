@@ -180,3 +180,17 @@ void AncestorPackage::Ban(const CTransactionRef& transaction)
     if (ancestor_subsets.count(transaction->GetHash()) == 0) return;
     banned_txns.insert(transaction->GetHash());
 }
+
+uint256 GetCombinedHash(const std::vector<uint256>& wtxids)
+{
+    std::vector<uint256> wtxids_copy(wtxids.cbegin(), wtxids.cend());
+    std::sort(wtxids_copy.begin(), wtxids_copy.end());
+    return (HashWriter() << wtxids_copy).GetHash();
+}
+uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions)
+{
+    std::vector<uint256> wtxids_copy;
+    std::transform(transactions.cbegin(), transactions.cend(), std::back_inserter(wtxids_copy),
+        [](const auto& tx){ return tx->GetWitnessHash(); });
+    return GetCombinedHash(wtxids_copy);
+}

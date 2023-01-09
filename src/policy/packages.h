@@ -132,4 +132,11 @@ public:
      * set, GetAncestorSet() should return std::nullopt for that tx. Does not affect Txns(). */
     void Ban(const CTransactionRef& transaction);
 };
+
+
+/** Get the hash of these wtxids, concatenated in lexicographical order. */
+uint256 GetCombinedHash(const std::vector<uint256>& wtxids);
+/** Get the hash of these transactions' wtxids, concatenated in lexicographical order. */
+uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions);
+
 #endif // BITCOIN_POLICY_PACKAGES_H
