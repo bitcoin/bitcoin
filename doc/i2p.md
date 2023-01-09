@@ -33,12 +33,10 @@ Core configuration options:
      none)
 
 -i2pacceptincoming
-     If set and -i2psam is also set then incoming I2P connections are
-     accepted via the SAM proxy. If this is not set but -i2psam is set
-     then only outgoing connections will be made to the I2P network.
-     Ignored if -i2psam is not set. Listening for incoming I2P
-     connections is done through the SAM proxy, not by binding to a
-     local address and port (default: 1)
+     Whether to accept inbound I2P connections (default: 1). Ignored if
+     -i2psam is not set. Listening for inbound I2P connections is
+     done through the SAM proxy, not by binding to a local address and
+     port.
 ```
 
 In a typical situation, this suffices:
