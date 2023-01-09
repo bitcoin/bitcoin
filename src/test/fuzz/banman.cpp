@@ -70,11 +70,13 @@ FUZZ_TARGET(banman, .init = initialize_banman)
                 fuzzed_data_provider,
                 [&] {
                     CNetAddr net_addr{ConsumeNetAddr(fuzzed_data_provider)};
-                    const std::optional<CNetAddr>& addr{LookupHost(net_addr.ToStringAddr(), /*fAllowLookup=*/false)};
-                    if (addr.has_value() && addr->IsValid()) {
-                        net_addr = *addr;
-                    } else {
-                        contains_invalid = true;
+                    if (!net_addr.IsCJDNS() || !net_addr.IsValid()) {
+                        const std::optional<CNetAddr>& addr{LookupHost(net_addr.ToStringAddr(), /*fAllowLookup=*/false)};
+                        if (addr.has_value() && addr->IsValid()) {
+                            net_addr = *addr;
+                        } else {
+                            contains_invalid = true;
+                        }
                     }
                     ban_man.Ban(net_addr, ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
                 },

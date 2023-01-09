@@ -64,26 +64,13 @@ FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& fast_random_context)
 {
     CNetAddr addr;
-    if (fuzzed_data_provider.remaining_bytes() > 1 && fuzzed_data_provider.ConsumeBool()) {
-        addr = ConsumeNetAddr(fuzzed_data_provider);
-    } else {
-        // The networks [1..6] correspond to CNetAddr::BIP155Network (private).
-        static const std::map<uint8_t, uint8_t> net_len_map = {{1, ADDR_IPV4_SIZE},
-                                                               {2, ADDR_IPV6_SIZE},
-                                                               {4, ADDR_TORV3_SIZE},
-                                                               {5, ADDR_I2P_SIZE},
-                                                               {6, ADDR_CJDNS_SIZE}};
-        uint8_t net = fast_random_context.randrange(5) + 1; // [1..5]
-        if (net == 3) {
-            net = 6;
+    assert(!addr.IsValid());
+    for (size_t i = 0; i < 8 && !addr.IsValid(); ++i) {
+        if (fuzzed_data_provider.remaining_bytes() > 1 && fuzzed_data_provider.ConsumeBool()) {
+            addr = ConsumeNetAddr(fuzzed_data_provider);
+        } else {
+            addr = ConsumeNetAddr(fuzzed_data_provider, &fast_random_context);
         }
-
-        DataStream s{};
-
-        s << net;
-        s << fast_random_context.randbytes(net_len_map.at(net));
-
-        s >> CAddress::V2_NETWORK(addr);
     }
 
     // Return a dummy IPv4 5.5.5.5 if we generated an invalid address.
