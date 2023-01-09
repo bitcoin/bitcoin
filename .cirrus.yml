@@ -213,6 +213,8 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: quay.io/centos/centos:stream8
+  # For faster CI feedback, immediately schedule one task that runs all tests
+  << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     PACKAGE_MANAGER_INSTALL: "yum install -y"
