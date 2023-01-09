@@ -741,6 +741,10 @@ static RPCHelpMan setban()
 
         const bool absolute{request.params[3].isNull() ? false : request.params[3].get_bool()};
 
+        if (absolute && banTime < GetTime()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Absolute timestamp is in the past");
+        }
+
         if (isSubnet) {
             node.banman->Ban(subNet, banTime, absolute);
             if (node.connman) {
