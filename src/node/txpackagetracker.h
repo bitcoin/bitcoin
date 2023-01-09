@@ -141,6 +141,13 @@ public:
                                                                              const uint256& rep_wtxid,
                                                                              const std::vector<std::pair<uint256, bool>>& txdata_status,
                                                                              std::chrono::microseconds expiry);
+    /** Record receipt of notfound message for pkgtxns. */
+    void ReceivedNotFound(NodeId nodeid, const uint256& hash);
+
+    /** If there is a package that is missing this tx data, updates the PendingPackage and
+     * returns a PackageToValidate including the other txdata stored in the orphanage.
+     */
+    std::optional<PackageToValidate> ReceivedPkgTxns(NodeId nodeid, const std::vector<CTransactionRef>& package_txns);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXPACKAGETRACKER_H
