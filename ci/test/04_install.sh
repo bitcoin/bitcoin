@@ -50,6 +50,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
                   $CI_IMAGE_NAME_TAG)
+  export CI_CONTAINER_ID
 
   # Create a non-root user inside the container which matches the local user.
   #
