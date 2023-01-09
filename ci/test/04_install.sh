@@ -20,20 +20,20 @@ export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/t
 export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
 env | grep -E '^(BITCOIN_CONFIG|BASE_|QEMU_|CCACHE_|LC_ALL|BOOST_TEST_RANDOM|DEBIAN_FRONTEND|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS|PREVIOUS_RELEASES_DIR)' | tee /tmp/env
 if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
-  DOCKER_ADMIN="--cap-add SYS_PTRACE"
+  CI_CONTAINER_CAP="--cap-add SYS_PTRACE"
 fi
 
 export P_CI_DIR="$PWD"
 export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  echo "Creating $DOCKER_NAME_TAG container to run in"
+  echo "Creating $CI_IMAGE_NAME_TAG container to run in"
   LOCAL_UID=$(id -u)
   LOCAL_GID=$(id -g)
 
   # the name isn't important, so long as we use the same UID
   LOCAL_USER=nonroot
-  ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
+  ${CI_RETRY_EXE} docker pull "$CI_IMAGE_NAME_TAG"
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
@@ -41,7 +41,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   fi
 
   # shellcheck disable=SC2086
-  DOCKER_ID=$(docker run $DOCKER_ADMIN --rm --interactive --detach --tty \
+  CI_CONTAINER_ID=$(docker run $CI_CONTAINER_CAP --rm --interactive --detach --tty \
                   --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
                   --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \
                   --mount type=bind,src=$DEPENDS_DIR,dst=$DEPENDS_DIR \
@@ -49,26 +49,26 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
-                  $DOCKER_NAME_TAG)
+                  $CI_IMAGE_NAME_TAG)
 
   # Create a non-root user inside the container which matches the local user.
   #
   # This prevents the root user in the container modifying the local file system permissions
   # on the mounted directories
-  docker exec "$DOCKER_ID" useradd -u "$LOCAL_UID" -o -m "$LOCAL_USER"
-  docker exec "$DOCKER_ID" groupmod -o -g "$LOCAL_GID" "$LOCAL_USER"
-  docker exec "$DOCKER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
-  export DOCKER_CI_CMD_PREFIX_ROOT="docker exec -u 0 $DOCKER_ID"
-  export DOCKER_CI_CMD_PREFIX="docker exec -u $LOCAL_UID $DOCKER_ID"
+  docker exec "$CI_CONTAINER_ID" useradd -u "$LOCAL_UID" -o -m "$LOCAL_USER"
+  docker exec "$CI_CONTAINER_ID" groupmod -o -g "$LOCAL_GID" "$LOCAL_USER"
+  docker exec "$CI_CONTAINER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
+  export CI_EXEC_CMD_PREFIX_ROOT="docker exec -u 0 $CI_CONTAINER_ID"
+  export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
 else
   echo "Running on host system without docker wrapper"
 fi
 
 CI_EXEC () {
-  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 CI_EXEC_ROOT () {
-  $DOCKER_CI_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $CI_EXEC_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 export -f CI_EXEC
 export -f CI_EXEC_ROOT
@@ -79,9 +79,9 @@ if [ -n "$DPKG_ADD_ARCH" ]; then
   CI_EXEC_ROOT dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
 
-if [[ $DOCKER_NAME_TAG == *centos* ]]; then
+if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
   ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y install epel-release
-  ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y --allowerasing install "$DOCKER_PACKAGES" "$PACKAGES"
+  ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y --allowerasing install "$CI_BASE_PACKAGES" "$PACKAGES"
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   if [[ "${ADD_UNTRUSTED_BPFCC_PPA}" == "true" ]]; then
     # Ubuntu 22.04 LTS and Debian 11 both have an outdated bpfcc-tools packages.
@@ -92,7 +92,7 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
     CI_EXEC_ROOT add-apt-repository ppa:hadret/bpfcc
   fi
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
-  ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$DOCKER_PACKAGES"
+  ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$CI_BASE_PACKAGES"
 fi
 
 if [ -n "$PIP_PACKAGES" ]; then
