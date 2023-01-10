@@ -108,7 +108,7 @@ Wallets created before version 0.13 are not HD and must be backed up every 100 k
 
 ### 1.6 Restoring the Wallet From a Backup
 
-To restore a wallet, the `restorewallet` RPC must be used.
+To restore a wallet, the `restorewallet` RPC or the `Restore Wallet` GUI menu item (`File` -> `Restore Wallet…`) must be used.
 
 ```
 $ bitcoin-cli restorewallet "restored-wallet" /home/node01/Backups/backup-01.dat
@@ -144,5 +144,5 @@ unforeseen configurations which result in some scripts being excluded. If a migr
 unexpectedly or otherwise misses any scripts, please create an issue on GitHub. A backup of the
 original wallet can be found in the wallet directory with the name `<name>-<timestamp>.legacy.bak`.
 
-The backup can be restored using the `restorewallet` command as discussed in the
-[Restoring the Wallet From a Backup](#16-restoring-the-wallet-from-a-backup) section
+The backup can be restored using the methods discussed in the
+[Restoring the Wallet From a Backup](#16-restoring-the-wallet-from-a-backup) section.
