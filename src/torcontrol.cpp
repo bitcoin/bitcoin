@@ -700,5 +700,5 @@ CService DefaultOnionServiceTarget()
 {
     struct in_addr onion_service_target;
     onion_service_target.s_addr = htonl(INADDR_LOOPBACK);
-    return {onion_service_target, (uint16_t)gArgs.GetArg("-onionport", BaseParams().OnionServiceTargetPort())};
+    return {onion_service_target, (uint16_t)gArgs.GetArg("-onionport", (int64_t)BaseParams().OnionServiceTargetPort())};
 }
