@@ -28,6 +28,44 @@ class WalletLabelsTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def invalid_label_name_test(self):
+        node = self.nodes[0]
+        address = node.getnewaddress()
+        pubkey = node.getaddressinfo(address)['pubkey']
+        rpc_calls = [
+            [node.getnewaddress],
+            [node.setlabel, address],
+            [node.getaddressesbylabel],
+            [node.importpubkey, pubkey],
+            [node.addmultisigaddress, 1, [pubkey]],
+            [node.getreceivedbylabel],
+            [node.listsinceblock, node.getblockhash(0), 1, False, True, False],
+        ]
+        if self.options.descriptors:
+            response = node.importdescriptors([{
+                'desc': f'pkh({pubkey})',
+                'label': '*',
+                'timestamp': 'now',
+            }])
+        else:
+            rpc_calls.extend([
+                [node.importprivkey, node.dumpprivkey(address)],
+                [node.importaddress, address],
+            ])
+
+            response = node.importmulti([{
+                'scriptPubKey': {'address': address},
+                'label': '*',
+                'timestamp': 'now',
+            }])
+
+        assert_equal(response[0]['success'], False)
+        assert_equal(response[0]['error']['code'], -11)
+        assert_equal(response[0]['error']['message'], "Invalid label name")
+
+        for rpc_call in rpc_calls:
+            assert_raises_rpc_error(-11, "Invalid label name", *rpc_call, "*")
+
     def run_test(self):
         # Check that there's no UTXO on the node
         node = self.nodes[0]
@@ -137,6 +175,8 @@ class WalletLabelsTest(BitcoinTestFramework):
         # Check that setlabel can set the label of an address already
         # in the label. This is a no-op.
         change_label(node, labels[2].addresses[0], labels[2], labels[2])
+
+        self.invalid_label_name_test()
 
         if self.options.descriptors:
             # This is a descriptor wallet test because of segwit v1+ addresses

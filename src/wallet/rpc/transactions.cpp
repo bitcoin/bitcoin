@@ -486,7 +486,7 @@ RPCHelpMan listtransactions()
 
     std::optional<std::string> filter_label;
     if (!request.params[0].isNull() && request.params[0].get_str() != "*") {
-        filter_label = request.params[0].get_str();
+        filter_label.emplace(LabelFromValue(request.params[0]));
         if (filter_label.value().empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
         }
@@ -634,10 +634,9 @@ RPCHelpMan listsinceblock()
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
     bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
 
+    // Only set it if 'label' was provided.
     std::optional<std::string> filter_label;
-    if (!request.params[5].isNull()) {
-        filter_label = request.params[5].get_str();
-    }
+    if (!request.params[5].isNull()) filter_label.emplace(LabelFromValue(request.params[5]));
 
     int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
 
