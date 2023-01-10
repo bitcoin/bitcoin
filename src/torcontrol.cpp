@@ -701,6 +701,6 @@ CService DefaultOnionServiceTarget()
     struct in_addr onion_service_target;
     onion_service_target.s_addr = htonl(INADDR_LOOPBACK);
     int64_t defaultOnionPort = BaseParams().OnionServiceTargetPort();
-    int64_t targetOnionPort = gArgs.GetArg("-onionport", defaultOnionPort);
+    int64_t targetOnionPort = gArgs.GetIntArg("-onionport", defaultOnionPort);
     return {onion_service_target, (uint16_t)targetOnionPort};
 }
