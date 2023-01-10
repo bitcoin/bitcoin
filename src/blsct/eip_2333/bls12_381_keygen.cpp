@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/eip-2333/derive_sk.h>
+#include <blsct/eip_2333/derive_sk.h>
 
 // Inputs
 // - parent_SK, the secret key of the parent node, a big endian encoded integer
