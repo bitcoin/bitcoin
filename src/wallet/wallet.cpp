@@ -3548,6 +3548,16 @@ std::set<ScriptPubKeyMan*> CWallet::GetAllScriptPubKeyMans(bool only_internal) c
         for (const auto& spk_man_pair : m_internal_spk_managers) {
             spk_mans.insert(spk_man_pair.second);
         }
+
+        for (const auto& spk_man_pair : m_spk_managers) {
+            if (const auto& desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair.second.get())) {
+                LOCK(desc_spk_man->cs_desc_man);
+                if (desc_spk_man->GetWalletDescriptor().internal) {
+                    spk_mans.insert(desc_spk_man);
+                }
+            }
+        }
+
         return spk_mans;
     } else {
         for (const auto &spk_man_pair: m_spk_managers) {
