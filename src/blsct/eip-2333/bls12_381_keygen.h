@@ -1,0 +1,107 @@
+// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <crypto/sha256.h>
+
+class BLS12_381_KeyGen
+{
+public:
+    // 0. compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index)
+    // 1. SK = HKDF_mod_r(compressed_lamport_PK)
+    // 2. return SK
+    //
+    // Inputs
+    // - parent_SK, the secret key of the parent node, a big endian encoded integer
+    // - index, the index of the desired child node, an integer 0 <= index < 2^32
+    // Outputs
+    // - child_SK, the secret key of the child node, a big endian encoded integer
+    std::vector<uint8_t> derive_child_SK(const std::vector<uint8_t>& parent_SK, const uint32_t& index);
+
+    // 0. SK = HKDF_mod_r(seed)
+    // 1. return SK
+    //
+    // Inputs
+    // - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
+    // Outputs
+    // - SK, the secret key of master node within the tree, a big endian encoded integer
+    std::array<uint8_t,32> derive_master_SK(std::vector<uint8_t>& seed, const std::vector<uint8_t>& SK);
+
+private:
+    inline static const uint32_t K = 32;
+    inline static const uint32_t L = K * 255;
+
+    // TODO check if this remains the same in v5
+    inline static std::string r = "52435875175126190479447740508185965837690552500527637822603658699938581184513";
+
+    // TODO check this remains the same in v5 environment as well
+    inline static const uint32_t HKDF_mod_r_L = 48; // ceil((3 * ceil(log2(r))) / 16).(L=48)
+
+    // HKDF-Extract is as defined in RFC5869, instantiated with SHA256
+    void HKDF_Extract();
+
+    // HKDF-Expand is as defined in RFC5869, instantiated with SHA256
+    void HKDF_Expand();
+
+    // I2OSP is as defined in RFC3447 (Big endian decoding)
+    void I2OSP();
+
+    // OS2IP is as defined in RFC3447 (Big endian encoding)
+    void OS2IP();
+
+    // flip_bits is a function that returns the bitwise negation of its input
+    void flip_bits();
+
+    // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
+    std::vector<std::array<uint8_t, K>> bytes_split(std::vector<uint8_t> octet_string, uint32_t chunk_size = K);
+
+    // 0. PRK = HKDF-Extract(salt, IKM)
+    // 1. OKM = HKDF-Expand(PRK, "" , L)
+    // 2. lamport_SK = bytes_split(OKM, K)
+    // 3. return lamport_SK
+    //
+    // Inputs
+    // - IKM, a secret octet string
+    // - salt, an octet string
+    //
+    // Outputs
+    // - lamport_SK, an array of 255 32-octet strings
+    std::array<uint8_t,255*32> IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
+
+    // 0. salt = I2OSP(index, 4)
+    // 1. IKM = I2OSP(parent_SK, 32)
+    // 2. lamport_0 = IKM_to_lamport_SK(IKM, salt)
+    // 3. not_IKM = flip_bits(IKM)
+    // 4. lamport_1 = IKM_to_lamport_SK(not_IKM, salt)
+    // 5. lamport_PK = ""
+    // 6. for i  in 1, .., 255
+    //        lamport_PK = lamport_PK | SHA256(lamport_0[i])
+    // 7. for i  in 1, .., 255
+    //        lamport_PK = lamport_PK | SHA256(lamport_1[i])
+    // 8. compressed_lamport_PK = SHA256(lamport_PK)
+    // 9. return compressed_lamport_PK
+    //
+    // Inputs
+    // - parent_SK, the BLS Secret Key of the parent node
+    // - index, the index of the desired child node, an integer 0 <= index < 2^32
+    //
+    // Outputs
+    // - lamport_PK, the compressed lamport PK, a 32 octet string Inputs
+    std::array<uint8_t, 32> parent_SK_to_lamport_PK(const std::vector<uint8_t>& parent_SK, const uint32_t& index);
+
+    // 1. salt = "BLS-SIG-KEYGEN-SALT-"
+    // 2. SK = 0
+    // 3. while SK == 0:
+    // 4.     salt = H(salt)
+    // 5.     PRK = HKDF-Extract(salt, IKM || I2OSP(0, 1))
+    // 6.     OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
+    // 7.     SK = OS2IP(OKM) mod r
+    // 8. return SK
+    //
+    // Inputs
+    // - IKM, a secret octet string >= 256 bits in length
+    // - key_info, an optional octet string (default="", the empty string)
+    // Outputs
+    // - SK, the corresponding secret key, an integer 0 <= SK < r.
+    std::vector<uint8_t> HKDF_mod_r(const std::vector<uint8_t> IKM, const std::vector<uint8_t>& key_info = {});
+};
