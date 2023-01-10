@@ -149,7 +149,7 @@ public:
         Field_scriptOperatorPayout              = 0x2000,
     };
 
-#define DMN_STATE_DIFF_ALL_FIELDS_BUT_PUBKEY \
+#define DMN_STATE_DIFF_ALL_FIELDS \
     DMN_STATE_DIFF_LINE(nRegisteredHeight) \
     DMN_STATE_DIFF_LINE(nLastPaidHeight) \
     DMN_STATE_DIFF_LINE(nPoSePenalty) \
@@ -159,14 +159,11 @@ public:
     DMN_STATE_DIFF_LINE(confirmedHash) \
     DMN_STATE_DIFF_LINE(confirmedHashWithProRegTxHash) \
     DMN_STATE_DIFF_LINE(keyIDOwner) \
+    DMN_STATE_DIFF_LINE(pubKeyOperator) \
     DMN_STATE_DIFF_LINE(keyIDVoting) \
     DMN_STATE_DIFF_LINE(addr) \
     DMN_STATE_DIFF_LINE(scriptPayout) \
     DMN_STATE_DIFF_LINE(scriptOperatorPayout)
-
-#define DMN_STATE_DIFF_ALL_FIELDS \
-    DMN_STATE_DIFF_ALL_FIELDS_BUT_PUBKEY \
-    DMN_STATE_DIFF_LINE(pubKeyOperator) \
 
 public:
     uint32_t fields{0};
@@ -185,13 +182,14 @@ public:
     SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
     {
         READWRITE(VARINT(obj.fields));
-#define DMN_STATE_DIFF_LINE(f) if (obj.fields & Field_##f) READWRITE(obj.state.f);
-        DMN_STATE_DIFF_ALL_FIELDS_BUT_PUBKEY
+#define DMN_STATE_DIFF_LINE(f) \
+        if (obj.fields & Field_pubKeyOperator) {\
+            /* TODO: implement migration to Basic BLS after the fork */ \
+            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), true)); \
+        } else if (obj.fields & Field_##f) READWRITE(obj.state.f);
+
+        DMN_STATE_DIFF_ALL_FIELDS
 #undef DMN_STATE_DIFF_LINE
-        if (obj.fields & Field_pubKeyOperator) {
-            // TODO: implement migration to Basic BLS after the fork
-            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), true));
-        }
     }
 
     void ApplyToState(CDeterministicMNState& target) const
