@@ -64,11 +64,12 @@ else
   echo "Running on host system without docker wrapper"
 fi
 
+export CI_EXEC_EATMYDATA=""
 CI_EXEC () {
-  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $DOCKER_CI_CMD_PREFIX      ${CI_EXEC_EATMYDATA} bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 CI_EXEC_ROOT () {
-  $DOCKER_CI_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $DOCKER_CI_CMD_PREFIX_ROOT ${CI_EXEC_EATMYDATA} bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 export -f CI_EXEC
 export -f CI_EXEC_ROOT
@@ -81,7 +82,7 @@ fi
 
 if [[ $DOCKER_NAME_TAG == *centos* ]]; then
   ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y install epel-release
-  ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y --allowerasing install "$DOCKER_PACKAGES" "$PACKAGES"
+  ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y --allowerasing install "$DOCKER_PACKAGES $PACKAGES ${CI_EATMYDATA}"
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   if [[ "${ADD_UNTRUSTED_BPFCC_PPA}" == "true" ]]; then
     # Ubuntu 22.04 LTS and Debian 11 both have an outdated bpfcc-tools packages.
@@ -92,8 +93,9 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
     CI_EXEC_ROOT add-apt-repository ppa:hadret/bpfcc
   fi
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
-  ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$DOCKER_PACKAGES"
+  ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES $DOCKER_PACKAGES ${CI_EATMYDATA}"
 fi
+export CI_EXEC_EATMYDATA="${CI_EATMYDATA}"
 
 if [ -n "$PIP_PACKAGES" ]; then
   if [ "$CI_OS_NAME" == "macos" ]; then
