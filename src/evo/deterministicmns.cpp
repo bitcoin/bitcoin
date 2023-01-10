@@ -396,22 +396,23 @@ CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDetermini
     diffRet.blockHash = to.blockHash;
     diffRet.nVersion = llmq::CLLMQUtils::IsV19Active(nHeight) ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
 
-    to.ForEachMN(false, [&](auto& toPtr) {
+    to.ForEachMN(false, [&](const auto& toPtr) {
         auto fromPtr = GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
             CSimplifiedMNListEntry sme(toPtr);
             sme.nVersion = diffRet.nVersion;
-            diffRet.mnList.emplace_back(toPtr);
+            diffRet.mnList.push_back(std::move(sme));
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
             sme1.nVersion = diffRet.nVersion;
             sme2.nVersion = diffRet.nVersion;
             if (sme1 != sme2) {
-                diffRet.mnList.emplace_back(toPtr);
+                diffRet.mnList.push_back(std::move(sme1));
             }
         }
     });
+
     ForEachMN(false, [&](auto& fromPtr) {
         auto toPtr = to.GetMN(fromPtr.proTxHash);
         if (toPtr == nullptr) {
