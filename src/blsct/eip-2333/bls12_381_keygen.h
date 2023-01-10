@@ -7,10 +7,6 @@
 class BLS12_381_KeyGen
 {
 public:
-    // 0. compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index)
-    // 1. SK = HKDF_mod_r(compressed_lamport_PK)
-    // 2. return SK
-    //
     // Inputs
     // - parent_SK, the secret key of the parent node, a big endian encoded integer
     // - index, the index of the desired child node, an integer 0 <= index < 2^32
@@ -18,9 +14,6 @@ public:
     // - child_SK, the secret key of the child node, a big endian encoded integer
     std::vector<uint8_t> derive_child_SK(const std::vector<uint8_t>& parent_SK, const uint32_t& index);
 
-    // 0. SK = HKDF_mod_r(seed)
-    // 1. return SK
-    //
     // Inputs
     // - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
     // Outputs
@@ -55,11 +48,6 @@ private:
     // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
     std::vector<std::array<uint8_t, K>> bytes_split(std::vector<uint8_t> octet_string, uint32_t chunk_size = K);
 
-    // 0. PRK = HKDF-Extract(salt, IKM)
-    // 1. OKM = HKDF-Expand(PRK, "" , L)
-    // 2. lamport_SK = bytes_split(OKM, K)
-    // 3. return lamport_SK
-    //
     // Inputs
     // - IKM, a secret octet string
     // - salt, an octet string
@@ -68,19 +56,6 @@ private:
     // - lamport_SK, an array of 255 32-octet strings
     std::array<uint8_t,255*32> IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
 
-    // 0. salt = I2OSP(index, 4)
-    // 1. IKM = I2OSP(parent_SK, 32)
-    // 2. lamport_0 = IKM_to_lamport_SK(IKM, salt)
-    // 3. not_IKM = flip_bits(IKM)
-    // 4. lamport_1 = IKM_to_lamport_SK(not_IKM, salt)
-    // 5. lamport_PK = ""
-    // 6. for i  in 1, .., 255
-    //        lamport_PK = lamport_PK | SHA256(lamport_0[i])
-    // 7. for i  in 1, .., 255
-    //        lamport_PK = lamport_PK | SHA256(lamport_1[i])
-    // 8. compressed_lamport_PK = SHA256(lamport_PK)
-    // 9. return compressed_lamport_PK
-    //
     // Inputs
     // - parent_SK, the BLS Secret Key of the parent node
     // - index, the index of the desired child node, an integer 0 <= index < 2^32
@@ -89,15 +64,6 @@ private:
     // - lamport_PK, the compressed lamport PK, a 32 octet string Inputs
     std::array<uint8_t, 32> parent_SK_to_lamport_PK(const std::vector<uint8_t>& parent_SK, const uint32_t& index);
 
-    // 1. salt = "BLS-SIG-KEYGEN-SALT-"
-    // 2. SK = 0
-    // 3. while SK == 0:
-    // 4.     salt = H(salt)
-    // 5.     PRK = HKDF-Extract(salt, IKM || I2OSP(0, 1))
-    // 6.     OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
-    // 7.     SK = OS2IP(OKM) mod r
-    // 8. return SK
-    //
     // Inputs
     // - IKM, a secret octet string >= 256 bits in length
     // - key_info, an optional octet string (default="", the empty string)
