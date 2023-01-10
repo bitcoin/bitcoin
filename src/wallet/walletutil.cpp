@@ -95,7 +95,7 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
     FlatSigningProvider keys;
     std::string error;
     std::vector<std::unique_ptr<Descriptor>> desc = Parse(desc_str, keys, error, false);
-    WalletDescriptor w_desc(std::move(desc.at(0)), creation_time, 0, 0, 0);
+    WalletDescriptor w_desc(std::move(desc.at(0)), creation_time, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0, /*_internal=*/internal);
     return w_desc;
 }
 

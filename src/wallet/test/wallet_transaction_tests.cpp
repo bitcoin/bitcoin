@@ -237,7 +237,9 @@ BOOST_FIXTURE_TEST_CASE(external_tx_creation_change_output_detection, TestChain1
     BOOST_CHECK(external_desc_spkm->GetDescriptorString(desc_str, true));
     FlatSigningProvider key_provider;
     std::string error;
-    std::unique_ptr<Descriptor> descriptor = Assert(Parse(desc_str, key_provider, error, /*require_checksum=*/false));
+    auto descs = Parse(desc_str, key_provider, error, /*require_checksum=*/false);
+    assert(descs.size() == 1);
+    auto& descriptor = descs.at(0);
 
     {
         // Now derive a key at an index that wasn't created by the wallet and send coins to it

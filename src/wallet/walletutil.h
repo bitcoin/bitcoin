@@ -91,6 +91,7 @@ public:
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
     int32_t next_index = 0; // Position of the next item to generate
     DescriptorCache cache;
+    bool internal{false}; // Used for change or not
 
     void DeserializeDescriptor(const std::string& str)
     {
@@ -113,10 +114,16 @@ public:
         SER_WRITE(obj, descriptor_str = obj.descriptor->ToString());
         READWRITE(descriptor_str, obj.creation_time, obj.next_index, obj.range_start, obj.range_end);
         SER_READ(obj, obj.DeserializeDescriptor(descriptor_str));
+
+        try {
+            READWRITE(obj.internal);
+        } catch (...) {
+            // swallow it
+        }
     }
 
     WalletDescriptor() = default;
-    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), id(DescriptorID(*descriptor)), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) { }
+    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index, bool _internal) : descriptor(descriptor), id(DescriptorID(*descriptor)), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index), internal(_internal) { }
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);

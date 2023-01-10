@@ -34,7 +34,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
         assert(descs.size() == 1);
         auto& desc = descs.at(0);
-        WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
+        WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1, /*_internal=*/false);
         if (!wallet->AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
     }
     WalletRescanReserver reserver(*wallet);
