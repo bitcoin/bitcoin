@@ -339,3 +339,31 @@ task:
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_android.sh"
+
+task:
+  name: 'SonarCloud'
+  << : *BASE_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    DEBIAN_FRONTEND: noninteractive
+  install_script:
+    - apt update && apt install -y build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libevent-dev libboost-dev libsqlite3-dev ccache git curl wget unzip
+  sonar_cache:
+    folder: "/tmp/sonar_cache"
+  ccache_cache:
+    folder: "/tmp/ccache_dir"
+  sonarcloud_script:
+    - wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip && unzip build-wrapper-linux-x86.zip
+    - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip && unzip sonar-scanner-cli-4.7.0.2747-linux.zip
+    - ./autogen.sh
+    - ./configure --disable-fuzz --disable-zmq
+    - ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make -j4
+    - ./sonar-scanner-4.7.0.2747-linux/bin/sonar-scanner \
+      -Dsonar.projectKey=bitcoin_bitcoin \
+      -Dsonar.organization=bitcoin \
+      -Dsonar.sources=. \
+      -Dsonar.cfamily.build-wrapper-output=bw-output \
+      -Dsonar.host.url=https://sonarcloud.io \
+      -Dsonar.cfamily.cache.enabled=true \
+      -Dsonar.cfamily.cache.path=/tmp/sonar_cache
