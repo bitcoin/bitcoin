@@ -49,7 +49,7 @@ don't have test cases for.
     - `interface` for tests for other interfaces (REST, ZMQ, etc), eg `interface_rest.py`
     - `mempool` for tests for mempool behaviour, eg `mempool_reorg.py`
     - `mining` for tests for mining features, eg `mining_prioritisetransaction.py`
-    - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect_ban.py`
+    - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect.py`
     - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
     - `tool` for tests for tools, eg `tool_wallet.py`
     - `wallet` for tests for wallet features, eg `wallet_keypool.py`
