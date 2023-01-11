@@ -69,7 +69,7 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
             for (auto& in : tx_mut.vin) {
                 outpoints.push_back(in.prevout);
             }
-            const auto new_tx = MakeTransactionRef(tx_mut);
+            auto new_tx = MakeTransactionRef(tx_mut);
             // add newly constructed transaction to outpoints
             for (uint32_t i = 0; i < num_out; i++) {
                 outpoints.emplace_back(new_tx->GetHash(), i);
