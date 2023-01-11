@@ -29,6 +29,8 @@ implicit-integer-sign-change:leveldb/util/comparator.cc
 implicit-integer-sign-change:FuzzedDataProvider.h
 implicit-integer-sign-change:minisketch/
 implicit-signed-integer-truncation:leveldb/
+# SYSCOIN
+implicit-signed-integer-truncation:quorums_dkgsession.cpp/
 implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:leveldb/
 implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
