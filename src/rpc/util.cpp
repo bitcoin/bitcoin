@@ -616,7 +616,7 @@ UniValue RPCHelpMan::HandleRequest(const node::JSONRPCRequest& request) const
     if (request.mode == node::JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(ToString());
     }
-    const UniValue ret = m_fun(*this, request);
+    UniValue ret = m_fun(*this, request);
     if (gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
         CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [&ret](const RPCResult& res) { return res.MatchesType(ret); }));
     }
