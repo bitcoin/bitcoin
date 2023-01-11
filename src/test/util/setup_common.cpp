@@ -397,15 +397,15 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             unspent_prevouts.pop_front();
         }
         const size_t num_outputs = det_rand.randrange(24) + 1;
-        // Approximately 1000sat "fee," equal output amounts.
-        const CAmount amount_per_output = (total_in - 1000) / num_outputs;
+        const CAmount fee = 100 * det_rand.randrange(30);
+        const CAmount amount_per_output = (total_in - fee) / num_outputs;
         for (size_t n{0}; n < num_outputs; ++n) {
             CScript spk = CScript() << CScriptNum(num_transactions + n);
             mtx.vout.push_back(CTxOut(amount_per_output, spk));
         }
         CTransactionRef ptx = MakeTransactionRef(mtx);
         mempool_transactions.push_back(ptx);
-        if (amount_per_output > 2000) {
+        if (amount_per_output > 3000) {
             // If the value is high enough to fund another transaction + fees, keep track of it so
             // it can be used to build a more complex transaction graph. Insert randomly into
             // unspent_prevouts for extra randomness in the resulting structures.
@@ -415,9 +415,11 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             }
         }
         if (submit) {
-            LOCK2(m_node.mempool->cs, cs_main);
+            LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
-            m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, 1000, 0, 1, false, 4, lp));
+            m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
+                                                         /*time=*/0, /*entry_height=*/1,
+                                                         /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
         }
         --num_transactions;
     }
