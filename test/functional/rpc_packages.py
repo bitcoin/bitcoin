@@ -20,6 +20,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
+    COIN,
     DEFAULT_FEE,
     MiniWallet,
 )
@@ -239,11 +240,14 @@ class RPCPackagesTest(BitcoinTestFramework):
         coin = self.wallet.get_utxo()
         fee = Decimal("0.00125000")
         replaceable_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, sequence=MAX_BIP125_RBF_SEQUENCE, fee = fee)
-        testres_replaceable = node.testmempoolaccept([replaceable_tx["hex"]])
-        assert_equal(testres_replaceable, [
-            {"txid": replaceable_tx["txid"], "wtxid": replaceable_tx["wtxid"],
-            "allowed": True, "vsize": replaceable_tx["tx"].get_vsize(), "fees": { "base": fee }}
-        ])
+        testres_replaceable = node.testmempoolaccept([replaceable_tx["hex"]])[0]
+        assert_equal(testres_replaceable["txid"], replaceable_tx["txid"])
+        assert_equal(testres_replaceable["wtxid"], replaceable_tx["wtxid"])
+        assert testres_replaceable["allowed"]
+        assert_equal(testres_replaceable["vsize"], replaceable_tx["tx"].get_vsize())
+        assert_equal(testres_replaceable["fees"]["base"], fee)
+        assert_fee_amount(fee, replaceable_tx["tx"].get_vsize(), testres_replaceable["fees"]["effective-feerate"])
+        assert_equal(testres_replaceable["fees"]["effective-includes"], [replaceable_tx["wtxid"]])
 
         # Replacement transaction is identical except has double the fee
         replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, sequence=MAX_BIP125_RBF_SEQUENCE, fee = 2 * fee)
@@ -287,11 +291,13 @@ class RPCPackagesTest(BitcoinTestFramework):
         peer = node.add_p2p_connection(P2PTxInvStore())
 
         package_txns = []
+        presubmitted_wtxids = set()
         for _ in range(num_parents):
             parent_tx = self.wallet.create_self_transfer(fee=DEFAULT_FEE)
             package_txns.append(parent_tx)
             if partial_submit and random.choice([True, False]):
                 node.sendrawtransaction(parent_tx["hex"])
+                presubmitted_wtxids.add(parent_tx["wtxid"])
         child_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=[tx["new_utxo"] for tx in package_txns], fee_per_output=10000) #DEFAULT_FEE
         package_txns.append(child_tx)
 
@@ -302,23 +308,18 @@ class RPCPackagesTest(BitcoinTestFramework):
         for package_txn in package_txns:
             tx = package_txn["tx"]
             assert tx.getwtxid() in submitpackage_result["tx-results"]
-            tx_result = submitpackage_result["tx-results"][tx.getwtxid()]
-            assert_equal(tx_result, {
-                "txid": package_txn["txid"],
-                "vsize": tx.get_vsize(),
-                "fees": {
-                    "base": DEFAULT_FEE,
-                }
-            })
+            wtxid = tx.getwtxid()
+            assert wtxid in submitpackage_result["tx-results"]
+            tx_result = submitpackage_result["tx-results"][wtxid]
+            assert_equal(tx_result["txid"], tx.rehash())
+            assert_equal(tx_result["vsize"], tx.get_vsize())
+            assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
+            if wtxid not in presubmitted_wtxids:
+                assert_fee_amount(DEFAULT_FEE, tx.get_vsize(), tx_result["fees"]["effective-feerate"])
+                assert_equal(tx_result["fees"]["effective-includes"], [wtxid])
 
         # submitpackage result should be consistent with testmempoolaccept and getmempoolentry
         self.assert_equal_package_results(node, testmempoolaccept_result, submitpackage_result)
-
-        # Package feerate is calculated for the remaining transactions after deduplication and
-        # individual submission. If only 0 or 1 transaction is left, e.g. because all transactions
-        # had high-feerates or were already in the mempool, no package feerate is provided.
-        # In this case, since all of the parents have high fees, each is accepted individually.
-        assert "package-feerate" not in submitpackage_result
 
         # The node should announce each transaction. No guarantees for propagation.
         peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
@@ -328,8 +329,11 @@ class RPCPackagesTest(BitcoinTestFramework):
         node = self.nodes[0]
         peer = node.add_p2p_connection(P2PTxInvStore())
 
+        # Package with 2 parents and 1 child. One parent pays for itself using modified fees, and
+        # another has 0 fees but is bumped by child.
         tx_poor = self.wallet.create_self_transfer(fee=0, fee_rate=0)
-        tx_rich = self.wallet.create_self_transfer(fee=DEFAULT_FEE)
+        tx_rich = self.wallet.create_self_transfer(fee=0, fee_rate=0)
+        node.prioritisetransaction(tx_rich["txid"], 0, int(DEFAULT_FEE * COIN))
         package_txns = [tx_rich, tx_poor]
         coins = [tx["new_utxo"] for tx in package_txns]
         tx_child = self.wallet.create_self_transfer_multi(utxos_to_spend=coins, fee_per_output=10000) #DEFAULT_FEE
@@ -340,14 +344,18 @@ class RPCPackagesTest(BitcoinTestFramework):
         rich_parent_result = submitpackage_result["tx-results"][tx_rich["wtxid"]]
         poor_parent_result = submitpackage_result["tx-results"][tx_poor["wtxid"]]
         child_result = submitpackage_result["tx-results"][tx_child["tx"].getwtxid()]
-        assert_equal(rich_parent_result["fees"]["base"], DEFAULT_FEE)
+        assert_equal(rich_parent_result["fees"]["base"], 0)
         assert_equal(poor_parent_result["fees"]["base"], 0)
         assert_equal(child_result["fees"]["base"], DEFAULT_FEE)
-        # Package feerate is calculated for the remaining transactions after deduplication and
-        # individual submission. Since this package had a 0-fee parent, package feerate must have
-        # been used and returned.
-        assert "package-feerate" in submitpackage_result
-        assert_fee_amount(DEFAULT_FEE, rich_parent_result["vsize"] + child_result["vsize"], submitpackage_result["package-feerate"])
+        # The "rich" parent does not require CPFP so its effective feerate.
+        assert_fee_amount(DEFAULT_FEE, tx_rich["tx"].get_vsize(), rich_parent_result["fees"]["effective-feerate"])
+        assert_equal(rich_parent_result["fees"]["effective-includes"], [tx_rich["wtxid"]])
+        # The "poor" parent and child's effective feerates are the same, composed of the child's fee
+        # divided by their combined vsize.
+        assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), poor_parent_result["fees"]["effective-feerate"])
+        assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), child_result["fees"]["effective-feerate"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective-includes"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective-includes"])
 
         # The node will broadcast each transaction, still abiding by its peer's fee filter
         peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])

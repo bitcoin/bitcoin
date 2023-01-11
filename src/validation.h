@@ -134,6 +134,19 @@ struct MempoolAcceptResult {
     const std::optional<int64_t> m_vsize;
     /** Raw base fees in satoshis. */
     const std::optional<CAmount> m_base_fees;
+    /** The feerate at which this transaction was considered. This includes any fee delta added
+     * using prioritisetransaction (i.e. modified fees). If this transaction was submitted as a
+     * package, this is the package feerate, which may also include its descendants and/or
+     * ancestors (see m_wtxids_fee_calculations below).
+     * Only present when m_result_type = ResultType::VALID.
+     */
+    const std::optional<CFeeRate> m_effective_feerate;
+    /** Contains the wtxids of the transactions used for fee-related checks. Includes this
+     * transaction's wtxid and may include others if this transaction was validated as part of a
+     * package. This is not necessarily equivalent to the list of transactions passed to
+     * ProcessNewPackage().
+     * Only present when m_result_type = ResultType::VALID. */
+    const std::optional<std::vector<uint256>> m_wtxids_fee_calculations;
 
     // The following field is only present when m_result_type = ResultType::DIFFERENT_WITNESS
     /** The wtxid of the transaction in the mempool which has the same txid but different witness. */
@@ -143,8 +156,13 @@ struct MempoolAcceptResult {
         return MempoolAcceptResult(state);
     }
 
-    static MempoolAcceptResult Success(std::list<CTransactionRef>&& replaced_txns, int64_t vsize, CAmount fees) {
-        return MempoolAcceptResult(std::move(replaced_txns), vsize, fees);
+    static MempoolAcceptResult Success(std::list<CTransactionRef>&& replaced_txns,
+                                       int64_t vsize,
+                                       CAmount fees,
+                                       CFeeRate effective_feerate,
+                                       const std::vector<uint256>& wtxids_fee_calculations) {
+        return MempoolAcceptResult(std::move(replaced_txns), vsize, fees,
+                                   effective_feerate, wtxids_fee_calculations);
     }
 
     static MempoolAcceptResult MempoolTx(int64_t vsize, CAmount fees) {
@@ -164,9 +182,17 @@ private:
         }
 
     /** Constructor for success case */
-    explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns, int64_t vsize, CAmount fees)
+    explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns,
+                                 int64_t vsize,
+                                 CAmount fees,
+                                 CFeeRate effective_feerate,
+                                 const std::vector<uint256>& wtxids_fee_calculations)
         : m_result_type(ResultType::VALID),
-        m_replaced_transactions(std::move(replaced_txns)), m_vsize{vsize}, m_base_fees(fees) {}
+        m_replaced_transactions(std::move(replaced_txns)),
+        m_vsize{vsize},
+        m_base_fees(fees),
+        m_effective_feerate(effective_feerate),
+        m_wtxids_fee_calculations(wtxids_fee_calculations) {}
 
     /** Constructor for already-in-mempool case. It wouldn't replace any transactions. */
     explicit MempoolAcceptResult(int64_t vsize, CAmount fees)
@@ -190,10 +216,6 @@ struct PackageMempoolAcceptResult
     * was a package-wide error (see result in m_state), m_tx_results will be empty.
     */
     std::map<const uint256, const MempoolAcceptResult> m_tx_results;
-    /** Package feerate, defined as the aggregated modified fees divided by the total virtual size
-     * of all transactions in the package.  May be unavailable if some inputs were not available or
-     * a transaction failure caused validation to terminate early. */
-    std::optional<CFeeRate> m_package_feerate;
 
     explicit PackageMempoolAcceptResult(PackageValidationState state,
                                         std::map<const uint256, const MempoolAcceptResult>&& results)
@@ -201,7 +223,7 @@ struct PackageMempoolAcceptResult
 
     explicit PackageMempoolAcceptResult(PackageValidationState state, CFeeRate feerate,
                                         std::map<const uint256, const MempoolAcceptResult>&& results)
-        : m_state{state}, m_tx_results(std::move(results)), m_package_feerate{feerate} {}
+        : m_state{state}, m_tx_results(std::move(results)) {}
 
     /** Constructor to create a PackageMempoolAcceptResult from a single MempoolAcceptResult */
     explicit PackageMempoolAcceptResult(const uint256& wtxid, const MempoolAcceptResult& result)
