@@ -65,7 +65,7 @@ private:
     static MclScalar flip_bits(const MclScalar& s);
 
     // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
-    // assumes that length of octet string is 255 * K
+    // expects that length of octet string is 255 * K
     static std::vector<std::array<uint8_t, K>> bytes_split(std::vector<uint8_t> octet_string);
 
     // Inputs

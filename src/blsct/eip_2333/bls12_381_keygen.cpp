@@ -83,7 +83,7 @@ MclScalar BLS12_381_KeyGen::flip_bits(const MclScalar& s)
 }
 
 // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
-// assumes that length of octet string is 255 * K
+// expects that length of octet string is 255 * K
 std::vector<std::array<uint8_t, BLS12_381_KeyGen::K>> BLS12_381_KeyGen::bytes_split(std::vector<uint8_t> octet_string)
 {
     if (octet_string.size() != 255 * BLS12_381_KeyGen::K) {
@@ -92,10 +92,10 @@ std::vector<std::array<uint8_t, BLS12_381_KeyGen::K>> BLS12_381_KeyGen::bytes_sp
     }
     std::vector<std::array<uint8_t, BLS12_381_KeyGen::K>> ret;
 
-    for (auto i = octet_string.begin(); i != octet_string.end(); std::advance(i, 32)) {
-        std::array<uint8_t, 32> byte_32_chunk;
-        std::copy(i, i + 32, byte_32_chunk.begin());
-        ret.push_back(byte_32_chunk);
+    for (auto i = octet_string.begin(); i != octet_string.end(); std::advance(i, BLS12_381_KeyGen::K)) {
+        std::array<uint8_t, BLS12_381_KeyGen::K> k_byte_chunk;
+        std::copy(i, i + BLS12_381_KeyGen::K, k_byte_chunk.begin());
+        ret.push_back(k_byte_chunk);
     }
     return ret;
 }
