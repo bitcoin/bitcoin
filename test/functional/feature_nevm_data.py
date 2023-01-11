@@ -62,7 +62,7 @@ class NEVMDataTest(DashTestFramework):
             try:
                 mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
                 # mpt > 0 means it got confirmed
-                if(mpt > 0):
+                if (mpt > 0):
                     foundCount += 1
             except Exception:
                 pass
@@ -78,7 +78,7 @@ class NEVMDataTest(DashTestFramework):
             try:
                 mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
                 # mpt > 0 means it got confirmed
-                if(mpt > 0):
+                if (mpt > 0):
                     foundCount += 1
             except Exception:
                 pass
@@ -105,7 +105,7 @@ class NEVMDataTest(DashTestFramework):
             try:
                 mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
                 # mpt > 0 means it got confirmed
-                if(mpt > 0):
+                if (mpt > 0):
                     foundCount += 1
             except Exception:
                 pass
@@ -121,7 +121,7 @@ class NEVMDataTest(DashTestFramework):
             try:
                 mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
                 # mpt > 0 means it got confirmed
-                if(mpt > 0):
+                if (mpt > 0):
                     foundCount += 1
             except Exception:
                 pass
