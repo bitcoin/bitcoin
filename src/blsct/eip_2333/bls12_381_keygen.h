@@ -62,10 +62,11 @@ private:
     static MclScalar OS2IP(const std::vector<uint8_t>& X);
 
     // flip_bits is a function that returns the bitwise negation of its input
-    void flip_bits();
+    static MclScalar flip_bits(const MclScalar& s);
 
     // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
-    std::vector<std::array<uint8_t, K>> bytes_split(std::vector<uint8_t> octet_string, uint32_t chunk_size = K);
+    // assumes that length of octet string is 255 * K
+    static std::vector<std::array<uint8_t, K>> bytes_split(std::vector<uint8_t> octet_string);
 
     // Inputs
     // - IKM, a secret octet string

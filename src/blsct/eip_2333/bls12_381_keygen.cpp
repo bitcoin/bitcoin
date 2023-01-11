@@ -77,14 +77,26 @@ MclScalar BLS12_381_KeyGen::OS2IP(const std::vector<uint8_t>& X)
 }
 
 // flip_bits is a function that returns the bitwise negation of its input
-void BLS12_381_KeyGen::flip_bits()
+MclScalar BLS12_381_KeyGen::flip_bits(const MclScalar& s)
 {
+    return s.Negate();
 }
 
 // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
-std::vector<std::array<uint8_t, BLS12_381_KeyGen::K>> BLS12_381_KeyGen::bytes_split(std::vector<uint8_t> octet_string, uint32_t chunk_size)
+// assumes that length of octet string is 255 * K
+std::vector<std::array<uint8_t, BLS12_381_KeyGen::K>> BLS12_381_KeyGen::bytes_split(std::vector<uint8_t> octet_string)
 {
+    if (octet_string.size() != 255 * BLS12_381_KeyGen::K) {
+        auto s = strprintf("Expected octet string to be of length %ld, but got %ld", 255 * BLS12_381_KeyGen::K, octet_string.size());
+        throw std::runtime_error(s);
+    }
     std::vector<std::array<uint8_t, BLS12_381_KeyGen::K>> ret;
+
+    for (auto i = octet_string.begin(); i != octet_string.end(); std::advance(i, 32)) {
+        std::array<uint8_t, 32> byte_32_chunk;
+        std::copy(i, i + 32, byte_32_chunk.begin());
+        ret.push_back(byte_32_chunk);
+    }
     return ret;
 }
 
@@ -100,7 +112,7 @@ std::array<uint8_t,255*32> BLS12_381_KeyGen::IKM_to_lamport_SK(const std::vector
     // 1. OKM = HKDF-Expand(PRK, "" , L)
     // 2. lamport_SK = bytes_split(OKM, K)
     // 3. return lamport_SK
-std::array<uint8_t,255*32> ret;
+    std::array<uint8_t,255*32> ret;
     return ret;
 }
 

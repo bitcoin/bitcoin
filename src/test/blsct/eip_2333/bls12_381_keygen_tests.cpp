@@ -10,7 +10,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(bls12_381_keygen_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_os2ip)
+BOOST_AUTO_TEST_CASE(test_i2osp)
 {
     // Size zero is invalid
     {
@@ -158,6 +158,50 @@ BOOST_AUTO_TEST_CASE(test_os2ip)
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         };
         BOOST_CHECK(act == exp);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_o2isp)
+{
+}
+
+BOOST_AUTO_TEST_CASE(test_flip_bits)
+{
+}
+
+BOOST_AUTO_TEST_CASE(test_bytes_split)
+{
+    // bad size 0
+    {
+        std::vector<uint8_t> vec(0);
+        BOOST_CHECK_THROW(BLS12_381_KeyGen::bytes_split(vec), std::runtime_error);
+
+    }
+    // bad size 255 * K - 1
+    {
+        std::vector<uint8_t> vec(255 * BLS12_381_KeyGen::K - 1);
+        BOOST_CHECK_THROW(BLS12_381_KeyGen::bytes_split(vec), std::runtime_error);
+    }
+    // bad size 255 * K + 1
+    {
+        std::vector<uint8_t> vec(255 * BLS12_381_KeyGen::K + 1);
+        BOOST_CHECK_THROW(BLS12_381_KeyGen::bytes_split(vec), std::runtime_error);
+    }
+    // good size 255 * K
+    {
+        const size_t vec_size = 255 * BLS12_381_KeyGen::K;
+        std::vector<uint8_t> vec(vec_size);
+        for (size_t i=0; i<vec_size; ++i) {
+            vec[i] = i % 256;
+        }
+        auto chunks = BLS12_381_KeyGen::bytes_split(vec);
+        uint8_t v = 0;
+        for (auto chunk : chunks) {
+            for (auto act = chunk.begin(); act != chunk.end(); ++act) {
+                auto exp = v++ % 256;
+                BOOST_CHECK(*act == exp);
+            }
+        }
     }
 }
 
