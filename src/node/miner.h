@@ -16,6 +16,7 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 
+class ArgsManager;
 class ChainstateManager;
 class CBlockIndex;
 class CChainParams;
@@ -139,6 +140,9 @@ private:
     unsigned int nBlockMaxWeight;
     CFeeRate blockMinFeeRate;
 
+    // Whether to call TestBlockValidity() at the end of CreateNewBlock().
+    const bool test_block_validity;
+
     // Information on the current status of the block
     uint64_t nBlockWeight;
     uint64_t nBlockTx;
@@ -161,6 +165,7 @@ public:
         Options();
         size_t nBlockMaxWeight;
         CFeeRate blockMinFeeRate;
+        bool test_block_validity;
     };
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool);
@@ -207,7 +212,11 @@ bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainParams);
 
 // SYSCOIN
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
+// SYSCOIN
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman, const std::vector<unsigned char> &vchExtraData);
+
+/** Apply -blockmintxfee and -blockmaxweight options from ArgsManager to BlockAssembler options. */
+void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& options);
 } // namespace node
 
 #endif // SYSCOIN_NODE_MINER_H
