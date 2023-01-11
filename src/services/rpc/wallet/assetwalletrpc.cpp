@@ -364,7 +364,7 @@ public:
                           " please call keypoolrefill first");
     } else {
         dest = *op_dest;
-        const CScript res = GetScriptForDestination (dest);
+        CScript res = GetScriptForDestination (dest);
         data.emplace (pwallet->GetName (), PerWallet (res));
         return res;
     }
@@ -450,7 +450,7 @@ static RPCHelpMan getauxblock()
     if (request.params.size() == 0)
     {
         const CScript coinbaseScript = g_mining_keys.GetCoinbaseScript(pwallet);
-        const UniValue res = AuxpowMiner::get().createAuxBlock(request, coinbaseScript);
+        UniValue res = AuxpowMiner::get().createAuxBlock(request, coinbaseScript);
         g_mining_keys.AddBlockHash(pwallet, res["hash"].get_str ());
         return res;
     }
