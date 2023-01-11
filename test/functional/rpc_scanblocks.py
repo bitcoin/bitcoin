@@ -92,7 +92,7 @@ class ScanblocksTest(SyscoinTestFramework):
         assert genesis_blockhash in node.scanblocks(
             "start", [{"desc": f"raw({genesis_coinbase_spk.hex()})"}], 0, 0)['relevant_blocks']
         # assert genesis_blockhash in node.scanblocks(
-            # "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks']
+        # "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks']
 
         # TODO: after an "accurate" mode for scanblocks is implemented (e.g. PR #26325)
         # check here that it filters out the false-positive
