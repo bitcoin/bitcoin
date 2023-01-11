@@ -53,7 +53,7 @@ class NEVMDataTest(DashTestFramework):
         tip = self.generate(self.nodes[0], 1)[-1]
         rpc_details = self.nodes[0].getblock(tip, True)
         print('Ensure fees will be properly calculated due to the block size being correctly calculated based on PoDA policy (100x factor of blob data)...')
-        assert(rpc_details["size"] > 670000 and rpc_details["size"]  < 680000)
+        assert rpc_details["size"] > 670000 and rpc_details["size"]  < 680000
         foundCount = 0
         self.sync_blocks()
         print('Testing nodes to see if MAX_DATA_BLOBS blobs exist at 2MB each...')
@@ -148,7 +148,7 @@ class NEVMDataTest(DashTestFramework):
         vhTxid = res['txid']
         self.nodes[3].syscoincreatenevmblob(secrets.token_hex(55))
         print('Checking for duplicate versionhash...')
-        assert(vhTxid != self.nodes[3].syscoincreaterawnevmblob(vh, vhData)['txid'])
+        assert vhTxid != self.nodes[3].syscoincreaterawnevmblob(vh, vhData)['txid']
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
         self.nodes[3].syscoincreatenevmblob(secrets.token_hex(55))['txid']

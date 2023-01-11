@@ -107,7 +107,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for i in range(3):
             self.mine_quorum(expected_connections=expected_connections)
         for mn in self.mninfo:
-            assert(not self.check_punished(mn) and not self.check_banned(mn))
+            assert not self.check_punished(mn) and not self.check_banned(mn)
 
     def test_banning(self, invalidate_proc, expected_connections):
         mninfos_online = self.mninfo.copy()
@@ -130,7 +130,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.reset_probe_timeouts()
             self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
             self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
-            assert(self.check_banned(mn))
+            assert self.check_banned(mn)
 
             if not went_offline:
                 # we do not include PoSe banned mns in quorums, so the next one should have 1 contributor less
@@ -146,7 +146,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 # Make sure this tx "safe" to mine even when ChainLocks are no longer functional
                 self.bump_mocktime(60 * 10 + 1)
                 self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-                assert(not self.check_banned(mn))
+                assert not self.check_banned(mn)
 
                 if restart:
                     self.stop_node(mn.node.index)

@@ -83,7 +83,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Assert that all blocks up until the lookback are chainlocked")
         for h in range(1, self.nodes[0].getblockcount()-5):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(h))
-            assert(block['chainlock'])
+            assert block['chainlock']
 
         self.log.info("Isolate node, mine on another, and reconnect")
         node0_mining_addr = self.nodes[0].getnewaddress()
@@ -91,7 +91,7 @@ class LLMQChainLocksTest(DashTestFramework):
         node0_tip = self.nodes[0].getbestblockhash()
         cl = self.generatetoaddress(self.nodes[1], 10, node0_mining_addr, sync_fun=self.no_op)[-6]
         self.wait_for_chainlocked_block(self.nodes[1], cl)
-        assert(self.nodes[0].getbestblockhash() == node0_tip)
+        assert self.nodes[0].getbestblockhash() == node0_tip
         self.reconnect_isolated_node(self.nodes[0], 1)
         cl = self.nodes[1].getbestblockhash()
         self.generatetoaddress(self.nodes[1], 5, node0_mining_addr, sync_fun=self.no_op)
@@ -105,7 +105,7 @@ class LLMQChainLocksTest(DashTestFramework):
         good_cl = self.nodes[1].getbestblockhash()
         self.generatetoaddress(self.nodes[1], 10, node0_mining_addr, sync_fun=self.no_op)
         self.wait_for_chainlocked_block(self.nodes[1], good_cl)
-        assert(not self.nodes[0].getblock(bad_cl)["chainlock"])
+        assert not self.nodes[0].getblock(bad_cl)["chainlock"]
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.bump_mocktime(5, nodes=self.nodes)
         good_cl = self.nodes[1].getbestblockhash()
@@ -114,15 +114,15 @@ class LLMQChainLocksTest(DashTestFramework):
         # since shorter chain was chainlocked and its a valid chain, node with longer chain should switch to it
         self.wait_for_chainlocked_block(self.nodes[0], good_cl)
         self.wait_until(lambda: self.nodes[0].getbestblockhash() == good_tip)
-        assert(self.nodes[1].getbestblockhash() == good_tip)
+        assert self.nodes[1].getbestblockhash() == good_tip
         self.log.info("The tip mined while this node was isolated should be marked conflicting now")
         found = False
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == bad_tip:
-                assert(tip["status"] == "conflicting")
+                assert tip["status"] == "conflicting"
                 found = True
                 break
-        assert(found)
+        assert found
         self.log.info("Isolate node, mine invalid longer chain(locked) + shorter good chain, and reconnect")
         prevActiveChainlock = self.nodes[0].getchainlocks()["active_chainlock"]["blockhash"]
         # set flag create and accept invalid blocks
@@ -138,9 +138,9 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             self.nodes[i].invalidateblock(good_tip)
             self.nodes[i].reconsiderblock(good_tip)
-            assert(self.nodes[i].getchainlocks()["active_chainlock"]["blockhash"] == prevActiveChainlock)
-            assert(not self.nodes[i].getblock(cl)["chainlock"])
-            assert(self.nodes[i].getbestblockhash() == good_tip)
+            assert self.nodes[i].getchainlocks()["active_chainlock"]["blockhash"] == prevActiveChainlock
+            assert not self.nodes[i].getblock(cl)["chainlock"]
+            assert self.nodes[i].getbestblockhash() == good_tip
 
         cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 5)
@@ -150,10 +150,10 @@ class LLMQChainLocksTest(DashTestFramework):
         found = False
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == bad_tip:
-                assert(tip["status"] == "invalid")
+                assert tip["status"] == "invalid"
                 found = True
                 break
-        assert(found)
+        assert found
 
         self.log.info("Keep node connected and let it try to reorg the chain")
         good_cl = self.nodes[0].getbestblockhash()
@@ -164,7 +164,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.start_node(0)
         self.connect_nodes(0, 1)
         force_finish_mnsync(self.nodes[0])
-        assert(self.nodes[0].getbestblockhash() == good_tip)
+        assert self.nodes[0].getbestblockhash() == good_tip
         self.nodes[0].invalidateblock(good_cl)
         self.log.info("Now try to reorg the chain")
         self.generatetoaddress(self.nodes[0], 5, node0_mining_addr, sync_fun=self.no_op)
@@ -176,37 +176,37 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.log.info("Now let the node which is on the wrong chain reorg back to the locked chain")
         self.nodes[0].reconsiderblock(good_tip)
-        assert(self.nodes[0].getbestblockhash() != good_tip)
+        assert self.nodes[0].getbestblockhash() != good_tip
         good_cl = self.nodes[1].getbestblockhash()
         good_tip = self.generatetoaddress(self.nodes[1], 5, node0_mining_addr, sync_fun=self.no_op)[-1]
         self.wait_for_chainlocked_block(self.nodes[0], good_cl)
-        assert(self.nodes[0].getbestblockhash() == good_tip)
+        assert self.nodes[0].getbestblockhash() == good_tip
         found = False
         foundConflict = False
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == good_tip:
-                assert(tip["status"] == "active")
+                assert tip["status"] == "active"
                 found = True
             if tip["status"] == "conflicting":
                 foundConflict = True
             if tip["status"] == "valid-fork":
                 forkChain = tip["hash"]
 
-        assert(found and foundConflict)
+        assert found and foundConflict
         self.log.info("Should switch to the locked tip on invalidate and stay there across restarts until reconsider is called again")
         self.stop_node(0)
         self.start_node(0)
         # will set valid-fork to active
         self.nodes[0].invalidateblock(good_cl)
-        assert(self.nodes[0].getbestblockhash() == forkChain)
+        assert self.nodes[0].getbestblockhash() == forkChain
         self.stop_node(0)
         self.start_node(0)
         found = False
-        assert(self.nodes[0].getbestblockhash() == forkChain)
+        assert self.nodes[0].getbestblockhash() == forkChain
         # reconsider to switch to good_tip but chainlocks should be cleared (invalidate block sets invalid flag on block but not chainlock failure so clear happens)
         self.nodes[0].reconsiderblock(good_cl)
         # back on the good_tip but no locks present anymore
-        assert(self.nodes[0].getbestblockhash() == good_tip)
+        assert self.nodes[0].getbestblockhash() == good_tip
         # make sure chainlocks are cleared due to chainlocked invalid block
         assert_raises_rpc_error(-32603, 'Unable to find any chainlock', self.nodes[0].getchainlocks)
 
@@ -220,15 +220,15 @@ class LLMQChainLocksTest(DashTestFramework):
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, True)
-            assert("confirmations" in tx)
+            assert "confirmations" in tx
         node0_cl_block = self.nodes[0].getblock(node0_cl)
-        assert(not node0_cl_block["chainlock"])
+        assert not node0_cl_block["chainlock"]
         node0_cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.log.info("Assert that TXs got included now")
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, True)
-            assert("confirmations" in tx and tx["confirmations"] > 0)
+            assert "confirmations" in tx and tx["confirmations"] > 0
         # Enable network on first node again, which will cause the blocks to propagate
         # for the mined TXs, which will then allow the network to create a CLSIG
         self.log.info("Re-enable network on first node and wait for chainlock")

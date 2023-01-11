@@ -84,11 +84,11 @@ class LLMQDKGErrors(DashTestFramework):
         for m in q['members']:
             if m['proTxHash'] == proTxHash:
                 if expectedValid:
-                    assert(m['valid'])
+                    assert m['valid']
                 else:
-                    assert(not m['valid'])
+                    assert not m['valid']
             else:
-                assert(m['valid'])
+                assert m['valid']
 
     def heal_masternodes(self, blockCount):
         # We're not testing PoSe here, so lets heal the MNs :)

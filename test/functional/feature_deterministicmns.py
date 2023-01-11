@@ -59,7 +59,7 @@ class DIP3Test(SyscoinTestFramework):
 
         # Make sure we're below block 432 (which activates dip3)
         self.log.info("testing rejection of ProTx before dip3 activation")
-        assert(self.nodes[0].getblockchaininfo()['blocks'] < 432)
+        assert self.nodes[0].getblockchaininfo()['blocks'] < 432
 
         mns = []
 
@@ -71,7 +71,7 @@ class DIP3Test(SyscoinTestFramework):
 
         # block 432 starts enforcing DIP3 MN payments
         self.generate(self.nodes[0], 432 - self.nodes[0].getblockcount())
-        assert(self.nodes[0].getblockcount() == 432)
+        assert self.nodes[0].getblockcount() == 432
 
         self.log.info("mining final block for DIP3 activation")
         self.generate(self.nodes[0], 1)
@@ -184,7 +184,7 @@ class DIP3Test(SyscoinTestFramework):
                     if 'address' in out['scriptPubKey']:
                         if expected_payee == out['scriptPubKey']['address'] and int(out['value']*COIN) == expected_amount:
                             found_multisig_payee = True
-        assert(found_multisig_payee)
+        assert found_multisig_payee
 
         self.log.info("testing reusing of collaterals for replaced MNs")
         for i in range(0, 5):
@@ -212,16 +212,16 @@ class DIP3Test(SyscoinTestFramework):
         old_dmnState = mn.node.masternode_status()["dmnState"]
         old_voting_address = old_dmnState["votingAddress"]
         new_voting_address = node.getnewaddress()
-        assert(old_voting_address != new_voting_address)
+        assert old_voting_address != new_voting_address
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
         node.protx_update_registrar(mn.protx_hash, "", new_voting_address, "")
         self.generate(node, 1)
         new_dmnState = mn.node.masternode_status()["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
-        assert(new_voting_address_from_rpc == new_voting_address)
+        assert new_voting_address_from_rpc == new_voting_address
         # make sure payoutAddress is the same as before
-        assert(old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"])
+        assert old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"]
 
     def prepare_mn(self, node, idx, alias):
         mn = Masternode()
@@ -250,7 +250,7 @@ class DIP3Test(SyscoinTestFramework):
             if txout['value'] == Decimal(100):
                 mn.collateral_vout = txout['n']
                 break
-        assert(mn.collateral_vout != -1)
+        assert mn.collateral_vout != -1
         # lock after creating collateral
         node.lockunspent(False, [{'txid': mn.collateral_txid, 'vout': mn.collateral_vout}], True)
 
@@ -269,7 +269,7 @@ class DIP3Test(SyscoinTestFramework):
             if txout['value'] == Decimal(100):
                 mn.collateral_vout = txout['n']
                 break
-        assert(mn.collateral_vout != -1)
+        assert mn.collateral_vout != -1
 
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn):
@@ -301,7 +301,7 @@ class DIP3Test(SyscoinTestFramework):
         self.nodes[0].protx_update_registrar(mn.protx_hash, '', '', payee, mn.fundsAddr)
         self.generate(self.nodes[0], 1)
         info = self.nodes[0].protx_info(mn.protx_hash)
-        assert(info['state']['payoutAddress'] == payee)
+        assert info['state']['payoutAddress'] == payee
 
     def test_protx_update_service(self, mn):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)

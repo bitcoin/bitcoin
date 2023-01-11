@@ -35,15 +35,15 @@ class FakeMNAUTHTest(DashTestFramework):
         public_key = masternode.pubKeyOperator
 
         # The peerinfo should not yet contain verified_proregtx_hash/verified_pubkey_hash
-        assert("verified_proregtx_hash" not in masternode.node.getpeerinfo()[-1])
-        assert("verified_pubkey_hash" not in masternode.node.getpeerinfo()[-1])
+        assert "verified_proregtx_hash" not in masternode.node.getpeerinfo()[-1]
+        assert "verified_pubkey_hash" not in masternode.node.getpeerinfo()[-1]
         # Fake-Authenticate the P2P connection to the masternode
         node_id = masternode.node.getpeerinfo()[-1]["id"]
-        assert(masternode.node.mnauth(node_id, protx_hash, public_key))
+        assert masternode.node.mnauth(node_id, protx_hash, public_key)
         # The peerinfo should now contain verified_proregtx_hash and verified_pubkey_hash
         peerinfo = masternode.node.getpeerinfo()[-1]
-        assert("verified_proregtx_hash" in peerinfo)
-        assert("verified_pubkey_hash" in peerinfo)
+        assert "verified_proregtx_hash" in peerinfo
+        assert "verified_pubkey_hash" in peerinfo
         assert_equal(peerinfo["verified_proregtx_hash"], protx_hash)
         assert_equal(peerinfo["verified_pubkey_hash"], bytes_to_hex_str(hash256(bytes.fromhex(public_key))[::-1]))
         # Test some error cases
@@ -56,7 +56,7 @@ class FakeMNAUTHTest(DashTestFramework):
                                                          node_id,
                                                          protx_hash,
                                                          null_hash)
-        assert(not masternode.node.mnauth(-1, protx_hash, public_key))
+        assert not masternode.node.mnauth(-1, protx_hash, public_key)
 
 
 if __name__ == '__main__':

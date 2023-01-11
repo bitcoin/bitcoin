@@ -74,7 +74,7 @@ class LLMQSigningTest(DashTestFramework):
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
             t = time.time()
             while time.time() - t < timeout:
-                assert(check_sigs(hasrecsigs, isconflicting1, isconflicting2))
+                assert check_sigs(hasrecsigs, isconflicting1, isconflicting2)
                 time.sleep(0.1)
 
         # Initial state
@@ -86,11 +86,11 @@ class LLMQSigningTest(DashTestFramework):
         # Sign second share and test optional quorumHash parameter, should not result in recovered sig
 
         # 1. Providing an invalid quorum hash should fail and cause no changes for sigs
-        assert(not self.mninfo[1].node.quorum_sign(100, id, msgHash, msgHash))
+        assert not self.mninfo[1].node.quorum_sign(100, id, msgHash, msgHash)
         assert_sigs_nochange(False, False, False, 3)
         # 2. Providing a valid quorum hash should succeed and cause no changes for sigss
         quorumHash = self.mninfo[1].node.quorum_selectquorum(100, id)["quorumHash"]
-        assert(self.mninfo[1].node.quorum_sign(100, id, msgHash, quorumHash))
+        assert self.mninfo[1].node.quorum_sign(100, id, msgHash, quorumHash)
         assert_sigs_nochange(False, False, False, 3)
         # Sign third share and test optional submit parameter if spork21 is enabled, should result in recovered sig
         # and conflict for msgHashConflict
@@ -137,13 +137,13 @@ class LLMQSigningTest(DashTestFramework):
         height = node.getblockcount()
         height_bad = node.getblockheader(recsig["quorumHash"])["height"]
         hash_bad = node.getblockhash(0)
-        assert(node.quorum_verify(100, id, msgHash, recsig["sig"]))
-        assert(node.quorum_verify(100, id, msgHash, recsig["sig"], "", height))
-        assert(not node.quorum_verify(100, id, msgHashConflict, recsig["sig"]))
+        assert node.quorum_verify(100, id, msgHash, recsig["sig"])
+        assert node.quorum_verify(100, id, msgHash, recsig["sig"], "", height)
+        assert not node.quorum_verify(100, id, msgHashConflict, recsig["sig"])
         assert not node.quorum_verify(100, id, msgHash, recsig["sig"], "", height_bad)
         # Use specific quorum
-        assert(node.quorum_verify(100, id, msgHash, recsig["sig"], recsig["quorumHash"]))
-        assert(not node.quorum_verify(100, id, msgHashConflict, recsig["sig"], recsig["quorumHash"]))
+        assert node.quorum_verify(100, id, msgHash, recsig["sig"], recsig["quorumHash"])
+        assert not node.quorum_verify(100, id, msgHashConflict, recsig["sig"], recsig["quorumHash"])
         assert_raises_rpc_error(-8, "quorum not found", node.quorum_verify, 100, id, msgHash, recsig["sig"], hash_bad)
 
 

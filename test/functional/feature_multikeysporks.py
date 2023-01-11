@@ -73,7 +73,7 @@ class MultiKeySporkTest(DashTestFramework):
     def test_spork(self, spork_name, final_value):
         # check test spork default state
         for node in self.nodes:
-            assert(self.get_test_spork_value(node, spork_name) == 4070908800)
+            assert self.get_test_spork_value(node, spork_name) == 4070908800
 
         self.bump_mocktime(1)
         # first and second signers set spork value
@@ -83,11 +83,11 @@ class MultiKeySporkTest(DashTestFramework):
         # spork change requires at least 3 signers
         time.sleep(10)
         for node in self.nodes:
-            assert(self.get_test_spork_value(node, spork_name) != 1)
+            assert self.get_test_spork_value(node, spork_name) != 1
 
         # restart with no extra args to trigger CheckAndRemove
         self.restart_node(0)
-        assert(self.get_test_spork_value(self.nodes[0], spork_name) != 1)
+        assert self.get_test_spork_value(self.nodes[0], spork_name) != 1
 
         # restart again with correct_params, should resync spork parts from other nodes
         self.restart_node(0, self.node0_extra_args)
@@ -104,7 +104,7 @@ class MultiKeySporkTest(DashTestFramework):
 
         # restart with no extra args to trigger CheckAndRemove, should reset the spork back to its default
         self.restart_node(0)
-        assert(self.get_test_spork_value(self.nodes[0], spork_name) == 4070908800)
+        assert self.get_test_spork_value(self.nodes[0], spork_name) == 4070908800
 
         # restart again with correct_params, should resync sporks from other nodes
         self.restart_node(0, self.node0_extra_args)
@@ -128,8 +128,8 @@ class MultiKeySporkTest(DashTestFramework):
         self.test_spork('SPORK_TEST', 2)
         self.test_spork('SPORK_TEST1', 3)
         for node in self.nodes:
-            assert(self.get_test_spork_value(node, 'SPORK_TEST') == 2)
-            assert(self.get_test_spork_value(node, 'SPORK_TEST1') == 3)
+            assert self.get_test_spork_value(node, 'SPORK_TEST') == 2
+            assert self.get_test_spork_value(node, 'SPORK_TEST1') == 3
 
 
 if __name__ == '__main__':
