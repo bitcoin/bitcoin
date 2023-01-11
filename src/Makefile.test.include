@@ -84,7 +84,7 @@ BITCOIN_TESTS =\
   test/blsct/arith/mcl/mcl_g1point_tests.cpp \
   test/blsct/arith/mcl/mcl_integration_tests.cpp \
   test/blsct/arith/mcl/mcl_scalar_tests.cpp \
-  test/blsct/eip_2333/bls_12_381_keygen_tests.cpp \
+  test/blsct/eip_2333/bls12_381_keygen_tests.cpp \
   test/blsct/range_proof/config_tests.cpp \
   test/blsct/range_proof/generators_tests.cpp \
   test/blsct/range_proof/lazy_g1point_tests.cpp \

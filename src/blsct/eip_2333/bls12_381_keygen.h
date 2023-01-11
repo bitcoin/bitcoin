@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bls/bls384_256.h> // must include this before bls/bls.h
+#include <bls/bls.h>
+#include <blsct/arith/mcl/mcl_scalar.h>
 #include <crypto/sha256.h>
 
 class BLS12_381_KeyGen
@@ -20,7 +23,9 @@ public:
     // - SK, the secret key of master node within the tree, a big endian encoded integer
     std::array<uint8_t,32> derive_master_SK(std::vector<uint8_t>& seed, const std::vector<uint8_t>& SK);
 
+#ifndef BOOST_UNIT_TEST
 private:
+#endif
     inline static const uint32_t K = 32;
     inline static const uint32_t L = K * 255;
 
@@ -36,11 +41,25 @@ private:
     // HKDF-Expand is as defined in RFC5869, instantiated with SHA256
     void HKDF_Expand();
 
-    // I2OSP is as defined in RFC3447 (Big endian decoding)
-    void I2OSP();
+    // I2OSP converts a nonnegative integer to an octet string of a specified length
+    // as defined in RFC3447 (Big endian decoding)
+    //
+    // I2OSP (x, xLen)
+    // Input:
+    // - x, nonnegative integer to be converted
+    // - xLen, intended length of the resulting octet string
+    // Output:
+    // - X, corresponding octet string of length xLen
+    static std::vector<uint8_t> I2OSP(const MclScalar& x, const size_t& xLen);
 
-    // OS2IP is as defined in RFC3447 (Big endian encoding)
-    void OS2IP();
+    // OS2IP converts an octet string to a nonnegative integer as defined in RFC3447
+    // (Big endian encoding)
+    // OS2IP (X)
+    // Input:
+    // - X, octet string to be converted
+    // Output:
+    // - x, corresponding nonnegative integer
+    static MclScalar OS2IP(const std::vector<uint8_t>& X);
 
     // flip_bits is a function that returns the bitwise negation of its input
     void flip_bits();
