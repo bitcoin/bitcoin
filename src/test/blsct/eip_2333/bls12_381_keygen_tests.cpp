@@ -163,10 +163,12 @@ BOOST_AUTO_TEST_CASE(test_i2osp)
 
 BOOST_AUTO_TEST_CASE(test_o2isp)
 {
+    // alias to MclScalar ctor call
 }
 
 BOOST_AUTO_TEST_CASE(test_flip_bits)
 {
+    // alias to MclScalar::Negate call
 }
 
 BOOST_AUTO_TEST_CASE(test_bytes_split)
