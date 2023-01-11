@@ -279,7 +279,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 }
 
 /** Event dispatcher thread */
-static bool ThreadHTTP(struct event_base* base)
+static void ThreadHTTP(struct event_base* base)
 {
     util::ThreadRename("http");
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER);
@@ -287,7 +287,6 @@ static bool ThreadHTTP(struct event_base* base)
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
     LogPrint(BCLog::HTTP, "Exited http event loop\n");
-    return event_base_got_break(base) == 0;
 }
 
 /** Bind HTTP server to specified addresses */
