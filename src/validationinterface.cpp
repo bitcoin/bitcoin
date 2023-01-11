@@ -94,6 +94,9 @@ public:
 
 static CMainSignals g_signals;
 
+CMainSignals::CMainSignals() {}
+CMainSignals::~CMainSignals() {}
+
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler)
 {
     assert(!m_internals);
@@ -118,8 +121,10 @@ size_t CMainSignals::CallbacksPending()
     return m_internals->m_schedulerClient.CallbacksPending();
 }
 
+MainSignalsFunc MockGetMainSignals;
 CMainSignals& GetMainSignals()
 {
+    if (MockGetMainSignals) return MockGetMainSignals();
     return g_signals;
 }
 

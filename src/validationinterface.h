@@ -186,6 +186,9 @@ private:
     friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 
 public:
+    CMainSignals();
+    ~CMainSignals();
+
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
     void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
     /** Unregister a CScheduler to give callbacks which should run in the background - these callbacks will now be dropped! */
@@ -196,16 +199,18 @@ public:
     size_t CallbacksPending();
 
 
-    void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
-    void TransactionAddedToMempool(const CTransactionRef&, uint64_t mempool_sequence);
-    void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
-    void ChainStateFlushed(const CBlockLocator &);
-    void BlockChecked(const CBlock&, const BlockValidationState&);
-    void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+    virtual void UpdatedBlockTip(const CBlockIndex*, const CBlockIndex*, bool fInitialDownload);
+    virtual void TransactionAddedToMempool(const CTransactionRef&, uint64_t mempool_sequence);
+    virtual void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
+    virtual void BlockConnected(const std::shared_ptr<const CBlock>&, const CBlockIndex* pindex);
+    virtual void BlockDisconnected(const std::shared_ptr<const CBlock>&, const CBlockIndex* pindex);
+    virtual void ChainStateFlushed(const CBlockLocator&);
+    virtual void BlockChecked(const CBlock&, const BlockValidationState&);
+    virtual void NewPoWValidBlock(const CBlockIndex*, const std::shared_ptr<const CBlock>&);
 };
 
+using MainSignalsFunc = std::function<CMainSignals&()>;
+extern MainSignalsFunc MockGetMainSignals;
 CMainSignals& GetMainSignals();
 
 #endif // BITCOIN_VALIDATIONINTERFACE_H
