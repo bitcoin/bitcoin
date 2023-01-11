@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 {
-    CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
+    CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8827), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.1.1");
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 {
-    CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
+    CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8827), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.2.1");
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
     NetGroupManager ngm_asmap{asmap};
 
-    CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
+    CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8827), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.1.1");
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
     NetGroupManager ngm_asmap{asmap};
 
-    CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
+    CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8827), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.2.1");
@@ -867,7 +867,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     AddrMan addrman{EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node)};
 
     CService addr1, addr2, addr3;
-    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
+    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8827, false));
     BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3"s, addr3, 9999, false));
@@ -875,7 +875,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 
     // Add three addresses to new table.
     CService source;
-    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
+    BOOST_CHECK(Lookup("252.5.1.1", source, 8827, false));
     std::vector<CAddress> addresses{CAddress(addr1, NODE_NONE), CAddress(addr2, NODE_NONE), CAddress(addr3, NODE_NONE)};
     BOOST_CHECK(addrman.Add(addresses, source));
     BOOST_CHECK(addrman.size() == 3);
@@ -964,7 +964,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     // Tests updating nTime via Connected() and nServices via SetServices()
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CNetAddr source{ResolveIP("252.2.2.2")};
-    CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
+    CAddress addr{CAddress(ResolveService("250.1.1.1", 8827), NODE_NONE)};
 
     const auto start_time{Now<NodeSeconds>() - 10000s};
     addr.nTime = start_time;
