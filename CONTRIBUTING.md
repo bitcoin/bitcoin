@@ -9,10 +9,11 @@ contributing.
 First, in terms of structure, there is no particular concept of "Bitcoin Core
 developers" in the sense of privileged people. Open source often naturally
 revolves around a meritocracy where contributors earn trust from the developer
-community over time. Nevertheless, some hierarchy is necessary for practical
+community over time. Nevertheless, some roles are necessary for practical
 purposes. As such, there are repository maintainers who are responsible for
 merging pull requests, the [release cycle](/doc/release-process.md), and
-moderation.
+moderation. See [MAINTAINERS.md](/MAINTAINERS.md) for more information on
+maintainers.
 
 Getting Started
 ---------------
