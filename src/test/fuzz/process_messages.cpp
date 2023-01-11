@@ -53,6 +53,12 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         connman.AddTestNode(p2p_node);
     }
 
+    MockedMainSignals signals(*g_setup->m_node.peerman);
+    auto mock_get_main_signals = [&signals]() -> CMainSignals& {
+        return signals;
+    };
+    MockGetMainSignals = mock_get_main_signals;
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
 
@@ -73,7 +79,11 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         } catch (const std::ios_base::failure&) {
         }
         g_setup->m_node.peerman->SendMessages(&random_node);
+
+        if (fuzzed_data_provider.ConsumeBool()) {
+            signals.SyncOne();
+        }
     }
-    SyncWithValidationInterfaceQueue();
+    signals.Sync();
     g_setup->m_node.connman->StopNodes();
 }
