@@ -4,6 +4,7 @@
 
 #include <wallet/transaction.h>
 #include <wallet/coincontrol.h>
+#include <key_io.h>
 #include <kernel/chain.h>
 #include <validation.h>
 #include <wallet/receive.h>
@@ -105,6 +106,19 @@ void CreateTxAndVerifyChange(const std::unique_ptr<CWallet>& wallet, const std::
     BOOST_CHECK(!OutputIsChange(wallet, res.tx, !change_pos));
 }
 
+std::unique_ptr<Descriptor> CreateSingleKeyDescriptor(const std::string& type, FlatSigningProvider& provider)
+{
+    CKey seed;
+    seed.MakeNewKey(true);
+    CExtKey master_key;
+    master_key.SetSeed(seed);
+    std::string descriptor = type + "(" + EncodeExtKey(master_key) + ")";
+    std::string error;
+    std::unique_ptr<Descriptor> desc = Parse(descriptor, provider, error);
+    BOOST_REQUIRE(desc);
+    return desc;
+}
+
 /**
  * Test descriptor wallet change output detection.
  *
@@ -138,6 +152,45 @@ BOOST_FIXTURE_TEST_CASE(descriptors_wallet_detect_change_output, TestChain100Set
     for (const auto& dest_type : {OutputType::LEGACY, OutputType::BECH32, OutputType::P2SH_SEGWIT, OutputType::BECH32M}) {
         CreateTxAndVerifyChange(wallet, external_wallet, dest_type, 15 * COIN);
     }
+
+    {
+        // Inactive descriptors tests
+
+        // 1) Verify importing a not-ranged internal descriptor, then create a tx and send coins to it.
+        // the wallet should be able to detect inactive descriptors as change.
+        FlatSigningProvider provider;
+        std::unique_ptr<Descriptor> desc = CreateSingleKeyDescriptor("pkh", provider);
+        WalletDescriptor wdesc(std::move(desc), 0, 0, 0, 0, /*_internal=*/true);
+        ScriptPubKeyMan* spkm = WITH_LOCK(wallet->cs_wallet, return wallet->AddWalletDescriptor(wdesc, provider, "", /*internal=*/true));
+
+        CTxDestination dest_change;
+        BOOST_CHECK(ExtractDestination(*spkm->GetScriptPubKeys().begin(), dest_change));
+
+        CCoinControl coin_control;
+        coin_control.destChange = dest_change;
+        auto op_tx = *Assert(CreateTransaction(*wallet, {{CNoDestination{CScript() << OP_TRUE}, 1 * COIN, true}}, /*change_pos=*/std::nullopt, coin_control));
+        BOOST_CHECK(OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
+
+
+        // 2) Verify importing a not-ranged descriptor that contains the key of an output already stored in the wallet.
+        //    The wallet should process the import and detect the output as change.
+        FlatSigningProvider provider2;
+        std::unique_ptr<Descriptor> desc2 = CreateSingleKeyDescriptor("wpkh", provider2);
+        std::vector<CScript> scripts;
+        FlatSigningProvider out_provider;
+        BOOST_CHECK(desc2->Expand(/*pos=*/0, provider2, scripts, out_provider));
+        BOOST_CHECK(ExtractDestination(scripts[0], dest_change));
+
+        coin_control.destChange = dest_change;
+        auto op_tx2 = *Assert(CreateTransaction(*wallet, {{CNoDestination{CScript() << OP_TRUE}, 1 * COIN, true}}, /*change_pos=*/std::nullopt, coin_control));
+        BOOST_CHECK(!OutputIsChange(wallet, op_tx2.tx, *op_tx2.change_pos));
+
+        // Now add the descriptor and verify that change is detected
+        WalletDescriptor wdesc2(std::move(desc2), 0, 0, 0, 0, /*_internal=*/true);
+        WITH_LOCK(wallet->cs_wallet, return wallet->AddWalletDescriptor(wdesc2, provider2, "", /*internal=*/true));
+        BOOST_CHECK(OutputIsChange(wallet, op_tx2.tx, *op_tx2.change_pos));
+    }
+
 
     // ### Now verify the negative paths:
 
