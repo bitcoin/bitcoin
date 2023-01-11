@@ -23,7 +23,7 @@ class WalletLabelsTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
+        self.num_nodes = 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -121,8 +121,14 @@ class WalletLabelsTest(BitcoinTestFramework):
             label.add_receive_address(address)
             label.verify(node)
 
+        # Check listlabels when passing 'purpose'
+        node2_addr = self.nodes[1].getnewaddress()
+        node.setlabel(node2_addr, "node2_addr")
+        assert_equal(node.listlabels(purpose="send"), ["node2_addr"])
+        assert_equal(node.listlabels(purpose="receive"), sorted(['coinbase'] + [label.name for label in labels]))
+
         # Check all labels are returned by listlabels.
-        assert_equal(node.listlabels(), sorted(['coinbase'] + [label.name for label in labels]))
+        assert_equal(node.listlabels(), sorted(['coinbase'] + [label.name for label in labels] + ["node2_addr"]))
 
         # Send a transaction to each label.
         for label in labels:
