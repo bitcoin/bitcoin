@@ -7,7 +7,7 @@ export LC_ALL=C
 TOPDIR=${TOPDIR:-$(git rev-parse --show-toplevel)}
 BUILDDIR=${BUILDDIR:-$TOPDIR}
 BINDIR=${BINDIR:-$BUILDDIR/src}
-BITCOIND=${BITCOIND:-$BINDIR/britanniacoind}
+BRITANNIACOIND=${BRITANNIACOIND:-$BINDIR/britanniacoind}
 SHARE_EXAMPLES_DIR=${SHARE_EXAMPLES_DIR:-$TOPDIR/share/examples}
 EXAMPLE_CONF_FILE=${EXAMPLE_CONF_FILE:-$SHARE_EXAMPLES_DIR/britanniacoin.conf}
 
@@ -16,7 +16,7 @@ EXAMPLE_CONF_FILE=${EXAMPLE_CONF_FILE:-$SHARE_EXAMPLES_DIR/britanniacoin.conf}
 DIRTY=""
 VERSION_OUTPUT=$($BRITANNIACOIND --version)
 if [[ $VERSION_OUTPUT == *"dirty"* ]]; then
-  DIRTY="${DIRTY}${BITCOIND}\n"
+  DIRTY="${DIRTY}${BRITANNIACOIND}\n"
 fi
 
 if [ -n "$DIRTY" ]
@@ -49,7 +49,7 @@ EOF
 # parse the output from bitcoind --help
 # adding newlines is a bit funky to ensure portability for BSD
 # see here for more details: https://stackoverflow.com/a/24575385
-${BITCOIND} --help \
+${BRITANNIACOIND} --help \
     | sed '1,/Print this help message and exit/d' \
     | sed -E 's/^[[:space:]]{2}\-/#/' \
     | sed -E 's/^[[:space:]]{7}/# /' \

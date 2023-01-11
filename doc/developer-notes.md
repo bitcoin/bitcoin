@@ -640,7 +640,7 @@ Threads
     : Universal plug-and-play startup/shutdown.
 
   - [ThreadSocketHandler (`b-net`)](https://doxygen.britanniacoincore.org/class_c_connman.html#a765597cbfe99c083d8fa3d61bb464e34)
-    : Sends/Receives data from peers on port 8333.
+    : Sends/Receives data from peers on port 8827.
 
   - [ThreadOpenAddedConnections (`b-addcon`)](https://doxygen.britanniacoincore.org/class_c_connman.html#a0b787caf95e52a346a2b31a580d60a62)
     : Opens network connections to added nodes.
@@ -1098,10 +1098,10 @@ namespace {
   `foo/bar.h` should use the include guard identifier `BRITANNIACOIN_FOO_BAR_H`, e.g.
 
 ```c++
-#ifndef BITCOIN_FOO_BAR_H
-#define BITCOIN_FOO_BAR_H
+#ifndef BRITANNIACOIN_FOO_BAR_H
+#define BRITANNIACOIN_FOO_BAR_H
 ...
-#endif // BITCOIN_FOO_BAR_H
+#endif // BRITANNIACOIN_FOO_BAR_H
 ```
 
 GUI

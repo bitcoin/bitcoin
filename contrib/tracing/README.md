@@ -100,7 +100,7 @@ Lists selectable peers and traffic and connection information.
    21  11         1248 byte  13         1299 byte  block-relay-only       XX.XXX.X.155:8827
    22  5           103 byte  1           102 byte  feeler                 XX.XX.XXX.173:8827
    23  11         1248 byte  12         1255 byte  block-relay-only       XX.XXX.XXX.220:8827
-   24  3           103 byte  1           102 byte  feeler                 XXX.XXX.XXX.64:8333
+   24  3           103 byte  1           102 byte  feeler                 XXX.XXX.XXX.64:8827
 …
 ```
 
@@ -108,7 +108,7 @@ Showing recent P2P messages between our node and a selected peer.
 
 ```
     ----------------------------------------------------------------------
-    |                PEER 16 (4faketorv2pbfu7x.onion:8333)               |
+    |                PEER 16 (4faketorv2pbfu7x.onion:8827)               |
     | OUR NODE                outbound-full-relay                   PEER |
     |                                           <--- sendcmpct (9 bytes) |
     | inv (37 byte) --->                                                 |
@@ -157,9 +157,9 @@ $ python3 contrib/tracing/log_raw_p2p_msgs.py ./src/britanniacoind
 Logging raw P2P messages.
 Messages larger that about 32kb will be cut off!
 Some messages might be lost!
- outbound msg 'inv' from peer 4 (outbound-full-relay, XX.XXX.XX.4:8333) with 253 bytes: 0705000000be2245c8f844c9f763748e1a7…
+ outbound msg 'inv' from peer 4 (outbound-full-relay, XX.XXX.XX.4:8827) with 253 bytes: 0705000000be2245c8f844c9f763748e1a7…
 …
-Warning: incomplete message (only 32568 out of 53552 bytes)! inbound msg 'tx' from peer 32 (outbound-full-relay, XX.XXX.XXX.43:8333) with 53552 bytes: 020000000001fd3c01939c85ad6756ed9fc…
+Warning: incomplete message (only 32568 out of 53552 bytes)! inbound msg 'tx' from peer 32 (outbound-full-relay, XX.XXX.XXX.43:8827) with 53552 bytes: 020000000001fd3c01939c85ad6756ed9fc…
 …
 Possibly lost 2 samples
 ```

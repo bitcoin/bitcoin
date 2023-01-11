@@ -6,12 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
-BITCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking"
+BRITANNIACOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking"
 if [ -z "$NO_DEPENDS" ]; then
-  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} CONFIG_SITE=$DEPENDS_DIR/$HOST/share/config.site"
+  BRITANNIACOIN_CONFIG_ALL="${BRITANNIACOIN_CONFIG_ALL} CONFIG_SITE=$DEPENDS_DIR/$HOST/share/config.site"
 fi
 if [ -z "$NO_WERROR" ]; then
-  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-werror"
+  BRITANNIACOIN_CONFIG_ALL="${BRITANNIACOIN_CONFIG_ALL} --enable-werror"
 fi
 
 CI_EXEC "ccache --zero-stats --max-size=$CCACHE_SIZE"
@@ -26,7 +26,7 @@ if [ -n "$ANDROID_TOOLS_URL" ]; then
   exit 0
 fi
 
-BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-external-signer --prefix=$BASE_OUTDIR"
+BRITANNIACOIN_CONFIG_ALL="${BRITANNIACOIN_CONFIG_ALL} --enable-external-signer --prefix=$BASE_OUTDIR"
 
 if [ -n "$CONFIG_SHELL" ]; then
   CI_EXEC "$CONFIG_SHELL" -c "./autogen.sh"
