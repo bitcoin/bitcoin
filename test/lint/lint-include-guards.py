@@ -14,7 +14,7 @@ from subprocess import check_output
 from typing import List
 
 
-HEADER_ID_PREFIX = 'BITCOIN_'
+HEADER_ID_PREFIX = 'BRITANNIACOIN_'
 HEADER_ID_SUFFIX = '_H'
 
 EXCLUDE_FILES_WITH_PREFIX = ['src/crypto/ctaes',

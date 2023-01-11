@@ -21,7 +21,7 @@ class I2PPorts(BritanniaCoinTestFramework):
         node = self.nodes[0]
 
         self.log.info("Ensure we don't try to connect if port!=0")
-        addr = "zsxwyo6qcn3chqzwxnseusqgsnuw3maqnztkiypyfxtya4snkoka.b32.i2p:8333"
+        addr = "zsxwyo6qcn3chqzwxnseusqgsnuw3maqnztkiypyfxtya4snkoka.b32.i2p:8827"
         raised = False
         try:
             with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}"]):

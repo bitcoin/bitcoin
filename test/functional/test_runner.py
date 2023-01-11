@@ -416,7 +416,7 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_britanniacoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_britanniacoind = config["components"].getboolean("ENABLE_BRITANNIACOIND")
 
     if not enable_britanniacoind:
         print("No functional tests to run.")

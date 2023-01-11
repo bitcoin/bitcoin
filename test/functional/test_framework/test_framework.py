@@ -251,9 +251,9 @@ class BritanniaCoinTestFramework(metaclass=BritanniaCoinTestMetaClass):
             "src",
             "britanniacoin-util" + config["environment"]["EXEEXT"],
         )
-        self.options.britanniacoind = os.getenv("BITCOIND", default=fname_britanniacoind)
-        self.options.britanniacoincli = os.getenv("BITCOINCLI", default=fname_britanniacoincli)
-        self.options.britanniacoinutil = os.getenv("BITCOINUTIL", default=fname_britanniacoinutil)
+        self.options.britanniacoind = os.getenv("BRITANNIACOIND", default=fname_britanniacoind)
+        self.options.britanniacoincli = os.getenv("BRITANNIACOINCLI", default=fname_britanniacoincli)
+        self.options.britanniacoinutil = os.getenv("BRITANNIACOINUTIL", default=fname_britanniacoinutil)
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -957,7 +957,7 @@ class BritanniaCoinTestFramework(metaclass=BritanniaCoinTestMetaClass):
 
     def is_britanniacoin_util_compiled(self):
         """Checks whether bitcoin-util was compiled."""
-        return self.config["components"].getboolean("ENABLE_BITCOIN_UTIL")
+        return self.config["components"].getboolean("ENABLE_BRITANNIACOIN_UTIL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
