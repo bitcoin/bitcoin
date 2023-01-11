@@ -87,6 +87,12 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
     const auto mock_time = ConsumeTime(fuzzed_data_provider);
     SetMockTime(mock_time);
 
+    MockedMainSignals signals(*g_setup->m_node.peerman);
+    auto mock_get_main_signals = [&signals]() -> CMainSignals& {
+        return signals;
+    };
+    MockGetMainSignals = mock_get_main_signals;
+
     // fuzzed_data_provider is fully consumed after this call, don't use it
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
     try {
@@ -95,7 +101,7 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
     } catch (const std::ios_base::failure&) {
     }
     g_setup->m_node.peerman->SendMessages(&p2p_node);
-    SyncWithValidationInterfaceQueue();
+    signals.Sync();
     g_setup->m_node.connman->StopNodes();
 }
 

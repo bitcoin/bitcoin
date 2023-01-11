@@ -20,6 +20,8 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
+#include <validation.h>
+#include <validationinterface.h>
 #include <version.h>
 
 #include <algorithm>
@@ -323,5 +325,79 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
         }
     }
 }
+
+class MockedMainSignals : public CMainSignals
+{
+private:
+    CValidationInterface& m_validation_interface;
+    std::list<std::function<void(CValidationInterface&)>> m_callbacks;
+
+public:
+    MockedMainSignals(CValidationInterface& validation_interface)
+        : m_validation_interface{validation_interface} {}
+
+    void Sync()
+    {
+        for (auto& fn : m_callbacks)
+            fn(m_validation_interface);
+    }
+
+    void SyncOne()
+    {
+        if (m_callbacks.empty()) return;
+
+        m_callbacks.front()(m_validation_interface);
+        m_callbacks.pop_front();
+    }
+
+    void UpdatedBlockTip(const CBlockIndex* new_index, const CBlockIndex* fork_index, bool initial_download) override
+    {
+        m_callbacks.push_back([new_index, fork_index, initial_download](CValidationInterface& validation_interface) {
+            validation_interface.UpdatedBlockTip(new_index, fork_index, initial_download);
+        });
+    }
+    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override
+    {
+        m_callbacks.push_back([tx, mempool_sequence](CValidationInterface& validation_interface) {
+            validation_interface.TransactionAddedToMempool(tx, mempool_sequence);
+        });
+    }
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
+    {
+        m_callbacks.push_back([tx, reason, mempool_sequence](CValidationInterface& validation_interface) {
+            validation_interface.TransactionRemovedFromMempool(tx, reason, mempool_sequence);
+        });
+    }
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
+    {
+        m_callbacks.push_back([block, index](CValidationInterface& validation_interface) {
+            validation_interface.BlockConnected(block, index);
+        });
+    }
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
+    {
+        m_callbacks.push_back([block, index](CValidationInterface& validation_interface) {
+            validation_interface.BlockDisconnected(block, index);
+        });
+    }
+    void ChainStateFlushed(const CBlockLocator& locator) override
+    {
+        m_callbacks.push_back([locator](CValidationInterface& validation_interface) {
+            validation_interface.ChainStateFlushed(locator);
+        });
+    }
+    void BlockChecked(const CBlock& block, const BlockValidationState& validation_state) override
+    {
+        m_callbacks.push_back([block, validation_state](CValidationInterface& validation_interface) {
+            validation_interface.BlockChecked(block, validation_state);
+        });
+    }
+    void NewPoWValidBlock(const CBlockIndex* index, const std::shared_ptr<const CBlock>& block) override
+    {
+        m_callbacks.push_back([index, block](CValidationInterface& validation_interface) {
+            validation_interface.NewPoWValidBlock(index, block);
+        });
+    }
+};
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
