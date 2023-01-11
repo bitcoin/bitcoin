@@ -953,7 +953,7 @@ BOOST_AUTO_TEST_CASE(minimum_inputs_test)
         /*tx_noinputs_size=*/0,
         /*avoid_partial=*/false,
     };
-    const auto result = SelectCoins(*wallet, available_coins, target, coin_control, coin_selection_params);
+    auto result = SelectCoins(*wallet, available_coins, target, coin_control, coin_selection_params);
     BOOST_REQUIRE(result);
 
     // Should consume only the first two coins (9 + 16) >= 25 and account correctly

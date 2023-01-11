@@ -1195,7 +1195,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::SelectTriedCollision()
 {
     LOCK(cs);
     Check();
-    const auto ret = SelectTriedCollision_();
+    auto ret = SelectTriedCollision_();
     Check();
     return ret;
 }
@@ -1204,7 +1204,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool new_only, std::optiona
 {
     LOCK(cs);
     Check();
-    const auto addrRet = Select_(new_only, network);
+    auto addrRet = Select_(new_only, network);
     Check();
     return addrRet;
 }
@@ -1213,7 +1213,7 @@ std::vector<CAddress> AddrManImpl::GetAddr(size_t max_addresses, size_t max_pct,
 {
     LOCK(cs);
     Check();
-    const auto addresses = GetAddr_(max_addresses, max_pct, network);
+    auto addresses = GetAddr_(max_addresses, max_pct, network);
     Check();
     return addresses;
 }
