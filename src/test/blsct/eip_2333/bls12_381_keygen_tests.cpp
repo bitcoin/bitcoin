@@ -263,4 +263,8 @@ BOOST_AUTO_TEST_CASE(test_hkdf_expand)
     BOOST_CHECK(act == exp);
 }
 
+BOOST_AUTO_TEST_CASE(test_hkdf_mod_r)
+{
+}
+
 BOOST_AUTO_TEST_SUITE_END()
