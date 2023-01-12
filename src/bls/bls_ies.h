@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Dash Core developers
+// Copyright (c) 2018-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,13 +17,11 @@ public:
 
     uint256 GetIV(size_t idx) const;
 
-public:
-    SERIALIZE_METHODS(CBLSIESEncryptedBlob, obj) {
+    SERIALIZE_METHODS(CBLSIESEncryptedBlob, obj)
+    {
         READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.data);
     }
 
-
-public:
     bool Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const void* data, size_t dataSize);
     bool Decrypt(size_t idx, const CBLSSecretKey& secretKey, CDataStream& decryptedDataRet) const;
     bool IsValid() const;
@@ -61,7 +59,7 @@ public:
         }
         try {
             ds >> objRet;
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
         return true;
@@ -71,10 +69,10 @@ public:
 class CBLSIESMultiRecipientBlobs
 {
 public:
+    // SYSCOIN
     using Blob = std::vector<uint8_t>;
     using BlobVector = std::vector<Blob>;
 
-public:
     CBLSPublicKey ephemeralPubKey;
     uint256 ivSeed;
     BlobVector blobs;
@@ -83,15 +81,14 @@ public:
     CBLSSecretKey ephemeralSecretKey;
     std::vector<uint256> ivVector;
 
-public:
     bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const BlobVector& _blobs);
 
     void InitEncrypt(size_t count);
     bool Encrypt(size_t idx, const CBLSPublicKey& recipient, const Blob& blob);
     bool Decrypt(size_t idx, const CBLSSecretKey& sk, Blob& blobRet) const;
 
-public:
-    SERIALIZE_METHODS(CBLSIESMultiRecipientBlobs, obj) {
+    SERIALIZE_METHODS(CBLSIESMultiRecipientBlobs, obj)
+    {
         READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.blobs);
     }
 };
@@ -102,7 +99,6 @@ class CBLSIESMultiRecipientObjects : public CBLSIESMultiRecipientBlobs
 public:
     using ObjectVector = std::vector<Object>;
 
-public:
     bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const ObjectVector& _objects, int nVersion)
     {
         BlobVector blobs;
@@ -114,6 +110,7 @@ public:
                 ds.clear();
 
                 ds << _objects[i];
+                // SYSCOIN
                 const auto bytesVec = MakeUCharSpan(ds);
                 blobs[i].assign(bytesVec.begin(), bytesVec.end());
             }
@@ -128,6 +125,7 @@ public:
     {
         CDataStream ds(SER_NETWORK, nVersion);
         ds << obj;
+        // SYSCOIN
         const auto bytesVec = MakeUCharSpan(ds);
         Blob blob(bytesVec.begin(), bytesVec.end());
         return CBLSIESMultiRecipientBlobs::Encrypt(idx, recipient, blob);

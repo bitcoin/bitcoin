@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2018-2021 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,7 @@ public:
 
 private:
     ctpl::thread_pool workerPool;
+
     static const int SIG_VERIFY_BATCH_SIZE = 8;
     struct SigVerifyJob {
         SigVerifyDoneCallback doneCallback;
@@ -54,7 +55,7 @@ public:
     void Start();
     void Stop();
 
-    bool GenerateContributions(size_t threshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet);
+    bool GenerateContributions(int threshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet);
 
     // The following functions are all used to aggregate verification (public key) vectors
     // Inputs are in the following form:
@@ -67,7 +68,7 @@ public:
     // The result is in the following form:
     //   [ a1+a2+a3+a4, b1+b2+b3+b4, c1+c2+c3+c4, d1+d2+d3+d4]
     // Multiple things can be parallelized here. For example, all 4 entries in the result vector can be calculated in parallel
-    // Also, each individual vector can be split into multiple batches and aggregating the batches can also be paralellized.
+    // Also, each individual vector can be split into multiple batches and aggregating the batches can also be parallelized.
     void AsyncBuildQuorumVerificationVector(const std::vector<BLSVerificationVectorPtr>& vvecs,
                                             size_t start, size_t count, bool parallel,
                                             std::function<void(const BLSVerificationVectorPtr&)> doneCallback);
@@ -80,7 +81,7 @@ public:
     // Inputs are in the following form:
     //   [a, b, c, d],
     // The result is simply a+b+c+d
-    // Aggregation is paralellized by splitting up the input vector into multiple batches and then aggregating the individual batch results
+    // Aggregation is parallelized by splitting up the input vector into multiple batches and then aggregating the individual batch results
     void AsyncAggregateSecretKeys(const BLSSecretKeyVector& secKeys,
                                   size_t start, size_t count, bool parallel,
                                   std::function<void(const CBLSSecretKey&)> doneCallback);
@@ -93,6 +94,7 @@ public:
                                   std::function<void(const CBLSPublicKey&)> doneCallback);
     std::future<CBLSPublicKey> AsyncAggregatePublicKeys(const BLSPublicKeyVector& pubKeys,
                                                         size_t start, size_t count, bool parallel);
+
     void AsyncAggregateSigs(const BLSSignatureVector& sigs,
                             size_t start, size_t count, bool parallel,
                             std::function<void(const CBLSSignature&)> doneCallback);
@@ -120,9 +122,9 @@ public:
     // Simple verification of vectors. Checks x.IsValid() for every entry and checks for duplicate entries
     static bool VerifyVerificationVector(const BLSVerificationVector& vvec, size_t start = 0, size_t count = 0);
     static bool VerifyVerificationVectors(const std::vector<BLSVerificationVectorPtr>& vvecs, size_t start = 0, size_t count = 0);
- 
+
     // Internally batched signature signing and verification
-    void AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const SignDoneCallback &doneCallback);
+    void AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const SignDoneCallback& doneCallback);
     void AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& pubKey, const uint256& msgHash, SigVerifyDoneCallback doneCallback, CancelCond cancelCond = [] { return false; });
     std::future<bool> AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& pubKey, const uint256& msgHash, CancelCond cancelCond = [] { return false; });
     bool IsAsyncVerifyInProgress();
@@ -190,4 +192,4 @@ private:
     }
 };
 
-#endif // SYSCOIN_BLS_BLS_WORKER_H
+#endif //SYSCOIN_BLS_BLS_WORKER_H
