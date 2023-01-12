@@ -121,7 +121,8 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         int64_t nTime2 = GetTimeMicros(); nTimeDMN += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "            - BuildNewListFromBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeDMN * 0.000001);
 
-        CSimplifiedMNList sml(tmpMNList);
+        bool v19active = llmq::utils::IsV19Active(pindexPrev);
+        CSimplifiedMNList sml(tmpMNList, v19active);
 
         int64_t nTime3 = GetTimeMicros(); nTimeSMNL += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);

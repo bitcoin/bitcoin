@@ -46,7 +46,8 @@ public:
                service == rhs.service &&
                pubKeyOperator == rhs.pubKeyOperator &&
                keyIDVoting == rhs.keyIDVoting &&
-               isValid == rhs.isValid;
+               isValid == rhs.isValid &&
+               nVersion == rhs.nVersion;
     }
 
     bool operator!=(const CSimplifiedMNListEntry& rhs) const
@@ -79,7 +80,7 @@ public:
 
     CSimplifiedMNList() = default;
     explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
-    explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
+    explicit CSimplifiedMNList(const CDeterministicMNList& dmnList, bool isV19Active);
 
     uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
     bool operator==(const CSimplifiedMNList& rhs) const;
