@@ -211,7 +211,7 @@ struct TestChainDIP3Setup : public TestChain100Setup
 
 struct TestChainDIP3V19Setup : public TestChain100Setup
 {
-    TestChainDIP3V19Setup() :TestChain100Setup(CBaseChainParams::REGTEST, {}, 900) {}
+    TestChainDIP3V19Setup() :TestChain100Setup(CBaseChainParams::REGTEST, {}, 1000) {}
 };
 
 struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
