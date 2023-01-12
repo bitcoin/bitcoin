@@ -1,3 +1,7 @@
+// Copyright (c) 2016-2022 The Dash Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
