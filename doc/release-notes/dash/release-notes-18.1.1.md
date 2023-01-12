@@ -1,14 +1,11 @@
-Dash Core version v18.2.0
-=========================
+Dash Core version 18.1.1
+========================
 
 Release is now available from:
 
   <https://www.dash.org/downloads/#wallets>
 
-This is a new minor version release, bringing new features, various bugfixes
-and other improvements.
-
-This release is optional for all nodes.
+This is a new hotfix release. All nodes should upgrade.
 
 Please report bugs using the issue tracker at github:
 
@@ -38,10 +35,6 @@ downgrade to an older version is only possible with a reindex
 Downgrade warning
 -----------------
 
-### Downgrade to a version < v18.2.0
-
-Downgrading to a version older than v18.2.0 is supported.
-
 ### Downgrade to a version < v18.0.1
 
 Downgrading to a version older than v18.0.1 is not supported due to changes in
@@ -55,94 +48,28 @@ masternodes. This results in PoSe punishment/banning for outdated masternodes,
 so downgrading even prior to the activation of the introduced hard-fork changes
 is not recommended.
 
-Versioning
-----------
-
-Dash Core imperfectly follows semantic versioning. Breaking changes should be
-expected in a major release. The number and severity of breaking changes in minor
-releases are minimized, however we do not guarantee there are no breaking changes.
-Bitcoin backports often introduce breaking changes, and are a likely source of
-breaking changes in minor releases. Patch releases should never contain breaking changes.
-
-This release **does** include breaking changes. Please read below to see if they will affect you.
-
 Notable changes
 ===============
 
+This release fixes an issue where outdated qfcommit messages replayed to the network were validated and propagated to
+other nodes rather than dropped. This patch updates the behavior so that old qfcommits will no longer be relayed.
 
-Remote Procedure Call (RPC) Changes
------------------------------------
+18.1.1 Change log
+===================
 
-### The new RPCs are:
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v18.1.0...dashpay:v18.1.1`).
 
-- `analyzepsbt` examines a PSBT and provides information about what
-  the PSBT contains and the next steps that need to be taken in order
-  to complete the transaction. For each input of a PSBT, `analyzepsbt`
-  provides information about what information is missing for that
-  input, including whether a UTXO needs to be provided, what pubkeys
-  still need to be provided, which scripts need to be provided, and
-  what signatures are still needed. Every input will also list which
-  role is needed to complete that input, and `analyzepsbt` will also
-  list the next role in general needed to complete the PSBT.
-  `analyzepsbt` will also provide the estimated fee rate and estimated
-  virtual size of the completed transaction if it has enough
-  information to do so.
-- `quorum listextended` is the cousin of `quorum list` with a more enriched reply. By using the `height` parameter, the RPC will list active quorums at a specified height (or at the tip if `height` is not specified).
-  This RPC returns the following data per quorum grouped per llmqTypes:
-    - For each `quorumHash`:
-        - `creationHeight`: Block height where its DKG started
-        - `quorumIndex`: Returned only for rotated llmqTypes
-        - `minedBlockHash`: Hash of the block containing the mined final commitment
-        - `numValidMembers`: The total of valid members.
-        - `healthRatio`: The ratio of healthy members to quorum size. Range [0.0 - 1.0].
-- `getbalances` returns an object with all balances (`mine`,
-  `untrusted_pending` and `immature`). Please refer to the RPC help of
-  `getbalances` for details. The new RPC is intended to replace
-  `getunconfirmedbalance` and the balance fields in `getwalletinfo`, as well as
-  `getbalance`. The old calls may be removed in a future version.
-
-### The removed RPCs are:
-None
-
-### Changes in existing RPCs introduced through bitcoin backports:
-- `walletprocesspsbt` and `walletcreatefundedpsbt` now include BIP 32 derivation paths by default for public keys if we know them. This can be disabled by setting `bip32derivs` to `false`.
-
-### Dash-specific changes in existing RPCs:
-None
-
-Please check `help <command>` for more detailed information on specific RPCs.
-
-Command-line options
---------------------
-
-
-Please check `Help -> Command-line options` in Qt wallet or `dashd --help` for
-more information.
-
-Backports from Bitcoin Core
----------------------------
-
-This release introduces many hundreds updates from Bitcoin v0.18/v0.19/v0.20/v0.21/v22. Bitcoin changes that do not align with Dash’s product needs, such as SegWit and RBF, are excluded from our backporting. For additional detail on what’s included in Bitcoin, please refer to their release notes.
-
-v18.2.0 Change log
-==================
-
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v18.1.0...dashpay:v18.2.0).
-
+- [`82d7b6e94a154c4b16bd634ef1a5eb168e22030c`](https://github.com/dashpay/dash/commit/82d7b6e94a154c4b16bd634ef1a5eb168e22030c) fix: avoid re-propogating old qfcommit messages (#5145)
+- [`6c5a310c14e5d97794fbaa84e5ca993c0961ae09`](https://github.com/dashpay/dash/commit/6c5a310c14e5d97794fbaa84e5ca993c0961ae09) chore: bump version
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Kittywhiskers Van Gogh
-- Konstantin Akimov
-- Odysseas Gabrielides
 - PastaPastaPasta
-- strophy
-- thephez
 - UdjinM6
 
-As well as everyone that submitted issues, reviewed pull requests, helped debug the release candidates, and write DIPs that were implemented in this release.
+As well as everyone that submitted issues and reviewed pull requests.
 
 Older releases
 ==============
@@ -167,8 +94,7 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v18.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.1.1.md) released January/08/2023
-- [v18.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.1.0.md) released October/09/2022
+- [v18.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.1.0.md) released October/17/2022
 - [v18.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.0.2.md) released October/09/2022
 - [v18.0.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.0.1.md) released August/17/2022
 - [v0.17.0.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.17.0.3.md) released June/07/2021
