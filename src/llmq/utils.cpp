@@ -256,7 +256,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
     auto MnsNotUsedAtH = CDeterministicMNList();
     std::vector<CDeterministicMNList> MnsUsedAtHIndexed(nQuorums);
 
-    bool skipRemovedMNs = IsV19Active(pQuorumBaseBlockIndex) || (Params().NetworkIDString() == CBaseChainParams::TESTNET);
+    bool skipRemovedMNs = /*IsV19Active(pQuorumBaseBlockIndex) || */(Params().NetworkIDString() == CBaseChainParams::TESTNET);
 
     for (auto i = 0; i < nQuorums; ++i) {
         for (const auto& mn : previousQuarters.quarterHMinusC[i]) {
