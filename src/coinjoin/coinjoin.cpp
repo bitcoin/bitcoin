@@ -130,6 +130,9 @@ bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex, const llmq::CCha
 bool CCoinJoinBroadcastTx::IsValidStructure() const
 {
     // some trivial checks only
+    if (masternodeOutpoint.IsNull() && m_protxHash.IsNull()) {
+        return false;
+    }
     if (tx->vin.size() != tx->vout.size()) {
         return false;
     }

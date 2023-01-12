@@ -2480,7 +2480,7 @@ std::string RejectCodeToString(const unsigned char code)
     return "";
 }
 
-std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CCoinJoinBroadcastTx dstx, uint256 hashTx)
+std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CCoinJoinBroadcastTx& dstx, uint256 hashTx)
 {
     if (!dstx.IsValidStructure()) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
@@ -2499,11 +2499,26 @@ std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CCoinJoinBroadca
     }
     // It could be that a MN is no longer in the list but its DSTX is not yet mined.
     // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
-    for (int i = 0; i < 24 && pindex; ++i) {
-        dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
-        if (dmn) break;
-        pindex = pindex->pprev;
+    if (dstx.masternodeOutpoint.IsNull()) {
+        for (int i = 0; i < 24 && pindex; ++i) {
+            dmn = deterministicMNManager->GetListForBlock(pindex).GetMN(dstx.m_protxHash);
+            if (dmn) {
+                dstx.masternodeOutpoint = dmn->collateralOutpoint;
+                break;
+            }
+            pindex = pindex->pprev;
+        }
+    } else {
+        for (int i = 0; i < 24 && pindex; ++i) {
+            dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
+            if (dmn) {
+                dstx.m_protxHash = dmn->proTxHash;
+                break;
+            }
+            pindex = pindex->pprev;
+        }
     }
+
     if (!dmn) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
         return {false, true};
