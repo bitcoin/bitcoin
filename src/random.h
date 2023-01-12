@@ -250,7 +250,7 @@ public:
                                    /* interval [0..0] */ Dur{0};
     };
 
-    // Compatibility with the C++11 UniformRandomBitGenerator concept
+    // Compatibility with the UniformRandomBitGenerator concept
     typedef uint64_t result_type;
     static constexpr uint64_t min() { return 0; }
     static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
