@@ -312,16 +312,16 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 12 native x86_64 [gui, system sqlite] [no depends]'
+  name: 'macOS 13 native arm64 [gui, sqlite only] [no depends]'
   macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: monterey-xcode-13.3  # https://cirrus-ci.org/guide/macOS
+    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.1  # https://cirrus-ci.org/guide/macOS
   << : *MACOS_NATIVE_TASK_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
-    FILE_ENV: "./ci/test/00_setup_env_mac_native_x86_64.sh"
+    FILE_ENV: "./ci/test/00_setup_env_mac_native_arm64.sh"
 
 task:
   name: 'ARM64 Android APK [focal]'
