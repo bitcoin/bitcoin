@@ -17,10 +17,16 @@ import os
 
 EXCLUDE = [
     # auto generated:
-    'src/qt/bitcoinstrings.cpp',
+    'src/qt/dashstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
+    'src/bip39.cpp',
+    'src/bip39.h',
+    'src/bip39_english.h',
+    'src/crypto/*',
+    'src/ctpl_stl.h',
     'src/reverse_iterator.h',
+    'src/statsd_client.cpp',
     'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
     'src/bench/nanobench.h',
