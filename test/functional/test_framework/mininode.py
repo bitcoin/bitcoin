@@ -399,7 +399,6 @@ class P2PInterface(P2PConnection):
     def on_mempool(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
-    def on_reject(self, message): pass
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
@@ -472,17 +471,17 @@ class P2PInterface(P2PConnection):
 
         self.wait_until(test_function, timeout=timeout)
 
-    def wait_for_getdata(self, timeout=60):
+    def wait_for_getdata(self, hash_list, timeout=60):
         """Waits for a getdata message.
 
-        Receiving any getdata message will satisfy the predicate. the last_message["getdata"]
-        value must be explicitly cleared before calling this method, or this will return
-        immediately with success. TODO: change this method to take a hash value and only
-        return true if the correct block/tx has been requested."""
+        The object hashes in the inventory vector must match the provided hash_list."""
 
         def test_function():
             assert self.is_connected
-            return self.last_message.get("getdata")
+            last_data = self.last_message.get("getdata")
+            if not last_data:
+                return False
+            return [x.hash for x in last_data.inv] == hash_list
 
         self.wait_until(test_function, timeout=timeout)
 

@@ -23,6 +23,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         1) The transaction has a complete set of signatures
         2) No script verification error occurred"""
+        self.log.info("Test valid raw transaction with one input")
         privKeys = ['cUeKHd5orzT3mz8P9pxyREHfsWtVfgsfDjiZZBcjUBAaGk1BTj7N', 'cVKpPfVKSJxKqVpE9awvXNWuLHCa5j5tiE7K6zbUSptFpTEtiFrA']
 
         inputs = [
@@ -45,7 +46,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert 'errors' not in rawTxSigned
 
     def test_with_lock_outputs(self):
-        """Test correct error reporting when trying to sign a locked output"""
+        self.log.info("Test correct error reporting when trying to sign a locked output")
         self.nodes[0].encryptwallet("password")
 
         rawTx = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a00000000'
@@ -61,6 +62,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         4) Two script verification errors occurred
         5) Script verification errors have certain properties ("txid", "vout", "scriptSig", "sequence", "error")
         6) The verification errors refer to the invalid (vin 1) and missing input (vin 2)"""
+        self.log.info("Test script verification errors")
         privKeys = ['cUeKHd5orzT3mz8P9pxyREHfsWtVfgsfDjiZZBcjUBAaGk1BTj7N']
 
         inputs = [

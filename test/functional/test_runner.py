@@ -102,6 +102,7 @@ BASE_SCRIPTS = [
     'wallet_labels.py',
     'p2p_timeouts.py',
     'feature_bip68_sequence.py',
+    'mempool_updatefromblock.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
     'feature_multikeysporks.py',
