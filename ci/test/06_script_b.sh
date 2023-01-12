@@ -82,3 +82,8 @@ fi
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   CI_EXEC LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/fuzz/test_runner.py "${FUZZ_TESTS_CONFIG}" "$MAKEJOBS" -l DEBUG "${DIR_FUZZ_IN}"
 fi
+
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
+  echo "Stop and remove CI container by ID"
+  docker container kill "${CI_CONTAINER_ID}"
+fi

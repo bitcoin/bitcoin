@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_macos_cross
-export DOCKER_NAME_TAG=ubuntu:20.04  # Check that Focal can cross-compile to macos
+export CI_IMAGE_NAME_TAG=ubuntu:20.04  # Check that Focal can cross-compile to macos
 export HOST=x86_64-apple-darwin
 export PACKAGES="cmake libz-dev libtinfo5 python3-setuptools xorriso"
 export XCODE_VERSION=12.2
