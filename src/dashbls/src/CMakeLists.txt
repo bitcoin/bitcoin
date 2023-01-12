@@ -19,19 +19,20 @@ target_include_directories(dashbls
     ${CMAKE_CURRENT_SOURCE_DIR}
     $<$<BOOL:${GMP_FOUND}>:${GMP_INCLUDES}>
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/dashbls
+    ${CMAKE_CURRENT_SOURCE_DIR}/../depends/mimalloc/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../depends/relic/include
     ${CMAKE_CURRENT_BINARY_DIR}/../depends/relic/include
 )
 
 target_compile_definitions(dashbls
   PRIVATE
-    BLSALLOC_MINIALLOC=1
+    BLSALLOC_MIMALLOC=1
 )
 
 target_link_libraries(dashbls
   PUBLIC
     relic_s
-    minialloc
+    mimalloc-static
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../depends/relic/include/ DESTINATION include/dashbls)

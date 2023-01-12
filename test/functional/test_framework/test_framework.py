@@ -1385,7 +1385,7 @@ class DashTestFramework(SyscoinTestFramework):
             return True
         wait_until_helper(check_probes, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=60, sleep=1):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=60, sleep=0.5):
         def check_dkg_session():
             all_ok = True
             member_count = 0
