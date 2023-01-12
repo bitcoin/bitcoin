@@ -4,7 +4,7 @@
 #define SYSCOIN_REVERSE_ITERATOR_H
 
 /**
- * Template used for reverse iteration in C++11 range-based for loops.
+ * Template used for reverse iteration in range-based for loops.
  *
  *   std::vector<int> v = {1, 2, 3, 4, 5};
  *   for (auto x : reverse_iterate(v))

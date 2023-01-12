@@ -15,7 +15,7 @@ assignees: ''
 
 #### Useful skills:
 
-<!-- (For example, “C++11 std::thread”, “Qt5 GUI and async GUI design” or “basic understanding of Syscoin mining and the Syscoin Core RPC interface”.) -->
+<!-- (For example, “std::thread”, “Qt5 GUI and async GUI design” or “basic understanding of Syscoin mining and the Syscoin Core RPC interface”.) -->
 
 #### Want to work on this issue?
 

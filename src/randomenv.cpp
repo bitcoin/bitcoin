@@ -250,7 +250,7 @@ void RandAddDynamicEnv(CSHA512& hasher)
     gettimeofday(&tv, nullptr);
     hasher << tv;
 #endif
-    // Probably redundant, but also use all the clocks C++11 provides:
+    // Probably redundant, but also use all the standard library clocks:
     hasher << std::chrono::system_clock::now().time_since_epoch().count();
     hasher << std::chrono::steady_clock::now().time_since_epoch().count();
     hasher << std::chrono::high_resolution_clock::now().time_since_epoch().count();
