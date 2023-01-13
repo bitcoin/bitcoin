@@ -14,6 +14,13 @@ purposes. As such, there are repository maintainers who are responsible for
 merging pull requests, the [release cycle](/doc/release-process.md), and
 moderation.
 
+Code of Conduct
+---------------
+
+This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md).
+By participating, you are expected to uphold this code. Please report unacceptable behavior to
+[conduct@bitcoincore.org](mailto:conduct@bitcoincore.org).
+
 Getting Started
 ---------------
 
