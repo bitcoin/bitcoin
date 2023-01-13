@@ -932,7 +932,7 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
     BOOST_CHECK_EQUAL(output5.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
 }
 
-static util::Result<SelectionResult> select_coins(const CAmount& target, const CoinSelectionParams& cs_params, const CCoinControl& cc, std::function<CoinsResult(CWallet&)> coin_setup, interfaces::Chain* chain, const ArgsManager& args)
+static util::Result<SelectionResult> select_coins(const CAmount& target, const CoinSelectionParams& cs_params, const CCoinControl& cc, std::function<CoinsResult(CWallet&)> coin_setup, interfaces::Chain* chain)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(chain, "", args, CreateMockWalletDatabase());
     wallet->LoadWallet();
@@ -995,7 +995,7 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
                 add_coin(available_coins, wallet, CAmount(50 * COIN), CFeeRate(0), 144, false, 0, true);
                 return available_coins;
             },
-            chain, m_args);
+            chain);
 
         BOOST_CHECK(result);
         BOOST_CHECK(has_coin(result->GetInputSet(), CAmount(50 * COIN)));
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
                 }
                 return available_coins;
             },
-            chain, m_args);
+            chain);
 
         BOOST_CHECK(has_coin(result->GetInputSet(), CAmount(0.0625 * COIN)));
         BOOST_CHECK(has_coin(result->GetInputSet(), CAmount(0.025 * COIN)));
@@ -1041,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
                 }
                 return available_coins;
             },
-            chain, m_args);
+            chain);
 
         // No results
         // 1515 inputs * 68 bytes = 103,020 bytes

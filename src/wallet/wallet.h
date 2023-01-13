@@ -642,6 +642,9 @@ public:
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
+    /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
+    int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
+
     size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
 
