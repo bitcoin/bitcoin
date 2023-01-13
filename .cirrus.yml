@@ -153,7 +153,7 @@ task:
   ccache_cache:
     folder: '%CCACHE_DIR%'
   install_tools_script:
-    - choco install --yes --no-progress ccache --version=4.6.1
+    - choco install --yes --no-progress ccache --version=4.7.4
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
     - ccache --version
