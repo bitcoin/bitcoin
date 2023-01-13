@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING.MIT or http://www.opensource.org/licenses/mit-license.php.
 
-LIBDASHBLS = libdashbls.la
+LIBBLS = libdashbls.la
 
 DASHBLS_CPPFLAGS = -DBLSALLOC_MIMALLOC=1
 
@@ -63,4 +63,4 @@ include Makefile.relic.include
 #include Makefile.bench.include
 #endif
 
-lib_LTLIBRARIES += $(LIBDASHBLS)
+lib_LTLIBRARIES += $(LIBBLS)
