@@ -23,12 +23,10 @@ Context::Context()
     ECC_Start();
     // SYSCOIN
     BLSInit();
-    ecc_verify_handle.reset(new ECCVerifyHandle());
 }
 
 Context::~Context()
 {
-    ecc_verify_handle.reset();
     ECC_Stop();
 }
 

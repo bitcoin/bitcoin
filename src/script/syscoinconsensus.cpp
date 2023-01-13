@@ -68,12 +68,6 @@ inline int set_error(syscoinconsensus_error* ret, syscoinconsensus_error serror)
     return 0;
 }
 
-struct ECCryptoClosure
-{
-    ECCVerifyHandle handle;
-};
-
-ECCryptoClosure instance_of_eccryptoclosure;
 } // namespace
 
 /** Check that all specified flags are part of the libconsensus interface. */
