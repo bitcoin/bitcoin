@@ -14,6 +14,14 @@ MclScalar::MclScalar(const std::vector<uint8_t> &v)
     MclScalar::SetVch(v);
 }
 
+template <size_t L>
+MclScalar::MclScalar(const std::array<uint8_t,L> &a)
+{
+    std::vector<uint8_t> v(a.begin(), a.end());
+    MclScalar::SetVch(v);
+}
+template MclScalar::MclScalar(const std::array<uint8_t,48> &v);
+
 MclScalar::MclScalar(const mclBnFr& other_fr)
 {
     m_fr = other_fr;
@@ -192,6 +200,11 @@ mclBnFr MclScalar::Underlying() const
 bool MclScalar::IsValid() const
 {
     return mclBnFr_isValid(&m_fr) == 1;
+}
+
+bool MclScalar::IsZero() const
+{
+    return mclBnFr_isZero(&m_fr) == 1;
 }
 
 MclScalar MclScalar::Invert() const

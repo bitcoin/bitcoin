@@ -3,35 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/eip_2333/bls12_381_keygen.h>
+#include <crypto/sha256.h>
 #include <tinyformat.h>
 
-// Inputs
-// - parent_SK, the secret key of the parent node, a big endian encoded integer
-// - index, the index of the desired child node, an integer 0 <= index < 2^32
-// Outputs
-// - child_SK, the secret key of the child node, a big endian encoded integer
-std::vector<uint8_t> BLS12_381_KeyGen::derive_child_SK(const std::vector<uint8_t>& parent_SK, const uint32_t& index)
-{
-    // 0. compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index)
-    // 1. SK = HKDF_mod_r(compressed_lamport_PK)
-    // 2. return SK
-    std::vector<uint8_t> ret;
-    return ret;
-}
-
-// Inputs
-// - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
-// Outputs
-// - SK, the secret key of master node within the tree, a big endian encoded integer
-std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed, const std::vector<uint8_t>& SK)
-{
-    // 0. SK = HKDF_mod_r(seed)
-    // 1. return SK
-    std::array<uint8_t,BLS12_381_KeyGen::K> ret;
-    return ret;
-}
-
-std::array<uint8_t,CHMAC_SHA256::OUTPUT_SIZE> BLS12_381_KeyGen::HKDF_Extract(const std::vector<uint8_t>& IKM, const MclScalar& salt)
+std::array<uint8_t,CHMAC_SHA256::OUTPUT_SIZE> BLS12_381_KeyGen::HKDF_Extract(const MclScalar& salt, const std::vector<uint8_t>& IKM)
 {
     auto salt_vec = salt.GetVch(true);
     auto hmac_sha256 = CHMAC_SHA256(&salt_vec[0], salt_vec.size());
@@ -43,26 +18,35 @@ std::array<uint8_t,CHMAC_SHA256::OUTPUT_SIZE> BLS12_381_KeyGen::HKDF_Extract(con
     return hash;
 }
 
-std::array<uint8_t,BLS12_381_KeyGen::L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS12_381_KeyGen::K>& PRK, const std::vector<uint8_t>& info)
+template <size_t L>
+std::array<uint8_t,L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS12_381_KeyGen::K>& PRK, const std::vector<uint8_t>& info)
 {
     std::array<uint8_t,K> prev;
     std::array<uint8_t,L> output;
 
+    const size_t num_loops = std::ceil(static_cast<float>(L) / BLS12_381_KeyGen::K);
     auto output_it = output.begin();
-    for (uint8_t i=1; i != 0; ++i) {  // range of i is [0, 255]
+
+    for (size_t i=1; i<=num_loops; ++i) {
         auto hmac_sha256 = CHMAC_SHA256(&PRK[0], PRK.size());
         if (i > 1) {
             hmac_sha256.Write(&prev[0], prev.size());
         }
         hmac_sha256.Write(&info[0], info.size());
-        hmac_sha256.Write(static_cast<unsigned char*>(&i), 1);
-
+        uint8_t n = static_cast<uint8_t>(i);
+        hmac_sha256.Write(&n, 1);
         hmac_sha256.Finalize(&prev[0]);
-        std::copy_n(prev.begin(), K, output_it);
+
+        // if less than K bytes are remaining to copy, copy only the remaining bytes. otherwiese copy K bytes.
+        size_t bytes2copy = i * K > L ? L - (i - 1) * K : K;
+        std::copy_n(prev.begin(), bytes2copy, output_it);
+
         std::advance(output_it, K);
     }
     return output;
 }
+template std::array<uint8_t,8160ul> BLS12_381_KeyGen::HKDF_Expand<8160ul>(const std::array<uint8_t,BLS12_381_KeyGen::K>& PRK, const std::vector<uint8_t>& info);
+template std::array<uint8_t,48ul> BLS12_381_KeyGen::HKDF_Expand<48ul>(const std::array<uint8_t,BLS12_381_KeyGen::K>& PRK, const std::vector<uint8_t>& info);
 
 // Input:
 // - x, nonnegative integer to be converted
@@ -89,14 +73,11 @@ std::vector<uint8_t> BLS12_381_KeyGen::I2OSP(const MclScalar& x, const size_t& x
     }
 }
 
-// Input:
-// - X, octet string to be converted
-// Output:
-// - x, corresponding nonnegative integer
-MclScalar BLS12_381_KeyGen::OS2IP(const std::vector<uint8_t>& X)
+MclScalar BLS12_381_KeyGen::OS2IP(const std::array<uint8_t,48>& X)
 {
-    MclScalar x(X);
-    return x;
+    std::vector<uint8_t> vec(X.begin(), X.end());
+    MclScalar s(vec);
+    return s;
 }
 
 // flip_bits is a function that returns the bitwise negation of its input
@@ -107,12 +88,8 @@ MclScalar BLS12_381_KeyGen::flip_bits(const MclScalar& s)
 
 // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
 // expects that length of octet string is L
-std::array<std::array<uint8_t,BLS12_381_KeyGen::K>,BLS12_381_KeyGen::N> BLS12_381_KeyGen::bytes_split(const std::vector<uint8_t>& octet_string)
+std::array<std::array<uint8_t,BLS12_381_KeyGen::K>,BLS12_381_KeyGen::N> BLS12_381_KeyGen::bytes_split(const std::array<uint8_t,8160>& octet_string)
 {
-    if (octet_string.size() != N * K) {
-        auto s = strprintf("Expected octet string to be of length %ld, but got %ld", 255 * BLS12_381_KeyGen::K, octet_string.size());
-        throw std::runtime_error(s);
-    }
     std::array<std::array<uint8_t,K>,N> ret;
     size_t i = 0;
 
@@ -122,63 +99,98 @@ std::array<std::array<uint8_t,BLS12_381_KeyGen::K>,BLS12_381_KeyGen::N> BLS12_38
     return ret;
 }
 
-// Inputs
-// - IKM, a secret octet string
-// - salt, an octet string
-//
-// Outputs
-// - lamport_SK, an array of 255 32-octet strings
-std::array<uint8_t,BLS12_381_KeyGen::L> BLS12_381_KeyGen::IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt)
-{
-    // 0. PRK = HKDF-Extract(salt, IKM)
-    // 1. OKM = HKDF-Expand(PRK, "" , L)
-    // 2. lamport_SK = bytes_split(OKM, K)
-    // 3. return lamport_SK
-    std::array<uint8_t,L> ret;
-    return ret;
-}
-
-// Inputs
-// - parent_SK, the BLS Secret Key of the parent node
-// - index, the index of the desired child node, an integer 0 <= index < 2^32
-//
-// Outputs
-// - lamport_PK, the compressed lamport PK, a 32 octet string Inputs
-std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_PK(const std::vector<uint8_t>& parent_SK, const uint32_t& index)
-{
-    // 0. salt = I2OSP(index, 4)
-    // 1. IKM = I2OSP(parent_SK, 32)
-    // 2. lamport_0 = IKM_to_lamport_SK(IKM, salt)
-    // 3. not_IKM = flip_bits(IKM)
-    // 4. lamport_1 = IKM_to_lamport_SK(not_IKM, salt)
-    // 5. lamport_PK = ""
-    // 6. for i  in 1, .., 255
-    //        lamport_PK = lamport_PK | SHA256(lamport_0[i])
-    // 7. for i  in 1, .., 255
-    //        lamport_PK = lamport_PK | SHA256(lamport_1[i])
-    // 8. compressed_lamport_PK = SHA256(lamport_PK)
-    // 9. return compressed_lamport_PK
-
-    std::array<uint8_t,K> ret;
-    return ret;
-}
-
-// Inputs
-// - IKM, a secret octet string >= 256 bits in length
-// - key_info, an optional octet string (default="", the empty string)
-// Outputs
-// - SK, the corresponding secret key, an integer 0 <= SK < r.
 MclScalar BLS12_381_KeyGen::HKDF_mod_r(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& key_info)
 {
-    // 1. salt = "BLS-SIG-KEYGEN-SALT-"
-    // 2. SK = 0
-    // 3. while SK == 0:
-    // 4.     salt = H(salt)
-    // 5.     PRK = HKDF-Extract(salt, IKM || I2OSP(0, 1))
-    // 6.     OKM = HKDF-Expand(PRK, key_info || I2OSP(L, 2), L)
-    // 7.     SK = OS2IP(OKM) mod r
-    // 8. return SK
+    const auto L = 48;  // `ceil((3 * ceil(log2(r))) / 16)`, where `r` is the order of the BLS 12-381 curve
+    const std::string salt_str = "BLS-SIG-KEYGEN-SALT-";
+    const MclScalar zero(0);
 
-    MclScalar s;
-    return s;
+    std::vector<uint8_t> salt(salt_str.begin(), salt_str.end());
+    CSHA256 sha256;
+    std::array<uint8_t, CSHA256::OUTPUT_SIZE> hash;
+    MclScalar SK;
+
+    while (true) {
+        sha256.Write(&salt[0], salt.size());
+        sha256.Finalize(&hash[0]);
+        salt = std::vector<uint8_t>(hash.begin(), hash.end());
+
+        std::vector<uint8_t> IKM_zero(IKM.begin(), IKM.end());
+        auto i2osp_zero = I2OSP(0, 1);
+        IKM_zero.insert(IKM_zero.end(), i2osp_zero.begin(), i2osp_zero.end());
+        auto PRK = HKDF_Extract(IKM_zero, salt);
+
+        auto info = I2OSP(L, 2);
+        auto OKM = HKDF_Expand<L>(PRK, info);
+
+        SK = OS2IP(OKM);
+        if (!SK.IsZero()) return SK;
+        sha256.Reset();
+    }
+}
+
+std::array<std::array<uint8_t,CSHA256::OUTPUT_SIZE>,BLS12_381_KeyGen::N> BLS12_381_KeyGen::IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt)
+{
+    auto PRK = HKDF_Extract(IKM, salt);
+
+    const auto L = N * K;
+    std::vector<uint8_t> info(0);
+    auto OKM = HKDF_Expand<L>(PRK, info);
+
+    auto lamport_SK = bytes_split(OKM);
+
+    return lamport_SK;
+}
+
+std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_PK(const MclScalar& parent_SK, const uint32_t& index)
+{
+    auto salt = I2OSP(index, 4);
+    auto IKM = I2OSP(parent_SK, 32);
+    auto lamport_0 = IKM_to_lamport_SK(IKM, salt);
+    auto not_IKM = flip_bits(IKM).GetVch();
+    auto lamport_1 = IKM_to_lamport_SK(not_IKM, salt);
+
+    std::vector<uint8_t> lamport_PK;
+    CSHA256 sha256;
+    std::array<uint8_t,K> hash;
+
+    for (auto lamport_chunks : std::vector {lamport_0, lamport_1}) {
+        for (size_t i=1; i<=255; ++i) {
+            auto chunk = lamport_chunks[i-1];
+            sha256.Write(&chunk[0], K);
+            sha256.Finalize(&hash[0]);
+            sha256.Reset();
+            lamport_PK.insert(lamport_PK.end(), hash.begin(), hash.end());
+        }
+    }
+
+    sha256.Write(&lamport_PK[0], lamport_PK.size());
+    sha256.Finalize(&hash[0]);
+    return hash;
+}
+
+// Inputs
+// - parent_SK, the secret key of the parent node, a big endian encoded integer
+// - index, the index of the desired child node, an integer 0 <= index < 2^32
+// Outputs
+// - child_SK, the secret key of the child node, a big endian encoded integer
+std::vector<uint8_t> BLS12_381_KeyGen::derive_child_SK(const std::vector<uint8_t>& parent_SK, const uint32_t& index)
+{
+    // 0. compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index)
+    // 1. SK = HKDF_mod_r(compressed_lamport_PK)
+    // 2. return SK
+    std::vector<uint8_t> ret;
+    return ret;
+}
+
+// Inputs
+// - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
+// Outputs
+// - SK, the secret key of master node within the tree, a big endian encoded integer
+std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed, const std::vector<uint8_t>& SK)
+{
+    // 0. SK = HKDF_mod_r(seed)
+    // 1. return SK
+    std::array<uint8_t,BLS12_381_KeyGen::K> ret;
+    return ret;
 }

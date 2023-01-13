@@ -27,15 +27,15 @@ public:
 #ifndef BOOST_UNIT_TEST
 private:
 #endif
-    inline static const uint32_t K = 32;  // digest size
+    inline static const uint32_t K = CSHA256::OUTPUT_SIZE;  // digest size
     inline static const uint32_t N = 255;  // ? TODO give a better name
-    inline static const uint32_t L = K * N;  // HKDF output size
+    // inline static const uint32_t L = K * N;  // HKDF output size ???? TODO clarify this
 
     // TODO check if this remains the same in v5
     inline static std::string r = "52435875175126190479447740508185965837690552500527637822603658699938581184513";
 
-    // TODO check this remains the same in v5 environment as well
-    inline static const uint32_t HKDF_mod_r_L = 48; // ceil((3 * ceil(log2(r))) / 16).(L=48)
+    // // TODO check this remains the same in v5 environment as well
+    // inline static const uint32_t HKDF_mod_r_L = 48; // ceil((3 * ceil(log2(r))) / 16).(L=48)
 
     // HKDF-Extract is as defined in RFC5869, instantiated with SHA256
     // Inputs:
@@ -43,15 +43,16 @@ private:
     // - IKM, input keying material
     // Output:
     // - PRK, a pseudorandom key (of HashLen octets)
-    static std::array<uint8_t,K> HKDF_Extract(const std::vector<uint8_t>& IKM, const MclScalar& salt = MclScalar{0});
+    static std::array<uint8_t,K> HKDF_Extract(const MclScalar& salt, const std::vector<uint8_t>& IKM);
 
     // HKDF-Expand is as defined in RFC5869, instantiated with SHA256
     // Inputs:
-    // - PRK, a pseudorandom key of at least HashLen octets (usually, the output from the extract step) <- for bls12-381 keygen this is fixed to 32
+    // - PRK, a pseudorandom key of at least HashLen octets (usually, the output from the extract step) <- in bls12-381 keygen, fixed to 32
     // - info, optional context and application specific information (can be a zero-length string)
-    // - L, length of output keying material in octets (<= 255*HashLen)  <- for bls12-381 keygen this is fixed to 32*255
+    // - L, length of output keying material in octets (<= 255*HashLen)  <- added as type argument
     // Output:
-    // - OKM, output keying material (of L octets)
+    // - OKM, output keying material (of L octets) <- OutSize octets are returned instead
+    template <size_t L>
     static std::array<uint8_t,L> HKDF_Expand(const std::array<uint8_t,K>& PRK, const std::vector<uint8_t>& info);
 
     // I2OSP converts a nonnegative integer to an octet string of a specified length
@@ -69,17 +70,24 @@ private:
     // (Big endian encoding)
     // OS2IP (X)
     // Input:
-    // - X, octet string to be converted
+    // - X, octet string to be converted <- size is fixed to 48
     // Output:
     // - x, corresponding nonnegative integer
-    static MclScalar OS2IP(const std::vector<uint8_t>& X);
+    static MclScalar OS2IP(const std::array<uint8_t,48>& X);
 
     // flip_bits is a function that returns the bitwise negation of its input
     static MclScalar flip_bits(const MclScalar& s);
 
     // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
-    // expects that length of octet string is N * K
-    static std::array<std::array<uint8_t,K>,N> bytes_split(const std::vector<uint8_t>& octet_string);
+    // expected length of octet string is N * K
+    static std::array<std::array<uint8_t,K>,N> bytes_split(const std::array<uint8_t,8160>& octet_string);
+
+    // Inputs
+    // - IKM, a secret octet string >= 256 bits in length
+    // - key_info, an optional octet string (default="", the empty string)
+    // Outputs
+    // - SK, the corresponding secret key, an integer 0 <= SK < r.
+    static MclScalar HKDF_mod_r(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& key_info = {});
 
     // Inputs
     // - IKM, a secret octet string
@@ -87,7 +95,7 @@ private:
     //
     // Outputs
     // - lamport_SK, an array of 255 32-octet strings
-    std::array<uint8_t,BLS12_381_KeyGen::L> IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
+    static std::array<std::array<uint8_t,K>,N> IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
 
     // Inputs
     // - parent_SK, the BLS Secret Key of the parent node
@@ -95,12 +103,5 @@ private:
     //
     // Outputs
     // - lamport_PK, the compressed lamport PK, a 32 octet string Inputs
-    std::array<uint8_t,BLS12_381_KeyGen::K> parent_SK_to_lamport_PK(const std::vector<uint8_t>& parent_SK, const uint32_t& index);
-
-    // Inputs
-    // - IKM, a secret octet string >= 256 bits in length
-    // - key_info, an optional octet string (default="", the empty string)
-    // Outputs
-    // - SK, the corresponding secret key, an integer 0 <= SK < r.
-    MclScalar HKDF_mod_r(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& key_info = {});
+    static std::array<uint8_t,BLS12_381_KeyGen::K> parent_SK_to_lamport_PK(const MclScalar& parent_SK, const uint32_t& index);
 };
