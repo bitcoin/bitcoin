@@ -132,8 +132,7 @@ mi_decl_cache_align static const mi_tld_t tld_empty = {
 
 // the thread-local default heap for allocation
 mi_decl_thread mi_heap_t* _mi_heap_default = (mi_heap_t*)&_mi_heap_empty;
-// NOLINT(readability-redundant-declaration) 
-extern mi_heap_t _mi_heap_main;
+extern mi_heap_t _mi_heap_main; // NOLINT(readability-redundant-declaration) 
 
 static mi_tld_t tld_main = {
   0, false,

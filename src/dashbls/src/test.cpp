@@ -81,19 +81,16 @@ TEST_CASE("class PrivateKey") {
         std::vector<uint8_t> vec2 = pk2.Serialize();
         PrivateKey pk3 = PrivateKey(std::move(pk2));
         REQUIRE(!pk1.IsZero());
-        // NOLINT(*-use-after-move)
-        REQUIRE_THROWS(pk2.IsZero());
+        REQUIRE_THROWS(pk2.IsZero()); // NOLINT(*-use-after-move)
         REQUIRE(!pk3.IsZero());
         REQUIRE(vec2 == pk3.Serialize());
         pk3 = std::move(pk1);
-        // NOLINT(*-use-after-move) 
-        REQUIRE_THROWS(pk1.IsZero());
+        REQUIRE_THROWS(pk1.IsZero()); // NOLINT(*-use-after-move) 
         REQUIRE_THROWS(pk2.IsZero());
         REQUIRE(!pk3.IsZero());
         REQUIRE(vec1 == pk3.Serialize());
         pk3 = std::move(pk1);
-        // NOLINT(*-use-after-move) 
-        REQUIRE_THROWS(pk1.IsZero());
+        REQUIRE_THROWS(pk1.IsZero()); // NOLINT(*-use-after-move) 
         REQUIRE_THROWS(pk2.IsZero());
         REQUIRE_THROWS(pk3.IsZero());
     }
@@ -142,8 +139,7 @@ TEST_CASE("class PrivateKey") {
         G1Element g1 = pk1.GetG1Element();
         G2Element g2 = pk1.GetG2Element();
         PrivateKey pk2 = std::move(pk1);
-        // NOLINT(*-use-after-move) 
-        REQUIRE_THROWS(PrivateKey(pk1));
+        REQUIRE_THROWS(PrivateKey(pk1)); // NOLINT(*-use-after-move) 
         REQUIRE_THROWS(pk1 = pk2);
         REQUIRE_THROWS(pk1.GetG1Element());
         REQUIRE_THROWS(pk1.GetG2Element());
