@@ -16,11 +16,11 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
   - The minimum value for `-maxmempool` is 5.
   - A lower maximum mempool size means that transactions will be evicted sooner. This will affect any uses of `bitcoind` that process unconfirmed transactions.
 
-- To completely disable mempool functionality there is the option `-blocksonly`. This will make the client opt out of receiving (and thus relaying) transactions completely, except as part of blocks.
+- Since `0.14.0`, unused memory allocated to the mempool (default: 300MB) is shared with the UTXO cache, so when trying to reduce memory usage you should limit the mempool, with the `-maxmempool` command line argument.
+
+- To disable most of the mempool functionality there is the `-blocksonly` option. This will reduce the default memory usage to 5MB and make the client opt out of receiving (and thus relaying) transactions, except from whitelisted peers and as part of blocks.
 
   - Do not use this when using the client to broadcast transactions as any transaction sent will stick out like a sore thumb, affecting privacy. When used with the wallet it should be combined with `-walletbroadcast=0` and `-spendzeroconfchange=0`. Another mechanism for broadcasting outgoing transactions (if any) should be used.
-
-- Since `0.14.0`, unused memory allocated to the mempool (default: 300MB) is shared with the UTXO cache, so when trying to reduce memory usage you should limit the mempool, with the `-maxmempool` command line argument.
 
 ## Number of peers
 
