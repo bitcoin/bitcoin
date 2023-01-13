@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Dash Core developers
+// Copyright (c) 2018-2023 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -89,6 +89,19 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                      qc.quorumHash.ToString(), peer.GetId());
             Misbehaving(peer.GetId(), 100);
+            return;
+        }
+        if (pQuorumBaseBlockIndex->nHeight < (::ChainActive().Height() - GetLLMQParams(type).dkgInterval)) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is too old, peer=%d\n", __func__,
+                     qc.quorumHash.ToString(), peer.GetId());
+            // TODO: enable punishment in some future version when all/most nodes are running with this fix
+            // Misbehaving(peer.GetId(), 100);
+            return;
+        }
+        if (HasMinedCommitment(type, qc.quorumHash)) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum hash[%s], type[%d], quorumIndex[%d] is already mined, peer=%d\n",
+                     __func__, qc.quorumHash.ToString(), uint8_t(type), qc.quorumIndex, peer.GetId());
+            // NOTE: do not punish here
             return;
         }
     }
