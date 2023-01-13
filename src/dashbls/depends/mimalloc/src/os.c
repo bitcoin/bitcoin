@@ -68,7 +68,7 @@ terms of the MIT license. A copy of the license can be found in the file
   large OS pages (if MIMALLOC_LARGE_OS_PAGES is true).
 ----------------------------------------------------------- */
 bool _mi_os_decommit(void* addr, size_t size, mi_stats_t* stats); // NOLINT(readability-redundant-declaration)
-bool _mi_os_commit(void* addr, size_t size, bool* is_zero, mi_stats_t* tld_stats);
+bool _mi_os_commit(void* addr, size_t size, bool* is_zero, mi_stats_t* tld_stats); // NOLINT(readability-redundant-declaration)
 
 static void* mi_align_up_ptr(void* p, size_t alignment) {
   return (void*)_mi_align_up((uintptr_t)p, alignment);
