@@ -12,17 +12,17 @@ class BLS12_381_KeyGen
 {
 public:
     // Inputs
+    // - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
+    // Outputs
+    // - SK, the secret key of master node within the tree, a big endian encoded integer
+    MclScalar derive_master_SK(const std::vector<uint8_t>& seed);
+
+    // Inputs
     // - parent_SK, the secret key of the parent node, a big endian encoded integer
     // - index, the index of the desired child node, an integer 0 <= index < 2^32
     // Outputs
     // - child_SK, the secret key of the child node, a big endian encoded integer
-    std::vector<uint8_t> derive_child_SK(const std::vector<uint8_t>& parent_SK, const uint32_t& index);
-
-    // Inputs
-    // - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
-    // Outputs
-    // - SK, the secret key of master node within the tree, a big endian encoded integer
-    std::array<uint8_t,32> derive_master_SK(const std::vector<uint8_t>& seed, const std::vector<uint8_t>& SK);
+    MclScalar derive_child_SK(const MclScalar& parent_SK, const uint32_t& index);
 
 #ifndef BOOST_UNIT_TEST
 private:

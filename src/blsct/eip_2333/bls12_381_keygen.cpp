@@ -49,11 +49,6 @@ std::array<uint8_t,L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS
 template std::array<uint8_t,8160ul> BLS12_381_KeyGen::HKDF_Expand<8160ul>(const std::array<uint8_t,BLS12_381_KeyGen::K>& PRK, const std::vector<uint8_t>& info);
 template std::array<uint8_t,48ul> BLS12_381_KeyGen::HKDF_Expand<48ul>(const std::array<uint8_t,BLS12_381_KeyGen::K>& PRK, const std::vector<uint8_t>& info);
 
-// Input:
-// - x, nonnegative integer to be converted
-// - xLen, intended length of the resulting octet string
-// Output:
-// - X, corresponding octet string of length xLen
 std::vector<uint8_t> BLS12_381_KeyGen::I2OSP(const MclScalar& x, const size_t& xLen)
 {
     if (xLen == 0) {
@@ -81,14 +76,11 @@ MclScalar BLS12_381_KeyGen::OS2IP(const std::array<uint8_t,48>& X)
     return s;
 }
 
-// flip_bits is a function that returns the bitwise negation of its input
 MclScalar BLS12_381_KeyGen::flip_bits(const MclScalar& s)
 {
     return s.Negate();
 }
 
-// a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
-// expects that length of octet string is L
 BLS12_381_KeyGen::LamportChunks BLS12_381_KeyGen::bytes_split(const std::array<uint8_t,8160>& octet_string)
 {
     std::array<std::array<uint8_t,K>,N> ret;
@@ -170,28 +162,18 @@ std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_P
     return hash;
 }
 
-// Inputs
-// - parent_SK, the secret key of the parent node, a big endian encoded integer
-// - index, the index of the desired child node, an integer 0 <= index < 2^32
-// Outputs
-// - child_SK, the secret key of the child node, a big endian encoded integer
-std::vector<uint8_t> BLS12_381_KeyGen::derive_child_SK(const std::vector<uint8_t>& parent_SK, const uint32_t& index)
+MclScalar BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed)
 {
-    // 0. compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index)
-    // 1. SK = HKDF_mod_r(compressed_lamport_PK)
-    // 2. return SK
-    std::vector<uint8_t> ret;
-    return ret;
+    if (seed.size() < 256) {
+        throw std::runtime_error("seed must be an octet string of size 256 or larger");
+    }
+    auto SK = HKDF_mod_r(seed);
+    return SK;
 }
 
-// Inputs
-// - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
-// Outputs
-// - SK, the secret key of master node within the tree, a big endian encoded integer
-std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed, const std::vector<uint8_t>& SK)
+MclScalar BLS12_381_KeyGen::derive_child_SK(const MclScalar& parent_SK, const uint32_t& index)
 {
-    // 0. SK = HKDF_mod_r(seed)
-    // 1. return SK
-    std::array<uint8_t,BLS12_381_KeyGen::K> ret;
-    return ret;
+    auto compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index);
+    auto SK = HKDF_mod_r(std::vector<uint8_t>(compressed_lamport_PK.begin(), compressed_lamport_PK.end()));
+    return SK;
 }
