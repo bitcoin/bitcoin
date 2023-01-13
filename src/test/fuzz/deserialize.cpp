@@ -46,9 +46,6 @@ void initialize_deserialize()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();
-
-    // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const ECCVerifyHandle verify_handle;
 }
 
 #define FUZZ_TARGET_DESERIALIZE(name, code)                \

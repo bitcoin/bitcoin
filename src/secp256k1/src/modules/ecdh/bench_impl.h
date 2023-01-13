@@ -7,7 +7,7 @@
 #ifndef SECP256K1_MODULE_ECDH_BENCH_H
 #define SECP256K1_MODULE_ECDH_BENCH_H
 
-#include "../include/secp256k1_ecdh.h"
+#include "../../../include/secp256k1_ecdh.h"
 
 typedef struct {
     secp256k1_context *ctx;

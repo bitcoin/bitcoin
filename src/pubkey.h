@@ -330,21 +330,4 @@ struct CExtPubKey {
     [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild) const;
 };
 
-/** Users of this module must hold an ECCVerifyHandle. The constructor and
- *  destructor of these are not allowed to run in parallel, though. */
-class ECCVerifyHandle
-{
-    static int refcount;
-
-public:
-    ECCVerifyHandle();
-    ~ECCVerifyHandle();
-};
-
-typedef struct secp256k1_context_struct secp256k1_context;
-
-/** Access to the internal secp256k1 context used for verification. Only intended to be used
- *  by key.cpp. */
-const secp256k1_context* GetVerifyContext();
-
 #endif // BITCOIN_PUBKEY_H
