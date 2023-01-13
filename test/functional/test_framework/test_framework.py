@@ -873,6 +873,14 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     def skip_if_no_syscoind_zmq(self):
         """Skip the running test if syscoind has not been compiled with zmq support."""
+
+    def skip_if_no_py_sqlite3(self):
+        """Attempt to import the sqlite3 package and skip the test if the import fails."""
+        try:
+            import sqlite3  # noqa
+        except ImportError:
+            raise SkipTest("sqlite3 module not available.")
+
     def skip_if_no_python_bcc(self):
         """Attempt to import the bcc package and skip the tests if the import fails."""
         try:
