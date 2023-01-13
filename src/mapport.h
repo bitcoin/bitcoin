@@ -5,11 +5,7 @@
 #ifndef BITCOIN_MAPPORT_H
 #define BITCOIN_MAPPORT_H
 
-#ifdef USE_UPNP
-static constexpr bool DEFAULT_UPNP = USE_UPNP;
-#else
 static constexpr bool DEFAULT_UPNP = false;
-#endif // USE_UPNP
 
 static constexpr bool DEFAULT_NATPMP = false;
 
