@@ -22,8 +22,8 @@ AC_CANONICAL_HOST
 AH_TOP([#ifndef RLC_CONF_H])
 AH_TOP([#define RLC_CONF_H])
 AH_BOTTOM([#endif /*RLC_CONF_H*/])
-AM_INIT_AUTOMAKE([foreign no-define subdir-objects])
-
+# Require Automake 1.11.2 for AM_PROG_AR
+AM_INIT_AUTOMAKE([1.11.2 no-define foreign subdir-objects])
 dnl faketime messes with timestamps and causes configure to be re-run.
 dnl --disable-maintainer-mode can be used to bypass this.
 AM_MAINTAINER_MODE([enable])
@@ -60,11 +60,11 @@ AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 dnl Libtool init checks.
 LT_INIT([pic-only])
 
-AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 
 AM_PROG_AS
+AM_PROG_AR
 
 AC_ARG_ENABLE(tests,
   [AS_HELP_STRING([--disable-tests],
@@ -471,6 +471,16 @@ if test x$use_pkgconfig = xyes; then
   fi
   ])
 fi
+# When compiling with depends, the `PKG_CONFIG_PATH` and `PKG_CONFIG_LIBDIR` variables,
+# being set in a `config.site` file, are not exported to let the `--config-cache` option
+# work properly.
+if test -n "$PKG_CONFIG_PATH"; then
+  PKG_CONFIG="env PKG_CONFIG_PATH=$PKG_CONFIG_PATH $PKG_CONFIG"
+fi
+if test -n "$PKG_CONFIG_LIBDIR"; then
+  PKG_CONFIG="env PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR $PKG_CONFIG"
+fi
+
 
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -pipe"
