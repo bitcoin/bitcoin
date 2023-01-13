@@ -55,12 +55,12 @@ libdashbls_la_LDFLAGS  = $(AM_LDFLAGS)
 include Makefile.mimalloc.include
 include Makefile.relic.include
 
-if USE_TESTS
-include Makefile.test.include
-endif
+#if USE_TESTS
+#include Makefile.test.include
+#endif
 
-if USE_BENCH
-include Makefile.bench.include
-endif
+#if USE_BENCH
+#include Makefile.bench.include
+#endif
 
 lib_LTLIBRARIES += $(LIBDASHBLS)
