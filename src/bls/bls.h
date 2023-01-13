@@ -309,13 +309,11 @@ public:
 class ConstCBLSPublicKeyVersionWrapper {
 private:
     bool legacy;
-    bool checkMalleable;
     const CBLSPublicKey& obj;
 public:
-    ConstCBLSPublicKeyVersionWrapper(const CBLSPublicKey& obj, bool legacy, bool checkMalleable = true)
-            : obj(obj)
-            , legacy(legacy)
-            , checkMalleable(checkMalleable)
+    ConstCBLSPublicKeyVersionWrapper(const CBLSPublicKey& obj, bool legacy)
+            : legacy(legacy)
+            , obj(obj)
     {}
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -330,9 +328,9 @@ private:
     CBLSPublicKey& obj;
 public:
     CBLSPublicKeyVersionWrapper(CBLSPublicKey& obj, bool legacy, bool checkMalleable = true)
-            : obj(obj)
-            , legacy(legacy)
+            : legacy(legacy)
             , checkMalleable(checkMalleable)
+            , obj(obj)
     {}
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -374,13 +372,11 @@ public:
 class CBLSSignatureVersionWrapper {
 private:
     bool legacy;
-    bool checkMalleable;
     CBLSSignature& obj;
 public:
-    CBLSSignatureVersionWrapper(CBLSSignature& obj, bool legacy, bool checkMalleable = true)
-            : obj(obj)
-            , legacy(legacy)
-            , checkMalleable(checkMalleable)
+    CBLSSignatureVersionWrapper(CBLSSignature& obj, bool legacy)
+            : legacy(legacy)
+            , obj(obj)
     {}
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -573,8 +569,8 @@ private:
     CBLSLazyPublicKey& obj;
 public:
     CBLSLazyPublicKeyVersionWrapper(CBLSLazyPublicKey& obj, bool legacy)
-            : obj(obj)
-            , legacy(legacy)
+            : legacy(legacy)
+            , obj(obj)
     {}
     template <typename Stream>
     inline void Serialize(Stream& s) const {

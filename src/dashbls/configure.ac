@@ -1,5 +1,13 @@
 AC_PREREQ([2.60])
-AC_INIT([libdashbls],[1.2.4])
+# The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
+# the API. All changes in experimental modules are treated as
+# backwards-compatible and therefore at most increase the minor version.
+define(_PKG_VERSION_MAJOR, 1)
+define(_PKG_VERSION_MINOR, 2)
+define(_PKG_VERSION_BUILD, 4)
+define(_PKG_VERSION_IS_RELEASE, false)
+AC_INIT([libdashbls],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/syscoin/syscoin/issues],[libdashbls],[https://github.com/syscoin/syscoin])
+
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -393,6 +401,8 @@ case $host in
        # Homebrew where each one is located, then adjust paths accordingly.
        gmp_prefix=`$BREW --prefix gmp 2>/dev/null`
        if test x$gmp_prefix != x; then
+         PKG_CONFIG_PATH="$gmp_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+         export PKG_CONFIG_PATH
          GMP_CPPFLAGS="-I$gmp_prefix/include"
          GMP_LDFLAGS="-L$gmp_prefix/lib"
        fi
@@ -778,6 +788,11 @@ AC_SUBST(GMP_LIBS)
 
 AC_CONFIG_HEADERS([depends/relic/include/relic_conf.h])
 AC_CONFIG_FILES([Makefile])
+
+# Make sure nothing new is exported so that we don't break the cache.
+PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
+unset PKG_CONFIG_PATH
+PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
 
 AC_OUTPUT
 
