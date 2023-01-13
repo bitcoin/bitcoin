@@ -144,7 +144,6 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.generate(self.wallet, 101)
 
         self.test_uncache()
         self.test_add_spent()
