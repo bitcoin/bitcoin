@@ -215,7 +215,6 @@ class ZMQTest (BitcoinTestFramework):
             assert_equal([txid.hex()], self.nodes[1].getblock(hash)["tx"])
 
 
-        self.wallet.rescan_utxos()
         self.log.info("Wait for tx from second node")
         payment_tx = self.wallet.send_self_transfer(from_node=self.nodes[1])
         payment_txid = payment_tx['txid']

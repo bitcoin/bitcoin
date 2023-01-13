@@ -59,7 +59,6 @@ class MempoolPersistTest(BitcoinTestFramework):
 
     def run_test(self):
         self.mini_wallet = MiniWallet(self.nodes[2])
-        self.mini_wallet.rescan_utxos()
         if self.is_sqlite_compiled():
             self.nodes[2].createwallet(
                 wallet_name="watch",

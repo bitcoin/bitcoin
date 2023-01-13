@@ -96,7 +96,6 @@ class RESTTest (BitcoinTestFramework):
     def run_test(self):
         self.url = urllib.parse.urlparse(self.nodes[0].url)
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
 
         self.log.info("Broadcast test transaction and sync nodes")
         txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))

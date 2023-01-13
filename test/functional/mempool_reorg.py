@@ -31,7 +31,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Add 4 coinbase utxos to the miniwallet")
         # Block 76 contains the first spendable coinbase txs.
         first_block = 76
-        wallet.rescan_utxos()
 
         # Three scenarios for re-orging coinbase spends in the memory pool:
         # 1. Direct coinbase spend  :  spend_1

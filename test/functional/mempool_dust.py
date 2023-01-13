@@ -72,7 +72,6 @@ class DustRelayFeeTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
 
         # prepare output scripts of each standard type
         key = ECKey()

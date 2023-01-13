@@ -101,6 +101,13 @@ class MiniWallet:
             self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+        # When the pre-mined test framework chain is used, it contains coinbase
+        # outputs to the MiniWallet's default address in blocks 76-100
+        # (see method BitcoinTestFramework._initialize_chain())
+        # The MiniWallet needs to rescan_utxos() in order to account
+        # for those mature UTXOs, so that all txs spend confirmed coins
+        self.rescan_utxos()
+
     def _create_utxo(self, *, txid, vout, value, height, coinbase, confirmations):
         return {"txid": txid, "vout": vout, "value": value, "height": height, "coinbase": coinbase, "confirmations": confirmations}
 
