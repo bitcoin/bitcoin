@@ -1,1 +1,1 @@
-Refer to [doc/build-\*.md](/doc) for installation instructions
+Refer to [doc/build-\*.md](/doc) for build instructions
