@@ -35,7 +35,7 @@ LIBSYSCOIN_CLI=libsyscoin_cli.a
 LIBSYSCOIN_UTIL=libsyscoin_util.a
 LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.la
 LIBSYSCOINQT=qt/libsyscoinqt.a
-LIBDASHBLS=dashbls/libdashbls.la
+LIBBLS=dashbls/libdashbls.la
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBNEVM=nevm/libnevm.a
 if ENABLE_ZMQ
@@ -71,7 +71,7 @@ LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_ARM_SHANI)
 endif
 noinst_LTLIBRARIES += $(LIBSYSCOIN_CRYPTO)
 
-$(LIBDASHBLS):
+$(LIBBLS):
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D)
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -902,7 +902,7 @@ syscoin_bin_ldadd = \
   $(LIBSECP256K1) \
   $(LIBNEVM)
 
-syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(LIBDASHBLS)
+syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(LIBBLS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -957,7 +957,7 @@ syscoin_tx_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBNEVM) \
-  $(LIBDASHBLS)
+  $(LIBBLS)
 #
 
 # syscoin-wallet binary #
@@ -1125,7 +1125,7 @@ libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_
 
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libsyscoinconsensus_la_LIBADD = $(LIBDASHBLS) $(LIBSECP256K1)
+libsyscoinconsensus_la_LIBADD = $(LIBBLS) $(LIBSECP256K1)
 libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL
 libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/mimalloc/include
 libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/immer
