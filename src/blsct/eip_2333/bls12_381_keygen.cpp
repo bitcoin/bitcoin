@@ -6,10 +6,9 @@
 #include <crypto/sha256.h>
 #include <tinyformat.h>
 
-std::array<uint8_t,CHMAC_SHA256::OUTPUT_SIZE> BLS12_381_KeyGen::HKDF_Extract(const MclScalar& salt, const std::vector<uint8_t>& IKM)
+std::array<uint8_t,CHMAC_SHA256::OUTPUT_SIZE> BLS12_381_KeyGen::HKDF_Extract(const std::vector<uint8_t>& salt, const std::vector<uint8_t>& IKM)
 {
-    auto salt_vec = salt.GetVch(true);
-    auto hmac_sha256 = CHMAC_SHA256(&salt_vec[0], salt_vec.size());
+    auto hmac_sha256 = CHMAC_SHA256(&salt[0], salt.size());
     hmac_sha256.Write(&IKM[0], IKM.size());
 
     std::array<uint8_t,CHMAC_SHA256::OUTPUT_SIZE> hash;
@@ -111,10 +110,8 @@ MclScalar BLS12_381_KeyGen::HKDF_mod_r(const std::vector<uint8_t>& IKM, const st
         std::vector<uint8_t> IKM_zero(IKM.begin(), IKM.end());
         auto i2osp_zero = I2OSP(0, 1);
         IKM_zero.insert(IKM_zero.end(), i2osp_zero.begin(), i2osp_zero.end());
-        auto PRK = HKDF_Extract(IKM_zero, salt);
-
-        auto info = I2OSP(L, 2);
-        auto OKM = HKDF_Expand<L>(PRK, info);
+        auto PRK = HKDF_Extract(salt, IKM_zero);
+        auto OKM = HKDF_Expand<L>(PRK, key_info);
 
         SK = OS2IP(OKM);
         if (!SK.IsZero()) return SK;
@@ -124,7 +121,7 @@ MclScalar BLS12_381_KeyGen::HKDF_mod_r(const std::vector<uint8_t>& IKM, const st
 
 BLS12_381_KeyGen::LamportChunks BLS12_381_KeyGen::IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt)
 {
-    auto PRK = HKDF_Extract(IKM, salt);
+    auto PRK = HKDF_Extract(salt, IKM);
 
     const auto L = N * K;
     std::vector<uint8_t> info(0);
@@ -164,16 +161,18 @@ std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_P
 
 MclScalar BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed)
 {
-    if (seed.size() < 256) {
-        throw std::runtime_error("seed must be an octet string of size 256 or larger");
+    if (seed.size() < 32) {
+        throw std::runtime_error("seed must be an 256-bit octet string or larger");
     }
-    auto SK = HKDF_mod_r(seed);
+    const auto L = 48;
+    auto key_info = I2OSP(L, 2);
+    auto SK = HKDF_mod_r(seed, key_info);
     return SK;
 }
 
 MclScalar BLS12_381_KeyGen::derive_child_SK(const MclScalar& parent_SK, const uint32_t& index)
 {
     auto compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index);
-    auto SK = HKDF_mod_r(std::vector<uint8_t>(compressed_lamport_PK.begin(), compressed_lamport_PK.end()));
+    auto SK = HKDF_mod_r(std::vector<uint8_t>(compressed_lamport_PK.begin(), compressed_lamport_PK.end()), {});
     return SK;
 }

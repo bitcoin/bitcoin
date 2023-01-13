@@ -15,14 +15,14 @@ public:
     // - seed, the source entropy for the entire tree, a octet string >= 256 bits in length
     // Outputs
     // - SK, the secret key of master node within the tree, a big endian encoded integer
-    MclScalar derive_master_SK(const std::vector<uint8_t>& seed);
+    static MclScalar derive_master_SK(const std::vector<uint8_t>& seed);
 
     // Inputs
     // - parent_SK, the secret key of the parent node, a big endian encoded integer
     // - index, the index of the desired child node, an integer 0 <= index < 2^32
     // Outputs
     // - child_SK, the secret key of the child node, a big endian encoded integer
-    MclScalar derive_child_SK(const MclScalar& parent_SK, const uint32_t& index);
+    static MclScalar derive_child_SK(const MclScalar& parent_SK, const uint32_t& index);
 
 #ifndef BOOST_UNIT_TEST
 private:
@@ -44,7 +44,7 @@ private:
     // - IKM, input keying material
     // Output:
     // - PRK, a pseudorandom key (of HashLen octets)
-    static std::array<uint8_t,K> HKDF_Extract(const MclScalar& salt, const std::vector<uint8_t>& IKM);
+    static std::array<uint8_t,K> HKDF_Extract(const std::vector<uint8_t>& salt, const std::vector<uint8_t>& IKM);
 
     // HKDF-Expand is as defined in RFC5869, instantiated with SHA256
     // Inputs:
@@ -88,7 +88,7 @@ private:
     // - key_info, an optional octet string (default="", the empty string)
     // Outputs
     // - SK, the corresponding secret key, an integer 0 <= SK < r.
-    static MclScalar HKDF_mod_r(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& key_info = {});
+    static MclScalar HKDF_mod_r(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& key_info);
 
     // Inputs
     // - IKM, a secret octet string

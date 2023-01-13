@@ -6,6 +6,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
+#include <util/strencodings.h>
 #include <blsct/eip_2333/bls12_381_keygen.h>
 
 BOOST_FIXTURE_TEST_SUITE(bls12_381_keygen_tests, MclTestingSetup)
@@ -161,16 +162,6 @@ BOOST_AUTO_TEST_CASE(test_i2osp)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_o2isp)
-{
-    // alias to MclScalar ctor call
-}
-
-BOOST_AUTO_TEST_CASE(test_flip_bits)
-{
-    // alias to MclScalar::Negate call
-}
-
 BOOST_AUTO_TEST_CASE(test_bytes_split)
 {
     {
@@ -227,7 +218,7 @@ BOOST_AUTO_TEST_CASE(test_hkdf_extract)
         220,
     };
     std::vector<uint8_t> IKM { 0x01, 0x02 };
-    MclScalar salt(123);
+    std::vector<uint8_t> salt {123};
     auto act = BLS12_381_KeyGen::HKDF_Extract(salt, IKM);
     BOOST_CHECK(act == exp);
 }
@@ -245,7 +236,7 @@ BOOST_AUTO_TEST_CASE(test_hkdf_expand_48)
         31,32,33,34,35,36,37,38,39,40,
         41,42,43,44,45,46,47,48,
     };
-    MclScalar salt(123);
+    std::vector<uint8_t> salt {123};
     auto PRK = BLS12_381_KeyGen::HKDF_Extract(salt, IKM);
     auto info = BLS12_381_KeyGen::I2OSP(L, 2);
     auto act = BLS12_381_KeyGen::HKDF_Expand<L>(PRK, info);
@@ -261,15 +252,24 @@ BOOST_AUTO_TEST_CASE(test_hkdf_expand_255_times_32)
     };
 
     std::vector<uint8_t> IKM { 0x01, 0x02 };
-    MclScalar salt(123);
+    std::vector<uint8_t> salt {123};
     auto PRK = BLS12_381_KeyGen::HKDF_Extract(salt, IKM);
     std::vector<uint8_t> info;
     auto act = BLS12_381_KeyGen::HKDF_Expand<L>(PRK, info);
     BOOST_CHECK(act == exp);
 }
 
-BOOST_AUTO_TEST_CASE(test_hkdf_mod_r)
+BOOST_AUTO_TEST_CASE(test_test_case_0)
 {
+    auto seed = ParseHex("c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04");
+    auto act_master = BLS12_381_KeyGen::derive_master_SK(seed);
+    MclScalar exp_master("6083874454709270928345386274498605044986640685124978867557563392430687146096", 10);
+    BOOST_CHECK(act_master == exp_master);
+
+    auto child_index = 0;
+    MclScalar exp_child("20397789859736650942317412262472558107875392172444076792671091975210932703118", 10);
+    auto act_child = BLS12_381_KeyGen::derive_child_SK(act_master, child_index);
+    BOOST_CHECK(act_child == exp_child);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
