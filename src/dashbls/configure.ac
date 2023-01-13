@@ -60,9 +60,6 @@ AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 dnl Libtool init checks.
 LT_INIT([pic-only])
 
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-
 AM_PROG_AS
 AM_PROG_AR
 
@@ -346,7 +343,6 @@ if test x$use_big_endian = xyes; then
   AC_DEFINE([BIGED],   [1], [Define this symbol if big-endian support is enabled])
 fi
 
-use_pkgconfig=yes
 
 case $host_cpu in
   x86_64)
@@ -401,8 +397,6 @@ case $host in
        # Homebrew where each one is located, then adjust paths accordingly.
        gmp_prefix=`$BREW --prefix gmp 2>/dev/null`
        if test x$gmp_prefix != x; then
-         PKG_CONFIG_PATH="$gmp_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-         export PKG_CONFIG_PATH
          GMP_CPPFLAGS="-I$gmp_prefix/include"
          GMP_LDFLAGS="-L$gmp_prefix/lib"
        fi
@@ -417,7 +411,6 @@ case $host in
      fi
      ;;
   *mingw*)
-     use_pkgconfig=no
      AC_DEFINE([OPSYS], [WINDOWS], [Detected operation system.])
      LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"
 
@@ -461,25 +454,6 @@ case $host in
     AC_DEFINE([SEED], [UDEV], [Chosen random generator seeder.])
     ;;
 esac
-
-if test x$use_pkgconfig = xyes; then
-  m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR(PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh.)])
-  m4_ifdef([PKG_PROG_PKG_CONFIG], [
-  PKG_PROG_PKG_CONFIG
-  if test x"$PKG_CONFIG" = "x"; then
-    AC_MSG_ERROR(pkg-config not found.)
-  fi
-  ])
-fi
-# When compiling with depends, the `PKG_CONFIG_PATH` and `PKG_CONFIG_LIBDIR` variables,
-# being set in a `config.site` file, are not exported to let the `--config-cache` option
-# work properly.
-if test -n "$PKG_CONFIG_PATH"; then
-  PKG_CONFIG="env PKG_CONFIG_PATH=$PKG_CONFIG_PATH $PKG_CONFIG"
-fi
-if test -n "$PKG_CONFIG_LIBDIR"; then
-  PKG_CONFIG="env PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR $PKG_CONFIG"
-fi
 
 
 saved_CFLAGS="$CFLAGS"
@@ -798,11 +772,6 @@ AC_SUBST(GMP_LIBS)
 
 AC_CONFIG_HEADERS([depends/relic/include/relic_conf.h])
 AC_CONFIG_FILES([Makefile])
-
-# Make sure nothing new is exported so that we don't break the cache.
-PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
-unset PKG_CONFIG_PATH
-PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
 
 AC_OUTPUT
 
