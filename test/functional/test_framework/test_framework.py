@@ -600,6 +600,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def connect_nodes(self, a, b):
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
+        from_num_peers = 1 + len(from_connection.getpeerinfo())
+        to_num_peers = 1 + len(to_connection.getpeerinfo())
         ip_port = "127.0.0.1:" + str(p2p_port(b))
         from_connection.addnode(ip_port, "onetry")
         # poll until version handshake complete to avoid race conditions
