@@ -29,7 +29,8 @@ private:
 #endif
     inline static const uint32_t K = CSHA256::OUTPUT_SIZE;  // digest size
     inline static const uint32_t N = 255;  // ? TODO give a better name
-    // inline static const uint32_t L = K * N;  // HKDF output size ???? TODO clarify this
+
+    using LamportChunks = std::array<std::array<uint8_t,K>,N>;
 
     // TODO check if this remains the same in v5
     inline static std::string r = "52435875175126190479447740508185965837690552500527637822603658699938581184513";
@@ -80,7 +81,7 @@ private:
 
     // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
     // expected length of octet string is N * K
-    static std::array<std::array<uint8_t,K>,N> bytes_split(const std::array<uint8_t,8160>& octet_string);
+    static LamportChunks bytes_split(const std::array<uint8_t,8160>& octet_string);
 
     // Inputs
     // - IKM, a secret octet string >= 256 bits in length
@@ -95,7 +96,7 @@ private:
     //
     // Outputs
     // - lamport_SK, an array of 255 32-octet strings
-    static std::array<std::array<uint8_t,K>,N> IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
+    static LamportChunks IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
 
     // Inputs
     // - parent_SK, the BLS Secret Key of the parent node

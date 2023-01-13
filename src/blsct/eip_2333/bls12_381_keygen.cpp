@@ -23,6 +23,7 @@ std::array<uint8_t,L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS
 {
     std::array<uint8_t,K> prev;
     std::array<uint8_t,L> output;
+    uint8_t n;
 
     const size_t num_loops = std::ceil(static_cast<float>(L) / BLS12_381_KeyGen::K);
     auto output_it = output.begin();
@@ -33,7 +34,7 @@ std::array<uint8_t,L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS
             hmac_sha256.Write(&prev[0], prev.size());
         }
         hmac_sha256.Write(&info[0], info.size());
-        uint8_t n = static_cast<uint8_t>(i);
+        n = static_cast<uint8_t>(i);
         hmac_sha256.Write(&n, 1);
         hmac_sha256.Finalize(&prev[0]);
 
@@ -88,7 +89,7 @@ MclScalar BLS12_381_KeyGen::flip_bits(const MclScalar& s)
 
 // a function that takes in an octet string and splits it into K-byte chunks which are returned as an array
 // expects that length of octet string is L
-std::array<std::array<uint8_t,BLS12_381_KeyGen::K>,BLS12_381_KeyGen::N> BLS12_381_KeyGen::bytes_split(const std::array<uint8_t,8160>& octet_string)
+BLS12_381_KeyGen::LamportChunks BLS12_381_KeyGen::bytes_split(const std::array<uint8_t,8160>& octet_string)
 {
     std::array<std::array<uint8_t,K>,N> ret;
     size_t i = 0;
@@ -129,7 +130,7 @@ MclScalar BLS12_381_KeyGen::HKDF_mod_r(const std::vector<uint8_t>& IKM, const st
     }
 }
 
-std::array<std::array<uint8_t,CSHA256::OUTPUT_SIZE>,BLS12_381_KeyGen::N> BLS12_381_KeyGen::IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt)
+BLS12_381_KeyGen::LamportChunks BLS12_381_KeyGen::IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt)
 {
     auto PRK = HKDF_Extract(IKM, salt);
 
@@ -154,7 +155,7 @@ std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_P
     CSHA256 sha256;
     std::array<uint8_t,K> hash;
 
-    for (auto lamport_chunks : std::vector {lamport_0, lamport_1}) {
+    for (auto lamport_chunks : std::vector<LamportChunks> {lamport_0, lamport_1}) {
         for (size_t i=1; i<=255; ++i) {
             auto chunk = lamport_chunks[i-1];
             sha256.Write(&chunk[0], K);
