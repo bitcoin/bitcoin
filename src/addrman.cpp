@@ -1112,12 +1112,6 @@ int AddrManImpl::CheckAddrman() const
     return 0;
 }
 
-size_t AddrManImpl::size() const
-{
-    LOCK(cs); // TODO: Cache this in an atomic to avoid this overhead
-    return vRandom.size();
-}
-
 size_t AddrManImpl::Size(std::optional<Network> net, std::optional<bool> in_new) const
 {
     LOCK(cs);
@@ -1238,11 +1232,6 @@ template void AddrMan::Unserialize(CAutoFile& s);
 template void AddrMan::Unserialize(CHashVerifier<CAutoFile>& s);
 template void AddrMan::Unserialize(CDataStream& s);
 template void AddrMan::Unserialize(CHashVerifier<CDataStream>& s);
-
-size_t AddrMan::size() const
-{
-    return m_impl->size();
-}
 
 size_t AddrMan::Size(std::optional<Network> net, std::optional<bool> in_new) const
 {

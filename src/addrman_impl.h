@@ -112,8 +112,6 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
     size_t Size(std::optional<Network> net, std::optional<bool> in_new) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty)

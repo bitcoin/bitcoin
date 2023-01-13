@@ -1399,7 +1399,7 @@ void CConnman::ThreadDNSAddressSeed()
     if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
         // When -forcednsseed is provided, query all.
         seeds_right_now = seeds.size();
-    } else if (addrman.size() == 0) {
+    } else if (addrman.Size() == 0) {
         // If we have no known peers, query all.
         // This will occur on the first run, or if peers.dat has been
         // deleted.
@@ -1418,13 +1418,13 @@ void CConnman::ThreadDNSAddressSeed()
     // * If we continue having problems, eventually query all the
     //   DNS seeds, and if that fails too, also try the fixed seeds.
     //   (done in ThreadOpenConnections)
-    const std::chrono::seconds seeds_wait_time = (addrman.size() >= DNSSEEDS_DELAY_PEER_THRESHOLD ? DNSSEEDS_DELAY_MANY_PEERS : DNSSEEDS_DELAY_FEW_PEERS);
+    const std::chrono::seconds seeds_wait_time = (addrman.Size() >= DNSSEEDS_DELAY_PEER_THRESHOLD ? DNSSEEDS_DELAY_MANY_PEERS : DNSSEEDS_DELAY_FEW_PEERS);
 
     for (const std::string& seed : seeds) {
         if (seeds_right_now == 0) {
             seeds_right_now += DNSSEEDS_TO_QUERY_AT_ONCE;
 
-            if (addrman.size() > 0) {
+            if (addrman.Size() > 0) {
                 LogPrintf("Waiting %d seconds before querying DNS seeds.\n", seeds_wait_time.count());
                 std::chrono::seconds to_wait = seeds_wait_time;
                 while (to_wait.count() > 0) {
@@ -1504,7 +1504,7 @@ void CConnman::DumpAddresses()
     DumpPeerAddresses(::gArgs, addrman);
 
     LogPrint(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
-             addrman.size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+             addrman.Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
 void CConnman::ProcessAddrFetch()
