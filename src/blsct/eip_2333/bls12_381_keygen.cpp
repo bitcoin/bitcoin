@@ -80,7 +80,8 @@ MclScalar BLS12_381_KeyGen::OS2IP(const std::array<uint8_t,48ul>& X)
 std::vector<uint8_t> BLS12_381_KeyGen::flip_bits(const std::vector<uint8_t>& vec)
 {
     std::vector<uint8_t> ret(vec.size());
-    std::transform(vec.cbegin(), vec.cend(), ret.begin(), [](uint8_t x) { return ~x; });
+    std::transform(vec.cbegin(), vec.cend(), ret.begin(),
+        [](uint8_t x) { return static_cast<uint8_t>(~x); });
     return ret;
 }
 
