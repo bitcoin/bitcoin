@@ -31,7 +31,6 @@
 #include <node/transaction.h>
 #include <wallet/rpc/spend.h>
 #include <wallet/rpc/wallet.h>
-#include <rpc/server_util.h>
 #include <llmq/quorums_utils.h>
 using namespace wallet;
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
@@ -229,7 +228,6 @@ static RPCHelpMan protx_register()
     EnsureWalletIsUnlocked(*pwallet);
     
     size_t paramIdx = 0;
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
@@ -238,7 +236,7 @@ static RPCHelpMan protx_register()
     bool v19active;
     {
         LOCK(cs_main);
-        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+        v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     bool specific_legacy_bls_scheme{!v19active};
     if(request.params.size() >= 10) {
@@ -393,7 +391,6 @@ static RPCHelpMan protx_register_fund()
     pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(*pwallet);
     
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     size_t paramIdx = 0;
 
 
@@ -402,7 +399,7 @@ static RPCHelpMan protx_register_fund()
     bool v19active;
     {
         LOCK(cs_main);
-        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+        v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     CProRegTx ptx;
     bool specific_legacy_bls_scheme{!v19active};
@@ -535,14 +532,13 @@ static RPCHelpMan protx_register_prepare()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     size_t paramIdx = 0;
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
     bool v19active;
     {
         LOCK(cs_main);
-        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+        v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     CProRegTx ptx;
     bool specific_legacy_bls_scheme{!v19active};
@@ -729,12 +725,11 @@ static RPCHelpMan protx_update_service()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CProUpServTx ptx;
     bool v19active;
     {
         LOCK(cs_main);
-        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+        v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     bool specific_legacy_bls_scheme{!v19active};
     if(request.params.size() >= 6) {
@@ -842,12 +837,11 @@ static RPCHelpMan protx_update_registrar()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(*pwallet);
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CProUpRegTx ptx;
     bool v19active;
     {
         LOCK(cs_main);
-        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+        v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     bool specific_legacy_bls_scheme{!v19active};
     if(request.params.size() >= 6) {
@@ -951,12 +945,11 @@ static RPCHelpMan protx_revoke()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CProUpRevTx ptx;
     bool v19active;
     {
         LOCK(cs_main);
-        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+        v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     bool specific_legacy_bls_scheme{!v19active};
     if(request.params.size() >= 5) {
