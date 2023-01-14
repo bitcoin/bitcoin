@@ -334,4 +334,15 @@ BOOST_AUTO_TEST_CASE(test_test_case_3)
     );
 }
 
+BOOST_AUTO_TEST_CASE(test_test_vector_with_intermediate_values)
+{
+    // not testing for the intermediate values - lamport0, lamport1 and compressed_lamport_PK
+    RunTestCase(
+        "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04",
+        "6083874454709270928345386274498605044986640685124978867557563392430687146096",
+        0,
+        "20397789859736650942317412262472558107875392172444076792671091975210932703118"
+    );
+}
+
 BOOST_AUTO_TEST_SUITE_END()
