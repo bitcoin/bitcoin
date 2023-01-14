@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(test_bytes_split)
         const size_t vec_size = 255 * BLS12_381_KeyGen::DigestSize;
         std::array<uint8_t,8160> a;
         for (size_t i=0; i<vec_size; ++i) {
-            a[i] = i % 256;
+            a[i] = static_cast<uint8_t>(i % 256ul);
         }
         auto chunks = BLS12_381_KeyGen::bytes_split(a);
         uint8_t v = 0;
