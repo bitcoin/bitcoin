@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <array>
 
 #include <bls/bls384_256.h> // must include this before bls/bls.h
 #include <bls/bls.h>
