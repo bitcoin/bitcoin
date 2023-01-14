@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_bytes_split)
         uint8_t v = 0;
         for (auto chunk : chunks) {
             for (auto act = chunk.cbegin(); act != chunk.cend(); ++act) {
-                auto exp = v++ % 256;
+                auto exp = static_cast<uint8_t>(v++ % 256ul);
                 BOOST_CHECK(*act == exp);
             }
         }
