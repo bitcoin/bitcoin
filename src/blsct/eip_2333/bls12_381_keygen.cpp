@@ -159,7 +159,6 @@ std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_P
 
     sha256.Write(&lamport_PK[0], lamport_PK.size());
     sha256.Finalize(&hash[0]);
-    for(size_t i=0; i<hash.size(); ++i) { printf("%d, ", hash[i]); }; printf("\n");
     return hash;
 }
 
