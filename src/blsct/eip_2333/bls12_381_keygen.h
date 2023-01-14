@@ -28,7 +28,7 @@ private:
     static std::array<uint8_t,L> HKDF_Expand(const std::array<uint8_t,DigestSize>& PRK, const std::vector<uint8_t>& info);
 
     static std::vector<uint8_t> I2OSP(const MclScalar& x, const size_t& xLen);
-    static MclScalar OS2IP(const std::array<uint8_t,48>& X);
+    static MclScalar OS2IP(const std::array<uint8_t,48ul>& X);
     static std::vector<uint8_t> flip_bits(const std::vector<uint8_t>& vec);
     static LamportChunks bytes_split(const std::array<uint8_t,8160>& octet_string);
     static MclScalar HKDF_mod_r(const std::vector<uint8_t>& IKM);

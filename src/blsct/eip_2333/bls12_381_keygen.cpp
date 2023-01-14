@@ -58,7 +58,7 @@ std::vector<uint8_t> BLS12_381_KeyGen::I2OSP(const MclScalar& x, const size_t& x
     if (ret.size() == xLen) {
         return ret;
     } else if (ret.size() > xLen) {
-        auto s = strprintf("Input too large. Expected octet length <= %d, but got %d", xLen, ret.size());
+        auto s = strprintf("Input too large. Expected octet length <= %ld, but got %ld", xLen, ret.size());
         throw std::runtime_error(s);
     } else {
         // prepend 0 padding to make the octet string size xLen
@@ -68,7 +68,7 @@ std::vector<uint8_t> BLS12_381_KeyGen::I2OSP(const MclScalar& x, const size_t& x
     }
 }
 
-MclScalar BLS12_381_KeyGen::OS2IP(const std::array<uint8_t,48>& X)
+MclScalar BLS12_381_KeyGen::OS2IP(const std::array<uint8_t,48ul>& X)
 {
     std::vector<uint8_t> vec(X.cbegin(), X.cend());
     MclScalar s(vec);
