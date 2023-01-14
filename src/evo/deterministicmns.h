@@ -633,4 +633,4 @@ private:
 };
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
-#endif //SYSCOIN_EVO_DETERMINISTICMNS_H
+#endif // SYSCOIN_EVO_DETERMINISTICMNS_H
