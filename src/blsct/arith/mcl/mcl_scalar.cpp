@@ -17,10 +17,10 @@ MclScalar::MclScalar(const std::vector<uint8_t> &v)
 template <size_t L>
 MclScalar::MclScalar(const std::array<uint8_t,L> &a)
 {
-    std::vector<uint8_t> v(a.begin(), a.end());
+    std::vector<uint8_t> v(a.cbegin(), a.cend());
     MclScalar::SetVch(v);
 }
-template MclScalar::MclScalar(const std::array<uint8_t,48> &v);
+template MclScalar::MclScalar(const std::array<uint8_t,48ul>                                                                                                   &v);
 
 MclScalar::MclScalar(const mclBnFr& other_fr)
 {
