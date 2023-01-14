@@ -32,7 +32,9 @@ std::array<uint8_t,L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS
         if (i > 1) {
             hmac_sha256.Write(&prev[0], prev.size());
         }
-        hmac_sha256.Write(&info[0], info.size());
+        if (info.size() > 0){
+            hmac_sha256.Write(&info[0], info.size());
+        }
         n = static_cast<uint8_t>(i);
         hmac_sha256.Write(&n, 1);
         hmac_sha256.Finalize(&prev[0]);
