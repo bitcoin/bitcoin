@@ -39,7 +39,7 @@ std::array<uint8_t,L> BLS12_381_KeyGen::HKDF_Expand(const std::array<uint8_t,BLS
 
         // if less than K bytes are remaining to copy, copy only the remaining bytes. otherwiese copy K bytes.
         size_t bytes2copy = i * K > L ? L - (i - 1) * K : K;
-        std::copy_n(prev.begin(), bytes2copy, output_it);
+        std::copy_n(prev.cbegin(), bytes2copy, output_it);
 
         std::advance(output_it, K);
     }
@@ -63,21 +63,23 @@ std::vector<uint8_t> BLS12_381_KeyGen::I2OSP(const MclScalar& x, const size_t& x
     } else {
         // prepend 0 padding to make the octet string size xLen
         auto padded_ret = std::vector<uint8_t>(xLen - ret.size());
-        padded_ret.insert(padded_ret.end(), ret.begin(), ret.end());
+        padded_ret.insert(padded_ret.end(), ret.cbegin(), ret.cend());
         return padded_ret;
     }
 }
 
 MclScalar BLS12_381_KeyGen::OS2IP(const std::array<uint8_t,48>& X)
 {
-    std::vector<uint8_t> vec(X.begin(), X.end());
+    std::vector<uint8_t> vec(X.cbegin(), X.cend());
     MclScalar s(vec);
     return s;
 }
 
-MclScalar BLS12_381_KeyGen::flip_bits(const MclScalar& s)
+std::vector<uint8_t> BLS12_381_KeyGen::flip_bits(const std::vector<uint8_t>& vec)
 {
-    return s.Negate();
+    std::vector<uint8_t> ret(vec.size());
+    std::transform(vec.cbegin(), vec.cend(), ret.begin(), [](uint8_t x) { return ~x; });
+    return ret;
 }
 
 BLS12_381_KeyGen::LamportChunks BLS12_381_KeyGen::bytes_split(const std::array<uint8_t,8160>& octet_string)
@@ -85,7 +87,7 @@ BLS12_381_KeyGen::LamportChunks BLS12_381_KeyGen::bytes_split(const std::array<u
     std::array<std::array<uint8_t,K>,N> ret;
     size_t i = 0;
 
-    for (auto it = octet_string.begin(); it != octet_string.end(); std::advance(it, BLS12_381_KeyGen::K), ++i) {
+    for (auto it = octet_string.cbegin(); it != octet_string.cend(); std::advance(it, BLS12_381_KeyGen::K), ++i) {
         std::copy(it, it + K, ret[i].begin());
     }
     return ret;
@@ -97,7 +99,7 @@ MclScalar BLS12_381_KeyGen::HKDF_mod_r(const std::vector<uint8_t>& IKM, const st
     const std::string salt_str = "BLS-SIG-KEYGEN-SALT-";
     const MclScalar zero(0);
 
-    std::vector<uint8_t> salt(salt_str.begin(), salt_str.end());
+    std::vector<uint8_t> salt(salt_str.cbegin(), salt_str.cend());
     CSHA256 sha256;
     std::array<uint8_t, CSHA256::OUTPUT_SIZE> hash;
     MclScalar SK;
@@ -105,11 +107,11 @@ MclScalar BLS12_381_KeyGen::HKDF_mod_r(const std::vector<uint8_t>& IKM, const st
     while (true) {
         sha256.Write(&salt[0], salt.size());
         sha256.Finalize(&hash[0]);
-        salt = std::vector<uint8_t>(hash.begin(), hash.end());
+        salt = std::vector<uint8_t>(hash.cbegin(), hash.cend());
 
-        std::vector<uint8_t> IKM_zero(IKM.begin(), IKM.end());
+        std::vector<uint8_t> IKM_zero(IKM.cbegin(), IKM.cend());
         auto i2osp_zero = I2OSP(0, 1);
-        IKM_zero.insert(IKM_zero.end(), i2osp_zero.begin(), i2osp_zero.end());
+        IKM_zero.insert(IKM_zero.end(), i2osp_zero.cbegin(), i2osp_zero.cend());
         auto PRK = HKDF_Extract(salt, IKM_zero);
         auto OKM = HKDF_Expand<L>(PRK, key_info);
 
@@ -136,8 +138,9 @@ std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_P
 {
     auto salt = I2OSP(index, 4);
     auto IKM = I2OSP(parent_SK, 32);
+
     auto lamport_0 = IKM_to_lamport_SK(IKM, salt);
-    auto not_IKM = flip_bits(IKM).GetVch();
+    auto not_IKM = flip_bits(IKM);
     auto lamport_1 = IKM_to_lamport_SK(not_IKM, salt);
 
     std::vector<uint8_t> lamport_PK;
@@ -150,12 +153,13 @@ std::array<uint8_t,BLS12_381_KeyGen::K> BLS12_381_KeyGen::parent_SK_to_lamport_P
             sha256.Write(&chunk[0], K);
             sha256.Finalize(&hash[0]);
             sha256.Reset();
-            lamport_PK.insert(lamport_PK.end(), hash.begin(), hash.end());
+            lamport_PK.insert(lamport_PK.end(), hash.cbegin(), hash.cend());
         }
     }
 
     sha256.Write(&lamport_PK[0], lamport_PK.size());
     sha256.Finalize(&hash[0]);
+    for(size_t i=0; i<hash.size(); ++i) { printf("%d, ", hash[i]); }; printf("\n");
     return hash;
 }
 
@@ -173,6 +177,6 @@ MclScalar BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed)
 MclScalar BLS12_381_KeyGen::derive_child_SK(const MclScalar& parent_SK, const uint32_t& index)
 {
     auto compressed_lamport_PK = parent_SK_to_lamport_PK(parent_SK, index);
-    auto SK = HKDF_mod_r(std::vector<uint8_t>(compressed_lamport_PK.begin(), compressed_lamport_PK.end()), {});
+    auto SK = HKDF_mod_r(std::vector<uint8_t>(compressed_lamport_PK.cbegin(), compressed_lamport_PK.cend()), {});
     return SK;
 }

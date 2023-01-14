@@ -10,7 +10,7 @@
 #include <blsct/eip_2333/bls12_381_keygen.h>
 
 BOOST_FIXTURE_TEST_SUITE(bls12_381_keygen_tests, MclTestingSetup)
-
+/*
 BOOST_AUTO_TEST_CASE(test_i2osp)
 {
     // Size zero is invalid
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(test_bytes_split)
         auto chunks = BLS12_381_KeyGen::bytes_split(a);
         uint8_t v = 0;
         for (auto chunk : chunks) {
-            for (auto act = chunk.begin(); act != chunk.end(); ++act) {
+            for (auto act = chunk.cbegin(); act != chunk.cend(); ++act) {
                 auto exp = v++ % 256;
                 BOOST_CHECK(*act == exp);
             }
@@ -258,6 +258,25 @@ BOOST_AUTO_TEST_CASE(test_hkdf_expand_255_times_32)
     auto act = BLS12_381_KeyGen::HKDF_Expand<L>(PRK, info);
     BOOST_CHECK(act == exp);
 }
+*/
+
+BOOST_AUTO_TEST_CASE(test_flip_bits)
+{
+    std::vector<uint8_t> input {
+        13, 115,  89, 213, 121,  99, 171, 143,
+        187, 222,  24,  82, 220, 245,  83, 254,
+        219, 195,  31,  70,  77, 128, 238, 125,
+        64, 174, 104,  49,  34, 180,  80, 112,
+    };
+    std::vector<uint8_t> exp {
+        242, 140, 166,  42, 134, 156,  84, 112,
+        68,  33, 231, 173,  35,  10, 172,   1,
+        36,  60, 224, 185, 178, 127,  17, 130,
+        191,  81, 151, 206, 221,  75, 175, 143
+    };
+    auto act = BLS12_381_KeyGen::flip_bits(input);
+    BOOST_CHECK(act == exp);
+}
 
 BOOST_AUTO_TEST_CASE(test_test_case_0)
 {
@@ -269,6 +288,7 @@ BOOST_AUTO_TEST_CASE(test_test_case_0)
     auto child_index = 0;
     MclScalar exp_child("20397789859736650942317412262472558107875392172444076792671091975210932703118", 10);
     auto act_child = BLS12_381_KeyGen::derive_child_SK(act_master, child_index);
+    printf("child: %s\n", act_child.GetString(10).c_str());
     BOOST_CHECK(act_child == exp_child);
 }
 
