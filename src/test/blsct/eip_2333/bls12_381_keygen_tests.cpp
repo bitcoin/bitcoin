@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(test_bytes_split)
             a[i] = static_cast<uint8_t>(i % 256ul);
         }
         auto chunks = BLS12_381_KeyGen::bytes_split(a);
-        uint8_t v = 0;
+        size_t v = 0;
         for (auto chunk : chunks) {
             for (auto act = chunk.cbegin(); act != chunk.cend(); ++act) {
                 auto exp = static_cast<uint8_t>(v++ % 256ul);
