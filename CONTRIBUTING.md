@@ -17,7 +17,7 @@ moderation.
 Getting Started
 ---------------
 
-New contributors are very welcome and needed.
+New contributors are very welcome and needed to keep Bitcoin Core growing.
 
 Reviewing and testing is highly valued and the most effective way you can contribute
 as a new contributor. It also will teach you much more about the code and
