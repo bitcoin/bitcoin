@@ -162,6 +162,7 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
+  blsct/eip_2333/bls12_381_keygen.h \
   blsct/keys.h \
   blsct/range_proof/config.h \
   blsct/range_proof/generators.h \
@@ -406,6 +407,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
+  blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/keys.cpp \
   blsct/range_proof/config.cpp \
   blsct/range_proof/generators.cpp \

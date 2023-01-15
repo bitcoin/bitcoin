@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <array>
 
 #include <bls/bls384_256.h> // must include this before bls/bls.h
 #include <bls/bls.h>
@@ -28,6 +29,7 @@ class MclScalar
 public:
     MclScalar(const int64_t& n = 0);
     MclScalar(const std::vector<uint8_t>& v);
+    template <size_t L> MclScalar(const std::array<uint8_t,L>& a);
     MclScalar(const mclBnFr& n_fr);
     MclScalar(const uint256& n);
     MclScalar(const std::string& s, int radix);
@@ -57,6 +59,7 @@ public:
 
     mclBnFr Underlying() const;
     bool IsValid() const;
+    bool IsZero() const;
 
     MclScalar Invert() const;
     MclScalar Negate() const;
