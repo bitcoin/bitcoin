@@ -46,8 +46,8 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
 static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName, bool is_bls_legacy_scheme = true, bool specific_legacy_bls_scheme = false)
 {
     CBLSPublicKey pubKey;
-    bool use_bls_scheme = specific_legacy_bls_scheme || is_bls_legacy_scheme;
-    if (!pubKey.SetHexStr(hexKey, use_bls_scheme)) {
+    bool use_legacy_bls_scheme = specific_legacy_bls_scheme || is_bls_legacy_scheme;
+    if (!pubKey.SetHexStr(hexKey, use_legacy_bls_scheme)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
     }
     return pubKey;

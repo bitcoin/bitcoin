@@ -19,7 +19,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <rpc/server_util.h>
-
+#include <llmq/quorums_utils.h>
 UniValue BuildDMNListEntry(const node::NodeContext& node, const CDeterministicMN& dmn, bool detailed)
 {
     if (!detailed) {
@@ -184,18 +184,29 @@ static RPCHelpMan bls_generate()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-
+    node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext (request.context);
     CBLSSecretKey sk;
     sk.MakeNewKey();
-
+    bool bls_legacy_scheme;
+    {
+        LOCK(cs_main);
+        bls_legacy_scheme = !llmq::CLLMQUtils::IsV19Active(node.chainman->ActiveHeight());
+    }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString());
+    ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
     return ret;
 },
     };
 } 
-
+static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName)
+{
+    CBLSSecretKey secKey;
+    if (!secKey.SetHexStr(hexKey)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
+    }
+    return secKey;
+}
 static RPCHelpMan bls_fromsecret()
 {
      return RPCHelpMan{"bls_fromsecret",
@@ -210,14 +221,20 @@ static RPCHelpMan bls_fromsecret()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    CBLSSecretKey sk;
-    if (!sk.SetHexStr(request.params[0].get_str())) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
+    node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext (request.context);
+    CBLSSecretKey sk = ParseBLSSecretKey(request.params[0].get_str(), "secretKey");
+    bool bls_legacy_scheme;
+    {
+        LOCK(cs_main);
+        bls_legacy_scheme = !llmq::CLLMQUtils::IsV19Active(node.chainman->ActiveHeight());
     }
-
+    if (!request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
+        bls_legacy_scheme = request.params[1].get_bool();
+    }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString());
+    ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
     return ret;
 },
     };
