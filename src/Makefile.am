@@ -1125,7 +1125,7 @@ libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_
 
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libsyscoinconsensus_la_LIBADD = $(LIBBLS) $(LIBSECP256K1) -lgmp
+libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1) $(LIBBLS)
 libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL
 libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/mimalloc/include
 libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/immer
