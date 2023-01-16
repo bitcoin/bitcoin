@@ -102,7 +102,7 @@ task:
   env:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
-    CI_VCPKG_TAG: '2022.09.27'
+    CI_VCPKG_TAG: '2023.01.09'
     VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
@@ -153,7 +153,7 @@ task:
   ccache_cache:
     folder: '%CCACHE_DIR%'
   install_tools_script:
-    - choco install --yes --no-progress ccache --version=4.6.1
+    - choco install --yes --no-progress ccache --version=4.7.4
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
     - ccache --version
