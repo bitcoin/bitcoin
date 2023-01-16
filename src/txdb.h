@@ -8,6 +8,7 @@
 
 #include <coins.h>
 #include <dbwrapper.h>
+#include <kernel/cs_main.h>
 #include <sync.h>
 #include <fs.h>
 
@@ -43,9 +44,6 @@ static const int64_t nMaxTxIndexCache = 1024;
 static const int64_t max_filter_index_cache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;
-
-// Actually declared in validation.cpp; can't include because of circular dependency.
-extern RecursiveMutex cs_main;
 
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB final : public CCoinsView

@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <crypto/common.h>
+#include <kernel/cs_main.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
