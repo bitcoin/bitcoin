@@ -62,6 +62,12 @@ class ScanblocksTest(BitcoinTestFramework):
         # make sure the blockhash is present when using the first mined block as start_height
         assert blockhash in node.scanblocks(
             "start", [f"addr({addr_1})"], height)['relevant_blocks']
+        for v in [False, True]:
+            assert blockhash in node.scanblocks(
+                action="start",
+                scanobjects=[f"addr({addr_1})"],
+                start_height=height,
+                options={"filter_false_positives": v})['relevant_blocks']
 
         # also test the stop height
         assert blockhash in node.scanblocks(
@@ -94,8 +100,11 @@ class ScanblocksTest(BitcoinTestFramework):
         assert genesis_blockhash in node.scanblocks(
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks']
 
-        # TODO: after an "accurate" mode for scanblocks is implemented (e.g. PR #26325)
-        # check here that it filters out the false-positive
+        # check that the filter_false_positives option works
+        assert genesis_blockhash in node.scanblocks(
+            "start", [{"desc": f"raw({genesis_coinbase_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})['relevant_blocks']
+        assert genesis_blockhash not in node.scanblocks(
+            "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})['relevant_blocks']
 
         # test node with disabled blockfilterindex
         assert_raises_rpc_error(-1, "Index is not enabled for filtertype basic",
