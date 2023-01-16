@@ -162,6 +162,7 @@ struct Params {
     int nBridgeStartBlock;
     int nNEVMStartBlock;
     int nPODAStartBlock;
+    int nV19StartBlock;
     int nUTXOAssetsBlock;
     int nUTXOAssetsBlockProvisioning;
     uint64_t nMinMNSubsidySats;

@@ -22,7 +22,7 @@ namespace llmq
 {
 bool CLLMQUtils::IsV19Active(const int nHeight)
 {
-    return nHeight >= Params().GetConsensus().nPODAStartBlock; 
+    return nHeight >= Params().GetConsensus().nV19StartBlock; 
 }
 const CBlockIndex* CLLMQUtils::V19ActivationIndex(const CBlockIndex* pindex)
 {
@@ -30,7 +30,7 @@ const CBlockIndex* CLLMQUtils::V19ActivationIndex(const CBlockIndex* pindex)
     if(!IsV19Active(pindex->nHeight)) {
         return nullptr;
     }
-    return pindex->GetAncestor(Params().GetConsensus().nPODAStartBlock);
+    return pindex->GetAncestor(Params().GetConsensus().nV19StartBlock);
 }
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex)
 {
