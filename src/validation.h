@@ -18,6 +18,7 @@
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <fs.h>
+#include <kernel/cs_main.h> // IWYU pragma: export
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -86,7 +87,6 @@ enum class SynchronizationState {
     POST_INIT
 };
 
-extern RecursiveMutex cs_main;
 extern GlobalMutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 /** Used to notify getblocktemplate RPC of new tips. */
