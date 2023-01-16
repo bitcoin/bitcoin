@@ -427,6 +427,8 @@ AddrInfo* AddrManImpl::Create(const CAddress& addr, const CNetAddr& addrSource, 
     mapAddr[addr] = nId;
     mapInfo[nId].nRandomPos = vRandom.size();
     vRandom.push_back(nId);
+    nNew++;
+    m_network_counts[addr.GetNetwork()].n_new++;
     if (pnId)
         *pnId = nId;
     return &mapInfo[nId];
@@ -598,8 +600,6 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
     } else {
         pinfo = Create(addr, source, &nId);
         pinfo->nTime = std::max(NodeSeconds{0s}, pinfo->nTime - time_penalty);
-        nNew++;
-        m_network_counts[pinfo->GetNetwork()].n_new++;
     }
 
     int nUBucket = pinfo->GetNewBucket(nKey, source, m_netgroupman);
