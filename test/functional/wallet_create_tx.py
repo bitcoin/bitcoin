@@ -33,6 +33,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.test_anti_fee_sniping()
         self.test_tx_size_too_large()
         self.test_create_too_long_mempool_chain()
+        self.test_locktime_backdating()
 
     def test_anti_fee_sniping(self):
         self.log.info('Check that we have some (old) blocks and that anti-fee-sniping is disabled')
@@ -105,6 +106,24 @@ class CreateTxWalletTest(BitcoinTestFramework):
                                 test_wallet.send, outputs=[{test_wallet.getnewaddress(): 0.3}], options=options)
 
         test_wallet.unloadwallet()
+
+    def test_locktime_backdating(self):
+        self.log.info('Collect locktime backdating samples')
+        tx_locktime_backdate_seen = False
+        rbftx_locktime_backdate_seen = False
+        for i in range(100):
+            txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+            tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
+            if tx['locktime'] < 201:
+                tx_locktime_backdate_seen = True
+            rbftxid = self.nodes[0].bumpfee(txid)['txid']
+            rbftx = self.nodes[0].gettransaction(txid=rbftxid, verbose=True)['decoded']
+            if rbftx['locktime'] < 201:
+                rbftx_locktime_backdate_seen = True
+        self.log.info('Check that locktime backdating is enabled for regular transactions')
+        assert tx_locktime_backdate_seen
+        self.log.info('Check that locktime backdating is disabled for RBF replacement transactions')
+        assert not rbftx_locktime_backdate_seen
 
 
 if __name__ == '__main__':
