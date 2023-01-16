@@ -765,7 +765,8 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
  * current chain tip unless we are not synced with the current chain
  */
 static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
-                                 interfaces::Chain& chain, const uint256& block_hash, int block_height)
+                                 interfaces::Chain& chain, const uint256& block_hash,
+                                 int block_height, bool locktime_backdate_allowed)
 {
     // All inputs must be added by now
     assert(!tx.vin.empty());
@@ -795,8 +796,9 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
         // Secondly occasionally randomly pick a nLockTime even further back, so
         // that transactions that are delayed after signing for whatever reason,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
-        // better privacy.
-        if (rng_fast.randrange(10) == 0) {
+        // better privacy. See comments in `CreateTransactionInternal` for cases
+        // when this is not allowed.
+        if (locktime_backdate_allowed && rng_fast.randrange(10) == 0) {
             tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
         }
     } else {
@@ -1012,7 +1014,25 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     for (const auto& coin : selected_coins) {
         txNew.vin.push_back(CTxIn(coin->outpoint, CScript(), nSequence));
     }
-    DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+
+    // `DiscourageFeeSniping` may backdate locktime to improve privacy of
+    // transactions which are delayed after signing for specific reasons (see
+    // comments in `DiscourageFeeSniping`), but we prohibit this for RBF
+    // replacement transactions and transactions spending unconfirmed
+    // outputs. The reason for this is that if the locktime of the transaction
+    // gets backdated below the locktime of its unconfirmed parent or below the
+    // locktime of the transaction it replaces, the "signed earlier but only
+    // broadcast now" explanation will become unrealistic, and this locktime
+    // discrepancy may serve as a fingerprint of the wallet being used.
+    bool locktime_backdate_allowed = true;
+    for (const auto& coin: selected_coins) {
+        if (coin->depth == 0 || wallet.IsSpent(coin->outpoint)) {
+            locktime_backdate_allowed = false;
+            break;
+        }
+    }
+
+    DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight(), locktime_backdate_allowed);
 
     // Calculate the transaction fee
     TxSize tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);
