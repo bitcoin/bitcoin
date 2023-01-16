@@ -188,6 +188,30 @@ public:
     }
 };
 
+/** Writes data to an underlying source stream, while hashing the written data. */
+template <typename Source>
+class HashedSourceWriter : public CHashWriter
+{
+private:
+    Source& m_source;
+
+public:
+    explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : CHashWriter{source.GetType(), source.GetVersion()}, m_source{source} {}
+
+    void write(Span<const std::byte> src)
+    {
+        m_source.write(src);
+        CHashWriter::write(src);
+    }
+
+    template <typename T>
+    HashedSourceWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+};
+
 /** Compute the 256-bit hash of an object's serialization. */
 template<typename T>
 uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
