@@ -64,10 +64,10 @@ compute_credits_template: &CREDITS_TEMPLATE
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
 
 task:
-  name: 'lint [bionic]'
+  name: 'lint [jammy]'
   << : *BASE_TEMPLATE
   container:
-    image: ubuntu:bionic
+    image: ubuntu:jammy
     cpu: 1
     memory: 1G
   # For faster CI feedback, immediately schedule the linters
