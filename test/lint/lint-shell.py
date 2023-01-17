@@ -25,7 +25,7 @@ def check_shellcheck_install():
         sys.exit(0)
 
 def get_files(command):
-    output = subprocess.run(command, stdout=subprocess.PIPE, universal_newlines=True)
+    output = subprocess.run(command, stdout=subprocess.PIPE, text=True)
     files = output.stdout.split('\n')
 
     # remove whitespace element

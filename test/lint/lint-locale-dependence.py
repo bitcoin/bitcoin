@@ -223,7 +223,7 @@ def find_locale_dependent_function_uses():
     git_grep_output = list()
 
     try:
-        git_grep_output = check_output(git_grep_command, universal_newlines=True, encoding="utf8").splitlines()
+        git_grep_output = check_output(git_grep_command, text=True, encoding="utf8").splitlines()
     except CalledProcessError as e:
         if e.returncode > 1:
             raise e
