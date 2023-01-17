@@ -63,13 +63,6 @@ struct UniValueType {
 };
 
 /**
- * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
- * the right number of arguments are passed, just that any passed are the correct type.
- */
-void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValueType>& typesExpected, bool fAllowNull=false);
-
-/**
  * Type-check one argument; throws JSONRPCError if wrong type given.
  */
 void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected);
@@ -138,6 +131,7 @@ enum class OuterType {
 };
 
 struct RPCArgOptions {
+    bool skip_type_check{false};
     std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
     std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
     bool hidden{false};                  //!< For testing only
@@ -216,6 +210,9 @@ struct RPCArg {
     }
 
     bool IsOptional() const;
+
+    /** Check whether the request JSON type matches. */
+    void MatchesType(const UniValue& request) const;
 
     /** Return the first of all aliases */
     std::string GetFirstName() const;
