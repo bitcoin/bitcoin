@@ -110,7 +110,7 @@ private:
         /*: Title of Peers Table column which contains the peer's
             User Agent string. */
         tr("User Agent")};
-    QTimer *timer;
+    QTimer* timer{nullptr};
 };
 
 #endif // SYSCOIN_QT_PEERTABLEMODEL_H

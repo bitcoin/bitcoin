@@ -101,9 +101,9 @@ protected:
     bool eventFilter(QObject *object, QEvent *event) override;
 
 private:
-    bool saveURIs;                      // true during startup
-    QLocalServer* uriServer;
-    OptionsModel *optionsModel;
+    bool saveURIs{true}; // true during startup
+    QLocalServer* uriServer{nullptr};
+    OptionsModel* optionsModel{nullptr};
 };
 
 #endif // SYSCOIN_QT_PAYMENTSERVER_H

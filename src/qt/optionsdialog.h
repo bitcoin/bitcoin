@@ -75,8 +75,8 @@ Q_SIGNALS:
 private:
     Ui::OptionsDialog *ui;
     ClientModel* m_client_model{nullptr};
-    OptionsModel *model;
-    QDataWidgetMapper *mapper;
+    OptionsModel* model{nullptr};
+    QDataWidgetMapper* mapper{nullptr};
 };
 
 #endif // SYSCOIN_QT_OPTIONSDIALOG_H

@@ -217,9 +217,8 @@ Q_SIGNALS:
 
 #include <qt/syscoinamountfield.moc>
 
-SyscoinAmountField::SyscoinAmountField(QWidget *parent) :
-    QWidget(parent),
-    amount(nullptr)
+SyscoinAmountField::SyscoinAmountField(QWidget* parent)
+    : QWidget(parent)
 {
     amount = new AmountSpinBox(this);
     amount->setLocale(QLocale::c());

@@ -41,7 +41,7 @@ protected:
     virtual void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
-    QMenu *contextMenu;
+    QMenu* contextMenu{nullptr};
 };
 
 #endif // SYSCOIN_QT_QRIMAGEWIDGET_H

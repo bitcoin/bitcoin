@@ -227,14 +227,8 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 static int qt_argc = 1;
 static const char* qt_argv = "syscoin-qt";
 
-SyscoinApplication::SyscoinApplication():
-    QApplication(qt_argc, const_cast<char **>(&qt_argv)),
-    optionsModel(nullptr),
-    clientModel(nullptr),
-    window(nullptr),
-    pollShutdownTimer(nullptr),
-    returnValue(0),
-    platformStyle(nullptr)
+BitcoinApplication::SyscoinApplication()
+    : QApplication(qt_argc, const_cast<char**>(&qt_argv))
 {
     // Qt runs setlocale(LC_ALL, "") on initialization.
     RegisterMetaTypes();

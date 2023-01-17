@@ -28,3 +28,4 @@ readability-redundant-string-init,
 CheckOptions:
  - key: performance-move-const-arg.CheckTriviallyCopyableMove
    value: false
+HeaderFilterRegex: './qt'

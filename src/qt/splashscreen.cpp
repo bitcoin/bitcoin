@@ -28,7 +28,7 @@
 
 
 SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
-    : QWidget(), curAlignment(0)
+    : QWidget()
 {
     // set reference point, paddings
     int paddingRight            = 50;

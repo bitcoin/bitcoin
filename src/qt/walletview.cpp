@@ -32,7 +32,6 @@
 #include <QSettings>
 WalletView::WalletView(WalletModel* wallet_model, const PlatformStyle* _platformStyle, QWidget* parent)
     : QStackedWidget(parent),
-      clientModel(nullptr),
       walletModel(wallet_model),
       platformStyle(_platformStyle)
 {
