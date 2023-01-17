@@ -225,17 +225,13 @@ bool BaseIndex::Commit()
 {
     // Don't commit anything if we haven't indexed any block yet
     // (this could happen if init is interrupted).
-    bool ok = m_best_block_index != nullptr;
-    if (ok) {
+    if (m_best_block_index != nullptr) {
         CDBBatch batch(GetDB());
-        ok = CustomCommit(batch);
-        if (ok) {
-            GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
-            ok = GetDB().WriteBatch(batch);
-        }
-    }
-    if (!ok) {
-        return error("%s: Failed to commit latest %s state", __func__, GetName());
+        if (!CustomCommit(batch))
+            return error("%s: Failed to CustomCommit latest %s state", __func__, GetName());
+        GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+        if (!GetDB().WriteBatch(batch))
+            return error("%s: Failed to commit latest %s state", __func__, GetName());
     }
     return true;
 }
