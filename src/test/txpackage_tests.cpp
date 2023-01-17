@@ -6,6 +6,7 @@
 #include <key_io.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
+#include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -833,5 +834,168 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent_rich->GetHash())));
         BOOST_CHECK(!m_node.mempool->exists(GenTxid::Txid(tx_child_poor->GetHash())));
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(package_rbf_tests, TestChain100Setup)
+{
+    mineBlocks(5);
+    LOCK(::cs_main);
+    size_t expected_pool_size = m_node.mempool->size();
+    CKey child_key;
+    child_key.MakeNewKey(true);
+    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
+    CKey grandchild_key;
+    grandchild_key.MakeNewKey(true);
+    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(grandchild_key.GetPubKey()));
+
+    const CAmount coinbase_value{50 * COIN};
+    // Test that de-duplication works and CheckMinerScores is not called when it's just 1 transaction.
+    {
+        // 1 parent paying 0sat, 1 child paying 300sat
+        Package package1;
+        // 1 parent paying 0sat, 1 child paying 500sat
+        Package package2;
+        // Package1 and package2 have the same parent. The children conflict.
+        auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                        /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                        /*output_destination=*/parent_spk,
+                                                        /*output_amount=*/coinbase_value, /*submit=*/false, /*version=*/3);
+        CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
+        package1.push_back(tx_parent);
+        package2.push_back(tx_parent);
+
+        CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - 300, false, 3));
+        package1.push_back(tx_child_1);
+        CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - 500, false, 3));
+        package2.push_back(tx_child_2);
+
+        LOCK(m_node.mempool->cs);
+        const auto submit1 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(submit1.m_state.IsValid(), "Package validation unexpectedly failed" << submit1.m_state.GetRejectReason());
+        auto it_parent_1 = submit1.m_tx_results.find(tx_parent->GetWitnessHash());
+        auto it_child_1 = submit1.m_tx_results.find(tx_child_1->GetWitnessHash());
+        BOOST_CHECK(it_parent_1 != submit1.m_tx_results.end());
+        BOOST_CHECK(it_child_1 != submit1.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_parent_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        expected_pool_size += 2;
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child_1->GetHash())));
+        const auto entry_parent = m_node.mempool->GetIter(tx_parent->GetHash()).value();
+        const auto entry_child1 = m_node.mempool->GetIter(tx_child_1->GetHash()).value();
+
+        // Second time around, parent should be deduplicated and child2 considered by itself.
+        // CheckMinerScores would fail if called with child2. But it would be unfair to compare
+        // child1's individual feerate with child2's ancestor feerate.
+        BOOST_CHECK(CheckMinerScores(/*replacement_fees=*/500,
+                                     /*replacement_vsize=*/GetVirtualTransactionSize(*tx_child_2),
+                                     /*ancestors=*/{entry_parent},
+                                     /*direct_conflicts=*/{entry_child1},
+                                     /*original_transactions=*/{entry_child1}).has_value());
+        const auto submit2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package2, /*test_accept=*/false);
+        auto it_parent_2 = submit2.m_tx_results.find(tx_parent->GetWitnessHash());
+        auto it_child_2 = submit2.m_tx_results.find(tx_child_2->GetWitnessHash());
+        BOOST_CHECK(it_parent_2 != submit2.m_tx_results.end());
+        BOOST_CHECK(it_child_2 != submit2.m_tx_results.end());
+        BOOST_CHECK_MESSAGE(submit2.m_state.IsValid(), "Package validation unexpectedly failed" << submit2.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(it_parent_2->second.m_result_type, MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
+        BOOST_CHECK_EQUAL(it_child_2->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child_2->GetHash())));
+        BOOST_CHECK(!m_node.mempool->exists(GenTxid::Txid(tx_child_1->GetHash())));
+    }
+
+    // Test that V3 is required for package RBF, and not required for regular RBF.
+    {
+        CTransactionRef tx_parent_1 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 200, /*submit=*/false, /*version=*/2));
+        CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_1, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 400, /*submit=*/false, /*version=*/2));
+
+        CTransactionRef tx_parent_2 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 800, /*submit=*/false, /*version=*/2));
+        CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_2, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 800 - 200, /*submit=*/false, /*version=*/2));
+
+        CTransactionRef tx_parent_3 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 200, /*submit=*/false, /*version=*/2));
+        CTransactionRef tx_child_3 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_3, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 200 - 1300, /*submit=*/false, /*version=*/2));
+
+        CTransactionRef tx_parent_4 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 200, /*submit=*/false, /*version=*/3));
+        CTransactionRef tx_child_4 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_4, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 200 - 1500, /*submit=*/false, /*version=*/3));
+
+        // 1 parent paying 200sat, 1 child paying 200sat. Both v2.
+        Package package1{tx_parent_1, tx_child_1};
+        // 1 parent paying 800sat, 1 child paying 200sat. Both v2.
+        Package package2{tx_parent_2, tx_child_2};
+        // 1 parent paying 200sat, 1 child paying 1300. Both v2.
+        Package package3{tx_parent_3, tx_child_3};
+        // 1 parent paying 200sat, 1 child paying 1300. Same as package3, but v3.
+        Package package4{tx_parent_4, tx_child_4};
+        // In all packages, the parents conflict with each other
+
+        const auto submit1 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, false);
+        BOOST_CHECK_MESSAGE(submit1.m_state.IsValid(), "Package validation unexpectedly failed" << submit1.m_state.GetRejectReason());
+        auto it_parent_1 = submit1.m_tx_results.find(tx_parent_1->GetWitnessHash());
+        auto it_child_1 = submit1.m_tx_results.find(tx_child_1->GetWitnessHash());
+        BOOST_CHECK(it_parent_1 != submit1.m_tx_results.end());
+        BOOST_CHECK(it_child_1 != submit1.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_parent_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        expected_pool_size += 2;
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent_1->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child_1->GetHash())));
+
+        // These transactions do not need to be V3 to replace their conflicts within
+        // ProcessNewPackage() because the fees used in RBF are their own; no package RBF is
+        // actually happening.
+        const auto submit2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package2, false);
+        BOOST_CHECK_MESSAGE(submit2.m_state.IsValid(), "Package validation unexpectedly failed" << submit2.m_state.GetRejectReason());
+        auto it_parent_2 = submit2.m_tx_results.find(tx_parent_2->GetWitnessHash());
+        auto it_child_2 = submit2.m_tx_results.find(tx_child_2->GetWitnessHash());
+        BOOST_CHECK(it_parent_2 != submit2.m_tx_results.end());
+        BOOST_CHECK(it_child_2 != submit2.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_parent_2->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_2->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent_2->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child_2->GetHash())));
+
+        // Package RBF, in which the replacement transaction's child sponsors the fees to meet RBF
+        // rules, requires the replacement transactions to be V3.
+        const auto submit3 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package3, false);
+        BOOST_CHECK(submit3.m_state.IsInvalid());
+        BOOST_CHECK(submit3.m_state.GetRejectReason() == "package RBF failed: V3 required");
+        BOOST_CHECK(submit3.m_tx_results.at(tx_parent_3->GetWitnessHash()).m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(submit3.m_tx_results.at(tx_parent_3->GetWitnessHash()).m_state.GetResult(), TxValidationResult::TX_MEMPOOL_POLICY);
+        BOOST_CHECK(submit3.m_tx_results.at(tx_child_3->GetWitnessHash()).m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(submit3.m_tx_results.at(tx_child_3->GetWitnessHash()).m_state.GetResult(), TxValidationResult::TX_MISSING_INPUTS);
+
+        const auto submit4 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package4, false);
+        BOOST_CHECK_MESSAGE(submit4.m_state.IsValid(), "Package validation unexpectedly failed" << submit4.m_state.GetRejectReason());
+        auto it_parent_4 = submit4.m_tx_results.find(tx_parent_4->GetWitnessHash());
+        auto it_child_4 = submit4.m_tx_results.find(tx_child_4->GetWitnessHash());
+        BOOST_CHECK(it_parent_4 != submit4.m_tx_results.end());
+        BOOST_CHECK(it_child_4 != submit4.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_parent_4->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_4->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent_4->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child_4->GetHash())));
+    }
+
 }
 BOOST_AUTO_TEST_SUITE_END()
