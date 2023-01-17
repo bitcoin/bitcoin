@@ -2077,8 +2077,8 @@ unset LIBS
 LIBS="$LIBS_TEMP"
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
-AC_CONFIG_SUBDIRS([src/dashbls src/secp256k1])
-
+AC_CONFIG_SUBDIRS([src/dashbls])
+AC_CONFIG_SUBDIRS([src/secp256k1])
 AC_OUTPUT
 
 dnl Replace the BUILDDIR path with the correct Windows path if compiling on Native Windows

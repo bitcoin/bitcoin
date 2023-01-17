@@ -63,4 +63,4 @@ include Makefile.relic.include
 #include Makefile.bench.include
 #endif
 
-lib_LTLIBRARIES += $(LIBDASHBLS)
+noinst_LTLIBRARIES += $(LIBDASHBLS)

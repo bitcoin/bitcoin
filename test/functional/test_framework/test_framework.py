@@ -1062,7 +1062,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def confirm_mns(self):
         while True:
-            diff = self.nodes[0].protx_diff(1, self.nodes[0].getblockcount())
+            diff = self.nodes[0].protx_diff(self.nodes[0].getblockhash(1), self.nodes[0].getblockhash(self.nodes[0].getblockcount()))
             found_unconfirmed = False
             for mn in diff["mnList"]:
                 if int(mn["confirmedHash"], 16) == 0:
