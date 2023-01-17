@@ -28,7 +28,6 @@ class RPCGenerateTest(BitcoinTestFramework):
     def test_generateblock(self):
         node = self.nodes[0]
         miniwallet = MiniWallet(node)
-        miniwallet.rescan_utxos()
 
         self.log.info('Generate an empty block to address')
         address = miniwallet.get_address()

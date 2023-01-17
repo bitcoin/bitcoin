@@ -202,7 +202,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[3])
-        self.wallet.rescan_utxos()
         initial_height = self.nodes[3].getblockcount()
         self.generate(self.nodes[3], COINBASE_MATURITY, sync_fun=self.no_op)
 
