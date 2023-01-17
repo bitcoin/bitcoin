@@ -189,6 +189,17 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
     ret.pushKV("quorumIndex", quorum->qc->quorumIndex);
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
 
+    if (quorum->params.useRotation) {
+        auto previousActiveCommitment = llmq::quorumBlockProcessor->GetLastMinedCommitmentsByQuorumIndexUntilBlock(quorum->params.type, quorum->m_quorum_base_block_index, quorum->qc->quorumIndex, 0);
+        if (previousActiveCommitment.has_value()) {
+            int previousConsecutiveDKGFailures = (quorum->m_quorum_base_block_index->nHeight - previousActiveCommitment.value()->nHeight) /  quorum->params.dkgInterval - 1;
+            ret.pushKV("previousConsecutiveDKGFailures", previousConsecutiveDKGFailures);
+        }
+        else {
+            ret.pushKV("previousConsecutiveDKGFailures", 0);
+        }
+    }
+
     if (includeMembers) {
         UniValue membersArr(UniValue::VARR);
         for (size_t i = 0; i < quorum->members.size(); i++) {
