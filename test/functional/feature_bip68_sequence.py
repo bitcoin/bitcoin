@@ -266,21 +266,22 @@ class BIP68Test(BitcoinTestFramework):
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
 
         # Now mine some blocks, but make sure tx2 doesn't get mined.
-        # Use prioritisetransaction to lower the effective feerate to 0
+        # Use prioritisetransaction to lower the effective feerate to 0, removing it from mempool.
         self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(-self.relayfee*COIN))
+        self.wallet.send_self_transfer(from_node=self.nodes[0])
         cur_time = int(time.time())
         for _ in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
             self.generate(self.wallet, 1, sync_fun=self.no_op)
             cur_time += 600
 
-        assert tx2.hash in self.nodes[0].getrawmempool()
+        assert tx2.hash not in self.nodes[0].getrawmempool()
 
+        # Resubmit and mine tx2, and then try again
+        self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(self.relayfee*COIN))
+        self.nodes[0].sendrawtransaction(tx2.serialize().hex())
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=True)
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
-
-        # Mine tx2, and then try again
-        self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(self.relayfee*COIN))
 
         # Advance the time on the node so that we can test timelocks
         self.nodes[0].setmocktime(cur_time+600)
