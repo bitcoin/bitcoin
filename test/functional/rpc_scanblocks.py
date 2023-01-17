@@ -26,7 +26,6 @@ class ScanblocksTest(SyscoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         wallet = MiniWallet(node)
-        wallet.rescan_utxos()
 
         # send 1.0, mempool only
         _, spk_1, addr_1 = getnewdestination()

@@ -71,7 +71,6 @@ class MempoolAcceptanceTest(SyscoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
-        self.wallet.rescan_utxos()
 
         self.log.info('Start with empty mempool, and 200 blocks')
         self.mempool_size = 0

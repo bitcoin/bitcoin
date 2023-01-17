@@ -42,10 +42,6 @@ class ReplaceByFeeTest(SyscoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        # the pre-mined test framework chain contains coinbase outputs to the
-        # MiniWallet's default address in blocks 76-100 (see method
-        # SyscoinTestFramework._initialize_chain())
-        self.wallet.rescan_utxos()
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
@@ -398,7 +394,6 @@ class ReplaceByFeeTest(SyscoinTestFramework):
         """
         normal_node = self.nodes[1]
         wallet = MiniWallet(normal_node)
-        wallet.rescan_utxos()
         # Clear mempools to avoid cross-node sync failure.
         for node in self.nodes:
             self.generate(node, 1)
