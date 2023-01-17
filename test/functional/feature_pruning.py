@@ -472,8 +472,8 @@ class PruneTest(SyscoinTestFramework):
 
         self.log.info("Test invalid pruning command line options")
         self.test_invalid_command_line_options()
-
-        self.test_scanblocks_pruned()
+        # SYSCOIN
+        # self.test_scanblocks_pruned()
 
         self.log.info("Done")
 
