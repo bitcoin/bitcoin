@@ -18,8 +18,7 @@
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
-    ui(new Ui::ReceiveCoinsDialog),
-    model(nullptr)
+    ui(new Ui::ReceiveCoinsDialog)
 {
     ui->setupUi(this);
 

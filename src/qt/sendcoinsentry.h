@@ -72,7 +72,7 @@ protected:
 private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
-    WalletModel *model;
+    WalletModel* model{nullptr};
 
     /** Set required icons for buttons inside the dialog */
     void setButtonIcons();

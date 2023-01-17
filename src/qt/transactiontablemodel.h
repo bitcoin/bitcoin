@@ -93,8 +93,8 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     QStringList columns;
     TransactionTablePriv *priv;
-    bool fProcessingQueuedTransactions;
-    int cachedChainLockHeight;
+    bool fProcessingQueuedTransactions{false};
+    int cachedChainLockHeight{-1};
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();

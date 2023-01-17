@@ -67,7 +67,6 @@ protected:
 AddressBookPage::AddressBookPage(Mode _mode, Tabs _tab, QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::AddressBookPage),
-    model(nullptr),
     mode(_mode),
     tab(_tab)
 {

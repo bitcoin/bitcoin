@@ -268,9 +268,7 @@ public:
 TransactionTableModel::TransactionTableModel(WalletModel *parent):
         QAbstractTableModel(parent),
         walletModel(parent),
-        priv(new TransactionTablePriv(this)),
-        fProcessingQueuedTransactions(false),
-        cachedChainLockHeight(-1)
+        priv(new TransactionTablePriv(this))
 {
     subscribeToCoreSignals();
 

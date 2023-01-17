@@ -43,12 +43,12 @@ protected:
 
 private:
     Ui::ModalOverlay *ui;
-    int bestHeaderHeight; //best known height (based on the headers)
+    int bestHeaderHeight{0}; // best known height (based on the headers)
     QDateTime bestHeaderDate;
     QVector<QPair<qint64, double> > blockProcessTime;
-    bool layerIsVisible;
-    bool userClosed;
-    bool foreverHidden;
+    bool layerIsVisible{false};
+    bool userClosed{false};
+    bool foreverHidden{false};
     QPropertyAnimation m_animation;
     void UpdateHeaderSyncLabel();
 };

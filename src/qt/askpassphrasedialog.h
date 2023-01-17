@@ -39,8 +39,8 @@ public:
 private:
     Ui::AskPassphraseDialog *ui;
     Mode mode;
-    WalletModel *model;
-    bool fCapsLock;
+    WalletModel* model{nullptr};
+    bool fCapsLock{false};
     SecureString* m_passphrase_out;
 
 private Q_SLOTS:

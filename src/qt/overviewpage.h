@@ -51,13 +51,13 @@ Q_SIGNALS:
 private:
     QTimer* timer{nullptr};
     Ui::OverviewPage *ui;
-    ClientModel *clientModel;
-    WalletModel *walletModel;
+    ClientModel* clientModel{nullptr};
+    WalletModel* walletModel{nullptr};
     interfaces::WalletBalances m_balances;
     bool m_privacy{false};
     BitcoinUnit m_display_bitcoin_unit;
     bool fShowAdvancedCJUI;
-    int cachedNumISLocks;
+    int cachedNumISLocks{-1};
 
     TxViewDelegate *txdelegate;
     std::unique_ptr<TransactionFilterProxy> filter;

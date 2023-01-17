@@ -18,13 +18,9 @@
 #define XMARGIN                 10
 #define YMARGIN                 10
 
-TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
-    QWidget(parent),
-    timer(nullptr),
-    fMax(default_sample_height),
-    nMins(0),
-    clientModel(nullptr),
-    trafficGraphData(TrafficGraphData::Range_30m)
+TrafficGraphWidget::TrafficGraphWidget(QWidget* parent)
+    : QWidget(parent),
+      trafficGraphData(TrafficGraphData::Range_30m)
 {
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);

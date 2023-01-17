@@ -142,9 +142,6 @@ private:
 OverviewPage::OverviewPage(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    clientModel(nullptr),
-    walletModel(nullptr),
-    cachedNumISLocks(-1),
     txdelegate(new TxViewDelegate(this))
 {
     ui->setupUi(this);

@@ -185,9 +185,8 @@ Q_SIGNALS:
 
 #include <qt/bitcoinamountfield.moc>
 
-BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
-    QWidget(parent),
-    amount(nullptr)
+BitcoinAmountField::BitcoinAmountField(QWidget* parent)
+    : QWidget(parent)
 {
     amount = new AmountLineEdit(this);
     amount->setLocale(QLocale::c());

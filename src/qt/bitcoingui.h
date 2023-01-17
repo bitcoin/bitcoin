@@ -406,8 +406,8 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
 
 private:
-    OptionsModel *optionsModel;
-    QMenu* menu;
+    OptionsModel* optionsModel{nullptr};
+    QMenu* menu{nullptr};
 
     /** Shows context menu with Display Unit options by the mouse coordinates */
     void onDisplayUnitsClicked(const QPoint& point);

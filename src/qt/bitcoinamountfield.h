@@ -72,7 +72,7 @@ protected:
     bool eventFilter(QObject *object, QEvent *event) override;
 
 private:
-    AmountLineEdit *amount;
+    AmountLineEdit* amount{nullptr};
     BitcoinUnits *units;
 
     void unitChanged(int idx);

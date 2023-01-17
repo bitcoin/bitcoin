@@ -6,10 +6,8 @@
 
 #include <qt/guiutil.h>
 
-QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
-    QLineEdit(parent),
-    valid(true),
-    checkValidator(nullptr)
+QValidatedLineEdit::QValidatedLineEdit(QWidget* parent)
+    : QLineEdit(parent)
 {
     connect(this, &QValidatedLineEdit::textChanged, this, &QValidatedLineEdit::markValid);
 }

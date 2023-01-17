@@ -13,10 +13,9 @@
 
 #include <QTimer>
 
-PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent) :
-    QAbstractTableModel(parent),
-    m_node(node),
-    timer(nullptr)
+PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent)
+    : QAbstractTableModel(parent),
+      m_node(node)
 {
     // set up timer for auto refresh
     timer = new QTimer(this);

@@ -2144,9 +2144,7 @@ bool BitcoinGUI::isPrivacyModeActivated() const
     return m_mask_values_action->isChecked();
 }
 
-UnitDisplayStatusBarControl::UnitDisplayStatusBarControl() :
-    optionsModel(nullptr),
-    menu(nullptr)
+UnitDisplayStatusBarControl::UnitDisplayStatusBarControl()
 {
     createContextMenu();
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
