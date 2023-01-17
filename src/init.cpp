@@ -25,6 +25,7 @@
 #include <httprpc.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
+#include <index/walletfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <init/common.h>
@@ -220,6 +221,9 @@ void Interrupt(NodeContext& node)
     if (g_txindex) {
         g_txindex->Interrupt();
     }
+    if (g_wallet_filter_index) {
+        g_wallet_filter_index->Interrupt();
+    }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
     if (g_coin_stats_index) {
         g_coin_stats_index->Interrupt();
@@ -296,6 +300,10 @@ void Shutdown(NodeContext& node)
     if (g_txindex) {
         g_txindex->Stop();
         g_txindex.reset();
+    }
+    if (g_wallet_filter_index) {
+        g_wallet_filter_index->Stop();
+        g_wallet_filter_index.reset();
     }
     if (g_coin_stats_index) {
         g_coin_stats_index->Stop();
@@ -465,6 +473,7 @@ void SetupServerArgs(ArgsManager& argsman)
     hidden_args.emplace_back("-sysperms");
 #endif
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-walletfilterindex", strprintf("Maintain an index of compat filters by block, used to speed up wallet rescans (default: %u)", DEFAULT_WALLETFILTERINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blockfilterindex=<type>",
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
@@ -1465,6 +1474,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         LogPrintf("* Using %.1f MiB for transaction index database\n", cache_sizes.tx_index * (1.0 / 1024 / 1024));
     }
+    if (args.GetBoolArg("-walletfilterindex", DEFAULT_WALLETFILTERINDEX)) {
+        LogPrintf("* Using %.1f MiB for wallet filter index database\n", cache_sizes.wallet_filter_index * (1.0 / 1024 / 1024));
+    }
     for (BlockFilterType filter_type : g_enabled_filter_types) {
         LogPrintf("* Using %.1f MiB for %s block filter index database\n",
                   cache_sizes.filter_index * (1.0 / 1024 / 1024), BlockFilterTypeName(filter_type));
@@ -1580,6 +1592,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         g_txindex = std::make_unique<TxIndex>(interfaces::MakeChain(node), cache_sizes.tx_index, false, fReindex);
         if (!g_txindex->Start()) {
+            return false;
+        }
+    }
+
+    if (args.GetBoolArg("-walletfilterindex", DEFAULT_WALLETFILTERINDEX)) {
+        g_wallet_filter_index = std::make_unique<WalletFilterIndex>(interfaces::MakeChain(node), cache_sizes.wallet_filter_index, false, fReindex);
+        if (!g_wallet_filter_index->Start()) {
             return false;
         }
     }

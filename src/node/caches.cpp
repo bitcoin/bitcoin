@@ -4,9 +4,12 @@
 
 #include <node/caches.h>
 
+#include <index/walletfilterindex.h>
 #include <index/txindex.h>
 #include <txdb.h>
 #include <util/system.h>
+
+constexpr int64_t nMaxWalletFilterIndexCache = 32 << 20;
 
 namespace node {
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
@@ -19,6 +22,8 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     nTotalCache -= sizes.block_tree_db;
     sizes.tx_index = std::min(nTotalCache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= sizes.tx_index;
+    sizes.wallet_filter_index = std::min(nTotalCache / 8, args.GetBoolArg("-walletfilterindex", DEFAULT_WALLETFILTERINDEX) ? nMaxWalletFilterIndexCache : 0);
+    nTotalCache -= sizes.wallet_filter_index;
     sizes.filter_index = 0;
     if (n_indexes > 0) {
         int64_t max_cache = std::min(nTotalCache / 8, max_filter_index_cache << 20);
