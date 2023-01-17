@@ -1529,7 +1529,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     statusBar()->clearMessage();
 
     // Acquire current block source
-    enum BlockSource blockSource = clientModel->getBlockSource();
+    BlockSource blockSource{clientModel->getBlockSource()};
     switch (blockSource) {
         case BlockSource::NETWORK:
             if (header) {
@@ -1545,9 +1545,6 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
             } else {
                 progressBarLabel->setText(tr("Processing blocks on disk…"));
             }
-            break;
-        case BlockSource::REINDEX:
-            progressBarLabel->setText(tr("Reindexing blocks on disk…"));
             break;
         case BlockSource::NONE:
             if (header) {

@@ -33,9 +33,8 @@ QT_END_NAMESPACE
 
 enum class BlockSource {
     NONE,
-    REINDEX,
     DISK,
-    NETWORK
+    NETWORK,
 };
 
 enum NumConnections {
@@ -79,8 +78,8 @@ public:
 
     void getAllGovernanceObjects(std::vector<CGovernanceObject> &obj);
 
-    //! Returns enum BlockSource of the current importing/syncing state
-    enum BlockSource getBlockSource() const;
+    //! Returns the block source of the current importing/syncing state
+    BlockSource getBlockSource() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
