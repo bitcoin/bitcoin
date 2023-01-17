@@ -25,8 +25,8 @@ protected:
     void focusOutEvent(QFocusEvent *evt) override;
 
 private:
-    bool valid;
-    const QValidator *checkValidator;
+    bool valid{true};
+    const QValidator* checkValidator{nullptr};
 
 public Q_SLOTS:
     void setText(const QString&);
