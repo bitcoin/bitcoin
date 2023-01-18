@@ -227,11 +227,16 @@ private:
 public:
     CRPCConvertTable();
 
-    bool convert(const std::string& method, int idx) {
-        return (members.count(std::make_pair(method, idx)) > 0);
+    /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
+    UniValue ArgToUniValue(const std::string& arg_value, const std::string& method, int param_idx)
+    {
+        return members.count(std::make_pair(method, param_idx)) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
     }
-    bool convert(const std::string& method, const std::string& name) {
-        return (membersByName.count(std::make_pair(method, name)) > 0);
+
+    /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
+    UniValue ArgToUniValue(const std::string& arg_value, const std::string& method, const std::string& param_name)
+    {
+        return membersByName.count(std::make_pair(method, param_name)) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
     }
 };
 
@@ -263,14 +268,7 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
 
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
         const std::string& strVal = strParams[idx];
-
-        if (!rpcCvtTable.convert(strMethod, idx)) {
-            // insert string value directly
-            params.push_back(strVal);
-        } else {
-            // parse string as JSON, insert bool/number/object/etc. value
-            params.push_back(ParseNonRFCJSONValue(strVal));
-        }
+        params.push_back(rpcCvtTable.ArgToUniValue(strVal, strMethod, idx));
     }
 
     return params;
@@ -284,7 +282,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
     for (const std::string &s: strParams) {
         size_t pos = s.find('=');
         if (pos == std::string::npos) {
-            positional_args.push_back(rpcCvtTable.convert(strMethod, positional_args.size()) ? ParseNonRFCJSONValue(s) : s);
+            positional_args.push_back(rpcCvtTable.ArgToUniValue(s, strMethod, positional_args.size()));
             continue;
         }
 
@@ -294,13 +292,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         // Intentionally overwrite earlier named values with later ones as a
         // convenience for scripts and command line users that want to merge
         // options.
-        if (!rpcCvtTable.convert(strMethod, name)) {
-            // insert string value directly
-            params.pushKV(name, value);
-        } else {
-            // parse string as JSON, insert bool/number/object/etc. value
-            params.pushKV(name, ParseNonRFCJSONValue(value));
-        }
+        params.pushKV(name, rpcCvtTable.ArgToUniValue(value, strMethod, name));
     }
 
     if (!positional_args.empty()) {
