@@ -7,8 +7,8 @@ Source: https://github.com/bitcoin/bitcoin
 Files: *
 Copyright: 2009-2023, Bitcoin Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
-         as well as the numerous contributors to the project.
+Comment: The Bitcoin Core Developers encompasses all contributors to the
+         project, listed in the release notes or the git log.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
