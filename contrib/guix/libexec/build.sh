@@ -281,6 +281,8 @@ mkdir -p "$DISTSRC"
                     ${HOST_LDFLAGS:+LDFLAGS="${HOST_LDFLAGS}"}
 
     sed -i.old 's/-lstdc++ //g' config.status libtool
+    # SYSCOIN ensure we don't include non-static stdc++ in dashbls which seems to get included always
+    sed -i.old 's/-lstdc++ //g' dashbls/config.status libtool
 
     # Build Syscoin Core
     # Syscoin: add '-O --no-print-directory' (see Depends Building)
