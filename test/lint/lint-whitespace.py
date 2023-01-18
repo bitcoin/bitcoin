@@ -82,7 +82,7 @@ def get_diff(commit_range, check_only_code):
     else:
         what_files = ["."]
 
-    diff = check_output(["git", "diff", "-U0", commit_range, "--"] + what_files + exclude_args, universal_newlines=True, encoding="utf8")
+    diff = check_output(["git", "diff", "-U0", commit_range, "--"] + what_files + exclude_args, text=True, encoding="utf8")
 
     return diff
 
@@ -94,8 +94,8 @@ def main():
         if args.prev_commits:
             commit_range = "HEAD~" + args.prev_commits + "...HEAD"
         else:
-            # This assumes that the target branch of the pull request will be dev-4.x.
-            merge_base = check_output(["git", "merge-base", "HEAD", "dev-4.x"], universal_newlines=True, encoding="utf8").rstrip("\n")
+            # This assumes that the target branch of the pull request will be master.
+            merge_base = check_output(["git", "merge-base", "HEAD", "dev-4.x"], text=True, encoding="utf8").rstrip("\n")
             commit_range = merge_base + "..HEAD"
     else:
         commit_range = os.getenv("COMMIT_RANGE")
