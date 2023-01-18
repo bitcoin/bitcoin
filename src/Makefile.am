@@ -802,8 +802,9 @@ libsyscoin_common_a_SOURCES = \
   protocol.cpp \
   saltedhasher.cpp \
   psbt.cpp \
-  rpc/rawtransaction_util.cpp \
   rpc/external_signer.cpp \
+  rpc/rawtransaction_util.cpp \
+  rpc/request.cpp \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
@@ -836,7 +837,6 @@ libsyscoin_util_a_SOURCES = \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
-  rpc/request.cpp \
   support/cleanse.cpp \
   sync.cpp \
   util/asmap.cpp \
