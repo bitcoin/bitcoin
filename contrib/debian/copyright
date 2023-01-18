@@ -7,8 +7,8 @@ Source: https://github.com/syscoin/syscoin
 Files: *
 Copyright: 2009-2023, Syscoin Core Developers
 License: Expat
-Comment: The Syscoin Core developers encompasses the current developers listed on syscoin.org,
-         as well as the numerous contributors to the project.
+Comment: The Syscoin Core Developers encompasses all contributors to the
+         project, listed in the release notes or the git log.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
