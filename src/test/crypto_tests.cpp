@@ -160,6 +160,27 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
         }
         BOOST_CHECK_EQUAL(hexout, HexStr(outres));
     }
+
+    // Repeat 10x, but fragmented into 3 chunks, to exercise the ChaCha20 class's caching.
+    for (int i = 0; i < 10; ++i) {
+        size_t lens[3];
+        lens[0] = InsecureRandRange(hexout.size() / 2U + 1U);
+        lens[1] = InsecureRandRange(hexout.size() / 2U + 1U - lens[0]);
+        lens[2] = hexout.size() / 2U - lens[0] - lens[1];
+
+        rng.Seek64(seek);
+        outres.assign(hexout.size() / 2U, 0);
+        size_t pos = 0;
+        for (int j = 0; j < 3; ++j) {
+            if (!hex_message.empty()) {
+                rng.Crypt(m.data() + pos, outres.data() + pos, lens[j]);
+            } else {
+                rng.Keystream(outres.data() + pos, lens[j]);
+            }
+            pos += lens[j];
+        }
+        BOOST_CHECK_EQUAL(hexout, HexStr(outres));
+    }
 }
 
 static void TestPoly1305(const std::string &hexmessage, const std::string &hexkey, const std::string& hextag)
