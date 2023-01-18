@@ -12,7 +12,7 @@ import subprocess
 
 def git_grep(params: [], error_msg: ""):
     try:
-        output = subprocess.check_output(["git", "grep", *params], universal_newlines=True, encoding="utf8")
+        output = subprocess.check_output(["git", "grep", *params], text=True, encoding="utf8")
         print(error_msg)
         print(output)
         return 1

@@ -81,6 +81,9 @@ if [[ $DOCKER_NAME_TAG == *centos* ]]; then
   CI_EXEC_ROOT yum -y install epel-release
   CI_EXEC_ROOT yum -y install "$DOCKER_PACKAGES" "$PACKAGES"
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
+  if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
+    CI_EXEC_ROOT echo "${APPEND_APT_SOURCES_LIST}" >> /etc/apt/sources.list
+  fi
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$DOCKER_PACKAGES"
 fi

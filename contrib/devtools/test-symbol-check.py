@@ -23,7 +23,7 @@ def call_symbol_check(cxx: List[str], source, executable, options):
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
     subprocess.run([*cxx,source,'-o',executable] + env_flags + options, check=True)
-    p = subprocess.run([os.path.join(os.path.dirname(__file__), 'symbol-check.py'), executable], stdout=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.run([os.path.join(os.path.dirname(__file__), 'symbol-check.py'), executable], stdout=subprocess.PIPE, text=True)
     os.remove(source)
     os.remove(executable)
     return (p.returncode, p.stdout.rstrip())

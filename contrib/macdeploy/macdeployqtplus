@@ -185,7 +185,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     objdump = os.getenv("OBJDUMP", "objdump")
     if verbose:
         print(f"Inspecting with {objdump}: {binaryPath}")
-    output = run([objdump, "--macho", "--dylibs-used", binaryPath], stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    output = run([objdump, "--macho", "--dylibs-used", binaryPath], stdout=PIPE, stderr=PIPE, text=True)
     if output.returncode != 0:
         sys.stderr.write(output.stderr)
         sys.stderr.flush()

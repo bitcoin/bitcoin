@@ -21,7 +21,7 @@ def main():
         "--",
         "*.py",
     ]
-    output = subprocess.run(command, stdout=subprocess.PIPE, universal_newlines=True)
+    output = subprocess.run(command, stdout=subprocess.PIPE, text=True)
     if len(output.stdout) > 0:
         error_msg = (
             "A mutable list or dict seems to be used as default parameter value:\n\n"
