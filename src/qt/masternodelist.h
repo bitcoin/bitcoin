@@ -34,7 +34,7 @@ class MasternodeList : public QWidget
     Q_OBJECT
 
 public:
-    explicit MasternodeList(QWidget* parent = 0);
+    explicit MasternodeList(QWidget* parent = nullptr);
     ~MasternodeList();
 
     void setClientModel(ClientModel* clientModel);
@@ -42,21 +42,21 @@ public:
 
 private:
     QMenu* contextMenuDIP3;
-    int64_t nTimeFilterUpdatedDIP3;
-    int64_t nTimeUpdatedDIP3;
-    bool fFilterUpdatedDIP3;
+    int64_t nTimeFilterUpdatedDIP3{0};
+    int64_t nTimeUpdatedDIP3{0};
+    bool fFilterUpdatedDIP3{true};
 
     QTimer* timer;
-    Ui::MasternodeList* ui;
-    ClientModel* clientModel;
-    WalletModel* walletModel;
+    Ui::MasternodeList* ui{nullptr};
+    ClientModel* clientModel{nullptr};
+    WalletModel* walletModel{nullptr};
 
     // Protects tableWidgetMasternodesDIP3
     RecursiveMutex cs_dip3list;
 
     QString strCurrentFilterDIP3;
 
-    bool mnListChanged;
+    bool mnListChanged{true};
 
     CDeterministicMNCPtr GetSelectedDIP3MN();
 
