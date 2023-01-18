@@ -157,21 +157,25 @@ struct RPCArg {
         /** Required arg */
         NO,
         /**
+         * The arg is optional for one of two reasons:
+         *
          * Optional arg that is a named argument and has a default value of
-         * `null`. When possible, the default value should be specified.
-         */
-        OMITTED_NAMED_ARG,
-        /**
+         * `null`.
+         *
          * Optional argument with default value omitted because they are
-         * implicitly clear. That is, elements in an array or object may not
+         * implicitly clear. That is, elements in an array may not
          * exist by default.
          * When possible, the default value should be specified.
          */
         OMITTED,
+        OMITTED_NAMED_ARG, // Deprecated alias for OMITTED, can be removed
     };
+    /** Hint for default value */
     using DefaultHint = std::string;
+    /** Default constant value */
     using Default = UniValue;
-    using Fallback = std::variant<Optional, /* hint for default value */ DefaultHint, /* default constant value */ Default>;
+    using Fallback = std::variant<Optional, DefaultHint, Default>;
+
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
     const bool m_hidden;
@@ -182,13 +186,13 @@ struct RPCArg {
     const std::vector<std::string> m_type_str; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_type_str.at(0) will override the type of the value in a key-value pair, m_type_str.at(1) will override the type in the argument description.
 
     RPCArg(
-        const std::string name,
-        const Type type,
-        const Fallback fallback,
-        const std::string description,
-        const std::string oneline_description = "",
-        const std::vector<std::string> type_str = {},
-        const bool hidden = false)
+        std::string name,
+        Type type,
+        Fallback fallback,
+        std::string description,
+        std::string oneline_description = "",
+        std::vector<std::string> type_str = {},
+        bool hidden = false)
         : m_names{std::move(name)},
           m_type{std::move(type)},
           m_hidden{hidden},
@@ -201,13 +205,13 @@ struct RPCArg {
     }
 
     RPCArg(
-        const std::string name,
-        const Type type,
-        const Fallback fallback,
-        const std::string description,
-        const std::vector<RPCArg> inner,
-        const std::string oneline_description = "",
-        const std::vector<std::string> type_str = {})
+        std::string name,
+        Type type,
+        Fallback fallback,
+        std::string description,
+        std::vector<RPCArg> inner,
+        std::string oneline_description = "",
+        std::vector<std::string> type_str = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
           m_hidden{false},
@@ -242,7 +246,7 @@ struct RPCArg {
      * Return the description string, including the argument type and whether
      * the argument is required.
      */
-    std::string ToDescriptionString() const;
+    std::string ToDescriptionString(bool is_named_arg) const;
 };
 
 struct RPCResult {
@@ -270,12 +274,12 @@ struct RPCResult {
     const std::string m_cond;
 
     RPCResult(
-        const std::string cond,
-        const Type type,
-        const std::string m_key_name,
-        const bool optional,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
+        std::string cond,
+        Type type,
+        std::string m_key_name,
+        bool optional,
+        std::string description,
+        std::vector<RPCResult> inner = {})
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
@@ -288,19 +292,19 @@ struct RPCResult {
     }
 
     RPCResult(
-        const std::string cond,
-        const Type type,
-        const std::string m_key_name,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
-        : RPCResult{cond, type, m_key_name, false, description, inner} {}
+        std::string cond,
+        Type type,
+        std::string m_key_name,
+        std::string description,
+        std::vector<RPCResult> inner = {})
+        : RPCResult{std::move(cond), type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner)} {}
 
     RPCResult(
-        const Type type,
-        const std::string m_key_name,
-        const bool optional,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
+        Type type,
+        std::string m_key_name,
+        bool optional,
+        std::string description,
+        std::vector<RPCResult> inner = {})
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
@@ -312,10 +316,10 @@ struct RPCResult {
     }
 
     RPCResult(
-        const Type type,
-        const std::string m_key_name,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
+        Type type,
+        std::string m_key_name,
+        std::string description,
+        std::vector<RPCResult> inner = {})
         : RPCResult{type, m_key_name, false, description, inner} {}
 
     /** Append the sections of the result. */
