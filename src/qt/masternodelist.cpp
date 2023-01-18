@@ -34,7 +34,7 @@ int GetOffsetFromUtc()
 
 MasternodeList::MasternodeList(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::MasternodeList),
+    ui(new Ui::MasternodeList)
 {
     ui->setupUi(this);
 
