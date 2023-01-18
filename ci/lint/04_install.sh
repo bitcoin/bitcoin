@@ -7,7 +7,11 @@
 export LC_ALL=C
 
 ${CI_RETRY_EXE} apt-get update
-${CI_RETRY_EXE} apt-get install -y curl git gawk jq xz-utils
+# Lint dependencies:
+# - curl/xz-utils (to install shellcheck)
+# - git (used in many lint scripts)
+# - gpg (used by verify-commits)
+${CI_RETRY_EXE} apt-get install -y curl xz-utils git gpg
 
 PYTHON_PATH=/tmp/python
 if [ ! -d "${PYTHON_PATH}/bin" ]; then
