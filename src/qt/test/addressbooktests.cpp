@@ -75,7 +75,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     auto wallet_loader = interfaces::MakeWalletLoader(*test.m_node.chain, *Assert(test.m_node.args));
     test.m_node.wallet_loader = wallet_loader.get();
     node.setContext(&test.m_node);
-    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", gArgs, CreateMockWalletDatabase());
+    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", CreateMockWalletDatabase());
     wallet->LoadWallet();
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     {
