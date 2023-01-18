@@ -520,7 +520,7 @@ class TestNode():
             '-p', str(self.process.pid),
             '-o', output_path,
         ]
-        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subp = subprocess.Popen(cmd, capture_output=True)
         self.perf_subprocesses[profile_name] = subp
 
         return subp
@@ -730,7 +730,7 @@ class TestNodeCLI():
             p_args += [command]
         p_args += pos_args + named_args
         self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
-        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, capture_output=True, text=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()
         if returncode:

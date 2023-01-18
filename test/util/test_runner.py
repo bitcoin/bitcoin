@@ -107,7 +107,7 @@ def bctest(testDir, testObj, buildenv):
             raise Exception
 
     # Run the test
-    proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc = subprocess.Popen(execrun, stdin=stdinCfg, capture_output=True, text=True)
     try:
         outs = proc.communicate(input=inputData)
     except OSError:
