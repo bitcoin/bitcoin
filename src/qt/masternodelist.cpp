@@ -34,13 +34,7 @@ int GetOffsetFromUtc()
 
 MasternodeList::MasternodeList(QWidget* parent) :
     QWidget(parent),
-    nTimeFilterUpdatedDIP3(0),
-    nTimeUpdatedDIP3(0),
-    fFilterUpdatedDIP3(true),
     ui(new Ui::MasternodeList),
-    clientModel(nullptr),
-    walletModel(nullptr),
-    mnListChanged(true)
 {
     ui->setupUi(this);
 
