@@ -645,6 +645,9 @@ public:
     /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
     int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
 
+    /** Notify external script when a wallet transaction comes in or is updated (handled by -walletnotify) */
+    std::string m_notify_tx_changed_script;
+
     size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
 

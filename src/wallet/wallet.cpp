@@ -1108,7 +1108,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string strCmd = m_args.GetArg("-walletnotify", "");
+    std::string strCmd = m_notify_tx_changed_script;
 
     if (!strCmd.empty())
     {
@@ -2915,6 +2915,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     // should be possible to use std::allocate_shared.
     std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, args, std::move(database)), ReleaseWallet);
     walletInstance->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
+    walletInstance->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
 
     // Load wallet
     bool rescan_required = false;
