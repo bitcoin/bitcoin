@@ -168,7 +168,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             for wallet in os.listdir(node_master_wallets_dir):
                 shutil.copytree(
                     os.path.join(node_master_wallets_dir, wallet),
-                    os.path.join(self.nodes_wallet_dir(node), wallet)
+                    os.path.join(self.nodes_wallet_dir(node), wallet),
+                    # Do not copy any BDB transaction log files
+                    ignore = shutil.ignore_patterns("database")
                 )
 
         if not self.options.descriptors:
