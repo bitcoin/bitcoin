@@ -54,14 +54,31 @@ case $host in
      lt_cv_deplibs_check_method="pass_all"
   ;;
 esac
-dnl Require C++14 compiler (no GNU extensions)
-AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 
-dnl Libtool init checks.
-LT_INIT([pic-only])
+AC_ARG_ENABLE([c++20],
+  [AS_HELP_STRING([--enable-c++20],
+  [enable compilation in c++20 mode (disabled by default)])],
+  [use_cxx20=$enableval],
+  [use_cxx20=no])
 
+dnl Require C++17 compiler (no GNU extensions)
+if test "$use_cxx20" = "no"; then
+AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
+else
+AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
+fi
+
+
+AC_PROG_CC
 AM_PROG_AS
 AM_PROG_AR
+
+# Clear some cache variables as a workaround for a bug that appears due to a bad
+# interaction between AM_PROG_AR and LT_INIT when combining MSVC's archiver lib.exe.
+# https://debbugs.gnu.org/cgi/bugreport.cgi?bug=54421
+AS_UNSET(ac_cv_prog_AR)
+AS_UNSET(ac_cv_prog_ac_ct_AR)
+LT_INIT([pic-only win32-dll])
 
 AC_ARG_ENABLE(tests,
   [AS_HELP_STRING([--disable-tests],
