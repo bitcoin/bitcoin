@@ -10,6 +10,7 @@
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <psbt.h>
@@ -19,7 +20,6 @@
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
 #include <validationinterface.h>

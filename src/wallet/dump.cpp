@@ -5,6 +5,7 @@
 #include <wallet/dump.h>
 
 #include <fs.h>
+#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
 
