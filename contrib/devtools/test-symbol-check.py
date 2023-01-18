@@ -23,13 +23,13 @@ def call_symbol_check(cc: List[str], source, executable, options):
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
     subprocess.run([*cc,source,'-o',executable] + env_flags + options, check=True)
-    p = subprocess.run([os.path.join(os.path.dirname(__file__), 'symbol-check.py'), executable], stdout=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.run([os.path.join(os.path.dirname(__file__), 'symbol-check.py'), executable], stdout=subprocess.PIPE, text=True)
     os.remove(source)
     os.remove(executable)
     return (p.returncode, p.stdout.rstrip())
 
 def get_machine(cc: List[str]):
-    p = subprocess.run([*cc,'-dumpmachine'], stdout=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.run([*cc,'-dumpmachine'], stdout=subprocess.PIPE, text=True)
     return p.stdout.rstrip()
 
 class TestSymbolChecks(unittest.TestCase):

@@ -38,14 +38,14 @@ def main():
     os.chdir(CODE_DIR)
     files = subprocess.check_output(
         ['git', 'ls-files', '--', '*.h', '*.cpp'],
-        universal_newlines=True,
+        text=True,
     ).splitlines()
 
     command = [sys.executable, "../contrib/devtools/circular-dependencies.py", *files]
     dependencies_output = subprocess.run(
         command,
         stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
     )
 
     for dependency_str in dependencies_output.stdout.rstrip().split("\n"):
