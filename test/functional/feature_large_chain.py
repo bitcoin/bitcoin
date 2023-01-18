@@ -9,6 +9,7 @@ This test uses 4GB of disk space.
 This test takes 30 mins or more (up to 2 hours)
 """
 import os
+import threading
 
 from test_framework.blocktools import (
     MIN_BLOCKS_TO_KEEP,
@@ -64,7 +65,7 @@ def mine_large_blocks(node, n):
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir + f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
 
-class PruneTest(BitcoinTestFramework):
+class LargeChainTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -357,6 +358,36 @@ class PruneTest(BitcoinTestFramework):
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
         self.restart_node(5, extra_args=["-prune=550", "-blockfilterindex=1"]) # restart to trigger rescan
+
+        self.log.info("Test wallet interactions with rescanning wallet")
+        commands = [
+            ['unloadwallet', self.default_wallet_name],
+            ['rescanblockchain'],
+        ]
+
+        if self.options.descriptors:
+            commands.extend([
+                ['importdescriptors', '[{"desc": "wpkh([d34db33f/84h/1h/0h]tpubD6NzVbkrYhZ4Y1u1vQ8V7dG9y1YjKp6eX8gVfZ6U5w5U1p6U5m8LjY6X9e6HJQz1vQ8V7dG9y1YjKp6eX8gVfZ6U5w5U1p6U5m8LjY6X9e6HJQz1vQ8V7dG9y1YjKp6eX8gVfZ/0/*)#0h7xjxg8", "timestamp": "now", "active": true, "range": [0, 1000]}]'],
+            ])
+        else:
+            commands.extend([
+                ['importmulti', '[{"scriptPubKey": {"address": "2N8MytPW2ih27LctLjn6LfLFZZb1PFSsqBr"}, "timestamp": "now", "range": [0, 1000]}]'],
+                ['importaddress', '2N8MytPW2ih27LctLjn6LfLFZZb1PFSsqBr'],
+                ['importpubkey', '02f256e1f505f087e665f44aa4d8a4d12345cb2d20277525f1f505f087e665f44a'],
+                ['importprivkey', 'cVw3sdmQw3J4r87ZfiHrRc3E4r87ZfiHrRc3E4r87ZfiHrRc3E'],
+                ['importwallet', 'wallet.dump'],
+            ])
+
+        wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        for command in commands:
+            t = threading.Thread(target=wallet.rescanblockchain)
+            t.daemon = True
+            t.start()
+
+            assert_raises_rpc_error(-4, "Wallet is currently rescanning. Abort existing rescan or wait.", self.nodes[0].cli(*command).send_cli)
+
+            t.join()
+
         self.log.info("Success")
 
     def run_test(self):
@@ -488,4 +519,4 @@ class PruneTest(BitcoinTestFramework):
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})
 
 if __name__ == '__main__':
-    PruneTest().main()
+    LargeChainTest().main()
