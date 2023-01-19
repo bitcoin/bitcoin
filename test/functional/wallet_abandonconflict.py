@@ -16,6 +16,7 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
 
@@ -100,10 +101,15 @@ class AbandonConflictTest(BitcoinTestFramework):
         newbalance = alice.getbalance()
         assert_equal(newbalance, balance - Decimal("30") + signed3_change)
         balance = newbalance
+        for txid in self.nodes[0].getrawmempool():
+            entry = self.nodes[0].getmempoolentry(txid)
+            # Multiply by 1000 because minrelaytxfee is specified in BTC per KvB.
+            assert_greater_than(Decimal("0.006"), entry["fees"]["modified"] / entry["vsize"] * 1000)
+            assert_greater_than(Decimal("0.006"), entry["fees"]["descendant"] / entry["descendantsize"] * 1000)
 
         # Restart the node with a higher min relay fee so the parent tx is no longer in mempool
         # TODO: redo with eviction
-        self.restart_node(0, extra_args=["-minrelaytxfee=0.0001"])
+        self.restart_node(0, extra_args=["-minrelaytxfee=0.006"])
         alice = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         assert self.nodes[0].getmempoolinfo()['loaded']
 
@@ -160,8 +166,14 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(newbalance, balance - Decimal("10") - Decimal("14.99998") + Decimal("24.9996"))
         balance = newbalance
 
+        for txid in self.nodes[0].getrawmempool():
+            entry = self.nodes[0].getmempoolentry(txid)
+            # Multiply by 1000 because minrelaytxfee is specified in BTC per KvB.
+            assert_greater_than(Decimal("0.006"), entry["fees"]["modified"] / entry["vsize"] * 1000)
+            assert_greater_than(Decimal("0.006"), entry["fees"]["descendant"] / entry["descendantsize"] * 1000)
+
         # Remove using high relay fee again
-        self.restart_node(0, extra_args=["-minrelaytxfee=0.0001"])
+        self.restart_node(0, extra_args=["-minrelaytxfee=0.006"])
         alice = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         assert self.nodes[0].getmempoolinfo()['loaded']
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
