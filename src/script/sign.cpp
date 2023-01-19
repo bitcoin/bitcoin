@@ -169,13 +169,14 @@ static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, Signatur
     return false;
 }
 
-static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, const CScript& script, std::vector<valtype>& result)
+static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, Span<const unsigned char> script_bytes, std::vector<valtype>& result)
 {
     // Only BIP342 tapscript signing is supported for now.
     if (leaf_version != TAPROOT_LEAF_TAPSCRIPT) return false;
     SigVersion sigversion = SigVersion::TAPSCRIPT;
 
-    uint256 leaf_hash = (HashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
+    uint256 leaf_hash = ComputeTapleafHash(leaf_version, script_bytes);
+    CScript script = CScript(script_bytes.begin(), script_bytes.end());
 
     // <xonly pubkey> OP_CHECKSIG
     if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {

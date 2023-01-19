@@ -333,7 +333,10 @@ public:
 };
 
 /** Compute the BIP341 tapleaf hash from leaf version & script. */
-uint256 ComputeTapleafHash(uint8_t leaf_version, const CScript& script);
+uint256 ComputeTapleafHash(uint8_t leaf_version, Span<const unsigned char> script);
+/** Compute the BIP341 tapbranch hash from two branches.
+  * Spans must be 32 bytes each. */
+uint256 ComputeTapbranchHash(Span<const unsigned char> a, Span<const unsigned char> b);
 /** Compute the BIP341 taproot script tree Merkle root from control block and leaf hash.
  *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
 uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint256& tapleaf_hash);
