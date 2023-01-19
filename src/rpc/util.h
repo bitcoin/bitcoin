@@ -151,8 +151,7 @@ struct RPCArg {
     };
 
     enum class Optional {
-        /** Required arg */
-        NO,
+        NO, // Deprecated alias for Required
         /**
          * The arg is optional for one of two reasons:
          *
@@ -167,6 +166,8 @@ struct RPCArg {
         OMITTED,
         OMITTED_NAMED_ARG, // Deprecated alias for OMITTED, can be removed
     };
+    /** Required arg */
+    static constexpr auto Required = Optional::NO;
     /** Hint for default value */
     using DefaultHint = std::string;
     /** Default constant value */

@@ -718,7 +718,7 @@ bool RPCArg::IsOptional() const
     if (m_fallback.index() != 0) {
         return true;
     } else {
-        return RPCArg::Optional::NO != std::get<RPCArg::Optional>(m_fallback);
+        return RPCArg::Required != std::get<RPCArg::Optional>(m_fallback);
     }
 }
 
@@ -774,7 +774,7 @@ std::string RPCArg::ToDescriptionString(bool is_named_arg) const
             // nothing to do. Element is treated as if not present and has no default value
             break;
         }
-        case RPCArg::Optional::NO: {
+        case RPCArg::Required: {
             ret += ", required";
             break;
         }
