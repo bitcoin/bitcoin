@@ -82,6 +82,9 @@ FUZZ_TARGET_INIT(partially_downloaded_block, initialize_pdb)
     auto init_status{pdb.InitData(cmpctblock, extra_txn)};
 
     std::vector<CTransactionRef> missing;
+    // Whether we skipped a transaction that should be included in `missing`.
+    // FillBlock should never return READ_STATUS_OK if that is the case.
+    bool skipped_missing{false};
     for (size_t i = 0; i < cmpctblock.BlockTxCount(); i++) {
         // If init_status == READ_STATUS_OK then a available transaction in the
         // compact block (i.e. IsTxAvailable(i) == true) implies that we marked
@@ -97,6 +100,8 @@ FUZZ_TARGET_INIT(partially_downloaded_block, initialize_pdb)
         if (!pdb.IsTxAvailable(i) && !skip) {
             missing.push_back(block->vtx[i]);
         }
+
+        skipped_missing |= (!pdb.IsTxAvailable(i) && skip);
     }
 
     // Mock CheckBlock
@@ -123,6 +128,7 @@ FUZZ_TARGET_INIT(partially_downloaded_block, initialize_pdb)
     auto fill_status{pdb.FillBlock(reconstructed_block, missing)};
     switch (fill_status) {
     case READ_STATUS_OK:
+        assert(!skipped_missing);
         assert(!fail_check_block);
         assert(block->GetHash() == reconstructed_block.GetHash());
         break;
