@@ -6,7 +6,11 @@
 
 export LC_ALL=C
 
-if [ -n "$CIRRUS_PR" ]; then
+if [ -n "$LOCAL_BRANCH" ]; then
+  # To faithfully recreate CI linting locally, specify all commits on the current
+  # branch.
+  COMMIT_RANGE="$(git merge-base HEAD master)..HEAD"
+elif [ -n "$CIRRUS_PR" ]; then
   COMMIT_RANGE="HEAD~..HEAD"
   echo
   git log --no-merges --oneline "$COMMIT_RANGE"
