@@ -505,6 +505,7 @@ def gen_return_txouts():
 # transaction to make it large.  See gen_return_txouts() above.
 def create_lots_of_big_transactions(mini_wallet, node, fee, tx_batch_size, txouts, utxos=None):
     txids = []
+    txhex = []
     use_internal_utxos = utxos is None
     for _ in range(tx_batch_size):
         tx = mini_wallet.create_self_transfer(
@@ -512,10 +513,11 @@ def create_lots_of_big_transactions(mini_wallet, node, fee, tx_batch_size, txout
             fee=fee,
         )["tx"]
         tx.vout.extend(txouts)
+        txhex.append(tx.serialize().hex())
         res = node.testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['fees']['base'], fee)
         txids.append(node.sendrawtransaction(tx.serialize().hex()))
-    return txids
+    return txids, txhex
 
 
 def mine_large_block(test_framework, mini_wallet, node):

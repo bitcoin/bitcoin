@@ -152,7 +152,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
                 (i+1) * base_fee,
                 end_range - start_range,
                 self.txouts,
-                utxos[start_range:end_range])
+                utxos[start_range:end_range])[0]
 
         # Make sure that the size of each group of transactions exceeds
         # MAX_BLOCK_WEIGHT // 4 -- otherwise the test needs to be revised to
