@@ -100,7 +100,7 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessSporkMessages(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
+void CSporkManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
     ProcessSpork(pfrom, strCommand, vRecv, peerman);
     ProcessGetSporks(pfrom, strCommand, connman);

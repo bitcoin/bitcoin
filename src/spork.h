@@ -214,9 +214,9 @@ public:
     void CheckAndRemove() LOCKS_EXCLUDED(cs);
 
     /**
-     * ProcessSporkMessages is used to call ProcessSpork and ProcessGetSporks. See below
+     * ProcessMessage is used to call ProcessSpork and ProcessGetSporks. See below
      */
-    void ProcessSporkMessages(CNode* pfrom, std::string_view strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
 
     /**
      * ProcessSpork is used to handle the 'spork' p2p message.
@@ -224,7 +224,6 @@ public:
      * For 'spork', it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    void ProcessSporkMessages(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
     void ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman) LOCKS_EXCLUDED(cs);
     void ProcessGetSporks(CNode* pfrom, const std::string& strCommand, CConnman& connman) LOCKS_EXCLUDED(cs);
     /**

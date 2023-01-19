@@ -5037,7 +5037,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     //probably one the extensions
     if(msg_type == NetMsgType::SPORK || msg_type == NetMsgType::GETSPORKS) {
-        sporkManager.ProcessSporkMessages(&pfrom, msg_type, vRecv, m_connman, *this);
+        sporkManager.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::SYNCSTATUSCOUNT) {
         masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
