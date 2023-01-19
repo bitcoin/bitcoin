@@ -48,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
         package_too_many.emplace_back(create_placeholder_tx(1, 1));
     }
     PackageValidationState state_too_many;
-    BOOST_CHECK(!CheckPackage(package_too_many, state_too_many));
+    BOOST_CHECK(!IsPackageWellFormed(package_too_many, state_too_many));
     BOOST_CHECK_EQUAL(state_too_many.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(state_too_many.GetRejectReason(), "package-too-many-transactions");
 
@@ -63,7 +63,7 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
     }
     BOOST_CHECK(package_too_large.size() <= MAX_PACKAGE_COUNT);
     PackageValidationState state_too_large;
-    BOOST_CHECK(!CheckPackage(package_too_large, state_too_large));
+    BOOST_CHECK(!IsPackageWellFormed(package_too_large, state_too_large));
     BOOST_CHECK_EQUAL(state_too_large.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(state_too_large.GetRejectReason(), "package-too-large");
 }
@@ -147,8 +147,8 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         CTransactionRef tx_child = MakeTransactionRef(mtx_child);
 
         PackageValidationState state;
-        BOOST_CHECK(CheckPackage({tx_parent, tx_child}, state));
-        BOOST_CHECK(!CheckPackage({tx_child, tx_parent}, state));
+        BOOST_CHECK(IsPackageWellFormed({tx_parent, tx_child}, state));
+        BOOST_CHECK(!IsPackageWellFormed({tx_child, tx_parent}, state));
         BOOST_CHECK_EQUAL(state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "package-not-sorted");
         BOOST_CHECK(IsChildWithParents({tx_parent, tx_child}));
@@ -175,7 +175,7 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         package.push_back(MakeTransactionRef(child));
 
         PackageValidationState state;
-        BOOST_CHECK(CheckPackage(package, state));
+        BOOST_CHECK(IsPackageWellFormed(package, state));
         BOOST_CHECK(IsChildWithParents(package));
 
         package.erase(package.begin());
@@ -211,8 +211,8 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         BOOST_CHECK(IsChildWithParents({tx_parent, tx_parent_also_child, tx_child}));
         // IsChildWithParents does not detect unsorted parents.
         BOOST_CHECK(IsChildWithParents({tx_parent_also_child, tx_parent, tx_child}));
-        BOOST_CHECK(CheckPackage({tx_parent, tx_parent_also_child, tx_child}, state));
-        BOOST_CHECK(!CheckPackage({tx_parent_also_child, tx_parent, tx_child}, state));
+        BOOST_CHECK(IsPackageWellFormed({tx_parent, tx_parent_also_child, tx_child}, state));
+        BOOST_CHECK(!IsPackageWellFormed({tx_parent_also_child, tx_parent, tx_child}, state));
         BOOST_CHECK_EQUAL(state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "package-not-sorted");
     }

@@ -52,7 +52,7 @@ bool IsConsistent(const Package& txns)
     return true;
 }
 
-bool CheckPackage(const Package& txns, PackageValidationState& state)
+bool IsPackageWellFormed(const Package& txns, PackageValidationState& state)
 {
     const unsigned int package_count = txns.size();
 
