@@ -162,7 +162,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     }
 }
 
-void CDKGSessionManager::ProcessMessage(CNode* pfrom, const CQuorumManager& quorum_manager, const std::string& msg_type, CDataStream& vRecv)
+void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quorum_manager, const std::string& msg_type, CDataStream& vRecv)
 {
     static Mutex cs_indexedQuorumsCache;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
@@ -179,13 +179,13 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const CQuorumManager& quor
     }
 
     if (msg_type == NetMsgType::QWATCH) {
-        pfrom->qwatch = true;
+        pfrom.qwatch = true;
         return;
     }
 
     if (vRecv.empty()) {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        Misbehaving(pfrom.GetId(), 100);
         return;
     }
 
@@ -199,7 +199,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const CQuorumManager& quor
     if (!Params().HasLLMQ(llmqType)) {
         LOCK(cs_main);
         LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", uint8_t(llmqType));
-        Misbehaving(pfrom->GetId(), 100);
+        Misbehaving(pfrom.GetId(), 100);
         return;
     }
 
@@ -221,14 +221,14 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const CQuorumManager& quor
             LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
             // NOTE: do not insta-ban for this, we might be lagging behind
-            Misbehaving(pfrom->GetId(), 10);
+            Misbehaving(pfrom.GetId(), 10);
             return;
         }
 
         if (!utils::IsQuorumTypeEnabled(llmqType, quorum_manager, pQuorumBaseBlockIndex->pprev)) {
             LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", uint8_t(llmqType));
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom.GetId(), 100);
             return;
         }
 
@@ -240,14 +240,14 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const CQuorumManager& quor
         if (quorumIndex > quorumIndexMax) {
             LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- invalid quorumHash %s\n", quorumHash.ToString());
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom.GetId(), 100);
             return;
         }
 
         if (!dkgSessionHandlers.count(std::make_pair(llmqType, quorumIndex))) {
             LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- no session handlers for quorumIndex [%d]\n", quorumIndex);
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom.GetId(), 100);
             return;
         }
     }

@@ -437,18 +437,18 @@ bool CQuorumManager::HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockP
     return quorum_block_processor.HasMinedCommitment(llmqType, quorumHash);
 }
 
-bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, uint16_t nDataMask, const uint256& proTxHash) const
+bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, uint16_t nDataMask, const uint256& proTxHash) const
 {
-    if (pFrom == nullptr) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid pFrom: nullptr\n", __func__);
+    if (pfrom == nullptr) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid pfrom: nullptr\n", __func__);
         return false;
     }
-    if (pFrom->nVersion < LLMQ_DATA_MESSAGES_VERSION) {
+    if (pfrom->nVersion < LLMQ_DATA_MESSAGES_VERSION) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Version must be %d or greater.\n", __func__, LLMQ_DATA_MESSAGES_VERSION);
         return false;
     }
-    if (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pFrom is neither a verified masternode nor a qwatch connection\n", __func__);
+    if (pfrom->GetVerifiedProRegTxHash().IsNull() && !pfrom->qwatch) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is neither a verified masternode nor a qwatch connection\n", __func__);
         return false;
     }
     if (!Params().HasLLMQ(llmqType)) {
@@ -466,7 +466,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
 
     LOCK(cs_data_requests);
     CQuorumDataRequestKey key;
-    key.proRegTx = pFrom->GetVerifiedProRegTxHash();
+    key.proRegTx = pfrom->GetVerifiedProRegTxHash();
     key.flag = true;
     key.quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
     key.llmqType = llmqType;
@@ -476,8 +476,8 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
         return false;
     }
 
-    CNetMsgMaker msgMaker(pFrom->GetSendVersion());
-    connman.PushMessage(pFrom, msgMaker.Make(NetMsgType::QGETDATA, it.first->second));
+    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QGETDATA, it.first->second));
 
     return true;
 }
@@ -604,20 +604,20 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, c
     return nIndex % pQuorum->qc->validMembers.size();
 }
 
-void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, CDataStream& vRecv)
+void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     auto strFunc = __func__;
     auto errorHandler = [&](const std::string& strError, int nScore = 10) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pFrom->GetId());
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pfrom.GetId());
         if (nScore > 0) {
             LOCK(cs_main);
-            Misbehaving(pFrom->GetId(), nScore);
+            Misbehaving(pfrom.GetId(), nScore);
         }
     };
 
     if (msg_type == NetMsgType::QGETDATA) {
 
-        if (!fMasternodeMode || pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
+        if (!fMasternodeMode || (pfrom.GetVerifiedProRegTxHash().IsNull() && !pfrom.qwatch)) {
             errorHandler("Not a verified masternode or a qwatch connection");
             return;
         }
@@ -628,14 +628,14 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
         auto sendQDATA = [&](CQuorumDataRequest::Errors nError = CQuorumDataRequest::Errors::UNDEFINED,
                              const CDataStream& body = CDataStream(SER_NETWORK, PROTOCOL_VERSION)) {
             request.SetError(nError);
-            CDataStream ssResponse(SER_NETWORK, pFrom->GetSendVersion(), request, body);
-            connman.PushMessage(pFrom, CNetMsgMaker(pFrom->GetSendVersion()).Make(NetMsgType::QDATA, ssResponse));
+            CDataStream ssResponse(SER_NETWORK, pfrom.GetSendVersion(), request, body);
+            connman.PushMessage(&pfrom, CNetMsgMaker(pfrom.GetSendVersion()).Make(NetMsgType::QDATA, ssResponse));
         };
 
         {
             LOCK2(cs_main, cs_data_requests);
             CQuorumDataRequestKey key;
-            key.proRegTx = pFrom->GetVerifiedProRegTxHash();
+            key.proRegTx = pfrom.GetVerifiedProRegTxHash();
             key.flag = false;
             key.quorumHash = request.GetQuorumHash();
             key.llmqType = request.GetLLMQType();
@@ -666,7 +666,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
             return;
         }
 
-        CDataStream ssResponseData(SER_NETWORK, pFrom->GetSendVersion());
+        CDataStream ssResponseData(SER_NETWORK, pfrom.GetSendVersion());
 
         // Check if request wants QUORUM_VERIFICATION_VECTOR data
         if (request.GetDataMask() & CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR) {
@@ -701,7 +701,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
     }
 
     if (msg_type == NetMsgType::QDATA) {
-        if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
+        if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || (pfrom.GetVerifiedProRegTxHash().IsNull() && !pfrom.qwatch)) {
             errorHandler("Not a verified masternode or a qwatch connection");
             return;
         }
@@ -712,7 +712,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
         {
             LOCK2(cs_main, cs_data_requests);
             CQuorumDataRequestKey key;
-            key.proRegTx = pFrom->GetVerifiedProRegTxHash();
+            key.proRegTx = pfrom.GetVerifiedProRegTxHash();
             key.flag = true;
             key.quorumHash = request.GetQuorumHash();
             key.llmqType = request.GetLLMQType();

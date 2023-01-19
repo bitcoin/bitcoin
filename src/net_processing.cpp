@@ -4122,12 +4122,12 @@ void PeerLogicValidation::ProcessMessage(
         governance->ProcessMessage(pfrom, msg_type, vRecv, m_connman);
         CMNAuth::ProcessMessage(pfrom, msg_type, vRecv, m_connman);
         m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv);
-        m_llmq_ctx->qdkgsman->ProcessMessage(&pfrom, *m_llmq_ctx->qman, msg_type, vRecv);
-        m_llmq_ctx->qman->ProcessMessage(&pfrom, msg_type, vRecv);
-        m_llmq_ctx->shareman->ProcessMessage(&pfrom, msg_type, vRecv, *sporkManager);
-        m_llmq_ctx->sigman->ProcessMessage(&pfrom, msg_type, vRecv);
-        m_llmq_ctx->clhandler->ProcessMessage(&pfrom, msg_type, vRecv);
-        m_llmq_ctx->isman->ProcessMessage(&pfrom, msg_type, vRecv);
+        m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, *m_llmq_ctx->qman, msg_type, vRecv);
+        m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv);
+        m_llmq_ctx->shareman->ProcessMessage(pfrom, msg_type, vRecv, *sporkManager);
+        m_llmq_ctx->sigman->ProcessMessage(pfrom, msg_type, vRecv);
+        m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv);
+        m_llmq_ctx->isman->ProcessMessage(pfrom, msg_type, vRecv);
         return;
     }
 

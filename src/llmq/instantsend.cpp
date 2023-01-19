@@ -762,7 +762,7 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     pendingInstantSendLocks.emplace(hash, std::make_pair(-1, islock));
 }
 
-void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
+void CInstantSendManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (!IsInstantSendEnabled()) {
         return;
@@ -776,20 +776,20 @@ void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& msg_ty
     }
 }
 
-void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, const llmq::CInstantSendLockPtr& islock)
+void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, const llmq::CInstantSendLockPtr& islock)
 {
     auto hash = ::SerializeHash(*islock);
 
     bool fDIP0024IsActive = false;
     {
         LOCK(cs_main);
-        EraseObjectRequest(pfrom->GetId(), CInv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, hash));
+        EraseObjectRequest(pfrom.GetId(), CInv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, hash));
         fDIP0024IsActive = utils::IsDIP0024Active(::ChainActive().Tip());
     }
 
     if (!islock->TriviallyValid()) {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        Misbehaving(pfrom.GetId(), 100);
         return;
     }
 
@@ -798,14 +798,14 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, cons
         const auto blockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(islock->cycleHash));
         if (blockIndex == nullptr) {
             // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
-            WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 1));
+            WITH_LOCK(cs_main, Misbehaving(pfrom.GetId(), 1));
             return;
         }
 
         // Deterministic islocks MUST use rotation based llmq
         auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
         if (blockIndex->nHeight % GetLLMQParams(llmqType).dkgInterval != 0) {
-            WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+            WITH_LOCK(cs_main, Misbehaving(pfrom.GetId(), 100));
             return;
         }
     }
@@ -822,10 +822,10 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, cons
     }
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: received islock, peer=%d\n", __func__,
-            islock->txid.ToString(), hash.ToString(), pfrom->GetId());
+            islock->txid.ToString(), hash.ToString(), pfrom.GetId());
 
     LOCK(cs_pendingLocks);
-    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->GetId(), islock));
+    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom.GetId(), islock));
 }
 
 /**
