@@ -12,7 +12,6 @@ from test_framework.messages import (
     MSG_TYPE_MASK,
     msg_inv,
     msg_notfound,
-    tx_from_hex,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -22,7 +21,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.wallet import MiniWallet
 
 
 class TestP2PConn(P2PInterface):
@@ -80,19 +79,8 @@ class TxDownloadTest(BitcoinTestFramework):
 
     def test_inv_block(self):
         self.log.info("Generate a transaction on node 0")
-        tx = self.nodes[0].createrawtransaction(
-            inputs=[{  # coinbase
-                "txid": self.nodes[0].getblock(self.nodes[0].getblockhash(1))['tx'][0],
-                "vout": 0
-            }],
-            outputs={ADDRESS_BCRT1_UNSPENDABLE: 500 - 0.00025},
-        )
-        tx = self.nodes[0].signrawtransactionwithkey(
-            hexstring=tx,
-            privkeys=[self.nodes[0].get_deterministic_priv_key().key],
-        )['hex']
-        ctx = tx_from_hex(tx)
-        txid = int(ctx.rehash(), 16)
+        tx = self.wallet.create_self_transfer()
+        txid = int(tx['txid'], 16)
 
         self.log.info(
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
@@ -103,7 +91,7 @@ class TxDownloadTest(BitcoinTestFramework):
             self.bump_mocktime(1)
 
         self.log.info("Put the tx in node 0's mempool")
-        self.nodes[0].sendrawtransaction(tx)
+        self.nodes[0].sendrawtransaction(tx['hex'])
 
         # Since node 1 is connected outbound to an honest peer (node 0), it
         # should get the tx within a timeout. (Assuming that node 0
@@ -155,6 +143,9 @@ class TxDownloadTest(BitcoinTestFramework):
         self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(1, 1)]))
 
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
+
         # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
         # the next trickle relay event happens.
         for test in [self.test_spurious_notfound, self.test_in_flight_max, self.test_inv_block, self.test_tx_requests]:
