@@ -7,7 +7,7 @@
 export LC_ALL=C
 
 ${CI_RETRY_EXE} apt-get update
-${CI_RETRY_EXE} apt-get install -y clang-format-9 python3-pip curl git gawk jq
+${CI_RETRY_EXE} apt-get install -y clang-format-9 python3-pip curl git gawk jq xz-utils
 update-alternatives --install /usr/bin/clang-format      clang-format      "$(which clang-format-9     )" 100
 update-alternatives --install /usr/bin/clang-format-diff clang-format-diff "$(which clang-format-diff-9)" 100
 
