@@ -54,8 +54,6 @@
 #include <llmq/chainlocks.h>
 #include <assert.h>
 
-#include <boost/algorithm/string/replace.hpp>
-
 const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
     {WALLET_FLAG_AVOID_REUSE,
         "You need to rescan the blockchain in order to correctly mark used "
@@ -906,14 +904,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     if (!strCmd.empty())
     {
-        boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
+        ReplaceAll(strCmd, "%s", wtxIn.GetHash().GetHex());
 #ifndef WIN32
         // Substituting the wallet name isn't currently supported on windows
         // because windows shell escaping has not been implemented yet:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
         // A few ways it could be implemented in the future are described in:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
-        boost::replace_all(strCmd, "%w", ShellEscape(GetName()));
+        ReplaceAll(strCmd, "%w", ShellEscape(GetName()));
 #endif
         std::thread t(runCommand, strCmd);
         t.detach(); // thread runs free
@@ -4768,7 +4766,7 @@ void CWallet::NotifyTransactionLock(const CTransactionRef &tx, const std::shared
         // notify an external script
         std::string strCmd = gArgs.GetArg("-instantsendnotify", "");
         if (!strCmd.empty()) {
-            boost::replace_all(strCmd, "%s", txHash.GetHex());
+            ReplaceAll(strCmd, "%s", txHash.GetHex());
             std::thread t(runCommand, strCmd);
             t.detach(); // thread runs free
         }

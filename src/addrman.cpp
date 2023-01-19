@@ -9,6 +9,8 @@
 #include <logging.h>
 #include <serialize.h>
 
+#include <cmath>
+
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetCheapHash();

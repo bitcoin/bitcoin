@@ -10,6 +10,7 @@
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <walletinitinterface.h>
@@ -20,8 +21,6 @@
 #include <memory>
 #include <set>
 #include <string>
-
-#include <boost/algorithm/string.hpp> // boost::trim
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -67,6 +66,8 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+/* List of -rpcauth values */
+static std::vector<std::vector<std::string>> g_rpcauth;
 /* RPC Auth Whitelist */
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
@@ -101,15 +102,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
     std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
-        //Search for multi-user login/pass "rpcauth" from config
-        std::vector<std::string> vFields;
-        boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
-        if (vFields.size() != 3) {
-            //Incorrect formatting in config file
-            continue;
-        }
-
+    for (const auto& vFields : g_rpcauth) {
         std::string strName = vFields[0];
         if (!TimingResistantEqual(strName, strUser)) {
             continue;
@@ -138,8 +131,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
         return false;
     if (strAuth.substr(0, 6) != "Basic ")
         return false;
-    std::string strUserPass64 = strAuth.substr(6);
-    boost::trim(strUserPass64);
+    std::string strUserPass64 = TrimString(strAuth.substr(6));
     std::string strUserPass = DecodeBase64(strUserPass64);
 
     if (strUserPass.find(':') != std::string::npos)
@@ -261,6 +253,15 @@ static bool InitRPCAuthentication()
     if (gArgs.GetArg("-rpcauth","") != "")
     {
         LogPrintf("Using rpcauth authentication.\n");
+        for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+            std::vector<std::string> fields = SplitString(rpcauth, ":$");
+            if (fields.size() == 3) {
+                g_rpcauth.push_back(fields);
+            } else {
+                LogPrintf("Invalid -rpcauth argument.\n");
+                return false;
+            }
+        }
     }
 
     g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
@@ -271,8 +272,10 @@ static bool InitRPCAuthentication()
         std::set<std::string>& whitelist = g_rpc_whitelist[strUser];
         if (pos != std::string::npos) {
             std::string strWhitelist = strRPCWhitelist.substr(pos + 1);
-            std::set<std::string> new_whitelist;
-            boost::split(new_whitelist, strWhitelist, boost::is_any_of(", "));
+            std::vector<std::string> whitelist_split = SplitString(strWhitelist, ", ");
+            std::set<std::string> new_whitelist{
+                std::make_move_iterator(whitelist_split.begin()),
+                std::make_move_iterator(whitelist_split.end())};
             if (intersect) {
                 std::set<std::string> tmp_whitelist;
                 std::set_intersection(new_whitelist.begin(), new_whitelist.end(),

@@ -643,6 +643,7 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.h \
   util/strencodings.cpp \
   util/strencodings.h \
+  util/string.cpp \
   version.h
 
 # common: shared between dashd, and dash-qt and non-server tools

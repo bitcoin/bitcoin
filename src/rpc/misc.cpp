@@ -35,8 +35,6 @@
 #include <malloc.h>
 #endif
 
-#include <boost/algorithm/string.hpp>
-
 #include <univalue.h>
 
 static UniValue debug(const JSONRPCRequest& request)
@@ -64,9 +62,7 @@ static UniValue debug(const JSONRPCRequest& request)
     std::string strMode = request.params[0].get_str();
     LogInstance().DisableCategory(BCLog::ALL);
 
-    std::vector<std::string> categories;
-    boost::split(categories, strMode, boost::is_any_of("+"));
-
+    std::vector<std::string> categories = SplitString(strMode, '+');
     if (std::find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
         for (const auto& cat : categories) {
             LogInstance().EnableCategory(cat);

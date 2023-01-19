@@ -45,7 +45,7 @@ void CChainLocksHandler::Start()
         EnforceBestChainLock();
         // regularly retry signing the current chaintip as it might have failed before due to missing islocks
         TrySignChainTip();
-    }, 5000);
+    }, std::chrono::seconds{5});
 }
 
 void CChainLocksHandler::Stop()
@@ -163,7 +163,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     scheduler->scheduleFromNow([&]() {
         CheckActiveState();
         EnforceBestChainLock();
-    }, 0);
+    }, std::chrono::seconds{0});
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
@@ -203,7 +203,7 @@ void CChainLocksHandler::UpdatedBlockTip()
             EnforceBestChainLock();
             TrySignChainTip();
             tryLockChainTipScheduled = false;
-        }, 0);
+        }, std::chrono::seconds{0});
     }
 }
 

@@ -49,10 +49,7 @@ if [[ ${INCLUDED_CPP_FILES} != "" ]]; then
 fi
 
 EXPECTED_BOOST_INCLUDES=(
-    boost/algorithm/string.hpp
-    boost/algorithm/string/classification.hpp
     boost/algorithm/string/replace.hpp
-    boost/algorithm/string/split.hpp
     boost/date_time/posix_time/posix_time.hpp
     boost/filesystem.hpp
     boost/filesystem/fstream.hpp
@@ -69,8 +66,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/signals2/optional_last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp
-    boost/thread.hpp
-    boost/thread/condition_variable.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | grep -vE "src/(immer)/" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do
