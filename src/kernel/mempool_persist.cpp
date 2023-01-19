@@ -63,6 +63,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         }
         uint64_t num;
         file >> num;
+        LOCK2(cs_main, pool.cs);
         while (num) {
             --num;
             CTransactionRef tx;
@@ -77,8 +78,12 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_expiry)) {
-                LOCK(cs_main);
-                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                // Use bypass_limits=true to skip feerate checks, and call TrimToSize() at the very
+                // end. This means the mempool may temporarily exceed its maximum capacity. However,
+                // this means fee-bumped transactions are persisted, and the resulting mempool
+                // minimum feerate is not dependent on the order in which transactions are loaded
+                // from disk.
+                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/true, /*test_accept=*/false);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {
@@ -104,6 +109,13 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         for (const auto& i : mapDeltas) {
             pool.PrioritiseTransaction(i.first, i.second);
         }
+        const auto size_before_trim{pool.size()};
+        // Ensure the maximum memory limits are ultimately enforced and any transactions below
+        // minimum feerates are evicted, since bypass_limits was set to true during ATMP calls.
+        pool.TrimToSize(pool.m_max_size_bytes);
+        const auto num_evicted{size_before_trim - pool.size()};
+        count -= num_evicted;
+        failed += num_evicted;
 
         std::set<uint256> unbroadcast_txids;
         file >> unbroadcast_txids;
