@@ -1,6 +1,10 @@
 Official BritanniaCoin Public Codebase and Development Tree
 =====================================
 
+This repository contains the source code for the BritanniaCoin blockchain.
+
+For full information on the BritanniaCoin project, visit our official website:
+
 https://britanniacoin.org
 
 What is Britannia Coin?
