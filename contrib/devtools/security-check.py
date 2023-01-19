@@ -6,15 +6,15 @@
 Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
-Needs `readelf` (for ELF), `objdump` (for PE) and `otool` (for MACHO).
+Needs `objdump` (for PE) and `otool` (for MACHO).
 '''
 import subprocess
 import sys
 import os
-
 from typing import List, Optional
 
-READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
+import pixie
+
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
@@ -26,52 +26,20 @@ def check_ELF_PIE(executable) -> bool:
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
-    stdout = run_command([READELF_CMD, '-h', '-W', executable])
-
-    ok = False
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(line)>=2 and tokens[0] == 'Type:' and tokens[1] == 'DYN':
-            ok = True
-    return ok
-
-def get_ELF_program_headers(executable):
-    '''Return type and flags for ELF program headers'''
-    stdout = run_command([READELF_CMD, '-l', '-W', executable])
-
-    in_headers = False
-    count = 0
-    headers = []
-    for line in stdout.splitlines():
-        if line.startswith('Program Headers:'):
-            in_headers = True
-        if line == '':
-            in_headers = False
-        if in_headers:
-            if count == 1: # header line
-                ofs_typ = line.find('Type')
-                ofs_offset = line.find('Offset')
-                ofs_flags = line.find('Flg')
-                ofs_align = line.find('Align')
-                if ofs_typ == -1 or ofs_offset == -1 or ofs_flags == -1 or ofs_align  == -1:
-                    raise ValueError('Cannot parse elfread -lW output')
-            elif count > 1:
-                typ = line[ofs_typ:ofs_offset].rstrip()
-                flags = line[ofs_flags:ofs_align].rstrip()
-                headers.append((typ, flags))
-            count += 1
-    return headers
+    elf = pixie.load(executable)
+    return elf.hdr.e_type == pixie.ET_DYN
 
 def check_ELF_NX(executable) -> bool:
     '''
     Check that no sections are writable and executable (including the stack)
     '''
+    elf = pixie.load(executable)
     have_wx = False
     have_gnu_stack = False
-    for (typ, flags) in get_ELF_program_headers(executable):
-        if typ == 'GNU_STACK':
+    for ph in elf.program_headers:
+        if ph.p_type == pixie.PT_GNU_STACK:
             have_gnu_stack = True
-        if 'W' in flags and 'E' in flags: # section is both writable and executable
+        if (ph.p_flags & pixie.PF_W) != 0 and (ph.p_flags & pixie.PF_X) != 0: # section is both writable and executable
             have_wx = True
     return have_gnu_stack and not have_wx
 
@@ -81,37 +49,99 @@ def check_ELF_RELRO(executable) -> bool:
     GNU_RELRO program header must exist
     Dynamic section must have BIND_NOW flag
     '''
+    elf = pixie.load(executable)
     have_gnu_relro = False
-    for (typ, flags) in get_ELF_program_headers(executable):
-        # Note: not checking flags == 'R': here as linkers set the permission differently
+    for ph in elf.program_headers:
+        # Note: not checking p_flags == PF_R: here as linkers set the permission differently
         # This does not affect security: the permission flags of the GNU_RELRO program
         # header are ignored, the PT_LOAD header determines the effective permissions.
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
         # See also https://marc.info/?l=binutils&m=1498883354122353
-        if typ == 'GNU_RELRO':
+        if ph.p_type == pixie.PT_GNU_RELRO:
             have_gnu_relro = True
 
     have_bindnow = False
-    stdout = run_command([READELF_CMD, '-d', '-W', executable])
-
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
+    for flags in elf.query_dyn_tags(pixie.DT_FLAGS):
+        assert isinstance(flags, int)
+        if flags & pixie.DF_BIND_NOW:
             have_bindnow = True
+
     return have_gnu_relro and have_bindnow
 
 def check_ELF_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
-    stdout = run_command([READELF_CMD, '--dyn-syms', '-W', executable])
-
+    elf = pixie.load(executable)
     ok = False
-    for line in stdout.splitlines():
-        if '__stack_chk_fail' in line:
+    for symbol in elf.dyn_symbols:
+        if symbol.name == b'__stack_chk_fail':
             ok = True
     return ok
+
+def check_ELF_separate_code(executable):
+    '''
+    Check that sections are appropriately separated in virtual memory,
+    based on their permissions. This checks for missing -Wl,-z,separate-code
+    and potentially other problems.
+    '''
+    elf = pixie.load(executable)
+    R = pixie.PF_R
+    W = pixie.PF_W
+    E = pixie.PF_X
+    EXPECTED_FLAGS = {
+        # Read + execute
+        b'.init': R | E,
+        b'.plt': R | E,
+        b'.plt.got': R | E,
+        b'.plt.sec': R | E,
+        b'.text': R | E,
+        b'.fini': R | E,
+        # Read-only data
+        b'.interp': R,
+        b'.note.gnu.property': R,
+        b'.note.gnu.build-id': R,
+        b'.note.ABI-tag': R,
+        b'.gnu.hash': R,
+        b'.dynsym': R,
+        b'.dynstr': R,
+        b'.gnu.version': R,
+        b'.gnu.version_r': R,
+        b'.rela.dyn': R,
+        b'.rela.plt': R,
+        b'.rodata': R,
+        b'.eh_frame_hdr': R,
+        b'.eh_frame': R,
+        b'.qtmetadata': R,
+        b'.gcc_except_table': R,
+        b'.stapsdt.base': R,
+        # Writable data
+        b'.init_array': R | W,
+        b'.fini_array': R | W,
+        b'.dynamic': R | W,
+        b'.got': R | W,
+        b'.data': R | W,
+        b'.bss': R | W,
+    }
+    if elf.hdr.e_machine == pixie.EM_PPC64:
+        # .plt is RW on ppc64 even with separate-code
+        EXPECTED_FLAGS[b'.plt'] = R | W
+    # For all LOAD program headers get mapping to the list of sections,
+    # and for each section, remember the flags of the associated program header.
+    flags_per_section = {}
+    for ph in elf.program_headers:
+        if ph.p_type == pixie.PT_LOAD:
+            for section in ph.sections:
+                assert(section.name not in flags_per_section)
+                flags_per_section[section.name] = ph.p_flags
+    # Spot-check ELF LOAD program header flags per section
+    # If these sections exist, check them against the expected R/W/E flags
+    for (section, flags) in flags_per_section.items():
+        if section in EXPECTED_FLAGS:
+            if EXPECTED_FLAGS[section] != flags:
+                return False
+    return True
 
 def get_PE_dll_characteristics(executable) -> int:
     '''Get PE DllCharacteristics bits'''
@@ -157,7 +187,7 @@ def check_PE_NX(executable) -> bool:
 def get_MACHO_executable_flags(executable) -> List[str]:
     stdout = run_command([OTOOL_CMD, '-vh', executable])
 
-    flags = []
+    flags: List[str] = []
     for line in stdout.splitlines():
         tokens = line.split()
         # filter first two header lines
@@ -225,7 +255,8 @@ CHECKS = {
     ('PIE', check_ELF_PIE),
     ('NX', check_ELF_NX),
     ('RELRO', check_ELF_RELRO),
-    ('Canary', check_ELF_Canary)
+    ('Canary', check_ELF_Canary),
+    ('separate_code', check_ELF_separate_code),
 ],
 'PE': [
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),

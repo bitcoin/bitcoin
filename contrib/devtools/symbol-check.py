@@ -12,35 +12,39 @@ Example usage:
     find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import subprocess
-import re
 import sys
 import os
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-# Debian 8 (Jessie) EOL: 2020. https://wiki.debian.org/DebianReleases#Production_Releases
+import pixie
+
+# Debian 9 (Stretch) EOL: 2022. https://wiki.debian.org/DebianReleases#Production_Releases
 #
-# - g++ version 4.9.2 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=g%2B%2B)
-# - libc version 2.19 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=libc6)
+# - g++ version 6.3.0 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=g%2B%2B)
+# - libc version 2.24 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=libc6)
 #
-# Ubuntu 16.04 (Xenial) EOL: 2024. https://wiki.ubuntu.com/Releases
+# Ubuntu 16.04 (Xenial) EOL: 2026. https://wiki.ubuntu.com/Releases
 #
-# - g++ version 5.3.1 (https://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=xenial&section=all)
-# - libc version 2.23.0 (https://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=xenial&section=all)
+# - g++ version 5.3.1
+# - libc version 2.23
 #
-# CentOS 7 EOL: 2024. https://wiki.centos.org/FAQ/General
+# CentOS Stream 8 EOL: 2024. https://wiki.centos.org/About/Product
 #
-# - g++ version 4.8.5 (http://mirror.centos.org/centos/7/os/x86_64/Packages/)
-# - libc version 2.17 (http://mirror.centos.org/centos/7/os/x86_64/Packages/)
+# - g++ version 8.5.0 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
+# - libc version 2.28 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 #
-# Taking the minimum of these as our target.
-#
-# According to GNU ABI document (https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
-#   GCC 4.8.5: GCC_4.8.0
-#   (glibc)    GLIBC_2_17
-#
+# See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
+
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
-'GLIBC':     (2,17),
+'GLIBC': {
+    pixie.EM_386:    (2,18),
+    pixie.EM_X86_64: (2,18),
+    pixie.EM_ARM:    (2,18),
+    pixie.EM_AARCH64:(2,18),
+    pixie.EM_PPC64:  (2,18),
+    pixie.EM_RISCV:  (2,27),
+},
 'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
@@ -52,7 +56,6 @@ IGNORE_EXPORTS = {
 '_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__', '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
 'environ', '_environ', '__environ',
 }
-READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
@@ -69,6 +72,8 @@ ELF_ALLOWED_LIBRARIES = {
 'ld-linux.so.2', # 32-bit dynamic linker
 'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
 'ld-linux-armhf.so.3', # 32-bit ARM dynamic linker
+'ld64.so.1', # POWER64 ABIv1 dynamic linker
+'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # dash-qt only
 'libxcb.so.1', # part of X11
@@ -77,13 +82,6 @@ ELF_ALLOWED_LIBRARIES = {
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2' # programming interface to dynamic linker
-}
-ARCH_MIN_GLIBC_VER = {
-'80386':  (2,1),
-'X86-64': (2,2,5),
-'ARM':    (2,4),
-'AArch64':(2,17),
-'RISC-V': (2,27)
 }
 
 MACHO_ALLOWED_LIBRARIES = {
@@ -128,29 +126,6 @@ class CPPFilt(object):
         self.proc.stdout.close()
         self.proc.wait()
 
-def read_symbols(executable, imports=True) -> List[Tuple[str, str, str]]:
-    '''
-    Parse an ELF executable and return a list of (symbol,version, arch) tuples
-    for dynamic, imported symbols.
-    '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', '-h', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Could not read symbols for {}: {}'.format(executable, stderr.strip()))
-    syms = []
-    for line in stdout.splitlines():
-        line = line.split()
-        if 'Machine:' in line:
-            arch = line[-1]
-        if len(line)>7 and re.match('[0-9]+:$', line[0]):
-            (sym, _, version) = line[7].partition('@')
-            is_import = line[6] == 'UND'
-            if version.startswith('@'):
-                version = version[1:]
-            if is_import == imports:
-                syms.append((sym, version, arch))
-    return syms
-
 def check_version(max_versions, version, arch) -> bool:
     if '_' in version:
         (lib, _, ver) = version.rpartition('_')
@@ -160,38 +135,35 @@ def check_version(max_versions, version, arch) -> bool:
     ver = tuple([int(x) for x in ver.split('.')])
     if not lib in max_versions:
         return False
-    return ver <= max_versions[lib] or lib == 'GLIBC' and ver <= ARCH_MIN_GLIBC_VER[arch]
-
-def elf_read_libraries(filename) -> List[str]:
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    libraries = []
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens)>2 and tokens[1] == '(NEEDED)':
-            match = re.match(r'^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
-            if match:
-                libraries.append(match.group(1))
-            else:
-                raise ValueError('Unparseable (NEEDED) specification')
-    return libraries
+    if isinstance(max_versions[lib], tuple):
+        return ver <= max_versions[lib]
+    else:
+        return ver <= max_versions[lib][arch]
 
 def check_imported_symbols(filename) -> bool:
+    elf = pixie.load(filename)
     cppfilt = CPPFilt()
     ok = True
-    for sym, version, arch in read_symbols(filename, True):
-        if version and not check_version(MAX_VERSIONS, version, arch):
+
+    for symbol in elf.dyn_symbols:
+        if not symbol.is_import:
+            continue
+        sym = symbol.name.decode()
+        version = symbol.version.decode() if symbol.version is not None else None
+        if version and not check_version(MAX_VERSIONS, version, elf.hdr.e_machine):
             print('{}: symbol {} from unsupported version {}'.format(filename, cppfilt(sym), version))
             ok = False
     return ok
 
 def check_exported_symbols(filename) -> bool:
+    elf = pixie.load(filename)
     cppfilt = CPPFilt()
     ok = True
-    for sym,version,arch in read_symbols(filename, False):
-        if arch == 'RISC-V' or sym in IGNORE_EXPORTS:
+    for symbol in elf.dyn_symbols:
+        if not symbol.is_export:
+            continue
+        sym = symbol.name.decode()
+        if elf.hdr.e_machine == pixie.EM_RISCV or sym in IGNORE_EXPORTS:
             continue
         print('{}: export of symbol {} not allowed'.format(filename, cppfilt(sym)))
         ok = False
@@ -199,9 +171,11 @@ def check_exported_symbols(filename) -> bool:
 
 def check_ELF_libraries(filename) -> bool:
     ok = True
-    for library_name in elf_read_libraries(filename):
-        if library_name not in ELF_ALLOWED_LIBRARIES:
-            print('{}: NEEDED library {} is not allowed'.format(filename, library_name))
+    elf = pixie.load(filename)
+    for library_name in elf.query_dyn_tags(pixie.DT_NEEDED):
+        assert(isinstance(library_name, bytes))
+        if library_name.decode() not in ELF_ALLOWED_LIBRARIES:
+            print('{}: NEEDED library {} is not allowed'.format(filename, library_name.decode()))
             ok = False
     return ok
 

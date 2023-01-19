@@ -1,0 +1,15 @@
+diff -ur libevent-2.1.8-stable.orig/configure.ac libevent-2.1.8-stable/configure.ac
+--- libevent-2.1.8-stable.orig/configure.ac	2017-01-29 17:51:00.000000000 +0000
++++ libevent-2.1.8-stable/configure.ac	2020-03-07 01:11:16.311335005 +0000
+@@ -389,6 +389,10 @@
+ 		#ifdef HAVE_NETDB_H
+ 		#include <netdb.h>
+ 		#endif
++#ifdef _WIN32
++#include <winsock2.h>
++#include <ws2tcpip.h>
++#endif
+ 	    ]],
+ 	    [[
+ 		getaddrinfo;
+Only in libevent-2.1.8-stable: configure.ac~
