@@ -76,7 +76,7 @@ bool IsConsistentPackage(const Package& txns)
     return true;
 }
 
-bool CheckPackage(const Package& txns, PackageValidationState& state, bool require_sorted)
+bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, bool require_sorted)
 {
     const unsigned int package_count = txns.size();
 
