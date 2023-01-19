@@ -87,7 +87,7 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
     return cmapVoteToObject.Get(nHash, pGovobj) && pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss);
 }
 
-void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
+void CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fDisableGovernance) return;
     if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;

@@ -212,7 +212,7 @@ void CSigSharesManager::InterruptWorkerThread()
     workInterrupt();
 }
 
-void CSigSharesManager::ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, const CSporkManager& sporkManager)
+void CSigSharesManager::ProcessMessage(const CNode& pfrom, const CSporkManager& sporkManager, const std::string& msg_type, CDataStream& vRecv)
 {
     // non-masternodes are not interested in sigshares
     if (!fMasternodeMode || WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) {

@@ -126,7 +126,7 @@ public:
     {
     }
 
-    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     void UnlockCoins();
 
@@ -207,7 +207,7 @@ public:
     explicit CCoinJoinClientManager(CWallet& wallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
         mixingWallet(wallet), m_mn_sync(mn_sync) {}
 
-    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman) LOCKS_EXCLUDED(cs_deqsessions);
+    void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
 
     bool StartMixing();
     void StopMixing();

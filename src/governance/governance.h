@@ -233,7 +233,7 @@ public:
     void SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
     void SyncObjects(CNode& peer, CConnman& connman) const;
 
-    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     void DoMaintenance(CConnman& connman);
 

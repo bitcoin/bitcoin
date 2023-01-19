@@ -4113,18 +4113,18 @@ void PeerLogicValidation::ProcessMessage(
 #ifdef ENABLE_WALLET
         coinJoinClientQueueManager->ProcessMessage(pfrom, msg_type, vRecv);
         for (auto& pair : coinJoinClientManagers) {
-            pair.second->ProcessMessage(pfrom, msg_type, vRecv, m_connman);
+            pair.second->ProcessMessage(pfrom, m_connman, msg_type, vRecv);
         }
 #endif // ENABLE_WALLET
         coinJoinServer->ProcessMessage(pfrom, msg_type, vRecv);
-        sporkManager->ProcessMessage(pfrom, msg_type, vRecv, m_connman);
+        sporkManager->ProcessMessage(pfrom, m_connman, msg_type, vRecv);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
-        governance->ProcessMessage(pfrom, msg_type, vRecv, m_connman);
-        CMNAuth::ProcessMessage(pfrom, msg_type, vRecv, m_connman);
+        governance->ProcessMessage(pfrom, m_connman, msg_type, vRecv);
+        CMNAuth::ProcessMessage(pfrom, m_connman, msg_type, vRecv);
         m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv);
         m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, *m_llmq_ctx->qman, msg_type, vRecv);
         m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv);
-        m_llmq_ctx->shareman->ProcessMessage(pfrom, msg_type, vRecv, *sporkManager);
+        m_llmq_ctx->shareman->ProcessMessage(pfrom, *sporkManager, msg_type, vRecv);
         m_llmq_ctx->sigman->ProcessMessage(pfrom, msg_type, vRecv);
         m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv);
         m_llmq_ctx->isman->ProcessMessage(pfrom, msg_type, vRecv);

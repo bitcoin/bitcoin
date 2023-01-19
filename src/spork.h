@@ -232,7 +232,7 @@ public:
     /**
      * ProcessMessage is used to call ProcessSpork and ProcessGetSporks. See below
      */
-    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     /**
      * ProcessSpork is used to handle the 'spork' p2p message.
@@ -240,7 +240,7 @@ public:
      * For 'spork', it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    void ProcessSpork(const CNode& peer, CDataStream& vRecv, CConnman& connman) LOCKS_EXCLUDED(cs);
+    void ProcessSpork(const CNode& peer, CConnman& connman, CDataStream& vRecv) LOCKS_EXCLUDED(cs);
 
 
     /**

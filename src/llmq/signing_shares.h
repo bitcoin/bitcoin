@@ -416,7 +416,7 @@ public:
     void UnregisterAsRecoveredSigsListener();
     void InterruptWorkerThread();
 
-    void ProcessMessage(const CNode& pnode, const std::string& msg_type, CDataStream& vRecv, const CSporkManager& sporkManager);
+    void ProcessMessage(const CNode& pnode, const CSporkManager& sporkManager, const std::string& msg_type, CDataStream& vRecv);
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
     std::optional<CSigShare> CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
