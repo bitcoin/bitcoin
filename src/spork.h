@@ -230,9 +230,9 @@ public:
     void CheckAndRemove() LOCKS_EXCLUDED(cs);
 
     /**
-     * ProcessSporkMessages is used to call ProcessSpork and ProcessGetSporks. See below
+     * ProcessMessage is used to call ProcessSpork and ProcessGetSporks. See below
      */
-    void ProcessSporkMessages(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
 
     /**
      * ProcessSpork is used to handle the 'spork' p2p message.

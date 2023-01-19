@@ -4117,7 +4117,7 @@ void PeerLogicValidation::ProcessMessage(
         }
 #endif // ENABLE_WALLET
         coinJoinServer->ProcessMessage(pfrom, msg_type, vRecv);
-        sporkManager->ProcessSporkMessages(pfrom, msg_type, vRecv, m_connman);
+        sporkManager->ProcessMessage(pfrom, msg_type, vRecv, m_connman);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
         governance->ProcessMessage(pfrom, msg_type, vRecv, m_connman);
         CMNAuth::ProcessMessage(pfrom, msg_type, vRecv, m_connman);

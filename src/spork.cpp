@@ -105,7 +105,7 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessSporkMessages(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
+void CSporkManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
 {
     if (msg_type == NetMsgType::SPORK) {
         ProcessSpork(peer, vRecv, connman);
