@@ -165,7 +165,6 @@ struct RPCArg {
          * When possible, the default value should be specified.
          */
         OMITTED,
-        OMITTED_NAMED_ARG, // Deprecated alias for OMITTED, can be removed
     };
     /** Hint for default value */
     using DefaultHint = std::string;

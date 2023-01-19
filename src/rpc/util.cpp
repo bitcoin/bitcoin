@@ -788,7 +788,6 @@ std::string RPCArg::ToDescriptionString(bool is_named_arg) const
         ret += ", optional, default=" + std::get<RPCArg::Default>(m_fallback).write();
     } else {
         switch (std::get<RPCArg::Optional>(m_fallback)) {
-        case RPCArg::Optional::OMITTED_NAMED_ARG: // Deprecated alias for OMITTED, can be removed
         case RPCArg::Optional::OMITTED: {
             if (is_named_arg) ret += ", optional"; // Default value is "null" in dicts. Otherwise,
             // nothing to do. Element is treated as if not present and has no default value
