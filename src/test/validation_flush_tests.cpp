@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     constexpr unsigned int COIN_SIZE = is_64_bit ? 80 : 64;
 
     auto print_view_mem_usage = [](CCoinsViewCache& view) {
-        BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
+        std::cout << "CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << std::endl;
     };
 
     constexpr size_t MAX_COINS_CACHE_BYTES = 1024;
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
             chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes=*/0),
             CoinsCacheSizeState::CRITICAL);
 
-        BOOST_TEST_MESSAGE("Exiting cache flush tests early due to unsupported arch");
+        std::cout << "Exiting cache flush tests early due to unsupported arch" << std::endl;
         return;
     }
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // Only perform these checks on 64 bit hosts; I haven't done the math for 32.
     if (is_64_bit) {
         float usage_percentage = (float)view.DynamicMemoryUsage() / (MAX_COINS_CACHE_BYTES + (1 << 10));
-        BOOST_TEST_MESSAGE("CoinsTip usage percentage: " << usage_percentage);
+        std::cout << "CoinsTip usage percentage: " << usage_percentage << std::endl;
         BOOST_CHECK(usage_percentage >= 0.9);
         BOOST_CHECK(usage_percentage < 1);
         BOOST_CHECK_EQUAL(

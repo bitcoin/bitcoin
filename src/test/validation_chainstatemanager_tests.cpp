@@ -294,7 +294,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             int chains_tested{0};
 
             for (Chainstate* chainstate : chainman.GetAll()) {
-                BOOST_TEST_MESSAGE("Checking coins in " << chainstate->ToString());
+                std::cout << "Checking coins in " << chainstate->ToString() << std::endl;
                 CCoinsViewCache& coinscache = chainstate->CoinsTip();
 
                 // Both caches will be empty initially.
@@ -327,7 +327,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             size_t coins_missing_from_background{0};
 
             for (Chainstate* chainstate : chainman.GetAll()) {
-                BOOST_TEST_MESSAGE("Checking coins in " << chainstate->ToString());
+                std::cout << "Checking coins in " << chainstate->ToString() << std::endl;
                 CCoinsViewCache& coinscache = chainstate->CoinsTip();
                 bool is_background = chainstate != &chainman.ActiveChainstate();
 
@@ -364,7 +364,7 @@ struct SnapshotTestSetup : TestChain100Setup {
     {
         ChainstateManager& chainman = *Assert(m_node.chainman);
 
-        BOOST_TEST_MESSAGE("Simulating node restart");
+        std::cout << "Simulating node restart" << std::endl;
         {
             LOCK(::cs_main);
             for (Chainstate* cs : chainman.GetAll()) {
@@ -492,7 +492,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     // chainstate data, and we end up with a single chainstate that is at tip.
     ChainstateManager& chainman_restarted = this->SimulateNodeRestart();
 
-    BOOST_TEST_MESSAGE("Performing Load/Verify/Activate of chainstate");
+    std::cout << "Performing Load/Verify/Activate of chainstate" << std::endl;
 
     // This call reinitializes the chainstates.
     this->LoadVerifyActivateChainstate();
@@ -507,8 +507,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 210);
     }
 
-    BOOST_TEST_MESSAGE(
-        "Ensure we can mine blocks on top of the initialized snapshot chainstate");
+    std::cout << "Ensure we can mine blocks on top of the initialized snapshot chainstate" << std::endl;
     mineBlocks(10);
     {
         LOCK(chainman_restarted.GetMutex());

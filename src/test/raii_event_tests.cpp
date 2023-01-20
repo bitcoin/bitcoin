@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(raii_event_order)
 BOOST_AUTO_TEST_CASE(raii_event_tests_SKIPPED)
 {
     // It would probably be ideal to report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
-    BOOST_TEST_MESSAGE("Skipping raii_event_tess: libevent doesn't support event_set_mem_functions");
+    std::cout << "Skipping raii_event_tess: libevent doesn't support event_set_mem_functions" << std::endl;
 }
 
 #endif  // EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED

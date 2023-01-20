@@ -42,7 +42,7 @@ bool IsProtected(int num_peers,
     for (const NodeEvictionCandidate& candidate : candidates) {
         if (protected_peer_ids.count(candidate.id)) {
             // this peer should have been removed from the eviction candidates
-            BOOST_TEST_MESSAGE(strprintf("expected candidate to be protected: %d", candidate.id));
+            std::cout << strprintf("expected candidate to be protected: %d", candidate.id) << std::endl;
             return false;
         }
         if (unprotected_peer_ids.count(candidate.id)) {
@@ -53,8 +53,8 @@ bool IsProtected(int num_peers,
 
     const bool is_protected{unprotected_count == unprotected_peer_ids.size()};
     if (!is_protected) {
-        BOOST_TEST_MESSAGE(strprintf("unprotected: expected %d, actual %d",
-                                     unprotected_peer_ids.size(), unprotected_count));
+        std::cout << strprintf("unprotected: expected %d, actual %d",
+                unprotected_peer_ids.size(), unprotected_count) << std::endl;
     }
     return is_protected;
 }
