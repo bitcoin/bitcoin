@@ -37,16 +37,7 @@ the `src/qt/test/test_main.cpp` file.
 For example, to run just the `getarg_tests` suite of tests:
 
 ```bash
-test_bitcoin --log_level=all --run_test=getarg_tests
-```
-
-`log_level` controls the verbosity of the test framework, which logs when a
-test case is entered, for example. `test_bitcoin` also accepts the command
-line arguments accepted by `bitcoind`. Use `--` to separate both types of
-arguments:
-
-```bash
-test_bitcoin --log_level=all --run_test=getarg_tests -- -printtoconsole=1
+test_bitcoin --run_test=getarg_tests
 ```
 
 The `-printtoconsole=1` after the two dashes redirects the debug log, which
