@@ -2469,6 +2469,19 @@ CConnman::~CConnman()
     Stop();
 }
 
+bool CConnman::AvoidPeerByAsn(CAddress addr)
+{
+    auto mapped_as{m_netgroupman.GetMappedAS(addr)};
+    if (mapped_as == 0) return false;
+    for (uint32_t& asn : as_to_avoid) {
+        if (asn == mapped_as) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
     std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct, network);

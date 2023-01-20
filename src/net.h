@@ -830,6 +830,9 @@ public:
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
 
+    // Check whether we are avoiding peers based on their AS
+    bool AvoidPeerByAsn(CAddress addr);
+
     //! Used to convey which local services we are offering peers during node
     //! connection.
     //!
