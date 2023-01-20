@@ -1307,12 +1307,15 @@ static void bls_generate_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"bls generate",
         "\nReturns a BLS secret/public key pair.\n",
-        {},
+        {
+            {"legacy", RPCArg::Type::BOOL, /* default */ "true until the v19 fork is activated, otherwise false", "Use legacy BLS scheme"},
+            },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
                 {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"}
             }},
         RPCExamples{
             HelpExampleCli("bls generate", "")
@@ -1327,9 +1330,15 @@ static UniValue bls_generate(const JSONRPCRequest& request)
     CBLSSecretKey sk;
     sk.MakeNewKey();
     bool bls_legacy_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    if (!request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
+        bls_legacy_scheme = request.params[1].get_bool();
+    }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
     ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+    ret.pushKV("scheme", bls_scheme_str);
     return ret;
 }
 
@@ -1346,6 +1355,7 @@ static void bls_fromsecret_help(const JSONRPCRequest& request)
             {
                 {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
                 {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"},
             }},
         RPCExamples{
             HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
@@ -1366,6 +1376,8 @@ static UniValue bls_fromsecret(const JSONRPCRequest& request)
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
     ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+    ret.pushKV("scheme", bls_scheme_str);
     return ret;
 }
 
