@@ -342,6 +342,15 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   configure_file(contrib/devtools/split-debug.sh.in split-debug.sh @ONLY)
 endif()
 
+include(GetAllExecutables)
+get_all_executables(executables)
+
+add_custom_target(check-symbols
+  COMMAND echo "Running symbol and dynamic library checks..."
+  COMMAND ${PYTHON_COMMAND} ${CMAKE_SOURCE_DIR}/contrib/devtools/symbol-check.py ${executables}
+  VERBATIM
+)
+
 get_directory_property(definitions COMPILE_DEFINITIONS)
 include(SeparateConfigs)
 separate_configs(definitions)
