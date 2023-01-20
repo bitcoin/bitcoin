@@ -762,7 +762,7 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     pendingInstantSendLocks.emplace(hash, std::make_pair(-1, islock));
 }
 
-void CInstantSendManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
+void CInstantSendManager::ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (!IsInstantSendEnabled()) {
         return;

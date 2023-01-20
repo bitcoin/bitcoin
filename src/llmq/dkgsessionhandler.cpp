@@ -107,7 +107,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
              params.name, quorumIndex, currentHeight, pQuorumBaseBlockIndex->nHeight, int(oldPhase), int(phase));
 }
 
-void CDKGSessionHandler::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
+void CDKGSessionHandler::ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (msg_type == NetMsgType::QCONTRIB) {

@@ -316,7 +316,7 @@ public:
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs_inputReqests, cs_creating);
 
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
 
     void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_pendingLocks);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);
