@@ -3163,6 +3163,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
+        if (pfrom.IsInboundConn() && m_connman.AvoidPeerByAsn(pfrom.addr)) {
+            LogPrint(BCLog::NET, "peer=%d is from an AS we want to avoid; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
         int64_t nTime;
         CService addrMe;
         uint64_t nNonce = 1;
