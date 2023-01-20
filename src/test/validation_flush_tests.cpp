@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         uint256 txid = InsecureRand256();
         COutPoint outp{txid, 0};
         newcoin.nHeight = 1;
-        newcoin.out.nValue = InsecureRand32();
+        newcoin.out.nValue = InsecureRandMoneyAmount();
         newcoin.out.scriptPubKey.assign(uint32_t{56}, 1);
         coins_view.AddCoin(outp, std::move(newcoin), false);
 

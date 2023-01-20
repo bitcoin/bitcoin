@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_RANDOM_H
 #define BITCOIN_TEST_UTIL_RANDOM_H
 
+#include <consensus/amount.h>
 #include <random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -34,6 +35,11 @@ static inline uint64_t InsecureRandRange(uint64_t range)
 static inline bool InsecureRandBool()
 {
     return g_insecure_rand_ctx.randbool();
+}
+
+static inline CAmount InsecureRandMoneyAmount()
+{
+    return static_cast<CAmount>(InsecureRandRange(MAX_MONEY + 1));
 }
 
 #endif // BITCOIN_TEST_UTIL_RANDOM_H
