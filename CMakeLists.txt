@@ -361,6 +361,24 @@ else()
   add_custom_target(check-security)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(exe_format MACHO)
+elseif(WIN32)
+  set(exe_format PE)
+elseif(UNIX)
+  set(exe_format ELF)
+endif()
+if(CMAKE_CROSSCOMPILING)
+  string(REPLACE ";" " " c_compiler_command "${DEPENDS_C_COMPILER_WITH_LAUNCHER}")
+else()
+  set(c_compiler_command "${CMAKE_C_COMPILER}")
+endif()
+add_custom_target(test-security-check
+  COMMAND env CC=${c_compiler_command} CFLAGS=${CMAKE_C_FLAGS} LDFLAGS=${CMAKE_EXE_LINKER_FLAGS} ${PYTHON_COMMAND} ${CMAKE_SOURCE_DIR}/contrib/devtools/test-security-check.py TestSecurityChecks.test_${exe_format}
+  COMMAND env CC=${c_compiler_command} CFLAGS=${CMAKE_C_FLAGS} LDFLAGS=${CMAKE_EXE_LINKER_FLAGS} ${PYTHON_COMMAND} ${CMAKE_SOURCE_DIR}/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_${exe_format}
+  VERBATIM
+)
+
 get_directory_property(definitions COMPILE_DEFINITIONS)
 include(SeparateConfigs)
 separate_configs(definitions)
