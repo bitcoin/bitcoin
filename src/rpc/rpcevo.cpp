@@ -175,7 +175,8 @@ static RPCHelpMan bls_generate()
 {
      return RPCHelpMan{"bls_generate",
         "\nReturns a BLS secret/public key pair.\n",
-        {              
+        {   
+            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{true}, "Use legacy BLS scheme"},           
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -191,10 +192,16 @@ static RPCHelpMan bls_generate()
     {
         LOCK(cs_main);
         bls_legacy_scheme = !llmq::CLLMQUtils::IsV19Active(node.chainman->ActiveHeight());
+        if (!request.params[1].isNull()) {
+            RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
+            bls_legacy_scheme = request.params[1].get_bool();
+        }
     }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
     ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+    ret.pushKV("scheme", bls_scheme_str);
     return ret;
 },
     };
@@ -213,6 +220,7 @@ static RPCHelpMan bls_fromsecret()
         "\nParses a BLS secret key and returns the secret/public key pair.\n",
         {              
              {"secret", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The BLS secret key."},  
+             {"legacy", RPCArg::Type::BOOL, RPCArg::Default{true}, "Use legacy BLS scheme"},
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -227,18 +235,19 @@ static RPCHelpMan bls_fromsecret()
     {
         LOCK(cs_main);
         bls_legacy_scheme = !llmq::CLLMQUtils::IsV19Active(node.chainman->ActiveHeight());
-    }
-    if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
-        bls_legacy_scheme = request.params[1].get_bool();
+        if (!request.params[1].isNull()) {
+            bls_legacy_scheme = request.params[1].get_bool();
+        }
     }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
     ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+    ret.pushKV("scheme", bls_scheme_str);
     return ret;
 },
     };
-} 
+}
 
 
 void RegisterEvoRPCCommands(CRPCTable &t)

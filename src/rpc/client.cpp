@@ -237,6 +237,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "protx_list_wallet", 1, "height" },
     { "protx_list", 1, "detailed" },
     { "protx_list", 2, "height" },
+    { "bls_generate", 0, "legacy" },
+    { "bls_fromsecret", 1, "legacy" },
     { "protx_register", 1, "collateralIndex" },
     { "protx_register", 6, "operatorReward" },
     { "protx_register", 9, "submit" },
