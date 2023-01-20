@@ -129,6 +129,15 @@ void EnsureWalletIsUnlocked(const CWallet* pwallet)
     }
 }
 
+LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet)
+{
+    LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+    }
+    return *spk_man;
+}
+
 WalletContext& EnsureWalletContext(const CoreContext& context)
 {
     auto* wallet_context = GetContext<WalletContext>(context);
@@ -589,7 +598,11 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
 
-    const SigningProvider* provider = pwallet->GetSigningProvider();
+    CScript script_pub_key = GetScriptForDestination(*keyID);
+    const SigningProvider* provider = pwallet->GetSigningProvider(script_pub_key);
+    if (!provider) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+    }
 
     CKey key;
     if (!provider->GetKey(*keyID, key)) {
@@ -995,10 +1008,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -1022,7 +1032,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     // Construct using pay-to-script-hash:
     CScript inner = CreateMultisigRedeemscript(required, pubkeys);
     CScriptID innerID(inner);
-    spk_man->AddCScript(inner);
+    spk_man.AddCScript(inner);
 
     pwallet->SetAddressBook(innerID, label, "send");
 
@@ -3133,7 +3143,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsSpentKey(address);
+        bool reused = avoid_reuse && pwallet->IsSpentKey(out.tx->GetHash(), out.i);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
@@ -3150,12 +3160,14 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 entry.pushKV("label", i->second.name);
             }
 
-            const SigningProvider* provider = pwallet->GetSigningProvider();
-            if (scriptPubKey.IsPayToScriptHash()) {
-                const CScriptID& hash = CScriptID(std::get<CScriptID>(address));
-                CScript redeemScript;
-                if (provider->GetCScript(hash, redeemScript)) {
-                    entry.pushKV("redeemScript", HexStr(redeemScript));
+            const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
+            if (provider) {
+                if (scriptPubKey.IsPayToScriptHash()) {
+                    const CScriptID& hash = CScriptID(std::get<CScriptID>(address));
+                    CScript redeemScript;
+                    if (provider->GetCScript(hash, redeemScript)) {
+                        entry.pushKV("redeemScript", HexStr(redeemScript));
+                    }
                 }
             }
         }
@@ -3166,8 +3178,11 @@ static UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         if (out.fSolvable) {
-            auto descriptor = InferDescriptor(scriptPubKey, *pwallet->GetLegacyScriptPubKeyMan());
-            entry.pushKV("desc", descriptor->ToString());
+            const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
+            if (provider) {
+                auto descriptor = InferDescriptor(scriptPubKey, *provider);
+                entry.pushKV("desc", descriptor->ToString());
+            }
         }
         if (avoid_reuse) entry.pushKV("reused", reused);
         entry.pushKV("safe", out.fSafe);
@@ -3444,9 +3459,23 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
+    std::set<const SigningProvider*> providers;
+    for (const std::pair<COutPoint, Coin> coin_pair : coins) {
+        const SigningProvider* provider = pwallet->GetSigningProvider(coin_pair.second.out.scriptPubKey);
+        if (provider) {
+            providers.insert(std::move(provider));
+        }
+    }
+    if (providers.size() == 0) {
+        // When there are no available providers, use DUMMY_SIGNING_PROVIDER so we can check if the tx is complete
+        providers.insert(&DUMMY_SIGNING_PROVIDER);
+    }
+
     UniValue result(UniValue::VOBJ);
-    SignTransaction(mtx, &*pwallet->GetLegacyScriptPubKeyMan(), coins, request.params[2], result);
-    return result;
+    for (const SigningProvider* provider : providers) {
+        SignTransaction(mtx, provider, coins, request.params[2], result);
+    }
+     return result;
 }
 
 static UniValue rescanblockchain(const JSONRPCRequest& request)
@@ -3582,9 +3611,10 @@ static UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& de
 {
     UniValue ret(UniValue::VOBJ);
     UniValue detail = DescribeAddress(dest);
+    CScript script = GetScriptForDestination(dest);
     const SigningProvider* provider = nullptr;
     if (pwallet) {
-        provider = pwallet->GetSigningProvider();
+        provider = pwallet->GetSigningProvider(script);
     }
     ret.pushKVs(detail);
     ret.pushKVs(std::visit(DescribeWalletAddressVisitor(provider), dest));
@@ -3672,11 +3702,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
-    const SigningProvider* provider = pwallet->GetSigningProvider();
+    const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
 
     isminetype mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
-    bool solvable = IsSolvable(*provider, scriptPubKey);
+    bool solvable = provider && IsSolvable(*provider, scriptPubKey);
     ret.pushKV("solvable", solvable);
     if (solvable) {
         ret.pushKV("desc", InferDescriptor(scriptPubKey, *provider)->ToString());
@@ -3688,17 +3718,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
     }
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
-    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
+
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         const CKeyID *key_id = std::get_if<CKeyID>(&dest);
-        const CKeyMetadata* meta = nullptr;
-        if (key_id != nullptr && !key_id->IsNull()) {
-            meta = spk_man->GetMetadata(*key_id);
-        }
-        if (!meta) {
-            meta = spk_man->GetMetadata(CScriptID(scriptPubKey));
-        }
-        if (meta) {
+        if (const CKeyMetadata* meta = spk_man->GetMetadata(dest)) {
             ret.pushKV("timestamp", meta->nCreateTime);
             CHDChain hdChainCurrent;
             LegacyScriptPubKeyMan* legacy_spk_man = pwallet->GetLegacyScriptPubKeyMan();

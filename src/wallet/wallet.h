@@ -76,8 +76,6 @@ static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -walletrejectlongchains
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
-//! Default for -avoidpartialspends
-static const bool DEFAULT_AVOIDPARTIALSPENDS = false;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 static const bool DEFAULT_WALLETBROADCAST = true;
@@ -150,13 +148,12 @@ class ReserveDestination : public CReserveScript
 {
 protected:
     //! The wallet to reserve from
-    CWallet* pwallet;
-    LegacyScriptPubKeyMan* m_spk_man{nullptr};
+    CWallet* const pwallet;
+    //! The ScriptPubKeyMan to reserve from. Based on type when GetReservedDestination is called
+    ScriptPubKeyMan* m_spk_man{nullptr};
 
     //! The index of the address's key in the keypool
     int64_t nIndex{-1};
-    //! The public key for the address
-    CPubKey vchPubKey;
     //! The destination
     CTxDestination address;
     //! Whether this is from the internal (change output) keypool
@@ -164,10 +161,9 @@ protected:
 
 public:
     //! Construct a ReserveDestination object. This does NOT reserve an address yet
-    explicit ReserveDestination(CWallet* pwalletIn)
-    {
-        pwallet = pwalletIn;
-    }
+    explicit ReserveDestination(CWallet* pwallet)
+      : pwallet(pwallet)
+      { }
 
     ReserveDestination(const ReserveDestination&) = delete;
     ReserveDestination& operator=(const ReserveDestination&) = delete;
@@ -654,17 +650,8 @@ class CWallet final : public WalletStorage, public interfaces::Chain::Notificati
 private:
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
-    //! if fUseCrypto is true, mapKeys must be empty
-    //! if fUseCrypto is false, vMasterKey must be empty
-    std::atomic<bool> fUseCrypto;
-
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
-
     //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
     bool fOnlyMixingAllowed;
-
-    bool SetCrypted();
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
 
@@ -817,9 +804,7 @@ public:
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
-        : fUseCrypto(false),
-          fDecryptionThoroughlyChecked(false),
-          fOnlyMixingAllowed(false),
+        : fOnlyMixingAllowed(false),
           m_chain(chain),
           m_name(name),
           database(std::move(database))
@@ -830,13 +815,11 @@ public:
     {
         // Should not have slots connected at this point.
         assert(NotifyUnload.empty());
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
     }
 
     /** Interface to assert chain access */
     bool HaveChain() const { return m_chain ? true : false; }
-    bool IsCrypted() const { return fUseCrypto; }
+    bool IsCrypted() const;
     bool IsLocked(bool fForMixing = false) const override;
     bool Lock(bool fForMixing = false);
 
@@ -907,10 +890,9 @@ public:
 
     bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    // Whether this or any UTXO with the same CTxDestination has been spent.
-    bool IsSpentKey(const CTxDestination& dst) const;
-    bool IsSpentKey(const uint256& hash, unsigned int n) const;
-    void SetSpentKeyState(const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations);
+    // Whether this or any known UTXO with the same single key has been spent.
+    bool IsSpentKey(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const;
 
@@ -936,9 +918,9 @@ public:
     bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
 
     //! Adds a destination data tuple to the store, and saves it to disk
-    bool AddDestData(const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddDestData(WalletBatch& batch, const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Erases a destination data tuple in the store and on disk
-    bool EraseDestData(const CTxDestination& dest, const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool EraseDestData(WalletBatch& batch, const CTxDestination& dest, const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Adds a destination data tuple to the store, without saving it to disk
     void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Look up a destination data tuple in the store, return true if found false otherwise
@@ -1275,9 +1257,17 @@ public:
         m_last_block_processed = block_hash;
     };
 
-    ScriptPubKeyMan* GetScriptPubKeyMan() const;
-    const SigningProvider* GetSigningProvider() const;
+    //! Get the ScriptPubKeyMan for a script
+    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+
+    //! Get the SigningProvider for a script
+    const SigningProvider* GetSigningProvider(const CScript& script) const;
+    const SigningProvider* GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
+
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
+
+    const CKeyingMaterial& GetEncryptionKey() const override;
+    bool HasEncryptionKeys() const override;
 
     // Temporary LegacyScriptPubKeyMan accessors and aliases.
     friend class LegacyScriptPubKeyMan;
@@ -1289,8 +1279,6 @@ public:
     LegacyScriptPubKeyMan::WatchOnlySet& setWatchOnly GUARDED_BY(cs_KeyStore) = m_spk_man->setWatchOnly;
     LegacyScriptPubKeyMan::WatchKeyMap& mapWatchKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapWatchKeys;
     LegacyScriptPubKeyMan::HDPubKeyMap& mapHdPubKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapHdPubKeys;
-    WalletBatch*& encrypted_batch GUARDED_BY(cs_wallet) = m_spk_man->encrypted_batch;
-    using CryptedKeyMap = LegacyScriptPubKeyMan::CryptedKeyMap;
 };
 
 /**

@@ -10,6 +10,7 @@
 #include <net.h>
 #include <node/context.h>
 #include <univalue.h>
+#include <ui_interface.h>
 #include <util/check.h>
 #include <util/error.h>
 #include <util/system.h>
@@ -17,6 +18,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <walletinitinterface.h>
+#include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
 #include <coinjoin/client.h>

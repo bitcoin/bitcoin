@@ -189,7 +189,7 @@ CPubKey HexToPubKey(const std::string& hex_in)
 }
 
 // Retrieves a public key for an address from the given FillableSigningProvider
-CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in)
+CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in)
 {
     CTxDestination dest = DecodeDestination(addr_in);
     if (!IsValidDestination(dest)) {
@@ -200,7 +200,7 @@ CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string&
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s does not refer to a key", addr_in));
     }
     CPubKey vchPubKey;
-    if (!keystore->GetPubKey(*keyID, vchPubKey)) {
+    if (!keystore.GetPubKey(*keyID, vchPubKey)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("no full public key for address %s", addr_in));
     }
     if (!vchPubKey.IsFullyValid()) {
