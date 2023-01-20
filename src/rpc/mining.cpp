@@ -531,7 +531,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         "    https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki\n"
         "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n",
         {
-            {"template_request", RPCArg::Type::OBJ, /* default_val */ "", "A json object in the following spec",
+            {"template_request", RPCArg::Type::OBJ, /* default_val */ "", "Format of the template",
                 {
                     {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
                     {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, "A list of strings",
