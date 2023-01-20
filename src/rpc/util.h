@@ -324,8 +324,10 @@ struct RPCResult {
     std::string ToStringObj() const;
     /** Return the description string, including the result type. */
     std::string ToDescriptionString() const;
-    /** Check whether the result JSON type matches. */
-    bool MatchesType(const UniValue& result) const;
+    /** Check whether the result JSON type matches.
+     * Returns true if type matches, or object describing error(s) if not.
+     */
+    UniValue MatchesType(const UniValue& result) const;
 
 private:
     void CheckInnerDoc() const;
