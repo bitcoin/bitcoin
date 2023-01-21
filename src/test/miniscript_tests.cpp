@@ -114,6 +114,8 @@ typedef std::pair<ChallengeType, uint32_t> Challenge;
 struct KeyConverter {
     typedef CPubKey Key;
 
+    const miniscript::MiniscriptContext m_script_ctx{miniscript::MiniscriptContext::P2WSH};
+
     bool KeyCompare(const Key& a, const Key& b) const {
         return a < b;
     }
@@ -157,6 +159,10 @@ struct KeyConverter {
 
     std::optional<std::string> ToString(const Key& key) const {
         return HexStr(ToPKBytes(key));
+    }
+
+    miniscript::MiniscriptContext MsContext() const {
+        return m_script_ctx;
     }
 };
 

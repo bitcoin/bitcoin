@@ -229,6 +229,11 @@ enum class Availability {
     MAYBE,
 };
 
+enum class MiniscriptContext {
+    P2WSH,
+    TAPSCRIPT,
+};
+
 namespace internal {
 
 //! Helper function for Node::CalcType.

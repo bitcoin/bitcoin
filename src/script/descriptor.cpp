@@ -1426,8 +1426,11 @@ struct KeyParser {
     mutable std::vector<std::unique_ptr<PubkeyProvider>> m_keys;
     //! Used to detect key parsing errors within a Miniscript.
     mutable std::string m_key_parsing_error;
+    //! The script context we're operating within (Tapscript or P2WSH).
+    const miniscript::MiniscriptContext m_script_ctx;
 
-    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND) : m_out(out), m_in(in) {}
+    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND, miniscript::MiniscriptContext ctx)
+        : m_out(out), m_in(in), m_script_ctx(ctx) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return *m_keys.at(a) < *m_keys.at(b);
@@ -1474,6 +1477,10 @@ struct KeyParser {
             return key;
         }
         return {};
+    }
+
+    miniscript::MiniscriptContext MsContext() const {
+        return m_script_ctx;
     }
 };
 
@@ -1714,7 +1721,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     }
     // Process miniscript expressions.
     {
-        KeyParser parser(&out, nullptr);
+        KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */miniscript::MiniscriptContext::P2WSH);
         auto node = miniscript::FromString(std::string(expr.begin(), expr.end()), parser);
         if (node) {
             if (ctx != ParseScriptContext::P2WSH) {
@@ -1887,7 +1894,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
     }
 
     if (ctx == ParseScriptContext::P2WSH) {
-        KeyParser parser(nullptr, &provider);
+        KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */miniscript::MiniscriptContext::P2WSH);
         auto node = miniscript::FromScript(script, parser);
         if (node && node->IsSane()) {
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));

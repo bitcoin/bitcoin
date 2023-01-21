@@ -404,6 +404,8 @@ struct Satisfier {
     SignatureData& m_sig_data;
     const BaseSignatureCreator& m_creator;
     const CScript& m_witness_script;
+    //! For now Miniscript is only available under P2WSH.
+    const miniscript::MiniscriptContext m_script_ctx{miniscript::MiniscriptContext::P2WSH};
 
     explicit Satisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
                        const BaseSignatureCreator& creator LIFETIMEBOUND,
@@ -465,6 +467,10 @@ struct Satisfier {
     }
     miniscript::Availability SatHASH160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
         return MsLookupHelper(m_sig_data.hash160_preimages, hash, preimage);
+    }
+
+    miniscript::MiniscriptContext MsContext() const {
+        return m_script_ctx;
     }
 };
 
