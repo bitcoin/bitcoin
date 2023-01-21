@@ -1181,8 +1181,15 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts,
                                      FlatSigningProvider& provider) const override
     {
-        for (const auto& key : keys) provider.pubkeys.emplace(key.GetID(), key);
-        return Vector(m_node->ToScript(ScriptMaker(keys, m_node->GetMsCtx())));
+        const auto script_ctx{m_node->GetMsCtx()};
+        for (const auto& key : keys) {
+            if (miniscript::IsTapscript(script_ctx)) {
+                provider.pubkeys.emplace(Hash160(XOnlyPubKey{key}), key);
+            } else {
+                provider.pubkeys.emplace(key.GetID(), key);
+            }
+        }
+        return Vector(m_node->ToScript(ScriptMaker(keys, script_ctx)));
     }
 
 public:
@@ -1443,9 +1450,12 @@ struct KeyParser {
     mutable std::string m_key_parsing_error;
     //! The script context we're operating within (Tapscript or P2WSH).
     const miniscript::MiniscriptContext m_script_ctx;
+    //! The number of keys that were parsed before starting to parse this Miniscript descriptor.
+    uint32_t m_offset;
 
-    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND, miniscript::MiniscriptContext ctx)
-        : m_out(out), m_in(in), m_script_ctx(ctx) {}
+    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND,
+              miniscript::MiniscriptContext ctx, uint32_t offset = 0)
+        : m_out(out), m_in(in), m_script_ctx(ctx), m_offset(offset) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return *m_keys.at(a) < *m_keys.at(b);
@@ -1463,7 +1473,7 @@ struct KeyParser {
     {
         assert(m_out);
         Key key = m_keys.size();
-        auto pk = ParsePubkey(key, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
+        auto pk = ParsePubkey(m_offset + key, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
         if (!pk) return {};
         m_keys.push_back(std::move(pk));
         return key;
@@ -1537,8 +1547,9 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         }
         ++key_exp_index;
         return std::make_unique<PKHDescriptor>(std::move(pubkey));
-    } else if (Func("pkh", expr)) {
-        error = "Can only have pkh at top level, in sh(), or in wsh()";
+    } else if (ctx != ParseScriptContext::P2TR && Func("pkh", expr)) {
+        // Under Taproot, always the Miniscript parser deal with it.
+        error = "Can only have pkh at top level, in sh(), wsh(), or in tr()";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
@@ -1751,11 +1762,12 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     }
     // Process miniscript expressions.
     {
-        KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */miniscript::MiniscriptContext::P2WSH);
+        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
+        KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */script_ctx, key_exp_index);
         auto node = miniscript::FromString(std::string(expr.begin(), expr.end()), parser);
         if (node) {
-            if (ctx != ParseScriptContext::P2WSH) {
-                error = "Miniscript expressions can only be used in wsh";
+            if (ctx != ParseScriptContext::P2WSH && ctx != ParseScriptContext::P2TR) {
+                error = "Miniscript expressions can only be used in wsh or tr.";
                 return nullptr;
             }
             if (parser.m_key_parsing_error != "") {
@@ -1790,6 +1802,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
             // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
             // may have an empty list of public keys.
             CHECK_NONFATAL(!parser.m_keys.empty());
+            key_exp_index += parser.m_keys.size();
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
         }
     }
@@ -1923,8 +1936,9 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
 
-    if (ctx == ParseScriptContext::P2WSH) {
-        KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */miniscript::MiniscriptContext::P2WSH);
+    if (ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR) {
+        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
+        KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */script_ctx);
         auto node = miniscript::FromScript(script, parser);
         if (node && node->IsSane()) {
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
