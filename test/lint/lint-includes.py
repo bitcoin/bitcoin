@@ -47,7 +47,8 @@ EXPECTED_BOOST_INCLUDES = ["boost/date_time/posix_time/posix_time.hpp",
                            "boost/intrusive_ptr.hpp",
                            "boost/python/suite/indexing/vector_indexing_suite.hpp",
                            "boost/python.hpp",
-                           "boost/range/adaptors.hpp"]
+                           "boost/range/adaptors.hpp",
+                           "boost/range/irange.hpp"]
 
 
 def get_toplevel():
