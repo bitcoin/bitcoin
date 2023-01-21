@@ -582,6 +582,7 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;
         }
+        status = DatabaseStatus::SUCCESS;
         return db;
     } catch (const std::runtime_error& e) {
         status = DatabaseStatus::FAILED_LOAD;
