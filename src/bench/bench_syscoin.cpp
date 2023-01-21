@@ -15,11 +15,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-// SYSCOIN
-#include <bls/bls.h>
-void InitBLSTests();
-void CleanupBLSTests();
-void CleanupBLSDkgTests();
 static const char* DEFAULT_BENCH_FILTER = ".*";
 static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
 /** Priority level default value, run "all" priority levels */
@@ -66,9 +61,6 @@ int main(int argc, char** argv)
     ArgsManager argsman;
     SetupBenchArgs(argsman);
     SHA256AutoDetect();
-    // SYSCOIN
-    BLSInit();
-    InitBLSTests();
     std::string error;
     if (!argsman.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
@@ -137,9 +129,6 @@ int main(int argc, char** argv)
         args.priority = parsePriorityLevel(argsman.GetArg("-priority-level", DEFAULT_PRIORITY));
 
         benchmark::BenchRunner::RunAll(args);
-        // SYSCOIN need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
-        CleanupBLSDkgTests();
-        CleanupBLSTests();
         return EXIT_SUCCESS;
     } catch (const std::exception& e) {
         tfm::format(std::cerr, "Error: %s\n", e.what());

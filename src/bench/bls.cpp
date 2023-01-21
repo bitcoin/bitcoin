@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,18 +8,6 @@
 #include <util/time.h>
 
 #include <iostream>
-
-CBLSWorker blsWorker;
-
-void InitBLSTests()
-{
-    blsWorker.Start();
-}
-
-void CleanupBLSTests()
-{
-    blsWorker.Stop();
-}
 
 static void BuildTestVectors(size_t count, size_t invalidCount,
                              BLSPublicKeyVector& pubKeys, BLSSecretKeyVector& secKeys, BLSSignatureVector& sigs,
@@ -35,8 +23,7 @@ static void BuildTestVectors(size_t count, size_t invalidCount,
     for (size_t i = 0; i < invalidCount; i++) {
         invalid[i] = true;
     }
-    FastRandomContext rng;
-    Shuffle(invalid.begin(), invalid.end(), rng);
+    Shuffle(invalid.begin(), invalid.end(), FastRandomContext());
 
     for (size_t i = 0; i < count; i++) {
         secKeys[i].MakeNewKey();
@@ -61,8 +48,20 @@ static void BLS_PubKeyAggregate_Normal(benchmark::Bench& bench)
     CBLSPublicKey pubKey2 = secKey2.GetPublicKey();
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(100).run([&] {
         pubKey1.AggregateInsecure(pubKey2);
+    });
+}
+
+static void BLS_SecKeyAggregate_Normal(benchmark::Bench& bench)
+{
+    CBLSSecretKey secKey1, secKey2;
+    secKey1.MakeNewKey();
+    secKey2.MakeNewKey();
+
+    // Benchmark.
+    bench.run([&] {
+        secKey1.AggregateInsecure(secKey2);
     });
 }
 
@@ -78,18 +77,6 @@ static void BLS_SignatureAggregate_Normal(benchmark::Bench& bench)
     // Benchmark.
     bench.run([&] {
         sig1.AggregateInsecure(sig2);
-    });	    
-}	
-
-static void BLS_SecKeyAggregate_Normal(benchmark::Bench& bench)
-{
-    CBLSSecretKey secKey1, secKey2;
-    secKey1.MakeNewKey();
-    secKey2.MakeNewKey();
-
-    // Benchmark.
-    bench.run([&] {
-        secKey1.AggregateInsecure(secKey2);
     });
 }
 
@@ -97,12 +84,12 @@ static void BLS_Sign_Normal(benchmark::Bench& bench)
 {
     CBLSSecretKey secKey;
     secKey.MakeNewKey();
-    CBLSPublicKey pubKey = secKey.GetPublicKey();
+    CBLSSignature sig;
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(100).run([&] {
         uint256 hash = GetRandHash();
-        secKey.Sign(hash);
+        sig = secKey.Sign(hash);
     });
 }
 
@@ -117,7 +104,7 @@ static void BLS_Verify_Normal(benchmark::Bench& bench)
 
     // Benchmark.
     size_t i = 0;
-    bench.run([&] {
+    bench.minEpochIterations(20).run([&] {
         bool valid = sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
         if (valid && invalid[i]) {
             std::cout << "expected invalid but it is valid" << std::endl;
@@ -131,7 +118,7 @@ static void BLS_Verify_Normal(benchmark::Bench& bench)
 }
 
 
-static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -141,22 +128,25 @@ static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench)
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(epoch_iters).run([&] {
         for (size_t i = 0; i < pubKeys.size(); i++) {
-            sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
+            bool ok = sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
+            assert(ok);
         }
     });
 }
+
 static void BLS_Verify_LargeBlock100(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlock(100, bench);
-}
-static void BLS_Verify_LargeBlock1000(benchmark::Bench& bench)
-{
-    BLS_Verify_LargeBlock(1000, bench);
+    BLS_Verify_LargeBlock(100, bench, 10);
 }
 
-static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeBlock1000(benchmark::Bench& bench)
+{
+    BLS_Verify_LargeBlock(1000, bench, 1);
+}
+
+static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -166,22 +156,24 @@ static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(epoch_iters).run([&] {
         CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
-        aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        bool ok = aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        assert(ok);
     });
 }
+
 static void BLS_Verify_LargeBlockSelfAggregated100(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlockSelfAggregated(100, bench);
+    BLS_Verify_LargeBlockSelfAggregated(100, bench, 10);
 }
+
 static void BLS_Verify_LargeBlockSelfAggregated1000(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlockSelfAggregated(1000, bench);
+    BLS_Verify_LargeBlockSelfAggregated(1000, bench, 2);
 }
 
-
-static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -193,19 +185,21 @@ static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& be
     CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
 
     // Benchmark.
-    bench.run([&] {
-        aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+    bench.minEpochIterations(epoch_iters).run([&] {
+        bool ok = aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        assert(ok);
     });
 }
+
 static void BLS_Verify_LargeAggregatedBlock100(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeAggregatedBlock(100, bench);
-}
-static void BLS_Verify_LargeAggregatedBlock1000(benchmark::Bench& bench)
-{
-    BLS_Verify_LargeAggregatedBlock(1000, bench);
+    BLS_Verify_LargeAggregatedBlock(100, bench, 10);
 }
 
+static void BLS_Verify_LargeAggregatedBlock1000(benchmark::Bench& bench)
+{
+    BLS_Verify_LargeAggregatedBlock(1000, bench, 1);
+}
 
 static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& bench)
 {
@@ -221,7 +215,7 @@ static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& ben
     std::set<size_t> prevalidated;
 
     while (prevalidated.size() < 900) {
-        int idx = GetRand((int)pubKeys.size());
+        int idx = GetRandInternal((int)pubKeys.size());
         if (prevalidated.count((size_t)idx)) {
             continue;
         }
@@ -229,7 +223,7 @@ static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& ben
     }
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(10).run([&] {
         BLSPublicKeyVector nonvalidatedPubKeys;
         std::vector<uint256> nonvalidatedHashes;
         nonvalidatedPubKeys.reserve(pubKeys.size());
@@ -266,7 +260,7 @@ static void BLS_Verify_Batched(benchmark::Bench& bench)
     size_t i = 0;
     size_t j = 0;
     size_t batchSize = 16;
-    bench.run([&] {
+    bench.minEpochIterations(1000).run([&] {
         j++;
         if ((j % batchSize) != 0) {
             return;
@@ -325,11 +319,14 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
         return cancel;
     };
 
+    CBLSWorker blsWorker;
+    blsWorker.Start();
+
     // Benchmark.
-    size_t i = 0;
-    bench.run([&] {
+    bench.minEpochIterations(1000).run([&] {
         if (futures.size() < 100) {
             while (futures.size() < 10000) {
+                size_t i = 0;
                 auto f = blsWorker.AsyncVerifySig(sigs[i], pubKeys[i], msgHashes[i], cancelCond);
                 futures.emplace_back(std::make_pair(i, std::move(f)));
                 i = (i + 1) % pubKeys.size();
@@ -350,23 +347,27 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
             assert(false);
         }
     });
+
     cancel = true;
-    while (blsWorker.IsAsyncVerifyInProgress()) {
+    while (blsWorker.IsAsyncVerifyInProgress())
+    {
         UninterruptibleSleep(std::chrono::milliseconds{100});
     }
+
+    blsWorker.Stop();
 }
 
-/*BENCHMARK(BLS_PubKeyAggregate_Normal)
-BENCHMARK(BLS_SecKeyAggregate_Normal)
-BENCHMARK(BLS_SignatureAggregate_Normal)
-BENCHMARK(BLS_Sign_Normal)
-BENCHMARK(BLS_Verify_Normal)
-BENCHMARK(BLS_Verify_LargeBlock100)
-BENCHMARK(BLS_Verify_LargeBlock1000)
-BENCHMARK(BLS_Verify_LargeBlockSelfAggregated100)
-BENCHMARK(BLS_Verify_LargeBlockSelfAggregated1000)
-BENCHMARK(BLS_Verify_LargeAggregatedBlock100)
-BENCHMARK(BLS_Verify_LargeAggregatedBlock1000)
-BENCHMARK(BLS_Verify_LargeAggregatedBlock1000PreVerified)
-BENCHMARK(BLS_Verify_Batched)
-BENCHMARK(BLS_Verify_BatchedParallel)*/
+BENCHMARK(BLS_PubKeyAggregate_Normal, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_SecKeyAggregate_Normal, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_SignatureAggregate_Normal, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Sign_Normal, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_Normal, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeBlock100, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeBlock1000, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeBlockSelfAggregated100, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeBlockSelfAggregated1000, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock100, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock1000, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock1000PreVerified, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_Batched, benchmark::PriorityLevel::HIGH)
+BENCHMARK(BLS_Verify_BatchedParallel, benchmark::PriorityLevel::HIGH)
