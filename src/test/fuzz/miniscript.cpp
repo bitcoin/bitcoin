@@ -514,6 +514,9 @@ struct SmartInfo
 
             // Based on the fragment, determine #subs/data/k/keys to pass to ComputeType. */
             switch (frag) {
+                case Fragment::MULTI_A:
+                    // TODO: Tapscript support.
+                    assert(false);
                 case Fragment::PK_K:
                 case Fragment::PK_H:
                     n_keys = 1;
@@ -703,6 +706,9 @@ std::optional<NodeInfo> ConsumeNodeSmart(FuzzedDataProvider& provider, Type type
 
     // Based on the fragment the recipe uses, fill in other data (k, keys, data).
     switch (frag) {
+        case Fragment::MULTI_A:
+            // TODO: Tapscript support.
+            assert(false);
         case Fragment::PK_K:
         case Fragment::PK_H:
             return {{frag, ConsumePubKey(provider)}};
@@ -793,6 +799,9 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
             scriptsize += miniscript::internal::ComputeScriptLen(node_info->fragment, ""_mst, node_info->subtypes.size(), node_info->k, node_info->subtypes.size(), node_info->keys.size()) - 1;
             if (scriptsize > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
             switch (node_info->fragment) {
+            case Fragment::MULTI_A:
+                // TODO: Tapscript support.
+                assert(false);
             case Fragment::JUST_0:
             case Fragment::JUST_1:
                 break;
@@ -1019,6 +1028,9 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
     // satisfaction will also match the expected policy.
     bool satisfiable = node->IsSatisfiable([](const Node& node) -> bool {
         switch (node.fragment) {
+        case Fragment::MULTI_A:
+            // TODO: Tapscript support.
+            assert(false);
         case Fragment::PK_K:
         case Fragment::PK_H: {
             auto it = TEST_DATA.dummy_sigs.find(node.keys[0]);

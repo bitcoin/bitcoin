@@ -45,7 +45,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
     // Sanity check on k
     if (fragment == Fragment::OLDER || fragment == Fragment::AFTER) {
         assert(k >= 1 && k < 0x80000000UL);
-    } else if (fragment == Fragment::MULTI) {
+    } else if (fragment == Fragment::MULTI || fragment == Fragment::MULTI_A) {
         assert(k >= 1 && k <= n_keys);
     } else if (fragment == Fragment::THRESH) {
         assert(k >= 1 && k <= n_subs);
@@ -69,7 +69,9 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
     if (fragment == Fragment::PK_K || fragment == Fragment::PK_H) {
         assert(n_keys == 1);
     } else if (fragment == Fragment::MULTI) {
-        assert(n_keys >= 1 && n_keys <= 20);
+        assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTISIG);
+    } else if (fragment == Fragment::MULTI_A) {
+        assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTI_A);
     } else {
         assert(n_keys == 0);
     }
@@ -212,6 +214,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
                 ((x << "i"_mst) && (y << "j"_mst)) ||
                 ((x << "j"_mst) && (y << "i"_mst)))); // k=k_x*k_y*k_z* !(g_x*h_y + h_x*g_y + i_x*j_y + j_x*i_y)
         case Fragment::MULTI: return "Bnudemsk"_mst;
+        case Fragment::MULTI_A: return "Budemsk"_mst;
         case Fragment::THRESH: {
             bool all_e = true;
             bool all_m = true;
@@ -260,6 +263,7 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::HASH160:
         case Fragment::RIPEMD160: return 4 + 2 + 21;
         case Fragment::MULTI: return 1 + BuildScript(n_keys).size() + BuildScript(k).size() + 34 * n_keys;
+        case Fragment::MULTI_A: return (1 + 32 + 1) * n_keys + BuildScript(k).size() + 1;
         case Fragment::AND_V: return subsize;
         case Fragment::WRAP_V: return subsize + (sub0typ << "x"_mst);
         case Fragment::WRAP_S:
@@ -373,9 +377,13 @@ std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script)
             // Decompose OP_EQUALVERIFY into OP_EQUAL OP_VERIFY
             out.emplace_back(OP_EQUAL, std::vector<unsigned char>());
             opcode = OP_VERIFY;
+        } else if (opcode == OP_NUMEQUALVERIFY) {
+            // Decompose OP_NUMEQUALVERIFY into OP_NUMEQUAL OP_VERIFY
+            out.emplace_back(OP_NUMEQUAL, std::vector<unsigned char>());
+            opcode = OP_VERIFY;
         } else if (IsPushdataOp(opcode)) {
             if (!CheckMinimalPush(push_data, opcode)) return {};
-        } else if (it != itend && (opcode == OP_CHECKSIG || opcode == OP_CHECKMULTISIG || opcode == OP_EQUAL) && (*it == OP_VERIFY)) {
+        } else if (it != itend && (opcode == OP_CHECKSIG || opcode == OP_CHECKMULTISIG || opcode == OP_EQUAL || opcode == OP_NUMEQUAL) && (*it == OP_VERIFY)) {
             // Rule out non minimal VERIFY sequences
             return {};
         }
