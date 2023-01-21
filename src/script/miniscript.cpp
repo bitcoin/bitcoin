@@ -10,6 +10,7 @@
 #include <assert.h>
 
 namespace miniscript {
+
 namespace internal {
 
 Type SanitizeType(Type e) {

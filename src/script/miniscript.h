@@ -20,6 +20,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <span.h>
+#include <util/check.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -233,6 +234,16 @@ enum class MiniscriptContext {
     P2WSH,
     TAPSCRIPT,
 };
+
+/** Whether the context Tapscript, ensuring the only other possibility is P2WSH. */
+constexpr bool IsTapscript(MiniscriptContext ms_ctx)
+{
+    switch (ms_ctx) {
+        case MiniscriptContext::P2WSH: return false;
+        case MiniscriptContext::TAPSCRIPT: return true;
+    }
+    assert(false);
+}
 
 namespace internal {
 
@@ -585,7 +596,8 @@ public:
         };
         // The upward function computes for a node, given its followed-by-OP_VERIFY status
         // and the CScripts of its child nodes, the CScript of the node.
-        auto upfn = [&ctx](bool verify, const Node& node, Span<CScript> subs) -> CScript {
+        const bool is_tapscript{IsTapscript(m_script_ctx)};
+        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, Span<CScript> subs) -> CScript {
             switch (node.fragment) {
                 case Fragment::PK_K: return BuildScript(ctx.ToPKBytes(node.keys[0]));
                 case Fragment::PK_H: return BuildScript(OP_DUP, OP_HASH160, ctx.ToPKHBytes(node.keys[0]), OP_EQUALVERIFY);
@@ -618,6 +630,7 @@ public:
                 case Fragment::OR_I: return BuildScript(OP_IF, subs[0], OP_ELSE, subs[1], OP_ENDIF);
                 case Fragment::ANDOR: return BuildScript(std::move(subs[0]), OP_NOTIF, subs[2], OP_ELSE, subs[1], OP_ENDIF);
                 case Fragment::MULTI: {
+                    CHECK_NONFATAL(!is_tapscript);
                     CScript script = BuildScript(node.k);
                     for (const auto& key : node.keys) {
                         script = BuildScript(std::move(script), ctx.ToPKBytes(key));
@@ -653,7 +666,8 @@ public:
         };
         // The upward function computes for a node, given whether its parent is a wrapper,
         // and the string representations of its child nodes, the string representation of the node.
-        auto upfn = [&ctx](bool wrapped, const Node& node, Span<std::string> subs) -> std::optional<std::string> {
+        const bool is_tapscript{IsTapscript(m_script_ctx)};
+        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, Span<std::string> subs) -> std::optional<std::string> {
             std::string ret = wrapped ? ":" : "";
 
             switch (node.fragment) {
@@ -717,6 +731,7 @@ public:
                     if (node.subs[2]->fragment == Fragment::JUST_0) return std::move(ret) + "and_n(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
                     return std::move(ret) + "andor(" + std::move(subs[0]) + "," + std::move(subs[1]) + "," + std::move(subs[2]) + ")";
                 case Fragment::MULTI: {
+                    CHECK_NONFATAL(!is_tapscript);
                     auto str = std::move(ret) + "multi(" + ::ToString(node.k);
                     for (const auto& key : node.keys) {
                         auto key_str = ctx.ToString(key);
@@ -1631,6 +1646,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 in = in.subspan(arg_size + 1);
                 script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
             } else if (Const("multi(", in)) {
+                if (IsTapscript(ctx.MsContext())) return {};
                 // Get threshold
                 int next_comma = FindNextChar(in, ',');
                 if (next_comma < 1) return {};
@@ -1989,6 +2005,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             }
             // Multi
             if (last - in >= 3 && in[0].first == OP_CHECKMULTISIG) {
+                if (IsTapscript(ctx.MsContext())) return {};
                 std::vector<Key> keys;
                 const auto n = ParseScriptNumber(in[1]);
                 if (!n || last - in < 3 + *n) return {};
