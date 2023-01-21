@@ -1516,6 +1516,9 @@ public:
     //! Return the expression type.
     Type GetType() const { return typ; }
 
+    //! Return the script context for this node.
+    MiniscriptContext GetMsCtx() const { return m_script_ctx; }
+
     //! Find an insane subnode which has no insane children. Nullptr if there is none.
     const Node* FindInsaneSub() const {
         return TreeEval<const Node*>([](const Node& node, Span<const Node*> subs) -> const Node* {
