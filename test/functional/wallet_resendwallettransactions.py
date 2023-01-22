@@ -58,9 +58,9 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         assert_equal(node.p2ps[1].tx_invs_received[txid], 0)
 
         self.log.info("Bump time & check that transaction is rebroadcast")
-        # Transaction should be rebroadcast approximately 24 hours in the future,
-        # but can range from 12-36. So bump 36 hours to be sure.
-        rebroadcast_time = self.mocktime + 36 * 60 * 60
+        # Transaction should be rebroadcast approximately 2 hours in the future,
+        # but can range from 1-3. So bump 3 hours to be sure.
+        rebroadcast_time = self.mocktime + 3 * 60 * 60
         node.setmocktime(rebroadcast_time)
         self.mocktime = rebroadcast_time
 
