@@ -9,6 +9,7 @@
 #include <rpc/blockchain.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <timedata.h>
 #include <uint256.h>

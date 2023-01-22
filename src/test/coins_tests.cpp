@@ -6,6 +6,7 @@
 #include <coins.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <txdb.h>
 #include <uint256.h>
