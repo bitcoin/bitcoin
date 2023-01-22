@@ -1035,7 +1035,6 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
     if (!filter.IsWithinSizeConstraints()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Filter is not within size constraints");
     }
-    filter.UpdateEmptyFull();
 
     std::string strHash = request.params[1].get_str();
     uint256 hash(uint256S(strHash));
@@ -1135,7 +1134,6 @@ static UniValue getblock(const JSONRPCRequest& request)
                                     {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
                                 }},
                             }},
-                            {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
                         }},
                 },
                 RPCExamples{

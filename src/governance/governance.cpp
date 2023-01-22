@@ -105,7 +105,6 @@ void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, 
         vRecv >> nProp;
 
         vRecv >> filter;
-        filter.UpdateEmptyFull();
 
         if (nProp == uint256()) {
             SyncObjects(peer, connman);
@@ -909,7 +908,6 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
     CBloomFilter filter;
-    filter.clear();
 
     size_t nVoteCount = 0;
     if (fUseFilter) {

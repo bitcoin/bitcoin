@@ -25,7 +25,7 @@ FUZZ_TARGET(bloom_filter)
         fuzzed_data_provider.ConsumeIntegral<unsigned int>(),
         static_cast<unsigned char>(fuzzed_data_provider.PickValueInArray({BLOOM_UPDATE_NONE, BLOOM_UPDATE_ALL, BLOOM_UPDATE_P2PUBKEY_ONLY, BLOOM_UPDATE_MASK}))};
     while (fuzzed_data_provider.remaining_bytes() > 0) {
-        switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 6)) {
+        switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 3)) {
         case 0: {
             const std::vector<unsigned char> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
             (void)bloom_filter.contains(b);
@@ -56,13 +56,7 @@ FUZZ_TARGET(bloom_filter)
             assert(present);
             break;
         }
-        case 3:
-            bloom_filter.clear();
-            break;
-        case 4:
-            bloom_filter.reset(fuzzed_data_provider.ConsumeIntegral<unsigned int>());
-            break;
-        case 5: {
+        case 3: {
             const std::optional<CMutableTransaction> mut_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
             if (!mut_tx) {
                 break;
@@ -71,9 +65,6 @@ FUZZ_TARGET(bloom_filter)
             (void)bloom_filter.IsRelevantAndUpdate(tx);
             break;
         }
-        case 6:
-            bloom_filter.UpdateEmptyFull();
-            break;
         }
         (void)bloom_filter.IsWithinSizeConstraints();
     }
