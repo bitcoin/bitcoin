@@ -286,6 +286,7 @@ $(host_prefix)/share/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_
             -e 's|@no_upnp@|$(NO_UPNP)|' \
             -e 's|@no_natpmp@|$(NO_NATPMP)|' \
             -e 's|@no_usdt@|$(NO_USDT)|' \
+            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             $< > $@
 	touch $@
 

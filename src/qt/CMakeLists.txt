@@ -191,6 +191,19 @@ target_link_libraries(bitcoin-qt
 )
 set(installable_targets bitcoin-qt)
 
+if(MULTIPROCESS)
+  add_executable(bitcoin-gui
+    main.cpp
+    ../init/bitcoin-gui.cpp
+  )
+  target_link_libraries(bitcoin-gui
+    bitcoinqt
+    bitcoin_node
+    bitcoin_ipc
+  )
+  list(APPEND installable_targets bitcoin-gui)
+endif()
+
 install(TARGETS ${installable_targets}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT GUI
