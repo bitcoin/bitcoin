@@ -392,11 +392,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         enough transactions off of each root UTXO to exceed the MAX_REPLACEMENT_LIMIT.
         Then create a conflicting RBF replacement transaction.
         """
-        normal_node = self.nodes[1]
-        wallet = MiniWallet(normal_node)
         # Clear mempools to avoid cross-node sync failure.
         for node in self.nodes:
             self.generate(node, 1)
+        normal_node = self.nodes[1]
+        wallet = MiniWallet(normal_node)
 
         # This has to be chosen so that the total number of transactions can exceed
         # MAX_REPLACEMENT_LIMIT without having any one tx graph run into the descendant
