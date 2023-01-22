@@ -33,7 +33,8 @@ Type SanitizeType(Type e) {
     return e;
 }
 
-Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys) {
+Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k,
+                 size_t data_size, size_t n_subs, size_t n_keys, MiniscriptContext ms_ctx) {
     // Sanity check on data
     if (fragment == Fragment::SHA256 || fragment == Fragment::HASH256) {
         assert(data_size == 32);
@@ -116,7 +117,8 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             "e"_mst.If(x << "f"_mst) | // e=f_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
             (x & "ms"_mst) | // m=m_x, s=s_x
-            // NOTE: 'd:' is not 'u' under P2WSH as MINIMALIF is only a policy rule there.
+            // NOTE: 'd:' is 'u' under Tapscript but not P2WSH as MINIMALIF is only a policy rule there.
+            "u"_mst.If(IsTapscript(ms_ctx)) |
             "ndx"_mst; // n, d, x
         case Fragment::WRAP_V: return
             "V"_mst.If(x << "B"_mst) | // V=B_x

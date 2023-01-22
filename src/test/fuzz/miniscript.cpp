@@ -580,7 +580,7 @@ struct SmartInfo
                             if (subs > 0) subt.push_back(x);
                             if (subs > 1) subt.push_back(y);
                             if (subs > 2) subt.push_back(z);
-                            Type res = miniscript::internal::ComputeType(frag, x, y, z, subt, k, data_size, subs, n_keys);
+                            Type res = miniscript::internal::ComputeType(frag, x, y, z, subt, k, data_size, subs, n_keys, MsCtx::P2WSH);
                             // Continue if the result is not a valid node.
                             if ((res << "K"_mst) + (res << "V"_mst) + (res << "B"_mst) + (res << "W"_mst) != 1) continue;
 
