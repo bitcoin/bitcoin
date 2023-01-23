@@ -47,7 +47,8 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
     std::unique_ptr<DatabaseBatch> batch = db.MakeBatch();
 
     bool ret = true;
-    if (!batch->StartCursor()) {
+    std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
+    if (!cursor) {
         error = _("Error: Couldn't create cursor into database");
         ret = false;
     }
@@ -68,13 +69,13 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
         while (true) {
             CDataStream ss_key(SER_DISK, CLIENT_VERSION);
             CDataStream ss_value(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            ret = batch->ReadAtCursor(ss_key, ss_value, complete);
-            if (complete) {
+            DatabaseCursor::Status status = cursor->Next(ss_key, ss_value);
+            if (status == DatabaseCursor::Status::DONE) {
                 ret = true;
                 break;
-            } else if (!ret) {
+            } else if (status == DatabaseCursor::Status::FAIL) {
                 error = _("Error reading next record from wallet database");
+                ret = false;
                 break;
             }
             std::string key_str = HexStr(ss_key);
@@ -85,7 +86,7 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
         }
     }
 
-    batch->CloseCursor();
+    cursor.reset();
     batch.reset();
 
     // Close the wallet after we're done with it. The caller won't be doing this

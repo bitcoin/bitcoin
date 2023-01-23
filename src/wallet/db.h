@@ -22,6 +22,25 @@ struct bilingual_str;
 namespace wallet {
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
+class DatabaseCursor
+{
+public:
+    explicit DatabaseCursor() {}
+    virtual ~DatabaseCursor() {}
+
+    DatabaseCursor(const DatabaseCursor&) = delete;
+    DatabaseCursor& operator=(const DatabaseCursor&) = delete;
+
+    enum class Status
+    {
+        FAIL,
+        MORE,
+        DONE,
+    };
+
+    virtual Status Next(CDataStream& key, CDataStream& value) { return Status::FAIL; }
+};
+
 /** RAII class that provides access to a WalletDatabase */
 class DatabaseBatch
 {
@@ -92,9 +111,7 @@ public:
         return HasKey(std::move(ssKey));
     }
 
-    virtual bool StartCursor() = 0;
-    virtual bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) = 0;
-    virtual void CloseCursor() = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
@@ -156,6 +173,11 @@ public:
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
 };
 
+class DummyCursor : public DatabaseCursor
+{
+    Status Next(CDataStream& key, CDataStream& value) override { return Status::FAIL; }
+};
+
 /** RAII class that provides access to a DummyDatabase. Never fails. */
 class DummyBatch : public DatabaseBatch
 {
@@ -169,9 +191,7 @@ public:
     void Flush() override {}
     void Close() override {}
 
-    bool StartCursor() override { return true; }
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override { return true; }
-    void CloseCursor() override {}
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<DummyCursor>(); }
     bool TxnBegin() override { return true; }
     bool TxnCommit() override { return true; }
     bool TxnAbort() override { return true; }

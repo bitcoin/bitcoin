@@ -3775,26 +3775,27 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
 
     // Get all of the records for DB type migration
     std::unique_ptr<DatabaseBatch> batch = m_database->MakeBatch();
+    std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
     std::vector<std::pair<SerializeData, SerializeData>> records;
-    if (!batch->StartCursor()) {
+    if (!cursor) {
         error = _("Error: Unable to begin reading all records in the database");
         return false;
     }
-    bool complete = false;
+    DatabaseCursor::Status status = DatabaseCursor::Status::FAIL;
     while (true) {
         CDataStream ss_key(SER_DISK, CLIENT_VERSION);
         CDataStream ss_value(SER_DISK, CLIENT_VERSION);
-        bool ret = batch->ReadAtCursor(ss_key, ss_value, complete);
-        if (!ret) {
+        status = cursor->Next(ss_key, ss_value);
+        if (status != DatabaseCursor::Status::MORE) {
             break;
         }
         SerializeData key(ss_key.begin(), ss_key.end());
         SerializeData value(ss_value.begin(), ss_value.end());
         records.emplace_back(key, value);
     }
-    batch->CloseCursor();
+    cursor.reset();
     batch.reset();
-    if (!complete) {
+    if (status != DatabaseCursor::Status::DONE) {
         error = _("Error: Unable to read all records in the database");
         return false;
     }
