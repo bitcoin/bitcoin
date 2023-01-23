@@ -6,6 +6,11 @@
 #include <logging.h>
 #include <test/util/setup_common.h>
 
+// All but 2 of the benchmarks should have roughly similar performance:
+//
+// LogPrintWithoutCategory should be ~3 orders of magnitude faster, as nothing is logged.
+//
+// LogWithoutWriteToFile should be ~2 orders of magnitude faster, as it avoids disk writes.
 
 static void Logging(benchmark::Bench& bench, const std::vector<const char*>& extra_args, const std::function<void()>& log)
 {
@@ -68,6 +73,7 @@ static void LogPrintfWithoutThreadNames(benchmark::Bench& bench)
 
 static void LogWithoutWriteToFile(benchmark::Bench& bench)
 {
+    // Disable writing the log to a file, as used for unit tests and fuzzing in `MakeNoLogFileContext`.
     Logging(bench, {"-nodebuglogfile", "-debug=1"}, [] {
         LogPrintf("%s\n", "test");
         LogPrint(BCLog::NET, "%s\n", "test");
