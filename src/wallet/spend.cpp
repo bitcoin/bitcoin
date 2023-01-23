@@ -117,8 +117,9 @@ static std::optional<int64_t> GetSignedTxinWeight(const CWallet* wallet, const C
                                                   const bool can_grind_r)
 {
     // If weight was provided, use that.
-    if (coin_control && coin_control->HasInputWeight(txin.prevout)) {
-        return coin_control->GetInputWeight(txin.prevout);
+    std::optional<int64_t> weight;
+    if (coin_control && (weight = coin_control->GetInputWeight(txin.prevout))) {
+        return weight.value();
     }
 
     // Otherwise, use the maximum satisfaction size provided by the descriptor.
@@ -261,7 +262,10 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
     const bool can_grind_r = wallet.CanGrindR();
     std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
     for (const COutPoint& outpoint : coin_control.ListSelected()) {
-        int input_bytes = -1;
+        int64_t input_bytes = coin_control.GetInputWeight(outpoint).value_or(-1);
+        if (input_bytes != -1) {
+            input_bytes = GetVirtualTransactionSize(input_bytes, 0, 0);
+        }
         CTxOut txout;
         if (auto ptr_wtx = wallet.GetWalletTx(outpoint.hash)) {
             // Clearly invalid input, fail
@@ -269,7 +273,9 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
                 return util::Error{strprintf(_("Invalid pre-selected input %s"), outpoint.ToString())};
             }
             txout = ptr_wtx->tx->vout.at(outpoint.n);
-            input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
+            if (input_bytes == -1) {
+                input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
+            }
         } else {
             // The input is external. We did not find the tx in mapWallet.
             const auto out{coin_control.GetExternalOutput(outpoint)};
@@ -282,11 +288,6 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 
         if (input_bytes == -1) {
             input_bytes = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, can_grind_r, &coin_control);
-        }
-
-        // If available, override calculated size with coin control specified size
-        if (coin_control.HasInputWeight(outpoint)) {
-            input_bytes = GetVirtualTransactionSize(coin_control.GetInputWeight(outpoint), 0, 0);
         }
 
         if (input_bytes == -1) {
