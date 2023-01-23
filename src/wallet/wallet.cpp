@@ -271,6 +271,14 @@ public:
         // fast rescanning via block filters is only supported by descriptor wallets right now
         assert(!m_wallet.IsLegacy());
 
+        if (m_wallet.chain().hasWalletFilterIndex()) {
+            std::optional<GCSFilter::Params> params = m_wallet.chain().getWalletFilterParams();
+            if (params.has_value()) {
+                LogPrintf("Using wallet filter.\n");
+                m_query_set = std::make_unique<GCSFilter::QuerySet>(params.value());
+            }
+        }
+
         // create initial filter with scripts from all ScriptPubKeyMans
         for (auto spkm : m_wallet.GetAllScriptPubKeyMans()) {
             auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
@@ -299,7 +307,11 @@ public:
 
     std::optional<bool> MatchesBlock(const uint256& block_hash) const
     {
-        return m_wallet.chain().blockFilterMatchesAny(BlockFilterType::BASIC, block_hash, m_filter_set);
+        if (m_query_set != nullptr) {
+            return m_wallet.chain().walletFilterMatchesAny(block_hash, *m_query_set);
+        } else {
+            return m_wallet.chain().blockFilterMatchesAny(BlockFilterType::BASIC, block_hash, m_filter_set);
+        }
     }
 
 private:
@@ -312,11 +324,20 @@ private:
       */
     std::map<uint256, int32_t> m_last_range_ends;
     GCSFilter::ElementSet m_filter_set;
+    std::unique_ptr<GCSFilter::QuerySet> m_query_set;
 
     void AddScriptPubKeys(const DescriptorScriptPubKeyMan* desc_spkm, int32_t last_range_end = 0)
     {
         for (const auto& script_pub_key : desc_spkm->GetScriptPubKeys(last_range_end)) {
-            m_filter_set.emplace(script_pub_key.begin(), script_pub_key.end());
+            if (m_query_set != nullptr) {
+                GCSFilter::Element element(script_pub_key.begin(), script_pub_key.end());
+                m_query_set->insert(element);
+            } else {
+                m_filter_set.emplace(script_pub_key.begin(), script_pub_key.end());
+            }
+        }
+        if (m_query_set != nullptr) {
+            m_query_set->sort();
         }
     }
 };
@@ -1813,7 +1834,9 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     ScanResult result;
 
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
-    if (!IsLegacy() && chain().hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
+    if (!IsLegacy() && (chain().hasBlockFilterIndex(BlockFilterType::BASIC) || chain().hasWalletFilterIndex())) {
+        fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
+    }
 
     WalletLogPrintf("Rescan started from block %s... (%s)\n", start_block.ToString(),
                     fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
