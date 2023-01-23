@@ -384,7 +384,16 @@ def update_updatable_copyright(filename):
                               "Copyright updated! -> %s" % last_git_change_year)
 
 def exec_update_header_year(base_directory):
+    url_before = "http://www.opensource.org/licenses/mit-license.php"
+    url_after = "https://opensource.org/licenses/MIT"
     for filename in get_filenames_to_examine(base_directory):
+        # Update URL
+        file_lines = read_file_lines(filename)
+        for i in range(len(file_lines)):
+            if url_before in file_lines[i]:
+                file_lines[i] = file_lines[i].replace(url_before, url_after)
+        write_file_lines(filename, file_lines)
+
         update_updatable_copyright(filename)
 
 ################################################################################
@@ -444,7 +453,7 @@ def get_header_lines(header, start_year, end_year):
 CPP_HEADER = '''
 // Copyright (c) %s The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/MIT.
 '''
 
 def get_cpp_header_lines_to_insert(start_year, end_year):
@@ -453,7 +462,7 @@ def get_cpp_header_lines_to_insert(start_year, end_year):
 SCRIPT_HEADER = '''
 # Copyright (c) %s The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/MIT.
 '''
 
 def get_script_header_lines_to_insert(start_year, end_year):
