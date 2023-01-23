@@ -72,15 +72,10 @@ void CCoinControl::SetInputWeight(const COutPoint& outpoint, int64_t weight)
     m_selected[outpoint].SetInputWeight(weight);
 }
 
-bool CCoinControl::HasInputWeight(const COutPoint& outpoint) const
+std::optional<int64_t> CCoinControl::GetInputWeight(const COutPoint& outpoint) const
 {
     const auto it = m_selected.find(outpoint);
-    return it != m_selected.end() && it->second.HasInputWeight();
-}
-
-int64_t CCoinControl::GetInputWeight(const COutPoint& outpoint) const
-{
-    return m_selected.at(outpoint).GetInputWeight();
+    return it != m_selected.end() ? it->second.GetInputWeight() : std::nullopt;
 }
 
 void PreselectedInput::SetTxOut(const CTxOut& txout)
@@ -104,14 +99,8 @@ void PreselectedInput::SetInputWeight(int64_t weight)
     m_weight = weight;
 }
 
-int64_t PreselectedInput::GetInputWeight() const
+std::optional<int64_t> PreselectedInput::GetInputWeight() const
 {
-    assert(m_weight.has_value());
-    return m_weight.value();
-}
-
-bool PreselectedInput::HasInputWeight() const
-{
-    return m_weight.has_value();
+    return m_weight;
 }
 } // namespace wallet
