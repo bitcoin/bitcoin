@@ -190,6 +190,15 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
     return MatchInternal(queries.data(), queries.size());
 }
 
+bool GCSFilter::MatchAny(const QuerySet& query_set) const
+{
+    assert(query_set.m_params.m_siphash_k0 == m_params.m_siphash_k0);
+    assert(query_set.m_params.m_siphash_k1 == m_params.m_siphash_k1);
+
+    const std::vector<uint64_t> queries = query_set.sorted_and_ranged(m_F);
+    return MatchInternal(queries.data(), queries.size());
+}
+
 const std::string& BlockFilterTypeName(BlockFilterType filter_type)
 {
     static std::string unknown_retval;
