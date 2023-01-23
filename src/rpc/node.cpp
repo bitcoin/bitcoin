@@ -240,11 +240,11 @@ static RPCHelpMan logging()
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
-                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to add to debug logging",
+                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to debug logging",
                         {
                             {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
-                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to remove from debug logging",
+                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to remove from debug logging",
                         {
                             {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
@@ -294,16 +294,16 @@ static RPCHelpMan echo(const std::string& name)
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
         {
-            {"arg0", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg1", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg2", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg3", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg4", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg5", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg6", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg7", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg8", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
-            {"arg9", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg0", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg1", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg2", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg3", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg4", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg5", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg6", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg7", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg8", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
+            {"arg9", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.skip_type_check = true}},
         },
                 RPCResult{RPCResult::Type::ANY, "", "Returns whatever was passed in"},
                 RPCExamples{""},
@@ -376,7 +376,7 @@ static RPCHelpMan getindexinfo()
     return RPCHelpMan{"getindexinfo",
                 "\nReturns the status of one or all available indices currently running in the node.\n",
                 {
-                    {"index_name", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Filter results for an index with a specific name."},
+                    {"index_name", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter results for an index with a specific name."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ_DYN, "", "", {

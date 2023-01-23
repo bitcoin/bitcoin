@@ -230,7 +230,7 @@ static RPCHelpMan deriveaddresses()
          "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
-            {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
+            {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
         },
         RPCResult{
             RPCResult::Type::ARR, "", "",
