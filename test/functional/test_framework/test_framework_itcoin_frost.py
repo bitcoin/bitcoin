@@ -51,9 +51,11 @@ class BaseFrostTest(BaseItcoinTest):
             priv_key = ECKey()
             priv_key.set(aggregate_share_bytes, True)
             pub_key = priv_key.get_pubkey()
-            # Note that private keys for compressed and uncompressed bitcoin public keys use the same version byte (239). 
-            # The reason for the compressed form starting with a different character ('c' instead of '9') is because a 
-            # 0x01 byte is appended to the private key before base58 encoding.
+            # Note that private keys for compressed and uncompressed bitcoin
+            # public keys use the same version byte (239).
+            # The reason for the compressed form starting with a different
+            # character ('c' instead of '9') is because a 0x01 byte is appended
+            # to the private key before base58 encoding.
             priv_key_b58 = byte_to_base58(bytes(priv_key.get_bytes() + b"\x01"), 239)
             address = key_to_p2pkh(pub_key.get_bytes().hex())
             keypairs.append(TestNode.AddressKeyPair(address, priv_key_b58))
@@ -67,10 +69,13 @@ class BaseFrostTest(BaseItcoinTest):
                 public_key = public_key + p.coefficient_commitments[0]
 
             # 2. Tweak the public key
-            # As per BIP-341 If the spending conditions do not require a script path, the output key should commit to an unspendable
-            # script path instead of having no script path. This can be achieved by computing the output key point as
-            # Q = Y + int(hash_{TapTweak}(bytes(Y)))G
-            # where hash_{TapTweak}(bytes(Y)) = sha256(sha256("TapTweak") + sha256("TapTweak") + data)
+            # As per BIP-341 If the spending conditions do not require a script
+            # path, the output key should commit to an unspendable script path
+            # instead of having no script path. This can be achieved by
+            # computing the output key point as
+            #     Q = Y + int(hash_{TapTweak}(bytes(Y)))G
+            # where
+            #     hash_{TapTweak}(bytes(Y)) = sha256(sha256("TapTweak") + sha256("TapTweak") + data)
             tweak_bytes = TaggedHash(self.TAPTWEAK_CONTEXT, public_key.x.to_bytes(32, byteorder='big'))
             for participant in self.participants:
                 public_key = participant.derive_public_key([p.coefficient_commitments[0] for p in self.participants if p.index != participant.index], tweak_bytes)
@@ -92,7 +97,8 @@ class BaseFrostTest(BaseItcoinTest):
     def setup_nodes(self):
         """Set up nodes."""
         super().setup_nodes()
-        # Set an address corresponding to the (tweaked or not) public key to nodes (to mine blocks)
+        # Set an address corresponding to the (tweaked or not) public key to
+        # nodes (to mine blocks)
         address = key_to_p2pkh(self.participants[0].public_key.sec_serialize().hex())
         for i in range(self.signet_num_signers):
             self.node(i).args.address = address
@@ -122,8 +128,11 @@ class BaseFrostTest(BaseItcoinTest):
         signet_solution = b"\x00" + ser_string_vector([signme_signed.vin[0].scriptSig])
 
         # Append the signet solution
-        # We remove the last 5 bytes, in order to remove the previously appended SIGNET_HEADER
-        # We append SIGNET_HEADER and signet_solution again as a single pushdata operation
+        #
+        # - we remove the last 5 bytes, in order to remove the previously
+        #   appended SIGNET_HEADER;
+        # - we append SIGNET_HEADER and signet_solution again as a single
+        #   pushdata operation.
         block.vtx[0].vout[-1].scriptPubKey = block.vtx[0].vout[-1].scriptPubKey[:-5] + CScriptOp.encode_op_pushdata(miner.SIGNET_HEADER + signet_solution)
         block.vtx[0].rehash()
 
