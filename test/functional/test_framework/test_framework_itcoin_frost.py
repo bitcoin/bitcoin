@@ -44,24 +44,6 @@ class BaseFrostTest(BaseItcoinTest):
         for p in self.participants:
             p.aggregate_shares([participant.shares[p.index-1] for participant in self.participants if participant.index != p.index])
 
-        # We need to set the key pairs
-        keypairs = []
-        for p in self.participants:
-            aggregate_share_bytes = p.aggregate_share.to_bytes(32, byteorder='big')
-            priv_key = ECKey()
-            priv_key.set(aggregate_share_bytes, True)
-            pub_key = priv_key.get_pubkey()
-            # Note that private keys for compressed and uncompressed bitcoin
-            # public keys use the same version byte (239).
-            # The reason for the compressed form starting with a different
-            # character ('c' instead of '9') is because a 0x01 byte is appended
-            # to the private key before base58 encoding.
-            priv_key_b58 = byte_to_base58(bytes(priv_key.get_bytes() + b"\x01"), 239)
-            address = key_to_p2pkh(pub_key.get_bytes().hex())
-            keypairs.append(TestNode.AddressKeyPair(address, priv_key_b58))
-        TestNode.PRIV_KEYS[:self.signet_num_signers] = keypairs
-        self._key_pairs = keypairs
-
         if (tweak_public_key):
             # 1. Derive pubkey without tweak, Y = ∏ 𝜙_j_0, 1 ≤ j ≤ n
             public_key = FROST.Point()
@@ -91,6 +73,24 @@ class BaseFrostTest(BaseItcoinTest):
         if set_signet_challenge_as_extra_arg:
             arg_signetchallenge = f"-signetchallenge={self.signet_challenge}"
             self.extra_args = [[arg_signetchallenge]] * self.num_nodes
+
+        # We need to set the key pairs
+        keypairs = []
+        for p in self.participants:
+            aggregate_share_bytes = p.aggregate_share.to_bytes(32, byteorder='big')
+            priv_key = ECKey()
+            priv_key.set(aggregate_share_bytes, True)
+            pub_key = priv_key.get_pubkey()
+            # Note that private keys for compressed and uncompressed bitcoin
+            # public keys use the same version byte (239).
+            # The reason for the compressed form starting with a different
+            # character ('c' instead of '9') is because a 0x01 byte is appended
+            # to the private key before base58 encoding.
+            priv_key_b58 = byte_to_base58(bytes(priv_key.get_bytes() + b"\x01"), 239)
+            address = key_to_p2pkh(pub_key.get_bytes().hex())
+            keypairs.append(TestNode.AddressKeyPair(address, priv_key_b58))
+        TestNode.PRIV_KEYS[:self.signet_num_signers] = keypairs
+        self._key_pairs = keypairs
 
     def setup_nodes(self):
         """Set up nodes."""
