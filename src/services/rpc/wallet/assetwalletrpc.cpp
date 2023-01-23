@@ -410,8 +410,8 @@ static RPCHelpMan getauxblock()
                 "required to merge-mine it.  With arguments, submits a solved\n"
                 "auxpow for a previously returned block.\n",
                 {
-                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "Hash of the block to submit"},
-                    {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "Serialised auxpow found"},
+                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Hash of the block to submit"},
+                    {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Serialised auxpow found"},
                 },
                 {
                     RPCResult{"without arguments",
