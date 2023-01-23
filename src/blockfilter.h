@@ -40,6 +40,19 @@ public:
         {}
     };
 
+    class QuerySet
+    {
+    private:
+        std::vector<uint64_t> m_hashed_elements;
+    public:
+        Params m_params;
+        QuerySet(const Params& params) : m_params(params) {};
+        QuerySet(const Params& params, const ElementSet& elements);
+        void insert(const Element& element);
+        void sort();
+        std::vector<uint64_t> sorted_and_ranged(const uint64_t& F) const;
+    };
+
 private:
     Params m_params;
     uint32_t m_N;  //!< Number of elements in the filter

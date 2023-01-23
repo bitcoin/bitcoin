@@ -24,6 +24,35 @@ static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
 };
 
+GCSFilter::QuerySet::QuerySet(const Params& params, const ElementSet& elements)
+    : m_params(params)
+{
+    for (const Element& element : elements)
+        insert(element);
+    sort();
+}
+
+void GCSFilter::QuerySet::insert(const Element& element)
+{
+    uint64_t hashed_element = HashElement(element, m_params.m_siphash_k0, m_params.m_siphash_k1);
+    m_hashed_elements.push_back(hashed_element);
+}
+
+void GCSFilter::QuerySet::sort()
+{
+    std::sort(m_hashed_elements.begin(), m_hashed_elements.end());
+}
+
+std::vector<uint64_t> GCSFilter::QuerySet::sorted_and_ranged(const uint64_t& F) const
+{
+    std::vector<uint64_t> ranged_elements;
+    ranged_elements.reserve(m_hashed_elements.size());
+    for (const uint64_t& hashed_element : m_hashed_elements) {
+        ranged_elements.push_back(RangeHashedElement(hashed_element, F));
+    }
+    return ranged_elements;
+}
+
 uint64_t GCSFilter::HashElement(const Element& element) const
 {
     return HashElement(element, m_params.m_siphash_k0, m_params.m_siphash_k1);
