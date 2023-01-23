@@ -46,8 +46,12 @@ private:
     uint64_t m_F;  //!< Range of element hashes, F = N * M
     std::vector<unsigned char> m_encoded;
 
-    /** Hash a data element to an integer in the range [0, N * M). */
-    uint64_t HashToRange(const Element& element) const;
+    /** Hash a data element using stored siphash keys. */
+    uint64_t HashElement(const Element& element) const;
+    static uint64_t HashElement(const Element& element, const uint64_t& siphash_k0, const uint64_t& siphash_k1);
+    /** Return an integer in the range [0, N * M) */
+    uint64_t RangeHashedElement(const uint64_t& hashed_element) const;
+    static uint64_t RangeHashedElement(const uint64_t& hashed_element, const uint64_t& F);
 
     std::vector<uint64_t> BuildHashedSet(const ElementSet& elements) const;
 

@@ -24,12 +24,26 @@ static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
 };
 
-uint64_t GCSFilter::HashToRange(const Element& element) const
+uint64_t GCSFilter::HashElement(const Element& element) const
 {
-    uint64_t hash = CSipHasher(m_params.m_siphash_k0, m_params.m_siphash_k1)
+    return HashElement(element, m_params.m_siphash_k0, m_params.m_siphash_k1);
+}
+
+uint64_t GCSFilter::HashElement(const Element& element, const uint64_t& siphash_k0, const uint64_t& siphash_k1)
+{
+    return CSipHasher(siphash_k0, siphash_k1)
         .Write(element.data(), element.size())
         .Finalize();
-    return FastRange64(hash, m_F);
+}
+
+uint64_t GCSFilter::RangeHashedElement(const uint64_t& hashed_element) const
+{
+    return RangeHashedElement(hashed_element, m_F);
+}
+
+uint64_t GCSFilter::RangeHashedElement(const uint64_t& hashed_element, const uint64_t& F)
+{
+    return FastRange64(hashed_element, F);
 }
 
 std::vector<uint64_t> GCSFilter::BuildHashedSet(const ElementSet& elements) const
@@ -37,7 +51,8 @@ std::vector<uint64_t> GCSFilter::BuildHashedSet(const ElementSet& elements) cons
     std::vector<uint64_t> hashed_elements;
     hashed_elements.reserve(elements.size());
     for (const Element& element : elements) {
-        hashed_elements.push_back(HashToRange(element));
+        uint64_t hashed_element = HashElement(element);
+        hashed_elements.push_back(RangeHashedElement(hashed_element));
     }
     std::sort(hashed_elements.begin(), hashed_elements.end());
     return hashed_elements;
@@ -93,7 +108,7 @@ GCSFilter::GCSFilter(const Params& params, const ElementSet& elements)
     BitStreamWriter<CVectorWriter> bitwriter(stream);
 
     uint64_t last_value = 0;
-    for (uint64_t value : BuildHashedSet(elements)) {
+    for (const uint64_t& value : BuildHashedSet(elements)) {
         uint64_t delta = value - last_value;
         GolombRiceEncode(bitwriter, m_params.m_P, delta);
         last_value = value;
@@ -136,7 +151,7 @@ bool GCSFilter::MatchInternal(const uint64_t* element_hashes, size_t size) const
 
 bool GCSFilter::Match(const Element& element) const
 {
-    uint64_t query = HashToRange(element);
+    uint64_t query = RangeHashedElement(HashElement(element));
     return MatchInternal(&query, 1);
 }
 
