@@ -46,6 +46,8 @@ public:
 
     /** Get a single filter by block. */
     bool LookupFilter(const CBlockIndex* block_index, GCSFilter& filter_out) const;
+
+    const GCSFilter::Params& GetParams() const { return m_params; };
 };
 
 /// The global wallet filter index. May be null.

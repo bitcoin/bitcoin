@@ -10,6 +10,7 @@
 #include <deploymentstatus.h>
 #include <external_signer.h>
 #include <index/blockfilterindex.h>
+#include <index/walletfilterindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
@@ -552,6 +553,24 @@ public:
         const CBlockIndex* index{WITH_LOCK(::cs_main, return chainman().m_blockman.LookupBlockIndex(block_hash))};
         if (index == nullptr || !block_filter_index->LookupFilter(index, filter)) return std::nullopt;
         return filter.GetFilter().MatchAny(filter_set);
+    }
+    bool hasWalletFilterIndex() override
+    {
+        return g_wallet_filter_index != nullptr;
+    }
+    std::optional<GCSFilter::Params> getWalletFilterParams() override
+    {
+        if (!g_wallet_filter_index) return std::nullopt;
+        return g_wallet_filter_index->GetParams();
+    }
+    std::optional<bool> walletFilterMatchesAny(const uint256& block_hash, const GCSFilter::QuerySet& query_set) override
+    {
+        if (!g_wallet_filter_index) return std::nullopt;
+
+        GCSFilter filter;
+        const CBlockIndex* index{WITH_LOCK(::cs_main, return chainman().m_blockman.LookupBlockIndex(block_hash))};
+        if (index == nullptr || !g_wallet_filter_index->LookupFilter(index, filter)) return std::nullopt;
+        return filter.MatchAny(query_set);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
