@@ -1148,16 +1148,16 @@ public:
         return true;
     }
 
-    /** Return the maximum number of stack elements needed to satisfy this script non-malleably, including
-     * the script push. */
+    /** Return the maximum number of stack elements needed to satisfy this script non-malleably.
+     * This does not account for the P2WSH script push. */
     std::optional<uint32_t> GetStackSize() const {
         if (!ss.sat.valid) return {};
-        return ss.sat.value + 1;
+        return ss.sat.value;
     }
 
     //! Check the maximum stack size for this script against the policy limit.
     bool CheckStackSize() const {
-        if (const auto ss = GetStackSize()) return *ss - 1 <= MAX_STANDARD_P2WSH_STACK_ITEMS;
+        if (const auto ss = GetStackSize()) return *ss <= MAX_STANDARD_P2WSH_STACK_ITEMS;
         return true;
     }
 

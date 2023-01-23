@@ -973,7 +973,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
 
     if (nonmal_success) {
         // Non-malleable satisfactions are bounded by GetStackSize().
-        assert(witness_nonmal.stack.size() <= *node->GetStackSize());
+        assert(witness_nonmal.stack.size() <= *node->GetStackSize() + 1);
         // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
         assert(mal_success);
         assert(witness_nonmal.stack == witness_mal.stack);
