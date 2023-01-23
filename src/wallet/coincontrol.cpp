@@ -58,9 +58,9 @@ void CCoinControl::UnSelectAll()
     m_selected_inputs.clear();
 }
 
-void CCoinControl::ListSelected(std::vector<COutPoint>& vOutpoints) const
+std::vector<COutPoint> CCoinControl::ListSelected() const
 {
-    vOutpoints.assign(m_selected_inputs.begin(), m_selected_inputs.end());
+    return {m_selected_inputs.begin(), m_selected_inputs.end()};
 }
 
 void CCoinControl::SetInputWeight(const COutPoint& outpoint, int64_t weight)

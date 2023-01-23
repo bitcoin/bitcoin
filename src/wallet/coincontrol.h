@@ -100,7 +100,7 @@ public:
     /**
      * List the selected inputs.
      */
-    void ListSelected(std::vector<COutPoint>& vOutpoints) const;
+    std::vector<COutPoint> ListSelected() const;
     /**
      * Set an input's weight.
      */

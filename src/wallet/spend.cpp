@@ -159,10 +159,8 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
                                             const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     PreSelectedInputs result;
-    std::vector<COutPoint> vPresetInputs;
-    coin_control.ListSelected(vPresetInputs);
     const bool can_grind_r = wallet.CanGrindR();
-    for (const COutPoint& outpoint : vPresetInputs) {
+    for (const COutPoint& outpoint : coin_control.ListSelected()) {
         int input_bytes = -1;
         CTxOut txout;
         if (auto ptr_wtx = wallet.GetWalletTx(outpoint.hash)) {
