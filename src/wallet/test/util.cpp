@@ -50,7 +50,7 @@ std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, 
 
     // Get a cursor to the original database
     auto batch = database.MakeBatch();
-    batch->StartCursor();
+    std::unique_ptr<wallet::DatabaseCursor> cursor = batch->GetNewCursor();
 
     // Get a batch for the new database
     auto new_batch = new_database->MakeBatch();
@@ -59,9 +59,9 @@ std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, 
     while (true) {
         CDataStream key(SER_DISK, CLIENT_VERSION);
         CDataStream value(SER_DISK, CLIENT_VERSION);
-        bool complete;
-        batch->ReadAtCursor(key, value, complete);
-        if (complete) break;
+        DatabaseCursor::Status status = cursor->Next(key, value);
+        assert(status != DatabaseCursor::Status::FAIL);
+        if (status == DatabaseCursor::Status::DONE) break;
         new_batch->Write(key, value);
     }
 

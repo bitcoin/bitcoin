@@ -907,6 +907,12 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
+class FailCursor : public DatabaseCursor
+{
+public:
+    Status Next(CDataStream& key, CDataStream& value) override { return Status::FAIL; }
+};
+
 /** RAII class that provides access to a FailDatabase. Which fails if needed. */
 class FailBatch : public DatabaseBatch
 {
@@ -922,9 +928,7 @@ public:
     void Flush() override {}
     void Close() override {}
 
-    bool StartCursor() override { return true; }
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override { return false; }
-    void CloseCursor() override {}
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<FailCursor>(); }
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }
