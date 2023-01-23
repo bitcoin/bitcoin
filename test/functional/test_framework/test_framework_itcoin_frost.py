@@ -92,8 +92,6 @@ class BaseFrostTest(BaseItcoinTest):
             arg_signetchallenge = f"-signetchallenge={self.signet_challenge}"
             self.extra_args = [[arg_signetchallenge]] * self.num_nodes
 
-        return
-
     def setup_nodes(self):
         """Set up nodes."""
         super().setup_nodes()
