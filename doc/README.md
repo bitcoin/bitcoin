@@ -53,7 +53,6 @@ The Widecoin repo's [root README](/README.md) contains relevant information on t
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)
-- [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
 - [Source Code Documentation (External Link)](https://doxygen.widecoincore.org/)
 - [Translation Process](translation_process.md)
@@ -64,6 +63,7 @@ The Widecoin repo's [root README](/README.md) contains relevant information on t
 - [BIPS](bips.md)
 - [Dnsseed Policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
+- [Internal Design Docs](design/)
 
 ### Resources
 * Discuss on the [WidecoinTalk](https://widecointalk.org/) forums, in the [Development & Technical Discussion board](https://widecointalk.org/index.php?board=6.0).
@@ -71,7 +71,6 @@ The Widecoin repo's [root README](/README.md) contains relevant information on t
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [Assumeutxo design](assumeutxo.md)
 - [widecoin.conf Configuration File](widecoin-conf.md)
 - [CJDNS Support](cjdns.md)
 - [Files](files.md)

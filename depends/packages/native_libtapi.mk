@@ -13,7 +13,5 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  ./install.sh && \
-  mkdir -p $($(package)_staging_prefix_dir)/include/llvm-c && \
-  cp src/llvm/include/llvm-c/lto.h $($(package)_staging_prefix_dir)/include/llvm-c
+  ./install.sh
 endef

@@ -14,7 +14,6 @@
 #ifndef WIDECOIN_BASE58_H
 #define WIDECOIN_BASE58_H
 
-#include <attributes.h>
 #include <span.h>
 
 #include <string>

@@ -33,12 +33,11 @@ public:
     CTxDestination destChange = CNoDestination();
     //! Override the default change type if set, ignored if destChange is set
     std::optional<OutputType> m_change_type;
-    //! If false, only selected inputs are used
-    bool m_add_inputs = true;
     //! If false, only safe inputs will be used
     bool m_include_unsafe_inputs = false;
-    //! If false, allows unselected inputs, but requires all selected inputs be used
-    bool fAllowOtherInputs = false;
+    //! If true, the selection process can add extra unselected inputs from the wallet
+    //! while requires all selected inputs be used
+    bool m_allow_other_inputs = false;
     //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly = false;
     //! Override automatic min/max checks on fee, m_feerate must be set if true

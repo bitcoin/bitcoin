@@ -406,8 +406,8 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
             if (node.isObject()) {
                 auto script_bytes = ParseHex(node["script"].get_str());
                 CScript script(script_bytes.begin(), script_bytes.end());
-                int idx = node["id"].get_int();
-                int leaf_version = node["leafVersion"].get_int();
+                int idx = node["id"].getInt<int>();
+                int leaf_version = node["leafVersion"].getInt<int>();
                 scriptposes[{script, leaf_version}] = idx;
                 spktest.Add(depth, script, leaf_version);
             } else {

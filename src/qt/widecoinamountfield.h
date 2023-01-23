@@ -6,6 +6,7 @@
 #define WIDECOIN_QT_WIDECOINAMOUNTFIELD_H
 
 #include <consensus/amount.h>
+#include <qt/widecoinunits.h>
 
 #include <QWidget>
 
@@ -52,7 +53,7 @@ public:
     bool validate();
 
     /** Change unit used to display amount. */
-    void setDisplayUnit(int unit);
+    void setDisplayUnit(WidecoinUnit new_unit);
 
     /** Make field empty and ready for new input. */
     void clear();

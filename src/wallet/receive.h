@@ -24,17 +24,15 @@ bool OutputIsChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_
 CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx);
 
-CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
+CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 //! filter decides which addresses will count towards the debit
 CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
 CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx);
-CAmount CachedTxGetImmatureCredit(const CWallet& wallet, const CWalletTx& wtx, bool fUseCache = true);
-CAmount CachedTxGetImmatureWatchOnlyCredit(const CWallet& wallet, const CWalletTx& wtx, const bool fUseCache = true);
-// TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-// annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
-// annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
-// having to resolve the issue of member access into incomplete type CWallet.
-CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) NO_THREAD_SAFETY_ANALYSIS;
+CAmount CachedTxGetImmatureCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter = ISMINE_SPENDABLE)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 struct COutputEntry
 {
     CTxDestination destination;
@@ -44,7 +42,8 @@ struct COutputEntry
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                         std::list<COutputEntry>& listReceived,
                         std::list<COutputEntry>& listSent,
-                        CAmount& nFee, const isminefilter& filter);
+                        CAmount& nFee, const isminefilter& filter,
+                        bool include_change);
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx);

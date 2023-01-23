@@ -18,94 +18,75 @@ WidecoinUnits::WidecoinUnits(QObject *parent):
 {
 }
 
-QList<WidecoinUnits::Unit> WidecoinUnits::availableUnits()
+QList<WidecoinUnit> WidecoinUnits::availableUnits()
 {
-    QList<WidecoinUnits::Unit> unitlist;
-    unitlist.append(WCN);
-    unitlist.append(mWCN);
-    unitlist.append(uWCN);
-    unitlist.append(SAT);
+    QList<WidecoinUnit> unitlist;
+    unitlist.append(Unit::WCN);
+    unitlist.append(Unit::mWCN);
+    unitlist.append(Unit::uWCN);
+    unitlist.append(Unit::SAT);
     return unitlist;
 }
 
-bool WidecoinUnits::valid(int unit)
+QString WidecoinUnits::longName(Unit unit)
 {
-    switch(unit)
-    {
-    case WCN:
-    case mWCN:
-    case uWCN:
-    case SAT:
-        return true;
-    default:
-        return false;
-    }
+    switch (unit) {
+    case Unit::WCN: return QString("WCN");
+    case Unit::mWCN: return QString("mWCN");
+    case Unit::uWCN: return QString::fromUtf8("µWCN (bits)");
+    case Unit::SAT: return QString("Satoshi (sat)");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-QString WidecoinUnits::longName(int unit)
+QString WidecoinUnits::shortName(Unit unit)
 {
-    switch(unit)
-    {
-    case WCN: return QString("WCN");
-    case mWCN: return QString("mWCN");
-    case uWCN: return QString::fromUtf8("µWCN (bits)");
-    case SAT: return QString("Satoshi (sat)");
-    default: return QString("???");
-    }
+    switch (unit) {
+    case Unit::WCN: return longName(unit);
+    case Unit::mWCN: return longName(unit);
+    case Unit::uWCN: return QString("bits");
+    case Unit::SAT: return QString("sat");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-QString WidecoinUnits::shortName(int unit)
+QString WidecoinUnits::description(Unit unit)
 {
-    switch(unit)
-    {
-    case uWCN: return QString::fromUtf8("bits");
-    case SAT: return QString("sat");
-    default: return longName(unit);
-    }
+    switch (unit) {
+    case Unit::WCN: return QString("Widecoins");
+    case Unit::mWCN: return QString("mWCN (1 / 1" THIN_SP_UTF8 "000)");
+    case Unit::uWCN: return QString("µWCN (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case Unit::SAT: return QString("sWCN (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-QString WidecoinUnits::description(int unit)
+qint64 WidecoinUnits::factor(Unit unit)
 {
-    switch(unit)
-    {
-    case WCN: return QString("Widecoins");
-    case mWCN: return QString("mWCN (1 / 1" THIN_SP_UTF8 "000)");
-    case uWCN: return QString("µWCN (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case SAT: return QString("sWCN (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    default: return QString("???");
-    }
+    switch (unit) {
+    case Unit::WCN: return 100'000'000;
+    case Unit::mWCN: return 100'000;
+    case Unit::uWCN: return 100;
+    case Unit::SAT: return 1;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-qint64 WidecoinUnits::factor(int unit)
+int WidecoinUnits::decimals(Unit unit)
 {
-    switch(unit)
-    {
-    case WCN: return 100000000;
-    case mWCN: return 100000;
-    case uWCN: return 100;
-    case SAT: return 1;
-    default: return 100000000;
-    }
+    switch (unit) {
+    case Unit::WCN: return 8;
+    case Unit::mWCN: return 5;
+    case Unit::uWCN: return 2;
+    case Unit::SAT: return 0;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-int WidecoinUnits::decimals(int unit)
-{
-    switch(unit)
-    {
-    case WCN: return 8;
-    case mWCN: return 5;
-    case uWCN: return 2;
-    case SAT: return 0;
-    default: return 0;
-    }
-}
-
-QString WidecoinUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
+QString WidecoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    if(!valid(unit))
-        return QString(); // Refuse to format invalid unit
     qint64 n = (qint64)nIn;
     qint64 coin = factor(unit);
     int num_decimals = decimals(unit);
@@ -147,19 +128,19 @@ QString WidecoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separato
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
 
-QString WidecoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString WidecoinUnits::formatWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     return format(unit, amount, plussign, separators) + QString(" ") + shortName(unit);
 }
 
-QString WidecoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString WidecoinUnits::formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     QString str(formatWithUnit(unit, amount, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }
 
-QString WidecoinUnits::formatWithPrivacy(int unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
+QString WidecoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
 {
     assert(amount >= 0);
     QString value;
@@ -171,10 +152,11 @@ QString WidecoinUnits::formatWithPrivacy(int unit, const CAmount& amount, Separa
     return value + QString(" ") + shortName(unit);
 }
 
-bool WidecoinUnits::parse(int unit, const QString &value, CAmount *val_out)
+bool WidecoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
 {
-    if(!valid(unit) || value.isEmpty())
+    if (value.isEmpty()) {
         return false; // Refuse to parse invalid unit or empty string
+    }
     int num_decimals = decimals(unit);
 
     // Ignore spaces and thin spaces when parsing
@@ -210,14 +192,9 @@ bool WidecoinUnits::parse(int unit, const QString &value, CAmount *val_out)
     return ok;
 }
 
-QString WidecoinUnits::getAmountColumnTitle(int unit)
+QString WidecoinUnits::getAmountColumnTitle(Unit unit)
 {
-    QString amountTitle = QObject::tr("Amount");
-    if (WidecoinUnits::valid(unit))
-    {
-        amountTitle += " ("+WidecoinUnits::shortName(unit) + ")";
-    }
-    return amountTitle;
+    return QObject::tr("Amount") + " (" + shortName(unit) + ")";
 }
 
 int WidecoinUnits::rowCount(const QModelIndex &parent) const
@@ -240,7 +217,7 @@ QVariant WidecoinUnits::data(const QModelIndex &index, int role) const
         case Qt::ToolTipRole:
             return QVariant(description(unit));
         case UnitRole:
-            return QVariant(static_cast<int>(unit));
+            return QVariant::fromValue(unit);
         }
     }
     return QVariant();
@@ -249,4 +226,41 @@ QVariant WidecoinUnits::data(const QModelIndex &index, int role) const
 CAmount WidecoinUnits::maxMoney()
 {
     return MAX_MONEY;
+}
+
+namespace {
+qint8 ToQint8(WidecoinUnit unit)
+{
+    switch (unit) {
+    case WidecoinUnit::WCN: return 0;
+    case WidecoinUnit::mWCN: return 1;
+    case WidecoinUnit::uWCN: return 2;
+    case WidecoinUnit::SAT: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+WidecoinUnit FromQint8(qint8 num)
+{
+    switch (num) {
+    case 0: return WidecoinUnit::WCN;
+    case 1: return WidecoinUnit::mWCN;
+    case 2: return WidecoinUnit::uWCN;
+    case 3: return WidecoinUnit::SAT;
+    }
+    assert(false);
+}
+} // namespace
+
+QDataStream& operator<<(QDataStream& out, const WidecoinUnit& unit)
+{
+    return out << ToQint8(unit);
+}
+
+QDataStream& operator>>(QDataStream& in, WidecoinUnit& unit)
+{
+    qint8 input;
+    in >> input;
+    unit = FromQint8(input);
+    return in;
 }

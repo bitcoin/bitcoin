@@ -22,6 +22,7 @@ bench_widecoin/bench_widecoin.vcxproj
 libtest_util/libtest_util.vcxproj
 
 /widecoin_config.h
+/common.init.vcxproj
 
 */Win32
 libwidecoin_qt/QtGeneratedFiles/*

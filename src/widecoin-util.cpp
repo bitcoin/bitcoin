@@ -11,18 +11,18 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <compat/compat.h>
 #include <core_io.h>
 #include <streams.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <version.h>
 
 #include <atomic>
 #include <cstdio>
 #include <functional>
 #include <memory>
 #include <thread>
-
-#include <boost/algorithm/string.hpp>
 
 static const int CONTINUE_EXECUTION=-1;
 
@@ -143,16 +143,7 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
     return EXIT_SUCCESS;
 }
 
-#ifdef WIN32
-// Export main() and ensure working ASLR on Windows.
-// Exporting a symbol will prevent the linker from stripping
-// the .reloc section from the binary, which is a requirement
-// for ASLR. This is a temporary workaround until a fixed
-// version of binutils is used for releases.
-__declspec(dllexport) int main(int argc, char* argv[])
-#else
-int main(int argc, char* argv[])
-#endif
+MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
     SetupEnvironment();

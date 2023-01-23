@@ -18,7 +18,7 @@ def perform_pre_checks():
             sys.exit(int(mock_result[0]))
 
 def enumerate(args):
-    sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}, {"fingerprint": "00000002"}]))
+    sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}]))
 
 def getdescriptors(args):
     xpub = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"

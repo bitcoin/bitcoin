@@ -79,7 +79,7 @@ def to_jsonable(obj: Any) -> Any:
             val = getattr(obj, slot, None)
             if slot in HASH_INTS and isinstance(val, int):
                 ret[slot] = ser_uint256(val).hex()
-            elif slot in HASH_INT_VECTORS and isinstance(val[0], int):
+            elif slot in HASH_INT_VECTORS and all(isinstance(a, int) for a in val):
                 ret[slot] = [ser_uint256(a).hex() for a in val]
             else:
                 ret[slot] = to_jsonable(val)

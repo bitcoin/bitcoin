@@ -129,15 +129,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished">Махфий сузни киритинг</translation>
+        <translation type="unfinished">Махфий сўзни киритинг</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation type="unfinished">Янги махфий суз</translation>
+        <translation type="unfinished">Янги махфий сўз</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished">Янги махфий сузни такрорланг</translation>
+        <translation type="unfinished">Янги махфий сўзни такрорланг</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -145,11 +145,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Ҳамённи қодлаш</translation>
+        <translation type="unfinished">Ҳамённи шифрлаш</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Ушбу операцияни амалга ошириш учун ҳамённи қулфдан чиқариш парол сўзини талаб қилади.</translation>
+        <translation type="unfinished">Ушбу операцияни амалга ошириш учун ҳамённи қулфдан чиқариш махфий сўзини талаб қилади.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -173,7 +173,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">Ҳамёни кодланган</translation>
+        <translation type="unfinished">Ҳамён шифрланган</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -691,6 +691,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -833,10 +854,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">Тасдиқлаш танловларини рад қилиш</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">Ўзгаришлар амалга ошиши учун мижозни қайта ишга тушириш талаб қилинади.</translation>
     </message>
     <message>
@@ -1406,10 +1429,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Message:</source>
         <translation type="unfinished">Хабар</translation>
     </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">Тўлов олувчи:</translation>
-    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1438,10 +1457,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionDesc</name>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1/тасдиқланмади</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 тасдиқлашлар</translation>
     </message>
     <message>

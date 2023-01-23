@@ -15,5 +15,6 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="install"
-export WIDECOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang CXX=clang++"
+# Temporarily pin dwarf 4, until valgrind can understand clang's dwarf 5
+export WIDECOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang CXX=clang++ CFLAGS='-gdwarf-4' CXXFLAGS='-gdwarf-4'"
 export CCACHE_SIZE=200M

@@ -10,8 +10,8 @@
 #include <bench/bench.h>
 
 struct nontrivial_t {
-    int x;
-    nontrivial_t() :x(-1) {}
+    int x{-1};
+    nontrivial_t() = default;
     SERIALIZE_METHODS(nontrivial_t, obj) { READWRITE(obj.x); }
 };
 static_assert(!std::is_trivially_default_constructible<nontrivial_t>::value,

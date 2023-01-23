@@ -28,7 +28,6 @@ To do a full check with `-r`, make sure that you have fetched the upstream repos
 maintained:
 * for `src/secp256k1`: https://github.com/widecoin-core/secp256k1.git (branch master)
 * for `src/leveldb`: https://github.com/widecoin-core/leveldb-subtree.git (branch widecoin-fork)
-* for `src/univalue`: https://github.com/widecoin-core/univalue-subtree.git (branch master)
 * for `src/crypto/ctaes`: https://github.com/widecoin-core/ctaes.git (branch master)
 * for `src/crc32c`: https://github.com/widecoin-core/crc32c-subtree.git (branch widecoin-fork)
 * for `src/minisketch`: https://github.com/sipa/minisketch.git (branch master)
@@ -39,6 +38,6 @@ To do so, add the upstream repository as remote:
 git remote add --fetch secp256k1 https://github.com/widecoin-core/secp256k1.git
 ```
 
-lint-all.sh
+all-lint.py
 ===========
 Calls other scripts with the `lint-` prefix.

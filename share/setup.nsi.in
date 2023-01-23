@@ -75,13 +75,15 @@ Section -Main SEC0000
     File @abs_top_builddir@/release/@WIDECOIN_GUI_NAME@@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
+    File @abs_top_srcdir@/share/examples/widecoin.conf
+    SetOutPath $INSTDIR\share\rpcauth
+    File @abs_top_srcdir@/share/rpcauth/*.*
     SetOutPath $INSTDIR\daemon
     File @abs_top_builddir@/release/@WIDECOIN_DAEMON_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@WIDECOIN_CLI_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@WIDECOIN_TX_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@WIDECOIN_WALLET_TOOL_NAME@@EXEEXT@
-    SetOutPath $INSTDIR\doc
-    File /r /x Makefile* @abs_top_srcdir@/doc\*.*
+    File @abs_top_builddir@/release/@WIDECOIN_TEST_NAME@@EXEEXT@
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
@@ -128,8 +130,9 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@WIDECOIN_GUI_NAME@@EXEEXT@
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
+    Delete /REBOOTOK $INSTDIR\widecoin.conf
+    RMDir /r /REBOOTOK $INSTDIR\share
     RMDir /r /REBOOTOK $INSTDIR\daemon
-    RMDir /r /REBOOTOK $INSTDIR\doc
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 

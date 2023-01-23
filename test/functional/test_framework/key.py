@@ -15,6 +15,10 @@ import unittest
 
 from .util import modinv
 
+# Point with no known discrete log.
+H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
+
+
 def TaggedHash(tag, data):
     ss = hashlib.sha256(tag.encode('utf-8')).digest()
     ss += ss

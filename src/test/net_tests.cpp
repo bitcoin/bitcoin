@@ -4,7 +4,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <cstdint>
 #include <net.h>
 #include <net_processing.h>
@@ -58,7 +58,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     std::string pszDest;
 
     std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(id++,
-                                                            NODE_NETWORK,
                                                             /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/0,
@@ -77,7 +76,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(id++,
-                                                            NODE_NETWORK,
                                                             /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/1,
@@ -96,7 +94,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(id++,
-                                                            NODE_NETWORK,
                                                             /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/0,
@@ -115,7 +112,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(id++,
-                                                            NODE_NETWORK,
                                                             /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/1,
@@ -629,7 +625,6 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
     std::unique_ptr<CNode> pnode = std::make_unique<CNode>(/*id=*/0,
-                                                           NODE_NETWORK,
                                                            /*sock=*/nullptr,
                                                            addr,
                                                            /*nKeyedNetGroupIn=*/0,
@@ -648,7 +643,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     pnode->SetAddrLocal(addrLocal);
 
     // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
-    GetLocalAddrForPeer(&*pnode);
+    GetLocalAddrForPeer(*pnode);
 
     // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
     BOOST_CHECK(1);
@@ -678,13 +673,12 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     // Our address:port as seen from the peer, completely different from the above.
     in_addr peer_us_addr;
     peer_us_addr.s_addr = htonl(0x02030405);
-    const CAddress peer_us{CService{peer_us_addr, 20002}, NODE_NETWORK};
+    const CService peer_us{peer_us_addr, 20002};
 
     // Create a peer with a routable IPv4 address (outbound).
     in_addr peer_out_in_addr;
     peer_out_in_addr.s_addr = htonl(0x01020304);
     CNode peer_out{/*id=*/0,
-                   /*nLocalServicesIn=*/NODE_NETWORK,
                    /*sock=*/nullptr,
                    /*addrIn=*/CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
                    /*nKeyedNetGroupIn=*/0,
@@ -697,7 +691,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     peer_out.SetAddrLocal(peer_us);
 
     // Without the fix peer_us:8333 is chosen instead of the proper peer_us:bind_port.
-    auto chosen_local_addr = GetLocalAddrForPeer(&peer_out);
+    auto chosen_local_addr = GetLocalAddrForPeer(peer_out);
     BOOST_REQUIRE(chosen_local_addr);
     const CService expected{peer_us_addr, bind_port};
     BOOST_CHECK(*chosen_local_addr == expected);
@@ -706,7 +700,6 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     in_addr peer_in_in_addr;
     peer_in_in_addr.s_addr = htonl(0x05060708);
     CNode peer_in{/*id=*/0,
-                  /*nLocalServicesIn=*/NODE_NETWORK,
                   /*sock=*/nullptr,
                   /*addrIn=*/CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
                   /*nKeyedNetGroupIn=*/0,
@@ -719,7 +712,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     peer_in.SetAddrLocal(peer_us);
 
     // Without the fix peer_us:8333 is chosen instead of the proper peer_us:peer_us.GetPort().
-    chosen_local_addr = GetLocalAddrForPeer(&peer_in);
+    chosen_local_addr = GetLocalAddrForPeer(peer_in);
     BOOST_REQUIRE(chosen_local_addr);
     BOOST_CHECK(*chosen_local_addr == peer_us);
 
@@ -732,26 +725,31 @@ BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
     BOOST_CHECK(IsReachable(NET_IPV6));
     BOOST_CHECK(IsReachable(NET_ONION));
     BOOST_CHECK(IsReachable(NET_I2P));
+    BOOST_CHECK(IsReachable(NET_CJDNS));
 
     SetReachable(NET_IPV4, false);
     SetReachable(NET_IPV6, false);
     SetReachable(NET_ONION, false);
     SetReachable(NET_I2P, false);
+    SetReachable(NET_CJDNS, false);
 
     BOOST_CHECK(!IsReachable(NET_IPV4));
     BOOST_CHECK(!IsReachable(NET_IPV6));
     BOOST_CHECK(!IsReachable(NET_ONION));
     BOOST_CHECK(!IsReachable(NET_I2P));
+    BOOST_CHECK(!IsReachable(NET_CJDNS));
 
     SetReachable(NET_IPV4, true);
     SetReachable(NET_IPV6, true);
     SetReachable(NET_ONION, true);
     SetReachable(NET_I2P, true);
+    SetReachable(NET_CJDNS, true);
 
     BOOST_CHECK(IsReachable(NET_IPV4));
     BOOST_CHECK(IsReachable(NET_IPV6));
     BOOST_CHECK(IsReachable(NET_ONION));
     BOOST_CHECK(IsReachable(NET_I2P));
+    BOOST_CHECK(IsReachable(NET_CJDNS));
 }
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_NetworkCaseUnroutableAndInternal)
@@ -829,7 +827,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     in_addr peer_in_addr;
     peer_in_addr.s_addr = htonl(0x01020304);
     CNode peer{/*id=*/0,
-               /*nLocalServicesIn=*/NODE_NETWORK,
                /*sock=*/nullptr,
                /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
                /*nKeyedNetGroupIn=*/0,
@@ -843,13 +840,13 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     const int64_t time{0};
     const CNetMsgMaker msg_maker{PROTOCOL_VERSION};
 
-    // Force CChainState::IsInitialBlockDownload() to return false.
+    // Force Chainstate::IsInitialBlockDownload() to return false.
     // Otherwise PushAddress() isn't called by PeerManager::ProcessMessage().
     TestChainState& chainstate =
         *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
     chainstate.JumpOutOfIbd();
 
-    m_node.peerman->InitializeNode(&peer);
+    m_node.peerman->InitializeNode(peer, NODE_NETWORK);
 
     std::atomic<bool> interrupt_dummy{false};
     std::chrono::microseconds time_received_dummy{0};

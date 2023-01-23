@@ -11,8 +11,8 @@
 #include <streams.h>
 #include <univalue.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
-#include <boost/algorithm/string.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -130,8 +130,7 @@ unsigned int ParseScriptFlags(const std::string& str)
     if (str.empty()) return 0;
 
     unsigned int flags = 0;
-    std::vector<std::string> words;
-    boost::algorithm::split(words, str, boost::algorithm::is_any_of(","));
+    std::vector<std::string> words = SplitString(str, ',');
 
     for (const std::string& word : words) {
         auto it = FLAG_NAMES.find(word);
@@ -150,7 +149,7 @@ void Test(const std::string& str)
     CMutableTransaction tx = TxFromHex(test["tx"].get_str());
     const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
     if (prevouts.size() != tx.vin.size()) throw std::runtime_error("Incorrect number of prevouts");
-    size_t idx = test["index"].get_int64();
+    size_t idx = test["index"].getInt<int64_t>();
     if (idx >= tx.vin.size()) throw std::runtime_error("Invalid index");
     unsigned int test_flags = ParseScriptFlags(test["flags"].get_str());
     bool final = test.exists("final") && test["final"].get_bool();

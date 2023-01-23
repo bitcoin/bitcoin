@@ -2,26 +2,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <univalue.h>
+
 #include <cassert>
+#include <cstdio>
 #include <string>
-#include "univalue.h"
 
 #ifndef JSON_TEST_SRC
 #error JSON_TEST_SRC must point to test source directory
 #endif
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-#endif
-
 std::string srcdir(JSON_TEST_SRC);
-static bool test_failed = false;
-
-#define d_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", filename.c_str()); } }
-#define f_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", __func__); } }
 
 static std::string rtrim(std::string s)
 {
@@ -42,9 +33,9 @@ static void runtest(std::string filename, const std::string& jdata)
         bool testResult = val.read(jdata);
 
         if (wantPass) {
-            d_assert(testResult == true);
+            assert(testResult == true);
         } else {
-            d_assert(testResult == false);
+            assert(testResult == false);
         }
 
         if (wantRoundTrip) {
@@ -142,30 +133,38 @@ void unescape_unicode_test()
     bool testResult;
     // Escaped ASCII (quote)
     testResult = val.read("[\"\\u0022\"]");
-    f_assert(testResult);
-    f_assert(val[0].get_str() == "\"");
+    assert(testResult);
+    assert(val[0].get_str() == "\"");
     // Escaped Basic Plane character, two-byte UTF-8
     testResult = val.read("[\"\\u0191\"]");
-    f_assert(testResult);
-    f_assert(val[0].get_str() == "\xc6\x91");
+    assert(testResult);
+    assert(val[0].get_str() == "\xc6\x91");
     // Escaped Basic Plane character, three-byte UTF-8
     testResult = val.read("[\"\\u2191\"]");
-    f_assert(testResult);
-    f_assert(val[0].get_str() == "\xe2\x86\x91");
+    assert(testResult);
+    assert(val[0].get_str() == "\xe2\x86\x91");
     // Escaped Supplementary Plane character U+1d161
     testResult = val.read("[\"\\ud834\\udd61\"]");
-    f_assert(testResult);
-    f_assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
+    assert(testResult);
+    assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
+}
+
+void no_nul_test()
+{
+    char buf[] = "___[1,2,3]___";
+    UniValue val;
+    assert(val.read(buf + 3, 7));
 }
 
 int main (int argc, char *argv[])
 {
-    for (unsigned int fidx = 0; fidx < ARRAY_SIZE(filenames); fidx++) {
-        runtest_file(filenames[fidx]);
+    for (const auto& f: filenames) {
+        runtest_file(f);
     }
 
     unescape_unicode_test();
+    no_nul_test();
 
-    return test_failed ? 1 : 0;
+    return 0;
 }
 

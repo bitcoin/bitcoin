@@ -32,6 +32,13 @@ class WalletSignerTest(WidecoinTestFramework):
         else:
             return path
 
+    def mock_multi_signers_path(self):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'multi_signers.py')
+        if platform.system() == "Windows":
+            return "py " + path
+        else:
+            return path
+
     def set_test_params(self):
         self.num_nodes = 2
         # The experimental syscall sandbox feature (-sandbox) is not compatible with -signer (which
@@ -58,6 +65,8 @@ class WalletSignerTest(WidecoinTestFramework):
         self.test_valid_signer()
         self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
         self.test_invalid_signer()
+        self.restart_node(1, [f"-signer={self.mock_multi_signers_path()}", "-keypool=10"])
+        self.test_multiple_signers()
 
     def test_valid_signer(self):
         self.log.debug(f"-signer={self.mock_signer_path()}")
@@ -194,6 +203,12 @@ class WalletSignerTest(WidecoinTestFramework):
         assert(res["complete"])
         assert_equal(res["hex"], mock_tx)
 
+        self.log.info('Test sendall using hww1')
+
+        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()],options={"add_to_wallet": False})
+        assert(res["complete"])
+        assert_equal(res["hex"], mock_tx)
+
         # # Handle error thrown by script
         # self.set_mock_result(self.nodes[4], "2")
         # assert_raises_rpc_error(-1, 'Unable to parse JSON',
@@ -205,6 +220,12 @@ class WalletSignerTest(WidecoinTestFramework):
         self.log.debug(f"-signer={self.mock_invalid_signer_path()}")
         self.log.info('Test invalid external signer')
         assert_raises_rpc_error(-1, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, descriptors=True, external_signer=True)
+
+    def test_multiple_signers(self):
+        self.log.debug(f"-signer={self.mock_multi_signers_path()}")
+        self.log.info('Test multiple external signers')
+
+        assert_raises_rpc_error(-1, "GetExternalSigner: More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, descriptors=True, external_signer=True)
 
 if __name__ == '__main__':
     WalletSignerTest().main()

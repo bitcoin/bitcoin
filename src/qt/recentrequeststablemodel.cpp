@@ -34,10 +34,7 @@ RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &RecentRequestsTableModel::updateDisplayUnit);
 }
 
-RecentRequestsTableModel::~RecentRequestsTableModel()
-{
-    /* Intentionally left empty */
-}
+RecentRequestsTableModel::~RecentRequestsTableModel() = default;
 
 int RecentRequestsTableModel::rowCount(const QModelIndex &parent) const
 {

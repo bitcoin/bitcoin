@@ -14,6 +14,9 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QVariant>
+
+#include <cassert>
 
 /** QSpinBox that uses fixed-point numbers internally and uses our own
  * formatting/parsing functions.
@@ -96,7 +99,7 @@ public:
         setValue(val);
     }
 
-    void setDisplayUnit(int unit)
+    void setDisplayUnit(WidecoinUnit unit)
     {
         bool valid = false;
         CAmount val = value(&valid);
@@ -122,7 +125,7 @@ public:
 
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
-            int w = GUIUtil::TextWidth(fm, WidecoinUnits::format(WidecoinUnits::WCN, WidecoinUnits::maxMoney(), false, WidecoinUnits::SeparatorStyle::ALWAYS));
+            int w = GUIUtil::TextWidth(fm, WidecoinUnits::format(WidecoinUnit::WCN, WidecoinUnits::maxMoney(), false, WidecoinUnits::SeparatorStyle::ALWAYS));
             w += 2; // cursor blinking space
 
             QStyleOptionSpinBox opt;
@@ -141,14 +144,13 @@ public:
 
             opt.rect = rect();
 
-            cachedMinimumSizeHint = style()->sizeFromContents(QStyle::CT_SpinBox, &opt, hint, this)
-                                    .expandedTo(QApplication::globalStrut());
+            cachedMinimumSizeHint = style()->sizeFromContents(QStyle::CT_SpinBox, &opt, hint, this);
         }
         return cachedMinimumSizeHint;
     }
 
 private:
-    int currentUnit{WidecoinUnits::WCN};
+    WidecoinUnit currentUnit{WidecoinUnit::WCN};
     CAmount singleStep{CAmount(100000)}; // satoshis
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
@@ -326,14 +328,14 @@ void WidecoinAmountField::unitChanged(int idx)
     unit->setToolTip(unit->itemData(idx, Qt::ToolTipRole).toString());
 
     // Determine new unit ID
-    int newUnit = unit->itemData(idx, WidecoinUnits::UnitRole).toInt();
-
-    amount->setDisplayUnit(newUnit);
+    QVariant new_unit = unit->currentData(WidecoinUnits::UnitRole);
+    assert(new_unit.isValid());
+    amount->setDisplayUnit(new_unit.value<WidecoinUnit>());
 }
 
-void WidecoinAmountField::setDisplayUnit(int newUnit)
+void WidecoinAmountField::setDisplayUnit(WidecoinUnit new_unit)
 {
-    unit->setValue(newUnit);
+    unit->setValue(QVariant::fromValue(new_unit));
 }
 
 void WidecoinAmountField::setSingleStep(const CAmount& step)

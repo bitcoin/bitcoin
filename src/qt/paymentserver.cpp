@@ -15,7 +15,7 @@
 #include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <policy/policy.h>
 #include <util/system.h>
 #include <wallet/wallet.h>
@@ -78,32 +78,11 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         QString arg(argv[i]);
-        if (arg.startsWith("-"))
-            continue;
+        if (arg.startsWith("-")) continue;
 
-        // If the widecoin: URI contains a payment request, we are not able to detect the
-        // network as that would require fetching and parsing the payment request.
-        // That means clicking such an URI which contains a testnet payment request
-        // will start a mainnet instance and throw a "wrong network" error.
         if (arg.startsWith(WIDECOIN_IPC_PREFIX, Qt::CaseInsensitive)) // widecoin: URI
         {
-            if (savedPaymentRequests.contains(arg)) continue;
             savedPaymentRequests.insert(arg);
-
-            SendCoinsRecipient r;
-            if (GUIUtil::parseWidecoinURI(arg, &r) && !r.address.isEmpty())
-            {
-                auto tempChainParams = CreateChainParams(gArgs, CBaseChainParams::MAIN);
-
-                if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
-                    SelectParams(CBaseChainParams::MAIN);
-                } else {
-                    tempChainParams = CreateChainParams(gArgs, CBaseChainParams::TESTNET);
-                    if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
-                        SelectParams(CBaseChainParams::TESTNET);
-                    }
-                }
-            }
         }
     }
 }
@@ -179,9 +158,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     }
 }
 
-PaymentServer::~PaymentServer()
-{
-}
+PaymentServer::~PaymentServer() = default;
 
 //
 // OSX-specific way of handling widecoin: URIs

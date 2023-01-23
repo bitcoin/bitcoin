@@ -570,6 +570,11 @@
         <translation type="unfinished">មិនមានកាបូបអេឡិចត្រូនិច</translation>
     </message>
     <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">ឈ្មោះកាបូប</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;វិនដូ</translation>
     </message>
@@ -812,6 +817,27 @@
         <translation type="unfinished">ប៊ីតខញ</translation>
     </message>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -961,10 +987,12 @@
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">បញ្ចាក់ជម្រើសការកែសម្រួលឡើងវិញ</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">ផ្ទាំងអតិថិជននិងត្រូវបិទ។ តើអ្នកចង់បន្តទៀតឫទេ?</translation>
     </message>
     <message>
@@ -1594,10 +1622,6 @@
         <source>Transaction creation failed!</source>
         <translation type="unfinished">បង្កើតប្រត្តិបត្តិការមិនជោគជ័យ!</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">សំណើរទូរទាត់ប្រាក់បានផុតកំណត់។</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -1649,26 +1673,10 @@
         <translation type="unfinished">សារៈ</translation>
     </message>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">នេះជាសំណើរទូរទាត់ប្រាក់មិនទាន់បានបញ្ចាក់តាមច្បាប់ត្រឹមត្រូវ។</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">នេះជាសំណើរទូរទាត់ប្រាក់ដែលបានបញ្ចាក់តាមច្បាប់ត្រឹមត្រូវ។</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished">បញ្ចូលស្លាក​សញ្ញាមួយ សម្រាប់អាសយដ្ឋាននេះ ដើម្បីបញ្ចូលវាទៅក្នងបញ្ចីរអាសយដ្ឋានដែលបានប្រើប្រាស់</translation>
     </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">បង់ទៅកាន់</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">អនុស្សរណៈ</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
@@ -1803,6 +1811,7 @@
     <name>TransactionDesc</name>
     <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">បានបោះបង់ចោល</translation>
     </message>
     <message>

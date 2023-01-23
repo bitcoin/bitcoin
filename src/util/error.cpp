@@ -5,8 +5,10 @@
 #include <util/error.h>
 
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/translation.h>
+
+#include <cassert>
+#include <string>
 
 bilingual_str TransactionErrorString(const TransactionError err)
 {
@@ -35,6 +37,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("External signer not found");
         case TransactionError::EXTERNAL_SIGNER_FAILED:
             return Untranslated("External signer failed to sign");
+        case TransactionError::INVALID_PACKAGE:
+            return Untranslated("Transaction rejected due to invalid package");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);

@@ -36,5 +36,7 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm lib/*.la
+  rm lib/*.la && \
+  rm include/ev*.h && \
+  rm include/event2/*_compat.h
 endef

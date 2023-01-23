@@ -2,11 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
-#include <string.h>
+#include <univalue.h>
+#include <univalue_utffilter.h>
+
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <string>
 #include <vector>
-#include <stdio.h>
-#include "univalue.h"
-#include "univalue_utffilter.h"
 
 /*
  * According to stackexchange, the original json test suite wanted
@@ -14,7 +17,7 @@
  * so we will follow PHP's lead, which should be more than sufficient
  * (further stackexchange comments indicate depth > 32 rarely occurs).
  */
-static const size_t MAX_JSON_DEPTH = 512;
+static constexpr size_t MAX_JSON_DEPTH = 512;
 
 static bool json_isdigit(int ch)
 {

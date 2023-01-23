@@ -95,17 +95,47 @@ Run all possible tests with
 test/functional/test_runner.py --extended
 ```
 
-In order to run backwards compatibility tests, download the previous node binaries:
+In order to run backwards compatibility tests, first run:
 
 ```
-test/get_previous_releases.py -b v22.0 v0.21.0 v0.20.1 v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2
+test/get_previous_releases.py -b
 ```
+
+to download the necessary previous release binaries.
 
 By default, up to 4 tests will be run in parallel by test_runner. To specify
 how many jobs to run, append `--jobs=n`
 
 The individual tests and the test_runner harness have many command-line
 options. Run `test/functional/test_runner.py -h` to see them all.
+
+#### Speed up test runs with a ramdisk
+
+If you have available RAM on your system you can create a ramdisk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
+Speed-up amount varies on each system (and according to your ram speed and other variables), but a 2-3x speed-up is not uncommon.
+
+To create a 4GB ramdisk on Linux at `/mnt/tmp/`:
+
+```bash
+sudo mkdir -p /mnt/tmp
+sudo mount -t tmpfs -o size=4g tmpfs /mnt/tmp/
+```
+
+Configure the size of the ramdisk using the `size=` option.
+The size of the ramdisk needed is relative to the number of concurrent jobs the test suite runs.
+For example running the test suite with `--jobs=100` might need a 4GB ramdisk, but running with `--jobs=32` will only need a 2.5GB ramdisk.
+
+To use, run the test suite specifying the ramdisk as the `cachedir` and `tmpdir`:
+
+```bash
+test/functional/test_runner.py --cachedir=/mnt/tmp/cache --tmpdir=/mnt/tmp
+```
+
+Once finished with the tests and the disk, and to free the ram, simply unmount the disk:
+
+```bash
+sudo umount /mnt/tmp
+```
 
 #### Troubleshooting and debugging test failures
 
@@ -277,11 +307,12 @@ Use the `-v` option for verbose output.
 
 | Lint test | Dependency |
 |-----------|:----------:|
-| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8)
-| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy)
-| [`lint-python.sh`](lint/lint-python.sh) | [pyzmq](https://github.com/zeromq/pyzmq)
-| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck)
-| [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell)
+| [`lint-python.py`](lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
+| [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
+| [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
+| [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
+| [`lint-shell.py`](lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
+| [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
 
 In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
 
@@ -292,13 +323,13 @@ Please be aware that on Linux distributions all dependencies are usually availab
 Individual tests can be run by directly calling the test script, e.g.:
 
 ```
-test/lint/lint-files.sh
+test/lint/lint-files.py
 ```
 
 You can run all the shell-based lint tests by running:
 
 ```
-test/lint/lint-all.sh
+test/lint/all-lint.py
 ```
 
 # Writing functional tests

@@ -24,6 +24,8 @@ bool PeerTableSortProxy::lessThan(const QModelIndex& left_index, const QModelInd
     switch (static_cast<PeerTableModel::ColumnIndex>(left_index.column())) {
     case PeerTableModel::NetNodeId:
         return left_stats.nodeid < right_stats.nodeid;
+    case PeerTableModel::Age:
+        return left_stats.m_connected > right_stats.m_connected;
     case PeerTableModel::Address:
         return left_stats.m_addr_name.compare(right_stats.m_addr_name) < 0;
     case PeerTableModel::Direction:

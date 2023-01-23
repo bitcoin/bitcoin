@@ -423,8 +423,12 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
    unsigned int offset = 0;
    secp256k1_rfc6979_hmac_sha256 rng;
    unsigned int i;
+   secp256k1_scalar msg;
+   unsigned char msgmod32[32];
+   secp256k1_scalar_set_b32(&msg, msg32, NULL);
+   secp256k1_scalar_get_b32(msgmod32, &msg);
    /* We feed a byte array to the PRNG as input, consisting of:
-    * - the private key (32 bytes) and message (32 bytes), see RFC 6979 3.2d.
+    * - the private key (32 bytes) and reduced message (32 bytes), see RFC 6979 3.2d.
     * - optionally 32 extra bytes of data, see RFC 6979 3.6 Additional Data.
     * - optionally 16 extra bytes with the algorithm name.
     * Because the arguments have distinct fixed lengths it is not possible for
@@ -432,7 +436,7 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
     *  nonces.
     */
    buffer_append(keydata, &offset, key32, 32);
-   buffer_append(keydata, &offset, msg32, 32);
+   buffer_append(keydata, &offset, msgmod32, 32);
    if (data != NULL) {
        buffer_append(keydata, &offset, data, 32);
    }

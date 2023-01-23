@@ -24,9 +24,6 @@
 #include <util/time.h>
 
 #ifdef WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -47,6 +44,7 @@
 #include <QGuiApplication>
 #include <QJsonObject>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QLatin1String>
 #include <QLineEdit>
 #include <QList>
@@ -55,10 +53,12 @@
 #include <QMouseEvent>
 #include <QPluginLoader>
 #include <QProgressDialog>
+#include <QRegularExpression>
 #include <QScreen>
 #include <QSettings>
 #include <QShortcut>
 #include <QSize>
+#include <QStandardPaths>
 #include <QString>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
@@ -72,12 +72,14 @@
 #include <string>
 #include <vector>
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
 
 #include <QProcess>
 
 void ForceActivation();
 #endif
+
+using namespace std::chrono_literals;
 
 namespace GUIUtil {
 
@@ -174,8 +176,7 @@ bool parseWidecoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!WidecoinUnits::parse(WidecoinUnits::WCN, i->second, &rv.amount))
-                {
+                if (!WidecoinUnits::parse(WidecoinUnit::WCN, i->second, &rv.amount)) {
                     return false;
                 }
             }
@@ -207,7 +208,7 @@ QString formatWidecoinURI(const SendCoinsRecipient &info)
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(WidecoinUnits::format(WidecoinUnits::WCN, info.amount, false, WidecoinUnits::SeparatorStyle::NEVER));
+        ret += QString("?amount=%1").arg(WidecoinUnits::format(WidecoinUnit::WCN, info.amount, false, WidecoinUnits::SeparatorStyle::NEVER));
         paramCount++;
     }
 
@@ -289,6 +290,17 @@ QString getDefaultDataDirectory()
     return PathToQString(GetDefaultDataDir());
 }
 
+QString ExtractFirstSuffixFromFilter(const QString& filter)
+{
+    QRegularExpression filter_re(QStringLiteral(".* \\(\\*\\.(.*)[ \\)]"), QRegularExpression::InvertedGreedinessOption);
+    QString suffix;
+    QRegularExpressionMatch m = filter_re.match(filter);
+    if (m.hasMatch()) {
+        suffix = m.captured(1);
+    }
+    return suffix;
+}
+
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
     const QString &filter,
     QString *selectedSuffixOut)
@@ -306,13 +318,7 @@ QString getSaveFileName(QWidget *parent, const QString &caption, const QString &
     /* Directly convert path to native OS path separators */
     QString result = QDir::toNativeSeparators(QFileDialog::getSaveFileName(parent, caption, myDir, filter, &selectedFilter));
 
-    /* Extract first suffix from filter pattern "Description (*.foo)" or "Description (*.foo *.bar ...) */
-    QRegExp filter_re(".* \\(\\*\\.(.*)[ \\)]");
-    QString selectedSuffix;
-    if(filter_re.exactMatch(selectedFilter))
-    {
-        selectedSuffix = filter_re.cap(1);
-    }
+    QString selectedSuffix = ExtractFirstSuffixFromFilter(selectedFilter);
 
     /* Add suffix if needed */
     QFileInfo info(result);
@@ -354,14 +360,8 @@ QString getOpenFileName(QWidget *parent, const QString &caption, const QString &
 
     if(selectedSuffixOut)
     {
-        /* Extract first suffix from filter pattern "Description (*.foo)" or "Description (*.foo *.bar ...) */
-        QRegExp filter_re(".* \\(\\*\\.(.*)[ \\)]");
-        QString selectedSuffix;
-        if(filter_re.exactMatch(selectedFilter))
-        {
-            selectedSuffix = filter_re.cap(1);
-        }
-        *selectedSuffixOut = selectedSuffix;
+        *selectedSuffixOut = ExtractFirstSuffixFromFilter(selectedFilter);
+        ;
     }
     return result;
 }
@@ -396,7 +396,7 @@ bool isObscured(QWidget *w)
 
 void bringToFront(QWidget* w)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     ForceActivation();
 #endif
 
@@ -414,7 +414,7 @@ void bringToFront(QWidget* w)
 
 void handleCloseWindowShortcut(QWidget* w)
 {
-    QObject::connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), w), &QShortcut::activated, w, &QWidget::close);
+    QObject::connect(new QShortcut(QKeySequence(QObject::tr("Ctrl+W")), w), &QShortcut::activated, w, &QWidget::close);
 }
 
 void openDebugLogfile()
@@ -428,7 +428,7 @@ void openDebugLogfile()
 
 bool openWidecoinConf()
 {
-    fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", WIDECOIN_CONF_FILENAME));
+    fs::path pathConfig = GetConfigFile(gArgs.GetPathArg("-conf", WIDECOIN_CONF_FILENAME));
 
     /* Create the file */
     std::ofstream configFile{pathConfig, std::ios_base::app};
@@ -440,7 +440,7 @@ bool openWidecoinConf()
 
     /* Open widecoin.conf with the associated application */
     bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathConfig)));
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // Workaround for macOS-specific behavior; see #15409.
     if (!res) {
         res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", PathToQString(pathConfig)});
@@ -505,7 +505,7 @@ fs::path static StartupShortcutPath()
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Widecoin.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Widecoin (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Widecoin (%s).lnk", chain);
+    return GetSpecialFolderPath(CSIDL_STARTUP) / fs::u8path(strprintf("Widecoin (%s).lnk", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -586,7 +586,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "widecoin.desktop";
-    return GetAutostartDir() / strprintf("widecoin-%s.desktop", chain);
+    return GetAutostartDir() / fs::u8path(strprintf("widecoin-%s.desktop", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -615,9 +615,10 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     else
     {
         char pszExePath[MAX_PATH+1];
-        ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath) - 1);
-        if (r == -1)
+        ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath));
+        if (r == -1 || r > MAX_PATH) {
             return false;
+        }
         pszExePath[r] = '\0';
 
         fs::create_directories(GetAutostartDir());
@@ -713,23 +714,28 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
 
 QString formatDurationStr(std::chrono::seconds dur)
 {
-    const auto secs = count_seconds(dur);
-    QStringList strList;
-    int days = secs / 86400;
-    int hours = (secs % 86400) / 3600;
-    int mins = (secs % 3600) / 60;
-    int seconds = secs % 60;
+    using days = std::chrono::duration<int, std::ratio<86400>>; // can remove this line after C++20
+    const auto d{std::chrono::duration_cast<days>(dur)};
+    const auto h{std::chrono::duration_cast<std::chrono::hours>(dur - d)};
+    const auto m{std::chrono::duration_cast<std::chrono::minutes>(dur - d - h)};
+    const auto s{std::chrono::duration_cast<std::chrono::seconds>(dur - d - h - m)};
+    QStringList str_list;
+    if (auto d2{d.count()}) str_list.append(QObject::tr("%1 d").arg(d2));
+    if (auto h2{h.count()}) str_list.append(QObject::tr("%1 h").arg(h2));
+    if (auto m2{m.count()}) str_list.append(QObject::tr("%1 m").arg(m2));
+    const auto s2{s.count()};
+    if (s2 || str_list.empty()) str_list.append(QObject::tr("%1 s").arg(s2));
+    return str_list.join(" ");
+}
 
-    if (days)
-        strList.append(QObject::tr("%1 d").arg(days));
-    if (hours)
-        strList.append(QObject::tr("%1 h").arg(hours));
-    if (mins)
-        strList.append(QObject::tr("%1 m").arg(mins));
-    if (seconds || (!days && !hours && !mins))
-        strList.append(QObject::tr("%1 s").arg(seconds));
-
-    return strList.join(" ");
+QString FormatPeerAge(std::chrono::seconds time_connected)
+{
+    const auto time_now{GetTime<std::chrono::seconds>()};
+    const auto age{time_now - time_connected};
+    if (age >= 24h) return QObject::tr("%1 d").arg(age / 24h);
+    if (age >= 1h) return QObject::tr("%1 h").arg(age / 1h);
+    if (age >= 1min) return QObject::tr("%1 m").arg(age / 1min);
+    return QObject::tr("%1 s").arg(age / 1s);
 }
 
 QString formatServicesStr(quint64 mask)
@@ -874,7 +880,7 @@ bool ItemDelegate::eventFilter(QObject *object, QEvent *event)
 
 void PolishProgressDialog(QProgressDialog* dialog)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
     const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
@@ -888,11 +894,7 @@ void PolishProgressDialog(QProgressDialog* dialog)
 
 int TextWidth(const QFontMetrics& fm, const QString& text)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
     return fm.horizontalAdvance(text);
-#else
-    return fm.width(text);
-#endif
 }
 
 void LogQtInfo()
@@ -981,7 +983,7 @@ void PrintSlotException(
     std::string description = sender->metaObject()->className();
     description += "->";
     description += receiver->metaObject()->className();
-    PrintExceptionContinue(exception, description.c_str());
+    PrintExceptionContinue(exception, description);
 }
 
 void ShowModalDialogAsynchronously(QDialog* dialog)

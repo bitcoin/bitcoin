@@ -23,10 +23,11 @@ static bool KeyFilter(const std::string& type)
     return WalletBatch::IsKeyType(type) || type == DBKeys::HDCHAIN;
 }
 
-bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::vector<bilingual_str>& warnings)
+bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
     DatabaseStatus status;
+    ReadDatabaseArgs(args, options);
     options.require_existing = true;
     options.verify = false;
     options.require_format = DatabaseFormat::BERKELEY;

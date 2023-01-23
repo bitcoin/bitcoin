@@ -5,6 +5,7 @@
 #include <qt/transactiontablemodel.h>
 
 #include <qt/addresstablemodel.h>
+#include <qt/widecoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -32,11 +33,11 @@
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
-        Qt::AlignLeft|Qt::AlignVCenter, /* status */
-        Qt::AlignLeft|Qt::AlignVCenter, /* watchonly */
-        Qt::AlignLeft|Qt::AlignVCenter, /* date */
-        Qt::AlignLeft|Qt::AlignVCenter, /* type */
-        Qt::AlignLeft|Qt::AlignVCenter, /* address */
+        Qt::AlignLeft|Qt::AlignVCenter, /*status=*/
+        Qt::AlignLeft|Qt::AlignVCenter, /*watchonly=*/
+        Qt::AlignLeft|Qt::AlignVCenter, /*date=*/
+        Qt::AlignLeft|Qt::AlignVCenter, /*type=*/
+        Qt::AlignLeft|Qt::AlignVCenter, /*address=*/
         Qt::AlignRight|Qt::AlignVCenter /* amount */
     };
 
@@ -61,7 +62,7 @@ struct TxLessThan
 struct TransactionNotification
 {
 public:
-    TransactionNotification() {}
+    TransactionNotification() = default;
     TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction):
         hash(_hash), status(_status), showTransaction(_showTransaction) {}
 
@@ -232,7 +233,7 @@ public:
         return nullptr;
     }
 
-    QString describe(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
+    QString describe(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord* rec, WidecoinUnit unit)
     {
         return TransactionDesc::toHTML(node, wallet, rec, unit);
     }
