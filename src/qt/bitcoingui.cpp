@@ -647,6 +647,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             // initialize the disable state of the tray icon with the current value in the model.
             trayIcon->setVisible(optionsModel->getShowTrayIcon());
         }
+
+        m_mask_values_action->setChecked(_clientModel->getOptionsModel()->getOption(OptionsModel::OptionID::MaskValues).toBool());
     } else {
         if(trayIconMenu)
         {
