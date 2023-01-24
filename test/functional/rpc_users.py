@@ -105,8 +105,6 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.test_auth(self.nodes[0], self.user, self.password)
 
         self.log.info('Check correctness of the rpcuser/rpcpassword config options')
-        url = urllib.parse.urlparse(self.nodes[1].url)
-
         self.test_auth(self.nodes[1], self.rpcuser, self.rpcpassword)
 
         init_error = 'Error: Unable to start HTTP server. See debug log for details.'
