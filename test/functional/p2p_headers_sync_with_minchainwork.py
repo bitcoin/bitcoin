@@ -27,6 +27,7 @@ NODE2_BLOCKS_REQUIRED = 2047
 
 class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
     def set_test_params(self):
+        self.rpc_timeout *= 4  # To avoid timeout when generating BLOCKS_TO_MINE
         self.setup_clean_chain = True
         # SYSCOIN
         self.rpc_timeout = 480
