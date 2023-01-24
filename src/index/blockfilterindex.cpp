@@ -252,16 +252,21 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 
     BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
 
+    return Write(filter, block.height, filter.ComputeHeader(prev_header));
+}
+
+bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
+{
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
 
     std::pair<uint256, DBVal> value;
-    value.first = block.hash;
+    value.first = filter.GetBlockHash();
     value.second.hash = filter.GetHash();
-    value.second.header = filter.ComputeHeader(prev_header);
+    value.second.header = filter_header;
     value.second.pos = m_next_filter_pos;
 
-    if (!m_db->Write(DBHeightKey(block.height), value)) {
+    if (!m_db->Write(DBHeightKey(block_height), value)) {
         return false;
     }
 

@@ -44,6 +44,8 @@ private:
 
     bool AllowPrune() const override { return true; }
 
+    bool Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header);
+
 protected:
     bool CustomInit(const std::optional<interfaces::BlockKey>& block) override;
 
