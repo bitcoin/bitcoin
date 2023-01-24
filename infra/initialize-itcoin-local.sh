@@ -35,7 +35,7 @@ export LD_LIBRARY_PATH=${MYDIR}/../../itcoin-pbft/usrlocal/lib${LD_LIBRARY_PATH:
 DATADIR="${MYDIR}/datadir"
 export BITCOIN_PORT=38333
 export RPC_PORT=38332
-export ZMQ_PUBHASHTX_PORT=29010
+export ZMQ_PUBHASHTX_PORT=29009
 export ZMQ_PUBRAWBLOCK_PORT=29009
 
 errecho() {

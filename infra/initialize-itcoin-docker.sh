@@ -45,7 +45,7 @@ INTERNAL_DATADIR="/opt/itcoin-core/datadir"
 BITCOIN_PORT=38333
 RPC_HOST=127.0.0.1 # localhost would fail if the system is ipv6-only
 RPC_PORT=38332
-ZMQ_PUBHASHTX_PORT=29010
+ZMQ_PUBHASHTX_PORT=29009
 ZMQ_PUBRAWBLOCK_PORT=29009
 
 errecho() {
