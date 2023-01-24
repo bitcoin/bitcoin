@@ -415,7 +415,6 @@ def main():
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
-    parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
 
@@ -443,7 +442,13 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging_level)
 
     # Create base test directory
-    tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    tmpdir_parser = argparse.ArgumentParser()
+    tmpdir_parser.add_argument("--tmpdir", dest="tmpdir")
+    tmpdir_args, _ = tmpdir_parser.parse_known_args(args=unknown_args)
+    if tmpdir_args.tmpdir:
+        tmpdir = tmpdir_args.tmpdir
+    else:
+        tmpdir = "%s/test_runner_₿_🏃_%s" % (tempfile.gettempdir(), datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
     os.makedirs(tmpdir)
 
