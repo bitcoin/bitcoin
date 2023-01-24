@@ -401,7 +401,7 @@ class TestNode():
             return dl.tell()
 
     @contextlib.contextmanager
-    def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):
+    def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2, ordered=False):
         if unexpected_msgs is None:
             unexpected_msgs = []
         time_end = time.time() + timeout * self.timeout_factor
@@ -409,6 +409,7 @@ class TestNode():
 
         yield
 
+        result_order = []
         while True:
             found = True
             with open(self.debug_log_path, encoding='utf-8') as dl:
@@ -419,9 +420,17 @@ class TestNode():
                 if re.search(re.escape(unexpected_msg), log, flags=re.MULTILINE):
                     self._raise_assertion_error('Unexpected message "{}" partially matches log:\n\n{}\n\n'.format(unexpected_msg, print_log))
             for expected_msg in expected_msgs:
-                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
+                match = re.search(re.escape(expected_msg), log, flags=re.MULTILINE)
+                if match is None:
                     found = False
+                else:
+                    result_order.append(match.span())
             if found:
+                if ordered and not sorted(result_order) == result_order:
+                    self._raise_assertion_error(
+                        f'Expected messages "{list(zip(expected_msgs, result_order))}" were not found in order passed in:'
+                        f'\n\n{print_log}\n\n '
+                    )
                 return
             if time.time() >= time_end:
                 break
