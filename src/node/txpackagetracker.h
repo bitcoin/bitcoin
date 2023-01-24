@@ -100,6 +100,16 @@ public:
      * Should not be called when a tx fails validation.
      * */
     void FinalizeTransactions(const std::set<uint256>& valid, const std::set<uint256>& invalid);
+
+    /** Whether a package info message is allowed (version-agnostic):
+     * - We agreed to relay packages of this version with this peer.
+     * - We solicited this package info somewhat recently.
+     * Returns false if the message is not allowed and the peer should be disconnected. */
+    bool PkgInfoAllowed(NodeId nodeid, const uint256& wtxid, PackageRelayVersions version);
+
+    /** Record receipt of a notfound message for pkginfo. */
+    void ForgetPkgInfo(NodeId nodeid, const uint256& rep_wtxid, PackageRelayVersions pkginfo_version);
+
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXPACKAGETRACKER_H
