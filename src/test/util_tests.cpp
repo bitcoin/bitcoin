@@ -35,9 +35,11 @@
 #include <univalue.h>
 #include <utility>
 #include <vector>
+
+#include <sys/types.h>
+
 #ifndef WIN32
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #endif
 
