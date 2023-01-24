@@ -1378,7 +1378,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     assert(constructed.size() == 1);
     assert(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
-    const NodeRef<Key> tl_node = std::move(constructed.front());
+    NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
     return tl_node;
 }
@@ -1813,7 +1813,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
         }
     }
     if (constructed.size() != 1) return {};
-    const NodeRef<Key> tl_node = std::move(constructed.front());
+    NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
     // Note that due to how ComputeType works (only assign the type to the node if the
     // subs' types are valid) this would fail if any node of tree is badly typed.
