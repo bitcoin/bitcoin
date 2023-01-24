@@ -199,12 +199,7 @@ static std::string serviceFlagToStr(size_t bit)
     // Not using default, so we get warned when a case is missing
     }
 
-    std::ostringstream stream;
-    stream.imbue(std::locale::classic());
-    stream << "UNKNOWN[";
-    stream << "2^" << bit;
-    stream << "]";
-    return stream.str();
+    return strprintf("UNKNOWN[2^%u]", bit);
 }
 
 std::vector<std::string> serviceFlagsToStr(uint64_t flags)

@@ -25,7 +25,7 @@ class ListTransactionsTest(WidecoinTestFramework):
         self.num_nodes = 3
         # This test isn't testing txn relay/timing, so set whitelist on the
         # peers for instant txn relay. This speeds up the test run time 2-3x.
-        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
+        self.extra_args = [["-whitelist=noban@127.0.0.1", "-walletrbf=0"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -109,6 +109,7 @@ class ListTransactionsTest(WidecoinTestFramework):
         self.run_rbf_opt_in_test()
         self.run_externally_generated_address_test()
         self.run_invalid_parameters_test()
+        self.test_op_return()
 
     def run_rbf_opt_in_test(self):
         """Test the opt-in-rbf flag for sent and received transactions."""
@@ -146,7 +147,7 @@ class ListTransactionsTest(WidecoinTestFramework):
         # Create tx2 using createrawtransaction
         inputs = [{"txid": utxo_to_use["txid"], "vout": utxo_to_use["vout"]}]
         outputs = {self.nodes[0].getnewaddress(): 0.999}
-        tx2 = self.nodes[1].createrawtransaction(inputs, outputs)
+        tx2 = self.nodes[1].createrawtransaction(inputs=inputs, outputs=outputs, replaceable=False)
         tx2_signed = self.nodes[1].signrawtransactionwithwallet(tx2)["hex"]
         txid_2 = self.nodes[1].sendrawtransaction(tx2_signed)
 
@@ -178,7 +179,7 @@ class ListTransactionsTest(WidecoinTestFramework):
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[1], txid_3)
         inputs = [{"txid": txid_3, "vout": utxo_to_use["vout"]}]
         outputs = {self.nodes[0].getnewaddress(): 0.997}
-        tx4 = self.nodes[1].createrawtransaction(inputs, outputs)
+        tx4 = self.nodes[1].createrawtransaction(inputs=inputs, outputs=outputs, replaceable=False)
         tx4_signed = self.nodes[1].signrawtransactionwithwallet(tx4)["hex"]
         txid_4 = self.nodes[1].sendrawtransaction(tx4_signed)
 
@@ -283,6 +284,17 @@ class ListTransactionsTest(WidecoinTestFramework):
         self.nodes[0].listtransactions(label="*")
         assert_raises_rpc_error(-8, "Negative count", self.nodes[0].listtransactions, count=-1)
         assert_raises_rpc_error(-8, "Negative from", self.nodes[0].listtransactions, skip=-1)
+
+    def test_op_return(self):
+        """Test if OP_RETURN outputs will be displayed correctly."""
+        raw_tx = self.nodes[0].createrawtransaction([], [{'data': 'aa'}])
+        funded_tx = self.nodes[0].fundrawtransaction(raw_tx)
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])
+        tx_id = self.nodes[0].sendrawtransaction(signed_tx['hex'])
+
+        op_ret_tx = [tx for tx in self.nodes[0].listtransactions() if tx['txid'] == tx_id][0]
+
+        assert 'address' not in op_ret_tx
 
 
 if __name__ == '__main__':

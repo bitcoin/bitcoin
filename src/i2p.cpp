@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <compat/endian.h>
 #include <crypto/sha256.h>
 #include <fs.h>
@@ -12,11 +12,11 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
-#include <util/strencodings.h>
 #include <tinyformat.h>
 #include <util/readwritefile.h>
 #include <util/sock.h>
 #include <util/spanparsing.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 
 #include <chrono>
@@ -69,12 +69,11 @@ static std::string SwapBase64(const std::string& from)
 static Binary DecodeI2PBase64(const std::string& i2p_b64)
 {
     const std::string& std_b64 = SwapBase64(i2p_b64);
-    bool invalid;
-    Binary decoded = DecodeBase64(std_b64.c_str(), &invalid);
-    if (invalid) {
+    auto decoded = DecodeBase64(std_b64);
+    if (!decoded) {
         throw std::runtime_error(strprintf("Cannot decode Base64: \"%s\"", i2p_b64));
     }
-    return decoded;
+    return std::move(*decoded);
 }
 
 /**
@@ -116,8 +115,19 @@ namespace sam {
 Session::Session(const fs::path& private_key_file,
                  const CService& control_host,
                  CThreadInterrupt* interrupt)
-    : m_private_key_file(private_key_file), m_control_host(control_host), m_interrupt(interrupt),
-      m_control_sock(std::make_unique<Sock>(INVALID_SOCKET))
+    : m_private_key_file{private_key_file},
+      m_control_host{control_host},
+      m_interrupt{interrupt},
+      m_control_sock{std::make_unique<Sock>(INVALID_SOCKET)},
+      m_transient{false}
+{
+}
+
+Session::Session(const CService& control_host, CThreadInterrupt* interrupt)
+    : m_control_host{control_host},
+      m_interrupt{interrupt},
+      m_control_sock{std::make_unique<Sock>(INVALID_SOCKET)},
+      m_transient{true}
 {
 }
 
@@ -151,8 +161,8 @@ bool Session::Accept(Connection& conn)
                 throw std::runtime_error("wait on socket failed");
             }
 
-            if ((occurred & Sock::RECV) == 0) {
-                // Timeout, no incoming connections within MAX_WAIT_FOR_IO.
+            if (occurred == 0) {
+                // Timeout, no incoming connections or errors within MAX_WAIT_FOR_IO.
                 continue;
             }
 
@@ -243,7 +253,7 @@ std::string Session::Reply::Get(const std::string& key) const
 template <typename... Args>
 void Session::Log(const std::string& fmt, const Args&... args) const
 {
-    LogPrint(BCLog::I2P, "I2P: %s\n", tfm::format(fmt, args...));
+    LogPrint(BCLog::I2P, "%s\n", tfm::format(fmt, args...));
 }
 
 Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
@@ -315,6 +325,7 @@ void Session::DestGenerate(const Sock& sock)
     // https://geti2p.net/spec/common-structures#key-certificates
     // "7" or "EdDSA_SHA512_Ed25519" - "Recent Router Identities and Destinations".
     // Use "7" because i2pd <2.24.0 does not recognize the textual form.
+    // If SIGNATURE_TYPE is not specified, then the default one is DSA_SHA1.
     const Reply& reply = SendRequestAndGetReply(sock, "DEST GENERATE SIGNATURE_TYPE=7", false);
 
     m_private_key = DecodeI2PBase64(reply.Get("PRIV"));
@@ -356,29 +367,47 @@ void Session::CreateIfNotCreatedAlready()
         return;
     }
 
-    Log("Creating SAM session with %s", m_control_host.ToString());
+    const auto session_type = m_transient ? "transient" : "persistent";
+    const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
+
+    Log("Creating %s SAM session %s with %s", session_type, session_id, m_control_host.ToString());
 
     auto sock = Hello();
 
-    const auto& [read_ok, data] = ReadBinaryFile(m_private_key_file);
-    if (read_ok) {
-        m_private_key.assign(data.begin(), data.end());
+    if (m_transient) {
+        // The destination (private key) is generated upon session creation and returned
+        // in the reply in DESTINATION=.
+        const Reply& reply = SendRequestAndGetReply(
+            *sock,
+            strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=TRANSIENT SIGNATURE_TYPE=7", session_id));
+
+        m_private_key = DecodeI2PBase64(reply.Get("DESTINATION"));
     } else {
-        GenerateAndSavePrivateKey(*sock);
+        // Read our persistent destination (private key) from disk or generate
+        // one and save it to disk. Then use it when creating the session.
+        const auto& [read_ok, data] = ReadBinaryFile(m_private_key_file);
+        if (read_ok) {
+            m_private_key.assign(data.begin(), data.end());
+        } else {
+            GenerateAndSavePrivateKey(*sock);
+        }
+
+        const std::string& private_key_b64 = SwapBase64(EncodeBase64(m_private_key));
+
+        SendRequestAndGetReply(*sock,
+                               strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s",
+                                         session_id,
+                                         private_key_b64));
     }
-
-    const std::string& session_id = GetRandHash().GetHex().substr(0, 10); // full is an overkill, too verbose in the logs
-    const std::string& private_key_b64 = SwapBase64(EncodeBase64(m_private_key));
-
-    SendRequestAndGetReply(*sock, strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s",
-                                            session_id, private_key_b64));
 
     m_my_addr = CService(DestBinToAddr(MyDestination()), I2P_SAM31_PORT);
     m_session_id = session_id;
     m_control_sock = std::move(sock);
 
-    LogPrintf("I2P: SAM session created: session id=%s, my address=%s\n", m_session_id,
-              m_my_addr.ToString());
+    Log("%s SAM session %s created, my address=%s",
+        Capitalize(session_type),
+        m_session_id,
+        m_my_addr.ToString());
 }
 
 std::unique_ptr<Sock> Session::StreamAccept()
@@ -406,12 +435,12 @@ void Session::Disconnect()
 {
     if (m_control_sock->Get() != INVALID_SOCKET) {
         if (m_session_id.empty()) {
-            Log("Destroying incomplete session");
+            Log("Destroying incomplete SAM session");
         } else {
-            Log("Destroying session %s", m_session_id);
+            Log("Destroying SAM session %s", m_session_id);
         }
     }
-    m_control_sock->Reset();
+    m_control_sock = std::make_unique<Sock>(INVALID_SOCKET);
     m_session_id.clear();
 }
 } // namespace sam

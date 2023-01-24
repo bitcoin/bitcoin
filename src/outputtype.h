@@ -6,7 +6,6 @@
 #ifndef WIDECOIN_OUTPUTTYPE_H
 #define WIDECOIN_OUTPUTTYPE_H
 
-#include <attributes.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
@@ -20,6 +19,7 @@ enum class OutputType {
     P2SH_SEGWIT,
     BECH32,
     BECH32M,
+    UNKNOWN,
 };
 
 static constexpr auto OUTPUT_TYPES = std::array{

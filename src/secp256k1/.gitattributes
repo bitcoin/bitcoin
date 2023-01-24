@@ -1,2 +1,2 @@
-src/ecmult_static_pre_g.h linguist-generated
-src/ecmult_gen_static_prec_table.h linguist-generated
+src/precomputed_ecmult.c linguist-generated
+src/precomputed_ecmult_gen.c linguist-generated

@@ -28,7 +28,8 @@ const std::string CLIENT_NAME("WidecoinCore");
 //   - "// No build information available", if proper git information is not available
 #endif
 
-//! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. $Format:%n#define GIT_COMMIT_ID "%H"$
+//! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. 
+#define GIT_COMMIT_ID "b3f866a8dfd652b6339b79124843e58bd0bf3013"
 
 #ifdef BUILD_GIT_TAG
     #define BUILD_DESC BUILD_GIT_TAG
@@ -76,10 +77,8 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     ss << "/";
     return ss.str();
 }
-
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-
     const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
@@ -92,12 +91,9 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
     strCopyrightHolders += "\n" + strYear + "The Bitcoin Core developers";
     return strCopyrightHolders;
-
 }
-
 std::string LicenseInfo()
 {
-
     const std::string URL_SOURCE_CODE = "<https://github.com/widecoin-project/widecoin>";
     const std::string URL_WEBSITE = "<https://widecoin.org>";
 
@@ -114,5 +110,4 @@ std::string LicenseInfo()
            _("This is experimental software.").translated + "\n" +
            strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") +
            "\n";
-
 }

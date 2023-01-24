@@ -5,7 +5,7 @@
 #ifndef WIDECOIN_UTIL_BIP32_H
 #define WIDECOIN_UTIL_BIP32_H
 
-#include <attributes.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 

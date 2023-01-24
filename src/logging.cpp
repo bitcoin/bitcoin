@@ -5,15 +5,17 @@
 
 #include <fs.h>
 #include <logging.h>
-#include <util/threadnames.h>
 #include <util/string.h>
+#include <util/threadnames.h>
 #include <util/time.h>
 
 #include <algorithm>
 #include <array>
 #include <mutex>
+#include <optional>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
+constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
 
 BCLog::Logger& LogInstance()
 {
@@ -122,6 +124,19 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
     return (m_categories.load(std::memory_order_relaxed) & category) != 0;
 }
 
+bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
+{
+    // Log messages at Warning and Error level unconditionally, so that
+    // important troubleshooting information doesn't get lost.
+    if (level >= BCLog::Level::Warning) return true;
+
+    if (!WillLogCategory(category)) return false;
+
+    StdLockGuard scoped_lock(m_cs);
+    const auto it{m_category_log_levels.find(category)};
+    return level >= (it == m_category_log_levels.end() ? LogLevel() : it->second);
+}
+
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
     return m_categories == BCLog::NONE;
@@ -135,7 +150,7 @@ struct CLogCategoryDesc {
 const CLogCategoryDesc LogCategories[] =
 {
     {BCLog::NONE, "0"},
-    {BCLog::NONE, "none"},
+    {BCLog::NONE, ""},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
     {BCLog::MEMPOOL, "mempool"},
@@ -171,7 +186,7 @@ const CLogCategoryDesc LogCategories[] =
 
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 {
-    if (str == "") {
+    if (str.empty()) {
         flag = BCLog::ALL;
         return true;
     }
@@ -182,6 +197,112 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
         }
     }
     return false;
+}
+
+std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
+{
+    switch (level) {
+    case BCLog::Level::Trace:
+        return "trace";
+    case BCLog::Level::Debug:
+        return "debug";
+    case BCLog::Level::Info:
+        return "info";
+    case BCLog::Level::Warning:
+        return "warning";
+    case BCLog::Level::Error:
+        return "error";
+    case BCLog::Level::None:
+        return "";
+    }
+    assert(false);
+}
+
+std::string LogCategoryToStr(BCLog::LogFlags category)
+{
+    // Each log category string representation should sync with LogCategories
+    switch (category) {
+    case BCLog::LogFlags::NONE:
+        return "";
+    case BCLog::LogFlags::NET:
+        return "net";
+    case BCLog::LogFlags::TOR:
+        return "tor";
+    case BCLog::LogFlags::MEMPOOL:
+        return "mempool";
+    case BCLog::LogFlags::HTTP:
+        return "http";
+    case BCLog::LogFlags::BENCH:
+        return "bench";
+    case BCLog::LogFlags::ZMQ:
+        return "zmq";
+    case BCLog::LogFlags::WALLETDB:
+        return "walletdb";
+    case BCLog::LogFlags::RPC:
+        return "rpc";
+    case BCLog::LogFlags::ESTIMATEFEE:
+        return "estimatefee";
+    case BCLog::LogFlags::ADDRMAN:
+        return "addrman";
+    case BCLog::LogFlags::SELECTCOINS:
+        return "selectcoins";
+    case BCLog::LogFlags::REINDEX:
+        return "reindex";
+    case BCLog::LogFlags::CMPCTBLOCK:
+        return "cmpctblock";
+    case BCLog::LogFlags::RAND:
+        return "rand";
+    case BCLog::LogFlags::PRUNE:
+        return "prune";
+    case BCLog::LogFlags::PROXY:
+        return "proxy";
+    case BCLog::LogFlags::MEMPOOLREJ:
+        return "mempoolrej";
+    case BCLog::LogFlags::LIBEVENT:
+        return "libevent";
+    case BCLog::LogFlags::COINDB:
+        return "coindb";
+    case BCLog::LogFlags::QT:
+        return "qt";
+    case BCLog::LogFlags::LEVELDB:
+        return "leveldb";
+    case BCLog::LogFlags::VALIDATION:
+        return "validation";
+    case BCLog::LogFlags::I2P:
+        return "i2p";
+    case BCLog::LogFlags::IPC:
+        return "ipc";
+#ifdef DEBUG_LOCKCONTENTION
+    case BCLog::LogFlags::LOCK:
+        return "lock";
+#endif
+    case BCLog::LogFlags::UTIL:
+        return "util";
+    case BCLog::LogFlags::BLOCKSTORE:
+        return "blockstorage";
+    case BCLog::LogFlags::ALL:
+        return "all";
+    }
+    assert(false);
+}
+
+static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
+{
+    if (level_str == "trace") {
+        return BCLog::Level::Trace;
+    } else if (level_str == "debug") {
+        return BCLog::Level::Debug;
+    } else if (level_str == "info") {
+        return BCLog::Level::Info;
+    } else if (level_str == "warning") {
+        return BCLog::Level::Warning;
+    } else if (level_str == "error") {
+        return BCLog::Level::Error;
+    } else if (level_str == "none") {
+        return BCLog::Level::None;
+    } else {
+        return std::nullopt;
+    }
 }
 
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
@@ -200,6 +321,18 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
         ret.push_back(catActive);
     }
     return ret;
+}
+
+/** Log severity levels that can be selected by the user. */
+static constexpr std::array<BCLog::Level, 3> LogLevelsList()
+{
+    return {BCLog::Level::Info, BCLog::Level::Debug, BCLog::Level::Trace};
+}
+
+std::string BCLog::Logger::LogLevelsString() const
+{
+    const auto& levels = LogLevelsList();
+    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
 }
 
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
@@ -249,17 +382,38 @@ namespace BCLog {
     }
 } // namespace BCLog
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
+
+    if ((category != LogFlags::NONE || level != Level::None) && m_started_new_line) {
+        std::string s{"["};
+
+        if (category != LogFlags::NONE) {
+            s += LogCategoryToStr(category);
+        }
+
+        if (category != LogFlags::NONE && level != Level::None) {
+            // Only add separator if both flag and level are not NONE
+            s += ":";
+        }
+
+        if (level != Level::None) {
+            s += LogLevelToStr(level);
+        }
+
+        s += "] ";
+        str_prefixed.insert(0, s);
+    }
 
     if (m_log_sourcelocations && m_started_new_line) {
         str_prefixed.insert(0, "[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] [" + logging_function + "] ");
     }
 
     if (m_log_threadnames && m_started_new_line) {
-        str_prefixed.insert(0, "[" + util::ThreadGetInternalName() + "] ");
+        const auto& threadname = util::ThreadGetInternalName();
+        str_prefixed.insert(0, "[" + (threadname.empty() ? "unknown" : threadname) + "] ");
     }
 
     str_prefixed = LogTimestampStr(str_prefixed);
@@ -336,4 +490,25 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
+}
+
+bool BCLog::Logger::SetLogLevel(const std::string& level_str)
+{
+    const auto level = GetLogLevel(level_str);
+    if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
+    m_log_level = level.value();
+    return true;
+}
+
+bool BCLog::Logger::SetCategoryLogLevel(const std::string& category_str, const std::string& level_str)
+{
+    BCLog::LogFlags flag;
+    if (!GetLogCategory(flag, category_str)) return false;
+
+    const auto level = GetLogLevel(level_str);
+    if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
+
+    StdLockGuard scoped_lock(m_cs);
+    m_category_log_levels[flag] = level.value();
+    return true;
 }

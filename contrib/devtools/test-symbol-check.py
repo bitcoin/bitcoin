@@ -39,7 +39,7 @@ class TestSymbolChecks(unittest.TestCase):
         cc = determine_wellknown_cmd('CC', 'gcc')
 
         # there's no way to do this test for RISC-V at the moment; we build for
-        # RISC-V in a glibc 2.27 envinonment and we allow all symbols from 2.27.
+        # RISC-V in a glibc 2.27 environment and we allow all symbols from 2.27.
         if 'riscv' in get_machine(cc):
             self.skipTest("test not available for RISC-V")
 
@@ -187,7 +187,7 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test3.exe'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
-                #include <windows.h>
+                #include <combaseapi.h>
 
                 int main()
                 {

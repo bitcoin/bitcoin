@@ -1594,10 +1594,10 @@
                <item row="23" column="0">
                 <widget class="QLabel" name="peerAddrRelayEnabledLabel">
                  <property name="toolTip">
-                  <string extracomment="Tooltip text for the Address Relay field in the peer details area.">Whether we relay addresses to this peer.</string>
+                  <string extracomment="Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).">Whether we relay addresses to this peer.</string>
                  </property>
                  <property name="text">
-                  <string>Address Relay</string>
+                  <string extracomment="Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).">Address Relay</string>
                  </property>
                 </widget>
                </item>
@@ -1620,10 +1620,10 @@
                <item row="24" column="0">
                 <widget class="QLabel" name="peerAddrProcessedLabel">
                  <property name="toolTip">
-                  <string extracomment="Tooltip text for the Addresses Processed field in the peer details area.">Total number of addresses processed, excluding those dropped due to rate-limiting.</string>
+                  <string extracomment="Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).">The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</string>
                  </property>
                  <property name="text">
-                  <string>Addresses Processed</string>
+                  <string extracomment="Text title for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).">Addresses Processed</string>
                  </property>
                 </widget>
                </item>
@@ -1646,10 +1646,10 @@
                <item row="25" column="0">
                 <widget class="QLabel" name="peerAddrRateLimitedLabel">
                  <property name="toolTip">
-                  <string extracomment="Tooltip text for the Addresses Rate-Limited field in the peer details area.">Total number of addresses dropped due to rate-limiting.</string>
+                  <string extracomment="Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.">The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</string>
                  </property>
                  <property name="text">
-                  <string>Addresses Rate-Limited</string>
+                  <string extracomment="Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.">Addresses Rate-Limited</string>
                  </property>
                 </widget>
                </item>

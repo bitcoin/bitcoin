@@ -23,7 +23,7 @@
 using namespace std::literals;
 using node::NodeContext;
 
-static const std::vector<bool> EMPTY_ASMAP;
+static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
 static const bool DETERMINISTIC{true};
 
 static int32_t GetCheckRatio(const NodeContext& node_ctx)
@@ -62,7 +62,7 @@ BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(addrman_simple)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     BOOST_CHECK(addrman->size() >= 1);
 
     // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
-    addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     std::vector<CAddress> vAddr;
     vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
     vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
 
 BOOST_AUTO_TEST_CASE(addrman_select)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -223,9 +223,9 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 
 BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CAddress addr{CAddress(ResolveService("253.3.3.3", 8333), NODE_NONE)};
-    int64_t start_time{GetAdjustedTime()};
+    const auto start_time{Now<NodeSeconds>()};
     addr.nTime = start_time;
 
     // test that multiplicity stays at 1 if nTime doesn't increase
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     for (unsigned int i = 1; i < 400; ++i) {
         std::string addr_ip{ToString(i % 256) + "." + ToString(i >> 8 % 256) + ".1.1"};
         CNetAddr source{ResolveIP(addr_ip)};
-        addr.nTime = start_time + i;
+        addr.nTime = start_time + std::chrono::seconds{i};
         addrman->Add({addr}, source);
     }
     AddressPosition addr_pos_multi = addrman->FindAddressEntry(addr).value();
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
 
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
 BOOST_AUTO_TEST_CASE(addrman_getaddr)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     // Test: Sanity check, GetAddr should never return anything if addrman
     //  is empty.
@@ -295,15 +295,15 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK_EQUAL(vAddr1.size(), 0U);
 
     CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
-    addr1.nTime = GetAdjustedTime(); // Set time so isTerrible = false
+    addr1.nTime = Now<NodeSeconds>(); // Set time so isTerrible = false
     CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
-    addr2.nTime = GetAdjustedTime();
+    addr2.nTime = Now<NodeSeconds>();
     CAddress addr3 = CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE);
-    addr3.nTime = GetAdjustedTime();
+    addr3.nTime = Now<NodeSeconds>();
     CAddress addr4 = CAddress(ResolveService("252.253.3.4", 8333), NODE_NONE);
-    addr4.nTime = GetAdjustedTime();
+    addr4.nTime = Now<NodeSeconds>();
     CAddress addr5 = CAddress(ResolveService("252.254.4.5", 8333), NODE_NONE);
-    addr5.nTime = GetAdjustedTime();
+    addr5.nTime = Now<NodeSeconds>();
     CNetAddr source1 = ResolveIP("250.1.2.1");
     CNetAddr source2 = ResolveIP("250.2.3.3");
 
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
         CAddress addr = CAddress(ResolveService(strAddr), NODE_NONE);
 
         // Ensure that for all addrs in addrman, isTerrible == false.
-        addr.nTime = GetAdjustedTime();
+        addr.nTime = Now<NodeSeconds>();
         addrman->Add({addr}, ResolveIP(strAddr));
         if (i % 8 == 0)
             addrman->Good(addr);
@@ -357,27 +357,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap; // use /16
-
-    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, asmap), 40);
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN), 40);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info1.GetTriedBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN) != info1.GetTriedBucket(nKey2, EMPTY_NETGROUPMAN));
 
     // Test: Two addresses with same IP but different ports can map to
     //  different buckets because they have different keys.
     AddrInfo info2 = AddrInfo(addr2, source1);
 
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info2.GetTriedBucket(nKey1, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN) != info2.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         AddrInfo infoi = AddrInfo(
             CAddress(ResolveService("250.1.1." + ToString(i)), NODE_NONE),
             ResolveIP("250.1.1." + ToString(i)));
-        int bucket = infoi.GetTriedBucket(nKey1, asmap);
+        int bucket = infoi.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same /16 prefix should
@@ -389,7 +387,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250." + ToString(j) + ".1.1"), NODE_NONE),
             ResolveIP("250." + ToString(j) + ".1.1"));
-        int bucket = infoj.GetTriedBucket(nKey1, asmap);
+        int bucket = infoj.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different /16 prefix should map to more than
@@ -409,27 +407,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap; // use /16
-
     // Test: Make sure the buckets are what we expect
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), 786);
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, asmap), 786);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN), 786);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, EMPTY_NETGROUPMAN), 786);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetNewBucket(nKey1, asmap) != info1.GetNewBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN) != info1.GetNewBucket(nKey2, EMPTY_NETGROUPMAN));
 
     // Test: Ports should not affect bucket placement in the addr
     AddrInfo info2 = AddrInfo(addr2, source1);
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), info2.GetNewBucket(nKey1, asmap));
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN), info2.GetNewBucket(nKey1, EMPTY_NETGROUPMAN));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         AddrInfo infoi = AddrInfo(
             CAddress(ResolveService("250.1.1." + ToString(i)), NODE_NONE),
             ResolveIP("250.1.1." + ToString(i)));
-        int bucket = infoi.GetNewBucket(nKey1, asmap);
+        int bucket = infoi.GetNewBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same group (\16 prefix for IPv4) should
@@ -442,7 +438,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
                                         ResolveService(
                                             ToString(250 + (j / 255)) + "." + ToString(j % 256) + ".1.1"), NODE_NONE),
             ResolveIP("251.4.1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same source groups should map to NO MORE
@@ -454,7 +450,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250.1.1.1"), NODE_NONE),
             ResolveIP("250." + ToString(p) + ".1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different source groups should map to MORE
@@ -475,6 +471,9 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.8.0.0/16 AS8
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
+    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    NetGroupManager ngm_asmap{asmap};
+
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
 
@@ -486,27 +485,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
-
-    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, asmap), 236);
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 236);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info1.GetTriedBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, ngm_asmap) != info1.GetTriedBucket(nKey2, ngm_asmap));
 
     // Test: Two addresses with same IP but different ports can map to
     //  different buckets because they have different keys.
     AddrInfo info2 = AddrInfo(addr2, source1);
 
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info2.GetTriedBucket(nKey1, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, ngm_asmap) != info2.GetTriedBucket(nKey1, ngm_asmap));
 
     std::set<int> buckets;
     for (int j = 0; j < 255; j++) {
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("101." + ToString(j) + ".1.1"), NODE_NONE),
             ResolveIP("101." + ToString(j) + ".1.1"));
-        int bucket = infoj.GetTriedBucket(nKey1, asmap);
+        int bucket = infoj.GetTriedBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different /16 prefix MAY map to more than
@@ -518,7 +515,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250." + ToString(j) + ".1.1"), NODE_NONE),
             ResolveIP("250." + ToString(j) + ".1.1"));
-        int bucket = infoj.GetTriedBucket(nKey1, asmap);
+        int bucket = infoj.GetTriedBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different /16 prefix MAY NOT map to more than
@@ -528,6 +525,9 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 {
+    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    NetGroupManager ngm_asmap{asmap};
+
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
 
@@ -538,27 +538,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
-
     // Test: Make sure the buckets are what we expect
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), 795);
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, asmap), 795);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 795);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, ngm_asmap), 795);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetNewBucket(nKey1, asmap) != info1.GetNewBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetNewBucket(nKey1, ngm_asmap) != info1.GetNewBucket(nKey2, ngm_asmap));
 
     // Test: Ports should not affect bucket placement in the addr
     AddrInfo info2 = AddrInfo(addr2, source1);
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), info2.GetNewBucket(nKey1, asmap));
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), info2.GetNewBucket(nKey1, ngm_asmap));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         AddrInfo infoi = AddrInfo(
             CAddress(ResolveService("250.1.1." + ToString(i)), NODE_NONE),
             ResolveIP("250.1.1." + ToString(i)));
-        int bucket = infoi.GetNewBucket(nKey1, asmap);
+        int bucket = infoi.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same /16 prefix
@@ -571,7 +569,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
                                         ResolveService(
                                             ToString(250 + (j / 255)) + "." + ToString(j % 256) + ".1.1"), NODE_NONE),
             ResolveIP("251.4.1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same source /16 prefix should not map to more
@@ -583,7 +581,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250.1.1.1"), NODE_NONE),
             ResolveIP("101." + ToString(p) + ".1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different source /16 prefixes usually map to MORE
@@ -595,7 +593,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250.1.1.1"), NODE_NONE),
             ResolveIP("250." + ToString(p) + ".1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different source /16 prefixes sometimes map to NO MORE
@@ -606,11 +604,12 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
     std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    NetGroupManager netgroupman{asmap1};
 
     const auto ratio = GetCheckRatio(m_node);
-    auto addrman_asmap1 = std::make_unique<AddrMan>(asmap1, DETERMINISTIC, ratio);
-    auto addrman_asmap1_dup = std::make_unique<AddrMan>(asmap1, DETERMINISTIC, ratio);
-    auto addrman_noasmap = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, ratio);
+    auto addrman_asmap1 = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);
+    auto addrman_asmap1_dup = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);
+    auto addrman_noasmap = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, ratio);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
@@ -639,8 +638,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(addr_pos1.position != addr_pos3.position);
 
     // deserializing non-asmaped peers.dat to asmaped addrman
-    addrman_asmap1 = std::make_unique<AddrMan>(asmap1, DETERMINISTIC, ratio);
-    addrman_noasmap = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, ratio);
+    addrman_asmap1 = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);
+    addrman_noasmap = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, ratio);
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
     stream >> *addrman_asmap1;
@@ -651,8 +650,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(addr_pos4 == addr_pos2);
 
     // used to map to different buckets, now maps to the same bucket.
-    addrman_asmap1 = std::make_unique<AddrMan>(asmap1, DETERMINISTIC, ratio);
-    addrman_noasmap = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, ratio);
+    addrman_asmap1 = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);
+    addrman_noasmap = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, ratio);
     CAddress addr1 = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.2.1.1"), NODE_NONE);
     addrman_noasmap->Add({addr, addr2}, default_source);
@@ -671,7 +670,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 {
     // Confirm that invalid addresses are ignored in unserialization.
 
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
@@ -703,14 +702,14 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     BOOST_REQUIRE(pos + sizeof(tried2_raw_replacement) <= stream.size());
     memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
 
-    addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     stream >> *addrman;
     BOOST_CHECK_EQUAL(addrman->size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     BOOST_CHECK(addrman->size() == 0);
 
@@ -743,7 +742,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 
 BOOST_AUTO_TEST_CASE(addrman_noevict)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     // Add 35 addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -795,7 +794,7 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
 
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 {
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     BOOST_CHECK(addrman->size() == 0);
 
@@ -822,8 +821,8 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
     // Ensure test of address fails, so that it is evicted.
     // Update entry in tried by setting last good connection in the deep past.
-    BOOST_CHECK(!addrman->Good(info, /*nTime=*/1));
-    addrman->Attempt(info, /*fCountFailure=*/false, /*nTime=*/GetAdjustedTime() - 61);
+    BOOST_CHECK(!addrman->Good(info, NodeSeconds{1s}));
+    addrman->Attempt(info, /*fCountFailure=*/false, Now<NodeSeconds>() - 61s);
 
     // Should swap 36 for 19.
     addrman->ResolveCollisions();
@@ -865,7 +864,7 @@ static CDataStream AddrmanToStream(const AddrMan& addrman)
 
 BOOST_AUTO_TEST_CASE(load_addrman)
 {
-    AddrMan addrman{EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node)};
+    AddrMan addrman{EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node)};
 
     CService addr1, addr2, addr3;
     BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
@@ -884,7 +883,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrman);
     bool exceptionThrown = false;
-    AddrMan addrman1{EMPTY_ASMAP, !DETERMINISTIC, GetCheckRatio(m_node)};
+    AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
 
     BOOST_CHECK(addrman1.size() == 0);
     try {
@@ -901,7 +900,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
     CDataStream ssPeers2 = AddrmanToStream(addrman);
 
-    AddrMan addrman2{EMPTY_ASMAP, !DETERMINISTIC, GetCheckRatio(m_node)};
+    AddrMan addrman2{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman2.size() == 0);
     ReadFromStream(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 3);
@@ -939,7 +938,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     // Test that the de-serialization of corrupted peers.dat throws an exception.
     CDataStream ssPeers1 = MakeCorruptPeersDat();
     bool exceptionThrown = false;
-    AddrMan addrman1{EMPTY_ASMAP, !DETERMINISTIC, GetCheckRatio(m_node)};
+    AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman1.size() == 0);
     try {
         unsigned char pchMsgTmp[4];
@@ -955,7 +954,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     // Test that ReadFromStream fails if peers.dat is corrupt
     CDataStream ssPeers2 = MakeCorruptPeersDat();
 
-    AddrMan addrman2{EMPTY_ASMAP, !DETERMINISTIC, GetCheckRatio(m_node)};
+    AddrMan addrman2{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman2.size() == 0);
     BOOST_CHECK_THROW(ReadFromStream(addrman2, ssPeers2), std::ios_base::failure);
 }
@@ -963,11 +962,11 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 BOOST_AUTO_TEST_CASE(addrman_update_address)
 {
     // Tests updating nTime via Connected() and nServices via SetServices()
-    auto addrman = std::make_unique<AddrMan>(EMPTY_ASMAP, DETERMINISTIC, GetCheckRatio(m_node));
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CNetAddr source{ResolveIP("252.2.2.2")};
     CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
 
-    int64_t start_time{GetAdjustedTime() - 10000};
+    const auto start_time{Now<NodeSeconds>() - 10000s};
     addr.nTime = start_time;
     BOOST_CHECK(addrman->Add({addr}, source));
     BOOST_CHECK_EQUAL(addrman->size(), 1U);
@@ -979,7 +978,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     addrman->SetServices(addr_diff_port, NODE_NETWORK_LIMITED);
     std::vector<CAddress> vAddr1{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
     BOOST_CHECK_EQUAL(vAddr1.size(), 1U);
-    BOOST_CHECK_EQUAL(vAddr1.at(0).nTime, start_time);
+    BOOST_CHECK(vAddr1.at(0).nTime == start_time);
     BOOST_CHECK_EQUAL(vAddr1.at(0).nServices, NODE_NONE);
 
     // Updating an addrman entry with the correct port is successful
@@ -987,7 +986,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     addrman->SetServices(addr, NODE_NETWORK_LIMITED);
     std::vector<CAddress> vAddr2 = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
     BOOST_CHECK_EQUAL(vAddr2.size(), 1U);
-    BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000);
+    BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000s);
     BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
 }
 

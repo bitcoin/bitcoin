@@ -12,7 +12,7 @@ if ENABLE_MAN
 SUBDIRS += doc/man
 endif
 .PHONY: deploy FORCE
-.INTERMEDIATE: $(OSX_TEMP_ISO) $(COVERAGE_INFO)
+.INTERMEDIATE: $(COVERAGE_INFO)
 
 export PYTHONPATH
 
@@ -23,6 +23,7 @@ endif
 
 WIDECOIND_BIN=$(top_builddir)/src/$(WIDECOIN_DAEMON_NAME)$(EXEEXT)
 WIDECOIN_QT_BIN=$(top_builddir)/src/qt/$(WIDECOIN_GUI_NAME)$(EXEEXT)
+WIDECOIN_TEST_BIN=$(top_builddir)/src/test/$(WIDECOIN_TEST_NAME)$(EXEEXT)
 WIDECOIN_CLI_BIN=$(top_builddir)/src/$(WIDECOIN_CLI_NAME)$(EXEEXT)
 WIDECOIN_TX_BIN=$(top_builddir)/src/$(WIDECOIN_TX_NAME)$(EXEEXT)
 WIDECOIN_UTIL_BIN=$(top_builddir)/src/$(WIDECOIN_UTIL_NAME)$(EXEEXT)
@@ -37,8 +38,6 @@ space := $(empty) $(empty)
 OSX_APP=Widecoin-Qt.app
 OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
 OSX_DMG = $(OSX_VOLNAME).dmg
-OSX_TEMP_ISO = $(OSX_DMG:.dmg=).temp.iso
-OSX_BACKGROUND_IMAGE=$(top_srcdir)/contrib/macdeploy/background.tiff
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/widecoin.icns
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
@@ -48,7 +47,8 @@ DIST_CONTRIB = \
 	       $(top_srcdir)/test/sanitizer_suppressions/tsan \
 	       $(top_srcdir)/test/sanitizer_suppressions/ubsan \
 	       $(top_srcdir)/contrib/linearize/linearize-data.py \
-	       $(top_srcdir)/contrib/linearize/linearize-hashes.py
+	       $(top_srcdir)/contrib/linearize/linearize-hashes.py \
+	       $(top_srcdir)/contrib/signet/miner
 
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
@@ -64,7 +64,6 @@ WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/widecoin.ico \
   $(top_srcdir)/doc/README_windows.txt
 
 OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_INSTALLER_ICONS) \
-  $(top_srcdir)/contrib/macdeploy/detached-sig-apply.sh \
   $(top_srcdir)/contrib/macdeploy/detached-sig-create.sh
 
 COVERAGE_INFO = $(COV_TOOL_WRAPPER) baseline.info \
@@ -80,6 +79,7 @@ $(WIDECOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(WIDECOIND_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(WIDECOIN_QT_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(WIDECOIN_TEST_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(WIDECOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(WIDECOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(WIDECOIN_WALLET_BIN) $(top_builddir)/release
@@ -130,31 +130,16 @@ $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
 deploydir: $(OSX_DMG)
 else !BUILD_DARWIN
 APP_DIST_DIR=$(top_builddir)/dist
-APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/background.tiff $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
 
-$(APP_DIST_DIR)/Applications:
-	@rm -f $@
-	@cd $(@D); $(LN_S) /Applications $(@F)
-
-$(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Widecoin-Qt
-
-$(OSX_TEMP_ISO): $(APP_DIST_EXTRAS)
+$(OSX_DMG): deploydir
 	$(XORRISOFS) -D -l -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -o $@ $(APP_DIST_DIR) -- $(if $(SOURCE_DATE_EPOCH),-volume_date all_file_dates =$(SOURCE_DATE_EPOCH))
 
-$(OSX_DMG): $(OSX_TEMP_ISO)
-	$(DMG) dmg "$<" "$@"
-
-$(APP_DIST_DIR)/.background/background.tiff:
-	$(MKDIR_P) $(@D)
-	cp $(OSX_BACKGROUND_IMAGE) $@
-
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Widecoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	INSTALLNAMETOOL=$(INSTALLNAMETOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR)
+	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR)
 
-deploydir: $(APP_DIST_EXTRAS)
+deploydir: $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Widecoin-Qt
 endif !BUILD_DARWIN
 
-appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
 endif
 
@@ -191,7 +176,6 @@ LCOV_FILTER_PATTERN = \
 	-p "src/leveldb/" \
 	-p "src/crc32c/" \
 	-p "src/bench/" \
-	-p "src/univalue" \
 	-p "src/crypto/ctaes" \
 	-p "src/minisketch" \
 	-p "src/secp256k1" \

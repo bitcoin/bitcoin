@@ -478,8 +478,8 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
                 c.m_network = NET_IPV6;
             }
         },
-        /* protected_peer_ids */ {0, 4},
-        /* unprotected_peer_ids */ {1, 2, 3},
+        /*protected_peer_ids=*/{0, 4},
+        /*unprotected_peer_ids=*/{1, 2, 3},
         random_context));
 
     // Combined test: expect having 1 CJDNS, 1 I2P, 1 localhost and 1 onion peer
@@ -627,7 +627,7 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
                             candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
                             if (candidate.id <= 7) {
-                                candidate.fRelayTxes = false;
+                                candidate.m_relay_txs = false;
                                 candidate.fRelevantServices = true;
                             }
                         },
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
                             candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
                             if (candidate.id <= 7) {
-                                candidate.fRelayTxes = false;
+                                candidate.m_relay_txs = false;
                                 candidate.fRelevantServices = true;
                             }
                         },

@@ -181,7 +181,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
         ExtractDestination(out.scriptPubKey, address);
         totalAmount += out.nValue;
         tx_description.append(tr(" * Sends %1 to %2")
-            .arg(WidecoinUnits::formatWithUnit(WidecoinUnits::WCN, out.nValue))
+            .arg(WidecoinUnits::formatWithUnit(WidecoinUnit::WCN, out.nValue))
             .arg(QString::fromStdString(EncodeDestination(address))));
         tx_description.append("<br>");
     }
@@ -193,7 +193,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
     } else {
         tx_description.append(tr("Pays transaction fee: "));
-        tx_description.append(WidecoinUnits::formatWithUnit(WidecoinUnits::WCN, *analysis.fee));
+        tx_description.append(WidecoinUnits::formatWithUnit(WidecoinUnit::WCN, *analysis.fee));
 
         // add total amount in all subdivision units
         tx_description.append("<hr />");

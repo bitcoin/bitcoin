@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <test/util/setup_common.h>
 #include <threadinterrupt.h>
 #include <util/sock.h>
@@ -66,24 +66,6 @@ BOOST_AUTO_TEST_CASE(move_assignment)
     BOOST_CHECK(!SocketIsClosed(s));
     BOOST_CHECK_EQUAL(sock2->Get(), s);
     delete sock2;
-    BOOST_CHECK(SocketIsClosed(s));
-}
-
-BOOST_AUTO_TEST_CASE(release)
-{
-    SOCKET s = CreateSocket();
-    Sock* sock = new Sock(s);
-    BOOST_CHECK_EQUAL(sock->Release(), s);
-    delete sock;
-    BOOST_CHECK(!SocketIsClosed(s));
-    BOOST_REQUIRE(CloseSocket(s));
-}
-
-BOOST_AUTO_TEST_CASE(reset)
-{
-    const SOCKET s = CreateSocket();
-    Sock sock(s);
-    sock.Reset();
     BOOST_CHECK(SocketIsClosed(s));
 }
 

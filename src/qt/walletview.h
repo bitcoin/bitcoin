@@ -6,6 +6,7 @@
 #define WIDECOIN_QT_WALLETVIEW_H
 
 #include <consensus/amount.h>
+#include <qt/widecoinunits.h>
 
 #include <QStackedWidget>
 
@@ -115,7 +116,7 @@ Q_SIGNALS:
     /** Encryption status of wallet changed */
     void encryptionStatusChanged();
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
+    void incomingTransaction(const QString& date, WidecoinUnit unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
 };

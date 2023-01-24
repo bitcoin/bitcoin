@@ -9,6 +9,7 @@ src/widecoin-gui
 src/widecoin-node
 src/widecoin-tx
 src/widecoin-util
+src/widecoin-chainstate
 src/widecoin-wallet
 src/test/fuzz/fuzz
 src/test/test_widecoin
@@ -43,8 +44,6 @@ src/obj
 share/setup.nsi
 share/qt/Info.plist
 
-src/univalue/gen
-
 src/qt/*.moc
 src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
@@ -76,7 +75,6 @@ src/qt/widecoin-qt.includes
 *.log
 *.trs
 *.dmg
-*.iso
 
 *.json.h
 *.raw.h
@@ -150,3 +148,5 @@ osx_volname
 dist/
 
 /guix-build-*
+
+/ci/scratch/

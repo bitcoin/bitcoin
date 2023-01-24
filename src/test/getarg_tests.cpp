@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
@@ -21,8 +20,9 @@ BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
 void ResetArgs(ArgsManager& local_args, const std::string& strArg)
 {
     std::vector<std::string> vecArg;
-    if (strArg.size())
-        boost::split(vecArg, strArg, IsSpace, boost::token_compress_on);
+    if (strArg.size()) {
+        vecArg = SplitString(strArg, ' ');
+    }
 
     // Insert dummy executable name:
     vecArg.insert(vecArg.begin(), "testwidecoin");
@@ -357,6 +357,24 @@ BOOST_AUTO_TEST_CASE(patharg)
 
     ResetArgs(local_args, "-dir=user/.widecoin/.//");
     BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+
+    // Check negated and default argument handling. Specifying an empty argument
+    // is the same as not specifying the argument. This is convenient for
+    // scripting so later command line arguments can override earlier command
+    // line arguments or widecoin.conf values. Currently the -dir= case cannot be
+    // distinguished from -dir case with no assignment, but #16545 would add the
+    // ability to distinguish these in the future (and treat the no-assign case
+    // like an imperative command or an error).
+    ResetArgs(local_args, "");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    ResetArgs(local_args, "-dir=override");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"override"});
+    ResetArgs(local_args, "-dir=");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    ResetArgs(local_args, "-dir");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    ResetArgs(local_args, "-nodir");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{""});
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)

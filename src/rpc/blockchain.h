@@ -10,6 +10,7 @@
 #include <fs.h>
 #include <streams.h>
 #include <sync.h>
+#include <validation.h>
 
 #include <any>
 #include <stdint.h>
@@ -19,8 +20,7 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
-class CChainState;
-class CTxMemPool;
+class Chainstate;
 class UniValue;
 namespace node {
 struct NodeContext;
@@ -40,13 +40,7 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(const CBlockIndex*);
 
 /** Block description to JSON */
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
-
-/** Mempool information to JSON */
-UniValue MempoolInfoToJSON(const CTxMemPool& pool);
-
-/** Mempool to JSON */
-UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose = false, bool include_mempool_sequence = false);
+UniValue blockToJSON(node::BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
 
 /** Block header to JSON */
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex) LOCKS_EXCLUDED(cs_main);
@@ -60,8 +54,8 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
  */
 UniValue CreateUTXOSnapshot(
     node::NodeContext& node,
-    CChainState& chainstate,
-    CAutoFile& afile,
+    Chainstate& chainstate,
+    AutoFile& afile,
     const fs::path& path,
     const fs::path& tmppath);
 

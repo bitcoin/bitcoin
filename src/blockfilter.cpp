@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mutex>
-#include <sstream>
 #include <set>
 
 #include <blockfilter.h>
@@ -13,6 +12,7 @@
 #include <script/script.h>
 #include <streams.h>
 #include <util/golombrice.h>
+#include <util/string.h>
 
 /// SerType used to serialize parameters in GCS filter encoding.
 static constexpr int GCS_SER_TYPE = SER_NETWORK;
@@ -47,7 +47,7 @@ GCSFilter::GCSFilter(const Params& params)
     : m_params(params), m_N(0), m_F(0), m_encoded{0}
 {}
 
-GCSFilter::GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter)
+GCSFilter::GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter, bool skip_decode_check)
     : m_params(params), m_encoded(std::move(encoded_filter))
 {
     SpanReader stream{GCS_SER_TYPE, GCS_SER_VERSION, m_encoded};
@@ -58,6 +58,8 @@ GCSFilter::GCSFilter(const Params& params, std::vector<unsigned char> encoded_fi
         throw std::ios_base::failure("N must be <2^32");
     }
     m_F = static_cast<uint64_t>(m_N) * static_cast<uint64_t>(m_params.m_M);
+
+    if (skip_decode_check) return;
 
     // Verify that the encoded filter contains exactly N elements. If it has too much or too little
     // data, a std::ios_base::failure exception will be raised.
@@ -146,7 +148,7 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
 
 const std::string& BlockFilterTypeName(BlockFilterType filter_type)
 {
-    static std::string unknown_retval = "";
+    static std::string unknown_retval;
     auto it = g_filter_types.find(filter_type);
     return it != g_filter_types.end() ? it->second : unknown_retval;
 }
@@ -167,7 +169,7 @@ const std::set<BlockFilterType>& AllBlockFilterTypes()
 
     static std::once_flag flag;
     std::call_once(flag, []() {
-            for (auto entry : g_filter_types) {
+            for (const auto& entry : g_filter_types) {
                 types.insert(entry.first);
             }
         });
@@ -177,19 +179,7 @@ const std::set<BlockFilterType>& AllBlockFilterTypes()
 
 const std::string& ListBlockFilterTypes()
 {
-    static std::string type_list;
-
-    static std::once_flag flag;
-    std::call_once(flag, []() {
-            std::stringstream ret;
-            bool first = true;
-            for (auto entry : g_filter_types) {
-                if (!first) ret << ", ";
-                ret << entry.second;
-                first = false;
-            }
-            type_list = ret.str();
-        });
+    static std::string type_list{Join(g_filter_types, ", ", [](const auto& entry) { return entry.second; })};
 
     return type_list;
 }
@@ -219,14 +209,14 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
 }
 
 BlockFilter::BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
-                         std::vector<unsigned char> filter)
+                         std::vector<unsigned char> filter, bool skip_decode_check)
     : m_filter_type(filter_type), m_block_hash(block_hash)
 {
     GCSFilter::Params params;
     if (!BuildParams(params)) {
         throw std::invalid_argument("unknown filter_type");
     }
-    m_filter = GCSFilter(params, std::move(filter));
+    m_filter = GCSFilter(params, std::move(filter), skip_decode_check);
 }
 
 BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo)

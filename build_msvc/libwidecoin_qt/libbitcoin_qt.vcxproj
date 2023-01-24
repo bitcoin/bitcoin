@@ -53,6 +53,7 @@
     <ClCompile Include="..\..\src\qt\transactiondesc.cpp" />
     <ClCompile Include="..\..\src\qt\transactiondescdialog.cpp" />
     <ClCompile Include="..\..\src\qt\transactionfilterproxy.cpp" />
+    <ClCompile Include="..\..\src\qt\transactionoverviewwidget.cpp" />
     <ClCompile Include="..\..\src\qt\transactionrecord.cpp" />
     <ClCompile Include="..\..\src\qt\transactiontablemodel.cpp" />
     <ClCompile Include="..\..\src\qt\transactionview.cpp" />

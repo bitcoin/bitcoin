@@ -3,14 +3,19 @@ bench_ecmult
 bench_internal
 tests
 exhaustive_tests
-gen_ecmult_gen_static_prec_table
-gen_ecmult_static_pre_g
+precompute_ecmult_gen
+precompute_ecmult
 valgrind_ctime_test
+ecdh_example
+ecdsa_example
+schnorr_example
 *.exe
 *.so
 *.a
 *.csv
 !.gitignore
+*.log
+*.trs
 
 Makefile
 configure
@@ -41,6 +46,7 @@ coverage.*.html
 
 src/libsecp256k1-config.h
 src/libsecp256k1-config.h.in
+build-aux/ar-lib
 build-aux/config.guess
 build-aux/config.sub
 build-aux/depcomp

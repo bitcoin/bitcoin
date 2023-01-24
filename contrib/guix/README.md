@@ -382,7 +382,7 @@ https://ci.guix.gnu.org is automatically used unless the `--no-substitutes` flag
 is supplied. This default list of substitute servers is overridable both on a
 `guix-daemon` level and when you invoke `guix` commands. See examples below for
 the various ways of adding dongcarl's substitute server after having [authorized
-his signing key](#authorize-the-signing-keys).
+his signing key](#step-1-authorize-the-signing-keys).
 
 Change the **default list** of substitute servers by starting `guix-daemon` with
 the `--substitute-urls` option (you will likely need to edit your init script):

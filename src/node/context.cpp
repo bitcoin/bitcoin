@@ -7,14 +7,16 @@
 #include <addrman.h>
 #include <banman.h>
 #include <interfaces/chain.h>
+#include <kernel/context.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netgroup.h>
 #include <policy/fees.h>
 #include <scheduler.h>
 #include <txmempool.h>
 #include <validation.h>
 
 namespace node {
-NodeContext::NodeContext() {}
-NodeContext::~NodeContext() {}
+NodeContext::NodeContext() = default;
+NodeContext::~NodeContext() = default;
 } // namespace node

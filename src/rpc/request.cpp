@@ -66,23 +66,23 @@ UniValue JSONRPCError(int code, const std::string& message)
  */
 static const std::string COOKIEAUTH_USER = "__cookie__";
 /** Default name for auth cookie file */
-static const std::string COOKIEAUTH_FILE = ".cookie";
+static const char* const COOKIEAUTH_FILE = ".cookie";
 
 /** Get name of RPC authentication cookie file */
 static fs::path GetAuthCookieFile(bool temp=false)
 {
-    std::string arg = gArgs.GetArg("-rpccookiefile", COOKIEAUTH_FILE);
+    fs::path arg = gArgs.GetPathArg("-rpccookiefile", COOKIEAUTH_FILE);
     if (temp) {
         arg += ".tmp";
     }
-    return AbsPathForConfigVal(fs::PathFromString(arg));
+    return AbsPathForConfigVal(arg);
 }
 
 bool GenerateAuthCookie(std::string *cookie_out)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
-    GetRandBytes(rand_pwd, COOKIE_SIZE);
+    GetRandBytes(rand_pwd);
     std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
 
     /** the umask determines what permissions are used to create this file -
@@ -146,7 +146,7 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
         if (!rec.isObject()) {
             throw std::runtime_error("Batch member must be an object");
         }
-        size_t id = rec["id"].get_int();
+        size_t id = rec["id"].getInt<int>();
         if (id >= num) {
             throw std::runtime_error("Batch member id is larger than batch size");
         }

@@ -5,7 +5,8 @@
 #ifndef WIDECOIN_UTIL_BYTEVECTORHASH_H
 #define WIDECOIN_UTIL_BYTEVECTORHASH_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstddef>
 #include <vector>
 
 /**

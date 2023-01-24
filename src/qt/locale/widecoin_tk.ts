@@ -356,11 +356,11 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation type="unfinished">&amp;Amallar</translation>
+        <translation type="unfinished">&amp;Geleşikler</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation type="unfinished">Amallaryň geçmişine göz aýla</translation>
+        <translation type="unfinished">Geleşikleriň geçmişine göz aýla</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -405,7 +405,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">Tor işleýşi ýapyk.</translation>
+        <translation type="unfinished">Ulgamyň işleýşi ýapyk.</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
@@ -509,7 +509,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
-        <translation type="unfinished">Tor bilen sinhronlaşdyrmak...</translation>
+        <translation type="unfinished">Ulgam bilen utgaşdyrmak...</translation>
     </message>
     <message>
         <source>Indexing blocks on disk…</source>
@@ -546,8 +546,8 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform>Amallar geçmişinden %n blok(lar) işlendi.</numerusform>
-            <numerusform>Amallar geçmişinden %n blok(lar) işlendi.</numerusform>
+            <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message>
@@ -564,7 +564,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished">Mundan soňky amallar entek görünmez.</translation>
+        <translation type="unfinished">Mundan soňky geleşikler entek görünmez.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -584,7 +584,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Widecoin Transaction</source>
-        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin amalyny (BGÇBA) ýükle</translation>
+        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin geleşigini ýükle</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -592,7 +592,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Widecoin Transaction from clipboard</source>
-        <translation type="unfinished">Bölekleýin gol çekilen bitkoin amalyny alyş-çalyş panelinden ýükle</translation>
+        <translation type="unfinished">Bölekleýin gol çekilen bitkoin geleşigini alyş-çalyş panelinden ýükle</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -651,6 +651,11 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Elýeterli gapjyk ýok</translation>
     </message>
     <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">Gapjygyň ady</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Penjire</translation>
     </message>
@@ -678,8 +683,8 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>%n active connection(s) to Widecoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>Bitkoin toruna %n işjeň arabaglanyşyk.</numerusform>
-            <numerusform>Bitkoin toruna %n işjeň arabaglanyşyk.</numerusform>
+            <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message>
@@ -695,12 +700,12 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Disable network activity</source>
         <extracomment>A context menu item.</extracomment>
-        <translation type="unfinished">Toruň işjeňligini öçür</translation>
+        <translation type="unfinished">Ulgamyň işjeňligini öçür</translation>
     </message>
     <message>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
-        <translation type="unfinished">Toruň işjeňligini aç</translation>
+        <translation type="unfinished">Ulgamyň işjeňligini aç</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -748,11 +753,11 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation type="unfinished">Iberilen amal</translation>
+        <translation type="unfinished">Iberilen geleşik</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation type="unfinished">Gelýän amal</translation>
+        <translation type="unfinished">Gelýän geleşik</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -951,7 +956,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
-        <translation type="unfinished">Gapjyk döredilýär &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <translation type="unfinished">&lt;b&gt;%1&lt;/b&gt; gapjyk döredilýär...</translation>
     </message>
     <message>
         <source>Create wallet failed</source>
@@ -965,7 +970,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>Can't list signers</source>
         <translation type="unfinished">Gol çekenleriň sanawyny görkezip bolanok</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -983,7 +988,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">Gapjyk aç</translation>
+        <translation type="unfinished">Gapjygy aç</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
@@ -1170,13 +1175,26 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>Widecoin</source>
         <translation type="unfinished">Bitkoin</translation>
     </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation type="unfinished">(Zerur bolan %1 GB-dan)</translation>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>(%1 GB needed for full chain)</source>
-        <translation type="unfinished">(Doly zynjyr üçin %1 GB zerur)</translation>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1384,7 +1402,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <name>SendCoinsDialog</name>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Mukdar:</translation>
+        <translation type="unfinished">Sany:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -1396,7 +1414,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Töleg:</translation>
+        <translation type="unfinished">Gatanç:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -1499,7 +1517,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
-        <translation type="unfinished">Amalyň &amp;ID-sini göçür</translation>
+        <translation type="unfinished">Geleşigiň &amp;ID-sini göçür</translation>
     </message>
     <message>
         <source>Comma separated file</source>

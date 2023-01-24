@@ -102,7 +102,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
     if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx from peer=%d\n", nErased, peer);
 }
 
-unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
+void TxOrphanage::LimitOrphans(unsigned int max_orphans)
 {
     AssertLockHeld(g_cs_orphans);
 
@@ -135,7 +135,7 @@ unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
         EraseTx(m_orphan_list[randompos]->first);
         ++nEvicted;
     }
-    return nEvicted;
+    if (nEvicted > 0) LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);
 }
 
 void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set) const
