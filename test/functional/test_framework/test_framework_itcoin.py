@@ -1,5 +1,6 @@
 """Base test module for Signet test utilities."""
 import configparser
+import datetime
 import os
 import tempfile
 from pathlib import Path
@@ -395,3 +396,21 @@ class BitcoindNode:
         self._rpc.stop_node()
         self._node = None
         PortSeed.n = self._old_port_seed
+
+
+def utc_timestamp(y: int, m: int, d: int, h: int, minutes: int, s: int) -> int:
+    """Seconds since the epoch in UTC
+
+    Source: https://stackoverflow.com/questions/5067218/get-utc-timestamp-in-python-with-datetime/#13423091
+
+    >>> utc_timestamp(2000, 1, 1, 0, 0, 0)
+    946684800
+
+    >>> utc_timestamp(2020, 9, 1, 0, 0, 1)
+    1598918401
+
+    >>> utc_timestamp(2021, 1, 1, 0, 0, 0)
+    1609459200
+    """
+    epoch = datetime.datetime(1970, 1, 1)
+    return int((datetime.datetime(y, m, d, h, minutes, s) - epoch).total_seconds())
