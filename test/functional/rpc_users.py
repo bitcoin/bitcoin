@@ -86,9 +86,19 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(401, call_with_auth(node, user + 'wrong', password + 'wrong').status)
 
     def run_test(self):
-        self.log.info('Check correctness of the rpcauth config option')
         url = urllib.parse.urlparse(self.nodes[0].url)
+        self.log.info('Check that we bind before issuing cookie')
+        with self.nodes[0].assert_debug_log(
+            expected_msgs=[
+                f"Binding RPC on address 127.0.0.1 port {url.port}",
+                "Using random cookie authentication.",
+            ],
+            ordered=True
+        ):
+            self.restart_node(0)
 
+        url = urllib.parse.urlparse(self.nodes[0].url)
+        self.log.info('Check correctness of the rpcauth config option')
         self.test_auth(self.nodes[0], url.username, url.password)
         self.test_auth(self.nodes[0], 'rt', self.rtpassword)
         self.test_auth(self.nodes[0], 'rt2', self.rt2password)
