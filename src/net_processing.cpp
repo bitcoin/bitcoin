@@ -2965,7 +2965,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
             m_txpackagetracker->AddChildrenToWorkSet(*porphanTx);
-            m_txpackagetracker->EraseOrphanTx(orphanHash);
+            m_txpackagetracker->EraseOrphanTx(porphanTx->GetWitnessHash());
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
             }
@@ -3011,7 +3011,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                     m_recent_rejects.insert(porphanTx->GetHash());
                 }
             }
-            m_txpackagetracker->EraseOrphanTx(orphanHash);
+            m_txpackagetracker->EraseOrphanTx(porphanTx->GetWitnessHash());
             return true;
         }
     }
