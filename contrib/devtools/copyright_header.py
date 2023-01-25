@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 import re
 import fnmatch
@@ -451,7 +451,7 @@ def get_header_lines(header, start_year, end_year):
 CPP_HEADER = '''
 // Copyright (c) %s The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://www.opensource.org/licenses/mit-license.php.
 '''
 
 def get_cpp_header_lines_to_insert(start_year, end_year):
@@ -460,7 +460,7 @@ def get_cpp_header_lines_to_insert(start_year, end_year):
 SCRIPT_HEADER = '''
 # Copyright (c) %s The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://www.opensource.org/licenses/mit-license.php.
 '''
 
 def get_script_header_lines_to_insert(start_year, end_year):
