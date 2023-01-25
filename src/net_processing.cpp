@@ -584,14 +584,17 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only one
-     *                     orphan will be reconsidered on each call of this function. This set
-     *                     may be added to if accepting an orphan causes its children to be
-     *                     reconsidered.
-     * @return             True if there are still orphans in this peer's work set.
+     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only
+     *                     one orphan will be reconsidered on each call of this function. If an
+     *                     accepted orphan has orphaned children, those will need to be
+     *                     reconsidered, creating more work, possibly for other peers.
+     * @return             True if meaningful work was done (an orphan was accepted/rejected).
+     *                     If no meaningful work was done, then the work set for this peer
+     *                     will be empty.
      */
     bool ProcessOrphanTx(Peer& peer)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+
     /** Process a single headers message from a peer.
      *
      * @param[in]   pfrom     CNode of the peer
@@ -2892,9 +2895,8 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     LOCK(cs_main);
 
     CTransactionRef porphanTx = nullptr;
-    bool more = false;
 
-    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id, more)) {
+    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id)) {
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
@@ -2907,7 +2909,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
             }
-            break;
+            return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
@@ -2950,11 +2952,11 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 }
             }
             m_orphanage.EraseTx(orphanHash);
-            break;
+            return true;
         }
     }
 
-    return more;
+    return false;
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
@@ -4849,12 +4851,12 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
         }
     }
 
-    const bool has_more_orphans = ProcessOrphanTx(*peer);
+    const bool processed_orphan = ProcessOrphanTx(*peer);
 
     if (pfrom->fDisconnect)
         return false;
 
-    if (has_more_orphans) return true;
+    if (processed_orphan) return true;
 
     // this maintains the order of responses
     // and prevents m_getdata_requests to grow unbounded

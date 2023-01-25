@@ -89,11 +89,8 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
                 },
                 [&] {
                     {
-                        bool more = true;
-                        CTransactionRef ref = orphanage.GetTxToReconsider(peer_id, more);
-                        if (!ref) {
-                            Assert(!more);
-                        } else {
+                        CTransactionRef ref = orphanage.GetTxToReconsider(peer_id);
+                        if (ref) {
                             bool have_tx = orphanage.HaveTx(GenTxid::Txid(ref->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(ref->GetHash()));
                             Assert(have_tx);
                         }
