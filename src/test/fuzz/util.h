@@ -23,7 +23,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/net.h>
-#include <txmempool.h>
 #include <uint256.h>
 #include <version.h>
 
@@ -212,8 +211,6 @@ template <typename WeakEnumType, size_t size>
 {
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
-
-[[nodiscard]] CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept;
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 

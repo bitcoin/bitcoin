@@ -11,6 +11,11 @@
 
 #include <univalue.h>
 
+#include <list>
+#include <string>
+
+class JSONRPCRequest;
+
 namespace {
 
 static RPCHelpMan getzmqnotifications()
