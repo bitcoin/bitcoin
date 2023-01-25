@@ -6,11 +6,11 @@
 #include <vector>
 #include <script/script.h>
 #include <script/miniscript.h>
+#include <serialize.h>
 
 #include <assert.h>
 
 namespace miniscript {
-
 namespace internal {
 
 Type SanitizeType(Type e) {
