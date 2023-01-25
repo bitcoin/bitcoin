@@ -216,10 +216,10 @@ static RPCHelpMan getrawtransaction()
                             {RPCResult::Type::NUM, "fee", /*optional=*/true, "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                             {RPCResult::Type::ARR, "vin", "",
                             {
-                                {RPCResult::Type::OBJ, "", "utxo being spent, omitted if block undo data is not available",
+                                {RPCResult::Type::OBJ, "", "utxo being spent",
                                 {
                                     {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                                    {RPCResult::Type::OBJ, "prevout", /*optional=*/true, "Only if undo information is available)",
+                                    {RPCResult::Type::OBJ, "prevout", /*optional=*/true, "The previous output, omitted if block undo data is not available",
                                     {
                                         {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
                                         {RPCResult::Type::NUM, "height", "The height of the prevout"},
