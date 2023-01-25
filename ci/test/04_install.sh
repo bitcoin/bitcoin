@@ -93,7 +93,7 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
     CI_EXEC_ROOT add-apt-repository ppa:hadret/bpfcc
   fi
   if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
-    CI_EXEC_ROOT echo "${APPEND_APT_SOURCES_LIST}" >> /etc/apt/sources.list
+    CI_EXEC_ROOT echo "${APPEND_APT_SOURCES_LIST}" \>\> /etc/apt/sources.list
   fi
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$CI_BASE_PACKAGES"
