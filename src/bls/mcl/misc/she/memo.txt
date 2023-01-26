@@ -1,0 +1,119 @@
+P ; generator
+x ; secret key
+xP ; public key
+Enc(m;r) = (mP + rxP, rP)
+
+c = (S, T)
+dec(c) := S - xT
+dec(Enc(m;r)) = (mP + rxP) - x(rP) = mP
+DLP(mP) := m
+Dec(c) := DLP(dec(c))
+
+ZKP of dec(c) = m
+
+z := Enc(m;0) = (mP, 0)
+
+c - z = (rxP, rP) ; r is unknown
+
+ZKP of dec(c - z) = 0
+(P1, P2) := (P, rP)
+(A1, A2) := (xP, xrP)
+
+Prover shows that x(P1, P2) = (A1, A2) without revealing x.
+b ; rand
+B = (b P1, b P2)
+h = Hash(P2, A1, A2, B1, B2)
+d = b + h a
+pi = (d, h)
+
+Verifier
+Bi := d Pi - h Ai
+verify h = Hash(P2, A1, A2, B1, B2)
+-----------------------------------------------------------------------------
+CipherTextGT
+P ; generator of GT, GT=<P>
+x1, x2 ; secrect key
+(P0, P1, P2, P3) := (P, x1 P, x2 P, x1 x2 P) ; public information
+
+CipherText c = (A0, A1, A2, A3)
+dec(c) = 0 <=> A0 = x2 A1 + x1 A2 - x1 x2 A3 ; (*)
+
+F(a1, a2, a3) := a2 A1 + a1 A2 - a3 A3
+
+dec(c) = 0 <=> A0 = F(x1, x2, x1 x2)
+
+Sigma-protocol for dec(c) = 0, i.e., show (*)
+
+Prover:
+  b1, b2, b3 ; rand
+  Bi := bi P (i = 1, 2, 3)
+  X := F(b1, b2, b3)
+  send (B1, B2, B3, X) to Verfier
+
+Verifier:
+  takes h randomly and send to Prover
+
+Prover:
+  d1 := b1 + h x1
+  d2 := b2 + h x2
+  d3 := b3 + h x1 x2
+  send (d1, d2, d3) to Verifier
+
+Verifier:
+  verify
+    di P = Bi + h Pi (i = 1, 2, 3)
+    X = F(d1, d2, d3) - h A0
+    and accept it
+
+Fiat-Shamir transform:
+
+Prover:
+b1, b2, b3 ; random value
+Bi := bi P (i = 1, 2, 3)
+X := F(b1, b2, b3)
+h := Hash(P0, ..., P3, A0, ..., A3, B1, B2, B3, X)
+d1 := b1 + h x1
+d2 := b2 + h x2
+d3 := b3 + h x1 x2
+pi := (d1, d2, d3, h)
+
+Verifier:
+(pi, {Pi}, {Ai}) given
+Bi' := di P - h Pi for i = 1, 2, 3
+X' := F(d1, d2, d3) - h A0
+verify Hash({Pi}, {Ai}, {Bi'}, X') = h
+
+Completeness
+
+B1' = d1 P - h P1 = (b1 + h x1) P - h x1 P = b1 P = B1
+B2' = d2 P - h P2 = (b2 + h x2) P - h x2 P = b2 P = B2
+B3' = d3 P - h P3 = (b3 + h x1 x2) P - h x1 x2 P = B3
+X' = F(b1 + h x1, b2 + h x2, b3 + h x1 x2) - h A0
+ = F(b1, b2, b3) + h F(x1, x2, x1 x2) - h A0
+ = F(b1, b2, b3) + h (F(x1, x2, x1 x2) - A0)
+ = F(b1, b2, b3) = X
+OK
+
+Soundness
+{Ai}, pi=(d1, d2, d3, h) ; given
+compute Bi', X' as above
+Suppose Hash({Pi}, {Ai}, {Bi'}, X') = h
+
+define
+b1 := d1 - h x1
+b2 := d2 - h x2
+b3 := d3 - h x1 x2
+where x1, x2 are unknown
+d1, d2, d3 are free parameters, so b1, b2, b3 are also free.
+
+B1' = d1 P - h P1 = b1 P
+B2' = b2 P
+B3' = b3 P
+
+Y := F(x1, x2, x1 x2) - A0; unknown, but it is fixed
+X' = F(d1, d2, d3) - h A0 = F(b1 + h x1, b2 + h x2, b3 + h x1 x2) - h A0
+ = F(b1, b2, b3) + h(F(x1, x2, x1 x2) - A0)
+ = F(b1, b2, b3) + h Y
+
+Hash({Pi}, {Ai}, b1 P, b2 P, b3 P, F(b1, b2, b3) + h Y) = h
+To found {b1, b2, b3, h} to hold this equation, Y must be 0.

@@ -101,11 +101,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        nDefaultPort = 8333;
+        pchMessageStart[0] = 0xdb;
+        pchMessageStart[1] = 0xd2;
+        pchMessageStart[2] = 0xb1;
+        pchMessageStart[3] = 0xac;
+        nDefaultPort = 48480;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 496;
         m_assumed_chain_state_size = 6;
@@ -216,11 +216,11 @@ public:
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000076f6e7cbd0beade5d20");
         consensus.defaultAssumeValid = uint256S("0x0000000000000004877fa2d36316398528de4f347df2f8a96f76613a298ce060"); // 2344474
 
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
-        nDefaultPort = 18333;
+        pchMessageStart[0] = 0xe2;
+        pchMessageStart[1] = 0xbe;
+        pchMessageStart[2] = 0x8d;
+        pchMessageStart[3] = 0xb7;
+        nDefaultPort = 15155;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 42;
         m_assumed_chain_state_size = 2;
@@ -357,7 +357,7 @@ public:
         uint256 hash = h.GetHash();
         memcpy(pchMessageStart, hash.begin(), 4);
 
-        nDefaultPort = 38333;
+        nDefaultPort = 15157;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1598918400, 52613770, 0x1e0377ae, 1, 50 * COIN);
@@ -421,11 +421,11 @@ public:
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
 
-        pchMessageStart[0] = 0xfa;
+        pchMessageStart[0] = 0xfd;
         pchMessageStart[1] = 0xbf;
-        pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xda;
-        nDefaultPort = 18444;
+        pchMessageStart[2] = 0x9f;
+        pchMessageStart[3] = 0xfb;
+        nDefaultPort = 15156;
         nPruneAfterHeight = args.GetBoolArg("-fastprune", false) ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;

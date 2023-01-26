@@ -9,7 +9,7 @@ https://www.transifex.net/projects/p/bitcoin/
 Please report bugs using the issue tracker at github:
 https://github.com/bitcoin/bitcoin/issues
 
-For Ubuntu users, there is a new ppa maintained by Matt Corallo which you can add to your system so that it will automatically keep bitcoin up-to-date.  Just type "sudo apt-add-repository ppa:bitcoin/bitcoin" in your terminal, then install the bitcoin-qt package.
+For Ubuntu users, there is a new ppa maintained by Matt Corallo which you can add to your system so that it will automatically keep bitcoin up-to-date.  Just type "sudo apt-add-repository ppa:bitcoin/bitcoin" in your terminal, then install the navcoin-qt package.
 
 MAJOR BUG FIX  (CVE-2011-4447)
 
@@ -17,7 +17,7 @@ The wallet encryption feature introduced in Bitcoin version 0.4.0 did not suffic
 managed to get a copy of your encrypted wallet.dat file might be able to recover some or all of the unencrypted keys and steal the
 associated coins.
 
-If you have a previously encrypted wallet.dat, the first time you run bitcoin-qt or bitcoind the wallet will be rewritten, Bitcoin will
+If you have a previously encrypted wallet.dat, the first time you run navcoin-qt or navcoind the wallet will be rewritten, Bitcoin will
 shut down, and you will be prompted to restart it to run with the new, properly encrypted file.
 
 If you had a previously encrypted wallet.dat that might have been copied or stolen (for example, you backed it up to a public
@@ -32,7 +32,7 @@ new private keys are properly backed up you should:
 
 2. Run it again, then ask it for a new bitcoin address.
 Bitcoin-Qt: Address Book, then New Address...
-bitcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
+navcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
 
 3. If your encrypted wallet.dat may have been copied or stolen, send  all of your bitcoins to the new bitcoin address.
 

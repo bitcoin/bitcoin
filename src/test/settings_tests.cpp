@@ -251,7 +251,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
 
     // If check below fails, should manually dump the results with:
     //
-    //   SETTINGS_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=settings_tests/Merge
+    //   SETTINGS_MERGE_TEST_OUT=results.txt ./test_navcoin --run_test=settings_tests/Merge
     //
     // And verify diff against previous results to make sure the changes are expected.
     //

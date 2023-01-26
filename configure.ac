@@ -7,7 +7,7 @@ define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2023)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
-AC_INIT([Bitcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
+AC_INIT([Navcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/navcoin/navcoin/issues],[navcoin],[https://navcoin.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -29,17 +29,15 @@ if test -n "$PKG_CONFIG_LIBDIR"; then
   PKG_CONFIG="env PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR $PKG_CONFIG"
 fi
 
-BITCOIN_DAEMON_NAME=bitcoind
-BITCOIN_GUI_NAME=bitcoin-qt
-BITCOIN_TEST_NAME=test_bitcoin
-BITCOIN_CLI_NAME=bitcoin-cli
-BITCOIN_TX_NAME=bitcoin-tx
-BITCOIN_UTIL_NAME=bitcoin-util
-BITCOIN_CHAINSTATE_NAME=bitcoin-chainstate
-BITCOIN_WALLET_TOOL_NAME=bitcoin-wallet
+BITCOIN_DAEMON_NAME=navcoind
+BITCOIN_TEST_NAME=test_navcoin
+BITCOIN_CLI_NAME=navcoin-cli
+BITCOIN_TX_NAME=navcoin-tx
+BITCOIN_UTIL_NAME=navcoin-util
+BITCOIN_CHAINSTATE_NAME=navcoin-chainstate
+BITCOIN_WALLET_TOOL_NAME=navcoin-wallet
 dnl Multi Process
-BITCOIN_MP_NODE_NAME=bitcoin-node
-BITCOIN_MP_GUI_NAME=bitcoin-gui
+BITCOIN_MP_NODE_NAME=navcoin-node
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 dnl This is also the default as-of libtool 2.4.7
@@ -186,11 +184,6 @@ AC_ARG_ENABLE(tests,
     [use_tests=$enableval],
     [use_tests=yes])
 
-AC_ARG_ENABLE(gui-tests,
-    AS_HELP_STRING([--disable-gui-tests],[do not compile GUI tests (default is to compile if GUI and tests enabled)]),
-    [use_gui_tests=$enableval],
-    [use_gui_tests=$use_tests])
-
 AC_ARG_ENABLE(bench,
     AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
     [use_bench=$enableval],
@@ -213,12 +206,6 @@ AC_ARG_ENABLE([fuzz-binary],
     [enable_fuzz_binary=$enableval],
     [enable_fuzz_binary=yes])
 
-AC_ARG_WITH([qrencode],
-  [AS_HELP_STRING([--with-qrencode],
-  [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
-  [use_qr=$withval],
-  [use_qr=auto])
-
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--disable-hardening],
   [do not attempt to harden the resulting executables (default is to harden when possible)])],
@@ -237,9 +224,9 @@ AC_ARG_ENABLE([ccache],
   [use_ccache=$enableval],
   [use_ccache=auto])
 
-dnl Suppress warnings from external headers (e.g. Boost, Qt).
+dnl Suppress warnings from external headers (e.g. Boost).
 dnl May be useful if warnings from external headers clutter the build output
-dnl too much, so that it becomes difficult to spot Bitcoin Core warnings
+dnl too much, so that it becomes difficult to spot Navcoin Core warnings
 dnl or if they cause a build failure with --enable-werror.
 AC_ARG_ENABLE([suppress-external-warnings],
   [AS_HELP_STRING([--enable-suppress-external-warnings],
@@ -295,7 +282,7 @@ AC_ARG_WITH([mpgen],
 
 AC_ARG_ENABLE([multiprocess],
   [AS_HELP_STRING([--enable-multiprocess],
-  [build multiprocess bitcoin-node, bitcoin-wallet, and bitcoin-gui executables in addition to monolithic bitcoind and bitcoin-qt executables. Requires libmultiprocess library. Experimental (default is no)])],
+  [build multiprocess navcoin-node, and navcoin-wallet executables in addition to monolithic navcoind executable. Requires libmultiprocess library. Experimental (default is no)])],
   [enable_multiprocess=$enableval],
   [enable_multiprocess=no])
 
@@ -634,37 +621,37 @@ CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx bitcoin-util bitcoin-wallet (default=yes)])],
+  [build navcoin-cli navcoin-tx navcoin-util navcoin-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
 AC_ARG_ENABLE([util-cli],
   [AS_HELP_STRING([--enable-util-cli],
-  [build bitcoin-cli])],
+  [build navcoin-cli])],
   [build_bitcoin_cli=$enableval],
   [build_bitcoin_cli=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-tx],
   [AS_HELP_STRING([--enable-util-tx],
-  [build bitcoin-tx])],
+  [build navcoin-tx])],
   [build_bitcoin_tx=$enableval],
   [build_bitcoin_tx=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
-  [build bitcoin-wallet])],
+  [build navcoin-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-util],
   [AS_HELP_STRING([--enable-util-util],
-  [build bitcoin-util])],
+  [build navcoin-util])],
   [build_bitcoin_util=$enableval],
   [build_bitcoin_util=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([experimental-util-chainstate],
   [AS_HELP_STRING([--enable-experimental-util-chainstate],
-  [build experimental bitcoin-chainstate executable (default=no)])],
+  [build experimental navcoin-chainstate executable (default=no)])],
   [build_bitcoin_chainstate=$enableval],
   [build_bitcoin_chainstate=no])
 
@@ -682,7 +669,7 @@ AC_ARG_WITH([experimental-kernel-lib],
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build bitcoind daemon (default=yes)])],
+  [build navcoind daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
@@ -744,7 +731,7 @@ case $host in
          dnl in expected paths because they may conflict with system files. Ask
          dnl Homebrew where each one is located, then adjust paths accordingly.
          dnl It's safe to add these paths even if the functionality is disabled by
-         dnl the user (--without-wallet or --without-gui for example).
+         dnl the user (--without-wallet for example).
 
          dnl Homebrew may create symlinks in /usr/local/include for some packages.
          dnl Because MacOS's clang internally adds "-I /usr/local/include" to its search
@@ -763,8 +750,8 @@ case $host in
            BDB_LIBS="-L$bdb_prefix/lib -ldb_cxx-4.8"
          fi
 
-         if $BREW list --versions qt@5 >/dev/null; then
-           export PKG_CONFIG_PATH="$($BREW --prefix qt@5 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
+         if test "$use_sqlite" != "no" && $BREW list --versions sqlite3 >/dev/null; then
+           export PKG_CONFIG_PATH="$($BREW --prefix sqlite3 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
          fi
 
          case $host in
@@ -1013,7 +1000,7 @@ AC_CHECK_DECLS([getifaddrs, freeifaddrs],[CHECK_SOCKET],,
     #include <ifaddrs.h>]
 )
 
-dnl These are used for daemonization in bitcoind
+dnl These are used for daemonization in navcoind
 AC_CHECK_DECLS([fork])
 AC_CHECK_DECLS([setsid])
 
@@ -1316,9 +1303,6 @@ if test "$enable_fuzz" = "yes"; then
   build_bitcoin_wallet=no
   build_bitcoind=no
   build_bitcoin_libs=no
-  bitcoin_enable_qt=no
-  bitcoin_enable_qt_test=no
-  bitcoin_enable_qt_dbus=no
   use_bench=no
   use_tests=no
   use_external_signer=no
@@ -1328,19 +1312,6 @@ if test "$enable_fuzz" = "yes"; then
   enable_fuzz_binary=yes
 
   AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"], [], [$CXXFLAG_WERROR])
-else
-  BITCOIN_QT_INIT
-
-  dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-  BITCOIN_QT_CONFIGURE([5.11.3])
-
-  dnl Keep a copy of the original $QT_INCLUDES and use it when invoking qt's moc
-  QT_INCLUDES_UNSUPPRESSED=$QT_INCLUDES
-  if test "$suppress_external_warnings" != "no" ; then
-    QT_INCLUDES=SUPPRESS_WARNINGS($QT_INCLUDES)
-    QT_DBUS_INCLUDES=SUPPRESS_WARNINGS($QT_DBUS_INCLUDES)
-    QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
-  fi
 fi
 
 if test "$enable_fuzz_binary" = "yes"; then
@@ -1461,7 +1432,7 @@ if test "$use_natpmp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" = "nononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$use_tests$use_bench" = "nononononononono"; then
   use_boost=no
 else
   use_boost=yes
@@ -1536,10 +1507,10 @@ fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$use_external_signer" = "yes"])
 
 dnl Do not compile with syscall sandbox support when compiling under the sanitizers.
-dnl The sanitizers introduce use of syscalls that are not typically used in bitcoind
+dnl The sanitizers introduce use of syscalls that are not typically used in navcoind
 dnl (such as execve when the sanitizers execute llvm-symbolizer).
 if test "$use_sanitizers" != ""; then
-  AC_MSG_WARN([Specifying --with-sanitizers forces --without-seccomp since the sanitizers introduce use of syscalls not allowed by the bitcoind syscall sandbox (-sandbox=<mode>).])
+  AC_MSG_WARN([Specifying --with-sanitizers forces --without-seccomp since the sanitizers introduce use of syscalls not allowed by the navcoind syscall sandbox (-sandbox=<mode>).])
   seccomp_found=no
 fi
 if test "$seccomp_found" != "no"; then
@@ -1582,7 +1553,7 @@ fi
 dnl libevent check
 
 use_libevent=no
-if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$enable_fuzz_binary$use_tests$use_bench" != "nononononono"; then
+if test "$build_bitcoin_cli$build_bitcoind$enable_fuzz_binary$use_tests$use_bench" != "nonononono"; then
   PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
   if test "$TARGET_OS" != "windows"; then
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
@@ -1611,12 +1582,6 @@ if test x$use_libevent = xyes; then
     [ AC_MSG_RESULT([no]) ]
   )
   CXXFLAGS="$TEMP_CXXFLAGS"
-fi
-
-dnl QR Code encoding library check
-
-if test "$use_qr" != "no"; then
-  BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
 fi
 
 dnl ZMQ check
@@ -1667,7 +1632,6 @@ fi
 
 AM_CONDITIONAL([BUILD_MULTIPROCESS], [test "$build_multiprocess" = "yes"])
 AM_CONDITIONAL([BUILD_BITCOIN_NODE], [test "$build_multiprocess" = "yes"])
-AM_CONDITIONAL([BUILD_BITCOIN_GUI], [test "$build_multiprocess" = "yes"])
 
 dnl codegen tools check
 
@@ -1810,47 +1774,9 @@ else
   fi
 fi
 
-dnl these are only used when qt is enabled
-BUILD_TEST_QT=""
-if test "$bitcoin_enable_qt" != "no"; then
-  dnl enable dbus support
-  AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
-  if test "$bitcoin_enable_qt_dbus" != "no"; then
-    AC_DEFINE([USE_DBUS], [1], [Define if dbus support should be compiled in])
-  fi
-  AC_MSG_RESULT([$bitcoin_enable_qt_dbus])
-
-  dnl enable qr support
-  AC_MSG_CHECKING([whether to build GUI with support for QR codes])
-  if test "$have_qrencode" = "no"; then
-    if test "$use_qr" = "yes"; then
-      AC_MSG_ERROR([QR support requested but cannot be built. Use --without-qrencode])
-    fi
-    use_qr=no
-  else
-    if test "$use_qr" != "no"; then
-      AC_DEFINE([USE_QRCODE], [1], [Define if QR support should be compiled in])
-      use_qr=yes
-    fi
-  fi
-  AC_MSG_RESULT([$use_qr])
-
-  if test "$XGETTEXT" = ""; then
-    AC_MSG_WARN([xgettext is required to update qt translations])
-  fi
-
-  AC_MSG_CHECKING([whether to build test_bitcoin-qt])
-  if test "$use_gui_tests$bitcoin_enable_qt_test" = "yesyes"; then
-    AC_MSG_RESULT([yes])
-    BUILD_TEST_QT="yes"
-  else
-    AC_MSG_RESULT([no])
-  fi
-fi
-
 AM_CONDITIONAL([ENABLE_ZMQ], [test "$use_zmq" = "yes"])
 
-AC_MSG_CHECKING([whether to build test_bitcoin])
+AC_MSG_CHECKING([whether to build test_navcoin])
 if test "$use_tests" = "yes"; then
   if test "$enable_fuzz" = "yes"; then
     AC_MSG_RESULT([no, because fuzzing is enabled])
@@ -1870,7 +1796,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$enable_fuzz_binary$use_bench$use_tests" = "nononononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoin_libs$build_bitcoind$enable_fuzz_binary$use_bench$use_tests" = "nononononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
 
@@ -1884,10 +1810,7 @@ AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
-AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
-AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
-AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
@@ -1924,7 +1847,6 @@ AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 AC_SUBST(BITCOIN_DAEMON_NAME)
-AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_TEST_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
@@ -1932,7 +1854,6 @@ AC_SUBST(BITCOIN_UTIL_NAME)
 AC_SUBST(BITCOIN_CHAINSTATE_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 AC_SUBST(BITCOIN_MP_NODE_NAME)
-AC_SUBST(BITCOIN_MP_GUI_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(CORE_LDFLAGS)
@@ -1966,7 +1887,6 @@ AC_SUBST(USE_SQLITE)
 AC_SUBST(USE_BDB)
 AC_SUBST(ENABLE_EXTERNAL_SIGNER)
 AC_SUBST(USE_UPNP)
-AC_SUBST(USE_QRCODE)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
@@ -1981,20 +1901,17 @@ AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(ANDROID_ARCH)
 AC_SUBST(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR)
-AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
+AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
 AC_CONFIG_LINKS([contrib/devtools/iwyu/bitcoin.core.imp:contrib/devtools/iwyu/bitcoin.core.imp])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
-AC_CONFIG_LINKS([contrib/macdeploy/background.tiff:contrib/macdeploy/background.tiff])
 AC_CONFIG_LINKS([src/.bear-tidy-config:src/.bear-tidy-config])
 AC_CONFIG_LINKS([src/.clang-tidy:src/.clang-tidy])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
-AC_CONFIG_LINKS([src/qt/Makefile:src/qt/Makefile])
-AC_CONFIG_LINKS([src/qt/test/Makefile:src/qt/test/Makefile])
 AC_CONFIG_LINKS([src/test/Makefile:src/test/Makefile])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
@@ -2036,15 +1953,11 @@ if test "$enable_wallet" != "no"; then
     echo "    with sqlite   = $use_sqlite"
     echo "    with bdb      = $use_bdb"
 fi
-echo "  with gui / qt   = $bitcoin_enable_qt"
-if test $bitcoin_enable_qt != "no"; then
-    echo "    with qr       = $use_qr"
-fi
 echo "  with zmq        = $use_zmq"
 if test $enable_fuzz = "no"; then
     echo "  with test       = $use_tests"
 else
-    echo "  with test       = not building test_bitcoin because fuzzing is enabled"
+    echo "  with test       = not building test_navcoin because fuzzing is enabled"
 fi
 echo "  with fuzz binary = $enable_fuzz_binary"
 echo "  with bench      = $use_bench"

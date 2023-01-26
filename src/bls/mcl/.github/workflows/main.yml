@@ -1,0 +1,26 @@
+name: test
+on: [push]
+
+jobs:
+  build:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: lscpu
+    - run: sudo apt update
+    - run: sudo apt install valgrind
+    - run: make bin/pairing.exe -j4
+    - run: valgrind bin/pairing.exe
+    - run: make clean
+#    - run: wget https://software.intel.com/content/dam/develop/external/us/en/documents/downloads/sde-external-8.63.0-2021-01-18-lin.tar.bz2
+#    - run: bzip2 -dc sde-external-8.63.0-2021-01-18-lin.tar.bz2 | tar xvf -
+#    - run: make bin/bn_test.exe DEBUG=1 -j4
+#    - run: sde-external-8.63.0-2021-01-18-lin/sde64 -hsw -- bin/bn_test.exe
+    - run: make test_ci DEBUG=1 -j4
+    - run: make clean
+    - run: make test_ci DEBUG=1 -j4 CXX=clang++
+    - run: make clean
+#    - run: make test_go
+#    - run: sudo apt install openjdk-8-jdk
+#    - run: make -C ffi/java test JAVA_INC=-I/usr/lib/jvm/java-8-openjdk-amd64/include

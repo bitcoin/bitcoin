@@ -29,6 +29,7 @@ ALLOWED_EXECUTABLE_SHEBANG = {
     "py": [b"#!/usr/bin/env python3"],
     "sh": [b"#!/usr/bin/env bash", b"#!/bin/sh"],
 }
+EXCLUDED_DIRS = ("^src/bls/")
 
 
 class FileMeta(object):
@@ -123,8 +124,11 @@ def check_all_file_permissions(files) -> int:
 
     Additionally checks that for executable files, the file contains a shebang line
     """
+    filename_exclude_dir_regex = re.compile(EXCLUDED_DIRS)
     failed_tests = 0
     for filename, file_meta in files.items():
+        if filename_exclude_dir_regex.match(filename):
+            continue
         if file_meta.permissions == ALLOWED_PERMISSION_EXECUTABLES:
             with open(filename, "rb") as f:
                 shebang = f.readline().rstrip(b"\n")

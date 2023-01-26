@@ -8,6 +8,12 @@ EXTRA_LIBRARIES += \
   $(LIBTEST_UTIL)
 
 TEST_UTIL_H = \
+  blsct/arith/elements.h \
+  blsct/arith/endianness.h \
+  blsct/arith/mcl/mcl_g1point.h \
+  blsct/arith/mcl/mcl_scalar.h \
+  blsct/arith/mcl/mcl_initializer.h \
+  blsct/keys.h \
   test/util/blockfilter.h \
   test/util/chainstate.h \
   test/util/logging.h \
@@ -26,7 +32,13 @@ endif # ENABLE_WALLET
 
 libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtest_util_a_LIBADD = $(LIBBLS) $(LIBMCL)
 libtest_util_a_SOURCES = \
+  blsct/arith/elements.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/arith/mcl/mcl_initializer.cpp \
+  blsct/keys.cpp \
   test/util/blockfilter.cpp \
   test/util/logging.cpp \
   test/util/mining.cpp \

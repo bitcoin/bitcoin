@@ -1,36 +1,36 @@
-Sample init scripts and service configuration for bitcoind
+Sample init scripts and service configuration for navcoind
 ==========================================================
 
 Sample scripts and configuration files for systemd, Upstart and OpenRC
 can be found in the contrib/init folder.
 
-    contrib/init/bitcoind.service:    systemd service unit configuration
-    contrib/init/bitcoind.openrc:     OpenRC compatible SysV style init script
-    contrib/init/bitcoind.openrcconf: OpenRC conf.d file
-    contrib/init/bitcoind.conf:       Upstart service configuration file
-    contrib/init/bitcoind.init:       CentOS compatible SysV style init script
+    contrib/init/navcoind.service:    systemd service unit configuration
+    contrib/init/navcoind.openrc:     OpenRC compatible SysV style init script
+    contrib/init/navcoind.openrcconf: OpenRC conf.d file
+    contrib/init/navcoind.conf:       Upstart service configuration file
+    contrib/init/navcoind.init:       CentOS compatible SysV style init script
 
 Service User
 ---------------------------------
 
 All three Linux startup configurations assume the existence of a "bitcoin" user
 and group.  They must be created before attempting to use these scripts.
-The macOS configuration assumes bitcoind will be set up for the current user.
+The macOS configuration assumes navcoind will be set up for the current user.
 
 Configuration
 ---------------------------------
 
-Running bitcoind as a daemon does not require any manual configuration. You may
+Running navcoind as a daemon does not require any manual configuration. You may
 set the `rpcauth` setting in the `bitcoin.conf` configuration file to override
 the default behaviour of using a special cookie for authentication.
 
 This password does not have to be remembered or typed as it is mostly used
-as a fixed token that bitcoind and client programs read from the configuration
+as a fixed token that navcoind and client programs read from the configuration
 file, however it is recommended that a strong and secure password be used
 as this password is security critical to securing the wallet should the
 wallet be enabled.
 
-If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set,
+If navcoind is run with the "-server" flag (set by default), and no rpcpassword is set,
 it will use a special cookie file for authentication. The cookie is generated with random
 content when the daemon starts, and deleted when it exits. Read access to this file
 controls who can access it through RPC.
@@ -38,7 +38,7 @@ controls who can access it through RPC.
 By default the cookie is stored in the data directory, but it's location can be overridden
 with the option '-rpccookiefile'.
 
-This allows for running bitcoind without having to do any manual configuration.
+This allows for running navcoind without having to do any manual configuration.
 
 `conf`, `pid`, and `wallet` accept relative paths which are interpreted as
 relative to the data directory. `wallet` *only* supports relative paths.
@@ -53,17 +53,17 @@ Paths
 
 All three configurations assume several paths that might need to be adjusted.
 
-    Binary:              /usr/bin/bitcoind
+    Binary:              /usr/bin/navcoind
     Configuration file:  /etc/bitcoin/bitcoin.conf
-    Data directory:      /var/lib/bitcoind
-    PID file:            /var/run/bitcoind/bitcoind.pid (OpenRC and Upstart) or
-                         /run/bitcoind/bitcoind.pid (systemd)
-    Lock file:           /var/lock/subsys/bitcoind (CentOS)
+    Data directory:      /var/lib/navcoind
+    PID file:            /var/run/navcoind/navcoind.pid (OpenRC and Upstart) or
+                         /run/navcoind/navcoind.pid (systemd)
+    Lock file:           /var/lock/subsys/navcoind (CentOS)
 
 The PID directory (if applicable) and data directory should both be owned by the
 bitcoin user and group. It is advised for security reasons to make the
 configuration file and data directory only readable by the bitcoin user and
-group. Access to bitcoin-cli and other bitcoind rpc clients can then be
+group. Access to navcoin-cli and other navcoind rpc clients can then be
 controlled by group membership.
 
 NOTE: When using the systemd .service file, the creation of the aforementioned
@@ -84,7 +84,7 @@ OpenRC).
 
 ### macOS
 
-    Binary:              /usr/local/bin/bitcoind
+    Binary:              /usr/local/bin/navcoind
     Configuration file:  ~/Library/Application Support/Bitcoin/bitcoin.conf
     Data directory:      ~/Library/Application Support/Bitcoin
     Lock file:           ~/Library/Application Support/Bitcoin/.lock
@@ -98,23 +98,23 @@ Installing this .service file consists of just copying it to
 /usr/lib/systemd/system directory, followed by the command
 `systemctl daemon-reload` in order to update running systemd configuration.
 
-To test, run `systemctl start bitcoind` and to enable for system startup run
-`systemctl enable bitcoind`
+To test, run `systemctl start navcoind` and to enable for system startup run
+`systemctl enable navcoind`
 
 NOTE: When installing for systemd in Debian/Ubuntu the .service file needs to be copied to the /lib/systemd/system directory instead.
 
 ### OpenRC
 
-Rename bitcoind.openrc to bitcoind and drop it in /etc/init.d.  Double
+Rename navcoind.openrc to navcoind and drop it in /etc/init.d.  Double
 check ownership and permissions and make it executable.  Test it with
-`/etc/init.d/bitcoind start` and configure it to run on startup with
-`rc-update add bitcoind`
+`/etc/init.d/navcoind start` and configure it to run on startup with
+`rc-update add navcoind`
 
 ### Upstart (for Debian/Ubuntu based distributions)
 
 Upstart is the default init system for Debian/Ubuntu versions older than 15.04. If you are using version 15.04 or newer and haven't manually configured upstart you should follow the systemd instructions instead.
 
-Drop bitcoind.conf in /etc/init.  Test by running `service bitcoind start`
+Drop navcoind.conf in /etc/init.  Test by running `service navcoind start`
 it will automatically start on reboot.
 
 NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they
@@ -122,21 +122,21 @@ use old versions of Upstart and do not supply the start-stop-daemon utility.
 
 ### CentOS
 
-Copy bitcoind.init to /etc/init.d/bitcoind. Test by running `service bitcoind start`.
+Copy navcoind.init to /etc/init.d/navcoind. Test by running `service navcoind start`.
 
-Using this script, you can adjust the path and flags to the bitcoind program by
+Using this script, you can adjust the path and flags to the navcoind program by
 setting the BITCOIND and FLAGS environment variables in the file
-/etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.
+/etc/sysconfig/navcoind. You can also use the DAEMONOPTS environment variable here.
 
 ### macOS
 
-Copy org.bitcoin.bitcoind.plist into ~/Library/LaunchAgents. Load the launch agent by
-running `launchctl load ~/Library/LaunchAgents/org.bitcoin.bitcoind.plist`.
+Copy org.bitcoin.navcoind.plist into ~/Library/LaunchAgents. Load the launch agent by
+running `launchctl load ~/Library/LaunchAgents/org.bitcoin.navcoind.plist`.
 
-This Launch Agent will cause bitcoind to start whenever the user logs in.
+This Launch Agent will cause navcoind to start whenever the user logs in.
 
-NOTE: This approach is intended for those wanting to run bitcoind as the current user.
-You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a
+NOTE: This approach is intended for those wanting to run navcoind as the current user.
+You will need to modify org.bitcoin.navcoind.plist if you intend to use it as a
 Launch Daemon with a dedicated bitcoin user.
 
 Auto-respawn

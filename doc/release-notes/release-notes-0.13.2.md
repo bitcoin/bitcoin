@@ -111,7 +111,7 @@ git merge commit are mentioned.
 - #8972 `6f86b53` Make warnings label selectable (jonasschnelli) (MarcoFalke)
 - #9185 `6d70a73` Fix coincontrol sort issue (jonasschnelli)
 - #9094 `5f3a12c` Use correct conversion function for boost::path datadir (laanwj)
-- #8908 `4a974b2` Update bitcoin-qt.desktop (s-matthew-english)
+- #8908 `4a974b2` Update navcoin-qt.desktop (s-matthew-english)
 - #9190 `dc46b10` Plug many memory leaks (laanwj)
 
 ### Wallet
@@ -134,7 +134,7 @@ git merge commit are mentioned.
 - #8838 `094848b` Calculate size and weight of block correctly in CreateNewBlock() (jnewbery)
 - #8920 `40169dc` Set minimum required Boost to 1.47.0 (fanquake)
 - #9251 `a710a43` Improvement of documentation of command line parameter 'whitelist' (wodry)
-- #8932 `106da69` Allow bitcoin-tx to create v2 transactions (btcdrak)
+- #8932 `106da69` Allow navcoin-tx to create v2 transactions (btcdrak)
 - #8929 `12428b4` add software-properties-common (sigwo)
 - #9120 `08d1c90` bug: Missed one "return false" in recent refactoring in #9067 (UdjinM6)
 - #9067 `f85ee01` Fix exit codes (UdjinM6)

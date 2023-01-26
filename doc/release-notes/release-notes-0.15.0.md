@@ -19,7 +19,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the 
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+or `navcoind`/`navcoin-qt` (on Linux).
 
 The first time you run version 0.15.0, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
@@ -148,11 +148,11 @@ Multi-wallet is enabled by using more than one `-wallet` argument when starting 
 
 **In Bitcoin-Qt, only the first wallet will be displayed and accessible for creating and signing transactions.** GUI selectable multiple wallets will be supported in a future version. However, even in 0.15 other loaded wallets will remain synchronized to the node's current tip in the background. This can be useful if running a pruned node, since loading a wallet where the most recent sync is beyond the pruned height results in having to download and revalidate the whole blockchain. Continuing to synchronize all wallets in the background avoids this problem.
 
-Bitcoin Core 0.15.0 contains the following changes to the RPC interface and `bitcoin-cli` for multi-wallet:
+Bitcoin Core 0.15.0 contains the following changes to the RPC interface and `navcoin-cli` for multi-wallet:
 
-* When running Bitcoin Core with a single wallet, there are **no** changes to the RPC interface or `bitcoin-cli`. All RPC calls and `bitcoin-cli` commands continue to work as before.
-* When running Bitcoin Core with multi-wallet, all *node-level* RPC methods continue to work as before. HTTP RPC requests should be send to the normal `<RPC IP address>:<RPC port>` endpoint, and `bitcoin-cli` commands should be run as before. A *node-level* RPC method is any method which does not require access to the wallet.
-* When running Bitcoin Core with multi-wallet, *wallet-level* RPC methods must specify the wallet for which they're intended in every request. HTTP RPC requests should be send to the `<RPC IP address>:<RPC port>/wallet/<wallet name>` endpoint, for example `127.0.0.1:8332/wallet/wallet1.dat`. `bitcoin-cli` commands should be run with a `-rpcwallet` option, for example `bitcoin-cli -rpcwallet=wallet1.dat getbalance`.
+* When running Bitcoin Core with a single wallet, there are **no** changes to the RPC interface or `navcoin-cli`. All RPC calls and `navcoin-cli` commands continue to work as before.
+* When running Bitcoin Core with multi-wallet, all *node-level* RPC methods continue to work as before. HTTP RPC requests should be send to the normal `<RPC IP address>:<RPC port>` endpoint, and `navcoin-cli` commands should be run as before. A *node-level* RPC method is any method which does not require access to the wallet.
+* When running Bitcoin Core with multi-wallet, *wallet-level* RPC methods must specify the wallet for which they're intended in every request. HTTP RPC requests should be send to the `<RPC IP address>:<RPC port>/wallet/<wallet name>` endpoint, for example `127.0.0.1:8332/wallet/wallet1.dat`. `navcoin-cli` commands should be run with a `-rpcwallet` option, for example `navcoin-cli -rpcwallet=wallet1.dat getbalance`.
 * A new *node-level* `listwallets` RPC method is added to display which wallets are currently loaded. The names returned by this method are the same as those used in the HTTP endpoint and for the `rpcwallet` argument.
 
 Note that while multi-wallet is now fully supported, the RPC multi-wallet interface should be considered unstable for version 0.15.0, and there may backwards-incompatible changes in future versions.
@@ -199,7 +199,7 @@ Version 0.15 introduces several new RPC methods:
   in the chain (See [PR 9733](https://github.com/bitcoin/bitcoin/pull/9733)).
 - `listwallets` lists wallets which are currently loaded. See the *Multi-wallet* section
   of these release notes for full details (See [Multi-wallet support](#multi-wallet-support)).
-- `uptime` returns the total runtime of the `bitcoind` server since its last start (See [PR 10400](https://github.com/bitcoin/bitcoin/pull/10400)).
+- `uptime` returns the total runtime of the `navcoind` server since its last start (See [PR 10400](https://github.com/bitcoin/bitcoin/pull/10400)).
 
 Low-level RPC changes
 ---------------------
@@ -268,13 +268,13 @@ Low-level RPC changes
   or subnet is invalid. Previously returned RPC_CLIENT_NODE_ALREADY_ADDED.
   - `setban` now returns RPC_CLIENT_INVALID_IP_OR_SUBNET if the user tries to unban
   a node that has not previously been banned. Previously returned RPC_MISC_ERROR.
-  - `removeprunedfunds` now returns RPC_WALLET_ERROR if `bitcoind` is unable to remove
+  - `removeprunedfunds` now returns RPC_WALLET_ERROR if `navcoind` is unable to remove
   the transaction. Previously returned RPC_INTERNAL_ERROR.
   - `removeprunedfunds` now returns RPC_INVALID_PARAMETER if the transaction does not
   exist in the wallet. Previously returned RPC_INTERNAL_ERROR.
   - `fundrawtransaction` now returns RPC_INVALID_ADDRESS_OR_KEY if an invalid change
   address is provided. Previously returned RPC_INVALID_PARAMETER.
-  - `fundrawtransaction` now returns RPC_WALLET_ERROR if `bitcoind` is unable to create
+  - `fundrawtransaction` now returns RPC_WALLET_ERROR if `navcoind` is unable to create
   the transaction. The error message provides further details. Previously returned
   RPC_INTERNAL_ERROR.
   - `bumpfee` now returns RPC_INVALID_PARAMETER if the provided transaction has
@@ -331,17 +331,17 @@ Low-level RPC changes
 - #9740 `9fec4da` Add friendly output to dumpwallet (aideca)
 - #10426 `16f6c98` Replace bytes_serialized with bogosize (sipa)
 - #10252 `980deaf` RPC/Mining: Restore API compatibility for prioritisetransaction (luke-jr)
-- #9672 `46311e7` Opt-into-RBF for RPC & bitcoin-tx (luke-jr)
+- #9672 `46311e7` Opt-into-RBF for RPC & navcoin-tx (luke-jr)
 - #10481 `9c248e3` Decodehextx scripts sanity check  (achow101)
 - #10488 `fa1f106` Note that the prioritizetransaction dummy value is deprecated, and has no meaning (TheBlueMatt)
 - #9738 `c94b89e` gettxoutproof() should return consistent result (jnewbery)
 - #10191 `00350bd` [trivial] Rename unused RPC arguments 'dummy' (jnewbery)
 - #10627 `b62b4c8` fixed listunspent rpc convert parameter (tnakagawa)
 - #10412 `bef02fb` Improve wallet rescan API (ryanofsky)
-- #10400 `1680ee0` [RPC] Add an uptime command that displays the amount of time (in seconds) bitcoind has been running (rvelhote)
+- #10400 `1680ee0` [RPC] Add an uptime command that displays the amount of time (in seconds) navcoind has been running (rvelhote)
 - #10683 `d81bec7` rpc: Move the `generate` RPC call to rpcwallet (laanwj)
 - #10710 `30bc0f6` REST/RPC example update (Mirobit)
-- #10747 `9edda0c` [rpc] fix verbose argument for getblock in bitcoin-cli (jnewbery)
+- #10747 `9edda0c` [rpc] fix verbose argument for getblock in navcoin-cli (jnewbery)
 - #10589 `104f5f2` More economical fee estimates for RBF and RPC options to control (morcos)
 - #10543 `b27b004` Change API to estimaterawfee (morcos)
 - #10807 `afd2fca` getbalance example covers at least 6 confirms (instagibbs)
@@ -576,7 +576,7 @@ Low-level RPC changes
 - #9497 `2c781fb` CCheckQueue Unit Tests (JeremyRubin)
 - #10024 `9225de2` [trivial] Use log.info() instead of print() in remaining functional test cases (jnewbery)
 - #9956 `3192e52` Reorganise qa directory (jnewbery)
-- #10017 `02d64bd` combine_logs.py - aggregates log files from multiple bitcoinds during functional tests (jnewbery)
+- #10017 `02d64bd` combine_logs.py - aggregates log files from multiple navcoinds during functional tests (jnewbery)
 - #10047 `dfef6b6` [tests] Remove unused variables and imports (practicalswift)
 - #9701 `a230b05` Make bumpfee tests less fragile (ryanofsky)
 - #10053 `ca20923` [test] Allow functional test cases to be skipped (jnewbery)
@@ -648,7 +648,7 @@ Low-level RPC changes
 - #10555 `643fa0b` [tests] various improvements to zmq_test.py (jnewbery)
 - #10533 `d083bd9` [tests] Use cookie auth instead of rpcuser and rpcpassword (achow101)
 - #10632 `c68a9a6` qa: Add stopatheight test (MarcoFalke)
-- #10636 `4bc853b` [qa] util: Check return code after closing bitcoind proc (MarcoFalke)
+- #10636 `4bc853b` [qa] util: Check return code after closing navcoind proc (MarcoFalke)
 - #10662 `e0a7801` Initialize randomness in benchmarks (achow101)
 - #10612 `7c87a9c` The young person's guide to the test_framework (jnewbery)
 - #10659 `acb1153` [qa] blockchain: Pass on closed connection during generate call (MarcoFalke)
@@ -718,10 +718,10 @@ Low-level RPC changes
 - #10372 `15254e9` Add perf counter data to GetStrongRandBytes state in scheduler (TheBlueMatt)
 - #10461 `55b72f3` Update style guide (sipa)
 - #10486 `10e8c0a` devtools: Retry after signing fails in github-merge (laanwj)
-- #10447 `f259263` Make bitcoind invalid argument error message specific (laanwj)
+- #10447 `f259263` Make navcoind invalid argument error message specific (laanwj)
 - #10495 `6a38b79` contrib: Update location of seeds.txt (laanwj)
 - #10469 `b6b150b` Fixing typo in rpcdump.cpp help message (keystrike)
-- #10451 `27b9931` contrib/init/bitcoind.openrcconf: Don't disable wallet by default (luke-jr)
+- #10451 `27b9931` contrib/init/navcoind.openrcconf: Don't disable wallet by default (luke-jr)
 - #10323 `00d3692` Update to latest libsecp256k1 master (sipa)
 - #10422 `cec9e1e` Fix timestamp in fee estimate debug message (morcos)
 - #10566 `5d034ee` [docs] Use the "domain name setup" image (previously unused) in the gitian docs (practicalswift)
@@ -742,7 +742,7 @@ Low-level RPC changes
 - #10676 `379aed0` document script-based return fields for validateaddress (instagibbs)
 - #10651 `cef4b5c` Verify binaries from bitcoincore.org and bitcoin.org (TheBlueMatt)
 - #10786 `ca4c545` Add PR description to merge commit in github-merge.py (sipa)
-- #10812 `c5904e8` [utils] Allow bitcoin-cli's -rpcconnect option to be used with square brackets (jnewbery)
+- #10812 `c5904e8` [utils] Allow navcoin-cli's -rpcconnect option to be used with square brackets (jnewbery)
 - #10842 `3895e25` Fix incorrect Doxygen tag (@ince → @since). Doxygen parameter name matching (practicalswift)
 - #10681 `df0793f` add gdb attach process to test README (instagibbs)
 - #10789 `1124328` Punctuation/grammer fixes in rpcwallet.cpp (stevendlander)

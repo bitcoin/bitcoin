@@ -23,7 +23,10 @@ noinst_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
+BLS_INCLUDES=-I$(srcdir)/bls/include -I$(srcdir)/bls/mcl/include -I$(srcdir)/bls/mcl/src
+
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
 
 LIBBITCOIN_NODE=libbitcoin_node.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
@@ -31,8 +34,9 @@ LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.la
-LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
+LIBMCL=bls/mcl/lib/libmcl.a
+LIBBLS=bls/lib/libbls384_256.a
 
 if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
@@ -70,6 +74,33 @@ noinst_LTLIBRARIES += $(LIBBITCOIN_CRYPTO)
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
+$(LIBBLS):
+	$(AM_V_at) \
+		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		CC='$(CC)' \
+		CXX='$(CXX)' \
+		CFLAGS='$(CXXFLAGS)' \
+		LDFLAGS='$(LDFLAGS)' \
+		ARFLAGS='$(ARFLAGS)' \
+		AR='$(AR)' \
+		RANLIB='$(RANLIB)' \
+		$(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
+	$(RANLIB) bls/lib/libbls384_256.a
+
+$(LIBMCL):
+	$(AM_V_at) \
+		MCL_USE_LLVM=0 \
+		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		CC='$(CC)' \
+		CXX='$(CXX)' \
+		CFLAGS='$(CXXFLAGS)' \
+		LDFLAGS='$(LDFLAGS)' \
+		ARFLAGS='$(ARFLAGS)' \
+		AR='$(AR)' \
+		RANLIB='$(RANLIB)' \
+		$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
+	$(RANLIB) bls/mcl/lib/libmcl.a
+
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
@@ -84,37 +115,37 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_ZMQ)
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+  bin_PROGRAMS += navcoind
 endif
 
 if BUILD_BITCOIN_NODE
-  bin_PROGRAMS += bitcoin-node
+  bin_PROGRAMS += navcoin-node
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcoin-cli
+  bin_PROGRAMS += navcoin-cli
 endif
 
 if BUILD_BITCOIN_TX
-  bin_PROGRAMS += bitcoin-tx
+  bin_PROGRAMS += navcoin-tx
 endif
 
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
-  bin_PROGRAMS += bitcoin-wallet
+  bin_PROGRAMS += navcoin-wallet
 endif
 endif
 
 if BUILD_BITCOIN_UTIL
-  bin_PROGRAMS += bitcoin-util
+  bin_PROGRAMS += navcoin-util
 endif
 
 if BUILD_BITCOIN_CHAINSTATE
-  bin_PROGRAMS += bitcoin-chainstate
+  bin_PROGRAMS += navcoin-chainstate
 endif
 
 .PHONY: FORCE check-symbols check-security
-# bitcoin core #
+# navcoin core #
 BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
@@ -125,6 +156,20 @@ BITCOIN_CORE_H = \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
+  blsct/arith/mcl/mcl_g1point.h \
+  blsct/arith/mcl/mcl_initializer.h \
+  blsct/arith/mcl/mcl_scalar.h \
+  blsct/arith/mcl/mcl.h \
+  blsct/arith/elements.h \
+  blsct/arith/endianness.h \
+  blsct/eip_2333/bls12_381_keygen.h \
+  blsct/keys.h \
+  blsct/range_proof/config.h \
+  blsct/range_proof/generators.h \
+  blsct/range_proof/lazy_g1point.h \
+  blsct/range_proof/range_proof_logic.h \
+  blsct/range_proof/range_proof_with_transcript.h \
+  blsct/range_proof/range_proof.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -146,6 +191,7 @@ BITCOIN_CORE_H = \
   consensus/tx_verify.h \
   core_io.h \
   core_memusage.h \
+  ctokens/tokenid.h \
   cuckoocache.h \
   dbwrapper.h \
   deploymentinfo.h \
@@ -358,6 +404,17 @@ libbitcoin_node_a_SOURCES = \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_initializer.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/arith/elements.cpp \
+  blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/keys.cpp \
+  blsct/range_proof/config.cpp \
+  blsct/range_proof/generators.cpp \
+  blsct/range_proof/lazy_g1point.cpp \
+  blsct/range_proof/range_proof_logic.cpp \
+  blsct/range_proof/range_proof_with_transcript.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
@@ -519,10 +576,10 @@ crypto_libbitcoin_crypto_base_la_LDFLAGS = $(AM_LDFLAGS) -static
 crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/chacha_poly_aead.h \
-  crypto/chacha_poly_aead.cpp \
-  crypto/chacha20.h \
   crypto/chacha20.cpp \
+  crypto/chacha20.h \
+  crypto/chacha_poly_aead.cpp \
+  crypto/chacha_poly_aead.h \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
@@ -530,10 +587,12 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
-  crypto/poly1305.h \
-  crypto/poly1305.cpp \
-  crypto/muhash.h \
   crypto/muhash.cpp \
+  crypto/muhash.h \
+  crypto/pkcs5_pbkdf2.cpp \
+  crypto/pkcs5_pbkdf2.h \
+  crypto/poly1305.cpp \
+  crypto/poly1305.h \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
@@ -728,17 +787,17 @@ libbitcoin_cli_a_SOURCES = \
 nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# bitcoind & bitcoin-node binaries #
-bitcoin_daemon_sources = bitcoind.cpp
-bitcoin_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navcoind & navcoin-node binaries #
+navcoin_daemon_sources = bitcoind.cpp
+navcoin_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-bitcoin_daemon_sources += bitcoind-res.rc
+navcoin_daemon_sources += bitcoind-res.rc
 endif
 
-bitcoin_bin_ldadd = \
+navcoin_bin_ldadd = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -748,68 +807,72 @@ bitcoin_bin_ldadd = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
+  $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1)
 
-bitcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+navcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
-bitcoind_SOURCES = $(bitcoin_daemon_sources) init/bitcoind.cpp
-bitcoind_CPPFLAGS = $(bitcoin_bin_cppflags)
-bitcoind_CXXFLAGS = $(bitcoin_bin_cxxflags)
-bitcoind_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoind_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd)
+navcoind_SOURCES = $(navcoin_daemon_sources) init/bitcoind.cpp
+navcoind_CPPFLAGS = $(navcoin_bin_cppflags)
+navcoind_CXXFLAGS = $(navcoin_bin_cxxflags)
+navcoind_LDFLAGS = $(navcoin_bin_ldflags)
+navcoind_LDADD = $(LIBBITCOIN_NODE) $(navcoin_bin_ldadd)
 
-bitcoin_node_SOURCES = $(bitcoin_daemon_sources) init/bitcoin-node.cpp
-bitcoin_node_CPPFLAGS = $(bitcoin_bin_cppflags)
-bitcoin_node_CXXFLAGS = $(bitcoin_bin_cxxflags)
-bitcoin_node_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoin_node_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd) $(LIBBITCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+navcoin_node_SOURCES = $(navcoin_daemon_sources) init/bitcoin-node.cpp
+navcoin_node_CPPFLAGS = $(navcoin_bin_cppflags)
+navcoin_node_CXXFLAGS = $(navcoin_bin_cxxflags)
+navcoin_node_LDFLAGS = $(navcoin_bin_ldflags)
+navcoin_node_LDADD = $(LIBBITCOIN_NODE) $(navcoin_bin_ldadd) $(LIBBITCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
-# bitcoin-cli binary #
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
-bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navcoin-cli binary #
+navcoin_cli_SOURCES = bitcoin-cli.cpp
+navcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+navcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+navcoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-bitcoin_cli_LDADD = \
+navcoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-bitcoin_cli_LDADD += $(EVENT_LIBS)
+navcoin_cli_LDADD += $(EVENT_LIBS)
 #
 
-# bitcoin-tx binary #
-bitcoin_tx_SOURCES = bitcoin-tx.cpp
-bitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navcoin-tx binary #
+navcoin_tx_SOURCES = bitcoin-tx.cpp
+navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-bitcoin_tx_SOURCES += bitcoin-tx-res.rc
+navcoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-bitcoin_tx_LDADD = \
+navcoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1)
 #
 
-# bitcoin-wallet binary #
-bitcoin_wallet_SOURCES = bitcoin-wallet.cpp
-bitcoin_wallet_SOURCES += init/bitcoin-wallet.cpp
-bitcoin_wallet_CPPFLAGS = $(bitcoin_bin_cppflags)
-bitcoin_wallet_CXXFLAGS = $(bitcoin_bin_cxxflags)
-bitcoin_wallet_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoin_wallet_LDADD = \
+# navcoin-wallet binary #
+navcoin_wallet_SOURCES = bitcoin-wallet.cpp
+navcoin_wallet_SOURCES += init/bitcoin-wallet.cpp
+navcoin_wallet_CPPFLAGS = $(navcoin_bin_cppflags)
+navcoin_wallet_CXXFLAGS = $(navcoin_bin_cxxflags)
+navcoin_wallet_LDFLAGS = $(navcoin_bin_ldflags)
+navcoin_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -817,44 +880,48 @@ bitcoin_wallet_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1) \
   $(BDB_LIBS) \
   $(SQLITE_LIBS)
 
 if TARGET_WINDOWS
-bitcoin_wallet_SOURCES += bitcoin-wallet-res.rc
+navcoin_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 #
 
-# bitcoin-util binary #
-bitcoin_util_SOURCES = bitcoin-util.cpp
-bitcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navcoin-util binary #
+navcoin_util_SOURCES = bitcoin-util.cpp
+navcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-bitcoin_util_SOURCES += bitcoin-util-res.rc
+navcoin_util_SOURCES += bitcoin-util-res.rc
 endif
 
-bitcoin_util_LDADD = \
+navcoin_util_LDADD = \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1)
 #
 
 # bitcoin-chainstate binary #
-bitcoin_chainstate_SOURCES = bitcoin-chainstate.cpp
-bitcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
-bitcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_chainstate_SOURCES = bitcoin-chainstate.cpp
+navcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+navcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 # $(LIBTOOL_APP_LDFLAGS) deliberately omitted here so that we can test linking
 # bitcoin-chainstate against libbitcoinkernel as a shared or static library by
 # setting --{en,dis}able-shared.
-bitcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS)
-bitcoin_chainstate_LDADD = $(LIBBITCOINKERNEL)
+navcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS)
+navcoin_chainstate_LDADD = $(LIBBITCOINKERNEL)
 #
 
 # bitcoinkernel library #
@@ -862,8 +929,8 @@ if BUILD_BITCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBBITCOINKERNEL)
 
 libbitcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
-libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBBLS) $(LIBMCL) $(LIBSECP256K1)
+libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 
 # libbitcoinkernel requires default symbol visibility, explicitly specify that
 # here so that things still work even when user configures with
@@ -888,6 +955,12 @@ endif
 libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
+  blockfilter.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_initializer.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/arith/elements.cpp \
+  blsct/keys.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
@@ -977,7 +1050,10 @@ include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libbitcoinconsensus_la_LIBADD = \
+  $(LIBBLS) \
+  $(LIBMCL) \
+  $(LIBSECP256K1)
 libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
@@ -1024,6 +1100,7 @@ $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
+	-$(MAKE) -C bls clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
@@ -1103,14 +1180,6 @@ include Makefile.test.include
 
 if ENABLE_BENCH
 include Makefile.bench.include
-endif
-
-if ENABLE_QT
-include Makefile.qt.include
-endif
-
-if ENABLE_QT_TESTS
-include Makefile.qttest.include
 endif
 
 include Makefile.univalue.include

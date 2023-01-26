@@ -138,19 +138,19 @@ unhidden by clicking on the progress bar at the bottom of the window.
 Support for JSON-RPC Named Arguments
 ------------------------------------
 
-Commands sent over the JSON-RPC interface and through the `bitcoin-cli` binary
+Commands sent over the JSON-RPC interface and through the `navcoin-cli` binary
 can now use named arguments. This follows the [JSON-RPC specification](http://www.jsonrpc.org/specification)
 for passing parameters by-name with an object.
 
-`bitcoin-cli` has been updated to support this by parsing `name=value` arguments
+`navcoin-cli` has been updated to support this by parsing `name=value` arguments
 when the `-named` option is given.
 
 Some examples:
 
-    src/bitcoin-cli -named help command="help"
-    src/bitcoin-cli -named getblockhash height=0
-    src/bitcoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
-    src/bitcoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
+    src/navcoin-cli -named help command="help"
+    src/navcoin-cli -named getblockhash height=0
+    src/navcoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+    src/navcoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
 
 The order of arguments doesn't matter in this case. Named arguments are also
 useful to leave out arguments that should stay at their default value. The
@@ -367,7 +367,7 @@ and git merge commit are mentioned.
 - #8421 `b77bb95` httpserver: drop boost dependency (theuni)
 - #8638 `f061415` rest.cpp: change `HTTP_INTERNAL_SERVER_ERROR` to `HTTP_BAD_REQUEST` (djpnewton)
 - #8272 `91990ee` Make the dummy argument to getaddednodeinfo optional (sipa)
-- #8722 `bb843ad` bitcoin-cli: More detailed error reporting (laanwj)
+- #8722 `bb843ad` navcoin-cli: More detailed error reporting (laanwj)
 - #6996 `7f71a3c` Add preciousblock RPC (sipa)
 - #8788 `97c7f73` Give RPC commands more information about the RPC request (jonasschnelli)
 - #7948 `5d2c8e5` Augment getblockchaininfo bip9\_softforks data (mruddy)
@@ -626,14 +626,14 @@ and git merge commit are mentioned.
 - #8680 `666eaf0` Address Travis spurious failures (theuni)
 - #8789 `e31a43c` pull-tester: Only print output when failed (MarcoFalke)
 - #8810 `14e8f99` tests: Add exception error message for JSONRPCException (laanwj)
-- #8830 `ef0801b` test: Add option to run bitcoin-util-test.py manually (jnewbery)
-- #8881 `e66cc1d` Add some verbose logging to bitcoin-util-test.py (jnewbery)
+- #8830 `ef0801b` test: Add option to run navcoin-util-test.py manually (jnewbery)
+- #8881 `e66cc1d` Add some verbose logging to navcoin-util-test.py (jnewbery)
 - #8922 `0329511` Send segwit-encoded blocktxn messages in p2p-compactblocks (TheBlueMatt)
 - #8873 `74dc388` Add microbenchmarks to profile more code paths (ryanofsky)
 - #9032 `6a8be7b` test: Add format-dependent comparison to bctest (laanwj)
-- #9023 `774db92` Add logging to bitcoin-util-test.py (jnewbery)
+- #9023 `774db92` Add logging to navcoin-util-test.py (jnewbery)
 - #9065 `c9bdf9a` Merge `doc/unit-tests.md` into `src/test/README.md` (laanwj)
-- #9069 `ed64bce` Clean up bctest.py and bitcoin-util-test.py (jnewbery)
+- #9069 `ed64bce` Clean up bctest.py and navcoin-util-test.py (jnewbery)
 - #9095 `b8f43e3` test: Fix test\_random includes (MarcoFalke)
 - #8894 `faec09b` Testing: Include fRelay in mininode version messages (jnewbery)
 - #9097 `e536499` Rework `sync_*` and preciousblock.py (MarcoFalke)
@@ -718,18 +718,18 @@ and git merge commit are mentioned.
 - #8291 `5cac8b1` util: CopyrightHolders: Check for untranslated substitution (MarcoFalke)
 - #8557 `44691f3` contrib: Rework verifybinaries (MarcoFalke)
 - #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
-- #8813 `fb24d7e` bitcoind: Daemonize using daemon(3) (laanwj)
+- #8813 `fb24d7e` navcoind: Daemonize using daemon(3) (laanwj)
 - #9004 `67728a3` Clarify `listenonion` (unsystemizer)
 - #8674 `bae81b8` tools for analyzing, updating and adding copyright headers in source files (isle2983)
 - #8976 `8c6218a` libconsensus: Add input validation of flags (laanwj)
 - #9112 `46027e8` Avoid ugly exception in log on unknown inv type (laanwj)
-- #8837 `2108911` Allow bitcoin-tx to parse partial transactions (jnewbery)
+- #8837 `2108911` Allow navcoin-tx to parse partial transactions (jnewbery)
 - #9204 `74ced54` Clarify CreateTransaction error messages (instagibbs)
-- #9265 `31bcc66` bitcoin-cli: Make error message less confusing (laanwj)
+- #9265 `31bcc66` navcoin-cli: Make error message less confusing (laanwj)
 - #9303 `72bf1b3` Update comments in ctaes (sipa)
 - #9417 `c4b7d4f` Do not evaluate hidden LogPrint arguments (sipa)
 - #9506 `593a00c` RFC: Improve style for if indentation (sipa)
-- #8883 `d5d4ad8` Add all standard TXO types to bitcoin-tx (jnewbery)
+- #8883 `d5d4ad8` Add all standard TXO types to navcoin-tx (jnewbery)
 - #9531 `23281a4` Release notes for estimation changes  (morcos)
 - #9486 `f62bc10` Make peer=%d log prints consistent (TheBlueMatt)
 - #9552 `41cb05c` Add IPv6 support to qos.sh (jamesmacwhite)

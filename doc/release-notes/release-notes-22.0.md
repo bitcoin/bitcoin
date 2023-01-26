@@ -22,7 +22,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+or `navcoind`/`navcoin-qt` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
@@ -95,7 +95,7 @@ New and Updated RPCs
   of `decodescript` these fields are top-level attributes, and included again as attributes
   of the `scriptPubKey` object. (#20286)
 
-- When creating a hex-encoded bitcoin transaction using the `bitcoin-tx` utility
+- When creating a hex-encoded bitcoin transaction using the `navcoin-tx` utility
   with the `-json` option set, the following fields: `addresses`, `reqSigs` are no longer
   returned in the tx output of the response. (#20286)
 
@@ -152,7 +152,7 @@ Updated settings
 
 Changes to Wallet or GUI related settings can be found in the GUI or Wallet section below.
 
-- Passing an invalid `-rpcauth` argument now cause bitcoind to fail to start.  (#20461)
+- Passing an invalid `-rpcauth` argument now cause navcoind to fail to start.  (#20461)
 
 Tools and Utilities
 -------------------
@@ -163,9 +163,9 @@ Tools and Utilities
   like `-onlynet=<network>` or to upgrade to this release of Bitcoin Core 22.0
   that supports Tor v3 only.  (#21595)
 
-- A new `-rpcwaittimeout` argument to `bitcoin-cli` sets the timeout
+- A new `-rpcwaittimeout` argument to `navcoin-cli` sets the timeout
   in seconds to use with `-rpcwait`. If the timeout expires,
-  `bitcoin-cli` will report a failure. (#21056)
+  `navcoin-cli` will report a failure. (#21056)
 
 Wallet
 ------
@@ -316,7 +316,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20965 net, rpc:  return `NET_UNROUTABLE` as `not_publicly_routable`, automate helps (jonatack)
 - bitcoin/bitcoin#20966 banman: save the banlist in a JSON format on disk (vasild)
 - bitcoin/bitcoin#21015 Make all of `net_processing` (and some of net) use std::chrono types (dhruv)
-- bitcoin/bitcoin#21029 bitcoin-cli: Correct docs (no "generatenewaddress" exists) (luke-jr)
+- bitcoin/bitcoin#21029 navcoin-cli: Correct docs (no "generatenewaddress" exists) (luke-jr)
 - bitcoin/bitcoin#21148 Split orphan handling from `net_processing` into txorphanage (ajtowns)
 - bitcoin/bitcoin#21162 Net Processing: Move RelayTransaction() into PeerManager (jnewbery)
 - bitcoin/bitcoin#21167 make `CNode::m_inbound_onion` public, initialize explicitly (jonatack)
@@ -411,7 +411,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#22686 Use GetSelectionAmount in ApproximateBestSubset (achow101)
 
 ### RPC and other APIs
-- bitcoin/bitcoin#18335, bitcoin/bitcoin#21484 cli: Print useful error if bitcoind rpc work queue exceeded (LarryRuane)
+- bitcoin/bitcoin#18335, bitcoin/bitcoin#21484 cli: Print useful error if navcoind rpc work queue exceeded (LarryRuane)
 - bitcoin/bitcoin#18466 Fix invalid parameter error codes for `{sign,verify}message` RPCs (theStack)
 - bitcoin/bitcoin#18772 Calculate fees in `getblock` using BlockUndo data (robot-visions)
 - bitcoin/bitcoin#19033 http: Release work queue after event base finish (promag)
@@ -555,7 +555,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20471 Use C++17 in depends (fanquake)
 - bitcoin/bitcoin#20496 Drop unneeded macOS framework dependencies (hebasto)
 - bitcoin/bitcoin#20520 Do not force Precompiled Headers (PCH) for building Qt on Linux (hebasto)
-- bitcoin/bitcoin#20549 Support make src/bitcoin-node and src/bitcoin-gui (promag)
+- bitcoin/bitcoin#20549 Support make src/bitcoin-node and src/navcoin-gui (promag)
 - bitcoin/bitcoin#20565 Ensure PIC build for bdb on Android (BlockMechanic)
 - bitcoin/bitcoin#20594 Fix getauxval calls in randomenv.cpp (jonasschnelli)
 - bitcoin/bitcoin#20603 Update crc32c subtree (MarcoFalke)
@@ -571,7 +571,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20936 build fuzz tests by default (danben)
 - bitcoin/bitcoin#20937 guix: Make nsis reproducible by respecting SOURCE-DATE-EPOCH (dongcarl)
 - bitcoin/bitcoin#20938 fix linking against -latomic when building for riscv (fanquake)
-- bitcoin/bitcoin#20939 fix `RELOC_SECTION` security check for bitcoin-util (fanquake)
+- bitcoin/bitcoin#20939 fix `RELOC_SECTION` security check for navcoin-util (fanquake)
 - bitcoin/bitcoin#20963 gitian-linux: Build binaries for 64-bit POWER (continued) (laanwj)
 - bitcoin/bitcoin#21036 gitian: Bump descriptors to focal for 22.0 (fanquake)
 - bitcoin/bitcoin#21045 Adds switch to enable/disable randomized base address in MSVC builds (EthanHeilman)
@@ -637,7 +637,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#22182 guix: Overhaul how guix-{attest,verify} works and hierarchy (dongcarl)
 - bitcoin/bitcoin#22186 build, qt: Fix compiling qt package in depends with GCC 11 (hebasto)
 - bitcoin/bitcoin#22199 macdeploy: minor fixups and simplifications (fanquake)
-- bitcoin/bitcoin#22230 Fix MSVC linker /SubSystem option for bitcoin-qt.exe (hebasto)
+- bitcoin/bitcoin#22230 Fix MSVC linker /SubSystem option for navcoin-qt.exe (hebasto)
 - bitcoin/bitcoin#22234 Mark print-% target as phony (dgoncharov)
 - bitcoin/bitcoin#22238 improve detection of eBPF support (fanquake)
 - bitcoin/bitcoin#22258 Disable deprecated-copy warning only when external warnings are enabled (MarcoFalke)
@@ -857,7 +857,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#22224 Update msvc and appveyor builds to use Qt5.12.11 binaries (sipsorcery)
 - bitcoin/bitcoin#22249 Kill process group to avoid dangling processes when using `--failfast` (S3RK)
 - bitcoin/bitcoin#22267 fuzz: Speed up crypto fuzz target (MarcoFalke)
-- bitcoin/bitcoin#22270 Add bitcoin-util tests (+refactors) (MarcoFalke)
+- bitcoin/bitcoin#22270 Add navcoin-util tests (+refactors) (MarcoFalke)
 - bitcoin/bitcoin#22271 fuzz: Assert roundtrip equality for `CPubKey` (theStack)
 - bitcoin/bitcoin#22279 fuzz: add missing ECCVerifyHandle to `base_encode_decode` (apoelstra)
 - bitcoin/bitcoin#22292 bench, doc: benchmarking updates and fixups (jonatack)
@@ -893,13 +893,13 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20605 init: Signal-safe instant shutdown (laanwj)
 - bitcoin/bitcoin#20608 contrib: Add symbol check test for PE binaries (fanquake)
 - bitcoin/bitcoin#20689 contrib: Replace binary verification script verify.sh with python rewrite (theStack)
-- bitcoin/bitcoin#20715 util: Add argsmanager::getcommand() and use it in bitcoin-wallet (MarcoFalke)
+- bitcoin/bitcoin#20715 util: Add argsmanager::getcommand() and use it in navcoin-wallet (MarcoFalke)
 - bitcoin/bitcoin#20735 script: Remove outdated extract-osx-sdk.sh (hebasto)
 - bitcoin/bitcoin#20817 lint: Update list of spelling linter false positives, bump to codespell 2.0.0 (theStack)
-- bitcoin/bitcoin#20884 script: Improve robustness of bitcoind.service on startup (hebasto)
+- bitcoin/bitcoin#20884 script: Improve robustness of navcoind.service on startup (hebasto)
 - bitcoin/bitcoin#20906 contrib: Embed c++11 patch in `install_db4.sh` (gruve-p)
 - bitcoin/bitcoin#21004 contrib: Fix docker args conditional in gitian-build (setpill)
-- bitcoin/bitcoin#21007 bitcoind: Add -daemonwait option to wait for initialization (laanwj)
+- bitcoin/bitcoin#21007 navcoind: Add -daemonwait option to wait for initialization (laanwj)
 - bitcoin/bitcoin#21041 log: Move "Pre-allocating up to position 0x[…] in […].dat" log message to debug category (practicalswift)
 - bitcoin/bitcoin#21059 Drop boost/preprocessor dependencies (hebasto)
 - bitcoin/bitcoin#21087 guix: Passthrough `BASE_CACHE` into container (dongcarl)
@@ -923,7 +923,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#21471 bugfix: Fix `bech32_encode` calls in `gen_key_io_test_vectors.py` (sipa)
 - bitcoin/bitcoin#21615 script: Add trusted key for hebasto (hebasto)
 - bitcoin/bitcoin#21664 contrib: Use lief for macos and windows symbol & security checks (fanquake)
-- bitcoin/bitcoin#21695 contrib: Remove no longer used contrib/bitcoin-qt.pro (hebasto)
+- bitcoin/bitcoin#21695 contrib: Remove no longer used contrib/navcoin-qt.pro (hebasto)
 - bitcoin/bitcoin#21711 guix: Add full installation and usage documentation (dongcarl)
 - bitcoin/bitcoin#21799 guix: Use `gcc-8` across the board (dongcarl)
 - bitcoin/bitcoin#21802 Avoid UB in util/asmap (advance a dereferenceable iterator outside its valid range) (MarcoFalke)
@@ -967,7 +967,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20829 Add -netinfo help (jonatack)
 - bitcoin/bitcoin#20830 Update developer notes with signet (jonatack)
 - bitcoin/bitcoin#20890 Add explicit macdeployqtplus dependencies install step (hebasto)
-- bitcoin/bitcoin#20913 Add manual page generation for bitcoin-util (laanwj)
+- bitcoin/bitcoin#20913 Add manual page generation for navcoin-util (laanwj)
 - bitcoin/bitcoin#20985 Add xorriso to macOS depends packages (fanquake)
 - bitcoin/bitcoin#20986 Update developer notes to discourage very long lines (jnewbery)
 - bitcoin/bitcoin#20987 Add instructions for generating RPC docs (ben-kaufman)

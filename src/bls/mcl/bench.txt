@@ -1,0 +1,114 @@
+-----------------------------------------------------------------------------
+Core i7-7700@3.6GHz Firefox 58.0.1(64-bit)
+                        BN254  Fp381_1  Fp462
+op                             msec
+Fr::setByCSPRNG         0.022  0.021  0.019
+pairing                 2.446  7.353  14.596
+millerLoop              1.467  4.219  8.598
+finalExp                0.97   3.127  6.005
+precomputedMillerLoop   1.087  3.171  6.305
+G1::add                 0.007  0.01   0.014
+G1::dbl                 0.005  0.007  0.011
+G1::mul                 0.479  1.529  3.346
+G2::add                 0.013  0.022  0.033
+G2::dbl                 0.01   0.016  0.025
+G2::mul                 0.989  2.955  5.921
+hashAndMapToG1          0.135  0.309  0.76
+hashAndMapToG2          2.14   6.44   14.249
+Fr::add                 0.004  0.003  0.003
+Fr::mul                 0.004  0.004  0.005
+Fr::sqr                 0.003  0.003  0.004
+Fr::inv                 0.025  0.038  0.05
+GT::add                 0.005  0.004  0.005
+GT::mul                 0.016  0.027  0.041
+GT::sqr                 0.012  0.018  0.028
+GT::inv                 0.051  0.081  0.122
+
+-----------------------------------------------------------------------------
+iPhone7 iOS 11.2.1 Safari/604.1
+                        BN254  Fp381_1  Fp462
+op                              msec
+Fr::setByCSPRNG         0.041  0.038  0.154
+pairing                 3.9    11.752 22.578
+millerLoop              2.29   6.55   13.067
+finalExp                1.501  4.741  9.016
+precomputedMillerLoop   1.675  4.818  9.492
+G1::add                 0.006  0.015  0.018
+G1::dbl                 0.005  0.01   0.019
+G1::mul                 0.843  2.615  5.339
+G2::add                 0.015  0.03   0.048
+G2::dbl                 0.011  0.022  0.034
+G2::mul                 1.596  4.581  9.077
+hashAndMapToG1          0.212  0.507  1.201
+hashAndMapToG2          3.486  9.93   21.817
+Fr::add                 0.002  0.002  0.002
+Fr::mul                 0.002  0.003  0.003
+Fr::sqr                 0.002  0.003  0.004
+Fr::inv                 0.037  0.062  0.078
+GT::add                 0.003  0.003  0.003
+GT::mul                 0.021  0.037  0.058
+GT::sqr                 0.014  0.026  0.04
+GT::inv                 0.074  0.131  0.19
+-----------------------------------------------------------------------------
+Core i7-7700@3.6GHz Linux gcc.5.4.0
+
+                BN254          Fp381_1         Fp462
+G1::mulCT      202.807Kclk   597.410Kclk   1.658Mclk
+G1::mulCTsmall 200.968Kclk   596.074Kclk   1.650Mclk
+G1::mul        185.935Kclk   555.147Kclk   1.495Mclk
+G1::mulsmall     1.856Kclk     3.740Kclk   8.054Kclk
+G1::add        866.89 clk      1.710Kclk   3.663Kclk
+G1::dbl        798.60 clk      1.770Kclk   3.755Kclk
+G2::mulCT      391.655Kclk     1.351Mclk   3.102Mclk
+G2::mulCTsmall 369.134Kclk     1.358Mclk   3.105Mclk
+G2::mul        400.098Kclk     1.277Mclk   3.009Mclk
+G2::mulsmall     5.774Kclk    12.806Kclk  25.374Kclk
+G2::add          2.696Kclk     7.547Kclk  14.683Kclk
+G2::dbl          2.600Kclk     5.366Kclk  10.436Kclk
+GT::pow        727.157Kclk     1.991Mclk   4.364Mclk
+hashAndMapToG1  27.953Kclk    87.291Kclk 200.972Kclk
+hashAndMapToG2 775.186Kclk     2.629Mclk   6.937Mclk
+Fp::add         11.48 clk     69.54 clk   21.36 clk
+Fp::mul         63.11 clk    134.90 clk  303.75 clk
+Fp::sqr         64.39 clk    134.29 clk  305.38 clk
+Fp::inv          2.302Kclk     4.185Kclk   5.485Kclk
+GT::add        180.93 clk    247.70 clk  256.55 clk
+GT::mul          5.278Kclk    10.887Kclk  19.844Kclk
+GT::sqr          3.666Kclk     7.444Kclk  13.694Kclk
+GT::inv         11.322Kclk    22.480Kclk  41.796Kclk
+pairing          1.044Mclk     3.445Mclk   7.789Mclk
+millerLoop     634.214Kclk     1.913Mclk   4.466Mclk
+finalExp       423.413Kclk     1.535Mclk   3.328Mclk
+precomputedML  479.849Kclk     1.461Mclk   3.299Mclk
+-----------------------------------------------------------------------------
+
+1.2GHz ARM Cortex-A53 [HiKey] Linux gcc 4.9.2
+
+                   BN254       Fp381_1     Fp462
+G1::mulCT      858.149usec    2.780msec   8.507msec
+G1::mulCTsmall 854.535usec    2.773msec   8.499msec
+G1::mul        743.100usec    2.484msec   7.536msec
+G1::mulsmall     7.680usec   16.528usec  41.818usec
+G1::add          3.347usec    7.363usec  18.544usec
+G1::dbl          3.294usec    7.351usec  18.472usec
+G2::mulCT        1.627msec    5.083msec  12.142msec
+G2::mulCTsmall   1.534msec    5.124msec  12.125msec
+G2::mul          1.677msec    4.806msec  11.757msec
+G2::mulsmall    23.581usec   48.504usec  96.780usec
+G2::add         10.751usec   27.759usec  54.392usec
+G2::dbl         10.076usec   20.625usec  42.032usec
+GT::pow          2.662msec    7.091msec  14.042msec
+hashAndMapToG1 111.256usec  372.665usec   1.031msec
+hashAndMapToG2   3.199msec   10.168msec  27.391msec
+Fp::add         27.19nsec    38.02nsec   45.68nsec
+Fp::mul        279.17nsec   628.44nsec    1.662usec
+Fp::sqr        276.56nsec   651.67nsec    1.675usec
+Fp::inv          9.743usec   14.364usec  18.116usec
+GT::add        373.18nsec   530.62nsec  625.26nsec
+GT::mul         19.557usec   38.623usec  63.111usec
+GT::sqr         13.345usec   26.218usec  43.008usec
+GT::inv         44.119usec   84.581usec 153.046usec
+pairing          3.913msec   12.606msec  26.818msec
+millerLoop       2.402msec    7.202msec  15.711msec
+finalExp         1.506msec    5.395msec  11.098msec
+precomputedML    1.815msec    5.447msec  11.094msec

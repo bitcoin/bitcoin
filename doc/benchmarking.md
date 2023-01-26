@@ -17,7 +17,7 @@ and lock analysis.
 
 After compiling bitcoin-core, the benchmarks can be run with:
 
-    src/bench/bench_bitcoin
+    src/bench/bench_navcoin
 
 The output will look similar to:
 ```
@@ -39,7 +39,7 @@ The output will look similar to:
 Help
 ---------------------
 
-    src/bench/bench_bitcoin -?
+    src/bench/bench_navcoin -?
 
 To print the various options, like listing the benchmarks without running them
 or using a regex filter to only run certain benchmarks.

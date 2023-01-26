@@ -41,7 +41,7 @@ Core configuration options:
 In a typical situation, this suffices:
 
 ```
-bitcoind -i2psam=127.0.0.1:7656
+navcoind -i2psam=127.0.0.1:7656
 ```
 
 ## Additional configuration options related to I2P
@@ -51,7 +51,7 @@ bitcoind -i2psam=127.0.0.1:7656
 ```
 
 Set the `debug=i2p` config logging option to see additional information in the
-debug log about your I2P configuration and connections. Run `bitcoin-cli help
+debug log about your I2P configuration and connections. Run `navcoin-cli help
 logging` for more information.
 
 ```
@@ -66,7 +66,7 @@ I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
 peers than Tor or IP ones. Therefore, using I2P alone without other networks may
 make a node more susceptible to [Sybil
 attacks](https://en.bitcoin.it/wiki/Weaknesses#Sybil_attack). You can use
-`bitcoin-cli -addrinfo` to see the number of I2P addresses known to your node.
+`navcoin-cli -addrinfo` to see the number of I2P addresses known to your node.
 
 Another consideration with `onlynet=i2p` is that the initial blocks download
 phase when syncing up a new node can be very slow. This phase can be sped up by
@@ -106,8 +106,8 @@ incoming I2P connections (`-i2pacceptincoming`):
 - in the "localaddresses" output of RPC `getnetworkinfo`
 - in the debug log (grep for `AddLocal`; the I2P address ends in `.b32.i2p`)
 
-To see which I2P peers your node is connected to, use `bitcoin-cli -netinfo 4`
-or the `getpeerinfo` RPC (e.g. `bitcoin-cli getpeerinfo`).
+To see which I2P peers your node is connected to, use `navcoin-cli -netinfo 4`
+or the `getpeerinfo` RPC (e.g. `navcoin-cli getpeerinfo`).
 
 To see which I2P addresses your node knows, use the `getnodeaddresses 0 i2p`
 RPC.

@@ -19,7 +19,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+or `navcoind`/`navcoin-qt` (on Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
@@ -191,9 +191,9 @@ The `validateaddress` RPC output has been extended with a few new fields, and su
 Other changed command-line options
 ----------------------------------
 - `-debuglogfile=<file>` can be used to specify an alternative debug logging file.
-- bitcoin-cli now has an `-stdinrpcpass` option to allow the RPC password to be read from standard input.
+- navcoin-cli now has an `-stdinrpcpass` option to allow the RPC password to be read from standard input.
 - The `-usehd` option has been removed.
-- bitcoin-cli now supports a new `-getinfo` flag which returns an output like that of the now-removed `getinfo` RPC.
+- navcoin-cli now supports a new `-getinfo` flag which returns an output like that of the now-removed `getinfo` RPC.
 
 Testing changes
 ----------------
@@ -268,7 +268,7 @@ Testing changes
 - #11923 `81c89e9` Remove unused fNoncriticalErrors variable from CWalletDB::FindWalletTx (PierreRochard)
 - #11726 `604e08c` Cleanups + nit fixes for walletdir PR (MeshCollider)
 - #11403 `d889c03` Segwit wallet support (sipa)
-- #11970 `b7450cd` Add test coverage for bitcoin-cli multiwallet calls (ryanofsky)
+- #11970 `b7450cd` Add test coverage for navcoin-cli multiwallet calls (ryanofsky)
 - #11904 `66e3af7` Add a lock to the wallet directory (MeshCollider)
 - #12101 `c7978be` Clamp walletpassphrase timeout to 2^30 seconds and check its bounds (achow101)
 - #12210 `17180fa` Deprecate addwitnessaddress (laanwj)
@@ -281,7 +281,7 @@ Testing changes
 ### RPC and other APIs
 - #11008 `3841aaf` Enable disablesafemode by default (gmaxwell)
 - #11050 `7ed57d3` Avoid treating null RPC arguments different from missing arguments (ryanofsky)
-- #10997 `affe927` Add option -stdinrpcpass to bitcoin-cli to allow RPC password to be read from standard input (jharvell)
+- #10997 `affe927` Add option -stdinrpcpass to navcoin-cli to allow RPC password to be read from standard input (jharvell)
 - #11179 `e0e3cbb` Push down safe mode checks (laanwj)
 - #11203 `d745b4c` add wtxid to mempool entry output (sdaftuar)
 - #11099 `bc561b4` Add savemempool RPC (greenaddress)
@@ -578,8 +578,8 @@ Testing changes
 
 ### Miscellaneous
 - #11246 `777519b` github-merge: Coalesce git fetches (laanwj)
-- #10871 `c9a4aa8` Handle getinfo in bitcoin-cli w/ -getinfo (revival of #8843) (achow101)
-- #11419 `093074b` Utils: Fix launchctl not being able to stop bitcoind (OmeGak)
+- #10871 `c9a4aa8` Handle getinfo in navcoin-cli w/ -getinfo (revival of #8843) (achow101)
+- #11419 `093074b` Utils: Fix launchctl not being able to stop navcoind (OmeGak)
 - #11394 `6e4e98e` Perform a weaker subtree check in Travis (sipa)
 - #11702 `4122112` [build] Add a script for installing db4 (jamesob)
 - #11794 `dd49862` Prefix leveldb debug logging (laanwj)
@@ -596,7 +596,7 @@ Testing changes
 - #11951 `1fb34e0` Remove dead feeest-file read code for old versions (TheBlueMatt)
 - #11421 `9ccafb1` Merge current secp256k1 subtree (MarcoFalke)
 - #11573 `2631d55` [Util] Update tinyformat.h (fanquake)
-- #10529 `331352f` Improve bitcoind systemd service file (Flowdalic)
+- #10529 `331352f` Improve navcoind systemd service file (Flowdalic)
 - #11620 `70fec9e` [build] .gitignore: add background.tiff (Sjors)
 - #11558 `68e021e` Minimal code changes to allow msvc compilation (sipsorcery)
 - #11284 `10bee0d` Fix invalid memory access in CScript::operator+= (guidovranken, ajtowns)

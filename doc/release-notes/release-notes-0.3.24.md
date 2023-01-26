@@ -13,7 +13,7 @@ Notable changes in v0.3.24:
 
 C1) DNS seeding enabled by default.
 
-C2) UPNP enabled by default in the GUI client.  The percentage of bitcoin clients that accept incoming connections is quite small, and that is a problem.  This should help.  bitcoind, and unofficial builds, are unchanged (though we encourage use of "-upnp" to help the network!)
+C2) UPNP enabled by default in the GUI client.  The percentage of bitcoin clients that accept incoming connections is quite small, and that is a problem.  This should help.  navcoind, and unofficial builds, are unchanged (though we encourage use of "-upnp" to help the network!)
 
 C3) Initial unit testing framework.  Bitcoin sorely needs automated tests, and this is a beginning.  Contributions welcome.
 

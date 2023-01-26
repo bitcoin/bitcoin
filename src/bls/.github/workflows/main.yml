@@ -1,0 +1,19 @@
+name: test
+on: [push]
+
+jobs:
+  build:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: lscpu
+    - run: git submodule update --init --recursive
+    - run: make -C ./mcl lib/libmcl.a -j4
+    - run: make test_ci DEBUG=1 -j4
+    - run: make clean
+    - run: make test_go -j4
+    - run: make clean
+    - run: make test_ci DEBUG=1 BLS_ETH=1 -j4
+    - run: make clean
+    - run: make test_ci BLS_ETH=1 CXX=clang++ -j4

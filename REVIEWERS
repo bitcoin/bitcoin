@@ -1,8 +1,8 @@
 # ==============================================================================
-#                          Bitcoin Core REVIEWERS
+#                          Navcoin Core REVIEWERS
 # ==============================================================================
 
-# Configuration of automated review requests for the bitcoin/bitcoin repo
+# Configuration of automated review requests for the navcoin/navcoin repo
 # via DrahtBot.
 
 # Order is not important; if a modified file or directory matches a fnmatch,
