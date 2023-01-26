@@ -1589,7 +1589,8 @@ RPCHelpMan importdescriptors()
                 "\nImport descriptors. This will trigger a rescan of the blockchain based on the earliest timestamp of all descriptors being imported. Requires a new wallet backup.\n"
             "\nNote: This call can take over an hour to complete if using an early timestamp; during that time, other rpc calls\n"
             "may report that the imported keys, addresses or scripts exist but related transactions are still missing.\n"
-            "The rescan is significantly faster if block filters are available (using startup option \"-blockfilterindex=1\").\n",
+            "The rescan is significantly faster if wallers filters are available (using startup option \"-walletfilterindex=1\").\n"
+            "The rescan is faster if block filters are available (using startup option \"-blockfilterindex=1\").\n",
                 {
                     {"requests", RPCArg::Type::ARR, RPCArg::Optional::NO, "Data to be imported",
                         {
@@ -1887,7 +1888,7 @@ RPCHelpMan restorewallet()
         "restorewallet",
         "\nRestore and loads a wallet from backup.\n"
         "\nThe rescan is significantly faster if a descriptor wallet is restored"
-        "\nand block filters are available (using startup option \"-blockfilterindex=1\").\n",
+        "\nand wallet filters are available (using startup option \"-walletfilterindex=1\").\n",
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name that will be applied to the restored wallet"},
             {"backup_file", RPCArg::Type::STR, RPCArg::Optional::NO, "The backup file that will be used to restore the wallet."},
