@@ -663,7 +663,7 @@ BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database)
     }
     int ret = database.m_db->cursor(nullptr, &m_cursor, 0);
     if (ret != 0) {
-        throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret).c_str()));
+        throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret)));
     }
 }
 
