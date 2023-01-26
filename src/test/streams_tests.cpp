@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 {
-    CDataStream data(SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream data{};
 
-    BitStreamWriter<CDataStream> bit_writer(data);
+    BitStreamWriter bit_writer{data};
     bit_writer.Write(0, 1);
     bit_writer.Write(2, 2);
     bit_writer.Write(6, 3);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     bit_writer.Write(30497, 16);
     bit_writer.Flush();
 
-    CDataStream data_copy(data);
+    DataStream data_copy{data};
     uint32_t serialized_int1;
     data >> serialized_int1;
     BOOST_CHECK_EQUAL(serialized_int1, uint32_t{0x7700C35A}); // NOTE: Serialized as LE
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     data >> serialized_int2;
     BOOST_CHECK_EQUAL(serialized_int2, uint16_t{0x1072}); // NOTE: Serialized as LE
 
-    BitStreamReader<CDataStream> bit_reader(data_copy);
+    BitStreamReader bit_reader{data_copy};
     BOOST_CHECK_EQUAL(bit_reader.Read(1), 0U);
     BOOST_CHECK_EQUAL(bit_reader.Read(2), 2U);
     BOOST_CHECK_EQUAL(bit_reader.Read(3), 6U);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     // Degenerate case
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0x00, 0x00});
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     // Single character key
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0xff});
         BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
     }
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     in.push_back(std::byte{0x0f});
 
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0xff, 0x0f});
         BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
     }

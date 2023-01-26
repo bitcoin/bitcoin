@@ -111,7 +111,7 @@ FUZZ_TARGET_INIT(key, initialize_key)
     }
 
     {
-        CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
+        DataStream data_stream{};
         pubkey.Serialize(data_stream);
 
         CPubKey pubkey_deserialized;

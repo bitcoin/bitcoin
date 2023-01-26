@@ -3783,8 +3783,8 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     }
     DatabaseCursor::Status status = DatabaseCursor::Status::FAIL;
     while (true) {
-        CDataStream ss_key(SER_DISK, CLIENT_VERSION);
-        CDataStream ss_value(SER_DISK, CLIENT_VERSION);
+        DataStream ss_key{};
+        DataStream ss_value{};
         status = cursor->Next(ss_key, ss_value);
         if (status != DatabaseCursor::Status::MORE) {
             break;
@@ -3821,8 +3821,8 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     bool began = batch->TxnBegin();
     assert(began); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
     for (const auto& [key, value] : records) {
-        CDataStream ss_key(key, SER_DISK, CLIENT_VERSION);
-        CDataStream ss_value(value, SER_DISK, CLIENT_VERSION);
+        DataStream ss_key{key};
+        DataStream ss_value{value};
         if (!batch->Write(ss_key, ss_value)) {
             batch->TxnAbort();
             m_database->Close();
