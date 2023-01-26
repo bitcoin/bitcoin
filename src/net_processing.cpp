@@ -584,14 +584,17 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only one
-     *                     orphan will be reconsidered on each call of this function. This set
-     *                     may be added to if accepting an orphan causes its children to be
-     *                     reconsidered.
-     * @return             True if there are still orphans in this peer's work set.
+     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only
+     *                     one orphan will be reconsidered on each call of this function. If an
+     *                     accepted orphan has orphaned children, those will need to be
+     *                     reconsidered, creating more work, possibly for other peers.
+     * @return             True if meaningful work was done (an orphan was accepted/rejected).
+     *                     If no meaningful work was done, then the work set for this peer
+     *                     will be empty.
      */
     bool ProcessOrphanTx(Peer& peer)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+
     /** Process a single headers message from a peer.
      *
      * @param[in]   pfrom     CNode of the peer
@@ -2897,13 +2900,11 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
     AssertLockHeld(g_msgproc_mutex);
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
 
     CTransactionRef porphanTx = nullptr;
-    NodeId from_peer = -1;
-    bool more = false;
 
-    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id, from_peer, more)) {
+    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id)) {
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
@@ -2911,20 +2912,20 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
-            m_orphanage.AddChildrenToWorkSet(*porphanTx, peer.m_id);
+            m_orphanage.AddChildrenToWorkSet(*porphanTx);
             m_orphanage.EraseTx(orphanHash);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
             }
-            break;
+            return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
                     orphanHash.ToString(),
-                    from_peer,
+                    peer.m_id,
                     state.ToString());
                 // Maybe punish peer that gave us an invalid orphan tx
-                MaybePunishNodeForTx(from_peer, state);
+                MaybePunishNodeForTx(peer.m_id, state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
@@ -2959,11 +2960,11 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 }
             }
             m_orphanage.EraseTx(orphanHash);
-            break;
+            return true;
         }
     }
 
-    return more;
+    return false;
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
@@ -4033,7 +4034,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
-            m_orphanage.AddChildrenToWorkSet(tx, peer->m_id);
+            m_orphanage.AddChildrenToWorkSet(tx);
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
 
@@ -4045,9 +4046,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
             }
-
-            // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(*peer);
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -4856,16 +4854,12 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
         }
     }
 
-    bool has_more_orphans;
-    {
-        LOCK(cs_main);
-        has_more_orphans = ProcessOrphanTx(*peer);
-    }
+    const bool processed_orphan = ProcessOrphanTx(*peer);
 
     if (pfrom->fDisconnect)
         return false;
 
-    if (has_more_orphans) return true;
+    if (processed_orphan) return true;
 
     // this maintains the order of responses
     // and prevents m_getdata_requests to grow unbounded
@@ -4911,6 +4905,12 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
             LOCK(peer->m_getdata_requests_mutex);
             if (!peer->m_getdata_requests.empty()) fMoreWork = true;
         }
+        // Does this peer has an orphan ready to reconsider?
+        // (Note: we may have provided a parent for an orphan provided
+        //  by another peer that was already processed; in that case,
+        //  the extra work may not be noticed, possibly resulting in an
+        //  unnecessary 100ms delay)
+        if (m_orphanage.HaveTxToReconsider(peer->m_id)) fMoreWork = true;
     } catch (const std::exception& e) {
         LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' (%s) caught\n", __func__, SanitizeString(msg.m_type), msg.m_message_size, e.what(), typeid(e).name());
     } catch (...) {
