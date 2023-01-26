@@ -54,8 +54,11 @@ using node::PSBTAnalysis;
 using node::ReadBlockFromDisk;
 using node::UndoReadFromDisk;
 
-static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, Chainstate& active_chainstate, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_TXID)
+static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry,
+                     Chainstate& active_chainstate, const CTxUndo* txundo = nullptr,
+                     TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS)
 {
+    CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
     // Blockchain contextual information (confirmations and blocktime) is not
