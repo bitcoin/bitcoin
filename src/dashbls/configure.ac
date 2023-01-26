@@ -1,13 +1,5 @@
 AC_PREREQ([2.60])
-# The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
-# the API. All changes in experimental modules are treated as
-# backwards-compatible and therefore at most increase the minor version.
-define(_PKG_VERSION_MAJOR, 1)
-define(_PKG_VERSION_MINOR, 2)
-define(_PKG_VERSION_BUILD, 4)
-define(_PKG_VERSION_IS_RELEASE, false)
-AC_INIT([libdashbls],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/syscoin/syscoin/issues],[libdashbls],[https://github.com/syscoin/syscoin])
-
+AC_INIT([Syscoin Core],[1.2.4])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
