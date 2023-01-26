@@ -32,7 +32,7 @@ endif # ENABLE_WALLET
 
 libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libtest_util_a_LIBADD = $(LIBBLS) $(LIBMCL)
+#libtest_util_a_LIBADD = $(LIBBLS) $(LIBMCL)
 libtest_util_a_SOURCES = \
   blsct/arith/elements.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
