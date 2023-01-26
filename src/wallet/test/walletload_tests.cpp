@@ -58,8 +58,8 @@ bool HasAnyRecordOfType(WalletDatabase& db, const std::string& key)
     std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
     BOOST_CHECK(cursor);
     while (true) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
+        DataStream ssValue{};
         DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
         assert(status != DatabaseCursor::Status::FAIL);
         if (status == DatabaseCursor::Status::DONE) break;

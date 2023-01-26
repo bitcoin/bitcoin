@@ -721,6 +721,7 @@ static RPCHelpMan getblockheader()
 
     if (!fVerbose)
     {
+        // SYSCOIN
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
         ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
         std::string strHex = HexStr(ssBlock);

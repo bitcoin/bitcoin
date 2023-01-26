@@ -138,7 +138,7 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
         strPrint = "Could not satisfy difficulty target";
         return EXIT_FAILURE;
     }
-
+    // SYSCOIN
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << header;
     strPrint = HexStr(ss);

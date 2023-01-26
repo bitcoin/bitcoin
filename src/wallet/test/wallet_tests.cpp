@@ -910,7 +910,7 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 class FailCursor : public DatabaseCursor
 {
 public:
-    Status Next(CDataStream& key, CDataStream& value) override { return Status::FAIL; }
+    Status Next(DataStream& key, DataStream& value) override { return Status::FAIL; }
 };
 
 /** RAII class that provides access to a FailDatabase. Which fails if needed. */
@@ -918,10 +918,10 @@ class FailBatch : public DatabaseBatch
 {
 private:
     bool m_pass{true};
-    bool ReadKey(CDataStream&& key, CDataStream& value) override { return m_pass; }
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) override { return m_pass; }
-    bool EraseKey(CDataStream&& key) override { return m_pass; }
-    bool HasKey(CDataStream&& key) override { return m_pass; }
+    bool ReadKey(DataStream&& key, DataStream& value) override { return m_pass; }
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return m_pass; }
+    bool EraseKey(DataStream&& key) override { return m_pass; }
+    bool HasKey(DataStream&& key) override { return m_pass; }
 
 public:
     explicit FailBatch(bool pass) : m_pass(pass) {}
