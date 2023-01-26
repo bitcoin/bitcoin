@@ -147,7 +147,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-with-stack-protector (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.27))))
+                                       (base-libc (hardened-glibc (make-glibc-without-werror glibc-2.27)))
                                        (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -537,11 +537,12 @@ inspecting signatures in Mach-O binaries.")
 (define (make-glibc-without-werror glibc)
   (package-with-extra-configure-variable glibc "enable_werror" "no"))
 
-(define (make-glibc-with-stack-protector glibc)
-  (package-with-extra-configure-variable glibc "--enable-stack-protector" "all"))
-
-(define (make-glibc-with-bind-now glibc)
-  (package-with-extra-configure-variable glibc "--enable-bind-now" "yes"))
+;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+(define (hardened-glibc glibc)
+  (package-with-extra-configure-variable (
+    package-with-extra-configure-variable glibc
+    "--enable-stack-protector" "all")
+    "--enable-bind-now" "yes"))
 
 (define-public glibc-2.27
   (package
