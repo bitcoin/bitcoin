@@ -590,7 +590,7 @@ bool RangeProofLogic<T>::Verify(
         proof_transcripts.push_back(proof_transcript);
     }
 
-    const size_t max_mn = 1ul << max_num_rounds;
+    const size_t max_mn = 1ull << max_num_rounds;
     const Generators<T> gens = m_gf->GetInstance(token_id);
 
     auto point_sum = VerifyProofs(
