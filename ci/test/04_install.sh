@@ -33,7 +33,12 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   # the name isn't important, so long as we use the same UID
   LOCAL_USER=nonroot
-  ${CI_RETRY_EXE} docker pull "$CI_IMAGE_NAME_TAG"
+  DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
+      --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
+      --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
+      --build-arg "FILE_ENV=${FILE_ENV}" \
+      --tag="${CONTAINER_NAME}" \
+      "${BASE_ROOT_DIR}"
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
@@ -49,7 +54,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
-                  $CI_IMAGE_NAME_TAG)
+                  $CONTAINER_NAME)
   export CI_CONTAINER_ID
 
   # Create a non-root user inside the container which matches the local user.
@@ -63,6 +68,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
 else
   echo "Running on host system without docker wrapper"
+  "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 fi
 
 CI_EXEC () {
@@ -75,29 +81,6 @@ export -f CI_EXEC
 export -f CI_EXEC_ROOT
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
-
-if [ -n "$DPKG_ADD_ARCH" ]; then
-  CI_EXEC_ROOT dpkg --add-architecture "$DPKG_ADD_ARCH"
-fi
-
-if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
-  ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y install epel-release
-  ${CI_RETRY_EXE} CI_EXEC_ROOT dnf -y --allowerasing install "$CI_BASE_PACKAGES" "$PACKAGES"
-elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
-  if [[ "${ADD_UNTRUSTED_BPFCC_PPA}" == "true" ]]; then
-    # Ubuntu 22.04 LTS and Debian 11 both have an outdated bpfcc-tools packages.
-    # The iovisor PPA is outdated as well. The next Ubuntu and Debian releases will contain updated
-    # packages. Meanwhile, use an untrusted PPA to install an up-to-date version of the bpfcc-tools
-    # package.
-    # TODO: drop this once we can use newer images in GCE
-    CI_EXEC_ROOT add-apt-repository ppa:hadret/bpfcc
-  fi
-  if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
-    CI_EXEC_ROOT echo "${APPEND_APT_SOURCES_LIST}" \>\> /etc/apt/sources.list
-  fi
-  ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
-  ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$CI_BASE_PACKAGES"
-fi
 
 if [ -n "$PIP_PACKAGES" ]; then
   if [ "$CI_OS_NAME" == "macos" ]; then
