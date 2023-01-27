@@ -48,9 +48,6 @@ export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 
 export CONTAINER_NAME=${CONTAINER_NAME:-ci_unnamed}
 export CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG:-ubuntu:20.04}
-# Randomize test order.
-# See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
-export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
 # See man 7 debconf
 export DEBIAN_FRONTEND=noninteractive
 export CCACHE_SIZE=${CCACHE_SIZE:-100M}

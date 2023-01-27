@@ -22,6 +22,11 @@ if [ -n "$USE_VALGRIND" ]; then
   CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
 
+# See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
+BOOST_TEST_RANDOM=$(python3 -c 'import time;print(time.time_ns()&0xffffffff)')
+export BOOST_TEST_RANDOM
+echo "Randomize boost test order with '${BOOST_TEST_RANDOM}'."
+
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   CI_EXEC "${TEST_RUNNER_ENV}" DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" make "$MAKEJOBS" check VERBOSE=1
 fi
