@@ -9,6 +9,7 @@
 #include <prevector.h>
 #include <pubkey.h>
 #include <random.h>
+#include <validation.h>
 
 #include <vector>
 
@@ -28,6 +29,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     ECC_Start();
 
     struct PrevectorJob {
+        std::vector<DeferredCheck> m_deferred_checks;
         prevector<PREVECTOR_SIZE, uint8_t> p;
         explicit PrevectorJob(FastRandomContext& insecure_rand){
             p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
@@ -41,7 +43,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // The main thread should be counted to prevent thread oversubscription, and
     // to decrease the variance of benchmark results.
     int worker_threads_num{GetNumCores() - 1};
-    CCheckQueue<PrevectorJob> queue{QUEUE_BATCH_SIZE, worker_threads_num};
+    CCheckQueue<PrevectorJob, DeferredCheck> queue{QUEUE_BATCH_SIZE, worker_threads_num};
 
     // create all the data once, then submit copies in the benchmark.
     FastRandomContext insecure_rand(true);
@@ -54,7 +56,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
 
     bench.minEpochIterations(10).batch(BATCH_SIZE * BATCHES).unit("job").run([&] {
         // Make insecure_rand here so that each iteration is identical.
-        CCheckQueueControl<PrevectorJob> control(&queue);
+        CCheckQueueControl<PrevectorJob, DeferredCheck> control(&queue);
         for (auto vChecks : vBatches) {
             control.Add(std::move(vChecks));
         }

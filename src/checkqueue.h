@@ -8,10 +8,12 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/threadnames.h>
+#include <util/vector.h>
 
 #include <algorithm>
 #include <iterator>
 #include <vector>
+#include <optional>
 
 /**
  * Queue for verifications that have to be performed.
@@ -23,9 +25,12 @@
   * the master is done adding work, it temporarily joins the worker pool
   * as an N'th worker, until all jobs are done.
   */
-template <typename T>
+template <typename T, typename R>
 class CCheckQueue
 {
+public:
+    using ChecksReturn = std::pair<bool, std::optional<std::vector<R>>>;
+
 private:
     //! Mutex to protect the inner state
     Mutex m_mutex;
@@ -39,6 +44,8 @@ private:
     //! The queue of elements to be processed.
     //! As the order of booleans doesn't matter, it is used as a LIFO (stack)
     std::vector<T> queue GUARDED_BY(m_mutex);
+
+    std::vector<R> m_all_results GUARDED_BY(m_mutex);
 
     //! The number of workers (including the master) that are idle.
     int nIdle GUARDED_BY(m_mutex){0};
@@ -63,10 +70,11 @@ private:
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. */
-    bool Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    ChecksReturn Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
         std::vector<T> vChecks;
+        std::vector<R> results;
         vChecks.reserve(nBatchSize);
         unsigned int nNow = 0;
         bool fOk = true;
@@ -89,17 +97,23 @@ private:
                     if (fMaster && nTodo == 0) {
                         nTotal--;
                         bool fRet = fAllOk;
+
+                        // collect results from all checks and clear for subsequent work
+                        assert(results.size() == 0);
+                        results.swap(m_all_results);
+
                         // reset the status for new work later
                         fAllOk = true;
+
                         // return the current status
-                        return fRet;
+                        return std::make_pair(fRet, std::move(results));
                     }
                     nIdle++;
                     cond.wait(lock); // wait
                     nIdle--;
                 }
                 if (m_request_stop) {
-                    return false;
+                    return std::make_pair(false, std::nullopt);
                 }
 
                 // Decide how many work units to process now.
@@ -115,10 +129,21 @@ private:
                 fOk = fAllOk;
             }
             // execute work
-            for (T& check : vChecks)
-                if (fOk)
+            for (T& check : vChecks) {
+                if (fOk) {
                     fOk = check();
+
+                    if (fOk && !check.m_deferred_checks.empty()) {
+                        move_to_end(results, check.m_deferred_checks);
+                    }
+                }
+            }
             vChecks.clear();
+            if (results.size() > 0) {
+                LOCK(m_mutex);
+                move_to_end(m_all_results, results);
+                results.clear();
+            }
         } while (true);
     }
 
@@ -147,7 +172,7 @@ public:
     CCheckQueue& operator=(CCheckQueue&&) = delete;
 
     //! Wait until execution finishes, and return whether all evaluations were successful.
-    bool Wait() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    ChecksReturn Wait() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         return Loop(true /* master thread */);
     }
@@ -188,18 +213,18 @@ public:
  * RAII-style controller object for a CCheckQueue that guarantees the passed
  * queue is finished before continuing.
  */
-template <typename T>
+template <typename T, typename R>
 class CCheckQueueControl
 {
 private:
-    CCheckQueue<T> * const pqueue;
+    CCheckQueue<T, R> * const pqueue;
     bool fDone;
 
 public:
     CCheckQueueControl() = delete;
     CCheckQueueControl(const CCheckQueueControl&) = delete;
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
+    explicit CCheckQueueControl(CCheckQueue<T, R> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or nullptr
         if (pqueue != nullptr) {
@@ -207,13 +232,13 @@ public:
         }
     }
 
-    bool Wait()
+    typename CCheckQueue<T, R>::ChecksReturn Wait()
     {
         if (pqueue == nullptr)
-            return true;
-        bool fRet = pqueue->Wait();
+            return std::pair(true, std::make_optional<std::vector<R>>());
+        auto retval = pqueue->Wait();
         fDone = true;
-        return fRet;
+        return retval;
     }
 
     void Add(std::vector<T>&& vChecks)

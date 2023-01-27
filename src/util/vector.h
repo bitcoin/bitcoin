@@ -80,4 +80,15 @@ inline std::optional<V> FindFirst(const std::vector<V>& vec, const L fnc)
     return std::nullopt;
 }
 
+/** Move the contents of the second vector to the end of the first. */
+template<typename T1, typename T2>
+void move_to_end(T1& dest, T2& src)
+{
+    dest.insert(
+        dest.end(),
+        std::make_move_iterator(src.begin()),
+        std::make_move_iterator(src.end()));
+}
+
+
 #endif // BITCOIN_UTIL_VECTOR_H

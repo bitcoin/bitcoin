@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
 #include <util/time.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -39,7 +40,11 @@ BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, NoLockLoggingTestingSetup)
 static const unsigned int QUEUE_BATCH_SIZE = 128;
 static const int SCRIPT_CHECK_THREADS = 3;
 
+using DeferredChecks = std::vector<DeferredCheck>;
+
 struct FakeCheck {
+    DeferredChecks m_deferred_checks;
+
     bool operator()() const
     {
         return true;
@@ -47,6 +52,7 @@ struct FakeCheck {
 };
 
 struct FakeCheckCheckCompletion {
+    DeferredChecks m_deferred_checks;
     static std::atomic<size_t> n_calls;
     bool operator()()
     {
@@ -56,6 +62,7 @@ struct FakeCheckCheckCompletion {
 };
 
 struct FailingCheck {
+    DeferredChecks m_deferred_checks;
     bool fails;
     FailingCheck(bool _fails) : fails(_fails){};
     bool operator()() const
@@ -65,6 +72,7 @@ struct FailingCheck {
 };
 
 struct UniqueCheck {
+    DeferredChecks m_deferred_checks;
     static Mutex m;
     static std::unordered_multiset<size_t> results GUARDED_BY(m);
     size_t check_id;
@@ -79,6 +87,7 @@ struct UniqueCheck {
 
 
 struct MemoryCheck {
+    DeferredChecks m_deferred_checks;
     static std::atomic<size_t> fake_allocated_memory;
     bool b {false};
     bool operator()() const
@@ -104,6 +113,7 @@ struct MemoryCheck {
 };
 
 struct FrozenCleanupCheck {
+    DeferredChecks m_deferred_checks;
     static std::atomic<uint64_t> nFrozen;
     static std::condition_variable cv;
     static std::mutex m;
@@ -135,6 +145,30 @@ struct FrozenCleanupCheck {
     }
 };
 
+
+struct TestDeferredCheck {
+    int num;
+};
+
+//! A check that generates deferred checks.
+struct FakeGeneratorCheck {
+    std::vector<TestDeferredCheck> m_deferred_checks;
+    int param{-1};
+
+    FakeGeneratorCheck() = default;
+    FakeGeneratorCheck(int x) : param(x) { }
+    bool operator()()
+    {
+        m_deferred_checks.push_back({param});
+        return true;
+    }
+    void swap(FakeGeneratorCheck& x) noexcept
+    {
+        std::swap(param, x.param);
+    };
+};
+
+
 // Static Allocations
 std::mutex FrozenCleanupCheck::m{};
 std::atomic<uint64_t> FrozenCleanupCheck::nFrozen{0};
@@ -145,12 +179,13 @@ std::atomic<size_t> FakeCheckCheckCompletion::n_calls{0};
 std::atomic<size_t> MemoryCheck::fake_allocated_memory{0};
 
 // Queue Typedefs
-typedef CCheckQueue<FakeCheckCheckCompletion> Correct_Queue;
-typedef CCheckQueue<FakeCheck> Standard_Queue;
-typedef CCheckQueue<FailingCheck> Failing_Queue;
-typedef CCheckQueue<UniqueCheck> Unique_Queue;
-typedef CCheckQueue<MemoryCheck> Memory_Queue;
-typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
+typedef CCheckQueue<FakeCheckCheckCompletion, DeferredCheck> Correct_Queue;
+typedef CCheckQueue<FakeCheck, DeferredCheck> Standard_Queue;
+typedef CCheckQueue<FailingCheck, DeferredCheck> Failing_Queue;
+typedef CCheckQueue<UniqueCheck, DeferredCheck> Unique_Queue;
+typedef CCheckQueue<MemoryCheck, DeferredCheck> Memory_Queue;
+typedef CCheckQueue<FrozenCleanupCheck, DeferredCheck> FrozenCleanup_Queue;
+typedef CCheckQueue<FakeGeneratorCheck, TestDeferredCheck> Generator_Queue;
 
 
 /** This test case checks that the CCheckQueue works properly
@@ -165,14 +200,14 @@ static void Correct_Queue_range(std::vector<size_t> range)
     for (const size_t i : range) {
         size_t total = i;
         FakeCheckCheckCompletion::n_calls = 0;
-        CCheckQueueControl<FakeCheckCheckCompletion> control(small_queue.get());
+        CCheckQueueControl<FakeCheckCheckCompletion, DeferredCheck> control(small_queue.get());
         while (total) {
             vChecks.clear();
             vChecks.resize(std::min<size_t>(total, InsecureRandRange(10)));
             total -= vChecks.size();
             control.Add(std::move(vChecks));
         }
-        BOOST_REQUIRE(control.Wait());
+        BOOST_REQUIRE(control.Wait().first);
         BOOST_REQUIRE_EQUAL(FakeCheckCheckCompletion::n_calls, i);
     }
 }
@@ -213,12 +248,66 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 }
 
 
+template <typename T>
+static void CompareSets(const std::set<T>& a, const std::set<T>& b)
+{
+    std::vector<T> avec{a.begin(), a.end()}, bvec{b.begin(), b.end()};
+
+    std::sort(avec.begin(), avec.end());
+    std::sort(bvec.begin(), bvec.end());
+
+    BOOST_TEST(avec == bvec);
+}
+
+/** This test case checks that the CCheckQueue works properly
+ * with each specified size_t Checks pushed.
+ */
+static void DeferredRun(const int num_checks)
+{
+    auto small_queue = std::make_unique<Generator_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
+    // Make vChecks here to save on malloc (this test can be slow...)
+    int total_checks{0};
+
+    while (total_checks < num_checks) {
+        std::vector<FakeGeneratorCheck> vChecks;
+        CCheckQueueControl<FakeGeneratorCheck, TestDeferredCheck> control(small_queue.get());
+        int do_checks = InsecureRandRange(10) + 1;
+        std::set<int> range_checked;
+
+        for (int i = 0; i < do_checks; ++i) {
+            range_checked.insert(total_checks);
+            vChecks.emplace_back(total_checks++);
+        }
+        control.Add(std::move(vChecks));
+
+        auto [ok, deferred_checks] = control.Wait();
+
+        BOOST_REQUIRE(ok);
+        BOOST_REQUIRE(deferred_checks);
+
+        std::set<int> got_data;
+        for (const auto& dc : *deferred_checks) {
+            got_data.insert(dc.num);
+        }
+
+        CompareSets(range_checked, got_data);
+    }
+}
+
+/** Test that random numbers of checks are correct
+ */
+BOOST_AUTO_TEST_CASE(test_CheckQueue_Deferred_Checks)
+{
+    DeferredRun(10'000);
+}
+
+
 /** Test that failing checks are caught */
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
     auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     for (size_t i = 0; i < 1001; ++i) {
-        CCheckQueueControl<FailingCheck> control(fail_queue.get());
+        CCheckQueueControl<FailingCheck, DeferredCheck> control(fail_queue.get());
         size_t remaining = i;
         while (remaining) {
             size_t r = InsecureRandRange(10);
@@ -229,7 +318,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
                 vChecks.emplace_back(remaining == 1);
             control.Add(std::move(vChecks));
         }
-        bool success = control.Wait();
+        auto [success, deferred_checks] = control.Wait();
         if (i > 0) {
             BOOST_REQUIRE(!success);
         } else if (i == 0) {
@@ -244,14 +333,14 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
     auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     for (auto times = 0; times < 10; ++times) {
         for (const bool end_fails : {true, false}) {
-            CCheckQueueControl<FailingCheck> control(fail_queue.get());
+            CCheckQueueControl<FailingCheck, DeferredCheck> control(fail_queue.get());
             {
                 std::vector<FailingCheck> vChecks;
                 vChecks.resize(100, false);
                 vChecks[99] = end_fails;
                 control.Add(std::move(vChecks));
             }
-            bool r =control.Wait();
+            auto [r, deferred_checks] = control.Wait();
             BOOST_REQUIRE(r != end_fails);
         }
     }
@@ -266,7 +355,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
     size_t COUNT = 100000;
     size_t total = COUNT;
     {
-        CCheckQueueControl<UniqueCheck> control(queue.get());
+        CCheckQueueControl<UniqueCheck, DeferredCheck> control(queue.get());
         while (total) {
             size_t r = InsecureRandRange(10);
             std::vector<UniqueCheck> vChecks;
@@ -298,7 +387,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
     for (size_t i = 0; i < 1000; ++i) {
         size_t total = i;
         {
-            CCheckQueueControl<MemoryCheck> control(queue.get());
+            CCheckQueueControl<MemoryCheck, DeferredCheck> control(queue.get());
             while (total) {
                 size_t r = InsecureRandRange(10);
                 std::vector<MemoryCheck> vChecks;
@@ -322,10 +411,10 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
     auto queue = std::make_unique<FrozenCleanup_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     bool fails = false;
     std::thread t0([&]() {
-        CCheckQueueControl<FrozenCleanupCheck> control(queue.get());
+        CCheckQueueControl<FrozenCleanupCheck, DeferredCheck> control(queue.get());
         std::vector<FrozenCleanupCheck> vChecks(1);
         control.Add(std::move(vChecks));
-        bool waitResult = control.Wait(); // Hangs here
+        auto [waitResult, _] = control.Wait(); // Hangs here
         assert(waitResult);
     });
     {
@@ -361,7 +450,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         for (size_t i = 0; i < 3; ++i) {
             tg.emplace_back(
                     [&]{
-                    CCheckQueueControl<FakeCheck> control(queue.get());
+                    CCheckQueueControl<FakeCheck, DeferredCheck> control(queue.get());
                     // While sleeping, no other thread should execute to this point
                     auto observed = ++nThreads;
                     UninterruptibleSleep(std::chrono::milliseconds{10});
@@ -384,7 +473,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         {
             std::unique_lock<std::mutex> l(m);
             tg.emplace_back([&]{
-                    CCheckQueueControl<FakeCheck> control(queue.get());
+                    CCheckQueueControl<FakeCheck, DeferredCheck> control(queue.get());
                     std::unique_lock<std::mutex> ll(m);
                     has_lock = true;
                     cv.notify_one();
@@ -414,4 +503,5 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         }
     }
 }
+
 BOOST_AUTO_TEST_SUITE_END()

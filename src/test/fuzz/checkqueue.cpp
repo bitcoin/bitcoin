@@ -6,14 +6,14 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <script/interpreter.h>
 
-#include <cstdint>
-#include <string>
 #include <vector>
 
 namespace {
 struct DumbCheck {
     bool result = false;
+    std::vector<DeferredCheck> m_deferred_checks;
 
     explicit DumbCheck(const bool _result) : result(_result)
     {
@@ -31,8 +31,8 @@ FUZZ_TARGET(checkqueue)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const unsigned int batch_size = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 1024);
-    CCheckQueue<DumbCheck> check_queue_1{batch_size, /*worker_threads_num=*/0};
-    CCheckQueue<DumbCheck> check_queue_2{batch_size, /*worker_threads_num=*/0};
+    CCheckQueue<DumbCheck, DeferredCheck> check_queue_1{batch_size, /*worker_threads_num=*/0};
+    CCheckQueue<DumbCheck, DeferredCheck> check_queue_2{batch_size, /*worker_threads_num=*/0};
     std::vector<DumbCheck> checks_1;
     std::vector<DumbCheck> checks_2;
     const int size = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1024);
@@ -48,7 +48,7 @@ FUZZ_TARGET(checkqueue)
         (void)check_queue_1.Wait();
     }
 
-    CCheckQueueControl<DumbCheck> check_queue_control{&check_queue_2};
+    CCheckQueueControl<DumbCheck, DeferredCheck> check_queue_control{&check_queue_2};
     if (fuzzed_data_provider.ConsumeBool()) {
         check_queue_control.Add(std::move(checks_2));
     }
