@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -202,7 +202,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[3])
-        self.wallet.rescan_utxos()
         initial_height = self.nodes[3].getblockcount()
         self.generate(self.nodes[3], COINBASE_MATURITY, sync_fun=self.no_op)
 

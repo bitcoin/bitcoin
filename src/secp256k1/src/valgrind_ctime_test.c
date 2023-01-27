@@ -39,9 +39,7 @@ int main(void) {
         fprintf(stderr, "Usage: libtool --mode=execute valgrind ./valgrind_ctime_test\n");
         return 1;
     }
-    ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN
-                                   | SECP256K1_CONTEXT_VERIFY
-                                   | SECP256K1_CONTEXT_DECLASSIFY);
+    ctx = secp256k1_context_create(SECP256K1_CONTEXT_DECLASSIFY);
     /** In theory, testing with a single secret input should be sufficient:
      *  If control flow depended on secrets the tool would generate an error.
      */

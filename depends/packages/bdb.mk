@@ -15,6 +15,9 @@ $(package)_config_opts_netbsd=--with-pic
 $(package)_config_opts_openbsd=--with-pic
 $(package)_config_opts_android=--with-pic
 $(package)_cflags+=-Wno-error=implicit-function-declaration -Wno-error=format-security
+$(package)_cppflags_freebsd=-D_XOPEN_SOURCE=600
+$(package)_cppflags_netbsd=-D_XOPEN_SOURCE=600
+$(package)_cppflags_openbsd=-D_XOPEN_SOURCE=600
 $(package)_cppflags_mingw32=-DUNICODE -D_UNICODE
 endef
 

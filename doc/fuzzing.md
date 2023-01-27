@@ -283,8 +283,8 @@ $ sudo apt-get install libtool libtool-bin wget automake autoconf bison gdb
 ```
 
 At this point, you must install the .NET core.  The process differs, depending on your Linux distribution.
-See [this link](https://docs.microsoft.com/en-us/dotnet/core/install/linux) for details.
-On ubuntu 20.04, the following should work:
+See [this link](https://learn.microsoft.com/en-us/dotnet/core/install/linux) for details.
+On Ubuntu 20.04, the following should work:
 
 ```sh
 $ wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb

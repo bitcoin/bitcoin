@@ -21,6 +21,8 @@ Supporting RPCs are:
 - `importdescriptors` takes as input descriptors to import into a descriptor wallet
   (since v0.21).
 - `listdescriptors` outputs descriptors imported into a descriptor wallet (since v22).
+- `scanblocks` takes as input descriptors to scan for in blocks and returns the
+   relevant blockhashes (since v25).
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
@@ -264,6 +266,6 @@ ones. For larger numbers of errors, or other types of errors, there is a
 roughly 1 in a trillion chance of not detecting the errors.
 
 All RPCs in Bitcoin Core will include the checksum in their output. Only
-certain RPCs require checksums on input, including `deriveaddress` and
+certain RPCs require checksums on input, including `deriveaddresses` and
 `importmulti`. The checksum for a descriptor without one can be computed
 using the `getdescriptorinfo` RPC.

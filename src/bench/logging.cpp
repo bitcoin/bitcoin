@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,8 +41,8 @@ static void LoggingNoFile(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(LoggingYoThreadNames);
-BENCHMARK(LoggingNoThreadNames);
-BENCHMARK(LoggingYoCategory);
-BENCHMARK(LoggingNoCategory);
-BENCHMARK(LoggingNoFile);
+BENCHMARK(LoggingYoThreadNames, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingNoThreadNames, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingYoCategory, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingNoCategory, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingNoFile, benchmark::PriorityLevel::HIGH);

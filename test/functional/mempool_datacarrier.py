@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test datacarrier functionality"""
@@ -44,7 +44,6 @@ class DataCarrierTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
 
         # By default, only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
         default_size_data = random_bytes(MAX_OP_RETURN_RELAY - 3)

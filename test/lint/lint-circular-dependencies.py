@@ -14,7 +14,7 @@ import sys
 EXPECTED_CIRCULAR_DEPENDENCIES = (
     "chainparamsbase -> util/system -> chainparamsbase",
     "node/blockstorage -> validation -> node/blockstorage",
-    "policy/fees -> txmempool -> policy/fees",
+    "node/utxo_snapshot -> validation -> node/utxo_snapshot",
     "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
@@ -34,14 +34,14 @@ def main():
     os.chdir(CODE_DIR)
     files = subprocess.check_output(
         ['git', 'ls-files', '--', '*.h', '*.cpp'],
-        universal_newlines=True,
+        text=True,
     ).splitlines()
 
     command = [sys.executable, "../contrib/devtools/circular-dependencies.py", *files]
     dependencies_output = subprocess.run(
         command,
         stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
     )
 
     for dependency_str in dependencies_output.stdout.rstrip().split("\n"):

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -146,6 +146,16 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
 
 static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const XOnlyPubKey& pubkey, const uint256& leaf_hash, SigVersion sigversion)
 {
+    KeyOriginInfo info;
+    if (provider.GetKeyOriginByXOnly(pubkey, info)) {
+        auto it = sigdata.taproot_misc_pubkeys.find(pubkey);
+        if (it == sigdata.taproot_misc_pubkeys.end()) {
+            sigdata.taproot_misc_pubkeys.emplace(pubkey, std::make_pair(std::set<uint256>({leaf_hash}), info));
+        } else {
+            it->second.first.insert(leaf_hash);
+        }
+    }
+
     auto lookup_key = std::make_pair(pubkey, leaf_hash);
     auto it = sigdata.taproot_script_sigs.find(lookup_key);
     if (it != sigdata.taproot_script_sigs.end()) {
@@ -159,28 +169,18 @@ static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, Signatur
     return false;
 }
 
-static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, const CScript& script, std::vector<valtype>& result)
+static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, Span<const unsigned char> script_bytes, std::vector<valtype>& result)
 {
     // Only BIP342 tapscript signing is supported for now.
     if (leaf_version != TAPROOT_LEAF_TAPSCRIPT) return false;
     SigVersion sigversion = SigVersion::TAPSCRIPT;
 
-    uint256 leaf_hash = (HashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
+    uint256 leaf_hash = ComputeTapleafHash(leaf_version, script_bytes);
+    CScript script = CScript(script_bytes.begin(), script_bytes.end());
 
     // <xonly pubkey> OP_CHECKSIG
     if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
         XOnlyPubKey pubkey{Span{script}.subspan(1, 32)};
-
-        KeyOriginInfo info;
-        if (provider.GetKeyOriginByXOnly(pubkey, info)) {
-            auto it = sigdata.taproot_misc_pubkeys.find(pubkey);
-            if (it == sigdata.taproot_misc_pubkeys.end()) {
-                sigdata.taproot_misc_pubkeys.emplace(pubkey, std::make_pair(std::set<uint256>({leaf_hash}), info));
-            } else {
-                it->second.first.insert(leaf_hash);
-            }
-        }
-
         std::vector<unsigned char> sig;
         if (CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion)) {
             result = Vector(std::move(sig));

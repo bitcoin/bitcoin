@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,7 +36,7 @@ static void BenchTimeMillisSys(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BenchTimeDeprecated);
-BENCHMARK(BenchTimeMillis);
-BENCHMARK(BenchTimeMillisSys);
-BENCHMARK(BenchTimeMock);
+BENCHMARK(BenchTimeDeprecated, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeMillis, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeMillisSys, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeMock, benchmark::PriorityLevel::HIGH);

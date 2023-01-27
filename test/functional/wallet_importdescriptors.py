@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importdescriptors RPC.
@@ -15,7 +15,6 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
-from test_framework.address import key_to_p2pkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
@@ -30,6 +29,9 @@ from test_framework.wallet_util import (
 )
 
 class ImportDescriptorsTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, legacy=False)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-addresstype=legacy"],
@@ -117,12 +119,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         self.log.info("Internal addresses should be detected as such")
         key = get_generate_key()
-        addr = key_to_p2pkh(key.pubkey)
         self.test_importdesc({"desc": descsum_create("pkh(" + key.pubkey + ")"),
                               "timestamp": "now",
                               "internal": True},
                              success=True)
-        info = w1.getaddressinfo(addr)
+        info = w1.getaddressinfo(key.p2pkh_addr)
         assert_equal(info["ismine"], True)
         assert_equal(info["ischange"], True)
 
@@ -484,8 +485,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(addr, 'bcrt1qp8s25ckjl7gr6x2q3dx3tn2pytwp05upkjztk6ey857tt50r5aeqn6mvr9') # Derived at m/84'/0'/0'/1
         change_addr = wmulti_pub.getrawchangeaddress('bech32')
         assert_equal(change_addr, 'bcrt1qzxl0qz2t88kljdnkzg4n4gapr6kte26390gttrg79x66nt4p04fssj53nl')
-        assert(send_txid in self.nodes[0].getrawmempool(True))
-        assert(send_txid in (x['txid'] for x in wmulti_pub.listunspent(0)))
+        assert send_txid in self.nodes[0].getrawmempool(True)
+        assert send_txid in (x['txid'] for x in wmulti_pub.listunspent(0))
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)
 
         # generate some utxos for next tests

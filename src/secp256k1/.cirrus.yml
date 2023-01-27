@@ -26,6 +26,11 @@ env:
   # Compile and run the tests
   EXAMPLES: yes
 
+# https://cirrus-ci.org/pricing/#compute-credits
+credits_snippet: &CREDITS
+  # Don't use any credits for now.
+  use_compute_credits: false
+
 cat_logs_snippet: &CAT_LOGS
   always:
     cat_tests_log_script:
@@ -36,7 +41,6 @@ cat_logs_snippet: &CAT_LOGS
       - cat valgrind_ctime_test.log || true
     cat_bench_log_script:
       - cat bench.log || true
-  on_failure:
     cat_config_log_script:
       - cat config.log || true
     cat_test_env_script:
@@ -69,6 +73,7 @@ task:
     - env: {WIDEMUL:  int64,  RECOVERY: yes}
     - env: {WIDEMUL:  int64,                 ECDH: yes, SCHNORRSIG: yes}
     - env: {WIDEMUL: int128}
+    - env: {WIDEMUL: int128_struct}
     - env: {WIDEMUL: int128,  RECOVERY: yes,            SCHNORRSIG: yes}
     - env: {WIDEMUL: int128,                 ECDH: yes, SCHNORRSIG: yes}
     - env: {WIDEMUL: int128,  ASM: x86_64}
@@ -107,65 +112,32 @@ task:
   << : *CAT_LOGS
 
 task:
-  name: "x86_64: macOS Catalina"
+  name: "arm64: macOS Ventura"
   macos_instance:
-    image: catalina-base
+    image: ghcr.io/cirruslabs/macos-ventura-base:latest
   env:
     HOMEBREW_NO_AUTO_UPDATE: 1
     HOMEBREW_NO_INSTALL_CLEANUP: 1
-    # Cirrus gives us a fixed number of 12 virtual CPUs. Not that we even have that many jobs at the moment...
-    MAKEFLAGS: -j13
+    # Cirrus gives us a fixed number of 4 virtual CPUs. Not that we even have that many jobs at the moment...
+    MAKEFLAGS: -j5
   matrix:
     << : *ENV_MATRIX
+  env:
+    ASM: no
+    WITH_VALGRIND: no
+    CTIMETEST: no
   matrix:
     - env:
-        CC: gcc-9
+        CC: gcc
     - env:
         CC: clang
-  # Update Command Line Tools
-  # Uncomment this if the Command Line Tools on the CirrusCI macOS image are too old to brew valgrind.
-  # See https://apple.stackexchange.com/a/195963 for the implementation.
-  ## update_clt_script:
-  ##   - system_profiler SPSoftwareDataType
-  ##   - touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
-  ##   - |-
-  ##     PROD=$(softwareupdate -l | grep "*.*Command Line" | tail -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | sed 's/Label: //g' | tr -d '\n')
-  ##   # For debugging
-  ##   - softwareupdate -l && echo "PROD: $PROD"
-  ##   - softwareupdate -i "$PROD" --verbose
-  ##   - rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
-  ##
-  brew_valgrind_pre_script:
-    # Retry a few times because this tends to fail randomly.
-    - for i in {1..5}; do brew update && break || sleep 15; done
-    - brew config
-    - brew tap LouisBrunner/valgrind
-    # Fetch valgrind source but don't build it yet.
-    - brew fetch --HEAD LouisBrunner/valgrind/valgrind
-  brew_valgrind_cache:
-    # This is $(brew --cellar valgrind) but command substition does not work here.
-    folder: /usr/local/Cellar/valgrind
-    # Rebuild cache if ...
-    fingerprint_script:
-      # ... macOS version changes:
-      - sw_vers
-      # ... brew changes:
-      - brew config
-      # ... valgrind changes:
-      - git -C "$(brew --cache)/valgrind--git" rev-parse HEAD
-    populate_script:
-      # If there's no hit in the cache, build and install valgrind.
-      - brew install --HEAD LouisBrunner/valgrind/valgrind
-  brew_valgrind_post_script:
-    # If we have restored valgrind from the cache, tell brew to create symlink to the PATH.
-    # If we haven't restored from cached (and just run brew install), this is a no-op.
-    - brew link valgrind
   brew_script:
-    - brew install automake libtool gcc@9
+    - brew install automake libtool gcc
   << : *MERGE_BASE
   test_script:
     - ./ci/cirrus.sh
   << : *CAT_LOGS
+  << : *CREDITS
 
 task:
   name: "s390x (big-endian): Linux (Debian stable, QEMU)"
@@ -241,17 +213,63 @@ task:
   << : *CAT_LOGS
 
 task:
-  name: "x86_64 (mingw32-w64): Windows (Debian stable, Wine)"
   << : *LINUX_CONTAINER
   env:
-    WRAPPER_CMD: wine64-stable
-    SECP256K1_TEST_ITERS: 16
-    HOST: x86_64-w64-mingw32
+    WRAPPER_CMD: wine
     WITH_VALGRIND: no
     ECDH: yes
     RECOVERY: yes
     SCHNORRSIG: yes
     CTIMETEST: no
+  matrix:
+    - name: "x86_64 (mingw32-w64): Windows (Debian stable, Wine)"
+      env:
+        HOST: x86_64-w64-mingw32
+    - name: "i686 (mingw32-w64): Windows (Debian stable, Wine)"
+      env:
+        HOST: i686-w64-mingw32
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: wine
+    WERROR_CFLAGS: -WX
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+    # Use a MinGW-w64 host to tell ./configure we're building for Windows.
+    # This will detect some MinGW-w64 tools but then make will need only
+    # the MSVC tools CC, AR and NM as specified below.
+    HOST: x86_64-w64-mingw32
+    CC: /opt/msvc/bin/x64/cl
+    AR: /opt/msvc/bin/x64/lib
+    NM: /opt/msvc/bin/x64/dumpbin -symbols -headers
+    # Set non-essential options that affect the CLI messages here.
+    # (They depend on the user's taste, so we don't want to set them automatically in configure.ac.)
+    CFLAGS: -nologo -diagnostics:caret
+    LDFLAGS: -XCClinker -nologo -XCClinker -diagnostics:caret
+  matrix:
+    - name: "x86_64 (MSVC): Windows (Debian stable, Wine)"
+    - name: "x86_64 (MSVC): Windows (Debian stable, Wine, int128_struct)"
+      env:
+        WIDEMUL: int128_struct
+    - name: "x86_64 (MSVC): Windows (Debian stable, Wine, int128_struct with __(u)mulh)"
+      env:
+        WIDEMUL: int128_struct
+        CPPFLAGS: -DSECP256K1_MSVC_MULH_TEST_OVERRIDE
+    - name: "i686 (MSVC): Windows (Debian stable, Wine)"
+      env:
+        HOST: i686-w64-mingw32
+        CC: /opt/msvc/bin/x86/cl
+        AR: /opt/msvc/bin/x86/lib
+        NM: /opt/msvc/bin/x86/dumpbin -symbols -headers
   << : *MERGE_BASE
   test_script:
     - ./ci/cirrus.sh
@@ -301,14 +319,39 @@ task:
     - ./ci/cirrus.sh
   << : *CAT_LOGS
 
+# Memory sanitizers
 task:
-  name: "C++ -fpermissive"
+  << : *LINUX_CONTAINER
+  name: "MSan"
+  env:
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+    CC: clang
+    SECP256K1_TEST_ITERS: 32
+    ASM: no
+  container:
+    memory: 2G
+  matrix:
+    - env:
+        CFLAGS: "-fsanitize=memory -g"
+    - env:
+        ECMULTGENPRECISION: 2
+        ECMULTWINDOW: 2
+        CFLAGS: "-fsanitize=memory -g -O3"
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "C++ -fpermissive (entire project)"
   << : *LINUX_CONTAINER
   env:
-    # ./configure correctly errors out when given CC=g++.
-    # We hack around this by passing CC=g++ only to make.
-    CC: gcc
-    MAKEFLAGS: -j4 CC=g++ CFLAGS=-fpermissive\ -g
+    CC: g++
+    CFLAGS: -fpermissive -g
+    CPPFLAGS: -DSECP256K1_CPLUSPLUS_TEST_OVERRIDE
     WERROR_CFLAGS:
     ECDH: yes
     RECOVERY: yes
@@ -317,6 +360,14 @@ task:
   test_script:
     - ./ci/cirrus.sh
   << : *CAT_LOGS
+
+task:
+  name: "C++ (public headers)"
+  << : *LINUX_CONTAINER
+  test_script:
+    - g++ -Werror include/*.h
+    - clang -Werror -x c++-header include/*.h
+    - /opt/msvc/bin/x64/cl.exe -c -WX -TP include/*.h
 
 task:
   name: "sage prover"

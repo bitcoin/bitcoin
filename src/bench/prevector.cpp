@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,7 +61,7 @@ static void PrevectorResize(benchmark::Bench& bench)
 template <typename T>
 static void PrevectorDeserialize(benchmark::Bench& bench)
 {
-    CDataStream s0(SER_NETWORK, 0);
+    DataStream s0{};
     prevector<28, T> t0;
     t0.resize(28);
     for (auto x = 0; x < 900; ++x) {
@@ -85,12 +85,12 @@ static void PrevectorDeserialize(benchmark::Bench& bench)
     {                                                                \
         Prevector##name<nontrivial_t>(bench);                        \
     }                                                                \
-    BENCHMARK(Prevector##name##Nontrivial);                          \
+    BENCHMARK(Prevector##name##Nontrivial, benchmark::PriorityLevel::HIGH);         \
     static void Prevector##name##Trivial(benchmark::Bench& bench)    \
     {                                                                \
         Prevector##name<trivial_t>(bench);                           \
     }                                                                \
-    BENCHMARK(Prevector##name##Trivial);
+    BENCHMARK(Prevector##name##Trivial, benchmark::PriorityLevel::HIGH);
 
 PREVECTOR_TEST(Clear)
 PREVECTOR_TEST(Destructor)

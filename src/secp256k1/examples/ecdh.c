@@ -30,12 +30,8 @@ int main(void) {
     secp256k1_pubkey pubkey1;
     secp256k1_pubkey pubkey2;
 
-    /* The specification in secp256k1.h states that `secp256k1_ec_pubkey_create`
-     * needs a context object initialized for signing, which is why we create
-     * a context with the SECP256K1_CONTEXT_SIGN flag.
-     * (The docs for `secp256k1_ecdh` don't require any special context, just
-     * some initialized context) */
-    secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    /* Before we can call actual API functions, we need to create a "context". */
+    secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     if (!fill_random(randomize, sizeof(randomize))) {
         printf("Failed to generate randomness\n");
         return 1;

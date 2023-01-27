@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@ if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
 fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
-  CI_EXEC LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" "${TEST_RUNNER_ENV}" test/functional/test_runner.py --ci "$MAKEJOBS" --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" --ansi --combinedlogslen=4000 --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" "${TEST_RUNNER_EXTRA}" --quiet --failfast
+  CI_EXEC LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" "${TEST_RUNNER_ENV}" test/functional/test_runner.py --ci "$MAKEJOBS" --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" --ansi --combinedlogslen=99999999 --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" "${TEST_RUNNER_EXTRA}" --quiet --failfast
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
@@ -40,11 +40,13 @@ if [ "${RUN_TIDY}" = "true" ]; then
   ( CI_EXEC run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
   export P_CI_DIR="${BASE_BUILD_DIR}/navcoin-$HOST/"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
+          " src/common/url.cpp"\
           " src/compat"\
           " src/dbwrapper.cpp"\
           " src/init"\
           " src/kernel"\
           " src/node/chainstate.cpp"\
+          " src/node/chainstatemanager_args.cpp"\
           " src/node/mempool_args.cpp"\
           " src/node/validation_cache_args.cpp"\
           " src/policy/feerate.cpp"\
@@ -54,9 +56,10 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
           " src/test/fuzz/txorphan.cpp"\
-          " src/threadinterrupt.cpp"\
+          " src/test/fuzz/util/"\
           " src/util/bip32.cpp"\
           " src/util/bytevectorhash.cpp"\
+          " src/util/check.cpp"\
           " src/util/error.cpp"\
           " src/util/getuniquepath.cpp"\
           " src/util/hasher.cpp"\
@@ -67,7 +70,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/util/strencodings.cpp"\
           " src/util/string.cpp"\
           " src/util/syserror.cpp"\
-          " src/util/url.cpp"\
+          " src/util/threadinterrupt.cpp"\
           " src/zmq"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/navcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
 fi
@@ -78,4 +81,9 @@ fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   CI_EXEC LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/fuzz/test_runner.py "${FUZZ_TESTS_CONFIG}" "$MAKEJOBS" -l DEBUG "${DIR_FUZZ_IN}"
+fi
+
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
+  echo "Stop and remove CI container by ID"
+  docker container kill "${CI_CONTAINER_ID}"
 fi

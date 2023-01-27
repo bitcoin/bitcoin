@@ -62,13 +62,11 @@ int main(int argc, char** argv) {
             if (!states[0]) {
                 printf("         -\t");
             } else {
-                double total = 0.0;
                 for (auto& state : states) {
                     auto start = std::chrono::steady_clock::now();
                     minisketch_decode(state, 2 * syndromes, roots.data());
                     auto stop = std::chrono::steady_clock::now();
                     std::chrono::duration<double> dur(stop - start);
-                    total += dur.count();
                     benches.push_back(dur.count());
                 }
                 std::sort(benches.begin(), benches.end());
@@ -98,7 +96,6 @@ int main(int argc, char** argv) {
             if (!states[0]) {
                 printf("         -\t");
             } else {
-                double total = 0.0;
                 for (auto& state : states) {
                     auto start = std::chrono::steady_clock::now();
                     for (auto val : data) {
@@ -106,7 +103,6 @@ int main(int argc, char** argv) {
                     }
                     auto stop = std::chrono::steady_clock::now();
                     std::chrono::duration<double> dur(stop - start);
-                    total += dur.count();
                     benches.push_back(dur.count());
                 }
                 std::sort(benches.begin(), benches.end());
