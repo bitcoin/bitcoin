@@ -69,7 +69,6 @@
 #include <typeinfo>
 
 using node::ReadBlockFromDisk;
-using node::ReadRawBlockFromDisk;
 
 /** How long to cache transactions in mapRelay for normal relay */
 static constexpr auto RELAY_TX_CACHE_TIME = 15min;
