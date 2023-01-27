@@ -430,7 +430,7 @@ template void RangeProofLogic<Mcl>::ValidateProofsBySizes(
 
 template <typename T>
 typename T::Point RangeProofLogic<T>::VerifyProofs(
-    const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
+const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
     const Generators<T>& gens,
     const size_t& max_mn
 ) const {
@@ -505,7 +505,7 @@ typename T::Point RangeProofLogic<T>::VerifyProofs(
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
         for (size_t i = 1; i < num_rounds; ++i) {
-            const size_t sl = 1 << (i + 1);  // 4, 8, 16 ...
+            const size_t sl = 1ull << (i + 1);  // 4, 8, 16 ...
             for (long signed int s = sl - 1; s > 0; s -= 2) {
                 acc_xs[s] = acc_xs[s / 2] * p.xs[i];
                 acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[i];
@@ -590,7 +590,7 @@ bool RangeProofLogic<T>::Verify(
         proof_transcripts.push_back(proof_transcript);
     }
 
-    const size_t max_mn = 1 << max_num_rounds;
+    const size_t max_mn = 1ull << max_num_rounds;
     const Generators<T> gens = m_gf->GetInstance(token_id);
 
     auto point_sum = VerifyProofs(
