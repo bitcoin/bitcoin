@@ -25,7 +25,6 @@ BENCHMARKS =
 
 BLS_INCLUDES=-I$(srcdir)/bls/include -I$(srcdir)/bls/mcl/include -I$(srcdir)/bls/mcl/src
 
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
 
 LIBBITCOIN_NODE=libbitcoin_node.a
@@ -79,12 +78,12 @@ $(LIBBLS):
 		ARCH='$(firstword $(subst -, ,$(HOST)))' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CXXFLAGS)' \
+		CFLAGS='$(CXXFLAGS) -DBLS_ETH=1' \
 		LDFLAGS='$(LDFLAGS)' \
 		ARFLAGS='$(ARFLAGS)' \
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
-		$(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
+		$(MAKE) $(AM_MAKEFLAGS) BLS_ETH=1 -C bls lib/libbls384_256.a
 	$(RANLIB) bls/lib/libbls384_256.a
 
 $(LIBMCL):
@@ -162,14 +161,19 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
+  blsct/bls12_381_common.h \
+  blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \
-  blsct/keys.h \
+  blsct/private_key.h \
+  blsct/public_key.h \
+  blsct/public_keys.h \
   blsct/range_proof/config.h \
   blsct/range_proof/generators.h \
   blsct/range_proof/lazy_g1point.h \
   blsct/range_proof/range_proof_logic.h \
   blsct/range_proof/range_proof_with_transcript.h \
   blsct/range_proof/range_proof.h \
+  blsct/signature.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -408,13 +412,17 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
+  blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
-  blsct/keys.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/public_keys.cpp \
   blsct/range_proof/config.cpp \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/lazy_g1point.cpp \
   blsct/range_proof/range_proof_logic.cpp \
   blsct/range_proof/range_proof_with_transcript.cpp \
+  blsct/signature.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
@@ -960,7 +968,10 @@ libbitcoinkernel_la_SOURCES = \
   blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
-  blsct/keys.cpp \
+  blsct/double_public_key.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/public_keys.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
