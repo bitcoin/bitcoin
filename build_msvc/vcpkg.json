@@ -7,7 +7,6 @@
     "boost-process",
     "boost-signals2",
     "boost-test",
-    "gmp",
     "sqlite3",
     {
       "name": "libevent",
