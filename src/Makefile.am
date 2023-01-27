@@ -628,6 +628,8 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.h \
   util/strencodings.cpp \
   util/strencodings.h \
+  util/check.cpp \
+  util/check.h \
   version.h
 #
 

@@ -29,6 +29,7 @@
     <ClCompile Include="..\..\src\script\script.cpp" />
     <ClCompile Include="..\..\src\script\script_error.cpp" />
     <ClCompile Include="..\..\src\uint256.cpp" />
+    <ClCompile Include="..\..\src\util\check.cpp" />
     <ClCompile Include="..\..\src\util\strencodings.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

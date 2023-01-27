@@ -10,6 +10,7 @@
 #include <script/script_error.h>
 #include <span.h>
 #include <primitives/transaction.h>
+#include <util/check.h>
 
 #include <optional>
 #include <vector>
@@ -193,6 +194,29 @@ enum class SigVersion
     TAPSCRIPT = 3,   //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, script path spending, leaf version 0xc0; see BIP 342
 };
 
+
+//! Data that is accumulated during the script verification of a single input and then
+//! used to perform aggregate checks after all inputs have been run through
+//! `VerifyScript()`.
+//!
+//! TODO I realize this is kind of a hacky polymorphic-union thing; if there's a nicer
+//! way to do this, please someone let me know.
+struct DeferredCheck
+{
+    //! Set when script execution happens asynchronously so that we can associate
+    //! deferred checks with their related transaction when a block's worth of
+    //! script executions are performed in batch.
+    const CTransaction* m_tx_to;
+
+    //! Future specific deferred check structs will be added here as pointers.
+    //!
+    //! e.g.
+    //!
+    //! DeferredVaultRecoverySpendCheck* m_recov_spend_check;
+    //! DeferredVaultTriggerCheck* m_vault_trigger_check;
+};
+
+
 struct ScriptExecutionData
 {
     //! Whether m_tapleaf_hash is initialized.
@@ -219,6 +243,19 @@ struct ScriptExecutionData
 
     //! The hash of the corresponding output
     std::optional<uint256> m_output_hash;
+
+    //! Accumulate deferred checks during the verification of a single input which
+    //! are then executed after all inputs have been verified with `VerifyScript()`.
+    //! The deferred checks are aggregated and executed in `validation.cpp`.
+    //!
+    //! In practice, this pointer refers to data owned by the `CScriptCheck` instance
+    //! that has created this `ScriptExecutionData` instance.
+    std::vector<DeferredCheck>* m_deferred_checks;
+
+    void AppendDeferredCheck(DeferredCheck dc)
+    {
+        Assert(m_deferred_checks)->push_back(dc);
+    }
 };
 
 /** Signature hash sizes */
@@ -342,8 +379,9 @@ uint256 ComputeTapbranchHash(Span<const unsigned char> a, Span<const unsigned ch
 uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint256& tapleaf_hash);
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr, std::vector<DeferredCheck>* deferred_check = nullptr);
+
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr, std::vector<DeferredCheck>* deferred_checks = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
 
