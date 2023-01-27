@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9662e687-26a3-42dc-aa07-e7458ee7a670}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\bls\src\bls_c384_256.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>BLS_ETH;MCL_USE_VINT;MCL_VINT_FIXED_BUFFER;MCL_DONT_USE_OPENSSL;MCL_DONT_USE_XBYAK;MCL_SIZEOF_UNIT=4;MCL_MAX_BIT_SIZE=384;CYBOZU_MINIMUM_EXCEPTION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src\bls\src;..\..\src\bls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\common.vcxproj" />
+</Project>

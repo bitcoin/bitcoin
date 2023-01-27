@@ -1,5 +1,5 @@
 {
-  "name": "bitcoin-core",
+  "name": "navcoin-core",
   "version-string": "1",
   "dependencies": [
     "berkeleydb",
@@ -7,6 +7,7 @@
     "boost-process",
     "boost-signals2",
     "boost-test",
+    "gmp",
     "sqlite3",
     {
       "name": "libevent",
