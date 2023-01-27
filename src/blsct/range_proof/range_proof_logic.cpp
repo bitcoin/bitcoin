@@ -501,7 +501,7 @@ typename T::Point RangeProofLogic<T>::VerifyProofs(
 
         // this loop generates exponents for gi and hi generators so that
         // when there are aggregated, they become g and h in (16)
-        std::vector<Scalar> acc_xs(1 << num_rounds, 1);  // initialize all elems to 1
+        std::vector<Scalar> acc_xs(1ull << num_rounds, 1);  // initialize all elems to 1
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
         for (size_t i = 1; i < num_rounds; ++i) {
