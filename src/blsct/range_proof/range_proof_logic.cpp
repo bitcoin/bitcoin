@@ -430,7 +430,7 @@ template void RangeProofLogic<Mcl>::ValidateProofsBySizes(
 
 template <typename T>
 typename T::Point RangeProofLogic<T>::VerifyProofs(
-const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
+    const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
     const Generators<T>& gens,
     const size_t& max_mn
 ) const {
