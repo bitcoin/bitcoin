@@ -22,7 +22,7 @@ from test_framework.p2p import (
         msg_headers,
         P2PDataStore,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
         assert_equal,
 )
@@ -44,7 +44,7 @@ class P2PStaller(P2PDataStore):
         pass
 
 
-class P2PIBDStallingTest(BitcoinTestFramework):
+class P2PIBDStallingTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

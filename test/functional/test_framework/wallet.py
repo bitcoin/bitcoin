@@ -103,7 +103,7 @@ class MiniWallet:
 
         # When the pre-mined test framework chain is used, it contains coinbase
         # outputs to the MiniWallet's default address in blocks 76-100
-        # (see method BitcoinTestFramework._initialize_chain())
+        # (see method SyscoinTestFramework._initialize_chain())
         # The MiniWallet needs to rescan_utxos() in order to account
         # for those mature UTXOs, so that all txs spend confirmed coins
         self.rescan_utxos()
