@@ -585,6 +585,11 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockin
         }
     }
 
+    // No need to go to disk to get the genesis block
+    if (blockindex.nHeight == 0) {
+        return Params().GenesisBlock();
+    }
+
     if (!blockman.ReadBlockFromDisk(block, blockindex)) {
         // Block not found on disk. This could be because we have the block
         // header in our index but not yet have the block or did not accept the
