@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <node/miner.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
 #include <txmempool.h>
 #include <validation.h>
 
@@ -46,5 +46,18 @@ static void AssembleBlock(benchmark::Bench& bench)
         PrepareBlock(test_setup->m_node, P2WSH_OP_TRUE);
     });
 }
+static void BlockAssemblerAddPackageTxns(benchmark::Bench& bench)
+{
+    FastRandomContext det_rand{true};
+    auto testing_setup{MakeNoLogFileContext<TestChain100Setup>()};
+    testing_setup->PopulateMempool(det_rand, /*num_transactions=*/1000, /*submit=*/true);
+    node::BlockAssembler::Options assembler_options;
+    assembler_options.test_block_validity = false;
 
-BENCHMARK(AssembleBlock);
+    bench.run([&] {
+        PrepareBlock(testing_setup->m_node, P2WSH_OP_TRUE, assembler_options);
+    });
+}
+
+BENCHMARK(AssembleBlock, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BlockAssemblerAddPackageTxns, benchmark::PriorityLevel::LOW);

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -199,11 +199,12 @@ public:
         WITH_LOCK(m_mutex, m_request_stop = false);
     }
 
+    bool HasThreads() const { return !m_worker_threads.empty(); }
+
     ~CCheckQueue()
     {
         assert(m_worker_threads.empty());
     }
-
 };
 
 /**

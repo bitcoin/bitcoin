@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
@@ -96,7 +96,6 @@ class RESTTest (BitcoinTestFramework):
     def run_test(self):
         self.url = urllib.parse.urlparse(self.nodes[0].url)
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
 
         self.log.info("Broadcast test transaction and sync nodes")
         txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
@@ -387,6 +386,17 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/headers/1/{bb_hash}"))
         assert_equal(self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}"))
 
+        self.log.info("Test the /deploymentinfo URI")
+
+        deployment_info = self.nodes[0].getdeploymentinfo()
+        assert_equal(deployment_info, self.test_rest_request('/deploymentinfo'))
+
+        non_existing_blockhash = '42759cde25462784395a337460bde75f58e73d3f08bd31fdc3507cbac856a2c4'
+        resp = self.test_rest_request(f'/deploymentinfo/{non_existing_blockhash}', ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), "Block not found")
+
+        resp = self.test_rest_request(f"/deploymentinfo/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
 
 if __name__ == '__main__':
     RESTTest().main()

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <interfaces/init.h>
 #include <key.h>
@@ -17,7 +18,6 @@
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
-#include <util/url.h>
 #include <wallet/wallettool.h>
 
 #include <exception>
@@ -130,7 +130,6 @@ MAIN_FUNCTION
         return EXIT_FAILURE;
     }
 
-    ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
     if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;

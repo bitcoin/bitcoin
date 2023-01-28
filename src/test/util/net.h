@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -165,6 +165,10 @@ public:
         std::memset(name, 0x0, *name_len);
         return 0;
     }
+
+    bool SetNonBlocking() const override { return true; }
+
+    bool IsSelectable() const override { return true; }
 
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,

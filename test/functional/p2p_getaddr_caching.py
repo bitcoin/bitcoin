@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test addr response caching"""
@@ -60,7 +60,7 @@ class AddrTest(BitcoinTestFramework):
 
         # Need to make sure we hit MAX_ADDR_TO_SEND records in the addr response later because
         # only a fraction of all known addresses can be cached and returned.
-        assert(len(self.nodes[0].getnodeaddresses(0)) > int(MAX_ADDR_TO_SEND / (MAX_PCT_ADDR_TO_SEND / 100)))
+        assert len(self.nodes[0].getnodeaddresses(0)) > int(MAX_ADDR_TO_SEND / (MAX_PCT_ADDR_TO_SEND / 100))
 
         last_response_on_local_bind = None
         last_response_on_onion_bind1 = None
@@ -85,9 +85,9 @@ class AddrTest(BitcoinTestFramework):
 
             if i > 0:
                 # Responses from different binds should be unique
-                assert(last_response_on_local_bind != addr_receiver_onion1.get_received_addrs())
-                assert(last_response_on_local_bind != addr_receiver_onion2.get_received_addrs())
-                assert(last_response_on_onion_bind1 != addr_receiver_onion2.get_received_addrs())
+                assert last_response_on_local_bind != addr_receiver_onion1.get_received_addrs()
+                assert last_response_on_local_bind != addr_receiver_onion2.get_received_addrs()
+                assert last_response_on_onion_bind1 != addr_receiver_onion2.get_received_addrs()
                 # Responses on from the same bind should be the same
                 assert_equal(last_response_on_local_bind, addr_receiver_local.get_received_addrs())
                 assert_equal(last_response_on_onion_bind1, addr_receiver_onion1.get_received_addrs())
@@ -119,9 +119,9 @@ class AddrTest(BitcoinTestFramework):
         addr_receiver_onion2.wait_until(addr_receiver_onion2.addr_received)
 
         # new response is different
-        assert(set(last_response_on_local_bind) != set(addr_receiver_local.get_received_addrs()))
-        assert(set(last_response_on_onion_bind1) != set(addr_receiver_onion1.get_received_addrs()))
-        assert(set(last_response_on_onion_bind2) != set(addr_receiver_onion2.get_received_addrs()))
+        assert set(last_response_on_local_bind) != set(addr_receiver_local.get_received_addrs())
+        assert set(last_response_on_onion_bind1) != set(addr_receiver_onion1.get_received_addrs())
+        assert set(last_response_on_onion_bind2) != set(addr_receiver_onion2.get_received_addrs())
 
 if __name__ == '__main__':
     AddrTest().main()

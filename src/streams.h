@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -182,15 +182,12 @@ public:
  * >> and << read and write unformatted data using the above serialization templates.
  * Fills with data in linear time; some stringstream implementations take N^2 time.
  */
-class CDataStream
+class DataStream
 {
 protected:
     using vector_type = SerializeData;
     vector_type vch;
     vector_type::size_type m_read_pos{0};
-
-    int nType;
-    int nVersion;
 
 public:
     typedef vector_type::allocator_type   allocator_type;
@@ -203,23 +200,9 @@ public:
     typedef vector_type::const_iterator   const_iterator;
     typedef vector_type::reverse_iterator reverse_iterator;
 
-    explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nType{nTypeIn},
-          nVersion{nVersionIn} {}
-
-    explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
-    explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
-        : vch(sp.data(), sp.data() + sp.size()),
-          nType{nTypeIn},
-          nVersion{nVersionIn} {}
-
-    template <typename... Args>
-    CDataStream(int nTypeIn, int nVersionIn, Args&&... args)
-        : nType{nTypeIn},
-          nVersion{nVersionIn}
-    {
-        ::SerializeMany(*this, std::forward<Args>(args)...);
-    }
+    explicit DataStream() {}
+    explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
+    explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
     std::string str() const
     {
@@ -271,11 +254,6 @@ public:
     bool eof() const             { return size() == 0; }
     int in_avail() const         { return size(); }
 
-    void SetType(int n)          { nType = n; }
-    int GetType() const          { return nType; }
-    void SetVersion(int n)       { nVersion = n; }
-    int GetVersion() const       { return nVersion; }
-
     void read(Span<value_type> dst)
     {
         if (dst.size() == 0) return;
@@ -283,7 +261,7 @@ public:
         // Read from the beginning of the buffer
         auto next_read_pos{CheckedAdd(m_read_pos, dst.size())};
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
-            throw std::ios_base::failure("CDataStream::read(): end of data");
+            throw std::ios_base::failure("DataStream::read(): end of data");
         }
         memcpy(dst.data(), &vch[m_read_pos], dst.size());
         if (next_read_pos.value() == vch.size()) {
@@ -299,7 +277,7 @@ public:
         // Ignore from the beginning of the buffer
         auto next_read_pos{CheckedAdd(m_read_pos, num_ignore)};
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
-            throw std::ios_base::failure("CDataStream::ignore(): end of data");
+            throw std::ios_base::failure("DataStream::ignore(): end of data");
         }
         if (next_read_pos.value() == vch.size()) {
             m_read_pos = 0;
@@ -324,7 +302,7 @@ public:
     }
 
     template<typename T>
-    CDataStream& operator<<(const T& obj)
+    DataStream& operator<<(const T& obj)
     {
         // Serialize to this stream
         ::Serialize(*this, obj);
@@ -332,7 +310,7 @@ public:
     }
 
     template<typename T>
-    CDataStream& operator>>(T&& obj)
+    DataStream& operator>>(T&& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);
@@ -360,6 +338,50 @@ public:
             if (j == key.size())
                 j = 0;
         }
+    }
+};
+
+class CDataStream : public DataStream
+{
+private:
+    int nType;
+    int nVersion;
+
+public:
+    explicit CDataStream(int nTypeIn, int nVersionIn)
+        : nType{nTypeIn},
+          nVersion{nVersionIn} {}
+
+    explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
+    explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
+        : DataStream{sp},
+          nType{nTypeIn},
+          nVersion{nVersionIn} {}
+
+    template <typename... Args>
+    CDataStream(int nTypeIn, int nVersionIn, Args&&... args)
+        : nType{nTypeIn},
+          nVersion{nVersionIn}
+    {
+        ::SerializeMany(*this, std::forward<Args>(args)...);
+    }
+
+    int GetType() const          { return nType; }
+    void SetVersion(int n)       { nVersion = n; }
+    int GetVersion() const       { return nVersion; }
+
+    template <typename T>
+    CDataStream& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+
+    template <typename T>
+    CDataStream& operator>>(T&& obj)
+    {
+        ::Unserialize(*this, obj);
+        return *this;
     }
 };
 
@@ -487,12 +509,14 @@ public:
     AutoFile(const AutoFile&) = delete;
     AutoFile& operator=(const AutoFile&) = delete;
 
-    void fclose()
+    int fclose()
     {
+        int retval{0};
         if (file) {
-            ::fclose(file);
+            retval = ::fclose(file);
             file = nullptr;
         }
+        return retval;
     }
 
     /** Get wrapped FILE* with transfer of ownership.
@@ -610,7 +634,6 @@ private:
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
     std::vector<std::byte> vchBuf; //!< the buffer
 
-protected:
     //! read data from the source to fill the buffer
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
@@ -626,6 +649,28 @@ protected:
         }
         nSrcPos += nBytes;
         return true;
+    }
+
+    //! Advance the stream's read pointer (m_read_pos) by up to 'length' bytes,
+    //! filling the buffer from the file so that at least one byte is available.
+    //! Return a pointer to the available buffer data and the number of bytes
+    //! (which may be less than the requested length) that may be accessed
+    //! beginning at that pointer.
+    std::pair<std::byte*, size_t> AdvanceStream(size_t length)
+    {
+        assert(m_read_pos <= nSrcPos);
+        if (m_read_pos + length > nReadLimit) {
+            throw std::ios_base::failure("Attempt to position past buffer limit");
+        }
+        // If there are no bytes available, read from the file.
+        if (m_read_pos == nSrcPos && length > 0) Fill();
+
+        size_t buffer_offset{static_cast<size_t>(m_read_pos % vchBuf.size())};
+        size_t buffer_available{static_cast<size_t>(vchBuf.size() - buffer_offset)};
+        size_t bytes_until_source_pos{static_cast<size_t>(nSrcPos - m_read_pos)};
+        size_t advance{std::min({length, buffer_available, bytes_until_source_pos})};
+        m_read_pos += advance;
+        return std::make_pair(&vchBuf[buffer_offset], advance);
     }
 
 public:
@@ -665,22 +710,19 @@ public:
     //! read a number of bytes
     void read(Span<std::byte> dst)
     {
-        if (dst.size() + m_read_pos > nReadLimit) {
-            throw std::ios_base::failure("Read attempted past buffer limit");
-        }
         while (dst.size() > 0) {
-            if (m_read_pos == nSrcPos)
-                Fill();
-            unsigned int pos = m_read_pos % vchBuf.size();
-            size_t nNow = dst.size();
-            if (nNow + pos > vchBuf.size())
-                nNow = vchBuf.size() - pos;
-            if (nNow + m_read_pos > nSrcPos)
-                nNow = nSrcPos - m_read_pos;
-            memcpy(dst.data(), &vchBuf[pos], nNow);
-            m_read_pos += nNow;
-            dst = dst.subspan(nNow);
+            auto [buffer_pointer, length]{AdvanceStream(dst.size())};
+            memcpy(dst.data(), buffer_pointer, length);
+            dst = dst.subspan(length);
         }
+    }
+
+    //! Move the read position ahead in the stream to the given position.
+    //! Use SetPos() to back up in the stream, not SkipTo().
+    void SkipTo(const uint64_t file_pos)
+    {
+        assert(file_pos >= m_read_pos);
+        while (m_read_pos < file_pos) AdvanceStream(file_pos - m_read_pos);
     }
 
     //! return the current reading position

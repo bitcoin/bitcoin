@@ -19,7 +19,6 @@
 
 void initialize_block()
 {
-    static const ECCVerifyHandle verify_handle;
     SelectParams(CBaseChainParams::REGTEST);
 }
 

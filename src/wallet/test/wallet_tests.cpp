@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -587,7 +587,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     // returns the coin associated with the change address underneath the
     // coinbaseKey pubkey, even though the change address has a different
     // pubkey.
-    AddTx(CRecipient{GetScriptForRawPubKey({}), 1 * COIN, false /* subtract fee */});
+    AddTx(CRecipient{GetScriptForRawPubKey({}), 1 * COIN, /*subtract_fee=*/false});
     {
         LOCK(wallet->cs_wallet);
         list = ListCoins(*wallet);
@@ -620,6 +620,46 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(std::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
+}
+
+void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
+                     std::map<OutputType, size_t>& expected_coins_sizes)
+{
+    LOCK(context.wallet->cs_wallet);
+    util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
+    CWalletTx& wtx = context.AddTx(CRecipient{{GetScriptForDestination(*dest)}, amount, /*fSubtractFeeFromAmount=*/true});
+    CoinFilterParams filter;
+    filter.skip_locked = false;
+    CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
+    // Lock outputs so they are not spent in follow-up transactions
+    for (uint32_t i = 0; i < wtx.tx->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i});
+    for (const auto& [type, size] : expected_coins_sizes) BOOST_CHECK_EQUAL(size, available_coins.coins[type].size());
+}
+
+BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
+{
+    std::map<OutputType, size_t> expected_coins_sizes;
+    for (const auto& out_type : OUTPUT_TYPES) { expected_coins_sizes[out_type] = 0U; }
+
+    // Verify our wallet has one usable coinbase UTXO before starting
+    // This UTXO is a P2PK, so it should show up in the Other bucket
+    expected_coins_sizes[OutputType::UNKNOWN] = 1U;
+    CoinsResult available_coins = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet));
+    BOOST_CHECK_EQUAL(available_coins.Size(), expected_coins_sizes[OutputType::UNKNOWN]);
+    BOOST_CHECK_EQUAL(available_coins.coins[OutputType::UNKNOWN].size(), expected_coins_sizes[OutputType::UNKNOWN]);
+
+    // We will create a self transfer for each of the OutputTypes and
+    // verify it is put in the correct bucket after running GetAvailablecoins
+    //
+    // For each OutputType, We expect 2 UTXOs in our wallet following the self transfer:
+    //   1. One UTXO as the recipient
+    //   2. One UTXO from the change, due to payment address matching logic
+
+    for (const auto& out_type : OUTPUT_TYPES) {
+        if (out_type == OutputType::UNKNOWN) continue;
+        expected_coins_sizes[out_type] = 2U;
+        TestCoinsResult(*this, out_type, 1 * COIN, expected_coins_sizes);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
@@ -696,10 +736,10 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
     std::vector<unsigned char> malformed_record;
     CVectorWriter vw(0, 0, malformed_record, 0);
     vw << std::string("notadescriptor");
-    vw << (uint64_t)0;
-    vw << (int32_t)0;
-    vw << (int32_t)0;
-    vw << (int32_t)1;
+    vw << uint64_t{0};
+    vw << int32_t{0};
+    vw << int32_t{0};
+    vw << int32_t{1};
 
     SpanReader vr{0, 0, malformed_record};
     WalletDescriptor w_desc;
@@ -867,24 +907,28 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
+class FailCursor : public DatabaseCursor
+{
+public:
+    Status Next(DataStream& key, DataStream& value) override { return Status::FAIL; }
+};
+
 /** RAII class that provides access to a FailDatabase. Which fails if needed. */
 class FailBatch : public DatabaseBatch
 {
 private:
     bool m_pass{true};
-    bool ReadKey(CDataStream&& key, CDataStream& value) override { return m_pass; }
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) override { return m_pass; }
-    bool EraseKey(CDataStream&& key) override { return m_pass; }
-    bool HasKey(CDataStream&& key) override { return m_pass; }
+    bool ReadKey(DataStream&& key, DataStream& value) override { return m_pass; }
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return m_pass; }
+    bool EraseKey(DataStream&& key) override { return m_pass; }
+    bool HasKey(DataStream&& key) override { return m_pass; }
 
 public:
     explicit FailBatch(bool pass) : m_pass(pass) {}
     void Flush() override {}
     void Close() override {}
 
-    bool StartCursor() override { return true; }
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override { return false; }
-    void CloseCursor() override {}
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<FailCursor>(); }
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }
@@ -946,7 +990,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
 
     mtx.vin.clear();
     mtx.vin.push_back(CTxIn(tx_id_to_spend, 0));
-    wallet.transactionAddedToMempool(MakeTransactionRef(mtx), 0);
+    wallet.transactionAddedToMempool(MakeTransactionRef(mtx));
     const uint256& good_tx_id = mtx.GetHash();
 
     {
@@ -967,7 +1011,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     static_cast<FailDatabase&>(wallet.GetDatabase()).m_pass = false;
     mtx.vin.clear();
     mtx.vin.push_back(CTxIn(good_tx_id, 0));
-    BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx), 0),
+    BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx)),
                           std::runtime_error,
                           HasReason("DB error adding transaction to wallet, write failed"));
 }

@@ -7,7 +7,7 @@
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
+#include <wallet/test/util.h>
 #include <util/translation.h>
 #include <validationinterface.h>
 #include <wallet/context.h>
@@ -52,30 +52,6 @@ static void AddTx(CWallet& wallet)
     wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInactive{});
 }
 
-static std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, DatabaseOptions& options)
-{
-    auto new_database = CreateMockWalletDatabase(options);
-
-    // Get a cursor to the original database
-    auto batch = database.MakeBatch();
-    batch->StartCursor();
-
-    // Get a batch for the new database
-    auto new_batch = new_database->MakeBatch();
-
-    // Read all records from the original database and write them to the new one
-    while (true) {
-        CDataStream key(SER_DISK, CLIENT_VERSION);
-        CDataStream value(SER_DISK, CLIENT_VERSION);
-        bool complete;
-        batch->ReadAtCursor(key, value, complete);
-        if (complete) break;
-        new_batch->Write(key, value);
-    }
-
-    return new_database;
-}
-
 static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 {
     const auto test_setup = MakeNoLogFileContext<TestingSetup>();
@@ -118,10 +94,10 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 
 #ifdef USE_BDB
 static void WalletLoadingLegacy(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/true); }
-BENCHMARK(WalletLoadingLegacy);
+BENCHMARK(WalletLoadingLegacy, benchmark::PriorityLevel::HIGH);
 #endif
 
 #ifdef USE_SQLITE
 static void WalletLoadingDescriptors(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/false); }
-BENCHMARK(WalletLoadingDescriptors);
+BENCHMARK(WalletLoadingDescriptors, benchmark::PriorityLevel::HIGH);
 #endif

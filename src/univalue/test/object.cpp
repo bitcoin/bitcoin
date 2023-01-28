@@ -1,5 +1,5 @@
 // Copyright (c) 2014 BitPay Inc.
-// Copyright (c) 2014-2016 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #define BOOST_CHECK(expr) assert(expr)
@@ -160,6 +161,14 @@ void univalue_set()
     BOOST_CHECK(v.isStr());
     BOOST_CHECK_EQUAL(v.getValStr(), "zum");
 
+    {
+        std::string_view sv{"ab\0c", 4};
+        UniValue j{sv};
+        BOOST_CHECK(j.isStr());
+        BOOST_CHECK_EQUAL(j.getValStr(), sv);
+        BOOST_CHECK_EQUAL(j.write(), "\"ab\\u0000c\"");
+    }
+
     v.setFloat(-1.01);
     BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
@@ -184,13 +193,13 @@ void univalue_set()
     BOOST_CHECK_EQUAL(v.isBool(), true);
     BOOST_CHECK_EQUAL(v.isTrue(), false);
     BOOST_CHECK_EQUAL(v.isFalse(), true);
-    BOOST_CHECK_EQUAL(v.getBool(), false);
+    BOOST_CHECK_EQUAL(v.get_bool(), false);
 
     v.setBool(true);
     BOOST_CHECK_EQUAL(v.isBool(), true);
     BOOST_CHECK_EQUAL(v.isTrue(), true);
     BOOST_CHECK_EQUAL(v.isFalse(), false);
-    BOOST_CHECK_EQUAL(v.getBool(), true);
+    BOOST_CHECK_EQUAL(v.get_bool(), true);
 
     BOOST_CHECK_THROW(v.setNumStr("zombocom"), std::runtime_error);
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,6 +65,8 @@ namespace BCLog {
 #endif
         UTIL        = (1 << 25),
         BLOCKSTORE  = (1 << 26),
+        TXRECONCILIATION = (1 << 27),
+        SCAN        = (1 << 28),
         ALL         = ~(uint32_t)0,
     };
     enum class Level {

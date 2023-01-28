@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test error messages for 'getaddressinfo' and 'validateaddress' RPC commands."""
@@ -39,6 +39,9 @@ INVALID_ADDRESS = 'asfah14i8fajz0123f'
 INVALID_ADDRESS_2 = '1q049ldschfnwystcqnsvyfpj23mpsg3jcedq9xv'
 
 class InvalidAddressErrorMessageTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -92,15 +95,19 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_invalid(INVALID_ADDRESS, 'Not a valid Bech32 or Base58 encoding')
         self.check_invalid(INVALID_ADDRESS_2, 'Not a valid Bech32 or Base58 encoding')
 
+        node = self.nodes[0]
+
+        # Missing arg returns the help text
+        assert_raises_rpc_error(-1, "Return information about the given bitcoin address.", node.validateaddress)
+        # Explicit None is not allowed for required parameters
+        assert_raises_rpc_error(-3, "JSON value of type null is not of expected type string", node.validateaddress, None)
+
     def test_getaddressinfo(self):
         node = self.nodes[0]
 
         assert_raises_rpc_error(-5, "Invalid Bech32 address data size", node.getaddressinfo, BECH32_INVALID_SIZE)
-
         assert_raises_rpc_error(-5, "Not a valid Bech32 or Base58 encoding", node.getaddressinfo, BECH32_INVALID_PREFIX)
-
         assert_raises_rpc_error(-5, "Invalid prefix for Base58-encoded address", node.getaddressinfo, BASE58_INVALID_PREFIX)
-
         assert_raises_rpc_error(-5, "Not a valid Bech32 or Base58 encoding", node.getaddressinfo, INVALID_ADDRESS)
 
     def run_test(self):

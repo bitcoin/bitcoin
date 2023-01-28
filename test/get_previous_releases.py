@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -136,7 +136,7 @@ def download_binary(tag, args) -> int:
     tarballHash = hasher.hexdigest()
 
     if tarballHash not in SHA256_SUMS or SHA256_SUMS[tarballHash]['tarball'] != tarball:
-        if tarball in SHA256_SUMS.values():
+        if tarball in [v['tarball'] for v in SHA256_SUMS.values()]:
             print("Checksum did not match")
             return 1
 
@@ -148,10 +148,39 @@ def download_binary(tag, args) -> int:
     ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
                           '--strip-components=1',
                           'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
-    if ret:
+    if ret != 0:
+        print(f"Failed to extract the {tag} tarball")
         return ret
 
     Path(tarball).unlink()
+
+    if tag >= "v23" and platform == "arm64-apple-darwin":
+        # Starting with v23 there are arm64 binaries for ARM (e.g. M1, M2) macs, but they have to be signed to run
+        binary_path = f'{os.getcwd()}/{tag}/bin/'
+
+        for arm_binary in os.listdir(binary_path):
+            # Is it already signed?
+            ret = subprocess.run(
+                ['codesign', '-v', binary_path + arm_binary],
+                stderr=subprocess.DEVNULL,  # Suppress expected stderr output
+            ).returncode
+            if ret == 1:
+                # Have to self-sign the binary
+                ret = subprocess.run(
+                    ['codesign', '-s', '-', binary_path + arm_binary]
+                ).returncode
+                if ret != 0:
+                    print(f"Failed to self-sign {tag} {arm_binary} arm64 binary")
+                    return 1
+
+                # Confirm success
+                ret = subprocess.run(
+                    ['codesign', '-v', binary_path + arm_binary]
+                ).returncode
+                if ret != 0:
+                    print(f"Failed to verify the self-signed {tag} {arm_binary} arm64 binary")
+                    return 1
+
     return 0
 
 
@@ -260,11 +289,10 @@ if __name__ == '__main__':
                         help='download release binary.')
     parser.add_argument('-t', '--target-dir', action='store',
                         help='target directory.', default='releases')
-    parser.add_argument('tags', nargs='*', default=set(
-                            [v['tag'] for v in SHA256_SUMS.values()]
-                        ),
+    all_tags = sorted([*set([v['tag'] for v in SHA256_SUMS.values()])])
+    parser.add_argument('tags', nargs='*', default=all_tags,
                         help='release tags. e.g.: v0.18.1 v0.20.0rc2 '
-                        '(if not specified, the full list needed for'
+                        '(if not specified, the full list needed for '
                         'backwards compatibility tests will be used)'
                         )
     args = parser.parse_args()

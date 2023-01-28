@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2021 The Bitcoin Core developers
+# Copyright (c) 2016-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bumpfee RPC.
@@ -17,10 +17,6 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
-    add_witness_commitment,
-    create_block,
-    create_coinbase,
-    send_to_witness,
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -46,6 +42,9 @@ TOO_HIGH     = 100000
 
 
 class BumpFeeTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -89,6 +88,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
+        test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_address, dest_address)
         test_dust_to_fee(self, rbf_node, dest_address)
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
         test_rebumping(self, rbf_node, dest_address)
@@ -151,7 +151,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         self.log.info("Test invalid estimate_mode settings")
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
-            assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
+            assert_raises_rpc_error(-3, f"JSON value of type {k} for field estimate_mode is not of expected type string",
                 rbf_node.bumpfee, rbfid, {"estimate_mode": v})
         for mode in ["foo", Decimal("3.1415"), "sat/B", "BTC/kB"]:
             assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
@@ -200,16 +200,8 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     # Create a transaction with segwit output, then create an RBF transaction
     # which spends it, and make sure bumpfee can be called on it.
 
-    segwit_in = next(u for u in rbf_node.listunspent() if u["amount"] == Decimal("0.001"))
-    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='bech32'))
-    segwitid = send_to_witness(
-        use_p2wsh=False,
-        node=rbf_node,
-        utxo=segwit_in,
-        pubkey=segwit_out["pubkey"],
-        encode_p2sh=False,
-        amount=Decimal("0.0009"),
-        sign=True)
+    segwit_out = rbf_node.getnewaddress(address_type='bech32')
+    segwitid = rbf_node.send({segwit_out: "0.0009"}, options={"change_position": 1})["txid"]
 
     rbfraw = rbf_node.createrawtransaction([{
         'txid': segwitid,
@@ -292,6 +284,35 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     miniwallet.scan_tx(tx)
     miniwallet.send_self_transfer(from_node=rbf_node)
     assert_raises_rpc_error(-8, "Transaction has descendants in the mempool", rbf_node.bumpfee, parent_id)
+    self.clear_mempool()
+
+
+def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_address, dest_address):
+    self.log.info('Test that fee can be bumped when it has abandoned descendant')
+    # parent is send-to-self, so we don't have to check which output is change when creating the child tx
+    parent_id = spend_one_input(rbf_node, rbf_node_address)
+    # Submit child transaction with low fee
+    child_id = rbf_node.send(outputs={dest_address: 0.00020000},
+                             options={"inputs": [{"txid": parent_id, "vout": 0}], "fee_rate": 2})["txid"]
+    assert child_id in rbf_node.getrawmempool()
+
+    # Restart the node with higher min relay fee so the descendant tx is no longer in mempool so that we can abandon it
+    self.restart_node(1, ['-minrelaytxfee=0.00005'] + self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    self.connect_nodes(1, 0)
+    assert parent_id in rbf_node.getrawmempool()
+    assert child_id not in rbf_node.getrawmempool()
+    # Should still raise an error even if not in mempool
+    assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
+    # Now abandon the child transaction and bump the original
+    rbf_node.abandontransaction(child_id)
+    bumped_result = rbf_node.bumpfee(parent_id, {"fee_rate": HIGH})
+    assert bumped_result['txid'] in rbf_node.getrawmempool()
+    assert parent_id not in rbf_node.getrawmempool()
+    # Cleanup
+    self.restart_node(1, self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    self.connect_nodes(1, 0)
     self.clear_mempool()
 
 
@@ -541,10 +562,10 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     # then invalidate the block so the rbf tx will be put back in the mempool.
     # This makes it possible to check whether the rbf tx outputs are
     # spendable before the rbf tx is confirmed.
-    block = submit_block_with_tx(rbf_node, rbftx)
+    block = self.generateblock(rbf_node, output="raw(51)", transactions=[rbftx])
     # Can not abandon conflicted tx
     assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: rbf_node.abandontransaction(txid=bumpid))
-    rbf_node.invalidateblock(block.hash)
+    rbf_node.invalidateblock(block["hash"])
     # Call abandon to make sure the wallet doesn't attempt to resubmit
     # the bump tx and hope the wallet does not rebroadcast before we call.
     rbf_node.abandontransaction(bumpid)
@@ -566,7 +587,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
 
 def test_bumpfee_metadata(self, rbf_node, dest_address):
     self.log.info('Test that bumped txn metadata persists to new txn record')
-    assert(rbf_node.getbalance() < 49)
+    assert rbf_node.getbalance() < 49
     self.generatetoaddress(rbf_node, 101, rbf_node.getnewaddress())
     rbfid = rbf_node.sendtoaddress(dest_address, 49, "comment value", "to value")
     bumped_tx = rbf_node.bumpfee(rbfid)
@@ -617,17 +638,6 @@ def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
-
-
-def submit_block_with_tx(node, tx):
-    tip = node.getbestblockhash()
-    height = node.getblockcount() + 1
-    block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = create_block(int(tip, 16), create_coinbase(height), block_time, txlist=[tx])
-    add_witness_commitment(block)
-    block.solve()
-    node.submitblock(block.serialize().hex())
-    return block
 
 
 def test_no_more_inputs_fails(self, rbf_node, dest_address):

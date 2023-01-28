@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
+#include <wallet/test/util.h>
 #include <validationinterface.h>
 #include <wallet/receive.h>
 #include <wallet/wallet.h>
@@ -19,6 +19,8 @@ using wallet::CreateMockWalletDatabase;
 using wallet::DBErrors;
 using wallet::GetBalance;
 using wallet::WALLET_FLAG_DESCRIPTORS;
+
+const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)
 {
@@ -57,7 +59,7 @@ static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /
 static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
 static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/false); }
 
-BENCHMARK(WalletBalanceDirty);
-BENCHMARK(WalletBalanceClean);
-BENCHMARK(WalletBalanceMine);
-BENCHMARK(WalletBalanceWatch);
+BENCHMARK(WalletBalanceDirty, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WalletBalanceClean, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WalletBalanceMine, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WalletBalanceWatch, benchmark::PriorityLevel::HIGH);

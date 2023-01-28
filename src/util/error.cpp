@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2021 The Bitcoin Core developers
+// Copyright (c) 2010-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,6 +47,11 @@ bilingual_str TransactionErrorString(const TransactionError err)
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind)
 {
     return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
+}
+
+bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& invalid_value)
+{
+    return strprintf(_("Invalid port specified in %s: '%s'"), optname, invalid_value);
 }
 
 bilingual_str AmountHighWarn(const std::string& optname)

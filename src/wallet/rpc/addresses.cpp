@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,9 +43,7 @@ RPCHelpMan getnewaddress()
     }
 
     // Parse the label first so we don't generate a key if there's an error
-    std::string label;
-    if (!request.params[0].isNull())
-        label = LabelFromValue(request.params[0]);
+    const std::string label{LabelFromValue(request.params[0])};
 
     OutputType output_type = pwallet->m_default_address_type;
     if (!request.params[1].isNull()) {
@@ -140,7 +138,7 @@ RPCHelpMan setlabel()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     }
 
-    std::string label = LabelFromValue(request.params[1]);
+    const std::string label{LabelFromValue(request.params[1])};
 
     if (pwallet->IsMine(dest)) {
         pwallet->SetAddressBook(dest, label, "receive");
@@ -228,7 +226,7 @@ RPCHelpMan addmultisigaddress()
                             {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "bitcoin address or hex-encoded public key"},
                         },
                         },
-                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A label to assign the addresses to."},
                     {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                 },
                 RPCResult{
@@ -258,9 +256,7 @@ RPCHelpMan addmultisigaddress()
 
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-    std::string label;
-    if (!request.params[2].isNull())
-        label = LabelFromValue(request.params[2]);
+    const std::string label{LabelFromValue(request.params[2])};
 
     int required = request.params[0].getInt<int>();
 
@@ -662,7 +658,7 @@ RPCHelpMan getaddressesbylabel()
 
     LOCK(pwallet->cs_wallet);
 
-    std::string label = LabelFromValue(request.params[0]);
+    const std::string label{LabelFromValue(request.params[0])};
 
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
@@ -700,7 +696,7 @@ RPCHelpMan listlabels()
     return RPCHelpMan{"listlabels",
                 "\nReturns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n",
                 {
-                    {"purpose", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument."},
+                    {"purpose", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",

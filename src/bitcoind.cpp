@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <init.h>
 #include <interfaces/chain.h>
@@ -25,7 +26,6 @@
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
 #include <util/translation.h>
-#include <util/url.h>
 
 #include <any>
 #include <functional>

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #define BITCOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <chrono>
@@ -132,6 +132,18 @@ public:
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
+
+    /**
+     * Set the non-blocking option on the socket.
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNonBlocking() const;
+
+    /**
+     * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
+     * @return true if selectable
+     */
+    [[nodiscard]] virtual bool IsSelectable() const;
 
     using Event = uint8_t;
 
