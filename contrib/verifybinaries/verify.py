@@ -13,6 +13,7 @@ The script returns 0 if everything passes the checks. It returns 1 if either
 the signature check or the hash check doesn't pass. If an error occurs the
 return value is >= 2.
 """
+import argparse
 from hashlib import sha256
 import os
 import subprocess
@@ -79,14 +80,18 @@ def remove_files(filenames):
         os.remove(filename)
 
 
-def main(args):
-    # sanity check
-    if len(args) < 1:
-        print("Error: need to specify a version on the command line")
+def main():
+    parser = argparse.ArgumentParser(description="Download and verify bitcoin binaries.")
+    parser.add_argument("version", type=str, metavar="VERSION", help="Target version.")
+    parser.add_argument("-d", "--delete", action="store_true", required=False,
+                        help="Delete the downloaded binaries afterwards.")
+    try:
+        args = parser.parse_args()
+    except SystemExit:
         return 3
 
     # determine remote dir dependent on provided version string
-    version_base, version_rc, os_filter = parse_version_string(args[0])
+    version_base, version_rc, os_filter = parse_version_string(args.version)
     remote_dir = f"/bin/{VERSIONPREFIX}{version_base}/"
     if version_rc:
         remote_dir += f"test.{version_rc}/"
@@ -168,7 +173,7 @@ def main(args):
     verified_binaries = [entry[1] for entry in hashes_to_verify]
 
     # clean up files if desired
-    if len(args) >= 2:
+    if args.delete:
         print("Clean up the binaries")
         remove_files([sigfile1, sigfile2] + verified_binaries)
     else:
@@ -180,4 +185,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
