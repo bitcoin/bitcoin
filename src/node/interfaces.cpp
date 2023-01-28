@@ -711,8 +711,9 @@ public:
         LOCK(::cs_main);
         return chainman().m_blockman.m_have_pruned;
     }
-    bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
-    bool isInitialBlockDownload() override {
+    bool isReadyToBroadcast() override { return !chainman().m_blockman.LoadingBlocks() && !isInitialBlockDownload(); }
+    bool isInitialBlockDownload() override
+    {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
     bool shutdownRequested() override { return ShutdownRequested(); }

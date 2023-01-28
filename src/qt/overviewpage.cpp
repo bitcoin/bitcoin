@@ -140,8 +140,6 @@ private:
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    clientModel(nullptr),
-    walletModel(nullptr),
     m_platform_style{platformStyle},
     txdelegate(new TxViewDelegate(platformStyle, this))
 {

@@ -488,28 +488,6 @@ def find_output(node, txid, amount, *, blockhash=None):
     raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
 
 
-def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
-    """Build and send a transaction that spends the given inputs (specified
-    by lists of parent_txid:vout each), with the desired total value and fee,
-    equally divided up to the desired number of outputs.
-
-    Returns a tuple with the txid and the amount sent per output.
-    """
-    send_value = satoshi_round((value - fee)/num_outputs)
-    inputs = []
-    for (txid, vout) in zip(parent_txids, vouts):
-        inputs.append({'txid' : txid, 'vout' : vout})
-    outputs = {}
-    for _ in range(num_outputs):
-        outputs[node.getnewaddress()] = send_value
-    rawtx = node.createrawtransaction(inputs, outputs, 0, True)
-    signedtx = node.signrawtransactionwithwallet(rawtx)
-    txid = node.sendrawtransaction(signedtx['hex'])
-    fulltx = node.getrawtransaction(txid, 1)
-    assert len(fulltx['vout']) == num_outputs  # make sure we didn't generate a change output
-    return (txid, send_value)
-
-
 # Create large OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions). The
 # total serialized size of the txouts is about 66k vbytes.

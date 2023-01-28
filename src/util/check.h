@@ -8,14 +8,16 @@
 #include <attributes.h>
 
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 
-std::string StrFormatInternalBug(const char* msg, const char* file, int line, const char* func);
+std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
 class NonFatalCheckError : public std::runtime_error
 {
 public:
-    NonFatalCheckError(const char* msg, const char* file, int line, const char* func);
+    NonFatalCheckError(std::string_view msg, std::string_view file, int line, std::string_view func);
 };
 
 #define STR_INTERNAL_BUG(msg) StrFormatInternalBug((msg), __FILE__, __LINE__, __func__)
@@ -49,7 +51,7 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, co
 #endif
 
 /** Helper for Assert() */
-void assertion_fail(const char* file, int line, const char* func, const char* assertion);
+void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>

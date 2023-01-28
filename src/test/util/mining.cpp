@@ -8,7 +8,6 @@
 #include <consensus/merkle.h>
 #include <key_io.h>
 #include <node/context.h>
-#include <node/miner.h>
 #include <pow.h>
 #include <script/standard.h>
 #include <test/util/script.h>
@@ -74,10 +73,11 @@ CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
     return CTxIn{block->vtx[0]->GetHash(), 0};
 }
 
-std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
+std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey,
+                                     const BlockAssembler::Options& assembler_options)
 {
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get())}
+        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options}
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 
@@ -86,4 +86,10 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coi
     block->hashMerkleRoot = BlockMerkleRoot(*block);
 
     return block;
+}
+std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
+{
+    BlockAssembler::Options assembler_options;
+    ApplyArgsManOptions(*node.args, assembler_options);
+    return PrepareBlock(node, coinbase_scriptPubKey, assembler_options);
 }

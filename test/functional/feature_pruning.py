@@ -84,7 +84,7 @@ class PruneTest(BitcoinTestFramework):
             ["-maxreceivebuffer=20000", "-prune=550"],
             ["-maxreceivebuffer=20000"],
             ["-maxreceivebuffer=20000"],
-            ["-prune=550"],
+            ["-prune=550", "-blockfilterindex=1"],
         ]
         self.rpc_timeout = 120
 
@@ -356,7 +356,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 5)
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
-        self.restart_node(5, extra_args=["-prune=550"]) # restart to trigger rescan
+        self.restart_node(5, extra_args=["-prune=550", "-blockfilterindex=1"]) # restart to trigger rescan
         self.log.info("Success")
 
     def run_test(self):
@@ -472,7 +472,20 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Test invalid pruning command line options")
         self.test_invalid_command_line_options()
 
+        self.test_scanblocks_pruned()
+
         self.log.info("Done")
+
+    def test_scanblocks_pruned(self):
+        node = self.nodes[5]
+        genesis_blockhash = node.getblockhash(0)
+        false_positive_spk = bytes.fromhex("001400000000000000000000000000000000000cadcb")
+
+        assert genesis_blockhash in node.scanblocks(
+            "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks']
+
+        assert_raises_rpc_error(-1, "Block not available (pruned data)", node.scanblocks,
+            "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})
 
 if __name__ == '__main__':
     PruneTest().main()

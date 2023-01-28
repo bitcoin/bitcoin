@@ -42,10 +42,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        # the pre-mined test framework chain contains coinbase outputs to the
-        # MiniWallet's default address in blocks 76-100 (see method
-        # BitcoinTestFramework._initialize_chain())
-        self.wallet.rescan_utxos()
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
@@ -396,12 +392,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         enough transactions off of each root UTXO to exceed the MAX_REPLACEMENT_LIMIT.
         Then create a conflicting RBF replacement transaction.
         """
-        normal_node = self.nodes[1]
-        wallet = MiniWallet(normal_node)
-        wallet.rescan_utxos()
         # Clear mempools to avoid cross-node sync failure.
         for node in self.nodes:
             self.generate(node, 1)
+        normal_node = self.nodes[1]
+        wallet = MiniWallet(normal_node)
 
         # This has to be chosen so that the total number of transactions can exceed
         # MAX_REPLACEMENT_LIMIT without having any one tx graph run into the descendant

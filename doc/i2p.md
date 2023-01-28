@@ -16,8 +16,7 @@ enabled is required. Options include:
   Java
 - [i2pd (I2P Daemon)](https://github.com/PurpleI2P/i2pd)
   ([documentation](https://i2pd.readthedocs.io/en/latest)), a lighter
-  alternative in C++ (successfully tested with version 2.23 and up; version 2.36
-  or later recommended)
+  alternative in C++
 - [i2p-zero](https://github.com/i2p-zero/i2p-zero)
 - [other alternatives](https://en.wikipedia.org/wiki/I2P#Routers)
 
@@ -33,12 +32,10 @@ Core configuration options:
      none)
 
 -i2pacceptincoming
-     If set and -i2psam is also set then incoming I2P connections are
-     accepted via the SAM proxy. If this is not set but -i2psam is set
-     then only outgoing connections will be made to the I2P network.
-     Ignored if -i2psam is not set. Listening for incoming I2P
-     connections is done through the SAM proxy, not by binding to a
-     local address and port (default: 1)
+     Whether to accept inbound I2P connections (default: 1). Ignored if
+     -i2psam is not set. Listening for inbound I2P connections is
+     done through the SAM proxy, not by binding to a local address and
+     port.
 ```
 
 In a typical situation, this suffices:
@@ -46,27 +43,6 @@ In a typical situation, this suffices:
 ```
 bitcoind -i2psam=127.0.0.1:7656
 ```
-
-The first time Bitcoin Core connects to the I2P router, if
-`-i2pacceptincoming=1`, then it will automatically generate a persistent I2P
-address and its corresponding private key. The private key will be saved in a
-file named `i2p_private_key` in the Bitcoin Core data directory. The persistent
-I2P address is used for accepting incoming connections and for making outgoing
-connections if `-i2pacceptincoming=1`. If `-i2pacceptincoming=0` then only
-outbound I2P connections are made and a different transient I2P address is used
-for each connection to improve privacy.
-
-## Persistent vs transient I2P addresses
-
-In I2P connections, the connection receiver sees the I2P address of the
-connection initiator. This is unlike the Tor network where the recipient does
-not know who is connecting to them and can't tell if two connections are from
-the same peer or not.
-
-If an I2P node is not accepting incoming connections, then Bitcoin Core uses
-random, one-time, transient I2P addresses for itself for outbound connections
-to make it harder to discriminate, fingerprint or analyze it based on its I2P
-address.
 
 ## Additional configuration options related to I2P
 
@@ -100,7 +76,29 @@ In general, a node can be run with both onion and I2P hidden services (or
 any/all of IPv4/IPv6/onion/I2P/CJDNS), which can provide a potential fallback if
 one of the networks has issues.
 
-## I2P-related information in Bitcoin Core
+## Persistent vs transient I2P addresses
+
+The first time Bitcoin Core connects to the I2P router, it automatically
+generates a persistent I2P address and its corresponding private key by default
+or if `-i2pacceptincoming=1` is set.  The private key is saved in a file named
+`i2p_private_key` in the Bitcoin Core data directory.  The persistent I2P
+address is used for making outbound connections and accepting inbound
+connections.
+
+In the I2P network, the receiver of an inbound connection sees the address of
+the initiator.  This is unlike the Tor network, where the recipient does not
+know who is connecting to it.
+
+If your node is configured by setting `-i2pacceptincoming=0` to not accept
+inbound I2P connections, then it will use a random transient I2P address for
+itself on each outbound connection to make it harder to discriminate,
+fingerprint or analyze it based on its I2P address.
+
+I2P addresses are designed to be long-lived.  Waiting for tunnels to be built
+for every peer connection adds delay to connection setup time.  Therefore, I2P
+listening should only be turned off if really needed.
+
+## Fetching I2P-related information from Bitcoin Core
 
 There are several ways to see your I2P address in Bitcoin Core if accepting
 incoming I2P connections (`-i2pacceptincoming`):
@@ -136,14 +134,19 @@ port (`TO_PORT`) is always set to 0 and is not in the control of Bitcoin Core.
 
 ## Bandwidth
 
-I2P routers may route a large amount of general network traffic with their
-default settings. Check your router's configuration to limit the amount of this
-traffic relayed, if desired.
+By default, your node shares bandwidth and transit tunnels with the I2P network
+in order to increase your anonymity with cover traffic, help the I2P router used
+by your node integrate optimally with the network, and give back to the network.
+It's important that the nodes of a popular application like Bitcoin contribute
+as much to the I2P network as they consume.
 
-With `i2pd`, the amount of bandwidth being shared with the wider network can be
-adjusted with the `bandwidth`, `share` and `transittunnels` options in your
-`i2pd.conf` file. For example, to limit total I2P traffic to 256KB/s and share
-50% of this limit for a maximum of 20 transit tunnels:
+It is possible, though strongly discouraged, to change your I2P router
+configuration to limit the amount of I2P traffic relayed by your node.
+
+With `i2pd`, this can be done by adjusting the `bandwidth`, `share` and
+`transittunnels` options in your `i2pd.conf` file. For example, to limit total
+I2P traffic to 256KB/s and share 50% of this limit for a maximum of 20 transit
+tunnels:
 
 ```
 bandwidth = 256
@@ -153,9 +156,15 @@ share = 50
 transittunnels = 20
 ```
 
-If you prefer not to relay any public I2P traffic and only permit I2P traffic
-from programs which are connecting via the SAM proxy, e.g. Bitcoin Core, you
-can set the `notransit` option to `true`.
-
 Similar bandwidth configuration options for the Java I2P router can be found in
 `http://127.0.0.1:7657/config` under the "Bandwidth" tab.
+
+Before doing this, please see the "Participating Traffic Considerations" section
+in [Embedding I2P in your Application](https://geti2p.net/en/docs/applications/embedding).
+
+In most cases, the default router settings should work fine.
+
+## Bundling I2P in a Bitcoin application
+
+Please see the "General Guidance for Developers" section in https://geti2p.net/en/docs/api/samv3
+if you are developing a downstream application that may be bundling I2P with Bitcoin.

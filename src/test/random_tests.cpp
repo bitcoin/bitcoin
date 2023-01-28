@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(fastrandom_randbits)
     }
 }
 
-/** Does-it-compile test for compatibility with standard C++11 RNG interface. */
+/** Does-it-compile test for compatibility with standard library RNG interface. */
 BOOST_AUTO_TEST_CASE(stdrandom_test)
 {
     FastRandomContext ctx;

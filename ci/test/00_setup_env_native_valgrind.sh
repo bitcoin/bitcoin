@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export DOCKER_NAME_TAG="ubuntu:22.04"
+export CI_IMAGE_NAME_TAG="ubuntu:22.04"
 export CONTAINER_NAME=ci_native_valgrind
 export PACKAGES="valgrind clang llvm python3-zmq libevent-dev bsdmainutils libboost-dev libdb5.3++-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev libsqlite3-dev"
 export USE_VALGRIND=1

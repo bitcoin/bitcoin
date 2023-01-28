@@ -11,7 +11,6 @@ from decimal import Decimal
 from itertools import product
 import time
 
-from test_framework.blocktools import COINBASE_MATURITY
 import test_framework.messages
 from test_framework.p2p import (
     P2PInterface,
@@ -43,7 +42,6 @@ def assert_net_servicesnames(servicesflag, servicenames):
 
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001000"], ["-minrelaytxfee=0.00000500"]]
         self.supports_cli = False
@@ -51,9 +49,6 @@ class NetTest(BitcoinTestFramework):
     def run_test(self):
         # We need miniwallet to make a transaction
         self.wallet = MiniWallet(self.nodes[0])
-        self.generate(self.wallet, 1)
-        # Get out of IBD for the minfeefilter and getpeerinfo tests.
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # By default, the test framework sets up an addnode connection from
         # node 1 --> node0. By connecting node0 --> node 1, we're left with

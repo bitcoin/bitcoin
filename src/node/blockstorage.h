@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <fs.h>
+#include <kernel/cs_main.h>
 #include <protocol.h>
 #include <sync.h>
 #include <txdb.h>
@@ -16,8 +17,6 @@
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
-
-extern RecursiveMutex cs_main;
 
 class ArgsManager;
 class BlockValidationState;
@@ -49,10 +48,7 @@ static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = CMessageHeader::MESSAG
 
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
-/** Pruning-related variables and constants */
-/** True if we're running in -prune mode. */
 extern bool fPruneMode;
-/** Number of bytes of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
@@ -176,6 +172,17 @@ public:
 
     /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
+
+    /** Whether running in -prune mode. */
+    [[nodiscard]] bool IsPruneMode() const { return fPruneMode; }
+
+    /** Attempt to stay below this number of bytes of block files. */
+    [[nodiscard]] uint64_t GetPruneTarget() const { return nPruneTarget; }
+
+    [[nodiscard]] bool LoadingBlocks() const
+    {
+        return fImporting || fReindex;
+    }
 
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();

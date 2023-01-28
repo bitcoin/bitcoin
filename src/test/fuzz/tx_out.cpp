@@ -13,12 +13,9 @@
 
 FUZZ_TARGET(tx_out)
 {
-    CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream ds{buffer};
     CTxOut tx_out;
     try {
-        int version;
-        ds >> version;
-        ds.SetVersion(version);
         ds >> tx_out;
     } catch (const std::ios_base::failure&) {
         return;

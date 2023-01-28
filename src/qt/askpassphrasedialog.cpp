@@ -23,8 +23,6 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent, SecureStri
     QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::AskPassphraseDialog),
     mode(_mode),
-    model(nullptr),
-    fCapsLock(false),
     m_passphrase_out(passphrase_out)
 {
     ui->setupUi(this);

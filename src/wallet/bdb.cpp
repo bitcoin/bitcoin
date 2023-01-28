@@ -8,6 +8,7 @@
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -220,17 +221,17 @@ BerkeleyEnvironment::BerkeleyEnvironment() : m_use_shared_memory(false)
     fMockDb = true;
 }
 
-BerkeleyBatch::SafeDbt::SafeDbt()
+SafeDbt::SafeDbt()
 {
     m_dbt.set_flags(DB_DBT_MALLOC);
 }
 
-BerkeleyBatch::SafeDbt::SafeDbt(void* data, size_t size)
+SafeDbt::SafeDbt(void* data, size_t size)
     : m_dbt(data, size)
 {
 }
 
-BerkeleyBatch::SafeDbt::~SafeDbt()
+SafeDbt::~SafeDbt()
 {
     if (m_dbt.get_data() != nullptr) {
         // Clear memory, e.g. in case it was a private key
@@ -244,17 +245,17 @@ BerkeleyBatch::SafeDbt::~SafeDbt()
     }
 }
 
-const void* BerkeleyBatch::SafeDbt::get_data() const
+const void* SafeDbt::get_data() const
 {
     return m_dbt.get_data();
 }
 
-uint32_t BerkeleyBatch::SafeDbt::get_size() const
+uint32_t SafeDbt::get_size() const
 {
     return m_dbt.get_size();
 }
 
-BerkeleyBatch::SafeDbt::operator Dbt*()
+SafeDbt::operator Dbt*()
 {
     return &m_dbt;
 }
@@ -307,7 +308,7 @@ BerkeleyDatabase::~BerkeleyDatabase()
     }
 }
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_database(database)
 {
     database.AddRef();
     database.Open();
@@ -398,7 +399,6 @@ void BerkeleyBatch::Close()
         activeTxn->abort();
     activeTxn = nullptr;
     pdb = nullptr;
-    CloseCursor();
 
     if (fFlushOnClose)
         Flush();
@@ -476,15 +476,15 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                         fSuccess = false;
                     }
 
-                    if (db.StartCursor()) {
+                    std::unique_ptr<DatabaseCursor> cursor = db.GetNewCursor();
+                    if (cursor) {
                         while (fSuccess) {
-                            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-                            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-                            bool complete;
-                            bool ret1 = db.ReadAtCursor(ssKey, ssValue, complete);
-                            if (complete) {
+                            DataStream ssKey{};
+                            DataStream ssValue{};
+                            DatabaseCursor::Status ret1 = cursor->Next(ssKey, ssValue);
+                            if (ret1 == DatabaseCursor::Status::DONE) {
                                 break;
-                            } else if (!ret1) {
+                            } else if (ret1 == DatabaseCursor::Status::FAIL) {
                                 fSuccess = false;
                                 break;
                             }
@@ -502,7 +502,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                             if (ret2 > 0)
                                 fSuccess = false;
                         }
-                        db.CloseCursor();
+                        cursor.reset();
                     }
                     if (fSuccess) {
                         db.Close();
@@ -656,46 +656,50 @@ void BerkeleyDatabase::ReloadDbEnv()
     env->ReloadDbEnv();
 }
 
-bool BerkeleyBatch::StartCursor()
+BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database)
 {
-    assert(!m_cursor);
-    if (!pdb)
-        return false;
-    int ret = pdb->cursor(nullptr, &m_cursor, 0);
-    return ret == 0;
+    if (!database.m_db.get()) {
+        throw std::runtime_error(STR_INTERNAL_BUG("BerkeleyDatabase does not exist"));
+    }
+    int ret = database.m_db->cursor(nullptr, &m_cursor, 0);
+    if (ret != 0) {
+        throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret)));
+    }
 }
 
-bool BerkeleyBatch::ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
+DatabaseCursor::Status BerkeleyCursor::Next(DataStream& ssKey, DataStream& ssValue)
 {
-    complete = false;
-    if (m_cursor == nullptr) return false;
+    if (m_cursor == nullptr) return Status::FAIL;
     // Read at cursor
     SafeDbt datKey;
     SafeDbt datValue;
     int ret = m_cursor->get(datKey, datValue, DB_NEXT);
     if (ret == DB_NOTFOUND) {
-        complete = true;
+        return Status::DONE;
     }
-    if (ret != 0)
-        return false;
-    else if (datKey.get_data() == nullptr || datValue.get_data() == nullptr)
-        return false;
+    if (ret != 0 || datKey.get_data() == nullptr || datValue.get_data() == nullptr) {
+        return Status::FAIL;
+    }
 
     // Convert to streams
-    ssKey.SetType(SER_DISK);
     ssKey.clear();
     ssKey.write({AsBytePtr(datKey.get_data()), datKey.get_size()});
-    ssValue.SetType(SER_DISK);
     ssValue.clear();
     ssValue.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
-    return true;
+    return Status::MORE;
 }
 
-void BerkeleyBatch::CloseCursor()
+BerkeleyCursor::~BerkeleyCursor()
 {
     if (!m_cursor) return;
     m_cursor->close();
     m_cursor = nullptr;
+}
+
+std::unique_ptr<DatabaseCursor> BerkeleyBatch::GetNewCursor()
+{
+    if (!pdb) return nullptr;
+    return std::make_unique<BerkeleyCursor>(m_database);
 }
 
 bool BerkeleyBatch::TxnBegin()
@@ -749,7 +753,7 @@ std::string BerkeleyDatabaseVersion()
     return DbEnv::version(nullptr, nullptr, nullptr);
 }
 
-bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
+bool BerkeleyBatch::ReadKey(DataStream&& key, DataStream& value)
 {
     if (!pdb)
         return false;
@@ -765,7 +769,7 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
     return false;
 }
 
-bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
+bool BerkeleyBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
 {
     if (!pdb)
         return false;
@@ -780,7 +784,7 @@ bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwr
     return (ret == 0);
 }
 
-bool BerkeleyBatch::EraseKey(CDataStream&& key)
+bool BerkeleyBatch::EraseKey(DataStream&& key)
 {
     if (!pdb)
         return false;
@@ -793,7 +797,7 @@ bool BerkeleyBatch::EraseKey(CDataStream&& key)
     return (ret == 0 || ret == DB_NOTFOUND);
 }
 
-bool BerkeleyBatch::HasKey(CDataStream&& key)
+bool BerkeleyBatch::HasKey(DataStream&& key)
 {
     if (!pdb)
         return false;

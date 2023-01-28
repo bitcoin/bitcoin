@@ -58,10 +58,10 @@ private:
     std::optional<QDateTime> dateTo;
     QString m_search_string;
     quint32 typeFilter;
-    WatchOnlyFilter watchOnlyFilter;
-    CAmount minAmount;
-    int limitRows;
-    bool showInactive;
+    WatchOnlyFilter watchOnlyFilter{WatchOnlyFilter_All};
+    CAmount minAmount{0};
+    int limitRows{-1};
+    bool showInactive{true};
 };
 
 #endif // BITCOIN_QT_TRANSACTIONFILTERPROXY_H
