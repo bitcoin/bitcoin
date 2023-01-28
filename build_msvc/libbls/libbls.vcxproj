@@ -3,6 +3,7 @@
   <Import Project="..\common.init.vcxproj" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9662e687-26a3-42dc-aa07-e7458ee7a670}</ProjectGuid>
+    <TargetName>bls384_256</TargetName>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
