@@ -8,17 +8,18 @@
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <undo.h>
-#include <validation.h>
 
 using node::BlockManager;
 
 bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex& block_index, BlockFilter& filter, const BlockManager& blockman)
 {
-    LOCK(::cs_main);
-
     CBlock block;
-    if (!blockman.ReadBlockFromDisk(block, block_index.GetBlockPos())) {
-        return false;
+
+    {
+        LOCK_SHARED(g_cs_blockindex_data); // keep lock until we finish reading the block from disk
+        if (!blockman.ReadBlockFromDisk(block, block_index.GetFilePos(/*is_undo=*/false))) {
+            return false;
+        }
     }
 
     CBlockUndo block_undo;

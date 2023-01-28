@@ -3849,9 +3849,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
             pindexNew->nHeight, pindexNew->m_chain_tx_count, prev_tx_sum(*pindexNew), PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
         pindexNew->m_chain_tx_count = 0;
     }
-    pindexNew->nFile = pos.nFile;
-    pindexNew->nDataPos = pos.nPos;
-    pindexNew->nUndoPos = 0;
+    pindexNew->SetFileData(/*file_num=*/pos.nFile, /*data_pos=*/pos.nPos, /*undo_pos=*/0);
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
     if (DeploymentActiveAt(*pindexNew, *this, Consensus::DEPLOYMENT_SEGWIT)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
