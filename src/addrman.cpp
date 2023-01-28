@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1112,7 +1112,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::SelectTriedCollision()
 {
     LOCK(cs);
     Check();
-    const auto ret = SelectTriedCollision_();
+    auto ret = SelectTriedCollision_();
     Check();
     return ret;
 }
@@ -1121,7 +1121,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool newOnly) const
 {
     LOCK(cs);
     Check();
-    const auto addrRet = Select_(newOnly);
+    auto addrRet = Select_(newOnly);
     Check();
     return addrRet;
 }
@@ -1130,7 +1130,7 @@ std::vector<CAddress> AddrManImpl::GetAddr(size_t max_addresses, size_t max_pct,
 {
     LOCK(cs);
     Check();
-    const auto addresses = GetAddr_(max_addresses, max_pct, network);
+    auto addresses = GetAddr_(max_addresses, max_pct, network);
     Check();
     return addresses;
 }
@@ -1178,8 +1178,7 @@ void AddrMan::Unserialize(Stream& s_)
 }
 
 // explicit instantiation
-template void AddrMan::Serialize(CHashWriter& s) const;
-template void AddrMan::Serialize(CAutoFile& s) const;
+template void AddrMan::Serialize(HashedSourceWriter<CAutoFile>& s) const;
 template void AddrMan::Serialize(CDataStream& s) const;
 template void AddrMan::Unserialize(CAutoFile& s);
 template void AddrMan::Unserialize(CHashVerifier<CAutoFile>& s);

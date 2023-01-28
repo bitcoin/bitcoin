@@ -32,16 +32,15 @@ check_exists() {
 sha256_check() {
   # Args: <sha256_hash> <filename>
   #
-  if check_exists sha256sum; then
-    echo "${1}  ${2}" | sha256sum -c
+  if [ "$(uname)" = "FreeBSD" ]; then
+    # sha256sum exists on FreeBSD, but takes different arguments than the GNU version
+    sha256 -c "${1}" "${2}"
+  elif check_exists sha256sum; then
+    echo "${1} ${2}" | sha256sum -c
   elif check_exists sha256; then
-    if [ "$(uname)" = "FreeBSD" ]; then
-      sha256 -c "${1}" "${2}"
-    else
-      echo "${1}  ${2}" | sha256 -c
-    fi
+    echo "${1} ${2}" | sha256 -c
   else
-    echo "${1}  ${2}" | shasum -a 256 -c
+    echo "${1} ${2}" | shasum -a 256 -c
   fi
 }
 

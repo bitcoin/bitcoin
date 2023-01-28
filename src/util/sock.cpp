@@ -1,14 +1,14 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/compat.h>
 #include <logging.h>
-#include <threadinterrupt.h>
 #include <tinyformat.h>
 #include <util/sock.h>
 #include <util/syserror.h>
 #include <util/system.h>
+#include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <memory>
@@ -117,6 +117,34 @@ int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
     return getsockname(m_socket, name, name_len);
 }
 
+bool Sock::SetNonBlocking() const
+{
+#ifdef WIN32
+    u_long on{1};
+    if (ioctlsocket(m_socket, FIONBIO, &on) == SOCKET_ERROR) {
+        return false;
+    }
+#else
+    const int flags{fcntl(m_socket, F_GETFL, 0)};
+    if (flags == SOCKET_ERROR) {
+        return false;
+    }
+    if (fcntl(m_socket, F_SETFL, flags | O_NONBLOCK) == SOCKET_ERROR) {
+        return false;
+    }
+#endif
+    return true;
+}
+
+bool Sock::IsSelectable() const
+{
+#if defined(USE_POLL) || defined(WIN32)
+    return true;
+#else
+    return m_socket < FD_SETSIZE;
+#endif
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
@@ -185,10 +213,10 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
     SOCKET socket_max{0};
 
     for (const auto& [sock, events] : events_per_sock) {
-        const auto& s = sock->m_socket;
-        if (!IsSelectableSocket(s)) {
+        if (!sock->IsSelectable()) {
             return false;
         }
+        const auto& s = sock->m_socket;
         if (events.requested & RECV) {
             FD_SET(s, &recv);
         }

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -236,7 +236,7 @@ static bool rest_headers(const std::any& context,
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
             ssHeader << pindex->GetBlockHeader();
         }
@@ -248,7 +248,7 @@ static bool rest_headers(const std::any& context,
     }
 
     case RESTResponseFormat::HEX: {
-        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
             ssHeader << pindex->GetBlockHeader();
         }
@@ -305,8 +305,10 @@ static bool rest_block(const std::any& context,
         if (chainman.m_blockman.IsBlockPruned(pblockindex))
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
 
-        if (!ReadBlockFromDisk(block, pblockindex, chainman.GetParams().GetConsensus()))
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+    }
+
+    if (!ReadBlockFromDisk(block, pblockindex, chainman.GetParams().GetConsensus())) {
+        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
     switch (rf) {
@@ -433,7 +435,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
+        DataStream ssHeader{};
         for (const uint256& header : filter_headers) {
             ssHeader << header;
         }
@@ -444,7 +446,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         return true;
     }
     case RESTResponseFormat::HEX: {
-        CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
+        DataStream ssHeader{};
         for (const uint256& header : filter_headers) {
             ssHeader << header;
         }
@@ -532,7 +534,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
+        DataStream ssResp{};
         ssResp << filter;
 
         std::string binaryResp = ssResp.str();
@@ -541,7 +543,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         return true;
     }
     case RESTResponseFormat::HEX: {
-        CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
+        DataStream ssResp{};
         ssResp << filter;
 
         std::string strHex = HexStr(ssResp) + "\n";
@@ -588,6 +590,48 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
         return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
     }
     }
+}
+
+
+RPCHelpMan getdeploymentinfo();
+
+static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
+{
+    if (!CheckWarmup(req)) return false;
+
+    std::string hash_str;
+    const RESTResponseFormat rf = ParseDataFormat(hash_str, str_uri_part);
+
+    switch (rf) {
+    case RESTResponseFormat::JSON: {
+        JSONRPCRequest jsonRequest;
+        jsonRequest.context = context;
+        jsonRequest.params = UniValue(UniValue::VARR);
+
+        if (!hash_str.empty()) {
+            uint256 hash;
+            if (!ParseHashStr(hash_str, hash)) {
+                return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hash_str);
+            }
+
+            const ChainstateManager* chainman = GetChainman(context, req);
+            if (!chainman) return false;
+            if (!WITH_LOCK(::cs_main, return chainman->m_blockman.LookupBlockIndex(ParseHashV(hash_str, "blockhash")))) {
+                return RESTERR(req, HTTP_BAD_REQUEST, "Block not found");
+            }
+
+            jsonRequest.params.pushKV("blockhash", hash_str);
+        }
+
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, getdeploymentinfo().HandleRequest(jsonRequest).write() + "\n");
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+
 }
 
 static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
@@ -749,7 +793,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
                     return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
 
-                CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
+                DataStream oss{};
                 oss << strRequestMutable;
                 oss >> fCheckMemPool;
                 oss >> vOutPoints;
@@ -822,7 +866,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     case RESTResponseFormat::BINARY: {
         // serialize data
         // use exact same output as mentioned in Bip64
-        CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssGetUTXOResponse{};
         ssGetUTXOResponse << active_height << active_hash << bitmap << outs;
         std::string ssGetUTXOResponseString = ssGetUTXOResponse.str();
 
@@ -832,7 +876,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     }
 
     case RESTResponseFormat::HEX: {
-        CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssGetUTXOResponse{};
         ssGetUTXOResponse << active_height << active_hash << bitmap << outs;
         std::string strHex = HexStr(ssGetUTXOResponse) + "\n";
 
@@ -902,7 +946,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
     }
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ss_blockhash(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ss_blockhash{};
         ss_blockhash << pblockindex->GetBlockHash();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, ss_blockhash.str());
@@ -939,6 +983,8 @@ static const struct {
       {"/rest/mempool/", rest_mempool},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+      {"/rest/deploymentinfo/", rest_deploymentinfo},
+      {"/rest/deploymentinfo", rest_deploymentinfo},
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
 };
 

@@ -10,14 +10,14 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | [Automake](https://www.gnu.org/software/automake/) | [1.13](https://github.com/bitcoin/bitcoin/pull/18290) |
 | [Clang](https://clang.llvm.org) | [8.0](https://github.com/bitcoin/bitcoin/pull/24164) |
 | [GCC](https://gcc.gnu.org) | [8.1](https://github.com/bitcoin/bitcoin/pull/23060) |
-| [Python](https://www.python.org) (tests) | [3.6](https://github.com/bitcoin/bitcoin/pull/19504) |
+| [Python](https://www.python.org) (tests) | [3.7](https://github.com/bitcoin/bitcoin/pull/26226) |
 | [systemtap](https://sourceware.org/systemtap/) ([tracing](tracing.md))| N/A |
 
 ## Required
 
 | Dependency | Releases | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- | --- |
-| [Boost](../depends/packages/boost.mk) | [link](https://www.boost.org/users/download/) | [1.80.0](https://github.com/bitcoin/bitcoin/pull/25873) | [1.64.0](https://github.com/bitcoin/bitcoin/pull/22320) | No |
+| [Boost](../depends/packages/boost.mk) | [link](https://www.boost.org/users/download/) | [1.81.0](https://github.com/bitcoin/bitcoin/pull/26557) | [1.64.0](https://github.com/bitcoin/bitcoin/pull/22320) | No |
 | [libevent](../depends/packages/libevent.mk) | [link](https://github.com/libevent/libevent/releases) | [2.1.12-stable](https://github.com/bitcoin/bitcoin/pull/21991) | [2.1.8](https://github.com/bitcoin/bitcoin/pull/24681) | No |
 | glibc | [link](https://www.gnu.org/software/libc/) | N/A | [2.18](https://github.com/bitcoin/bitcoin/pull/23511) | Yes |
 | Linux Kernel | [link](https://www.kernel.org/) | N/A | 3.2.0 | Yes |

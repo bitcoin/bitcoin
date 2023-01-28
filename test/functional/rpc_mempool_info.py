@@ -18,7 +18,6 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
         confirmed_utxo = self.wallet.get_utxo()
 
         # Create a tree of unconfirmed transactions in the mempool:
@@ -84,7 +83,7 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", self.nodes[0].gettxspendingprevout, [{'txid' : txidA, 'vout' : -1}])
 
         self.log.info("Invalid txid provided")
-        assert_raises_rpc_error(-3, "Expected type string for txid, got number", self.nodes[0].gettxspendingprevout, [{'txid' : 42, 'vout' : 0}])
+        assert_raises_rpc_error(-3, "JSON value of type number for field txid is not of expected type string", self.nodes[0].gettxspendingprevout, [{'txid' : 42, 'vout' : 0}])
 
         self.log.info("Missing outputs")
         assert_raises_rpc_error(-8, "Invalid parameter, outputs are missing", self.nodes[0].gettxspendingprevout, [])

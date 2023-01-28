@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,7 +40,7 @@ static void EvictionProtection0Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_network = NET_IPV4;
@@ -51,7 +51,7 @@ static void EvictionProtection1Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
@@ -67,7 +67,7 @@ static void EvictionProtection2Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
@@ -85,7 +85,7 @@ static void EvictionProtection3Networks050Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        50 /* num_candidates */,
+        /*num_candidates=*/50,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 28 || c.id == 47); //  2 localhost
@@ -103,7 +103,7 @@ static void EvictionProtection3Networks100Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        100 /* num_candidates */,
+        /*num_candidates=*/100,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id >= 55 && c.id < 60); //  5 localhost
@@ -121,7 +121,7 @@ static void EvictionProtection3Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id >= 140 && c.id < 160); // 20 localhost
@@ -141,15 +141,15 @@ static void EvictionProtection3Networks250Candidates(benchmark::Bench& bench)
 // - 250 candidates is the number of peers reported by operators of busy nodes
 
 // No disadvantaged networks, with 250 eviction candidates.
-BENCHMARK(EvictionProtection0Networks250Candidates);
+BENCHMARK(EvictionProtection0Networks250Candidates, benchmark::PriorityLevel::HIGH);
 
 // 1 disadvantaged network (Tor) with 250 eviction candidates.
-BENCHMARK(EvictionProtection1Networks250Candidates);
+BENCHMARK(EvictionProtection1Networks250Candidates, benchmark::PriorityLevel::HIGH);
 
 // 2 disadvantaged networks (I2P, Tor) with 250 eviction candidates.
-BENCHMARK(EvictionProtection2Networks250Candidates);
+BENCHMARK(EvictionProtection2Networks250Candidates, benchmark::PriorityLevel::HIGH);
 
 // 3 disadvantaged networks (I2P/localhost/Tor) with 50/100/250 eviction candidates.
-BENCHMARK(EvictionProtection3Networks050Candidates);
-BENCHMARK(EvictionProtection3Networks100Candidates);
-BENCHMARK(EvictionProtection3Networks250Candidates);
+BENCHMARK(EvictionProtection3Networks050Candidates, benchmark::PriorityLevel::HIGH);
+BENCHMARK(EvictionProtection3Networks100Candidates, benchmark::PriorityLevel::HIGH);
+BENCHMARK(EvictionProtection3Networks250Candidates, benchmark::PriorityLevel::HIGH);

@@ -15,4 +15,4 @@ static void HexStrBench(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(HexStrBench);
+BENCHMARK(HexStrBench, benchmark::PriorityLevel::HIGH);

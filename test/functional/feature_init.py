@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Stress tests related to node initialization."""
@@ -16,6 +16,9 @@ class InitStressTest(BitcoinTestFramework):
     Ensure that initialization can be interrupted at a number of points and not impair
     subsequent starts.
     """
+
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
 
     def set_test_params(self):
         self.setup_clean_chain = False
@@ -55,7 +58,6 @@ class InitStressTest(BitcoinTestFramework):
             b'Loading P2P addresses',
             b'Loading banlist',
             b'Loading block index',
-            b'Switching active chainstate',
             b'Checking all blk files are present',
             b'Loaded best chain:',
             b'init message: Verifying blocks',

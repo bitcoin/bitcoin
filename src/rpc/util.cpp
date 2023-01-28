@@ -1,7 +1,8 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <clientversion.h>
 #include <consensus/amount.h>
 #include <key_io.h>
 #include <outputtype.h>
@@ -30,31 +31,6 @@ std::string GetAllOutputTypes()
     return Join(ret, ", ");
 }
 
-void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValueType>& typesExpected,
-                  bool fAllowNull)
-{
-    unsigned int i = 0;
-    for (const UniValueType& t : typesExpected) {
-        if (params.size() <= i)
-            break;
-
-        const UniValue& v = params[i];
-        if (!(fAllowNull && v.isNull())) {
-            RPCTypeCheckArgument(v, t);
-        }
-        i++;
-    }
-}
-
-void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected)
-{
-    if (!typeExpected.typeAny && value.type() != typeExpected.type) {
-        throw JSONRPCError(RPC_TYPE_ERROR,
-                           strprintf("JSON value of type %s is not of expected type %s", uvTypeName(value.type()), uvTypeName(typeExpected.type)));
-    }
-}
-
 void RPCTypeCheckObj(const UniValue& o,
     const std::map<std::string, UniValueType>& typesExpected,
     bool fAllowNull,
@@ -65,11 +41,8 @@ void RPCTypeCheckObj(const UniValue& o,
         if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
-        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull()))) {
-            std::string err = strprintf("Expected type %s for %s, got %s",
-                uvTypeName(t.second.type), t.first, uvTypeName(v.type()));
-            throw JSONRPCError(RPC_TYPE_ERROR, err);
-        }
+        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull())))
+            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("JSON value of type %s for field %s is not of expected type %s", uvTypeName(v.type()),  t.first, uvTypeName(t.second.type)));
     }
 
     if (fStrict)
@@ -408,6 +381,7 @@ struct Sections {
         const auto indent = std::string(current_indent, ' ');
         const auto indent_next = std::string(current_indent + 2, ' ');
         const bool push_name{outer_type == OuterType::OBJ}; // Dictionary keys must have a name
+        const bool is_top_level_arg{outer_type == OuterType::NONE}; // True on the first recursion
 
         switch (arg.m_type) {
         case RPCArg::Type::STR_HEX:
@@ -416,7 +390,7 @@ struct Sections {
         case RPCArg::Type::AMOUNT:
         case RPCArg::Type::RANGE:
         case RPCArg::Type::BOOL: {
-            if (outer_type == OuterType::NONE) return; // Nothing more to do for non-recursive types on first recursion
+            if (is_top_level_arg) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
             if (arg.m_opts.type_str.size() != 0 && push_name) {
                 left += "\"" + arg.GetName() + "\": " + arg.m_opts.type_str.at(0);
@@ -424,12 +398,12 @@ struct Sections {
                 left += push_name ? arg.ToStringObj(/*oneline=*/false) : arg.ToString(/*oneline=*/false);
             }
             left += ",";
-            PushSection({left, arg.ToDescriptionString()});
+            PushSection({left, arg.ToDescriptionString(/*is_named_arg=*/push_name)});
             break;
         }
         case RPCArg::Type::OBJ:
         case RPCArg::Type::OBJ_USER_KEYS: {
-            const auto right = outer_type == OuterType::NONE ? "" : arg.ToDescriptionString();
+            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString(/*is_named_arg=*/push_name);
             PushSection({indent + (push_name ? "\"" + arg.GetName() + "\": " : "") + "{", right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::OBJ);
@@ -437,20 +411,20 @@ struct Sections {
             if (arg.m_type != RPCArg::Type::OBJ) {
                 PushSection({indent_next + "...", ""});
             }
-            PushSection({indent + "}" + (outer_type != OuterType::NONE ? "," : ""), ""});
+            PushSection({indent + "}" + (is_top_level_arg ? "" : ","), ""});
             break;
         }
         case RPCArg::Type::ARR: {
             auto left = indent;
             left += push_name ? "\"" + arg.GetName() + "\": " : "";
             left += "[";
-            const auto right = outer_type == OuterType::NONE ? "" : arg.ToDescriptionString();
+            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString(/*is_named_arg=*/push_name);
             PushSection({left, right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::ARR);
             }
             PushSection({indent_next + "...", ""});
-            PushSection({indent + "]" + (outer_type != OuterType::NONE ? "," : ""), ""});
+            PushSection({indent + "]" + (is_top_level_arg ? "" : ","), ""});
             break;
         }
         } // no default case, so the compiler can warn about missing cases
@@ -582,9 +556,39 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
     if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(ToString());
     }
-    const UniValue ret = m_fun(*this, request);
+    UniValue arg_mismatch{UniValue::VOBJ};
+    for (size_t i{0}; i < m_args.size(); ++i) {
+        const auto& arg{m_args.at(i)};
+        UniValue match{arg.MatchesType(request.params[i])};
+        if (!match.isTrue()) {
+            arg_mismatch.pushKV(strprintf("Position %s (%s)", i + 1, arg.m_names), std::move(match));
+        }
+    }
+    if (!arg_mismatch.empty()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Wrong type passed:\n%s", arg_mismatch.write(4)));
+    }
+    UniValue ret = m_fun(*this, request);
     if (gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
-        CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [&ret](const RPCResult& res) { return res.MatchesType(ret); }));
+        UniValue mismatch{UniValue::VARR};
+        for (const auto& res : m_results.m_results) {
+            UniValue match{res.MatchesType(ret)};
+            if (match.isTrue()) {
+                mismatch.setNull();
+                break;
+            }
+            mismatch.push_back(match);
+        }
+        if (!mismatch.isNull()) {
+            std::string explain{
+                mismatch.empty() ? "no possible results defined" :
+                mismatch.size() == 1 ? mismatch[0].write(4) :
+                mismatch.write(4)};
+            throw std::runtime_error{
+                strprintf("Internal bug detected: RPC call \"%s\" returned incorrect type:\n%s\n%s %s\nPlease report this issue here: %s\n",
+                          m_name, explain,
+                          PACKAGE_NAME, FormatFullVersion(),
+                          PACKAGE_BUGREPORT)};
+        }
     }
     return ret;
 }
@@ -644,7 +648,7 @@ std::string RPCHelpMan::ToString() const
         if (i == 0) ret += "\nArguments:\n";
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString());
+        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/*is_named_arg=*/true));
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args
@@ -680,6 +684,52 @@ UniValue RPCHelpMan::GetArgMap() const
     return arr;
 }
 
+static std::optional<UniValue::VType> ExpectedType(RPCArg::Type type)
+{
+    using Type = RPCArg::Type;
+    switch (type) {
+    case Type::STR_HEX:
+    case Type::STR: {
+        return UniValue::VSTR;
+    }
+    case Type::NUM: {
+        return UniValue::VNUM;
+    }
+    case Type::AMOUNT: {
+        // VNUM or VSTR, checked inside AmountFromValue()
+        return std::nullopt;
+    }
+    case Type::RANGE: {
+        // VNUM or VARR, checked inside ParseRange()
+        return std::nullopt;
+    }
+    case Type::BOOL: {
+        return UniValue::VBOOL;
+    }
+    case Type::OBJ:
+    case Type::OBJ_USER_KEYS: {
+        return UniValue::VOBJ;
+    }
+    case Type::ARR: {
+        return UniValue::VARR;
+    }
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+UniValue RPCArg::MatchesType(const UniValue& request) const
+{
+    if (m_opts.skip_type_check) return true;
+    if (IsOptional() && request.isNull()) return true;
+    const auto exp_type{ExpectedType(m_type)};
+    if (!exp_type) return true; // nothing to check
+
+    if (*exp_type != request.getType()) {
+        return strprintf("JSON value of type %s is not of expected type %s", uvTypeName(request.getType()), uvTypeName(*exp_type));
+    }
+    return true;
+}
+
 std::string RPCArg::GetFirstName() const
 {
     return m_names.substr(0, m_names.find("|"));
@@ -700,7 +750,7 @@ bool RPCArg::IsOptional() const
     }
 }
 
-std::string RPCArg::ToDescriptionString() const
+std::string RPCArg::ToDescriptionString(bool is_named_arg) const
 {
     std::string ret;
     ret += "(";
@@ -747,11 +797,8 @@ std::string RPCArg::ToDescriptionString() const
     } else {
         switch (std::get<RPCArg::Optional>(m_fallback)) {
         case RPCArg::Optional::OMITTED: {
+            if (is_named_arg) ret += ", optional"; // Default value is "null" in dicts. Otherwise,
             // nothing to do. Element is treated as if not present and has no default value
-            break;
-        }
-        case RPCArg::Optional::OMITTED_NAMED_ARG: {
-            ret += ", optional"; // Default value is "null"
             break;
         }
         case RPCArg::Optional::NO: {
@@ -863,53 +910,77 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
     NONFATAL_UNREACHABLE();
 }
 
-bool RPCResult::MatchesType(const UniValue& result) const
+static std::optional<UniValue::VType> ExpectedType(RPCResult::Type type)
 {
-    if (m_skip_type_check) {
-        return true;
-    }
-    switch (m_type) {
+    using Type = RPCResult::Type;
+    switch (type) {
     case Type::ELISION:
     case Type::ANY: {
-        return true;
+        return std::nullopt;
     }
     case Type::NONE: {
-        return UniValue::VNULL == result.getType();
+        return UniValue::VNULL;
     }
     case Type::STR:
     case Type::STR_HEX: {
-        return UniValue::VSTR == result.getType();
+        return UniValue::VSTR;
     }
     case Type::NUM:
     case Type::STR_AMOUNT:
     case Type::NUM_TIME: {
-        return UniValue::VNUM == result.getType();
+        return UniValue::VNUM;
     }
     case Type::BOOL: {
-        return UniValue::VBOOL == result.getType();
+        return UniValue::VBOOL;
     }
     case Type::ARR_FIXED:
     case Type::ARR: {
-        if (UniValue::VARR != result.getType()) return false;
-        for (size_t i{0}; i < result.get_array().size(); ++i) {
-            // If there are more results than documented, re-use the last doc_inner.
-            const RPCResult& doc_inner{m_inner.at(std::min(m_inner.size() - 1, i))};
-            if (!doc_inner.MatchesType(result.get_array()[i])) return false;
-        }
-        return true; // empty result array is valid
+        return UniValue::VARR;
     }
     case Type::OBJ_DYN:
     case Type::OBJ: {
-        if (UniValue::VOBJ != result.getType()) return false;
+        return UniValue::VOBJ;
+    }
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+UniValue RPCResult::MatchesType(const UniValue& result) const
+{
+    if (m_skip_type_check) {
+        return true;
+    }
+
+    const auto exp_type = ExpectedType(m_type);
+    if (!exp_type) return true; // can be any type, so nothing to check
+
+    if (*exp_type != result.getType()) {
+        return strprintf("returned type is %s, but declared as %s in doc", uvTypeName(result.getType()), uvTypeName(*exp_type));
+    }
+
+    if (UniValue::VARR == result.getType()) {
+        UniValue errors(UniValue::VOBJ);
+        for (size_t i{0}; i < result.get_array().size(); ++i) {
+            // If there are more results than documented, re-use the last doc_inner.
+            const RPCResult& doc_inner{m_inner.at(std::min(m_inner.size() - 1, i))};
+            UniValue match{doc_inner.MatchesType(result.get_array()[i])};
+            if (!match.isTrue()) errors.pushKV(strprintf("%d", i), match);
+        }
+        if (errors.empty()) return true; // empty result array is valid
+        return errors;
+    }
+
+    if (UniValue::VOBJ == result.getType()) {
         if (!m_inner.empty() && m_inner.at(0).m_type == Type::ELISION) return true;
+        UniValue errors(UniValue::VOBJ);
         if (m_type == Type::OBJ_DYN) {
             const RPCResult& doc_inner{m_inner.at(0)}; // Assume all types are the same, randomly pick the first
             for (size_t i{0}; i < result.get_obj().size(); ++i) {
-                if (!doc_inner.MatchesType(result.get_obj()[i])) {
-                    return false;
-                }
+                UniValue match{doc_inner.MatchesType(result.get_obj()[i])};
+                if (!match.isTrue()) errors.pushKV(result.getKeys()[i], match);
             }
-            return true; // empty result obj is valid
+            if (errors.empty()) return true; // empty result obj is valid
+            return errors;
         }
         std::set<std::string> doc_keys;
         for (const auto& doc_entry : m_inner) {
@@ -919,7 +990,7 @@ bool RPCResult::MatchesType(const UniValue& result) const
         result.getObjMap(result_obj);
         for (const auto& result_entry : result_obj) {
             if (doc_keys.find(result_entry.first) == doc_keys.end()) {
-                return false; // missing documentation
+                errors.pushKV(result_entry.first, "key returned that was not in doc");
             }
         }
 
@@ -927,18 +998,18 @@ bool RPCResult::MatchesType(const UniValue& result) const
             const auto result_it{result_obj.find(doc_entry.m_key_name)};
             if (result_it == result_obj.end()) {
                 if (!doc_entry.m_optional) {
-                    return false; // result is missing a required key
+                    errors.pushKV(doc_entry.m_key_name, "key missing, despite not being optional in doc");
                 }
                 continue;
             }
-            if (!doc_entry.MatchesType(result_it->second)) {
-                return false; // wrong type
-            }
+            UniValue match{doc_entry.MatchesType(result_it->second)};
+            if (!match.isTrue()) errors.pushKV(doc_entry.m_key_name, match);
         }
-        return true;
+        if (errors.empty()) return true;
+        return errors;
     }
-    } // no default case, so the compiler can warn about missing cases
-    NONFATAL_UNREACHABLE();
+
+    return true;
 }
 
 void RPCResult::CheckInnerDoc() const

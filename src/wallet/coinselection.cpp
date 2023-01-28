@@ -1,10 +1,11 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/coinselection.h>
 
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <policy/feerate.h>
 #include <util/check.h>
 #include <util/system.h>
@@ -87,13 +88,15 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     std::vector<size_t> best_selection;
     CAmount best_waste = MAX_MONEY;
 
+    bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
+
     // Depth First search loop for choosing the UTXOs
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
         // Conditions for starting a backtrack
         bool backtrack = false;
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
             curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
-            (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
+            (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
             curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
@@ -354,6 +357,10 @@ void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descend
     // descendants is the count as seen from the top ancestor, not the descendants as seen from the
     // coin itself; thus, this value is counted as the max, not the sum
     m_descendants = std::max(m_descendants, descendants);
+
+    if (output.input_bytes > 0) {
+        m_weight += output.input_bytes * WITNESS_SCALE_FACTOR;
+    }
 }
 
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
@@ -436,22 +443,41 @@ void SelectionResult::Clear()
 {
     m_selected_inputs.clear();
     m_waste.reset();
+    m_weight = 0;
 }
 
 void SelectionResult::AddInput(const OutputGroup& group)
 {
-    util::insert(m_selected_inputs, group.m_outputs);
+    // As it can fail, combine inputs first
+    InsertInputs(group.m_outputs);
     m_use_effective = !group.m_subtract_fee_outputs;
+
+    m_weight += group.m_weight;
+}
+
+void SelectionResult::AddInputs(const std::set<COutput>& inputs, bool subtract_fee_outputs)
+{
+    // As it can fail, combine inputs first
+    InsertInputs(inputs);
+    m_use_effective = !subtract_fee_outputs;
+
+    m_weight += std::accumulate(inputs.cbegin(), inputs.cend(), 0, [](int sum, const auto& coin) {
+        return sum + std::max(coin.input_bytes, 0) * WITNESS_SCALE_FACTOR;
+    });
 }
 
 void SelectionResult::Merge(const SelectionResult& other)
 {
+    // As it can fail, combine inputs first
+    InsertInputs(other.m_selected_inputs);
+
     m_target += other.m_target;
     m_use_effective |= other.m_use_effective;
     if (m_algo == SelectionAlgorithm::MANUAL) {
         m_algo = other.m_algo;
     }
-    util::insert(m_selected_inputs, other.m_selected_inputs);
+
+    m_weight += other.m_weight;
 }
 
 const std::set<COutput>& SelectionResult::GetInputSet() const

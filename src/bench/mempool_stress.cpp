@@ -1,8 +1,9 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <kernel/mempool_entry.h>
 #include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -114,5 +115,5 @@ static void MempoolCheck(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(ComplexMemPool);
-BENCHMARK(MempoolCheck);
+BENCHMARK(ComplexMemPool, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MempoolCheck, benchmark::PriorityLevel::HIGH);

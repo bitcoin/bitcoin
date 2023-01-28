@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -179,6 +179,8 @@ const CLogCategoryDesc LogCategories[] =
 #endif
     {BCLog::UTIL, "util"},
     {BCLog::BLOCKSTORE, "blockstorage"},
+    {BCLog::TXRECONCILIATION, "txreconciliation"},
+    {BCLog::SCAN, "scan"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
@@ -277,6 +279,10 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "util";
     case BCLog::LogFlags::BLOCKSTORE:
         return "blockstorage";
+    case BCLog::LogFlags::TXRECONCILIATION:
+        return "txreconciliation";
+    case BCLog::LogFlags::SCAN:
+        return "scan";
     case BCLog::LogFlags::ALL:
         return "all";
     }

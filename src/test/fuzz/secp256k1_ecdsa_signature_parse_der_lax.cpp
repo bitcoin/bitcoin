@@ -12,7 +12,7 @@
 #include <vector>
 
 bool SigHasLowR(const secp256k1_ecdsa_signature* sig);
-int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_signature* sig, const unsigned char* input, size_t inputlen);
+int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned char* input, size_t inputlen);
 
 FUZZ_TARGET(secp256k1_ecdsa_signature_parse_der_lax)
 {
@@ -21,13 +21,11 @@ FUZZ_TARGET(secp256k1_ecdsa_signature_parse_der_lax)
     if (signature_bytes.data() == nullptr) {
         return;
     }
-    secp256k1_context* secp256k1_context_verify = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
     secp256k1_ecdsa_signature sig_der_lax;
-    const bool parsed_der_lax = ecdsa_signature_parse_der_lax(secp256k1_context_verify, &sig_der_lax, signature_bytes.data(), signature_bytes.size()) == 1;
+    const bool parsed_der_lax = ecdsa_signature_parse_der_lax(&sig_der_lax, signature_bytes.data(), signature_bytes.size()) == 1;
     if (parsed_der_lax) {
         ECC_Start();
         (void)SigHasLowR(&sig_der_lax);
         ECC_Stop();
     }
-    secp256k1_context_destroy(secp256k1_context_verify);
 }

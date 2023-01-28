@@ -3,8 +3,8 @@
 ## What is it?
 `Generic Arith Classes` is a loosely defined interface that consists of `Scalar`, `Point` and `Initializer` class aliases where `Scalar` class represents a scalar value and the arithmetic, `Point` class represents a curve point and the associated operations, and `Initializer` class represents initializers of the underlying libraries used by `Scalar` and `Point` classes.
 
-## Implmentation class structure
-An implmentation of `Generic Arith Classes` should have one top-level structure. The top-level strucuture should expose `Scalar`, `Point` and `Intializer` class aliases, and let each alias point to the actual implementation. Nothing else is enforced by `Generic Arith Classes` interface.
+## Implementation class structure
+An implementation of `Generic Arith Classes` should have one top-level structure. The top-level structure should expose `Scalar`, `Point` and `Intializer` class aliases, and let each alias point to the actual implementation. Nothing else is enforced by `Generic Arith Classes` interface.
 
 For example, [struct Mcl](../arith//mcl/mcl.h) below is a top-level structure of the `Mcl` classes. Underneath it, there exist [MclScalar](../arith/mcl/mcl_scalar.h), [MclG1Point](../arith/mcl/mcl_g1point.h) and [MclInitializer](../arith/mcl/mcl_initializer.h) which are aliases of `Scalar`, `Point` and `Initializer` respectively.
 
@@ -22,7 +22,7 @@ struct Mcl
 ## An implementation as an interface
 [Mcl](../arith//mcl/mcl.h) classes are designed to be generic so that it can be used to implement other cryptographic logic. So, other `Generic Arith Classes` implementations sharing the same API as [Mcl](../arith//mcl/mcl.h) can replace [Mcl](../arith//mcl/mcl.h) in the user classes of [Mcl]().
 
-For instance, [RangeProofLogic](../range_proof/range_proof_logic.h) that currently uses an implementation based on `libmcl` library can later swith to a new implementation based on `libsecp256k1` library without changing the user code aside from the type parameter as long as the new implementation has the same set of API as [Mcl](../arith/mcl/mcl.h).
+For instance, [RangeProofLogic](../range_proof/range_proof_logic.h) that currently uses an implementation based on `libmcl` library can later switch to a new implementation based on `libsecp256k1` library without changing the user code aside from the type parameter as long as the new implementation has the same set of API as [Mcl](../arith/mcl/mcl.h).
 
 This effectively makes the [Mcl](../arith//mcl/mcl.h) implementation an interface.
 
@@ -30,10 +30,10 @@ This effectively makes the [Mcl](../arith//mcl/mcl.h) implementation an interfac
 ### Based on existing implementation
 1. Copy existing top-level structure and the headers of aliased classes to a different directory.
 2. Rename them.
-3. Add implementaion of all the functions defined in the headers.
+3. Add implementation of all the functions defined in the headers.
 
 ### From scratch
-Below is one way of developing a new implentation of `Generic Arith Classes`:
+Below is one way of developing a new implementation of `Generic Arith Classes`:
 
 1. Define the top-level structure that exposes aliases to its associated `Scalar`, `Point`, and `Initializer` classes. Let each alias point to an empty class.
 

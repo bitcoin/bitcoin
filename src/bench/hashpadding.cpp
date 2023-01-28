@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ static void PrePadded(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(PrePadded);
+BENCHMARK(PrePadded, benchmark::PriorityLevel::HIGH);
 
 static void RegularPadded(benchmark::Bench& bench)
 {
@@ -44,4 +44,4 @@ static void RegularPadded(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RegularPadded);
+BENCHMARK(RegularPadded, benchmark::PriorityLevel::HIGH);

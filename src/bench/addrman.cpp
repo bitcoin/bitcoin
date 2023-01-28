@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -133,7 +133,7 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(AddrManAdd);
-BENCHMARK(AddrManSelect);
-BENCHMARK(AddrManGetAddr);
-BENCHMARK(AddrManAddThenGood);
+BENCHMARK(AddrManAdd, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManSelect, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManGetAddr, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManAddThenGood, benchmark::PriorityLevel::HIGH);
