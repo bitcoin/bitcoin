@@ -7,6 +7,8 @@
 #include <blsct/bls12_381_common.h>
 #include <blsct/public_keys.h>
 #include <tinyformat.h>
+#include <algorithm>
+#include <iterator>
 
 namespace blsct {
 

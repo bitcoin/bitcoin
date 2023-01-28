@@ -5,6 +5,7 @@
 #define BLS_ETH 1
 
 #include <algorithm>
+#include <iterator>
 #include <blsct/signature.h>
 #include <bls/bls384_256.h>
 
