@@ -58,7 +58,7 @@
     <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
       <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbls\libbls.vcxproj">
+    <ProjectReference Include="..\libbls384_256\libbls384_256.vcxproj">
       <Project>{9662e687-26a3-42dc-aa07-e7458ee7a670}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libmcl\libmcl.vcxproj">
