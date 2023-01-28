@@ -107,14 +107,6 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
-/**
- * Execute a command which returns JSON, and parse the result.
- *
- * @param str_command The command to execute, including any arguments
- * @param str_std_in string to pass to stdin
- * @return parsed JSON
- */
-UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
 
 /**
  * Most paths passed as configuration arguments are treated as relative to

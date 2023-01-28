@@ -5,10 +5,14 @@
 #ifndef BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 #define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
+#include <primitives/transaction.h>
 #include <validationinterface.h>
+
+#include <cstdint>
 #include <list>
 #include <memory>
 
+class CBlock;
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
