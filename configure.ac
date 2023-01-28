@@ -1471,9 +1471,11 @@ if test x$want_boost = xno; then
 fi
 
 dnl Prevent use of std::unary_function, which was removed in C++17,
-dnl and will generate warnings with newer compilers.
-dnl See: https://github.com/boostorg/container_hash/issues/22.
-BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"
+dnl and will generate warnings with newer compilers for Boost
+dnl older than 1.80.
+dnl See: https://github.com/boostorg/config/pull/430.
+AX_CHECK_PREPROC_FLAG([-DBOOST_NO_CXX98_FUNCTION_BASE], [BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"], [], [$CXXFLAG_WERROR],
+                      [AC_LANG_PROGRAM([[#include <boost/config.hpp>]])])
 
 dnl Opt-in to Boost Process
 if test "x$boost_process" != xno; then
