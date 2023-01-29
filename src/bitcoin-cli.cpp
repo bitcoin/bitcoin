@@ -89,7 +89,7 @@ static void SetupCliArgs(ArgsManager& argsman)
                              "RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000",
                              DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES),
                    ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
+    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the output of -getinfo is the result of multiple non-atomic requests. Some entries in the output may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-netinfo", strprintf("Get network peer connection information from the remote server. An optional argument from 0 to %d can be passed for different peers listings (default: 0). If a non-zero value is passed, an additional \"outonly\" (or \"o\") argument can be passed to see outbound peers only. Pass \"help\" (or \"h\") for detailed help documentation.", NETINFO_MAX_LEVEL), ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
 
@@ -274,19 +274,49 @@ struct BaseRequestHandler {
 
 /** Process addrinfo requests */
 struct AddrinfoRequestHandler : BaseRequestHandler {
+    static constexpr int ID_FULL_ADDRMAN = 0;
+    static constexpr int ID_FILTERED_ADDRMAN = 1;
+
+    /** Prepare a batch of JSON-RPC requests to retrieve addrman data.
+     *  This combines:
+     *   - getaddrmaninfo (available from v26.0+) for stats of all addresses in the addrman (used for selecting peers)
+     *   - getnodeaddresses (v22.0+) for stats of filtered address in the addrman (used by old -addrinfo and kept for not breaking user space)
+     */
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
         if (!args.empty()) {
             throw std::runtime_error("-addrinfo takes no arguments");
         }
+
+        UniValue result(UniValue::VARR);
+        result.push_back(JSONRPCRequestObj("getaddrmaninfo", NullUniValue, ID_FULL_ADDRMAN));
         UniValue params{RPCConvertValues("getnodeaddresses", std::vector<std::string>{{"0"}})};
-        return JSONRPCRequestObj("getnodeaddresses", params, 1);
+        result.push_back(JSONRPCRequestObj("getnodeaddresses", params, ID_FILTERED_ADDRMAN));
+        return result;
     }
 
-    UniValue ProcessReply(const UniValue& reply) override
+    UniValue ProcessReply(const UniValue &batch_in) override
     {
-        if (!reply["error"].isNull()) return reply;
-        const std::vector<UniValue>& nodes{reply["result"].getValues()};
+        const std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in);
+        UniValue result{UniValue::VOBJ};
+
+        // Process getaddrmaninfo reply (only if RPC exists)
+        if (batch[ID_FULL_ADDRMAN]["error"].isNull()) {
+            UniValue addresses{UniValue::VOBJ};
+            const std::vector<std::string>& network_types{batch[ID_FULL_ADDRMAN]["result"].getKeys()};
+            const std::vector<UniValue>& addrman_counts{batch[ID_FULL_ADDRMAN]["result"].getValues()};
+            for (size_t i = 0; i < network_types.size() - 1; ++i) {
+                uint64_t addr_count = addrman_counts[i]["total"].getInt<int>();
+                addresses.pushKV(network_types[i], addr_count);
+            }
+            uint64_t total = addrman_counts[network_types.size() - 1]["total"].getInt<int>();
+            addresses.pushKV("total", total);
+            result.pushKV("all addresses known (used for selecting peers)", std::move(addresses));
+        }
+
+        // Process getnodeaddresses reply
+        if (!batch[ID_FILTERED_ADDRMAN]["error"].isNull()) return batch[ID_FILTERED_ADDRMAN];
+        const std::vector<UniValue>& nodes{batch[ID_FILTERED_ADDRMAN]["result"].getValues()};
         if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
             throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
         }
@@ -299,14 +329,14 @@ struct AddrinfoRequestHandler : BaseRequestHandler {
             ++counts.at(network_id);
         }
         // Prepare result to return to user.
-        UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
+        UniValue addresses{UniValue::VOBJ};
         uint64_t total{0}; // Total address count
         for (size_t i = 1; i < NETWORKS.size() - 1; ++i) {
             addresses.pushKV(NETWORKS[i], counts.at(i));
             total += counts.at(i);
         }
         addresses.pushKV("total", total);
-        result.pushKV("addresses_known", std::move(addresses));
+        result.pushKV("addresses known after quality/recency filtering (for original -addrinfo compatibility)", std::move(addresses));
         return JSONRPCReplyObj(std::move(result), NullUniValue, /*id=*/1, JSONRPCVersion::V2);
     }
 };
