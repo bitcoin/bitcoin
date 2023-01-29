@@ -30,7 +30,12 @@ JSON_PARSING_ERROR = 'error: Error parsing JSON: foo'
 BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
 TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 WALLET_NOT_LOADED = 'Requested wallet does not exist or is not loaded'
-WALLET_NOT_SPECIFIED = 'Wallet file not specified'
+WALLET_NOT_SPECIFIED = (
+    "Multiple wallets are loaded. Please select which wallet to use by requesting the RPC "
+    "through the /wallet/<walletname> URI path. Or for the CLI, specify the \"-rpcwallet=<walletname>\" "
+    "option before the command (run \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see "
+    "which wallets are currently loaded)."
+)
 
 
 def cli_get_info_string_to_dict(cli_get_info_string):
@@ -330,6 +335,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             n3 = 4
             n4 = 10
             blocks = self.nodes[0].getblockcount()
+
+            self.log.info('Test -generate -rpcwallet=<filename> raise RPC error')
+            wallet2_path = f'-rpcwallet={self.nodes[0].wallets_path / wallets[2] / self.wallet_data_filename}'
+            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(wallet2_path, '-generate').echo)
 
             self.log.info('Test -generate -rpcwallet with no args')
             generate = self.nodes[0].cli(rpcwallet2, '-generate').send_cli()
