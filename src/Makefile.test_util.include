@@ -13,10 +13,14 @@ TEST_UTIL_H = \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/mcl/mcl_initializer.h \
+<<<<<<< HEAD
   blsct/double_public_key.h \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
+=======
+  blsct/keys.h \
+>>>>>>> navcoin/fix-ci-msvc
   test/util/blockfilter.h \
   test/util/chainstate.h \
   test/util/logging.h \
@@ -41,10 +45,14 @@ libtest_util_a_SOURCES = \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/mcl/mcl_initializer.cpp \
+<<<<<<< HEAD
   blsct/double_public_key.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
+=======
+  blsct/keys.cpp \
+>>>>>>> navcoin/fix-ci-msvc
   test/util/blockfilter.cpp \
   test/util/logging.cpp \
   test/util/mining.cpp \

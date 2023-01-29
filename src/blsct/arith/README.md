@@ -4,7 +4,7 @@
 `Generic Arith Classes` is a loosely defined interface that consists of `Scalar`, `Point` and `Initializer` class aliases where `Scalar` class represents a scalar value and the arithmetic, `Point` class represents a curve point and the associated operations, and `Initializer` class represents initializers of the underlying libraries used by `Scalar` and `Point` classes.
 
 ## Implementation class structure
-An implementation of `Generic Arith Classes` should have one top-level structure. The top-level structure should expose `Scalar`, `Point` and `Intializer` class aliases, and let each alias point to the actual implementation. Nothing else is enforced by `Generic Arith Classes` interface.
+An implementation of `Generic Arith Classes` should have one top-level structure. The top-level structure should expose `Scalar`, `Point` and `Initializer` class aliases, and let each alias point to the actual implementation. Nothing else is enforced by `Generic Arith Classes` interface.
 
 For example, [struct Mcl](../arith//mcl/mcl.h) below is a top-level structure of the `Mcl` classes. Underneath it, there exist [MclScalar](../arith/mcl/mcl_scalar.h), [MclG1Point](../arith/mcl/mcl_g1point.h) and [MclInitializer](../arith/mcl/mcl_initializer.h) which are aliases of `Scalar`, `Point` and `Initializer` respectively.
 
