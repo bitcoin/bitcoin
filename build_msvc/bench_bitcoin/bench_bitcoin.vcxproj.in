@@ -45,7 +45,7 @@
     <ProjectReference Include="..\libtest_util\libtest_util.vcxproj">
       <Project>{1e065f03-3566-47d0-8fa9-daa72b084e7d}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbls384_256\libbls384_256.vcxproj">
+    <ProjectReference Include="..\libbls384_256\bls384_256.vcxproj">
       <Project>{9662e687-26a3-42dc-aa07-e7458ee7a670}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libmcl\libmcl.vcxproj">
