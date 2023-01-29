@@ -908,7 +908,8 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
             strPrint += ("error message:\n" + err_msg.get_str());
         }
         if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED) {
-            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+            strPrint += "\nUsing \"bitcoin-cli\", add the \"-rpcwallet=<filename>\" option before the command.";
+            strPrint += "\nRun \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see which wallets are currently loaded.";
         }
     } else {
         strPrint = "error: " + error.write();
