@@ -163,23 +163,11 @@ AC_ARG_WITH([miniupnpc],
   [use_upnp=$withval],
   [use_upnp=auto])
 
-AC_ARG_ENABLE([upnp-default],
-  [AS_HELP_STRING([--enable-upnp-default],
-  [if UPNP is enabled, turn it on at startup (default is no)])],
-  [use_upnp_default=$enableval],
-  [use_upnp_default=no])
-
 AC_ARG_WITH([natpmp],
             [AS_HELP_STRING([--with-natpmp],
                             [enable NAT-PMP (default is yes if libnatpmp is found)])],
             [use_natpmp=$withval],
             [use_natpmp=auto])
-
-AC_ARG_ENABLE([natpmp-default],
-              [AS_HELP_STRING([--enable-natpmp-default],
-                              [if NAT-PMP is enabled, turn it on at startup (default is no)])],
-              [use_natpmp_default=$enableval],
-              [use_natpmp_default=no])
 
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
@@ -1765,15 +1753,8 @@ if test "$have_miniupnpc" = "no"; then
 else
   if test "$use_upnp" != "no"; then
     AC_MSG_RESULT([yes])
-    AC_MSG_CHECKING([whether to build with UPnP enabled by default])
     use_upnp=yes
-    upnp_setting=0
-    if test "$use_upnp_default" != "no"; then
-      use_upnp_default=yes
-      upnp_setting=1
-    fi
-    AC_MSG_RESULT([$use_upnp_default])
-    AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
+    AC_DEFINE([USE_UPNP], [1], [Define to 1 if UPnP support should be compiled in.])
     if test "$TARGET_OS" = "windows"; then
       MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"
     fi
@@ -1793,15 +1774,8 @@ if test "$have_natpmp" = "no"; then
 else
   if test "$use_natpmp" != "no"; then
     AC_MSG_RESULT([yes])
-    AC_MSG_CHECKING([whether to build with NAT-PMP enabled by default])
     use_natpmp=yes
-    natpmp_setting=0
-    if test "$use_natpmp_default" != "no"; then
-      use_natpmp_default=yes
-      natpmp_setting=1
-    fi
-    AC_MSG_RESULT($use_natpmp_default)
-    AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determines default state])
+    AC_DEFINE([USE_NATPMP], [1], [Define to 1 if UPnP support should be compiled in.])
     if test "$TARGET_OS" = "windows"; then
       NATPMP_CPPFLAGS="$NATPMP_CPPFLAGS -DSTATICLIB -DNATPMP_STATICLIB"
     fi
