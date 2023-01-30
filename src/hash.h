@@ -12,6 +12,7 @@
 #include <crypto/sha256.h>
 #include <prevector.h>
 #include <serialize.h>
+#include <span.h>
 #include <uint256.h>
 #include <version.h>
 
@@ -247,5 +248,13 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
  * then calling HashWriter::GetSHA256().
  */
 HashWriter TaggedHash(const std::string& tag);
+
+/** Compute the 160-bit RIPEMD-160 hash of an array. */
+inline uint160 RIPEMD160(Span<const unsigned char> data)
+{
+    uint160 result;
+    CRIPEMD160().Write(data.data(), data.size()).Finalize(result.begin());
+    return result;
+}
 
 #endif // BITCOIN_HASH_H
