@@ -249,15 +249,18 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
 }
 
 bool CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/ true);
-    cacheCoins.clear();
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/true);
+    if (fOk && !cacheCoins.empty()) {
+        /* BatchWrite must erase all cacheCoins elements when erase=true. */
+        throw std::logic_error("Not all cached coins were erased");
+    }
     cachedCoinsUsage = 0;
     return fOk;
 }
 
 bool CCoinsViewCache::Sync()
 {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/ false);
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/false);
     // Instead of clearing `cacheCoins` as we would in Flush(), just clear the
     // FRESH/DIRTY flags of any coin that isn't spent.
     for (auto it = cacheCoins.begin(); it != cacheCoins.end(); ) {

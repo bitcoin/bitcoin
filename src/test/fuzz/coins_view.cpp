@@ -75,6 +75,9 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 (void)coins_view_cache.Flush();
             },
             [&] {
+                (void)coins_view_cache.Sync();
+            },
+            [&] {
                 coins_view_cache.SetBestBlock(ConsumeUInt256(fuzzed_data_provider));
             },
             [&] {
