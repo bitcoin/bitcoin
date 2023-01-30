@@ -5,17 +5,9 @@
 #ifndef SYSCOIN_MAPPORT_H
 #define SYSCOIN_MAPPORT_H
 
-#ifdef USE_UPNP
-static constexpr bool DEFAULT_UPNP = USE_UPNP;
-#else
 static constexpr bool DEFAULT_UPNP = false;
-#endif // USE_UPNP
 
-#ifdef USE_NATPMP
-static constexpr bool DEFAULT_NATPMP = USE_NATPMP;
-#else
 static constexpr bool DEFAULT_NATPMP = false;
-#endif // USE_NATPMP
 
 enum MapPortProtoFlag : unsigned int {
     NONE = 0x00,
