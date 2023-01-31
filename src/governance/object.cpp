@@ -531,7 +531,6 @@ CAmount CGovernanceObject::GetMinCollateralFee(bool fork_active) const
 bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(::mempool.cs); // because of GetTransaction
 
     strError = "";
     fMissingConfirmations = false;
