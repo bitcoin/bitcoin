@@ -153,7 +153,7 @@ public:
     int nHeight{0};
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile GUARDED_BY(::cs_main){0};
+    int nFile GUARDED_BY(::cs_main){-1};
 
     //! Byte offset within blk?????.dat where this block's data is stored
     unsigned int nDataPos GUARDED_BY(::cs_main){0};
