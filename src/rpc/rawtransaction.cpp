@@ -943,25 +943,6 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     return result;
 }
 
-static std::string WriteHDKeypath(std::vector<uint32_t>& keypath)
-{
-    std::string keypath_str = "m";
-    for (uint32_t num : keypath) {
-        keypath_str += "/";
-        bool hardened = false;
-        if (num & 0x80000000) {
-            hardened = true;
-            num &= ~0x80000000;
-        }
-
-        keypath_str += ToString(num);
-        if (hardened) {
-            keypath_str += "'";
-        }
-    }
-    return keypath_str;
-}
-
 UniValue decodepsbt(const JSONRPCRequest& request)
 {
     RPCHelpMan{"decodepsbt",
