@@ -188,11 +188,11 @@ const Out& AsBase(const In& x)
  */
 #define FORMATTER_METHODS(cls, obj) \
     template<typename Stream> \
-    static void Ser(Stream& s, const cls& obj) { SerializationOps(obj, s, CSerActionSerialize()); } \
+    static void Ser(Stream& s, const cls& obj) { SerializationOps(obj, s, ActionSerialize{}); } \
     template<typename Stream> \
-    static void Unser(Stream& s, cls& obj) { SerializationOps(obj, s, CSerActionUnserialize()); } \
+    static void Unser(Stream& s, cls& obj) { SerializationOps(obj, s, ActionUnserialize{}); } \
     template<typename Stream, typename Type, typename Operation> \
-    static inline void SerializationOps(Type& obj, Stream& s, Operation ser_action) \
+    static void SerializationOps(Type& obj, Stream& s, Operation ser_action)
 
 /**
  * Implement the Serialize and Unserialize methods by delegating to a single templated
@@ -953,24 +953,15 @@ void Unserialize(Stream& is, std::shared_ptr<const T>& p)
 }
 
 
-
 /**
- * Support for SERIALIZE_METHODS and READWRITE macro.
+ * Support for all macros providing or using the ser_action parameter of the SerializationOps method.
  */
-struct CSerActionSerialize
-{
+struct ActionSerialize {
     constexpr bool ForRead() const { return false; }
 };
-struct CSerActionUnserialize
-{
+struct ActionUnserialize {
     constexpr bool ForRead() const { return true; }
 };
-
-
-
-
-
-
 
 
 /* ::GetSerializeSize implementations
@@ -1031,36 +1022,36 @@ inline void UnserializeMany(Stream& s, Args&&... args)
 }
 
 template<typename Stream, typename... Args>
-inline void SerReadWriteMany(Stream& s, CSerActionSerialize ser_action, const Args&... args)
+inline void SerReadWriteMany(Stream& s, ActionSerialize ser_action, const Args&... args)
 {
     ::SerializeMany(s, args...);
 }
 
 template<typename Stream, typename... Args>
-inline void SerReadWriteMany(Stream& s, CSerActionUnserialize ser_action, Args&&... args)
+inline void SerReadWriteMany(Stream& s, ActionUnserialize ser_action, Args&&... args)
 {
     ::UnserializeMany(s, args...);
 }
 
 template<typename Stream, typename Type, typename Fn>
-inline void SerRead(Stream& s, CSerActionSerialize ser_action, Type&&, Fn&&)
+inline void SerRead(Stream& s, ActionSerialize ser_action, Type&&, Fn&&)
 {
 }
 
 template<typename Stream, typename Type, typename Fn>
-inline void SerRead(Stream& s, CSerActionUnserialize ser_action, Type&& obj, Fn&& fn)
-{
-    fn(s, std::forward<Type>(obj));
-}
-
-template<typename Stream, typename Type, typename Fn>
-inline void SerWrite(Stream& s, CSerActionSerialize ser_action, Type&& obj, Fn&& fn)
+inline void SerRead(Stream& s, ActionUnserialize ser_action, Type&& obj, Fn&& fn)
 {
     fn(s, std::forward<Type>(obj));
 }
 
 template<typename Stream, typename Type, typename Fn>
-inline void SerWrite(Stream& s, CSerActionUnserialize ser_action, Type&&, Fn&&)
+inline void SerWrite(Stream& s, ActionSerialize ser_action, Type&& obj, Fn&& fn)
+{
+    fn(s, std::forward<Type>(obj));
+}
+
+template<typename Stream, typename Type, typename Fn>
+inline void SerWrite(Stream& s, ActionUnserialize ser_action, Type&&, Fn&&)
 {
 }
 
