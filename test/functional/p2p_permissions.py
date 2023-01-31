@@ -56,12 +56,12 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # For this, we need to use whitebind instead of bind
         # by modifying the configuration file.
         ip_port = "127.0.0.1:{}".format(p2p_port(1))
-        self.replaceinconfig(1, "bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)
+        self.nodes[1].replace_in_config([("bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)])
         self.checkpermission(
             ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
             ["noban", "bloomfilter", "forcerelay", "relay", "download"])
-        self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
+        self.nodes[1].replace_in_config([("whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")])
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
@@ -137,12 +137,6 @@ class P2PPermissionsTests(BitcoinTestFramework):
         for p in expectedPermissions:
             if p not in peerinfo['permissions']:
                 raise AssertionError("Expected permissions %r is not granted." % p)
-
-    def replaceinconfig(self, nodeid, old, new):
-        with open(self.nodes[nodeid].bitcoinconf, encoding="utf8") as f:
-            newText = f.read().replace(old, new)
-        with open(self.nodes[nodeid].bitcoinconf, 'w', encoding="utf8") as f:
-            f.write(newText)
 
 
 if __name__ == '__main__':
