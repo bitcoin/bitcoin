@@ -53,8 +53,8 @@ static const uint16_t DEFAULT_TOR_SOCKS_PORT = 9050;
 
 /****** Low-level TorControlConnection ********/
 
-TorControlConnection::TorControlConnection(struct event_base *_base):
-    base(_base), b_conn(nullptr)
+TorControlConnection::TorControlConnection(struct event_base* _base)
+    : base(_base)
 {
 }
 
