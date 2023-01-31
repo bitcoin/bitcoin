@@ -234,18 +234,18 @@ public:
 
 /** Writes data to an underlying source stream, while hashing the written data. */
 template <typename Source>
-class HashedSourceWriter : public CHashWriter
+class HashedSourceWriter : public HashWriter
 {
 private:
     Source& m_source;
 
 public:
-    explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : CHashWriter{source.GetType(), source.GetVersion()}, m_source{source} {}
+    explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : HashWriter{}, m_source{source} {}
 
     void write(Span<const std::byte> src)
     {
         m_source.write(src);
-        CHashWriter::write(src);
+        HashWriter::write(src);
     }
 
     template <typename T>

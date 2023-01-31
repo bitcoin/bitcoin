@@ -55,6 +55,27 @@ CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
     return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), NodeSeconds{std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<uint32_t>()}}};
 }
 
+template <typename P>
+P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    constexpr std::array ADDR_ENCODINGS{
+        CNetAddr::Encoding::V1,
+        CNetAddr::Encoding::V2,
+    };
+    constexpr std::array ADDR_FORMATS{
+        CAddress::Format::Disk,
+        CAddress::Format::Network,
+    };
+    if constexpr (std::is_same_v<P, CNetAddr::SerParams>) {
+        return P{PickValue(fuzzed_data_provider, ADDR_ENCODINGS)};
+    }
+    if constexpr (std::is_same_v<P, CAddress::SerParams>) {
+        return P{{PickValue(fuzzed_data_provider, ADDR_ENCODINGS)}, PickValue(fuzzed_data_provider, ADDR_FORMATS)};
+    }
+}
+template CNetAddr::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
+template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
+
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
     : m_fuzzed_data_provider{fuzzed_data_provider}, m_selectable{fuzzed_data_provider.ConsumeBool()}
 {
