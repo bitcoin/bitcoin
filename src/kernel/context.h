@@ -5,8 +5,6 @@
 #ifndef BITCOIN_KERNEL_CONTEXT_H
 #define BITCOIN_KERNEL_CONTEXT_H
 
-#include <memory>
-
 namespace kernel {
 //! Context struct holding the kernel library's logically global state, and
 //! passed to external libbitcoin_kernel functions which need access to this

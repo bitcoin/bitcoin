@@ -2,8 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/chain.h>
+
 #include <chain.h>
 #include <interfaces/chain.h>
+#include <kernel/cs_main.h>
 #include <sync.h>
 #include <uint256.h>
 

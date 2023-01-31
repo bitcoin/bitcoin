@@ -12,7 +12,8 @@
 #include <chrono>
 #include <memory>
 #include <string>
-#include <unordered_map>
+// Re-export the underlying type of the `Sock::EventsPerSock` type alias.
+#include <unordered_map> // IWYU pragma: export
 
 /**
  * Maximum time to wait for I/O readiness.

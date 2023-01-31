@@ -6,6 +6,8 @@
 
 #include <regex>
 #include <string>
+// A workaround for https://github.com/include-what-you-use/include-what-you-use/issues/1110
+// IWYU pragma: no_include <map>
 
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute)
 {

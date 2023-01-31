@@ -12,7 +12,6 @@
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>

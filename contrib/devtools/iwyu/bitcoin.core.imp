@@ -4,4 +4,8 @@
   { include: [ "<bits/termios-struct.h>", private, "<termios.h>", public ] },
   { include: [ "<bits/termios-tcflow.h>", private, "<termios.h>", public ] },
   { include: [ "<bits/chrono.h>", private, "<chrono>", public ] },
+
+  # A workaround for https://github.com/include-what-you-use/include-what-you-use/issues/908
+  { symbol: [ "std::max", "private", "<vector>", "public" ] },
+  { symbol: [ "std::max", "private", "<algorithm>", "public" ] },
 ]

@@ -7,7 +7,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <crypto/common.h>
-#include <kernel/cs_main.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -17,7 +16,6 @@
 #include <rpc/server.h>
 #include <serialize.h>
 #include <streams.h>
-#include <sync.h>
 #include <uint256.h>
 #include <version.h>
 #include <zmq/zmqutil.h>

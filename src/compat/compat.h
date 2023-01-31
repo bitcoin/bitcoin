@@ -25,10 +25,10 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
-#include <sys/socket.h>
+#include <sys/socket.h> // IWYU pragma: export
 #include <sys/types.h>
 #include <net/if.h>
-#include <netinet/in.h>
+#include <netinet/in.h> // IWYU pragma: export
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>

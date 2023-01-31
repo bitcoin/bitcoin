@@ -22,6 +22,8 @@
 #include <cstring>
 #include <thread>
 #include <vector>
+// A workaround for https://github.com/include-what-you-use/include-what-you-use/issues/927
+// IWYU pragma: no_include <type_traits>
 
 class CNode;
 
