@@ -9,12 +9,14 @@ export LC_ALL=C.UTF-8
 if [[ $HOST = *-mingw32 ]]; then
   # Generate all binaries, so that they can be wrapped
   CI_EXEC make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
+  CI_EXEC make "$MAKEJOBS" -C src minisketch/test.exe VERBOSE=1
   CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
 fi
 
 if [ -n "$QEMU_USER_CMD" ]; then
   # Generate all binaries, so that they can be wrapped
   CI_EXEC make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
+  CI_EXEC make "$MAKEJOBS" -C src minisketch/test VERBOSE=1
   CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
 fi
 
