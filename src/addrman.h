@@ -99,8 +99,14 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_);
 
-    //! Return the number of (unique) addresses in all tables.
-    size_t size() const;
+    /**
+    * Return size information about addrman.
+    *
+    * @param[in] net              Select addresses only from specified network (nullopt = all)
+    * @param[in] in_new           Select addresses only from one table (true = new, false = tried, nullopt = both)
+    * @return                     Number of unique addresses that match specified options.
+    */
+    size_t Size(std::optional<Network> net = {}, std::optional<bool> in_new = {}) const;
 
     /**
      * Attempt to add one or more addresses to addrman's new table.

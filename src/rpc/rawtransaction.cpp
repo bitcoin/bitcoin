@@ -54,8 +54,8 @@ using node::ReadBlockFromDisk;
 using node::UndoReadFromDisk;
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry,
-                     Chainstate& active_chainstate, const CTxUndo* txundo = nullptr,
-                     TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS)
+                     Chainstate& active_chainstate, const CTxUndo* txundo,
+                     TxVerbosity verbosity)
 {
     CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
