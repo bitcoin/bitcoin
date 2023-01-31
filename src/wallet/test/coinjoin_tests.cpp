@@ -129,7 +129,6 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        NodeContext node;
         chain = interfaces::MakeChain(node);
         wallet = std::make_unique<CWallet>(chain.get(), "", CreateMockWalletDatabase());
         bool firstRun;
@@ -151,6 +150,7 @@ public:
         RemoveWallet(wallet, std::nullopt);
     }
 
+    NodeContext node;
     std::shared_ptr<interfaces::Chain> chain;
     std::shared_ptr<CWallet> wallet;
 
