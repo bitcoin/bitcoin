@@ -5036,12 +5036,12 @@ bool ChainstateManager::ActivateSnapshot(
 static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
 {
     LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(
-        strprintf("%s (%.2f MB)",
-                  snapshot_loaded ? "saving snapshot chainstate" : "flushing coins cache",
+        strprintf("[snapshot] %s coins cache (%.2f MB)",
+                  (snapshot_loaded ? "syncing" : "flushing"),
                   coins_cache.DynamicMemoryUsage() / (1000 * 1000)),
         BCLog::LogFlags::ALL);
 
-    coins_cache.Flush();
+    snapshot_loaded ? coins_cache.Sync() : coins_cache.Flush();
 }
 
 bool ChainstateManager::PopulateAndValidateSnapshot(
