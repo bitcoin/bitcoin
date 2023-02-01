@@ -1355,14 +1355,14 @@ struct CSerActionUnserialize
 class CSizeComputer
 {
 protected:
-    size_t nSize;
+    size_t nSize{0};
     // SYSCOIN
-    const int nProtocol;
+    const int nProtocol{SER_SIZE};
     const int nVersion;
     int nTxVersion{0};
 public:
     // SYSCOIN
-    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE, int nTxVersionIn = 0) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn), nTxVersion(nTxVersionIn) {}
+    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE, int nTxVersionIn = 0) : nProtocol(nProtocolIn), nVersion(nVersionIn), nTxVersion(nTxVersionIn) {}
 
     void write(Span<const std::byte> src)
     {

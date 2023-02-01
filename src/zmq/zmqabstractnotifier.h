@@ -25,8 +25,8 @@ class CZMQAbstractNotifier
 {
 public:
     static const int DEFAULT_ZMQ_SNDHWM {1000};
-    // SYSCOIN
-    CZMQAbstractNotifier() : psocket(nullptr), psocketsub(nullptr), outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) { }
+
+    CZMQAbstractNotifier() : outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) {}
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
@@ -74,9 +74,9 @@ public:
     virtual bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse);
 
 protected:
-    void *psocket;
+    void* psocket{nullptr};
     // SYSCOIN
-    void *psocketsub;
+    void *psocketsub{nullptr};
     std::string type;
     std::string address;
     std::string addresssub;

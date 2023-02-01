@@ -20,7 +20,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr), pcontextsub(nullptr)
+
+CZMQNotificationInterface::CZMQNotificationInterface()
 {
 }
 

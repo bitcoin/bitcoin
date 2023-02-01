@@ -528,7 +528,7 @@ bool CBlockPolicyEstimator::_removeTx(const uint256& hash, bool inBlock)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath)
-    : m_estimation_filepath{estimation_filepath}, nBestSeenHeight{0}, firstRecordedHeight{0}, historicalFirst{0}, historicalBest{0}, trackedTxs{0}, untrackedTxs{0}
+    : m_estimation_filepath{estimation_filepath}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;

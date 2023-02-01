@@ -51,9 +51,9 @@ protected:
 private:
     CZMQNotificationInterface();
 
-    void *pcontext;
-    // SYSCOIN
-    void *pcontextsub;
+    void* pcontext{nullptr};
+       // SYSCOIN
+    void *pcontextsub{nullptr};
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 
