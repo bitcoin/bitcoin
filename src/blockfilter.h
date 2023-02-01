@@ -66,8 +66,6 @@ private:
     uint64_t RangeHashedElement(const uint64_t& hashed_element) const;
     static uint64_t RangeHashedElement(const uint64_t& hashed_element, const uint64_t& F);
 
-    std::vector<uint64_t> BuildHashedSet(const ElementSet& elements) const;
-
     /** Helper method used to implement Match and MatchAny */
     bool MatchInternal(const uint64_t* sorted_element_hashes, size_t size) const;
 
