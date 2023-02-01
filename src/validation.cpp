@@ -3058,7 +3058,11 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
         // any disconnected transactions back to the mempool.
         MaybeUpdateMempoolForReorg(disconnectpool, true);
     }
-    if (m_mempool) m_mempool->check(this->CoinsTip(), this->m_chain.Height() + 1);
+    if (m_mempool) {
+        // Limit mempool size and evict any transactions below min relay feerate.
+        m_mempool->TrimToSize(m_mempool->m_max_size_bytes);
+        m_mempool->check(this->CoinsTip(), this->m_chain.Height() + 1);
+    }
 
     CheckForkWarningConditions();
 
