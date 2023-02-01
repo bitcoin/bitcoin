@@ -508,9 +508,6 @@ class FormatArg
 {
     public:
         FormatArg()
-            : m_value(nullptr),
-            m_formatImpl(nullptr),
-            m_toIntImpl(nullptr)
         { }
 
         template<typename T>
@@ -549,10 +546,10 @@ class FormatArg
             return convertToInt<T>::invoke(*static_cast<const T*>(value));
         }
 
-        const void* m_value;
+        const void* m_value{nullptr};
         void (*m_formatImpl)(std::ostream& out, const char* fmtBegin,
-                             const char* fmtEnd, int ntrunc, const void* value);
-        int (*m_toIntImpl)(const void* value);
+                             const char* fmtEnd, int ntrunc, const void* value){nullptr};
+        int (*m_toIntImpl)(const void* value){nullptr};
 };
 
 

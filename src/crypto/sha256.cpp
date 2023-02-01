@@ -690,7 +690,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
 
 ////// SHA-256
 
-CSHA256::CSHA256() : bytes(0)
+CSHA256::CSHA256()
 {
     sha256::Initialize(s);
 }

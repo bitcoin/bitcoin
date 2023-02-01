@@ -14,7 +14,7 @@ class CSHA512
 private:
     uint64_t s[8];
     unsigned char buf[128];
-    uint64_t bytes;
+    uint64_t bytes{0};
 
 public:
     static constexpr size_t OUTPUT_SIZE = 64;

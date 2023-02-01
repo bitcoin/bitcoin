@@ -79,13 +79,13 @@ private:
     CDataStream ssKey;
     CDataStream ssValue;
 
-    size_t size_estimate;
+    size_t size_estimate{0};
 
 public:
     /**
      * @param[in] _parent    CDBWrapper that this batch is to be submitted to
      */
-    explicit CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION), size_estimate(0) { };
+    explicit CDBBatch(const CDBWrapper& _parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION) {};
 
     void Clear()
     {
