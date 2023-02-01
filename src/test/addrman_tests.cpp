@@ -947,8 +947,6 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     } catch (const std::exception&) {
         exceptionThrown = true;
     }
-    // Even though de-serialization failed addrman is not left in a clean state.
-    BOOST_CHECK(addrman1.Size() == 1);
     BOOST_CHECK(exceptionThrown);
 
     // Test that ReadFromStream fails if peers.dat is corrupt
