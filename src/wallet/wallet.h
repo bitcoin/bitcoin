@@ -954,10 +954,10 @@ private:
     using Clock = std::chrono::steady_clock;
     using NowFn = std::function<Clock::time_point()>;
     CWallet& m_wallet;
-    bool m_could_reserve;
+    bool m_could_reserve{false};
     NowFn m_now;
 public:
-    explicit WalletRescanReserver(CWallet& w) : m_wallet(w), m_could_reserve(false) {}
+    explicit WalletRescanReserver(CWallet& w) : m_wallet(w) {}
 
     bool reserve()
     {
