@@ -9,10 +9,9 @@
 #include <pubkey.h>
 #include <script/standard.h>
 #include <threadsafety.h>
-#include <sync.h>
 #include <bls/bls.h>
 #include <netaddress.h>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 class UniValue;
 class CDeterministicMNList;
 class CDeterministicMN;

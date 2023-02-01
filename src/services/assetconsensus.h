@@ -81,7 +81,6 @@ extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetNFTDB> passetnftdb;
 extern std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 extern std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
-extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 extern std::unique_ptr<CNEVMDataDB> pnevmdatadb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, const CTxUndo& txundo, AssetMap &mapAssets);

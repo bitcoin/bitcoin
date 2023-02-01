@@ -15,8 +15,7 @@
 #include <univalue.h>
 #include <script/standard.h>
 #include <key_io.h>
-#include <sync.h>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 class CBlockIndex;
 class CCoinsViewCache;
 class CProRegTx

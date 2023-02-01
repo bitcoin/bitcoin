@@ -7,8 +7,7 @@
 
 #include <primitives/transaction.h>
 #include <univalue.h>
-#include <sync.h>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;

@@ -31,18 +31,15 @@ class CRateCheckBuffer
 private:
     std::vector<int64_t> vecTimestamps;
 
-    int nDataStart;
+    int nDataStart{0};
 
-    int nDataEnd;
+    int nDataEnd{0};
 
-    bool fBufferEmpty;
+    bool fBufferEmpty{true};
 
 public:
     CRateCheckBuffer() :
-        vecTimestamps(RATE_BUFFER_SIZE),
-        nDataStart(0),
-        nDataEnd(0),
-        fBufferEmpty(true)
+        vecTimestamps(RATE_BUFFER_SIZE)
     {
     }
 
@@ -163,10 +160,10 @@ private:
     static const int MAX_TIME_FUTURE_DEVIATION;
     static const int RELIABLE_PROPAGATION_TIME;
 
-    int64_t nTimeLastDiff;
+    int64_t nTimeLastDiff{0};
 
     // keep track of current block height
-    int nCachedBlockHeight;
+    int nCachedBlockHeight{0};
 
     // keep track of the scanning errors
     std::map<uint256, CGovernanceObject> mapObjects;
@@ -191,7 +188,7 @@ private:
 
     hash_s_t setRequestedVotes;
 
-    bool fRateChecksEnabled;
+    bool fRateChecksEnabled{true};
 
     // used to check for changed voting keys
     CDeterministicMNListPtr lastMNListForVotingKeys;

@@ -84,11 +84,7 @@ public:
         nTimeSigned(nTimeSigned)
         {}
 
-    CSporkMessage() :
-        nSporkID((int32_t)0),
-        nValue(0),
-        nTimeSigned(0)
-        {}
+    CSporkMessage(){}
 
     SERIALIZE_METHODS(CSporkMessage, obj) {
         READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);

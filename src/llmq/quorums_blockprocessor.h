@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <unordered_lru_cache.h>
 #include <saltedhasher.h>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 class CNode;
 class PeerManager;
 class BlockValidationState;

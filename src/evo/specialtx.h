@@ -8,8 +8,7 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <version.h>
-#include <sync.h>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 class CBlock;
 class CBlockIndex;
 class TxValidationState;

@@ -34,8 +34,6 @@ const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 80;
 
 CGovernanceManager::CGovernanceManager(ChainstateManager& _chainman) :
     chainman(_chainman),
-    nTimeLastDiff(0),
-    nCachedBlockHeight(0),
     mapObjects(),
     mapErasedGovernanceObjects(),
     cmapVoteToObject(MAX_CACHE_SIZE),
@@ -43,7 +41,6 @@ CGovernanceManager::CGovernanceManager(ChainstateManager& _chainman) :
     cmmapOrphanVotes(MAX_CACHE_SIZE),
     mapLastMasternodeObject(),
     setRequestedObjects(),
-    fRateChecksEnabled(true),
     lastMNListForVotingKeys(std::make_shared<CDeterministicMNList>()),
     cs()
 {

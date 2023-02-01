@@ -8,7 +8,6 @@
 #include <node/miner.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
@@ -17,7 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 using namespace node;
 namespace node
 {

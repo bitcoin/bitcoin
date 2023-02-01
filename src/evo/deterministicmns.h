@@ -18,6 +18,7 @@
 #include <script/standard.h>
 #include <interfaces/chain.h>
 #include <bls/bls.h>
+#include <kernel/cs_main.h>
 class CProRegTx;
 class UniValue;
 

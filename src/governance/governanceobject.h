@@ -9,12 +9,11 @@
 #include <governance/governanceexceptions.h>
 #include <governance/governancevote.h>
 #include <governance/governancevotedb.h>
-#include <sync.h>
 #include <util/system.h>
 #include <threadsafety.h>
 
 #include <univalue.h>
-extern RecursiveMutex cs_main;
+#include <kernel/cs_main.h>
 
 class CBLSSecretKey;
 class CBLSPublicKey;
