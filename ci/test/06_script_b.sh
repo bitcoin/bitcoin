@@ -75,7 +75,12 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/util/syserror.cpp"\
           " src/util/threadinterrupt.cpp"\
           " src/zmq"\
-          " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
+          " -p . ${MAKEJOBS}"\
+          " -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"\
+          " |& tee /tmp/iwyu_ci.out"
+  export P_CI_DIR="${BASE_ROOT_DIR}/src"
+  CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/fix_includes.py --nosafe_headers < /tmp/iwyu_ci.out"
+  CI_EXEC "git --no-pager diff"
 fi
 
 if [ "$RUN_SECURITY_TESTS" = "true" ]; then
