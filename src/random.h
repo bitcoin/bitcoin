@@ -200,7 +200,7 @@ public:
             return rand64() >> (64 - bits);
         } else {
             if (bitbuf_size < bits) FillBitBuffer();
-            uint64_t ret = bitbuf & (~(uint64_t)0 >> (64 - bits));
+            uint64_t ret = bitbuf & (~uint64_t{0} >> (64 - bits));
             bitbuf >>= bits;
             bitbuf_size -= bits;
             return ret;
@@ -250,7 +250,7 @@ public:
                                    /* interval [0..0] */ Dur{0};
     };
 
-    // Compatibility with the C++11 UniformRandomBitGenerator concept
+    // Compatibility with the UniformRandomBitGenerator concept
     typedef uint64_t result_type;
     static constexpr uint64_t min() { return 0; }
     static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }

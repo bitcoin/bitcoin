@@ -130,7 +130,6 @@ MAIN_FUNCTION
         return EXIT_FAILURE;
     }
 
-    ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
     if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;

@@ -25,6 +25,7 @@ from decimal import Decimal
 import http.client
 import os
 import subprocess
+import textwrap
 
 from test_framework.blocktools import (
     MAX_FUTURE_BLOCK_TIME,
@@ -370,7 +371,7 @@ class BlockchainTest(BritanniaCoinTestFramework):
         # hash_type muhash should return a different UTXO set hash.
         res6 = node.gettxoutsetinfo(hash_type='muhash')
         assert 'muhash' in res6
-        assert(res['hash_serialized_2'] != res6['muhash'])
+        assert res['hash_serialized_2'] != res6['muhash']
 
         # muhash should not be returned unless requested.
         for r in [res, res2, res3, res4, res5]:
@@ -429,6 +430,17 @@ class BlockchainTest(BritanniaCoinTestFramework):
     def _test_getnetworkhashps(self):
         self.log.info("Test getnetworkhashps")
         hashes_per_second = self.nodes[0].getnetworkhashps()
+        assert_raises_rpc_error(
+            -3,
+            textwrap.dedent("""
+            Wrong type passed:
+            {
+                "Position 1 (nblocks)": "JSON value of type string is not of expected type number",
+                "Position 2 (height)": "JSON value of type array is not of expected type number"
+            }
+            """).strip(),
+            lambda: self.nodes[0].getnetworkhashps("a", []),
+        )
         # This should be 2 hashes every 10 minutes or 1/300
         assert abs(hashes_per_second * 300 - 1) < 0.0001
 

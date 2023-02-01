@@ -139,7 +139,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
     for (KeyValPair& row : salvagedData)
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */
-        CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{row.first};
         CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
         std::string strType, strErr;
         bool fReadOK;

@@ -6,9 +6,12 @@
 
 export LC_ALL=C
 
-GIT_HEAD=$(git rev-parse HEAD)
-if [ -n "$CIRRUS_PR" ]; then
-  COMMIT_RANGE="${CIRRUS_BASE_SHA}..$GIT_HEAD"
+if [ -n "$LOCAL_BRANCH" ]; then
+  # To faithfully recreate CI linting locally, specify all commits on the current
+  # branch.
+  COMMIT_RANGE="$(git merge-base HEAD master)..HEAD"
+elif [ -n "$CIRRUS_PR" ]; then
+  COMMIT_RANGE="HEAD~..HEAD"
   echo
   git log --no-merges --oneline "$COMMIT_RANGE"
   echo

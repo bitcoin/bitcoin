@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
+CZMQNotificationInterface::CZMQNotificationInterface()
 {
 }
 

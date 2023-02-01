@@ -34,10 +34,9 @@ bool SerializeDB(Stream& stream, const Data& data)
 {
     // Write and commit header, data
     try {
-        CHashWriter hasher(stream.GetType(), stream.GetVersion());
-        stream << Params().MessageStart() << data;
-        hasher << Params().MessageStart() << data;
-        stream << hasher.GetHash();
+        HashedSourceWriter hashwriter{stream};
+        hashwriter << Params().MessageStart() << data;
+        stream << hashwriter.GetHash();
     } catch (const std::exception& e) {
         return error("%s: Serialize or I/O error - %s", __func__, e.what());
     }
@@ -191,7 +190,7 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
     const auto path_addr{args.GetDataDirNet() / "peers.dat"};
     try {
         DeserializeFileDB(path_addr, *addrman, CLIENT_VERSION);
-        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
     } catch (const DbNotFoundError&) {
         // Addrman can be in an inconsistent state after failure, reset it
         addrman = std::make_unique<AddrMan>(netgroupman, /*deterministic=*/false, /*consistency_check_ratio=*/check_addrman);

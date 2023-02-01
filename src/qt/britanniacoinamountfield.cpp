@@ -217,9 +217,9 @@ Q_SIGNALS:
 
 #include <qt/britanniacoinamountfield.moc>
 
-BritanniaCoinAmountField::BritanniaCoinAmountField(QWidget *parent) :
-    QWidget(parent),
-    amount(nullptr)
+BritanniaCoinAmountField::BritanniaCoinAmountField(QWidget *parent)
+    : QWidget(parent)
+
 {
     amount = new AmountSpinBox(this);
     amount->setLocale(QLocale::c());

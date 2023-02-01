@@ -134,7 +134,6 @@ Follow the relevant Guix README.md sections:
 
 ### Verify other builders' signatures to your own (optional)
 
-- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
 - [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
 
 ### Commit your non codesigned signature to guix.sigs
@@ -193,7 +192,6 @@ popd
 
 ### Verify other builders' signatures to your own (optional)
 
-- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
 - [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
 
 ### Commit your codesigned signature to guix.sigs (for the signed macOS/Windows binaries)

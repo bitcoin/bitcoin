@@ -93,7 +93,7 @@ private:
     /** Libevent event base */
     struct event_base *base;
     /** Connection to control socket */
-    struct bufferevent *b_conn;
+    struct bufferevent* b_conn{nullptr};
     /** Message being received */
     TorControlReply message;
     /** Response handlers */

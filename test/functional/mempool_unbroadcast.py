@@ -23,7 +23,6 @@ class MempoolUnbroadcastTest(BritanniaCoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
         self.test_broadcast()
         self.test_txn_removal()
 

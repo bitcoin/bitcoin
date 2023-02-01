@@ -27,6 +27,7 @@ NODE2_BLOCKS_REQUIRED = 2047
 
 class RejectLowDifficultyHeadersTest(BritanniaCoinTestFramework):
     def set_test_params(self):
+        self.rpc_timeout *= 4  # To avoid timeout when generating BLOCKS_TO_MINE
         self.setup_clean_chain = True
         self.num_nodes = 4
         # Node0 has no required chainwork; node1 requires 15 blocks on top of the genesis block; node2 requires 2047
@@ -57,7 +58,7 @@ class RejectLowDifficultyHeadersTest(BritanniaCoinTestFramework):
 
         def check_node3_chaintips(num_tips, tip_hash, height):
             node3_chaintips = self.nodes[3].getchaintips()
-            assert(len(node3_chaintips) == num_tips)
+            assert len(node3_chaintips) == num_tips
             assert {
                 'height': height,
                 'hash': tip_hash,
@@ -69,7 +70,7 @@ class RejectLowDifficultyHeadersTest(BritanniaCoinTestFramework):
 
         for node in self.nodes[1:3]:
             chaintips = node.getchaintips()
-            assert(len(chaintips) == 1)
+            assert len(chaintips) == 1
             assert {
                 'height': 0,
                 'hash': '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
@@ -89,7 +90,7 @@ class RejectLowDifficultyHeadersTest(BritanniaCoinTestFramework):
             'status': 'active',
         } in self.nodes[2].getchaintips()
 
-        assert(len(self.nodes[2].getchaintips()) == 1)
+        assert len(self.nodes[2].getchaintips()) == 1
 
         self.log.info("Check that node3 accepted these headers as well")
         check_node3_chaintips(2, self.nodes[0].getbestblockhash(), NODE1_BLOCKS_REQUIRED)

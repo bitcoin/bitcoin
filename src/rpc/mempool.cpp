@@ -23,6 +23,8 @@
 #include <util/moneystr.h>
 #include <util/time.h>
 
+#include <utility>
+
 using kernel::DumpMempool;
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
@@ -59,11 +61,6 @@ static RPCHelpMan sendrawtransaction()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            RPCTypeCheck(request.params, {
-                UniValue::VSTR,
-                UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
-            });
-
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
@@ -124,6 +121,10 @@ static RPCHelpMan testmempoolaccept()
                     {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                     {
                         {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                        {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/false, "the effective feerate in " + CURRENCY_UNIT + " per KvB. May differ from the base feerate if, for example, there are modified fees from prioritisetransaction or a package feerate was used."},
+                        {RPCResult::Type::ARR, "effective-includes", /*optional=*/false, "transactions whose fees and vsizes are included in effective-feerate.",
+                            {RPCResult{RPCResult::Type::STR_HEX, "", "transaction wtxid in hex"},
+                        }},
                     }},
                     {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection string (only present when 'allowed' is false)"},
                 }},
@@ -141,10 +142,6 @@ static RPCHelpMan testmempoolaccept()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            RPCTypeCheck(request.params, {
-                UniValue::VARR,
-                UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
-            });
             const UniValue raw_transactions = request.params[0].get_array();
             if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
@@ -215,6 +212,12 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("vsize", virtual_size);
                         UniValue fees(UniValue::VOBJ);
                         fees.pushKV("base", ValueFromAmount(fee));
+                        fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
+                        UniValue effective_includes_res(UniValue::VARR);
+                        for (const auto& wtxid : tx_result.m_wtxids_fee_calculations.value()) {
+                            effective_includes_res.push_back(wtxid.ToString());
+                        }
+                        fees.pushKV("effective-includes", effective_includes_res);
                         result_inner.pushKV("fees", fees);
                     }
                 } else {
@@ -449,19 +452,17 @@ static RPCHelpMan getmempoolancestors()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    CTxMemPool::setEntries setAncestors;
-    std::string dummy;
-    mempool.CalculateMemPoolAncestors(*it, setAncestors, CTxMemPool::Limits::NoLimits(), dummy, false);
+    auto ancestors{mempool.AssumeCalculateMemPoolAncestors(__func__, *it, CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false)};
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter ancestorIt : setAncestors) {
+        for (CTxMemPool::txiter ancestorIt : ancestors) {
             o.push_back(ancestorIt->GetTx().GetHash().ToString());
         }
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter ancestorIt : setAncestors) {
+        for (CTxMemPool::txiter ancestorIt : ancestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
@@ -768,10 +769,13 @@ static RPCHelpMan submitpackage()
                         {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141."},
                         {RPCResult::Type::OBJ, "fees", "Transaction fees", {
                             {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                            {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/true, "if the transaction was not already in the mempool, the effective feerate in " + CURRENCY_UNIT + " per KvB. For example, the package feerate and/or feerate with modified fees from prioritisetransaction."},
+                            {RPCResult::Type::ARR, "effective-includes", /*optional=*/true, "if effective-feerate is provided, the wtxids of the transactions whose fees and vsizes are included in effective-feerate.",
+                                {{RPCResult::Type::STR_HEX, "", "transaction wtxid in hex"},
+                            }},
                         }},
                     }}
                 }},
-                {RPCResult::Type::STR_AMOUNT, "package-feerate", /*optional=*/true, "package feerate used for feerate checks in " + CURRENCY_UNIT + " per KvB. Excludes transactions which were deduplicated or accepted individually."},
                 {RPCResult::Type::ARR, "replaced-transactions", /*optional=*/true, "List of txids of replaced transactions",
                 {
                     {RPCResult::Type::STR_HEX, "", "The transaction id"},
@@ -787,9 +791,6 @@ static RPCHelpMan submitpackage()
             if (!Params().IsMockableChain()) {
                 throw std::runtime_error("submitpackage is for regression testing (-regtest mode) only");
             }
-            RPCTypeCheck(request.params, {
-                UniValue::VARR,
-            });
             const UniValue raw_transactions = request.params[0].get_array();
             if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
@@ -856,6 +857,7 @@ static RPCHelpMan submitpackage()
                 CHECK_NONFATAL(it != package_result.m_tx_results.end());
                 UniValue result_inner{UniValue::VOBJ};
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
+                const auto& tx_result = it->second;
                 if (it->second.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS) {
                     result_inner.pushKV("other-wtxid", it->second.m_other_wtxid.value().GetHex());
                 }
@@ -864,6 +866,17 @@ static RPCHelpMan submitpackage()
                     result_inner.pushKV("vsize", int64_t{it->second.m_vsize.value()});
                     UniValue fees(UniValue::VOBJ);
                     fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));
+                    if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                        // Effective feerate is not provided for MEMPOOL_ENTRY transactions even
+                        // though modified fees is known, because it is unknown whether package
+                        // feerate was used when it was originally submitted.
+                        fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
+                        UniValue effective_includes_res(UniValue::VARR);
+                        for (const auto& wtxid : tx_result.m_wtxids_fee_calculations.value()) {
+                            effective_includes_res.push_back(wtxid.ToString());
+                        }
+                        fees.pushKV("effective-includes", effective_includes_res);
+                    }
                     result_inner.pushKV("fees", fees);
                     if (it->second.m_replaced_transactions.has_value()) {
                         for (const auto& ptx : it->second.m_replaced_transactions.value()) {
@@ -874,9 +887,6 @@ static RPCHelpMan submitpackage()
                 tx_result_map.pushKV(tx->GetWitnessHash().GetHex(), result_inner);
             }
             rpc_result.pushKV("tx-results", tx_result_map);
-            if (package_result.m_package_feerate.has_value()) {
-                rpc_result.pushKV("package-feerate", ValueFromAmount(package_result.m_package_feerate.value().GetFeePerK()));
-            }
             UniValue replaced_list(UniValue::VARR);
             for (const uint256& hash : replaced_txids) replaced_list.push_back(hash.ToString());
             rpc_result.pushKV("replaced-transactions", replaced_list);

@@ -289,7 +289,7 @@ void TestGUI(interfaces::Node& node)
     std::vector<std::string> requests = walletModel.wallet().getAddressReceiveRequests();
     QCOMPARE(requests.size(), size_t{1});
     RecentRequestEntry entry;
-    CDataStream{MakeUCharSpan(requests[0]), SER_DISK, CLIENT_VERSION} >> entry;
+    DataStream{MakeUCharSpan(requests[0])} >> entry;
     QCOMPARE(entry.nVersion, int{1});
     QCOMPARE(entry.id, int64_t{1});
     QVERIFY(entry.date.isValid());

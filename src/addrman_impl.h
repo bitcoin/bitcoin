@@ -112,7 +112,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    size_t Size(std::optional<Network> net, std::optional<bool> in_new) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -215,6 +215,14 @@ private:
     /** Reference to the netgroup manager. netgroupman must be constructed before addrman and destructed after. */
     const NetGroupManager& m_netgroupman;
 
+    struct NewTriedCount {
+        size_t n_new;
+        size_t n_tried;
+    };
+
+    /** Number of entries in addrman per network and new/tried table. */
+    std::unordered_map<Network, NewTriedCount> m_network_counts GUARDED_BY(cs);
+
     //! Find an entry.
     AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -256,6 +264,8 @@ private:
     std::pair<CAddress, NodeSeconds> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    size_t Size_(std::optional<Network> net, std::optional<bool> in_new) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check, taking into account m_consistency_check_ratio.
     //! Will std::abort if an inconsistency is detected.

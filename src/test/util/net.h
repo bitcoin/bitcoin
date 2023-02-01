@@ -103,7 +103,7 @@ constexpr auto ALL_NETWORKS = std::array{
 class StaticContentsSock : public Sock
 {
 public:
-    explicit StaticContentsSock(const std::string& contents) : m_contents{contents}, m_consumed{0}
+    explicit StaticContentsSock(const std::string& contents) : m_contents{contents}
     {
         // Just a dummy number that is not INVALID_SOCKET.
         m_socket = INVALID_SOCKET - 1;
@@ -191,7 +191,7 @@ public:
 
 private:
     const std::string m_contents;
-    mutable size_t m_consumed;
+    mutable size_t m_consumed{0};
 };
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context);

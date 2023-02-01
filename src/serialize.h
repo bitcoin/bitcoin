@@ -1005,11 +1005,11 @@ struct CSerActionUnserialize
 class CSizeComputer
 {
 protected:
-    size_t nSize;
+    size_t nSize{0};
 
     const int nVersion;
 public:
-    explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
+    explicit CSizeComputer(int nVersionIn) : nVersion(nVersionIn) {}
 
     void write(Span<const std::byte> src)
     {
