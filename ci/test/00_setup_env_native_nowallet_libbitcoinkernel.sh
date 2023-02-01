@@ -13,4 +13,5 @@ export PACKAGES="-t buster-backports python3-zmq clang-8 llvm-8 libc++abi-8-dev 
 export APPEND_APT_SOURCES_LIST="deb http://deb.debian.org/debian buster-backports main"
 export DEP_OPTS="NO_WALLET=1 CC=clang-8 CXX='clang++-8 -stdlib=libc++'"
 export GOAL="install"
+export NO_WERROR=1
 export BITCOIN_CONFIG="--enable-reduce-exports CC=clang-8 CXX='clang++-8 -stdlib=libc++' --enable-experimental-util-chainstate --with-experimental-kernel-lib --enable-shared"
