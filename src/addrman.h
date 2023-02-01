@@ -106,7 +106,7 @@ public:
     * @param[in] in_new           Select addresses only from one table (true = new, false = tried, nullopt = both)
     * @return                     Number of unique addresses that match specified options.
     */
-    size_t Size(std::optional<Network> net = {}, std::optional<bool> in_new = {}) const;
+    size_t Size(std::optional<Network> net = std::nullopt, std::optional<bool> in_new = std::nullopt) const;
 
     /**
      * Attempt to add one or more addresses to addrman's new table.
