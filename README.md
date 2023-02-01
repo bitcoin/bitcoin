@@ -1,9 +1,7 @@
 Official BritanniaCoin Public Codebase and Development Tree
 =====================================
 
-=====================
-Current Version: V3.1
-=====================
+**Current Version: V3.1
 
 This repository contains the source code for the BritanniaCoin blockchain.
 
