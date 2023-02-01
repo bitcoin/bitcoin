@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bls_test", "test\proj\bls_t
 		{1DBB979A-C212-45CD-9563-446A96F87F71} = {1DBB979A-C212-45CD-9563-446A96F87F71}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bls", "src\proj\bls.vcxproj", "{1DBB979A-C212-45CD-9563-446A96F87F71}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bls", "src\proj\bls384_256.vcxproj", "{1DBB979A-C212-45CD-9563-446A96F87F72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +19,10 @@ Global
 		{51266DE6-B57B-4AE3-B85C-282F170E1728}.Debug|x64.Build.0 = Debug|x64
 		{51266DE6-B57B-4AE3-B85C-282F170E1728}.Release|x64.ActiveCfg = Release|x64
 		{51266DE6-B57B-4AE3-B85C-282F170E1728}.Release|x64.Build.0 = Release|x64
-		{1DBB979A-C212-45CD-9563-446A96F87F71}.Debug|x64.ActiveCfg = Debug|x64
-		{1DBB979A-C212-45CD-9563-446A96F87F71}.Debug|x64.Build.0 = Debug|x64
-		{1DBB979A-C212-45CD-9563-446A96F87F71}.Release|x64.ActiveCfg = Release|x64
-		{1DBB979A-C212-45CD-9563-446A96F87F71}.Release|x64.Build.0 = Release|x64
+		{1DBB979A-C212-45CD-9563-446A96F87F72}.Debug|x64.ActiveCfg = Debug|x64
+		{1DBB979A-C212-45CD-9563-446A96F87F72}.Debug|x64.Build.0 = Debug|x64
+		{1DBB979A-C212-45CD-9563-446A96F87F72}.Release|x64.ActiveCfg = Release|x64
+		{1DBB979A-C212-45CD-9563-446A96F87F72}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
