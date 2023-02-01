@@ -1,7 +1,9 @@
 Official BritanniaCoin Public Codebase and Development Tree
 =====================================
 
-**Current Version: V3.1**
+**Latest Full Release Version: V2.0**
+
+**Latest Development Build: V3.1**
 
 This repository contains the source code for the BritanniaCoin blockchain.
 
@@ -21,11 +23,11 @@ interface, which can be optionally built
 BritanniaCoin Versions
 ---------------------
 
-**V1.0 Branch:** The V1.0 branch contains the BritanniaCoin code based on Bitcoin Core Version 23.0 (April 2022)
+**V1.0:** The V1.0 branch contains the BritanniaCoin code based on Bitcoin Core Version 23.0 (April 2022)
 
-**V2.0 Branch** The V2.0 branch contains the BritanniaCoin code based on Bitcoin Core Version 24.0 (Dec 2022)
+**V2.0** The V2.0 branch contains the BritanniaCoin code based on Bitcoin Core Version 24.0 (Dec 2022)
 
-**V3.x Branches** Current working version series, reguarly updated and branches created from britanniacoin-official during merge updates and other major changes
+**V3.x** Current working version series, reguarly updated and branches created from britanniacoin-official during merge updates and other major changes
 
 
 
