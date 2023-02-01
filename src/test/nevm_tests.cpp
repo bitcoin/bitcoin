@@ -15,7 +15,7 @@
 #include <key_io.h>
 #include <util/system.h>
 #include <test/util/setup_common.h>
-extern UniValue read_json(const std::string& jsondata);
+#include <test/util/json.h>
 
 BOOST_FIXTURE_TEST_SUITE(nevm_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(seniority_test)

@@ -11,12 +11,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include <test/util/json.h>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
 
-extern UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(governance_validators_tests, BasicTestingSetup)
 
