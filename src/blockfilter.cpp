@@ -247,21 +247,10 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
 
 uint256 BlockFilter::GetHash() const
 {
-    const std::vector<unsigned char>& data = GetEncodedFilter();
-
-    uint256 result;
-    CHash256().Write(data).Finalize(result);
-    return result;
+    return Hash(GetEncodedFilter());
 }
 
 uint256 BlockFilter::ComputeHeader(const uint256& prev_header) const
 {
-    const uint256& filter_hash = GetHash();
-
-    uint256 result;
-    CHash256()
-        .Write(filter_hash)
-        .Write(prev_header)
-        .Finalize(result);
-    return result;
+    return Hash(GetHash(), prev_header);
 }
