@@ -147,8 +147,8 @@ task:
     - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
   check_script:
-    - src\test_navcoin.exe -l test_suite
-    - src\bench_navcoin.exe --sanity-check
+    - build_msvc\x64\Release\test_navcoin.exe -l test_suite
+    - build_msvc\x64\Release\bench_bench_navcoin.exe --sanity-check
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:
