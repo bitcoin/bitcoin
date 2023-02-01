@@ -42,7 +42,7 @@ struct mt_pooled_secure_allocator : public std::allocator<T> {
     }
     ~mt_pooled_secure_allocator() noexcept {}
 
-    T* allocate(std::size_t n, const void* hint = 0)
+    T* allocate(std::size_t n, const void* hint = nullptr)
     {
         size_t bucket = get_bucket();
         std::lock_guard<std::mutex> lock(pools[bucket]->mutex);

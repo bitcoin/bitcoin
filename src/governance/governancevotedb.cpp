@@ -5,7 +5,6 @@
 #include <governance/governancevotedb.h>
 
 CGovernanceObjectVoteFile::CGovernanceObjectVoteFile() :
-    nMemoryVotes(0),
     listVotes(),
     mapVoteIndex()
 {

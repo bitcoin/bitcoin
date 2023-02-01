@@ -66,7 +66,7 @@ private:
     T* end_;
     count_t depth_;
     node_t* const* path_[max_depth<B> + 1] = {
-        0,
+        nullptr,
     };
 
     void increment()

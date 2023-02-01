@@ -29,7 +29,7 @@ public: // Types
     using vote_m_t = std::map<uint256, vote_l_t::iterator>;
 
 private:
-    int nMemoryVotes;
+    int nMemoryVotes{0};
 
     vote_l_t listVotes;
 

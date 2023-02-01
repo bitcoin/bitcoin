@@ -87,10 +87,10 @@ public:
 
     bool AlreadyHave(const uint256& hash) const;
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
-    const CChainLockSig GetMostRecentChainLock() const;
-    const CChainLockSig GetBestChainLock() const ;
+    CChainLockSig GetMostRecentChainLock() const;
+    CChainLockSig GetBestChainLock() const ;
     const CBlockIndex* GetPreviousChainLock() const ;
-    const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() const;
+    std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, CChainLockSig& clsig, const uint256& hash, const uint256& idIn = uint256());

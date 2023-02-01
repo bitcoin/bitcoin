@@ -36,7 +36,7 @@ struct pooled_secure_allocator : public std::allocator<T> {
                             pool(nrequested_size, nnext_size, nmax_size){}
     ~pooled_secure_allocator() noexcept {}
 
-    T* allocate(std::size_t n, const void* hint = 0)
+    T* allocate(std::size_t n, const void* hint = nullptr)
     {
         size_t chunks = (n * sizeof(T) + pool.get_requested_size() - 1) / pool.get_requested_size();
         return static_cast<T*>(pool.ordered_malloc(chunks));

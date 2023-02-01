@@ -168,7 +168,7 @@ public:
 
     // GC_n is permitted to be 0.  The C++ standard says nothing about what
     // the return value is when GC_n == 0.
-    T* allocate(size_type GC_n, const void* = 0)
+    T* allocate(size_type GC_n, const void* = nullptr)
     {
         GC_type_traits<T> traits;
         return static_cast<T *>

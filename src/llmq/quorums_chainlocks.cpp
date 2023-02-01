@@ -133,12 +133,12 @@ bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLoc
 }
 
 
-const CChainLockSig CChainLocksHandler::GetMostRecentChainLock() const
+CChainLockSig CChainLocksHandler::GetMostRecentChainLock() const
 {
     LOCK(cs);
     return mostRecentChainLockShare;
 }
-const CChainLockSig CChainLocksHandler::GetBestChainLock() const
+CChainLockSig CChainLocksHandler::GetBestChainLock() const
 {
     LOCK(cs);
     return bestChainLockWithKnownBlock;
@@ -148,7 +148,7 @@ const CBlockIndex* CChainLocksHandler::GetPreviousChainLock() const
     LOCK(cs);
     return bestChainLockBlockIndexPrev;
 }
-const std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockShares() const
+std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockShares() const
 {
 
     LOCK(cs);
