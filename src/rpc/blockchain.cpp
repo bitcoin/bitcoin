@@ -644,6 +644,64 @@ const RPCResult getblock_vin{
     }
 };
 
+static RPCHelpMan getsilentpaymentblockdata()
+{
+    return RPCHelpMan{"getsilentpaymentblockdata",
+                "\nReturns a string that is serialized, hex-encoded data for the public key sum of candidate silent transaction inputs in the block.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                },
+                {
+                    RPCResult{
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "total_tx", "Total of candidate transactions in the block"},
+                            {RPCResult::Type::STR_HEX, "data", "A string that is serialized, hex-encoded data for the public key sum of candidate silent transaction inputs in the block (format <txid><sum_public_keys>)"},
+                        }},
+                },
+                RPCExamples{
+                    HelpExampleCli("getsilentpaymentblockdata", "\"00000000000000000002cbdf64ae445b53b545ba1e960f9e83787130d1530484\"")
+            + HelpExampleRpc("getsilentpaymentblockdata", "\"00000000000000000002cbdf64ae445b53b545ba1e960f9e83787130d1530484\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    uint256 hashBlock(ParseHashV(request.params[0], "hash"));
+
+    NodeContext& node_context{EnsureAnyNodeContext(request.context)};
+    ChainstateManager& chainman = EnsureChainman(node_context);
+
+    const CBlockIndex* pblockindex;
+    {
+        LOCK(cs_main);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
+
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not found");
+        }
+    }
+    const CBlock block{GetBlockChecked(chainman.m_blockman, pblockindex)};
+    const CBlockUndo& blockUndo = GetUndoChecked(chainman.m_blockman, pblockindex);
+
+    const auto& items = silentpayment::GetSilentPaymentKeysPerBlock(hashBlock, blockUndo, block.vtx);
+
+    std::stringstream ss;
+
+    for(const auto& [txid, sum_tx_pubkeys, outpoint_hash, truncated_hash]: items)
+    {
+        (void) txid; // not used
+        (void) outpoint_hash; // not used
+        ss << HexStr(sum_tx_pubkeys);
+        ss << HexStr(truncated_hash);
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("data", ss.str());
+    ret.pushKV("total_tx", items.size());
+    return ret;
+},
+    };
+}
+
 static RPCHelpMan getblock()
 {
     return RPCHelpMan{"getblock",
@@ -2871,6 +2929,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockfrompeer},
         {"blockchain", &getblockhash},
         {"blockchain", &getblockheader},
+        {"blockchain", &getsilentpaymentblockdata},
         {"blockchain", &getchaintips},
         {"blockchain", &getdifficulty},
         {"blockchain", &getdeploymentinfo},

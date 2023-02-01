@@ -172,6 +172,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "waitforblock",
     "waitforblockheight",
     "waitfornewblock",
+    "getsilentpaymentblockdata"
 };
 
 std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
