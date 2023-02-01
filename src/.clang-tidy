@@ -9,6 +9,7 @@ performance-for-range-copy,
 performance-move-const-arg,
 performance-no-automatic-move,
 performance-unnecessary-copy-initialization,
+readability-const-return-type,
 readability-redundant-declaration,
 readability-redundant-string-init,
 '
