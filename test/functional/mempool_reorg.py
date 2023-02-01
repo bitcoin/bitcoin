@@ -10,7 +10,7 @@ that spend (directly or indirectly) coinbase transactions.
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-from test_framework.wallet import MiniWallet
+from test_framework.wallet import MiniWallet, COIN
 
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -72,10 +72,16 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])
-        self.log.info("Generate a block")
-        last_block = self.generate(self.nodes[0], 1)
+
+        # A 0-fee transaction in a block should not remain in mempools.
+        free_tx = wallet.create_self_transfer(fee=0, fee_rate=0)
+        self.nodes[0].prioritisetransaction(free_tx["txid"], 0, COIN)
+        self.nodes[0].sendrawtransaction(free_tx["hex"])
         # generate() implicitly syncs blocks, so that peer 1 gets the block before timelock_tx
         # Otherwise, peer 1 would put the timelock_tx in m_recent_rejects
+        self.log.info("Generate a block")
+        last_block = self.generate(self.nodes[0], 1)
+        assert free_tx["txid"] in self.nodes[0].getblock(blockhash=last_block[0])["tx"]
 
         self.log.info("The time-locked transaction can now be spent")
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
