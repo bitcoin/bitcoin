@@ -568,8 +568,7 @@ public:
         if (!g_wallet_filter_index) return std::nullopt;
 
         GCSFilter filter;
-        const CBlockIndex* index{WITH_LOCK(::cs_main, return chainman().m_blockman.LookupBlockIndex(block_hash))};
-        if (index == nullptr || !g_wallet_filter_index->LookupFilter(index, filter)) return std::nullopt;
+        if (!g_wallet_filter_index->LookupFilter(block_hash, filter)) return std::nullopt;
         return filter.MatchAny(query_set);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override

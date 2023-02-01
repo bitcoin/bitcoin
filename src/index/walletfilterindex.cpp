@@ -244,20 +244,20 @@ bool WalletFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
     return true;
 }
 
-bool WalletFilterIndex::LookupFilter(const CBlockIndex* block_index, GCSFilter& filter_out) const
+bool WalletFilterIndex::LookupFilter(const uint256& block_hash, GCSFilter& filter_out) const
 {
     DBVal entry;
-    if (!m_db->Read(DBHashKey(block_index->GetBlockHash()), entry))
+    if (!m_db->Read(DBHashKey(block_hash), entry))
         return false;
 
     if (!ReadFilterFromDisk(entry.pos, filter_out))
         return false;
 
     uint64_t filter_sip_hash = CSipHasher(m_params.m_siphash_k0, m_params.m_siphash_k1)
-        .Write(block_index->GetBlockHash().GetUint64(0))
-        .Write(block_index->GetBlockHash().GetUint64(1))
-        .Write(block_index->GetBlockHash().GetUint64(2))
-        .Write(block_index->GetBlockHash().GetUint64(3))
+        .Write(block_hash.GetUint64(0))
+        .Write(block_hash.GetUint64(1))
+        .Write(block_hash.GetUint64(2))
+        .Write(block_hash.GetUint64(3))
         .Write(filter_out.GetEncoded().data(), filter_out.GetEncoded().size())
         .Finalize();
 

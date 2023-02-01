@@ -45,7 +45,7 @@ public:
                               bool f_wipe = false);
 
     /** Get a single filter by block. */
-    bool LookupFilter(const CBlockIndex* block_index, GCSFilter& filter_out) const;
+    bool LookupFilter(const uint256& block_hash, GCSFilter& filter_out) const;
 
     const GCSFilter::Params& GetParams() const { return m_params; };
 };
