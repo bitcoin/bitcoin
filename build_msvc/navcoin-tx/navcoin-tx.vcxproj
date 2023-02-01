@@ -2,14 +2,14 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\common.init.vcxproj" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{57A04EC9-542A-4E40-83D0-AC3BE1F36805}</ProjectGuid>
+    <ProjectGuid>{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\bitcoin-util.cpp" />
+    <ClCompile Include="..\..\src\bitcoin-tx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
@@ -29,6 +29,12 @@
     </ProjectReference>
     <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
       <Project>{bb493552-3b8c-4a8c-bf69-a6e7a51d2ea6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

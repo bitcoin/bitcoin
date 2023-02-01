@@ -58,6 +58,12 @@
     <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
       <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -70,6 +76,7 @@
     <HeaderFromHexdump RawFilePath="%(RawTestFile.FullPath)" HeaderFilePath="%(RawTestFile.FullPath).h" SourceHeader="static unsigned const char %(RawTestFile.Filename)_raw[] = {" SourceFooter="};" />
     <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="namespace json_tests{ static unsigned const char %(JsonTestFile.Filename)[] = {" SourceFooter="};}" />
   </Target>
+  <Import Project="$(SolutionDir)common.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />
