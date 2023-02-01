@@ -51,7 +51,8 @@ struct PrecomputedData
             const uint8_t ser[4] = {uint8_t(i), uint8_t(i >> 8), uint8_t(i >> 16), uint8_t(i >> 24)};
             uint256 hash;
             CSHA256().Write(PREFIX_S, 1).Write(ser, sizeof(ser)).Finalize(hash.begin());
-            /* Convert hash to scriptPubkeys. */
+            /* Convert hash to scriptPubkeys (of different lengths, so SanityCheck's cached memory
+             * usage check has a chance to detect mismatches). */
             switch (i % 5U) {
             case 0: /* P2PKH */
                 coins[i].out.scriptPubKey.resize(25);
@@ -381,6 +382,7 @@ FUZZ_TARGET(coinscache_sim)
 
             [&]() { // Remove a cache level.
                 // Apply to real caches (this reduces caches.size(), implicitly doing the same on the simulation data).
+                caches.back()->SanityCheck();
                 caches.pop_back();
             },
 
@@ -418,6 +420,11 @@ FUZZ_TARGET(coinscache_sim)
                 current_height = provider.ConsumeIntegralInRange<uint32_t>(1, current_height - 1);
             }
         );
+    }
+
+    // Sanity check all the remaining caches
+    for (const auto& cache : caches) {
+        cache->SanityCheck();
     }
 
     // Full comparison between caches and simulation data, from bottom to top,

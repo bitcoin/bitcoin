@@ -320,6 +320,9 @@ public:
     //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
     void ReallocateCache();
 
+    //! Run an internal sanity check on the cache data structure. */
+    void SanityCheck() const;
+
 private:
     /**
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
