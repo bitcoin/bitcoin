@@ -19,7 +19,7 @@
 // SYSCOIN
 #include <node/blockstorage.h>
 
-const std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
+std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
 
 /**
  * MainSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.

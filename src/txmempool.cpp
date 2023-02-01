@@ -1633,7 +1633,7 @@ void CTxMemPool::SetLoadTried(bool load_tried)
 }
 
 
-const std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept
+std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept
 {
     switch (r) {
         case MemPoolRemovalReason::EXPIRY: return "expiry";

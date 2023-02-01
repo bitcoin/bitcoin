@@ -397,7 +397,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
 }
 
 
-static const std::vector<RPCResult> TransactionDescriptionString()
+static std::vector<RPCResult> TransactionDescriptionString()
 {
     return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},

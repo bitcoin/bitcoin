@@ -1664,7 +1664,7 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
-const std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPubKeys() const
+std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPubKeys() const
 {
     LOCK(cs_KeyStore);
     std::unordered_set<CScript, SaltedSipHasher> spks;
@@ -2650,17 +2650,17 @@ void DescriptorScriptPubKeyMan::WriteDescriptor()
     }
 }
 
-const WalletDescriptor DescriptorScriptPubKeyMan::GetWalletDescriptor() const
+WalletDescriptor DescriptorScriptPubKeyMan::GetWalletDescriptor() const
 {
     return m_wallet_descriptor;
 }
 
-const std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::GetScriptPubKeys() const
+std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::GetScriptPubKeys() const
 {
     return GetScriptPubKeys(0);
 }
 
-const std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::GetScriptPubKeys(int32_t minimum_index) const
+std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::GetScriptPubKeys(int32_t minimum_index) const
 {
     LOCK(cs_desc_man);
     std::unordered_set<CScript, SaltedSipHasher> script_pub_keys;
