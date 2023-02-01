@@ -21,6 +21,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/util/json.h>
 #include <test/util/script.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
@@ -36,9 +37,6 @@
 #include <univalue.h>
 
 typedef std::vector<unsigned char> valtype;
-
-// In script_tests.cpp
-UniValue read_json(const std::string& jsondata);
 
 static CFeeRate g_dust{DUST_RELAY_TX_FEE};
 static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
