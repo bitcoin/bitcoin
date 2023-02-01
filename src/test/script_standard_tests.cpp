@@ -400,12 +400,11 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
 
     for (const auto& vec : vectors.getValues()) {
         TaprootBuilder spktest;
-        std::map<std::pair<CScript, int>, int> scriptposes;
+        std::map<std::pair<std::vector<unsigned char>, int>, int> scriptposes;
         std::function<void (const UniValue&, int)> parse_tree = [&](const UniValue& node, int depth) {
             if (node.isNull()) return;
             if (node.isObject()) {
-                auto script_bytes = ParseHex(node["script"].get_str());
-                CScript script(script_bytes.begin(), script_bytes.end());
+                auto script = ParseHex(node["script"].get_str());
                 int idx = node["id"].getInt<int>();
                 int leaf_version = node["leafVersion"].getInt<int>();
                 scriptposes[{script, leaf_version}] = idx;

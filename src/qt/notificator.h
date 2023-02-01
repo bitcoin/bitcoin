@@ -61,10 +61,10 @@ private:
         UserNotificationCenter      /**< Use the 10.8+ User Notification Center (Mac only) */
     };
     QString programName;
-    Mode mode;
+    Mode mode{None};
     QSystemTrayIcon *trayIcon;
 #ifdef USE_DBUS
-    QDBusInterface *interface;
+    QDBusInterface* interface{nullptr};
 
     void notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
 #endif

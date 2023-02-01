@@ -104,9 +104,9 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
-    PeerTableModel *peerTableModel;
+    PeerTableModel* peerTableModel{nullptr};
     PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
-    BanTableModel *banTableModel;
+    BanTableModel* banTableModel{nullptr};
 
     //! A thread to interact with m_node asynchronously
     QThread* const m_thread;

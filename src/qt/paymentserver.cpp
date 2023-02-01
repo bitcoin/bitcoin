@@ -126,11 +126,8 @@ bool PaymentServer::ipcSendCommandLine()
     return fResult;
 }
 
-PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
-    QObject(parent),
-    saveURIs(true),
-    uriServer(nullptr),
-    optionsModel(nullptr)
+PaymentServer::PaymentServer(QObject* parent, bool startLocalServer)
+    : QObject(parent)
 {
     // Install global event filter to catch QFileOpenEvents
     // on Mac: sent when you click bitcoin: links

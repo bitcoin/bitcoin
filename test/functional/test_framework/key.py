@@ -139,7 +139,7 @@ class EllipticCurve:
         See https://en.wikibooks.org/wiki/Cryptography/Prime_Curve/Jacobian_Coordinates - Point Addition (with affine point)"""
         x1, y1, z1 = p1
         x2, y2, z2 = p2
-        assert(z2 == 1)
+        assert z2 == 1
         # Adding to the point at infinity is a no-op
         if z1 == 0:
             return p2
@@ -262,7 +262,7 @@ class ECPubKey():
         return self.valid
 
     def get_bytes(self):
-        assert(self.valid)
+        assert self.valid
         p = SECP256K1.affine(self.p)
         if p is None:
             return None
@@ -276,7 +276,7 @@ class ECPubKey():
 
         See https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm for the
         ECDSA verifier algorithm"""
-        assert(self.valid)
+        assert self.valid
 
         # Extract r and s from the DER formatted signature. Return false for
         # any DER encoding errors.
@@ -349,7 +349,7 @@ class ECKey():
 
     def set(self, secret, compressed):
         """Construct a private key object with given 32-byte secret and compressed flag."""
-        assert(len(secret) == 32)
+        assert len(secret) == 32
         secret = int.from_bytes(secret, 'big')
         self.valid = (secret > 0 and secret < SECP256K1_ORDER)
         if self.valid:
@@ -362,7 +362,7 @@ class ECKey():
 
     def get_bytes(self):
         """Retrieve the 32-byte representation of this key."""
-        assert(self.valid)
+        assert self.valid
         return self.secret.to_bytes(32, 'big')
 
     @property
@@ -375,7 +375,7 @@ class ECKey():
 
     def get_pubkey(self):
         """Compute an ECPubKey object for this secret key."""
-        assert(self.valid)
+        assert self.valid
         ret = ECPubKey()
         p = SECP256K1.mul([(SECP256K1_G, self.secret)])
         ret.p = p
@@ -388,7 +388,7 @@ class ECKey():
 
         See https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm for the
         ECDSA signer algorithm."""
-        assert(self.valid)
+        assert self.valid
         z = int.from_bytes(msg, 'big')
         # Note: no RFC6979 by default, but a simple random nonce (some tests rely on distinct transactions for the same operation)
         if rfc6979:

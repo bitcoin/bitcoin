@@ -35,7 +35,7 @@ protected:
 
 private:
     Ui::SignVerifyMessageDialog *ui;
-    WalletModel *model;
+    WalletModel* model{nullptr};
     const PlatformStyle *platformStyle;
 
 private Q_SLOTS:

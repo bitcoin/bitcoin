@@ -10,6 +10,9 @@
 #include <limits.h>
 
 #include "util.h"
+#if defined(SECP256K1_INT128_NATIVE)
+#include "int128_native.h"
+#endif
 
 /* This library, like most software, relies on a number of compiler implementation defined (but not undefined)
    behaviours. Although the behaviours we require are essentially universal we test them specifically here to
@@ -55,7 +58,7 @@ struct secp256k1_assumption_checker {
 
         /* To int64_t. */
         ((int64_t)(uint64_t)0xB123C456D789E012ULL == (int64_t)-(int64_t)0x4EDC3BA928761FEEULL) &&
-#if defined(SECP256K1_WIDEMUL_INT128)
+#if defined(SECP256K1_INT128_NATIVE)
         ((int64_t)(((uint128_t)0xA1234567B8901234ULL << 64) + 0xC5678901D2345678ULL) == (int64_t)-(int64_t)0x3A9876FE2DCBA988ULL) &&
         (((int64_t)(int128_t)(((uint128_t)0xB1C2D3E4F5A6B7C8ULL << 64) + 0xD9E0F1A2B3C4D5E6ULL)) == (int64_t)(uint64_t)0xD9E0F1A2B3C4D5E6ULL) &&
         (((int64_t)(int128_t)(((uint128_t)0xABCDEF0123456789ULL << 64) + 0x0123456789ABCDEFULL)) == (int64_t)(uint64_t)0x0123456789ABCDEFULL) &&
@@ -71,7 +74,7 @@ struct secp256k1_assumption_checker {
         ((((int16_t)0xE9AC) >> 4) == (int16_t)(uint16_t)0xFE9A) &&
         ((((int32_t)0x937C918A) >> 9) == (int32_t)(uint32_t)0xFFC9BE48) &&
         ((((int64_t)0xA8B72231DF9CF4B9ULL) >> 19) == (int64_t)(uint64_t)0xFFFFF516E4463BF3ULL) &&
-#if defined(SECP256K1_WIDEMUL_INT128)
+#if defined(SECP256K1_INT128_NATIVE)
         ((((int128_t)(((uint128_t)0xCD833A65684A0DBCULL << 64) + 0xB349312F71EA7637ULL)) >> 39) == (int128_t)(((uint128_t)0xFFFFFFFFFF9B0674ULL << 64) + 0xCAD0941B79669262ULL)) &&
 #endif
     1) * 2 - 1];

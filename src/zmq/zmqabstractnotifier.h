@@ -20,7 +20,7 @@ class CZMQAbstractNotifier
 public:
     static const int DEFAULT_ZMQ_SNDHWM {1000};
 
-    CZMQAbstractNotifier() : psocket(nullptr), outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) { }
+    CZMQAbstractNotifier() : outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) {}
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
@@ -57,7 +57,7 @@ public:
     virtual bool NotifyTransaction(const CTransaction &transaction);
 
 protected:
-    void *psocket;
+    void* psocket{nullptr};
     std::string type;
     std::string address;
     int outbound_message_high_water_mark; // aka SNDHWM

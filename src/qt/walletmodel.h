@@ -181,13 +181,13 @@ private:
     // (transaction fee, for example)
     OptionsModel *optionsModel;
 
-    AddressTableModel *addressTableModel;
-    TransactionTableModel *transactionTableModel;
-    RecentRequestsTableModel *recentRequestsTableModel;
+    AddressTableModel* addressTableModel{nullptr};
+    TransactionTableModel* transactionTableModel{nullptr};
+    RecentRequestsTableModel* recentRequestsTableModel{nullptr};
 
     // Cache some values to be able to detect changes
     interfaces::WalletBalances m_cached_balances;
-    EncryptionStatus cachedEncryptionStatus;
+    EncryptionStatus cachedEncryptionStatus{Unencrypted};
     QTimer* timer;
 
     // Block hash denoting when the last balance update was done.

@@ -14,26 +14,34 @@ struct bilingual_str;
 namespace wallet {
 class SQLiteDatabase;
 
+class SQLiteCursor : public DatabaseCursor
+{
+public:
+    sqlite3_stmt* m_cursor_stmt{nullptr};
+
+    explicit SQLiteCursor() {}
+    ~SQLiteCursor() override;
+
+    Status Next(DataStream& key, DataStream& value) override;
+};
+
 /** RAII class that provides access to a WalletDatabase */
 class SQLiteBatch : public DatabaseBatch
 {
 private:
     SQLiteDatabase& m_database;
 
-    bool m_cursor_init = false;
-
     sqlite3_stmt* m_read_stmt{nullptr};
     sqlite3_stmt* m_insert_stmt{nullptr};
     sqlite3_stmt* m_overwrite_stmt{nullptr};
     sqlite3_stmt* m_delete_stmt{nullptr};
-    sqlite3_stmt* m_cursor_stmt{nullptr};
 
     void SetupSQLStatements();
 
-    bool ReadKey(CDataStream&& key, CDataStream& value) override;
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true) override;
-    bool EraseKey(CDataStream&& key) override;
-    bool HasKey(CDataStream&& key) override;
+    bool ReadKey(DataStream&& key, DataStream& value) override;
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
+    bool EraseKey(DataStream&& key) override;
+    bool HasKey(DataStream&& key) override;
 
 public:
     explicit SQLiteBatch(SQLiteDatabase& database);
@@ -44,9 +52,7 @@ public:
 
     void Close() override;
 
-    bool StartCursor() override;
-    bool ReadAtCursor(CDataStream& key, CDataStream& value, bool& complete) override;
-    void CloseCursor() override;
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;

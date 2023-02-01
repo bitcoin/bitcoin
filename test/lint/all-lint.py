@@ -10,11 +10,12 @@
 from glob import glob
 from pathlib import Path
 from subprocess import run
+from sys import executable
 
 exit_code = 0
 mod_path = Path(__file__).parent
 for lint in glob(f"{mod_path}/lint-*.py"):
-    result = run([lint])
+    result = run([executable, lint])
     if result.returncode != 0:
         print(f"^---- failure generated from {lint.split('/')[-1]}")
         exit_code |= result.returncode

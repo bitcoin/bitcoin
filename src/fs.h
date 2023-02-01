@@ -35,7 +35,7 @@ public:
     // Allow path objects arguments for compatibility.
     path(std::filesystem::path path) : std::filesystem::path::path(std::move(path)) {}
     path& operator=(std::filesystem::path path) { std::filesystem::path::operator=(std::move(path)); return *this; }
-    path& operator/=(std::filesystem::path path) { std::filesystem::path::operator/=(std::move(path)); return *this; }
+    path& operator/=(std::filesystem::path path) { std::filesystem::path::operator/=(path); return *this; }
 
     // Allow literal string arguments, which are safe as long as the literals are ASCII.
     path(const char* c) : std::filesystem::path(c) {}

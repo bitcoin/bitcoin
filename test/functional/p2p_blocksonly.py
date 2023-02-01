@@ -20,8 +20,6 @@ class P2PBlocksOnly(BritanniaCoinTestFramework):
 
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
-        # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
-        self.miniwallet.rescan_utxos()
 
         self.blocksonly_mode_tests()
         self.blocks_relay_conn_tests()
@@ -104,7 +102,7 @@ class P2PBlocksOnly(BritanniaCoinTestFramework):
         self.nodes[0].setmocktime(int(time.time()) + 60)
 
         conn.sync_send_with_ping()
-        assert(int(txid, 16) not in conn.get_invs())
+        assert int(txid, 16) not in conn.get_invs()
 
     def check_p2p_inv_violation(self, peer):
         self.log.info("Check that tx-invs from P2P are rejected and result in disconnect")

@@ -33,7 +33,7 @@ private Q_SLOTS:
 
 private:
     Ui::ReceiveRequestDialog *ui;
-    WalletModel *model;
+    WalletModel* model{nullptr};
     SendCoinsRecipient info;
 };
 

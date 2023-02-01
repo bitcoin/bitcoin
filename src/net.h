@@ -39,6 +39,7 @@
 #include <memory>
 #include <optional>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 class AddrMan;
@@ -968,6 +969,12 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+
+    /**
+     Return reachable networks for which we have no addresses in addrman and therefore
+     may require loading fixed seeds.
+     */
+    std::unordered_set<Network> GetReachableEmptyNetworks() const;
 
     /**
      * Return vector of current BLOCK_RELAY peers.

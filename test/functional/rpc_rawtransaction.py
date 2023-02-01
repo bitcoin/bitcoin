@@ -16,7 +16,6 @@ from collections import OrderedDict
 from decimal import Decimal
 from itertools import product
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     CTransaction,
@@ -59,7 +58,6 @@ class RawTransactionsTest(BritanniaCoinTestFramework):
         self.add_wallet_options(parser, descriptors=False)
 
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [
             ["-txindex"],
@@ -77,9 +75,6 @@ class RawTransactionsTest(BritanniaCoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.log.info("Prepare some coins for multiple *rawtransaction commands")
-        self.generate(self.wallet, 10)
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         self.getrawtransaction_tests()
         self.getrawtransaction_verbosity_tests()
@@ -216,13 +211,13 @@ class RawTransactionsTest(BritanniaCoinTestFramework):
             if missing_fields:
                 raise AssertionError(f"fields {', '.join(missing_fields)} are not in transaction")
 
-            assert(len(gottx['vin']) > 0)
+            assert len(gottx['vin']) > 0
             if v == 1:
-                assert('fee' not in gottx)
-                assert('prevout' not in gottx['vin'][0])
+                assert 'fee' not in gottx
+                assert 'prevout' not in gottx['vin'][0]
             if v == 2:
-                assert(isinstance(gottx['fee'], Decimal))
-                assert('prevout' in gottx['vin'][0])
+                assert isinstance(gottx['fee'], Decimal)
+                assert 'prevout' in gottx['vin'][0]
                 prevout = gottx['vin'][0]['prevout']
                 script_pub_key = prevout['scriptPubKey']
 
@@ -235,11 +230,11 @@ class RawTransactionsTest(BritanniaCoinTestFramework):
                     raise AssertionError(f"fields {', '.join(missing_fields)} are not in transaction")
 
         # check verbosity 2 without blockhash but with txindex
-        assert('fee' in self.nodes[0].getrawtransaction(txid=tx, verbosity=2))
+        assert 'fee' in self.nodes[0].getrawtransaction(txid=tx, verbosity=2)
         # check that coinbase has no fee or does not throw any errors for verbosity 2
         coin_base = self.nodes[1].getblock(block1)['tx'][0]
         gottx = self.nodes[1].getrawtransaction(txid=coin_base, verbosity=2, blockhash=block1)
-        assert('fee' not in gottx)
+        assert 'fee' not in gottx
 
     def createrawtransaction_tests(self):
         self.log.info("Test createrawtransaction")

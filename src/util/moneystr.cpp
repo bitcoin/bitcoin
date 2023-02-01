@@ -34,7 +34,7 @@ std::string FormatMoney(const CAmount n)
         str.erase(str.size()-nTrim, nTrim);
 
     if (n < 0)
-        str.insert((unsigned int)0, 1, '-');
+        str.insert(uint32_t{0}, 1, '-');
     return str;
 }
 
