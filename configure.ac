@@ -207,6 +207,12 @@ AC_ARG_ENABLE([fuzz],
     [enable_fuzz=$enableval],
     [enable_fuzz=no])
 
+AC_ARG_ENABLE([proto-fuzz],
+    AS_HELP_STRING([--enable-proto-fuzz],
+    [build for proto fuzzing (default no). enabling this will disable all other targets and override --{enable,disable}-fuzz-binary]),
+    [enable_proto_fuzz=$enableval],
+    [enable_proto_fuzz=no])
+
 AC_ARG_ENABLE([fuzz-binary],
     AS_HELP_STRING([--enable-fuzz-binary],
     [enable building of fuzz binary (default yes).]),
@@ -396,6 +402,20 @@ fi
 if test "$enable_lto" = "yes"; then
   AX_CHECK_COMPILE_FLAG([-flto], [LTO_CXXFLAGS="$LTO_CXXFLAGS -flto"], [AC_MSG_ERROR([compile failed with -flto])], [$CXXFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-flto], [LTO_LDFLAGS="$LTO_LDFLAGS -flto"], [AC_MSG_ERROR([link failed with -flto])], [$CXXFLAG_WERROR])
+fi
+
+if test "$enable_proto_fuzz" = "yes"; then
+  dnl Check that required libraries for proto fuzzing can be found.
+  dnl libprotobuf, libprotobuf-mutator-libfuzzer and libprotobuf-mutator are required.
+  AX_CHECK_LINK_FLAG(
+    [-lprotobuf], [PROTO_FUZZ_LDFLAGS="$PROTO_FUZZ_LDFLAGS -lprotobuf"],
+    [AC_MSG_ERROR([linker did not accept requested flags])], [])
+  AX_CHECK_LINK_FLAG(
+    [-lprotobuf-mutator-libfuzzer], [PROTO_FUZZ_LDFLAGS="$PROTO_FUZZ_LDFLAGS -lprotobuf-mutator-libfuzzer"],
+    [AC_MSG_ERROR([linker did not accept requested flags])], [])
+  AX_CHECK_LINK_FLAG(
+    [-lprotobuf-mutator], [PROTO_FUZZ_LDFLAGS="$PROTO_FUZZ_LDFLAGS -lprotobuf-mutator"],
+    [AC_MSG_ERROR([linker did not accept requested flags])], [])
 fi
 
 if test "$use_sanitizers" != ""; then
@@ -1883,6 +1903,7 @@ AM_CONDITIONAL([USE_SQLITE], [test "$use_sqlite" = "yes"])
 AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
+AM_CONDITIONAL([ENABLE_PROTO_FUZZ], [test "$enable_proto_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
 AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
@@ -1934,6 +1955,7 @@ AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 AC_SUBST(BITCOIN_MP_NODE_NAME)
 AC_SUBST(BITCOIN_MP_GUI_NAME)
 
+AC_SUBST(PROTO_FUZZ_LDFLAGS)
 AC_SUBST(RELDFLAGS)
 AC_SUBST(CORE_LDFLAGS)
 AC_SUBST(CORE_CPPFLAGS)
