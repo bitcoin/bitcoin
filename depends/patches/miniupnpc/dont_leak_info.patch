@@ -4,10 +4,10 @@ Date:   Thu Nov 19 10:51:19 2020 +0800
 
     Don't leak OS and miniupnpc version info in User-Agent
 
-diff --git a//minisoap.c b/minisoap.c
+diff --git a/miniupnpc/src/minisoap.c b/miniupnpc/src/minisoap.c
 index 7860667..775580b 100644
---- a/minisoap.c
-+++ b/minisoap.c
+--- a/src/minisoap.c
++++ b/src/minisoap.c
 @@ -90,7 +90,7 @@ int soapPostSubmit(SOCKET fd,
  	headerssize = snprintf(headerbuf, sizeof(headerbuf),
                         "POST %s HTTP/%s\r\n"
@@ -17,10 +17,10 @@ index 7860667..775580b 100644
  	                   "Content-Length: %d\r\n"
  					   "Content-Type: text/xml\r\n"
  					   "SOAPAction: \"%s\"\r\n"
-diff --git a/miniwget.c b/miniwget.c
+diff --git a/miniupnpc/src/miniwget.c b/miniupnpc/src/miniwget.c
 index d5b7970..05aeb9c 100644
---- a/miniwget.c
-+++ b/miniwget.c
+--- a/src/miniwget.c
++++ b/src/miniwget.c
 @@ -444,7 +444,7 @@ miniwget3(const char * host,
                   "GET %s HTTP/%s\r\n"
  			     "Host: %s:%d\r\n"
