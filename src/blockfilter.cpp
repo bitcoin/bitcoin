@@ -43,16 +43,10 @@ void GCSFilter::QuerySet::sort()
     std::sort(m_hashed_elements.begin(), m_hashed_elements.end());
 }
 
-std::vector<uint64_t> GCSFilter::QuerySet::sorted_and_ranged(const uint64_t& F) const
+const std::vector<uint64_t>& GCSFilter::QuerySet::sorted_elements() const
 {
-    std::vector<uint64_t> ranged_elements;
-    ranged_elements.reserve(m_hashed_elements.size());
-    for (const uint64_t& hashed_element : m_hashed_elements) {
-        ranged_elements.push_back(RangeHashedElement(hashed_element, F));
-    }
-    return ranged_elements;
+    return m_hashed_elements;
 }
-
 
 uint64_t GCSFilter::HashElement(const Element& element) const
 {
@@ -162,9 +156,9 @@ bool GCSFilter::MatchInternal(const uint64_t* element_hashes, size_t size) const
         while (true) {
             if (hashes_index == size) {
                 return false;
-            } else if (element_hashes[hashes_index] == value) {
+            } else if (RangeHashedElement(element_hashes[hashes_index]) == value) {
                 return true;
-            } else if (element_hashes[hashes_index] > value) {
+            } else if (RangeHashedElement(element_hashes[hashes_index]) > value) {
                 break;
             }
 
@@ -177,7 +171,7 @@ bool GCSFilter::MatchInternal(const uint64_t* element_hashes, size_t size) const
 
 bool GCSFilter::Match(const Element& element) const
 {
-    uint64_t query = RangeHashedElement(HashElement(element));
+    uint64_t query = HashElement(element);
     return MatchInternal(&query, 1);
 }
 
@@ -186,7 +180,7 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
     std::vector<uint64_t> hashed_elements;
     hashed_elements.reserve(elements.size());
     for (const Element& element : elements) {
-        hashed_elements.push_back(RangeHashedElement(HashElement(element)));
+        hashed_elements.push_back(HashElement(element));
     }
     std::sort(hashed_elements.begin(), hashed_elements.end());
     return MatchInternal(hashed_elements.data(), hashed_elements.size());
@@ -197,7 +191,7 @@ bool GCSFilter::MatchAny(const QuerySet& query_set) const
     assert(query_set.m_params.m_siphash_k0 == m_params.m_siphash_k0);
     assert(query_set.m_params.m_siphash_k1 == m_params.m_siphash_k1);
 
-    const std::vector<uint64_t> queries = query_set.sorted_and_ranged(m_F);
+    const std::vector<uint64_t> queries = query_set.sorted_elements();
     return MatchInternal(queries.data(), queries.size());
 }
 
