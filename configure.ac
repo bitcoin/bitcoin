@@ -1472,6 +1472,9 @@ if test "$use_boost" = "yes"; then
     AC_MSG_ERROR([only libbitcoinconsensus can be built without Boost])
   fi
 
+  dnl we don't have a user config
+  BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_USER_CONFIG"
+
   dnl we don't use multi_index serialization
   BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_MULTI_INDEX_DISABLE_SERIALIZATION"
 
