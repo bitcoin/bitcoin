@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+import "p2p.proto";
+
+package version_fuzz;
+
+message VersionHandshake {
+  required common_fuzz.Connection peer = 1;
+  required common_fuzz.ServiceFlags our_flags = 2;
+  repeated common_fuzz.HandshakeMsg msgs = 3;
+}

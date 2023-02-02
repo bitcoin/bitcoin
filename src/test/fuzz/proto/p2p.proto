@@ -1,0 +1,93 @@
+syntax = "proto2";
+
+package common_fuzz;
+
+message ServiceFlags {
+  required bool network = 1;
+  required bool network_limited = 2;
+  required bool witness = 3;
+  required bool compact_filters = 4;
+  required bool bloom = 5;
+
+  optional uint64 fuzzed_bits = 6;
+}
+
+enum ConnectionType {
+  INBOUND = 1;
+  OUTBOUND_FULL_RELAY = 2;
+  MANUAL = 3;
+  FEELER = 4;
+  BLOCK_RELAY = 5;
+  ADDR_FETCH = 6;
+  INBOUND_ONION = 7;
+}
+
+message NetPermissionFlags {
+  required bool bloom_filter = 1;
+  required bool relay = 2;
+  required bool force_relay = 3;
+  required bool download = 4;
+  required bool noban = 5;
+  required bool mempool = 6;
+  required bool addr = 7;
+  required bool implicit = 8;
+}
+
+message Address {
+  enum Network {
+    IPv4 = 1;
+    IPv6 = 2;
+    TOR = 3;
+    I2P = 4;
+    CJDNS = 5;
+  }
+
+  required Network network = 1;
+  required bytes addr_bytes = 2;
+}
+
+message Version {
+  required int32 version = 1;
+  required ServiceFlags services = 2;
+  required int64 time = 3;
+  // 8 ignored bytes
+  required Address their_addr = 4;
+  // 26 ignored bytes
+  required uint64 nonce = 5;
+  required string sub_version = 6;
+  required int32 starting_height = 7;
+  required bool tx_relay = 8;
+}
+message SendCmpct {
+  required bool high_bw = 1;
+  required uint64 version = 2;
+}
+message SendTxRcncl {
+  required uint32 version = 1;
+  required uint64 salt = 2;
+}
+message Empty {}
+
+message HandshakeMsg {
+  optional int64 mock_time = 1;
+  oneof msg {
+    SendCmpct send_cmpct = 2;
+    Empty sendaddrv2 = 3;
+    SendTxRcncl sendtxrcncl = 4;
+    Empty wtxidrelay = 5;
+    Empty verack = 6;
+    Version version = 7;
+  }
+}
+
+message Connection {
+  required bytes socket_data_provider = 1;
+  required Address addr = 2;
+  required uint64 keyed_net_group = 3;
+  required uint64 local_host_nonce = 4;
+  required Address addr_bind = 5;
+  required ConnectionType conn_type = 6;
+  // Options
+  optional NetPermissionFlags perm_flags = 7;
+  optional bool prefer_evict = 8;
+}

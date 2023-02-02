@@ -6,6 +6,7 @@ if ENABLE_FUZZ_BINARY
 noinst_PROGRAMS += test/fuzz/fuzz
 if ENABLE_PROTO_FUZZ
 noinst_PROGRAMS += test/fuzz/proto/atmp
+noinst_PROGRAMS += test/fuzz/proto/version
 endif
 endif
 
@@ -18,6 +19,7 @@ TEST_BINARY=test/test_bitcoin$(EXEEXT)
 FUZZ_BINARY=test/fuzz/fuzz$(EXEEXT)
 if ENABLE_PROTO_FUZZ
 PROTO_FUZZ_ATMP_BINARY=test/fuzz/proto/atmp$(EXEEXT)
+PROTO_FUZZ_VERSION_BINARY=test/fuzz/proto/version$(EXEEXT)
 endif
 
 JSON_TEST_FILES = \
@@ -251,9 +253,11 @@ PROTO_FUZZ_SUITE_LD_COMMON = \
  $(EVENT_PTHREADS_LIBS)
 
 COMMON_FUZZ_SRC = \
+  test/fuzz/util/net.cpp \
   test/fuzz/proto/convert.cpp \
   test/fuzz/proto/transaction.pb.cc \
-  test/fuzz/proto/mempool_options.pb.cc
+  test/fuzz/proto/mempool_options.pb.cc \
+  test/fuzz/proto/p2p.pb.cc
 
 test_fuzz_proto_atmp_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 test_fuzz_proto_atmp_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -263,6 +267,15 @@ test_fuzz_proto_atmp_SOURCES = \
  $(COMMON_FUZZ_SRC) \
  test/fuzz/proto/atmp.cpp \
  test/fuzz/proto/atmp.pb.cc 
+
+test_fuzz_proto_version_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+test_fuzz_proto_version_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_proto_version_LDADD = $(PROTO_FUZZ_SUITE_LD_COMMON)
+test_fuzz_proto_version_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) $(RUNTIME_LDFLAGS) $(PROTO_FUZZ_LDFLAGS)
+test_fuzz_proto_version_SOURCES = \
+ $(COMMON_FUZZ_SRC) \
+ test/fuzz/proto/version.cpp \
+ test/fuzz/proto/version.pb.cc
 endif 
 
 test_fuzz_fuzz_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
