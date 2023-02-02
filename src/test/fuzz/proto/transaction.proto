@@ -1,0 +1,37 @@
+syntax = "proto2";
+
+package common_fuzz;
+
+message PrevOut {
+  required string txid = 1;
+  required uint32 n = 2;
+}
+
+message Script {
+  required bytes raw = 1;
+}
+
+message TxInput {
+  required PrevOut prev_out = 1;
+  required Script script_sig = 2;
+  required uint32 sequence = 3;
+  repeated bytes witness_stack = 4;
+}
+
+message TxOutput {
+  required int64 value = 1;
+  required Script script_pub_key = 2;
+}
+
+message Transaction {
+  required string txid = 1;
+
+  repeated TxInput inputs = 2;
+  repeated TxOutput outputs = 3;
+  required int32 version = 4;
+  required uint32 lock_time = 5;
+}
+
+message Package {
+  repeated Transaction transactions = 1;
+}

@@ -1,0 +1,23 @@
+syntax = "proto2";
+
+import "transaction.proto";
+import "mempool_options.proto";
+
+package atmp_fuzz;
+
+// Describes a ATMP event.
+message AcceptToMemoryPool {
+  oneof tx_or_pkg {
+    common_fuzz.Transaction transaction = 1;
+    common_fuzz.Package pkg = 2;
+  }
+  optional int64 mock_time = 3;
+  required bool rolling_fee_update = 4;
+  optional int64 prioritise_delta = 5;
+  required bool bypass_limits = 6;
+}
+
+message Mempool {
+  repeated AcceptToMemoryPool atmp_events = 1;
+  required common_fuzz.MempoolOptions options = 2;
+}

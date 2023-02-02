@@ -1,0 +1,23 @@
+syntax = "proto2";
+
+package common_fuzz;
+
+message MempoolLimits {
+  optional uint32 ancestor_count_limit = 1;
+  optional uint32 ancestor_size_limit = 2;
+  optional uint32 descendant_count_limit = 3;
+  optional uint32 descendant_size_limit = 4;
+}
+
+message MempoolOptions {
+  optional int64 max_size_bytes = 1;
+  optional uint32 expiry_hours = 2;
+  optional int64 incremental_relay_feerate = 3;
+  optional int64 min_relay_feerate = 4;
+  optional int64 dust_relay_feerate = 5;
+  optional int32 max_datacarrier_bytes = 6;
+  optional bool permit_bare_multisig = 7;
+  optional bool require_standard = 8;
+  optional bool full_rbf = 9;
+  required MempoolLimits limits = 10;
+}
