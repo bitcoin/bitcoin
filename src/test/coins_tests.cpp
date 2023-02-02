@@ -131,8 +131,8 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
     std::map<COutPoint, Coin> result;
 
     // The cache stack.
-    std::vector<CCoinsViewCacheTest*> stack; // A stack of CCoinsViewCaches on top.
-    stack.push_back(new CCoinsViewCacheTest(base)); // Start with one cache.
+    std::vector<std::unique_ptr<CCoinsViewCacheTest>> stack; // A stack of CCoinsViewCaches on top.
+    stack.push_back(std::make_unique<CCoinsViewCacheTest>(base)); // Start with one cache.
 
     // Use a limited set of random transaction ids, so we do test overwriting entries.
     std::vector<uint256> txids;
@@ -218,7 +218,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                     found_an_entry = true;
                 }
             }
-            for (const CCoinsViewCacheTest *test : stack) {
+            for (const auto& test : stack) {
                 test->SelfTest();
             }
         }
@@ -241,29 +241,22 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 bool should_erase = InsecureRandRange(4) < 3;
                 BOOST_CHECK(should_erase ? stack.back()->Flush() : stack.back()->Sync());
                 flushed_without_erase |= !should_erase;
-                delete stack.back();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && InsecureRandBool())) {
                 //Add a new cache
                 CCoinsView* tip = base;
                 if (stack.size() > 0) {
-                    tip = stack.back();
+                    tip = stack.back().get();
                 } else {
                     removed_all_caches = true;
                 }
-                stack.push_back(new CCoinsViewCacheTest(tip));
+                stack.push_back(std::make_unique<CCoinsViewCacheTest>(tip));
                 if (stack.size() == 4) {
                     reached_4_caches = true;
                 }
             }
         }
-    }
-
-    // Clean up the stack.
-    while (stack.size() > 0) {
-        delete stack.back();
-        stack.pop_back();
     }
 
     // Verify coverage.
@@ -321,8 +314,8 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
     // The cache stack.
     CCoinsViewTest base; // A CCoinsViewTest at the bottom.
-    std::vector<CCoinsViewCacheTest*> stack; // A stack of CCoinsViewCaches on top.
-    stack.push_back(new CCoinsViewCacheTest(&base)); // Start with one cache.
+    std::vector<std::unique_ptr<CCoinsViewCacheTest>> stack; // A stack of CCoinsViewCaches on top.
+    stack.push_back(std::make_unique<CCoinsViewCacheTest>(&base)); // Start with one cache.
 
     // Track the txids we've used in various sets
     std::set<COutPoint> coinbase_coins;
@@ -487,23 +480,16 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && InsecureRandBool() == 0) {
                 BOOST_CHECK(stack.back()->Flush());
-                delete stack.back();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && InsecureRandBool())) {
                 CCoinsView* tip = &base;
                 if (stack.size() > 0) {
-                    tip = stack.back();
+                    tip = stack.back().get();
                 }
-                stack.push_back(new CCoinsViewCacheTest(tip));
+                stack.push_back(std::make_unique<CCoinsViewCacheTest>(tip));
             }
         }
-    }
-
-    // Clean up the stack.
-    while (stack.size() > 0) {
-        delete stack.back();
-        stack.pop_back();
     }
 
     // Verify coverage.
@@ -918,7 +904,7 @@ Coin MakeCoin()
 void TestFlushBehavior(
     CCoinsViewCacheTest* view,
     CCoinsViewDB& base,
-    std::vector<CCoinsViewCacheTest*>& all_caches,
+    std::vector<std::unique_ptr<CCoinsViewCacheTest>>& all_caches,
     bool do_erasing_flush)
 {
     CAmount value;
@@ -928,7 +914,7 @@ void TestFlushBehavior(
     auto flush_all = [&all_caches](bool erase) {
         // Flush in reverse order to ensure that flushes happen from children up.
         for (auto i = all_caches.rbegin(); i != all_caches.rend(); ++i) {
-            auto cache = *i;
+            auto& cache = *i;
             // hashBlock must be filled before flushing to disk; value is
             // unimportant here. This is normally done during connect/disconnect block.
             cache->SetBestBlock(InsecureRand256());
@@ -1079,19 +1065,13 @@ BOOST_AUTO_TEST_CASE(ccoins_flush_behavior)
 {
     // Create two in-memory caches atop a leveldb view.
     CCoinsViewDB base{"test", /*nCacheSize=*/ 1 << 23, /*fMemory=*/ true, /*fWipe=*/ false};
-    std::vector<CCoinsViewCacheTest*> caches;
-    caches.push_back(new CCoinsViewCacheTest(&base));
-    caches.push_back(new CCoinsViewCacheTest(caches.back()));
+    std::vector<std::unique_ptr<CCoinsViewCacheTest>> caches;
+    caches.push_back(std::make_unique<CCoinsViewCacheTest>(&base));
+    caches.push_back(std::make_unique<CCoinsViewCacheTest>(caches.back().get()));
 
-    for (CCoinsViewCacheTest* view : caches) {
-        TestFlushBehavior(view, base, caches, /*do_erasing_flush=*/ false);
-        TestFlushBehavior(view, base, caches, /*do_erasing_flush=*/ true);
-    }
-
-    // Clean up the caches.
-    while (caches.size() > 0) {
-        delete caches.back();
-        caches.pop_back();
+    for (const auto& view : caches) {
+        TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/false);
+        TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/true);
     }
 }
 
