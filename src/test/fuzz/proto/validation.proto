@@ -1,0 +1,32 @@
+syntax = "proto2";
+
+import "transaction.proto";
+import "block.proto";
+import "mempool_options.proto";
+
+package validation_fuzz;
+
+message ProcessNewBlock {
+  required common_fuzz.Block block = 1;
+  required bool force = 2;
+  required bool min_pow_checked = 3;
+}
+
+message ProcessNewHeaders {
+  repeated common_fuzz.BlockHeader headers = 1;
+  required bool min_pow_checked = 2;
+}
+
+message ValidationAction {
+  optional int64 mock_time = 1;
+  oneof action {
+    ProcessNewBlock process_new_block = 2;
+    ProcessNewHeaders process_new_headers = 3;
+	common_fuzz.Transaction process_transaction = 4;
+  }
+}
+
+message FuzzValidation {
+  optional common_fuzz.MempoolOptions mempool_options = 1;
+  repeated ValidationAction actions = 2;
+}

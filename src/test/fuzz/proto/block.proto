@@ -1,0 +1,23 @@
+syntax = "proto2";
+
+import "transaction.proto";
+
+package common_fuzz;
+
+message BlockHeader {
+  required int32 version = 1; 
+  required string hash_prev_block = 2;
+  // Filled in by post processing
+  required string merkle_root = 3;
+  required uint32 time = 4;
+  required uint32 bits = 5;
+  required uint32 nonce = 6;
+
+  // Filled in by post processing
+  required string hash = 7;
+}
+
+message Block {
+  required BlockHeader header = 1;
+  repeated common_fuzz.Transaction transactions = 2;
+}

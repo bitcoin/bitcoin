@@ -2,10 +2,12 @@
 
 #include <net.h>
 #include <node/connection_types.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <txmempool.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/proto/block.pb.h>
 #include <test/fuzz/proto/mempool_options.pb.h>
 #include <test/fuzz/proto/p2p.pb.h>
 #include <test/fuzz/proto/transaction.pb.h>
@@ -201,4 +203,29 @@ std::tuple<std::string, std::vector<uint8_t>> ConvertHandshakeMsg(const common_f
     if (stream.size() > 0)
         std::memcpy(data.data(), (uint8_t*)stream.data(), stream.size());
     return {type, std::move(data)};
+}
+
+CBlockHeader ConvertHeader(const common_fuzz::BlockHeader& proto_header)
+{
+    CBlockHeader header;
+    header.nVersion = proto_header.version();
+    auto hex = proto_header.hash_prev_block();
+    hex.resize(64);
+    header.hashPrevBlock = uint256S(hex);
+    hex = proto_header.merkle_root();
+    hex.resize(64);
+    header.hashMerkleRoot = uint256S(hex);
+    header.nTime = proto_header.time();
+    header.nBits = proto_header.bits();
+    header.nNonce = proto_header.nonce();
+    return header;
+}
+
+std::shared_ptr<CBlock> ConvertBlock(const common_fuzz::Block& block)
+{
+    auto block_ref = std::make_shared<CBlock>(ConvertHeader(block.header()));
+    for (auto tx : block.transactions()) {
+        block_ref->vtx.push_back(ConvertTransaction(tx));
+    }
+    return block_ref;
 }
