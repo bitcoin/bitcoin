@@ -6,8 +6,7 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/lazy_g1point.h>
-#include <bls/bls384_256.h> // must include this before bls/bls.h
-#include <bls/bls.h>
+#include <bls/bls384_256.h>
 
 template <typename T>
 LazyG1Point<T>::LazyG1Point(const typename T::Point& base, const typename T::Scalar& exp): m_base(base.m_p), m_exp(exp.m_fr)

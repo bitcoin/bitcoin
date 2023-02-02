@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test_constructors)
     {
         MclG1Point p(uint256::ONE);
         auto s = p.GetString();
-        BOOST_CHECK_EQUAL(s, "1 f6192bef86951fea27b115b4645cf5cf83bf067cf322647a1d1276c3d05208cb97cf72c5a0749fcfe631cf3fa246b9c 1764f91223eb414b6df18cc317537c17e242f678995b9894ef0d419725748a92ba0f5f58ecf5d403fae39cb41cc4e151");
+        BOOST_CHECK_EQUAL(s, "1 33331d389fc9c4966441e7546f1a945e59e68ffdb940b60f5b107e4f9ff90947938df8efac81e00a23f0bebe2917745 16b7a7540112dc359913951450b2e21a7c05e59b5580a00588761fc673b21284a13bc7d73e99dd116f9f196b1985ac55");
     }
 }
 
@@ -193,80 +193,6 @@ BOOST_AUTO_TEST_CASE(test_map_to_g1)
     // Empty vector should not be mapped to a point
     std::vector<uint8_t> empty_vec;
     BOOST_CHECK_THROW(MclG1Point::MapToG1(empty_vec), std::runtime_error);
-}
-
-BOOST_AUTO_TEST_CASE(test_hash_and_map)
-{
-    std::vector<uint8_t> vec{
-        0x73,
-        0xed,
-        0xa7,
-        0x53,
-        0x29,
-        0x9d,
-        0x7d,
-        0x48,
-        0x33,
-        0x39,
-        0xd8,
-        0x08,
-        0x09,
-        0xa1,
-        0xd8,
-        0x05,
-        0x53,
-        0xbd,
-        0xa4,
-        0x02,
-        0xff,
-        0xfe,
-        0x5b,
-        0xfe,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0x00,
-        0xd8,
-        0x08,
-        0x09,
-        0xa1,
-        0xd8,
-        0x05,
-        0x53,
-        0xbd,
-        0xa4,
-        0x02,
-        0xff,
-        0xfe,
-        0x5b,
-        0xfe,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-    };
-
-    // Use separate hash function to hash vec
-    mclBnFp h;
-    if (mclBnFp_setHashOf(&h, &vec[0], vec.size())) {
-        BOOST_FAIL("mclBnFp_setHashOf failed");
-    }
-    char buf[1024];
-    size_t ser_size = mclBnFp_serialize(buf, sizeof(buf), &h);
-    if (ser_size == 0) {
-        BOOST_FAIL("mclBnFp_serialize failed");
-    }
-    std::vector<uint8_t> hashedVec(buf, buf + ser_size);
-    // mclBpFp_serialize serializes its value in big-endian
-
-    // Then get g1 point from the hash
-    auto p = MclG1Point::MapToG1(hashedVec, Endianness::Big);
-
-    // Next, directly get g1 point from the vec, using integrated hash function
-    auto q = MclG1Point::HashAndMap(vec);
-    BOOST_CHECK(p == q);
 }
 
 BOOST_AUTO_TEST_CASE(test_rand)

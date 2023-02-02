@@ -424,7 +424,7 @@ bool RangeProof(
     auto y = MclScalar::Rand(true);
     auto z = MclScalar::Rand(true);
 
-    // Define vector ploynomials l(x), r(x) and t(x)
+    // Define vector polynomials l(x), r(x) and t(x)
     // t(x) = <l(x),r(x)> = <l0, r0> + (<l1, r0> + <l0, r1>) * x + <l1, r1> * x^2
     auto y_n = Elements<MclScalar>::FirstNPow(y, n);
     auto l0 = al - one_n * z;
