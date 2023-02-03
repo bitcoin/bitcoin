@@ -283,7 +283,7 @@ private:
     bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType, const Consensus::Params& params) LOCKS_EXCLUDED(cs_inputReqests);
     void TrySignInstantSendLock(const CTransaction& tx) LOCKS_EXCLUDED(cs_creating);
 
-    void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock);
+    void ProcessMessageInstantSendLock(const CNode& pfrom, const CInstantSendLockPtr& islock);
     bool ProcessPendingInstantSendLocks();
     bool ProcessPendingInstantSendLocks(bool deterministic) LOCKS_EXCLUDED(cs_pendingLocks);
 
@@ -316,7 +316,7 @@ public:
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs_inputReqests, cs_creating);
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
 
     void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_pendingLocks);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);

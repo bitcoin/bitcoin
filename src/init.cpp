@@ -1779,7 +1779,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     ChainstateManager& chainman = *Assert(node.chainman);
 
     node.peer_logic.reset(new PeerLogicValidation(
-        node.connman.get(), node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
+        *node.connman, node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
     ));
     RegisterValidationInterface(node.peer_logic.get());
 

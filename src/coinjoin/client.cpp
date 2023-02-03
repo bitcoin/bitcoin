@@ -134,7 +134,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream&
     }
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -153,12 +153,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, std::string_view msg_ty
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, msg_type, vRecv, connman);
+            session.ProcessMessage(peer, connman, msg_type, vRecv);
         }
     }
 }
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;

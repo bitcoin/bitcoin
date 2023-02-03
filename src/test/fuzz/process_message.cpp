@@ -36,8 +36,6 @@
 #include <string>
 #include <vector>
 
-bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, LLMQContext& llmq_ctx, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc);
-
 namespace {
 const TestingSetup* g_setup;
 } // namespace
@@ -72,7 +70,7 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
     p2p_node.SetSendVersion(PROTOCOL_VERSION);
     g_setup->m_node.peer_logic->InitializeNode(&p2p_node);
     try {
-        (void)ProcessMessage(&p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), *g_setup->m_node.chainman, *g_setup->m_node.mempool, *g_setup->m_node.llmq_ctx, g_setup->m_node.connman.get(), g_setup->m_node.banman.get(), std::atomic<bool>{false});
+        g_setup->m_node.peer_logic->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), std::atomic<bool>{false});
     } catch (const std::ios_base::failure& e) {
     }
     SyncWithValidationInterfaceQueue();

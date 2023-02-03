@@ -89,7 +89,7 @@ public:
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
     CChainLockSig GetBestChainLock() const;
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip();
