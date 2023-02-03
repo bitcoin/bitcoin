@@ -442,7 +442,7 @@ class CScript(bytes):
     __slots__ = ()
 
     @classmethod
-    def __coerce_instance(cls, other):
+    def __coerce_instance(cls, other) -> bytes:
         # Coerce other into bytes
         if isinstance(other, CScriptOp):
             other = bytes([other])
@@ -461,10 +461,6 @@ class CScript(bytes):
         elif isinstance(other, (bytes, bytearray)):
             other = CScriptOp.encode_op_pushdata(other)
         return other
-
-    def __add__(self, other):
-        # add makes no sense for a CScript()
-        raise NotImplementedError
 
     def join(self, iterable):
         # join makes no sense for a CScript()
@@ -924,6 +920,14 @@ class TaprootInfo(namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negfla
     def __hash__(self):
         return hash(str(self))
 
+    def controlblock_for_script_spend(self, script_name: str) -> bytes:
+        leaf = self.leaves[script_name]
+        return (
+            bytes([leaf.version + self.negflag]) +
+            self.internal_pubkey +
+            leaf.merklebranch
+        )
+
 # A TaprootLeafInfo object has the following fields:
 # - script: the leaf script (CScript or bytes)
 # - version: the leaf version (0xc0 for BIP342 tapscript)
@@ -984,7 +988,7 @@ def pprint_tx(tx: CTransaction, should_print: bool = True) -> str:
         for j, item in enumerate(wit.scriptWitness.stack):
             if type(item) is bytes:
                 scriptstr = repr(CScript([item]))
-            elif type(item) is CScript:
+            elif type(item) in {CScript, CScriptNum}:
                 scriptstr = repr(item)
             else:
                 raise NotImplementedError
