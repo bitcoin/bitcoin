@@ -232,17 +232,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     BOOST_CHECK_EQUAL(result5->GetSelectedValue(), 10 * CENT);
     expected_result.Clear();
 
-    // Negative effective value
-    // Select 10 Cent but have 1 Cent not be possible because too small
-    add_coin(5 * CENT, 5, expected_result);
-    add_coin(3 * CENT, 3, expected_result);
-    add_coin(2 * CENT, 2, expected_result);
-    const auto result6 = SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 5000);
-    BOOST_CHECK(result6);
-    BOOST_CHECK_EQUAL(result6->GetSelectedValue(), 10 * CENT);
-    // FIXME: this test is redundant with the above, because 1 Cent is selected, not "too small"
-    // BOOST_CHECK(EquivalentResult(expected_result, *result));
-
     // Select 0.25 Cent, not possible
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.25 * CENT, 0.5 * CENT));
     expected_result.Clear();
