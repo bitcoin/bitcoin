@@ -13,20 +13,12 @@
 #include <key_io.h>
 #include <netaddress.h>
 #include <pubkey.h>
+#include <tinyformat.h>
 #include <univalue.h>
 
 class CBlockIndex;
 class CCoinsViewCache;
 class CValidationState;
-
-struct maybe_error{
-    bool did_err{false};
-    ValidationInvalidReason reason{ValidationInvalidReason::CONSENSUS};
-    std::string_view error_str;
-
-    constexpr maybe_error() = default;
-    constexpr maybe_error(ValidationInvalidReason reasonIn, std::string_view err): did_err(true), reason(reasonIn), error_str(err) {};
-};
 
 class CProRegTx
 {

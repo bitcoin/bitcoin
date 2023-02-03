@@ -5,13 +5,24 @@
 #ifndef BITCOIN_EVO_SPECIALTX_H
 #define BITCOIN_EVO_SPECIALTX_H
 
+#include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
 #include <version.h>
 
+#include <string_view>
 #include <vector>
+
+struct maybe_error {
+    bool did_err{false};
+    ValidationInvalidReason reason{ValidationInvalidReason::CONSENSUS};
+    std::string_view error_str;
+
+    constexpr maybe_error() = default;
+    constexpr maybe_error(ValidationInvalidReason reasonIn, std::string_view err): did_err(true), reason(reasonIn), error_str(err) {};
+};
 
 template <typename T>
 inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)

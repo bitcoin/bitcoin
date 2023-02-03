@@ -13,6 +13,9 @@ class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
 class CValidationState;
+namespace llmq {
+class CQuorumBlockProcessor;
+} // namespace llmq
 
 extern CCriticalSection cs_main;
 
