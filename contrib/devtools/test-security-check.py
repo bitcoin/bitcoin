@@ -59,17 +59,22 @@ class TestSecurityChecks(unittest.TestCase):
         arch = get_arch(cxx, source, executable)
 
         if arch == lief.ARCHITECTURES.X86:
-            pass_flags = ['-Wl,-znoexecstack', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full']
+            pass_flags = ['-D_FORTIFY_SOURCE=3', '-Wl,-znoexecstack', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full']
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-zexecstack']), (1, executable + ': failed NX'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-no-pie','-fno-PIE']), (1, executable + ': failed PIE'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-znorelro']), (1, executable + ': failed RELRO'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-z,noseparate-code']), (1, executable + ': failed SEPARATE_CODE'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-fcf-protection=none']), (1, executable + ': failed CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-U_FORTIFY_SOURCE']), (1, executable + ': failed FORTIFY'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags), (0, ''))
         else:
-            pass_flags = ['-Wl,-znoexecstack', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE', '-Wl,-z,separate-code']
+            pass_flags = ['-D_FORTIFY_SOURCE=3', '-Wl,-znoexecstack', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE', '-Wl,-z,separate-code']
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-zexecstack']), (1, executable + ': failed NX'))
-            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-no-pie','-fno-PIE']), (1, executable + ': failed PIE'))
+            # LIEF fails to parse RISC-V with no PIE correctly, and doesn't detect the fortified function,
+            # so skip this test for RISC-V (for now). See https://github.com/lief-project/LIEF/issues/1082.
+            if arch != lief.ARCHITECTURES.RISCV:
+                self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-no-pie','-fno-PIE']), (1, executable + ': failed PIE'))
+                self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-U_FORTIFY_SOURCE']), (1, executable + ': failed FORTIFY'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-znorelro']), (1, executable + ': failed RELRO'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-z,noseparate-code']), (1, executable + ': failed SEPARATE_CODE'))
             self.assertEqual(call_security_check(cxx, source, executable, pass_flags), (0, ''))
