@@ -103,6 +103,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
+                                                                                              //
+        // Deployment of covenant tools (BIP xxx)
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nStartTime = 1711993169; // XXX FIXME
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nTimeout = 1727804369; // XXX FIXME
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].min_activation_height = 1'717'632; // XXX FIXME
 
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000052b2559353df4117b7348b64");
         consensus.defaultAssumeValid = uint256S("0x00000000000000000001a0a448d6cf2546b06801389cc030b2b18c6491266815"); // 804000
@@ -221,6 +227,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
+
+        // Deployment of covenant tools (BIP xxx)
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nStartTime = 1711993169; // XXX FIXME
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nTimeout = 1727804369; // XXX FIXME
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].min_activation_height = 1'717'632; // XXX FIXME
 
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000b6a51f415a67c0da307");
         consensus.defaultAssumeValid = uint256S("0x0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f"); // 2500000
@@ -359,6 +371,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
+        // Deployment of OP_COVTOOLS (BIP xxx)
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nStartTime = 1711993169; // XXX FIXME
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nTimeout = 1727804369; // XXX FIXME
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].min_activation_height = 0;
+
         // message start is defined as the first 4 bytes of the sha256d of the block script
         HashWriter h{};
         h << consensus.signet_challenge;
@@ -434,6 +452,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
+
+        // Deployment of OP_COVTOOLS (BIP xxx)
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_COVTOOLS].min_activation_height = 0;
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
