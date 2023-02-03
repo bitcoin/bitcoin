@@ -59,6 +59,10 @@ static constexpr unsigned int ANNEX_TAG = 0x50;
 // Validation weight per passing signature (Tapscript only, see BIP 342).
 static constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
 
+// Validation weight per passing taptweak generation (Tapscript only, see BIP 345).
+// Related bench: bench/opvault.cpp.
+static constexpr int64_t VALIDATION_WEIGHT_PER_TAPTWEAKCHECK{60};
+
 // How much weight budget is added to the witness size (Tapscript only, see BIP 342).
 static constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
 
@@ -210,6 +214,10 @@ enum opcodetype
     OP_CHECKSIGADD = 0xba,
 
     OP_INVALIDOPCODE = 0xff,
+
+    // vaults - OP_SUCCESS187 and OP_SUCCESS188
+    OP_VAULT = 0xbb,
+    OP_VAULT_RECOVER = 0xbc,
 };
 
 // Maximum value that an opcode can be
@@ -618,5 +626,7 @@ CScript BuildScript(Ts&&... inputs)
 
     return ret;
 }
+
+CScript PushAll(const std::vector<std::vector<unsigned char>>& values);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_H

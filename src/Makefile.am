@@ -279,6 +279,7 @@ BITCOIN_CORE_H = \
   support/cleanse.h \
   support/events.h \
   support/lockedpool.h \
+  span.h \
   sync.h \
   threadsafety.h \
   timedata.h \

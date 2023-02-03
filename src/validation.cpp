@@ -1883,12 +1883,59 @@ struct DeferredCheckError
     std::string ToString() { return m_code; }
 };
 
+using UnvaultTriggerIdx = std::pair<unsigned int, std::optional<unsigned int>>;
+struct SimpleHash {
+    size_t operator()(const UnvaultTriggerIdx& p) const { return p.first ^ p.second.value_or(-1); }
+};
 
+
+//! Process all deferred script checks and perform the related validation against
+//! the transaction that generated them.
 static std::optional<DeferredCheckError> ValidateDeferredChecks(
     const std::vector<DeferredCheck>& checks,
     const CTransaction& tx)
 {
-    // Perform deferred checks here.
+    std::unordered_map<size_t, CAmount> expected_trigger_out;
+    std::unordered_map<size_t, CAmount> expected_recovery_out;
+
+    for (const auto& c : checks) {
+        if (const auto& recov_check = c.m_recov_spend_check) {
+            expected_recovery_out[recov_check->vout_idx] += recov_check->amount;
+        }
+        else if (const auto& trigger_check = c.m_vault_trigger_check) {
+            if (!trigger_check->revault_vout_idx) {
+                expected_trigger_out[trigger_check->vout_idx] += trigger_check->amount;
+            } else {
+                auto revault_amt{trigger_check->revault_amount};
+                auto trigger_amt{trigger_check->amount - revault_amt};
+                Assume(trigger_amt >= 0);
+
+                // These sums can't overflow because the total sum of the amounts we're
+                // adding are guaranteed to be at most (21 * 10**6 * 10**8), which is of
+                // course less than 2**63.
+                expected_trigger_out[trigger_check->vout_idx] += trigger_amt;
+                expected_trigger_out[*trigger_check->revault_vout_idx] += revault_amt;
+            }
+        }
+    }
+
+    // Ensure that all vault inputs being swept to recovery have their value reflected
+    // in the corresponding outputs.
+    for (const auto& [vout_idx, amount] : expected_recovery_out) {
+        if (tx.vout[vout_idx].nValue < amount) {
+            return DeferredCheckError{"vault-insufficient-recovery-value"};
+        }
+    }
+
+    // Ensure that all vault inputs being triggered for unvault have their value
+    // reflected in the corresponding outputs.
+    for (const auto& [vout_idx, amount] : expected_trigger_out) {
+        if (tx.vout[vout_idx].nValue < amount) {
+            return DeferredCheckError{"vault-insufficient-trigger-value"};
+        }
+    }
+
+    // Perform more deferred checks here.
     return std::nullopt;
 }
 
@@ -2513,9 +2560,9 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     assert(deferred_checks.has_value());
     std::unordered_map<const CTransaction*, std::vector<DeferredCheck>> tx_to_checks;
-    for (const auto& check : *deferred_checks) {
+    for (auto& check : *deferred_checks) {
         assert(check.m_tx_to);
-        tx_to_checks[check.m_tx_to].push_back(check);
+        tx_to_checks[check.m_tx_to].push_back(std::move(check));
     }
 
     for (const auto &[tx, checks] : tx_to_checks) {

@@ -119,6 +119,26 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:
             return "Signature is found in scriptCode";
+        case SCRIPT_ERR_UNVAULT_MISMATCH:
+            return "Trigger outputs not compatible with OP_VAULT";
+        case SCRIPT_ERR_VAULT_BAD_REVAULT:
+            return "Bad revault";
+        case SCRIPT_ERR_UNVAULT_INCOMPAT_OUTPUT_TYPE:
+            return "OP_UNVAULT output must be at least witness v1";
+        case SCRIPT_ERR_VAULT_INVALID_DELAY:
+            return "Vault has invalid spend delay";
+        case SCRIPT_ERR_VAULT_LOW_RECOVERY_AMOUNT:
+            return "Vault recovery output nValue too low";
+        case SCRIPT_ERR_VAULT_BAD_RECOVERY_OUTPUTS:
+            return "Vault recovery transaction has bad output structure";
+        case SCRIPT_ERR_UNVAULT_TARGET_HASH:
+            return "OP_UNVAULT output target hash mismatch";
+        case SCRIPT_ERR_VAULT_BAD_VOUT_IDX:
+            return "Invalid vault vout index given";
+        case SCRIPT_ERR_VAULT_BAD_REVAULT_IDX:
+            return "Invalid revault vout index given";
+        case SCRIPT_ERR_VAULT_RECOVERY_NOT_REPLACEABLE:
+            return "Vault recovery inputs must be replaceable";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
         default: break;

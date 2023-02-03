@@ -151,6 +151,9 @@ std::string GetOpName(opcodetype opcode)
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
+    case OP_VAULT                  : return "OP_VAULT";
+    case OP_VAULT_RECOVER          : return "OP_VAULT_RECOVER";
+
     default:
         return "OP_UNKNOWN";
     }
@@ -376,4 +379,21 @@ bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode)
         return opcode == OP_PUSHDATA2;
     }
     return true;
+}
+
+CScript PushAll(const std::vector<std::vector<unsigned char>>& values)
+{
+    CScript result;
+    for (const auto& v : values) {
+        if (v.size() == 0) {
+            result << OP_0;
+        } else if (v.size() == 1 && v[0] >= 1 && v[0] <= 16) {
+            result << CScript::EncodeOP_N(v[0]);
+        } else if (v.size() == 1 && v[0] == 0x81) {
+            result << OP_1NEGATE;
+        } else {
+            result << v;
+        }
+    }
+    return result;
 }

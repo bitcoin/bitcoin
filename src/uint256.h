@@ -20,7 +20,7 @@
 template<unsigned int BITS>
 class base_blob
 {
-protected:
+public:
     static constexpr int WIDTH = BITS / 8;
     static_assert(BITS % 8 == 0, "base_blob currently only supports whole bytes.");
     std::array<uint8_t, WIDTH> m_data;
