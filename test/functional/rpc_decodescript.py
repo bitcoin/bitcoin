@@ -263,6 +263,16 @@ class DecodeScriptTest(BitcoinTestFramework):
             rpc_result = self.nodes[0].decodescript(script)
             assert_equal(result, rpc_result)
 
+    def decodescript_miniscript(self):
+        """Check that a Miniscript is decoded when possible under P2WSH context."""
+        # Sourced from https://github.com/bitcoin/bitcoin/pull/27037#issuecomment-1416151907.
+        # Miniscript-compatible offered HTLC
+        res = self.nodes[0].decodescript("82012088a914ffffffffffffffffffffffffffffffffffffffff88210250929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0ad51b2")
+        assert res["segwit"]["desc"] == "wsh(and_v(and_v(v:hash160(ffffffffffffffffffffffffffffffffffffffff),v:pk(0250929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0)),older(1)))#gm8xz4fl"
+        # Miniscript-incompatible offered HTLC
+        res = self.nodes[0].decodescript("82012088a914ffffffffffffffffffffffffffffffffffffffff882102ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffacb2")
+        assert res["segwit"]["desc"] == "wsh(raw(82012088a914ffffffffffffffffffffffffffffffffffffffff882102ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffacb2))#ra6w2xa7"
+
     def run_test(self):
         self.log.info("Test decoding of standard input scripts [scriptSig]")
         self.decodescript_script_sig()
@@ -272,6 +282,8 @@ class DecodeScriptTest(BitcoinTestFramework):
         self.decoderawtransaction_asm_sighashtype()
         self.log.info("Data-driven tests")
         self.decodescript_datadriven_tests()
+        self.log.info("Miniscript descriptor decoding")
+        self.decodescript_miniscript()
 
 if __name__ == '__main__':
     DecodeScriptTest().main()
