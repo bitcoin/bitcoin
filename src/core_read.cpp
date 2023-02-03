@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 namespace {
 class OpCodeParser

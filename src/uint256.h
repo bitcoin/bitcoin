@@ -20,7 +20,7 @@
 template<unsigned int BITS>
 class base_blob
 {
-protected:
+public:
     static constexpr int WIDTH = BITS / 8;
     std::array<uint8_t, WIDTH> m_data;
     static_assert(WIDTH == sizeof(m_data), "Sanity check");

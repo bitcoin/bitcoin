@@ -115,6 +115,36 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:
             return "Signature is found in scriptCode";
+        case SCRIPT_ERR_UNVAULT_MISMATCH:
+            return "OP_UNVAULT outputs not compatible with OP_VAULT";
+        case SCRIPT_ERR_UNVAULT_INCOMPAT_OUTPUT_TYPE:
+            return "OP_UNVAULT output must be at least witness v1";
+        case SCRIPT_ERR_VAULT_INVALID_RECOVERY_PARAMS:
+            return "Vault recovery params are malformed";
+        case SCRIPT_ERR_VAULT_INVALID_DELAY:
+            return "Vault has invalid spend delay";
+        case SCRIPT_ERR_VAULT_LOW_RECOVERY_AMOUNT:
+            return "Vault recovery output nValue too low";
+        case SCRIPT_ERR_VAULT_WRONG_TRIGGER_WITNESS_PROGRAM:
+            return "OP_UNVAULT trigger scriptPubKey does not match OP_VAULT hash";
+        case SCRIPT_ERR_VAULT_NESTED_SCRIPT_NOT_WITNESS:
+            return "Nested scriptPubKey is not a witness program";
+        case SCRIPT_ERR_VAULT_INVALID_TRIGGER_WITNESS:
+            return "OP_UNVAULT trigger witness is invalid";
+        case SCRIPT_ERR_VAULT_BAD_RECOVERY_OUTPUTS:
+            return "Vault recovery transaction has bad output structure";
+        case SCRIPT_ERR_UNVAULT_LOCKTIME:
+            return "OP_UNVAULT timelock has not matured";
+        case SCRIPT_ERR_UNVAULT_TARGET_HASH:
+            return "OP_UNVAULT output target hash mismatch";
+        case SCRIPT_ERR_RECURSION_TOO_DEEP:
+            return "Too many recursive calls to script interpreter";
+        case SCRIPT_ERR_VAULT_BAD_VOUT_IDX:
+            return "Invalid vout index given";
+        case SCRIPT_ERR_VAULT_RECOVERY_NOT_REPLACEABLE:
+            return "Vault recovery inputs must be replaceable";
+        case SCRIPT_ERR_VAULT_RECOVERY_AUTH:
+            return "Vault recovery authorization witness verification failed";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
         default: break;
