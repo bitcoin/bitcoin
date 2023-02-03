@@ -2045,6 +2045,11 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
+    // Enforce VAULT (BIPxxx)
+    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_VAULT)) {
+        flags |= SCRIPT_VERIFY_VAULT;
+    }
+
     // Enforce BIP147 NULLDUMMY (activated simultaneously with segwit)
     if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
