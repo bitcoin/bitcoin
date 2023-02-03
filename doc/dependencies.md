@@ -39,7 +39,7 @@ Some dependencies are not needed in all configurations. The following are some f
 #### Options passed to `./configure`
 * MiniUPnPc is not needed with `--without-miniupnpc`.
 * Berkeley DB is not needed with `--disable-wallet`.
-* SQLite is not needed with `--disable-wallet`.
+* SQLite is not needed with `--disable-wallet` or `--without-sqlite`.
 * libnatpmp is not needed with `--without-natpmp`.
 * Qt is not needed with `--without-gui`.
 * If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass `--with-qrencode`.
