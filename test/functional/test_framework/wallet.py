@@ -10,6 +10,7 @@ from enum import Enum
 from typing import (
     Any,
     Optional,
+    Tuple,
 )
 from test_framework.address import (
     address_to_scriptpubkey,
@@ -230,6 +231,14 @@ class MiniWallet:
             return self._utxos.pop(index)
         else:
             return self._utxos[index]
+
+    def get_utxo_as_txin(self, **kwargs) -> Tuple[dict, CTxIn]:
+        """Return UTXO as partially filled CTxIn (for spending)."""
+        u = self.get_utxo(**kwargs)
+        txid_in_int = int.from_bytes(bytes.fromhex(u['txid']), byteorder='big')
+        return u, CTxIn(
+            outpoint=COutPoint(txid_in_int, u['vout']),
+        )
 
     def get_utxos(self, *, include_immature_coinbase=False, mark_as_spent=True, confirmed_only=False):
         """Returns the list of all utxos and optionally mark them as spent"""
