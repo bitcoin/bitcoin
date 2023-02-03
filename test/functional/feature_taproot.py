@@ -81,6 +81,7 @@ from test_framework.script import (
     TaprootSignatureMsg,
     is_op_success,
     taproot_construct,
+    op_success_overrides,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
@@ -1137,6 +1138,9 @@ def spenders_taproot_active():
     for opval in range(76, 0x100):
         opcode = CScriptOp(opval)
         if not is_op_success(opcode):
+            continue
+        if opcode in op_success_overrides:
+            # Skip OP_SUCCESS codes which have been defined.
             continue
         scripts = [
             ("bare_success", CScript([opcode])),
