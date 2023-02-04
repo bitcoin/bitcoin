@@ -34,6 +34,9 @@
 #include <util/translation.h>
 #include <util/validation.h>
 #include <validation.h>
+#ifdef USE_BDB
+#include <wallet/bdb.h>
+#endif
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/fees.h>
@@ -4626,6 +4629,7 @@ bool CWallet::BackupWallet(const std::string& strDest)
 
 // This should be called carefully:
 // either supply the actual wallet_path to make a raw copy of wallet.dat or "" to backup current instance via BackupWallet()
+#ifdef USE_BDB
 bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings)
 {
     std::string strWalletName = GetName();
@@ -4764,6 +4768,13 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
 
     return true;
 }
+#elif USE_SQLITE
+bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings)
+{
+    WalletLogPrintf("Automatic wallet backups are currently only supported with Berkeley DB!\n");
+    return false;
+}
+#endif // USE_BDB
 
 void CWallet::NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
 {

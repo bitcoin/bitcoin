@@ -8,7 +8,6 @@
 
 #include <amount.h>
 #include <script/sign.h>
-#include <wallet/bdb.h>
 #include <wallet/db.h>
 #include <key.h>
 

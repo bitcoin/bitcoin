@@ -38,7 +38,7 @@ Some dependencies are not needed in all configurations. The following are some f
 
 #### Options passed to `./configure`
 * MiniUPnPc is not needed with `--without-miniupnpc`.
-* Berkeley DB is not needed with `--disable-wallet`.
+* Berkeley DB is not needed with `--disable-wallet` or `--without-bdb`.
 * SQLite is not needed with `--disable-wallet` or `--without-sqlite`.
 * libnatpmp is not needed with `--without-natpmp`.
 * Qt is not needed with `--without-gui`.
