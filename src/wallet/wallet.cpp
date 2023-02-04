@@ -4633,6 +4633,11 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         strWalletName = "wallet.dat";
     }
 
+    if (!ExistsBerkeleyDatabase(wallet_path)) {
+        WalletLogPrintf("Automatic wallet backups are currently only supported with Berkeley DB!\n");
+        return false;
+    }
+
     if (nWalletBackups <= 0) {
         WalletLogPrintf("Automatic wallet backups are disabled!\n");
         return false;

@@ -13,12 +13,12 @@ Run the following commands to install required packages:
 
 ##### Debian/Ubuntu:
 ```bash
-$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils bison
+$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils bison libsqlite3-dev
 ```
 
 ##### Fedora:
 ```bash
-$ sudo dnf install gcc-c++ libtool make autoconf automake python3 libstdc++-static patch
+$ sudo dnf install gcc-c++ libtool make autoconf automake python3 libstdc++-static patch sqlite-devel
 ```
 
 ##### Arch Linux:
@@ -99,7 +99,7 @@ disable-wallet mode with:
 
     ./configure --prefix=<prefix> --disable-wallet
 
-In this case there is no dependency on Berkeley DB 4.8.
+In this case there is no dependency on Berkeley DB 4.8 and SQLite.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 

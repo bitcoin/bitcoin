@@ -24,6 +24,7 @@ These are the dependencies currently used by Dash Core. You can find instruction
 | Python (tests) |  | [3.5](https://www.python.org/downloads) |  |  |  |
 | qrencode | [3.4.4](https://fukuchi.org/works/qrencode) |  | No |  |  |
 | Qt | [5.12.11](https://download.qt.io/official_releases/qt/) | [5.5.1](https://github.com/bitcoin/bitcoin/issues/13478) | No |  |  |
+| SQLite | [3.32.1](https://sqlite.org/download.html) | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) |  |  |  |
 | XCB |  |  |  |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) (Linux only) |
 | xkbcommon |  |  |  |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) (Linux only) |
 | ZeroMQ | [4.3.1](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
@@ -37,6 +38,8 @@ Some dependencies are not needed in all configurations. The following are some f
 
 #### Options passed to `./configure`
 * MiniUPnPc is not needed with `--without-miniupnpc`.
+* Berkeley DB is not needed with `--disable-wallet`.
+* SQLite is not needed with `--disable-wallet`.
 * libnatpmp is not needed with `--without-natpmp`.
 * Qt is not needed with `--without-gui`.
 * If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass `--with-qrencode`.

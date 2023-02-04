@@ -194,11 +194,13 @@ public:
 
 enum class DatabaseFormat {
     BERKELEY,
+    SQLITE,
 };
 
 struct DatabaseOptions {
     bool require_existing = false;
     bool require_create = false;
+    std::optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
     SecureString create_passphrase;
     bool verify = true;
