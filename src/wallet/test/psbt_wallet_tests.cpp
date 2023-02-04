@@ -11,6 +11,8 @@
 #include <boost/test/unit_test.hpp>
 #include <wallet/test/wallet_test_fixture.h>
 
+extern bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
+
 BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 BOOST_AUTO_TEST_CASE(psbt_updater_test)
@@ -65,6 +67,89 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     ssTx << psbtx;
     std::string final_hex = HexStr(ssTx);
     BOOST_CHECK_EQUAL(final_hex, "70736274ff01009a020000000258e87a21b56daf0c23be8e7070456c336f7cbaa5c8757924f545887bb2abdd750000000000ffffffff838d0427d0ec650a68aa46bb0b098aea4422c071b2ca78352a077959d07cea1d0100000000ffffffff0270aaf00800000000160014d85c2b71d0060b09c9886aeb815e50991dda124d00e1f5050000000016001400aea9a2e5f0f876a588df5546e8742d1d87008f00000000000100bb0200000001aad73931018bd25f84ae400b68848be09db706eac2ac18298babee71ab656f8b0000000048473044022058f6fc7c6a33e1b31548d481c826c015bd30135aad42cd67790dab66d2ad243b02204a1ced2604c6735b6393e5b41691dd78b00f0c5942fb9f751856faa938157dba01feffffff0280f0fa020000000017a9140fb9463421696b82c833af241c78c17ddbde493487d0f20a270100000017a91429ca74f8a08f81999428185c97b5d852e4063f6187650000000104475221029583bf39ae0a609747ad199addd634fa6108559d6c5cd39b4c2183f1ab96e07f2102dab61ff49a14db6a7d02b0cd1fbb78fc4b18312b5b4e54dae4dba2fbfef536d752ae2206029583bf39ae0a609747ad199addd634fa6108559d6c5cd39b4c2183f1ab96e07f049c4942a9220602dab61ff49a14db6a7d02b0cd1fbb78fc4b18312b5b4e54dae4dba2fbfef536d704b9147fd300000000");
+
+    // Mutate the transaction so that one of the inputs is invalid
+    psbtx.tx->vin[0].prevout.n = 2;
+
+    // Try to sign the mutated input
+    SignatureData sigdata;
+    psbtx.inputs[0].FillSignatureData(sigdata);
+    const SigningProvider* provider = m_wallet.GetSigningProvider(ws1, sigdata);
+    BOOST_CHECK(!SignPSBTInput(*provider, psbtx, 0, SIGHASH_ALL));
+}
+
+BOOST_AUTO_TEST_CASE(parse_hd_keypath)
+{
+    std::vector<uint32_t> keypath;
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1", keypath));
+    BOOST_CHECK(!ParseHDKeypath("///////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1", keypath));
+    BOOST_CHECK(!ParseHDKeypath("//////////////////////////'/", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("1///////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("1/'//////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("", keypath));
+    BOOST_CHECK(!ParseHDKeypath(" ", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("O", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("0000'/0000'/0000'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("0000,/0000,/0000,", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("01234", keypath));
+    BOOST_CHECK(!ParseHDKeypath("0x1234", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1", keypath));
+    BOOST_CHECK(!ParseHDKeypath(" 1", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("42", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m42", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
+    BOOST_CHECK(!ParseHDKeypath("4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+
+    BOOST_CHECK(ParseHDKeypath("m", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0/00", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/0/f00", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/00/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0'/00/'0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/1/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/1//", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+
+    BOOST_CHECK(ParseHDKeypath("m/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
+    BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
 }
 
 BOOST_AUTO_TEST_SUITE_END()

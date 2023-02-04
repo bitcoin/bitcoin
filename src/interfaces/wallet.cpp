@@ -21,8 +21,9 @@
 #include <wallet/context.h>
 #include <wallet/fees.h>
 #include <wallet/ismine.h>
-#include <wallet/rpcwallet.h>
 #include <wallet/load.h>
+#include <wallet/psbtwallet.h>
+#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -399,6 +400,15 @@ public:
     }
     int getRealOutpointCoinJoinRounds(const COutPoint& outpoint) override { return m_wallet->GetRealOutpointCoinJoinRounds(outpoint); }
     bool isFullyMixed(const COutPoint& outpoint) override { return m_wallet->IsFullyMixed(outpoint); }
+
+    TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
+        bool& complete,
+        int sighash_type = 1 /* SIGHASH_ALL */,
+        bool sign = true,
+        bool bip32derivs = false) override
+    {
+        return FillPSBT(m_wallet.get(), psbtx, complete, sighash_type, sign, bip32derivs);
+    }
     WalletBalances getBalances() override
     {
         const auto bal = m_wallet->GetBalance();

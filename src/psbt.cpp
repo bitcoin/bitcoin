@@ -7,6 +7,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <psbt.h>
+#include <tinyformat.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 
@@ -71,8 +72,11 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
     PSBTInput input = inputs[input_index];
-    int prevout_index = tx->vin[input_index].prevout.n;
+    uint32_t prevout_index = tx->vin[input_index].prevout.n;
     if (input.non_witness_utxo) {
+        if (prevout_index >= input.non_witness_utxo->vout.size()) {
+            return false;
+        }
         utxo = input.non_witness_utxo->vout[prevout_index];
     } else {
         return false;
@@ -224,6 +228,9 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
         COutPoint prevout = tx.vin[index].prevout;
+        if (prevout.n >= input.non_witness_utxo->vout.size()) {
+            return false;
+        }
         if (input.non_witness_utxo->GetHash() != prevout.hash) {
             return false;
         }
@@ -299,6 +306,7 @@ TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector
 
 std::string PSBTRoleName(PSBTRole role) {
     switch (role) {
+    case PSBTRole::CREATOR: return "creator";
     case PSBTRole::UPDATER: return "updater";
     case PSBTRole::SIGNER: return "signer";
     case PSBTRole::FINALIZER: return "finalizer";
@@ -328,13 +336,26 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         // Check for a UTXO
         CTxOut utxo;
         if (psbtx.GetInputUTXO(utxo, i)) {
+            if (!MoneyRange(utxo.nValue) || !MoneyRange(in_amt + utxo.nValue)) {
+                result.SetInvalid(strprintf("PSBT is not valid. Input %u has invalid value", i));
+                return result;
+            }
             in_amt += utxo.nValue;
             input_analysis.has_utxo = true;
         } else {
+            if (input.non_witness_utxo && psbtx.tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
+                result.SetInvalid(strprintf("PSBT is not valid. Input %u specifies invalid prevout", i));
+                return result;
+            }
             input_analysis.has_utxo = false;
             input_analysis.is_final = false;
             input_analysis.next = PSBTRole::UPDATER;
             calc_fee = false;
+        }
+
+        if (!utxo.IsNull() && utxo.scriptPubKey.IsUnspendable()) {
+            result.SetInvalid(strprintf("PSBT is not valid. Input %u spends unspendable output", i));
+            return result;
         }
 
         // Check if it is final
@@ -376,9 +397,16 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         // Get the output amount
         CAmount out_amt = std::accumulate(psbtx.tx->vout.begin(), psbtx.tx->vout.end(), CAmount(0),
             [](CAmount a, const CTxOut& b) {
+            if (!MoneyRange(a) || !MoneyRange(b.nValue) || !MoneyRange(a + b.nValue)) {
+                    return CAmount(-1);
+                }
                 return a += b.nValue;
             }
         );
+        if (!MoneyRange(out_amt)) {
+            result.SetInvalid(strprintf("PSBT is not valid. Output amount invalid"));
+            return result;
+        }
 
         // Get the fee
         CAmount fee = in_amt - out_amt;

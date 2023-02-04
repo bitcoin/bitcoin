@@ -487,6 +487,7 @@ struct PartiallySignedTransaction
 };
 
 enum class PSBTRole {
+    CREATOR,
     UPDATER,
     SIGNER,
     FINALIZER,
@@ -515,6 +516,17 @@ struct PSBTAnalysis {
     std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
     std::vector<PSBTInputAnalysis> inputs; //!< More information about the individual inputs of the transaction
     PSBTRole next;                         //!< Which of the BIP 174 roles needs to handle the transaction next
+    std::string error;                     //!< Error message
+
+    void SetInvalid(std::string err_msg)
+    {
+        estimated_vsize = std::nullopt;
+        estimated_feerate = std::nullopt;
+        fee = std::nullopt;
+        inputs.clear();
+        next = PSBTRole::CREATOR;
+        error = err_msg;
+    }
 };
 
 std::string PSBTRoleName(PSBTRole role);

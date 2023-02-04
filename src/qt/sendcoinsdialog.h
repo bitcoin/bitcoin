@@ -114,7 +114,7 @@ class SendConfirmationDialog : public QMessageBox
 
 public:
     SendConfirmationDialog(const QString &title, const QString &text, int secDelay = 0, QWidget *parent = nullptr);
-    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = 0, QWidget* parent = nullptr);
+    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = 0, const QString& confirmText = "Send", QWidget* parent = nullptr);
     int exec() override;
 
 private Q_SLOTS:
@@ -125,6 +125,7 @@ private:
     QAbstractButton *yesButton;
     QTimer countDownTimer;
     int secDelay;
+    QString confirmButtonText;
 };
 
 #endif // BITCOIN_QT_SENDCOINSDIALOG_H

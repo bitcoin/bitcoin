@@ -17,6 +17,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <psbt.h>
 #include <stdint.h>
 #include <string>
 #include <tuple>
@@ -216,6 +217,13 @@ public:
 
     // Check if an outpoint is fully mixed
     virtual bool isFullyMixed(const COutPoint& outpoint) = 0;
+
+    //! Fill PSBT.
+    virtual TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
+        bool& complete,
+        int sighash_type = 1 /* SIGHASH_ALL */,
+        bool sign = true,
+        bool bip32derivs = false) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
