@@ -87,12 +87,14 @@ BITCOIN_TESTS =\
   test/blsct/arith/mcl/mcl_integration_tests.cpp \
   test/blsct/arith/mcl/mcl_scalar_tests.cpp \
   test/blsct/eip_2333/bls12_381_keygen_tests.cpp \
+  test/blsct/keys_tests.cpp \
   test/blsct/range_proof/config_tests.cpp \
   test/blsct/range_proof/generators_tests.cpp \
   test/blsct/range_proof/lazy_g1point_tests.cpp \
   test/blsct/range_proof/range_proof_tests.cpp \
   test/blsct/range_proof/range_proof_with_transcript_tests.cpp \
-  test/blsct/keys_tests.cpp \
+  test/blsct/signature_tests.cpp \
+  test/blsct/sign_verify_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
   test/coins_tests.cpp \
@@ -218,7 +220,7 @@ BITCOIN_TEST_SUITE += \
 endif # ENABLE_WALLET
 
 test_test_navcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_navcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
+test_test_navcoin_CPPFLAGS = $(AM_CPPFLAGS) -DBLS_ETH=1 $(BITCOIN_INCLUDES) $(TESTDEFS) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
 test_test_navcoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
 test_test_navcoin_LDADD += $(LIBBITCOIN_WALLET)

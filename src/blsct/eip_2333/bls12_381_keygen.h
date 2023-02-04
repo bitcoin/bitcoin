@@ -1,10 +1,13 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2023 The Navcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+
+#ifndef NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
+#define NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
+
 #include <array>
-#include <bls/bls384_256.h> // must include this before bls/bls.h
-#include <bls/bls.h>
+#include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <crypto/sha256.h>
 #include <crypto/hmac_sha256.h>
@@ -36,3 +39,6 @@ private:
     static LamportChunks IKM_to_lamport_SK(const std::vector<uint8_t>& IKM, const std::vector<uint8_t>& salt);
     static std::array<uint8_t,DigestSize> parent_SK_to_lamport_PK(const MclScalar& parent_SK, const uint32_t& index);
 };
+
+#endif  // NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
+
