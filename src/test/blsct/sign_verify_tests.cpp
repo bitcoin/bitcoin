@@ -11,7 +11,7 @@
 #include <blsct/private_key.h>
 #include <blsct/public_key.h>
 #include <blsct/public_keys.h>
-#include <blsct/bls_common.h>
+#include <blsct/common.h>
 
 namespace blsct {
 

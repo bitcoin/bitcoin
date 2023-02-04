@@ -8,7 +8,7 @@
 #include <boost/test/unit_test.hpp>
 #include <streams.h>
 #include <test/util/setup_common.h>
-#include <blsct/bls_common.h>
+#include <blsct/common.h>
 #include <blsct/private_key.h>
 
 namespace blsct {

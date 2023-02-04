@@ -4,7 +4,7 @@
 
 #define BLS_ETH 1
 
-#include <blsct/bls_common.h>
+#include <blsct/common.h>
 #include <blsct/public_keys.h>
 #include <tinyformat.h>
 #include <algorithm>
@@ -35,7 +35,7 @@ PublicKey PublicKeys::Aggregate() const
 bool PublicKeys::VerifyBalanceBatch(const Signature& sig) const
 {
     auto aggr_pk = PublicKeys(m_pks).Aggregate();
-    return aggr_pk.CoreVerify(BLSCommon::BLSCTBALANCE, sig);
+    return aggr_pk.CoreVerify(Common::BLSCTBALANCE, sig);
 }
 
 bool PublicKeys::CoreAggregateVerify(const std::vector<PublicKey::Message>& msgs, const Signature& sig) const

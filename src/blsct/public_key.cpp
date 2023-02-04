@@ -5,7 +5,7 @@
 #define BLS_ETH 1
 
 #include <blsct/public_key.h>
-#include <blsct/bls_common.h>  // causes mutual dependency issue if included in the public_key header
+#include <blsct/common.h>  // causes mutual dependency issue if included in the public_key header
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
@@ -86,7 +86,7 @@ bool PublicKey::CoreVerify(const Message& msg, const Signature& sig) const
 
 bool PublicKey::VerifyBalance(const Signature& sig) const
 {
-    return CoreVerify(BLSCommon::BLSCTBALANCE, sig);
+    return CoreVerify(Common::BLSCTBALANCE, sig);
 }
 
 bool PublicKey::Verify(const Message& msg, const Signature& sig) const
