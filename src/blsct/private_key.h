@@ -9,7 +9,7 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/public_key.h>
-#include <blsct/bls12_381_common.h>
+#include <blsct/bls_common.h>
 #include <key.h>
 
 namespace blsct {

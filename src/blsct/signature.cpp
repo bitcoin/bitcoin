@@ -11,7 +11,7 @@
 
 namespace blsct {
 
-blsct::Signature Signature::Aggregate(const std::vector<blsct::Signature>& sigs)
+Signature Signature::Aggregate(const std::vector<blsct::Signature>& sigs)
 {
     std::vector<blsSignature> bls_sigs;
     std::transform(sigs.begin(), sigs.end(), std::back_inserter(bls_sigs), [](auto sig) {

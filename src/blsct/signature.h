@@ -12,6 +12,7 @@
 
 #include <bls/bls384_256.h>
 #include <vector>
+#include <serialize.h>
 
 namespace blsct {
 
@@ -19,6 +20,11 @@ class Signature
 {
 public:
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
+
+    SERIALIZE_METHODS(Signature, obj)
+    {
+        READWRITE(obj.m_data);
+    }
 
     blsSignature m_data;
 };

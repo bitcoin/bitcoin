@@ -161,7 +161,7 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
-  blsct/bls12_381_common.h \
+  blsct/bls_common.h \
   blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \
   blsct/private_key.h \

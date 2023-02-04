@@ -67,7 +67,7 @@ Signature PrivateKey::CoreSign(const Message& msg) const
 
 Signature PrivateKey::SignBalance() const
 {
-    return CoreSign(BLS12_381_Common::BLSCTBALANCE);
+    return CoreSign(BLSCommon::BLSCTBALANCE);
 }
 
 Signature PrivateKey::Sign(const Message& msg) const
