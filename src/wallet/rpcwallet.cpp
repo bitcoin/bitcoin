@@ -2596,7 +2596,7 @@ static UniValue listwalletdir(const JSONRPCRequest& request)
     }.Check(request);
 
     UniValue wallets(UniValue::VARR);
-    for (const auto& path : ListWalletDir()) {
+    for (const auto& path : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
         wallet.pushKV("name", path.string());
         wallets.push_back(wallet);
