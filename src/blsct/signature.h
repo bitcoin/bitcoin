@@ -21,10 +21,11 @@ class Signature
 public:
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
 
-    SERIALIZE_METHODS(Signature, obj)
-    {
-        READWRITE(obj.m_data);
-    }
+    template <typename Stream>
+    void Serialize(Stream& s) const;
+
+    template <typename Stream>
+    void Unserialize(Stream& s);
 
     blsSignature m_data;
 };
