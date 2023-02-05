@@ -1,0 +1,95 @@
+Fix duplicate platform plugin definitions
+
+androidplatformplugin.cpp and main.cpp both tried to define the platform
+plugin entry point. That happens to work with the android toolchain by
+chance, but it's certainly not intentional.
+
+Upstream commit:
+ - Qt 6.0: dc4212b3a694e143595968419ae5ad695ab2aa03
+
+--- a/qtbase/src/plugins/platforms/android/android.pro
++++ b/qtbase/src/plugins/platforms/android/android.pro
+@@ -16,7 +16,6 @@ INCLUDEPATH += \
+     $$QT_SOURCE_TREE/src/3rdparty/android
+ 
+ SOURCES += $$PWD/main.cpp \
+-           $$PWD/androidplatformplugin.cpp \
+            $$PWD/androidcontentfileengine.cpp \
+            $$PWD/androiddeadlockprotector.cpp \
+            $$PWD/androidjnimain.cpp \
+
+--- a/qtbase/src/plugins/platforms/android/androidplatformplugin.cpp
++++ /dev/null
+@@ -1,64 +0,0 @@
+-/****************************************************************************
+-**
+-** Copyright (C) 2012 BogDan Vatra <bogdan@kde.org>
+-** Contact: https://www.qt.io/licensing/
+-**
+-** This file is part of the plugins of the Qt Toolkit.
+-**
+-** $QT_BEGIN_LICENSE:LGPL$
+-** Commercial License Usage
+-** Licensees holding valid commercial Qt licenses may use this file in
+-** accordance with the commercial license agreement provided with the
+-** Software or, alternatively, in accordance with the terms contained in
+-** a written agreement between you and The Qt Company. For licensing terms
+-** and conditions see https://www.qt.io/terms-conditions. For further
+-** information use the contact form at https://www.qt.io/contact-us.
+-**
+-** GNU Lesser General Public License Usage
+-** Alternatively, this file may be used under the terms of the GNU Lesser
+-** General Public License version 3 as published by the Free Software
+-** Foundation and appearing in the file LICENSE.LGPL3 included in the
+-** packaging of this file. Please review the following information to
+-** ensure the GNU Lesser General Public License version 3 requirements
+-** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
+-**
+-** GNU General Public License Usage
+-** Alternatively, this file may be used under the terms of the GNU
+-** General Public License version 2.0 or (at your option) the GNU General
+-** Public license version 3 or any later version approved by the KDE Free
+-** Qt Foundation. The licenses are as published by the Free Software
+-** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+-** included in the packaging of this file. Please review the following
+-** information to ensure the GNU General Public License requirements will
+-** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+-** https://www.gnu.org/licenses/gpl-3.0.html.
+-**
+-** $QT_END_LICENSE$
+-**
+-****************************************************************************/
+-
+-#include <qpa/qplatformintegrationplugin.h>
+-#include "qandroidplatformintegration.h"
+-
+-QT_BEGIN_NAMESPACE
+-
+-class QAndroidPlatformIntegrationPlugin: public QPlatformIntegrationPlugin
+-{
+-    Q_OBJECT
+-    Q_PLUGIN_METADATA(IID QPlatformIntegrationFactoryInterface_iid FILE "android.json")
+-public:
+-    QPlatformIntegration *create(const QString &key, const QStringList &paramList) override;
+-};
+-
+-
+-QPlatformIntegration *QAndroidPlatformIntegrationPlugin::create(const QString &key, const QStringList &paramList)
+-{
+-    Q_UNUSED(paramList);
+-    if (!key.compare(QLatin1String("android"), Qt::CaseInsensitive))
+-        return new QAndroidPlatformIntegration(paramList);
+-    return 0;
+-}
+-
+-QT_END_NAMESPACE
+-#include "androidplatformplugin.moc"
+-
+
+--- a/qtbase/src/plugins/platforms/android/main.cpp
++++ b/qtbase/src/plugins/platforms/android/main.cpp
+@@ -61,3 +61,4 @@ QPlatformIntegration *QAndroidIntegrationPlugin::create(const QString& system, c
+ }
+ 
+ QT_END_NAMESPACE
++#include "main.moc"

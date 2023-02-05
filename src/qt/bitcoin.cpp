@@ -71,7 +71,7 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin);
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 Q_IMPORT_PLUGIN(QMacStylePlugin);
 #elif defined(QT_QPA_PLATFORM_ANDROID)
-Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
+Q_IMPORT_PLUGIN(QAndroidIntegrationPlugin)
 #endif
 #endif
 
