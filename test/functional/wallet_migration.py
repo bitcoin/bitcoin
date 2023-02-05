@@ -163,6 +163,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(basic2.getbalance(), basic2_balance)
         self.assert_list_txs_equal(basic2.listtransactions(), basic2_txs)
 
+        # Now test migration on a descriptor wallet
+        self.log.info("Test \"nothing to migrate\" when the user tries to migrate a wallet with no legacy data")
+        assert_raises_rpc_error(-4, "Error: This wallet is already a descriptor wallet", basic2.migratewallet)
+
     def test_multisig(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 

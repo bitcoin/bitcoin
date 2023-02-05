@@ -115,7 +115,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
 
         self.mocktime += 2
         node.setmocktime(self.mocktime)
-        self.wait_until(lambda: node.num_test_p2p_connections() == NUM_PEERS - 2)
+        self.wait_until(lambda: sum(x.is_connected for x in node.p2ps) == NUM_PEERS - 2)
         self.wait_until(lambda: self.is_block_requested(peers, stall_block))
         self.all_sync_send_with_ping(peers)
 
@@ -128,7 +128,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
 
         self.mocktime += 2
         node.setmocktime(self.mocktime)
-        self.wait_until(lambda: node.num_test_p2p_connections() == NUM_PEERS - 3)
+        self.wait_until(lambda: sum(x.is_connected for x in node.p2ps) == NUM_PEERS - 3)
         self.wait_until(lambda: self.is_block_requested(peers, stall_block))
         self.all_sync_send_with_ping(peers)
 

@@ -1065,6 +1065,33 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         }
     }
 
+    // Mark inactive coinbase transactions and their descendants as abandoned
+    if (wtx.IsCoinBase() && wtx.isInactive()) {
+        std::vector<CWalletTx*> txs{&wtx};
+
+        TxStateInactive inactive_state = TxStateInactive{/*abandoned=*/true};
+
+        while (!txs.empty()) {
+            CWalletTx* desc_tx = txs.back();
+            txs.pop_back();
+            desc_tx->m_state = inactive_state;
+            // Break caches since we have changed the state
+            desc_tx->MarkDirty();
+            batch.WriteTx(*desc_tx);
+            MarkInputsDirty(desc_tx->tx);
+            for (unsigned int i = 0; i < desc_tx->tx->vout.size(); ++i) {
+                COutPoint outpoint(desc_tx->GetHash(), i);
+                std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(outpoint);
+                for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
+                    const auto wit = mapWallet.find(it->second);
+                    if (wit != mapWallet.end()) {
+                        txs.push_back(&wit->second);
+                    }
+                }
+            }
+        }
+    }
+
     //// debug print
     WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
@@ -1274,7 +1301,11 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
             wtx.MarkDirty();
             batch.WriteTx(wtx);
             NotifyTransactionChanged(wtx.GetHash(), CT_UPDATED);
-            // Iterate over all its outputs, and mark transactions in the wallet that spend them abandoned too
+            // Iterate over all its outputs, and mark transactions in the wallet that spend them abandoned too.
+            // States are not permanent, so these transactions can become unabandoned if they are re-added to the
+            // mempool, or confirmed in a block, or conflicted.
+            // Note: If the reorged coinbase is re-added to the main chain, the descendants that have not had their
+            // states change will remain abandoned and will require manual broadcast if the user wants them.
             for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
                 for (TxSpends::const_iterator iter = range.first; iter != range.second; ++iter) {
@@ -3840,10 +3871,7 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
     AssertLockHeld(cs_wallet);
 
     LegacyScriptPubKeyMan* legacy_spkm = GetLegacyScriptPubKeyMan();
-    if (!legacy_spkm) {
-        error = _("Error: This wallet is already a descriptor wallet");
-        return std::nullopt;
-    }
+    assert(legacy_spkm);
 
     std::optional<MigrationData> res = legacy_spkm->MigrateToDescriptor();
     if (res == std::nullopt) {
@@ -4139,6 +4167,11 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
 util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>&& wallet, WalletContext& context)
 {
+    // Before anything else, check if there is something to migrate.
+    if (!wallet->GetLegacyScriptPubKeyMan()) {
+        return util::Error{_("Error: This wallet is already a descriptor wallet")};
+    }
+
     MigrationResult res;
     bilingual_str error;
     std::vector<bilingual_str> warnings;

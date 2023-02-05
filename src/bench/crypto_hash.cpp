@@ -18,7 +18,7 @@
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
 
-static void RIPEMD160(benchmark::Bench& bench)
+static void BenchRIPEMD160(benchmark::Bench& bench)
 {
     uint8_t hash[CRIPEMD160::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
@@ -150,7 +150,7 @@ static void MuHashPrecompute(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RIPEMD160, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchRIPEMD160, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA1, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA512, benchmark::PriorityLevel::HIGH);

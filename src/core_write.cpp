@@ -147,13 +147,13 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
     return HexStr(ssTx);
 }
 
-void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool include_address)
+void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool include_address, const SigningProvider* provider)
 {
     CTxDestination address;
 
     out.pushKV("asm", ScriptToAsmStr(script));
     if (include_address) {
-        out.pushKV("desc", InferDescriptor(script, DUMMY_SIGNING_PROVIDER)->ToString());
+        out.pushKV("desc", InferDescriptor(script, provider ? *provider : DUMMY_SIGNING_PROVIDER)->ToString());
     }
     if (include_hex) {
         out.pushKV("hex", HexStr(script));
@@ -170,6 +170,8 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
 
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
 {
+    CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
+
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
     // Transaction version is actually unsigned in consensus checks, just signed in memory,

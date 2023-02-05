@@ -12,6 +12,7 @@
 #include <crypto/sha256.h>
 #include <prevector.h>
 #include <serialize.h>
+#include <span.h>
 #include <uint256.h>
 #include <version.h>
 
@@ -166,6 +167,39 @@ public:
 };
 
 /** Reads data from an underlying stream, while hashing the read data. */
+template <typename Source>
+class HashVerifier : public HashWriter
+{
+private:
+    Source& m_source;
+
+public:
+    explicit HashVerifier(Source& source LIFETIMEBOUND) : m_source{source} {}
+
+    void read(Span<std::byte> dst)
+    {
+        m_source.read(dst);
+        this->write(dst);
+    }
+
+    void ignore(size_t num_bytes)
+    {
+        std::byte data[1024];
+        while (num_bytes > 0) {
+            size_t now = std::min<size_t>(num_bytes, 1024);
+            read({data, now});
+            num_bytes -= now;
+        }
+    }
+
+    template <typename T>
+    HashVerifier<Source>& operator>>(T&& obj)
+    {
+        ::Unserialize(*this, obj);
+        return *this;
+    }
+};
+
 template<typename Source>
 class CHashVerifier : public CHashWriter
 {
@@ -247,5 +281,13 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
  * then calling HashWriter::GetSHA256().
  */
 HashWriter TaggedHash(const std::string& tag);
+
+/** Compute the 160-bit RIPEMD-160 hash of an array. */
+inline uint160 RIPEMD160(Span<const unsigned char> data)
+{
+    uint160 result;
+    CRIPEMD160().Write(data.data(), data.size()).Finalize(result.begin());
+    return result;
+}
 
 #endif // BITCOIN_HASH_H

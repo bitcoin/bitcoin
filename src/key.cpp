@@ -245,8 +245,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     unsigned char rnd[8];
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd);
-    uint256 hash;
-    CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);
+    uint256 hash{Hash(str, rnd)};
     std::vector<unsigned char> vchSig;
     Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);

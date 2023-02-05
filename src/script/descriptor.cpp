@@ -4,11 +4,13 @@
 
 #include <script/descriptor.h>
 
+#include <hash.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/miniscript.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <uint256.h>
 
 #include <span.h>
 #include <util/bip32.h>
@@ -1618,8 +1620,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TxoutType::WITNESS_V0_SCRIPTHASH && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH)) {
-        CScriptID scriptid;
-        CRIPEMD160().Write(data[0].data(), data[0].size()).Finalize(scriptid.begin());
+        CScriptID scriptid{RIPEMD160(data[0])};
         CScript subscript;
         if (provider.GetCScript(scriptid, subscript)) {
             auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
@@ -1832,17 +1833,17 @@ DescriptorCache DescriptorCache::MergeAndDiff(const DescriptorCache& other)
     return diff;
 }
 
-const ExtPubKeyMap DescriptorCache::GetCachedParentExtPubKeys() const
+ExtPubKeyMap DescriptorCache::GetCachedParentExtPubKeys() const
 {
     return m_parent_xpubs;
 }
 
-const std::unordered_map<uint32_t, ExtPubKeyMap> DescriptorCache::GetCachedDerivedExtPubKeys() const
+std::unordered_map<uint32_t, ExtPubKeyMap> DescriptorCache::GetCachedDerivedExtPubKeys() const
 {
     return m_derived_xpubs;
 }
 
-const ExtPubKeyMap DescriptorCache::GetCachedLastHardenedExtPubKeys() const
+ExtPubKeyMap DescriptorCache::GetCachedLastHardenedExtPubKeys() const
 {
     return m_last_hardened_xpubs;
 }
