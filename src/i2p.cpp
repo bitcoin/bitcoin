@@ -336,7 +336,7 @@ void Session::GenerateAndSavePrivateKey(const Sock& sock)
 {
     DestGenerate(sock);
 
-    // umask is set to 077 in init.cpp, which is ok (unless -sysperms is given)
+    // umask is set to 077 in init.cpp, which is ok.
     if (!WriteBinaryFile(m_private_key_file,
                          std::string(m_private_key.begin(), m_private_key.end()))) {
         throw std::runtime_error(

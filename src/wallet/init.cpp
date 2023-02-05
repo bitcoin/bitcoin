@@ -122,9 +122,6 @@ bool WalletInit::ParameterInteraction() const
         return InitError(Untranslated("-zapwallettxes has been removed. If you are attempting to remove a stuck transaction from your wallet, please use abandontransaction instead."));
     }
 
-    if (gArgs.GetBoolArg("-sysperms", false))
-        return InitError(Untranslated("-sysperms is not allowed in combination with enabled wallet functionality"));
-
     return true;
 }
 
