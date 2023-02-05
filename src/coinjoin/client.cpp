@@ -756,7 +756,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 //
 // Passively run mixing in the background to mix funds based on the given configuration.
 //
-bool CCoinJoinClientSession::DoAutomaticDenominating(CTxMemPool& mempool, CConnman& connman, bool fDryRun)
+bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool, bool fDryRun)
 {
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
@@ -875,12 +875,12 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CTxMemPool& mempool, CConnm
         // there are funds to denominate and denominated balance does not exceed
         // max amount to mix yet.
         if (nBalanceAnonimizableNonDenom >= nValueMin + CCoinJoin::GetCollateralAmount() && nBalanceToDenominate > 0) {
-            CreateDenominated(nBalanceToDenominate);
+            CreateDenominated(fee_estimator, nBalanceToDenominate);
         }
 
         //check if we have the collateral sized inputs
         if (!mixingWallet.HasCollateralInputs()) {
-            return !mixingWallet.HasCollateralInputs(false) && MakeCollateralAmounts();
+            return !mixingWallet.HasCollateralInputs(false) && MakeCollateralAmounts(fee_estimator);
         }
 
         if (nSessionID) {
@@ -936,7 +936,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CTxMemPool& mempool, CConnm
     return false;
 }
 
-bool CCoinJoinClientManager::DoAutomaticDenominating(CTxMemPool& mempool, CConnman& connman, bool fDryRun)
+bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool, bool fDryRun)
 {
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
@@ -978,7 +978,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CTxMemPool& mempool, CConnm
             return false;
         }
 
-        fResult &= session.DoAutomaticDenominating(mempool, connman, fDryRun);
+        fResult &= session.DoAutomaticDenominating(connman, fee_estimator, mempool, fDryRun);
     }
 
     return fResult;
@@ -1372,7 +1372,7 @@ bool CCoinJoinClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds, s
 }
 
 // Create collaterals by looping through inputs grouped by addresses
-bool CCoinJoinClientSession::MakeCollateralAmounts()
+bool CCoinJoinClientSession::MakeCollateralAmounts(const CBlockPolicyEstimator& fee_estimator)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
@@ -1395,13 +1395,13 @@ bool CCoinJoinClientSession::MakeCollateralAmounts()
 
     // First try to use only non-denominated funds
     for (const auto& item : vecTally) {
-        if (!MakeCollateralAmounts(item, false)) continue;
+        if (!MakeCollateralAmounts(fee_estimator, item, false)) continue;
         return true;
     }
 
     // There should be at least some denominated funds we should be able to break in pieces to continue mixing
     for (const auto& item : vecTally) {
-        if (!MakeCollateralAmounts(item, true)) continue;
+        if (!MakeCollateralAmounts(fee_estimator, item, true)) continue;
         return true;
     }
 
@@ -1411,7 +1411,7 @@ bool CCoinJoinClientSession::MakeCollateralAmounts()
 }
 
 // Split up large inputs or create fee sized inputs
-bool CCoinJoinClientSession::MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated)
+bool CCoinJoinClientSession::MakeCollateralAmounts(const CBlockPolicyEstimator& fee_estimator, const CompactTallyItem& tallyItem, bool fTryDenominated)
 {
     AssertLockHeld(mixingWallet.cs_wallet);
 
@@ -1434,7 +1434,7 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CompactTallyItem& tally
         return false;
     }
 
-    CTransactionBuilder txBuilder(pwallet, tallyItem);
+    CTransactionBuilder txBuilder(pwallet, tallyItem, fee_estimator);
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- Start %s\n", __func__, txBuilder.ToString());
 
@@ -1553,7 +1553,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
 }
 
 // Create denominations by looping through inputs grouped by addresses
-bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate)
+bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estimator, CAmount nBalanceToDenominate)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
@@ -1577,7 +1577,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate)
     bool fCreateMixingCollaterals = !mixingWallet.HasCollateralInputs();
 
     for (const auto& item : vecTally) {
-        if (!CreateDenominated(nBalanceToDenominate, item, fCreateMixingCollaterals)) continue;
+        if (!CreateDenominated(fee_estimator, nBalanceToDenominate, item, fCreateMixingCollaterals)) continue;
         return true;
     }
 
@@ -1586,7 +1586,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate)
 }
 
 // Create denominations
-bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
+bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estimator, CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
 {
     AssertLockHeld(mixingWallet.cs_wallet);
 
@@ -1604,7 +1604,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
         return false;
     }
 
-    CTransactionBuilder txBuilder(pwallet, tallyItem);
+    CTransactionBuilder txBuilder(pwallet, tallyItem, fee_estimator);
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- Start %s\n", __func__, txBuilder.ToString());
 
@@ -1815,7 +1815,7 @@ void CCoinJoinClientQueueManager::DoMaintenance()
     CheckQueue();
 }
 
-void CCoinJoinClientManager::DoMaintenance(CTxMemPool& mempool, CConnman& connman)
+void CCoinJoinClientManager::DoMaintenance(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (m_mn_sync == nullptr) return;
@@ -1830,7 +1830,7 @@ void CCoinJoinClientManager::DoMaintenance(CTxMemPool& mempool, CConnman& connma
     CheckTimeout();
     ProcessPendingDsaRequest(connman);
     if (nDoAutoNextRun == nTick) {
-        DoAutomaticDenominating(mempool, connman);
+        DoAutomaticDenominating(connman, fee_estimator, mempool);
         nDoAutoNextRun = nTick + COINJOIN_AUTO_TIMEOUT_MIN + GetRandInt(COINJOIN_AUTO_TIMEOUT_MAX - COINJOIN_AUTO_TIMEOUT_MIN);
     }
 }
@@ -1867,14 +1867,13 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
     obj.pushKV("sessions",  arrSessions);
 }
 
-void DoCoinJoinMaintenance(CTxMemPool& mempool, CConnman& connman)
+void DoCoinJoinMaintenance(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool)
 {
     if (coinJoinClientQueueManager != nullptr) {
         coinJoinClientQueueManager->DoMaintenance();
     }
 
     for (const auto& pair : coinJoinClientManagers) {
-        pair.second->DoMaintenance(mempool, connman);
+        pair.second->DoMaintenance(connman, fee_estimator, mempool);
     }
 }
-

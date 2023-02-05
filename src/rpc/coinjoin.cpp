@@ -64,7 +64,7 @@ static UniValue coinjoin(const JSONRPCRequest& request)
 
         const NodeContext& node = EnsureNodeContext(request.context);
         CTxMemPool& mempool = EnsureMemPool(request.context);
-        bool result = it->second->DoAutomaticDenominating(mempool, *node.connman);
+        bool result = it->second->DoAutomaticDenominating(*node.connman, ::feeEstimator, mempool);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses().original + ", will retry"));
     }
 
