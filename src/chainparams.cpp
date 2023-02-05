@@ -218,7 +218,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 348000;
         consensus.nNEVMStartBlock = 1317500;
-        consensus.nPODAStartBlock = 1450000;
+        consensus.nPODAStartBlock = 1900000;
         consensus.nV19StartBlock = 1900000;
         consensus.nUTXOAssetsBlock = 1004200;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;

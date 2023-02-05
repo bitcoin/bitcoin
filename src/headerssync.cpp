@@ -10,6 +10,8 @@
 
 // The two constants below are computed using the simulation script on
 // https://gist.github.com/sipa/016ae445c132cdf65a2791534dfb7ae1
+//
+// They are likely not ideal for auxpow, but we've kept them for now.
 
 //! Store a commitment to a header every HEADER_COMMITMENT_PERIOD blocks.
 constexpr size_t HEADER_COMMITMENT_PERIOD{584};
@@ -18,9 +20,9 @@ constexpr size_t HEADER_COMMITMENT_PERIOD{584};
 //! received and validated against commitments.
 constexpr size_t REDOWNLOAD_BUFFER_SIZE{13959}; // 13959/584 = ~23.9 commitments
 
-// Our memory analysis assumes 48 bytes for a CompressedHeader (so we should
+// SYSCOIN Our memory analysis assumes 48 bytes for a CompressedHeader (so we should
 // re-calculate parameters if we compress further)
-static_assert(sizeof(CompressedHeader) == 48);
+// static_assert(sizeof(CompressedHeader) == 48);
 
 HeadersSyncState::HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
         const CBlockIndex* chain_start, const arith_uint256& minimum_required_work) :
@@ -30,7 +32,7 @@ HeadersSyncState::HeadersSyncState(NodeId id, const Consensus::Params& consensus
     m_current_chain_work(chain_start->nChainWork),
     m_commit_offset(GetRand<unsigned>(HEADER_COMMITMENT_PERIOD)),
     // SYSCOIN
-    m_last_header_received(m_chain_start->GetBlockHeader(consensus_params)),
+    m_last_header_received(m_chain_start->GetPureHeader()),
     m_current_height(chain_start->nHeight)
 {
     // Estimate the number of blocks that could possibly exist on the peer's
@@ -174,8 +176,8 @@ bool HeadersSyncState::ValidateAndStoreHeadersCommitments(const std::vector<CBlo
     }
     return true;
 }
-
-bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& current)
+// SYSCOIN
+bool HeadersSyncState::ValidateAndProcessSingleHeader(const CPureBlockHeader& current)
 {
     Assume(m_download_state == State::PRESYNC);
     if (m_download_state != State::PRESYNC) return false;
