@@ -1674,7 +1674,7 @@ static std::vector<unsigned int> AllConsensusFlags()
 {
     std::vector<unsigned int> ret;
 
-    for (unsigned int i = 0; i < 128; ++i) {
+    for (unsigned int i = 0; i < 256; ++i) {
         unsigned int flag = 0;
         if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
         if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;

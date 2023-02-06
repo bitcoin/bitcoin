@@ -68,6 +68,8 @@ static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("DISCOURAGE_UPGRADABLE_CHECKTEMPLATEVERIFY"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_CHECKTEMPLATEVERIFY},
     {std::string("DISCOURAGE_CHECKTEMPLATEVERIFY"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_CHECKTEMPLATEVERIFY},
     {std::string("CHECKTEMPLATEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKTEMPLATEVERIFY},
+    {std::string("ANYPREVOUT"), (unsigned int)SCRIPT_VERIFY_ANYPREVOUT},
+    {std::string("DISCOURAGE_ANYPREVOUT"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_ANYPREVOUT},
 };
 
 unsigned int ParseScriptFlags(std::string strFlags)
