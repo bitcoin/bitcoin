@@ -1052,7 +1052,10 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     TxValidationState& state = ws.m_state;
 
     const bool ctv_active = DeploymentActiveAfter(m_active_chainstate.m_chain.Tip(), m_active_chainstate.m_chainman, Consensus::DEPLOYMENT_CHECKTEMPLATEVERIFY);
-    const unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS | (ctv_active ? SCRIPT_VERIFY_NONE : SCRIPT_VERIFY_DISCOURAGE_CHECK_TEMPLATE_VERIFY_HASH);
+    const bool apo_active = DeploymentActiveAfter(m_active_chainstate.m_chain.Tip(), m_active_chainstate.m_chainman, Consensus::DEPLOYMENT_ANYPREVOUT);
+    const unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS
+        | (ctv_active ? SCRIPT_VERIFY_NONE : SCRIPT_VERIFY_DISCOURAGE_CHECK_TEMPLATE_VERIFY_HASH)
+        | (apo_active ? SCRIPT_VERIFY_NONE : SCRIPT_VERIFY_DISCOURAGE_ANYPREVOUT);
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
