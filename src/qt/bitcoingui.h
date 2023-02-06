@@ -288,6 +288,8 @@ public Q_SLOTS:
     void gotoVerifyMessageTab(QString addr = "");
     /** Load Partially Signed Bitcoin Transaction from file or clipboard */
     void gotoLoadPSBT(bool from_clipboard = false);
+    /** Enable history action when privacy is changed */
+    void enableHistoryAction(bool privacy);
 
     /** Show open dialog */
     void openClicked();
