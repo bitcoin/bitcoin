@@ -963,6 +963,14 @@ public:
     const arith_uint256& MinimumChainWork() const { return *Assert(m_options.minimum_chain_work); }
     const uint256& AssumedValidBlock() const { return *Assert(m_options.assumed_valid_block); }
 
+    bool IsAssumedValid(const CBlockIndex& index) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
+    bool IsAssumedValid(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
+    {
+        const auto* index = m_blockman.LookupBlockIndex(hash);
+        if (!index) return false;
+        return IsAssumedValid(*index);
+    }
+
     /**
      * Alias for ::cs_main.
      * Should be used in new code to make it easier to make ::cs_main a member
