@@ -32,10 +32,12 @@ enum
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
+    SIGHASH_ANYPREVOUT = 0x40,
+    SIGHASH_ANYPREVOUTANYSCRIPT = 0xc0,
 
     SIGHASH_DEFAULT = 0, //!< Taproot only; implied when sighash byte is missing, and equivalent to SIGHASH_ALL
     SIGHASH_OUTPUT_MASK = 3,
-    SIGHASH_INPUT_MASK = 0x80,
+    SIGHASH_INPUT_MASK = 0xc0,
 };
 
 /** Script verification flags.
@@ -153,6 +155,12 @@ enum : uint32_t {
     // discourage OP_CHECKTEMPLATEVERIFY
     SCRIPT_VERIFY_DISCOURAGE_CHECKTEMPLATEVERIFY = (1U << 23),
 
+    // CHECKTEMPLATEVERIFY validation (BIP-118)
+    SCRIPT_VERIFY_ANYPREVOUT = (1U << 24),
+
+    // Making ANYPREVOUT public key versions (in BIP 342 scripts) non-standard
+    SCRIPT_VERIFY_DISCOURAGE_ANYPREVOUT = (1U << 25),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -226,6 +234,7 @@ enum class SigVersion
 enum class KeyVersion
 {
     TAPROOT = 0,     //!< 32 byte public key
+    ANYPREVOUT = 1,  //!< 1 or 33 byte public key, first byte is 0x01
 };
 
 struct ScriptExecutionData
@@ -254,6 +263,9 @@ struct ScriptExecutionData
 
     //! The hash of the corresponding output
     std::optional<uint256> m_output_hash;
+
+    //! The taproot internal key. */
+    std::optional<XOnlyPubKey> m_internal_key = std::nullopt;
 };
 
 /** Signature hash sizes */
@@ -267,6 +279,8 @@ static constexpr size_t TAPROOT_CONTROL_BASE_SIZE = 33;
 static constexpr size_t TAPROOT_CONTROL_NODE_SIZE = 32;
 static constexpr size_t TAPROOT_CONTROL_MAX_NODE_COUNT = 128;
 static constexpr size_t TAPROOT_CONTROL_MAX_SIZE = TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * TAPROOT_CONTROL_MAX_NODE_COUNT;
+
+static constexpr uint8_t BIP118_PUBKEY_PREFIX = 0x01;
 
 extern const HashWriter HASHER_TAPSIGHASH; //!< Hasher with tag "TapSighash" pre-fed to it.
 extern const HashWriter HASHER_TAPLEAF;    //!< Hasher with tag "TapLeaf" pre-fed to it.

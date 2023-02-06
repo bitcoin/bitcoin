@@ -2146,6 +2146,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     // Enforce COVTOOLS (BIPxxx)
     if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_COVTOOLS)) {
         flags |= SCRIPT_VERIFY_CHECKTEMPLATEVERIFY;
+        flags |= SCRIPT_VERIFY_ANYPREVOUT;
     }
 
     // Enforce BIP147 NULLDUMMY (activated simultaneously with segwit)
