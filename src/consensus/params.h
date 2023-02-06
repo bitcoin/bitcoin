@@ -11,7 +11,8 @@
 #include <limits>
 // SYSCOIN
 #include <map>
-#include <cmath>
+#include <vector>
+
 namespace Consensus {
 
 /**
