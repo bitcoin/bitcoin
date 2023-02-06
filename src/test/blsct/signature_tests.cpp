@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_CASE(test_serialization_with_func_calls)
     sig.Serialize(st);
     Signature recovered_sig;
     recovered_sig.Unserialize(st);
+
     BOOST_CHECK(mclBnG2_isEqual(&sig.m_data.v, &recovered_sig.m_data.v) == 1);
 }
 
@@ -34,6 +35,7 @@ BOOST_AUTO_TEST_CASE(test_serialization_with_operators)
     st << sig;
     Signature recovered_sig;
     st >> recovered_sig;
+
     BOOST_CHECK(mclBnG2_isEqual(&sig.m_data.v, &recovered_sig.m_data.v) == 1);
 }
 
