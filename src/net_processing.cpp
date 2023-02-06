@@ -754,6 +754,7 @@ private:
     CNodeState* State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     uint32_t GetFetchFlags(const Peer& peer) const;
+    uint32_t GetBlockFetchFlags(const Peer& peer, const CBlockIndex& index) const;
 
     std::atomic<std::chrono::microseconds> m_next_inv_to_inbounds{0us};
 
@@ -2407,6 +2408,16 @@ uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
         nFetchFlags |= MSG_WITNESS_FLAG;
     }
     return nFetchFlags;
+}
+
+uint32_t PeerManagerImpl::GetBlockFetchFlags(const Peer& peer, const CBlockIndex& index) const
+{
+    uint32_t fetch_flags = GetFetchFlags(peer);
+    if (m_chainman.m_blockman.IsPruneMode() &&
+        WITH_LOCK(m_chainman.GetMutex(), return m_chainman.IsAssumedValid(index))) {
+        fetch_flags &= ~MSG_WITNESS_FLAG;
+    }
+    return fetch_flags;
 }
 
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req)
@@ -5829,7 +5840,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             NodeId staller = -1;
             FindNextBlocksToDownload(*peer, MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
             for (const CBlockIndex *pindex : vToDownload) {
-                uint32_t nFetchFlags = GetFetchFlags(*peer);
+                uint32_t nFetchFlags = GetBlockFetchFlags(*peer, *pindex);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                 BlockRequested(pto->GetId(), *pindex);
                 LogPrint(BCLog::NET, "Requesting block %s (%d, %s) peer=%d\n", pindex->GetBlockHash().ToString(),
