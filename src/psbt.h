@@ -889,7 +889,7 @@ struct PSBTOutput
                     } else if (key.size() != 33) {
                         throw std::ios_base::failure("Output Taproot BIP32 keypath key is not at 33 bytes");
                     }
-                    XOnlyPubKey xonly(uint256({key.begin() + 1, key.begin() + 33}));
+                    XOnlyPubKey xonly(uint256(Span<uint8_t>(key).last(32)));
                     std::set<uint256> leaf_hashes;
                     uint64_t value_len = ReadCompactSize(s);
                     size_t before_hashes = s.size();
