@@ -194,6 +194,7 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
             switch (result) {
             case VerifyDBResult::SUCCESS:
             case VerifyDBResult::INTERRUPTED:
+            case VerifyDBResult::SKIPPED_MISSING_BLOCKS:
                 break;
             case VerifyDBResult::CORRUPTED_BLOCK_DB:
                 return {ChainstateLoadStatus::FAILURE, _("Corrupted block database detected")};
