@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
-#include <node/context.h>
 #include <streams.h>
 #include <util/translation.h>
 #include <wallet/salvage.h>
@@ -130,10 +129,8 @@ bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::v
         return false;
     }
 
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
     DbTxn* ptxn = env->TxnBegin();
-    CWallet dummyWallet(chain.get(), "", CreateDummyWalletDatabase());
+    CWallet dummyWallet(nullptr, "", CreateDummyWalletDatabase());
     for (KeyValPair& row : salvagedData)
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */
