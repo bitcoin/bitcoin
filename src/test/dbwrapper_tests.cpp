@@ -5,6 +5,7 @@
 #include <dbwrapper.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/string.h>
 
 #include <memory>
 
@@ -324,12 +325,6 @@ struct StringContentsSerializer {
     StringContentsSerializer() = default;
     explicit StringContentsSerializer(const std::string& inp) : str(inp) {}
 
-    StringContentsSerializer& operator+=(const std::string& s) {
-        str += s;
-        return *this;
-    }
-    StringContentsSerializer& operator+=(const StringContentsSerializer& s) { return *this += s.str; }
-
     template<typename Stream>
     void Serialize(Stream& s) const
     {
@@ -343,44 +338,34 @@ struct StringContentsSerializer {
     {
         str.clear();
         uint8_t c{0};
-        while (true) {
-            try {
-                s >> c;
-                str.push_back(c);
-            } catch (const std::ios_base::failure&) {
-                break;
-            }
+        while (!s.eof()) {
+            s >> c;
+            str.push_back(c);
         }
     }
 };
 
 BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 {
-    char buf[10];
-
     fs::path ph = m_args.GetDataDirBase() / "iterator_string_ordering";
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
-    for (int x=0x00; x<10; ++x) {
-        for (int y = 0; y < 10; y++) {
-            snprintf(buf, sizeof(buf), "%d", x);
-            StringContentsSerializer key(buf);
-            for (int z = 0; z < y; z++)
+    for (int x = 0; x < 10; ++x) {
+        for (int y = 0; y < 10; ++y) {
+            std::string key{ToString(x)};
+            for (int z = 0; z < y; ++z)
                 key += key;
             uint32_t value = x*x;
-            BOOST_CHECK(dbw.Write(key, value));
+            BOOST_CHECK(dbw.Write(StringContentsSerializer{key}, value));
         }
     }
 
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
     for (const int seek_start : {0, 5}) {
-        snprintf(buf, sizeof(buf), "%d", seek_start);
-        StringContentsSerializer seek_key(buf);
-        it->Seek(seek_key);
-        for (unsigned int x=seek_start; x<10; ++x) {
-            for (int y = 0; y < 10; y++) {
-                snprintf(buf, sizeof(buf), "%d", x);
-                std::string exp_key(buf);
-                for (int z = 0; z < y; z++)
+        it->Seek(StringContentsSerializer{ToString(seek_start)});
+        for (unsigned int x = seek_start; x < 10; ++x) {
+            for (int y = 0; y < 10; ++y) {
+                std::string exp_key{ToString(x)};
+                for (int z = 0; z < y; ++z)
                     exp_key += exp_key;
                 StringContentsSerializer key;
                 uint32_t value;
