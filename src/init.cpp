@@ -816,8 +816,6 @@ bool AppInitBasicSetup(const ArgsManager& args)
     }
 
 #ifndef WIN32
-    umask(077);
-
     // Clean shutdown on SIGTERM
     registerSignalHandler(SIGTERM, HandleSIGTERM);
     registerSignalHandler(SIGINT, HandleSIGTERM);
