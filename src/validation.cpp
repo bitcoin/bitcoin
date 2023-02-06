@@ -4258,7 +4258,9 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    cache.Flush();
+    if (!cache.Flush()) {
+        return error("Failed to write to coin database");
+    }
     uiInterface.ShowProgress("", 100, false);
     return true;
 }
@@ -5033,7 +5035,7 @@ bool ChainstateManager::ActivateSnapshot(
     return true;
 }
 
-static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
+[[nodiscard]] static bool FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
 {
     LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(
         strprintf("[snapshot] %s coins cache (%.2f MB)",
@@ -5041,7 +5043,11 @@ static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_load
                   coins_cache.DynamicMemoryUsage() / (1000 * 1000)),
         BCLog::LogFlags::ALL);
 
-    snapshot_loaded ? coins_cache.Sync() : coins_cache.Flush();
+    if (snapshot_loaded ? coins_cache.Sync() : coins_cache.Flush()) {
+        return true;
+    } else {
+        return AbortNode("Failed to write to coin database");
+    }
 }
 
 bool ChainstateManager::PopulateAndValidateSnapshot(
@@ -5132,7 +5138,9 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                 coins_cache.SetBestBlock(GetRandHash());
 
                 // No need to acquire cs_main since this chainstate isn't being used yet.
-                FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false);
+                if (!FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false)) {
+                    return false;
+                }
             }
         }
     }
@@ -5163,7 +5171,9 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         base_blockhash.ToString());
 
     // No need to acquire cs_main since this chainstate isn't being used yet.
-    FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/true);
+    if (!FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/true)) {
+        return false;
+    }
 
     assert(coins_cache.GetBestBlock() == base_blockhash);
 
