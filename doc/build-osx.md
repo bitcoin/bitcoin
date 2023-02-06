@@ -54,6 +54,12 @@ brew install automake libtool boost pkg-config libevent
 ### 4. Clone Bitcoin repository
 
 `git` should already be installed by default on your system.
+If it is not, install it with the following command:
+
+``` bash
+brew install git
+```
+
 Now that all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory.
 All build scripts and commands will run from this directory.
 
