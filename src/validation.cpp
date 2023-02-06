@@ -3679,8 +3679,15 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
+    bool check_witness_commitment{DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT)};
+    if (check_witness_commitment && chainman.m_blockman.IsPruneMode()) {
+        LOCK(chainman.GetMutex());
+        if (chainman.IsAssumedValid(block.GetHash())) {
+            check_witness_commitment = false;
+        }
+    }
     bool fHaveWitness = false;
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
+    if (check_witness_commitment) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != NO_WITNESS_COMMITMENT) {
             bool malleated = false;
