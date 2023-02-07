@@ -670,7 +670,8 @@ static void protx_update_service_help(const JSONRPCRequest& request)
         },
     }.Check(request);
 }
-static UniValue protx_update_service_wrapper(const JSONRPCRequest& request, const bool specific_legacy_bls_scheme)
+
+static UniValue protx_update_service(const JSONRPCRequest& request)
 {
     protx_update_service_help(request);
 
@@ -680,11 +681,7 @@ static UniValue protx_update_service_wrapper(const JSONRPCRequest& request, cons
     EnsureWalletIsUnlocked(wallet.get());
 
     CProUpServTx ptx;
-    if (specific_legacy_bls_scheme) {
-        ptx.nVersion = CProUpServTx::LEGACY_BLS_VERSION;
-    } else {
-        ptx.nVersion = CProUpServTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
-    }
+    ptx.nVersion = CProUpServTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     if (!Lookup(request.params[1].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
@@ -744,15 +741,6 @@ static UniValue protx_update_service_wrapper(const JSONRPCRequest& request, cons
     SetTxPayload(tx, ptx);
 
     return SignAndSendSpecialTx(request, tx);
-}
-static UniValue protx_update_service(const JSONRPCRequest& request)
-{
-    return protx_update_service_wrapper(request, false);
-}
-
-static UniValue protx_update_service_legacy(const JSONRPCRequest& request)
-{
-    return protx_update_service_wrapper(request, true);
 }
 
 static void protx_update_registrar_help(const JSONRPCRequest& request)
@@ -1283,8 +1271,6 @@ static UniValue protx(const JSONRPCRequest& request)
         return protx_register_submit(new_request);
     } else if (command == "protxupdate_service") {
         return protx_update_service(new_request);
-    } else if (command == "protxupdate_service_legacy") {
-        return protx_update_service_legacy(new_request);
     } else if (command == "protxupdate_registrar") {
         return protx_update_registrar(new_request);
     } else if (command == "protxupdate_registrar_legacy") {
