@@ -225,6 +225,7 @@ BASE_SCRIPTS = [
     'p2p_compactblocks_hb.py --v2transport',
     'p2p_disconnect_ban.py --v1transport',
     'p2p_disconnect_ban.py --v2transport',
+    'feature_posix_fs_permissions.py',
     'feature_addressindex.py',
     'feature_timestampindex.py',
     'feature_spentindex.py',

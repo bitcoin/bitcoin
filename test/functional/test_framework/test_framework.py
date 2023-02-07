@@ -1037,6 +1037,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
 
+    def skip_if_platform_not_posix(self):
+        """Skip the running test if we are not on a POSIX platform"""
+        if os.name != 'posix':
+            raise SkipTest("not on a POSIX system")
+
     def skip_if_no_bitcoind_zmq(self):
         """Skip the running test if dashd has not been compiled with zmq support."""
         if not self.is_zmq_compiled():

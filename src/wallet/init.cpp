@@ -155,9 +155,6 @@ bool WalletInit::ParameterInteraction() const
         gArgs.ForceRemoveArg("rescan");
     }
 
-    if (gArgs.GetBoolArg("-sysperms", false))
-        return InitError(Untranslated("-sysperms is not allowed in combination with enabled wallet functionality"));
-
     if (gArgs.IsArgSet("-walletbackupsdir")) {
         if (!fs::is_directory(gArgs.GetArg("-walletbackupsdir", ""))) {
             InitWarning(strprintf(_("Warning: incorrect parameter %s, path must exist! Using default path."), "-walletbackupsdir"));
