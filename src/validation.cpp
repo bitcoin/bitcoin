@@ -3405,6 +3405,10 @@ void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pin
 
         if (m_chainman.IsAssumedValid(*pindexNew) && m_chainman.m_blockman.IsPruneMode()) {
             pindexNew->nStatus |= BLOCK_PRUNED_WITNESSES;
+            if (!m_chainman.m_blockman.HasPrunedWitnesses() &&
+                m_chainman.m_blockman.m_block_tree_db->WritePrunedWitnesses(true)) {
+                m_chainman.m_blockman.SetPrunedWitnesses();
+            }
         }
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);

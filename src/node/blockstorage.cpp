@@ -364,6 +364,12 @@ bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus_params)
         LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
     }
 
+    // Check whether we have ever pruned block & undo files
+    m_block_tree_db->ReadPrunedWitnesses(m_pruned_witnesses);
+    if (m_pruned_witnesses) {
+        LogPrintf("LoadBlockIndexDB(): blocks might have previously been stored without witnesses\n");
+    }
+
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     m_block_tree_db->ReadReindexing(fReindexing);

@@ -138,6 +138,9 @@ private:
      */
     std::unordered_map<std::string, PruneLockInfo> m_prune_locks GUARDED_BY(::cs_main);
 
+    /** True if we have ever stored a block without witnesses. */
+    bool m_pruned_witnesses{false};
+
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
 
@@ -208,6 +211,9 @@ public:
 
     //! Create or update a prune lock identified by its name
     void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    bool HasPrunedWitnesses() const { return m_pruned_witnesses; }
+    void SetPrunedWitnesses() { m_pruned_witnesses = true; }
 };
 
 void CleanupBlockRevFiles();
