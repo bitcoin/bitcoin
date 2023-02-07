@@ -72,9 +72,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         return {ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB, _("Incorrect or no genesis block found. Wrong datadir for network?")};
     }
 
-    // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
-    // in the past, but is now trying to run unpruned.
-    if (chainman.m_blockman.m_have_pruned && !options.prune) {
+    // Check for changed -prune state.  What we are concerned about is a user
+    // who has pruned blocks or stored blocks without witnesses in the past,
+    // but is now trying to run unpruned.
+    if ((chainman.m_blockman.m_have_pruned || chainman.m_blockman.HasPrunedWitnesses()) && !options.prune) {
         return {ChainstateLoadStatus::FAILURE, _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain")};
     }
 
