@@ -1607,6 +1607,12 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
     return networks;
 }
 
+bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
+{
+    AssertLockHeld(m_nodes_mutex);
+    return m_network_conn_counts[net] > 1;
+}
+
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
