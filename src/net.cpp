@@ -339,17 +339,6 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CSubNet& subNet)
-{
-    LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-        if (subNet.Match(static_cast<CNetAddr>(pnode->addr))) {
-            return pnode;
-        }
-    }
-    return nullptr;
-}
-
 CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(m_nodes_mutex);
