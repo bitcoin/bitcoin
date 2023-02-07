@@ -3823,14 +3823,15 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 continue;
             }
             ++num_proc;
-            bool fReachable = IsReachable(addr);
+            const bool reachable{g_reachable_nets.Contains(addr)};
             if (addr.nTime > current_a_time - 10min && !peer->m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
                 // Relay to a limited number of other nodes
-                RelayAddress(pfrom.GetId(), addr, fReachable);
+                RelayAddress(pfrom.GetId(), addr, reachable);
             }
             // Do not store addresses outside our network
-            if (fReachable)
+            if (reachable) {
                 vAddrOk.push_back(addr);
+            }
         }
         peer->m_addr_processed += num_proc;
         peer->m_addr_rate_limited += num_rate_limit;

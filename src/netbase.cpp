@@ -32,6 +32,8 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 std::chrono::milliseconds g_socks5_recv_timeout = 20s;
 static std::atomic<bool> interruptSocks5Recv(false);
 
+ReachableNets g_reachable_nets;
+
 std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup)
 {
     addrinfo ai_hint{};

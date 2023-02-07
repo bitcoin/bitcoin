@@ -115,7 +115,6 @@ bool fDiscover = true;
 bool fListen = true;
 GlobalMutex g_maplocalhost_mutex;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
-static bool vfLimited[NET_MAX] GUARDED_BY(g_maplocalhost_mutex) = {};
 std::string strSubVersion;
 
 size_t CSerializedNetMsg::GetMemoryUsage() const noexcept
@@ -232,7 +231,7 @@ static int GetnScore(const CService& addr)
 {
     CService addrLocal = pnode->GetAddrLocal();
     return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
-           IsReachable(addrLocal.GetNetwork());
+           g_reachable_nets.Contains(addrLocal);
 }
 
 std::optional<CService> GetLocalAddrForPeer(CNode& node)
@@ -280,7 +279,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
 CService MaybeFlipIPv6toCJDNS(const CService& service)
 {
     CService ret{service};
-    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && IsReachable(NET_CJDNS)) {
+    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && g_reachable_nets.Contains(NET_CJDNS)) {
         ret.m_net = NET_CJDNS;
     }
     return ret;
@@ -297,7 +296,7 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!fDiscover && nScore < LOCAL_MANUAL)
         return false;
 
-    if (!IsReachable(addr))
+    if (!g_reachable_nets.Contains(addr))
         return false;
 
     LogPrintf("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
@@ -325,25 +324,6 @@ void RemoveLocal(const CService& addr)
     LOCK(g_maplocalhost_mutex);
     LogPrintf("RemoveLocal(%s)\n", addr.ToStringAddrPort());
     mapLocalHost.erase(addr);
-}
-
-void SetReachable(enum Network net, bool reachable)
-{
-    if (net == NET_UNROUTABLE || net == NET_INTERNAL)
-        return;
-    LOCK(g_maplocalhost_mutex);
-    vfLimited[net] = !reachable;
-}
-
-bool IsReachable(enum Network net)
-{
-    LOCK(g_maplocalhost_mutex);
-    return !vfLimited[net];
-}
-
-bool IsReachable(const CNetAddr &addr)
-{
-    return IsReachable(addr.GetNetwork());
 }
 
 /** vote for a local address */
@@ -2433,7 +2413,7 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
     for (int n = 0; n < NET_MAX; n++) {
         enum Network net = (enum Network)n;
         if (net == NET_UNROUTABLE || net == NET_INTERNAL) continue;
-        if (IsReachable(net) && addrman.Size(net, std::nullopt) == 0) {
+        if (g_reachable_nets.Contains(net) && addrman.Size(net, std::nullopt) == 0) {
             networks.insert(net);
         }
     }
@@ -2453,7 +2433,7 @@ bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 
     LOCK(m_nodes_mutex);
     for (const auto net : nets) {
-        if (IsReachable(net) && m_network_conn_counts[net] == 0 && addrman.Size(net) != 0) {
+        if (g_reachable_nets.Contains(net) && m_network_conn_counts[net] == 0 && addrman.Size(net) != 0) {
             network = net;
             return true;
         }
@@ -2683,7 +2663,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (anchor && !m_anchors.empty()) {
                 const CAddress addr = m_anchors.back();
                 m_anchors.pop_back();
-                if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
+                if (!addr.IsValid() || IsLocal(addr) || !g_reachable_nets.Contains(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
@@ -2738,8 +2718,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 break;
             }
 
-            if (!IsReachable(addr))
+            if (!g_reachable_nets.Contains(addr)) {
                 continue;
+            }
 
             // only consider very recently tried nodes after 30 failed attempts
             if (current_time - addr_last_try < 10min && nTries < 30) {

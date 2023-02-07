@@ -160,16 +160,6 @@ enum
 /** Returns a local address that we should advertise to this peer. */
 std::optional<CService> GetLocalAddrForPeer(CNode& node);
 
-/**
- * Mark a network as reachable or unreachable (no automatic connects to it)
- * @note Networks are reachable by default
- */
-void SetReachable(enum Network net, bool reachable);
-/** @returns true if the network is reachable, false otherwise */
-bool IsReachable(enum Network net);
-/** @returns true if the address is in a reachable network, false otherwise */
-bool IsReachable(const CNetAddr& addr);
-
 bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
