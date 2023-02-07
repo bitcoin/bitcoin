@@ -33,9 +33,9 @@ class CRecoveredSig
 {
 public:
     const uint8_t llmqType{Consensus::LLMQ_NONE};
-    const uint256 quorumHash;
-    const uint256 id;
-    const uint256 msgHash;
+    const uint256 quorumHash{};
+    const uint256 id{};
+    const uint256 msgHash{};
     const CBLSLazySignature sig;
 
     CRecoveredSig() = default;
