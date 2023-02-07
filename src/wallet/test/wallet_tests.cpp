@@ -1062,6 +1062,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
 //! matter. The test could be extended to cover other scenarios in the future.
 BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
 {
+    gArgs.ForceSetArg("-unsafesqlitesync", "1");
     // Create new wallet with known key and unload it.
     auto chain = interfaces::MakeChain(m_node);
     auto wallet = TestLoadWallet(*chain);

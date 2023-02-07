@@ -5,9 +5,11 @@
 #include <key_io.h>
 #include <chainparams.h>
 #include <coinjoin/client.h>
+#include <logging.h>
 #include <script/descriptor.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
