@@ -3402,6 +3402,10 @@ void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pin
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
     if (DeploymentActiveAt(*pindexNew, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
+
+        if (m_chainman.IsAssumedValid(*pindexNew) && m_chainman.m_blockman.IsPruneMode()) {
+            pindexNew->nStatus |= BLOCK_PRUNED_WITNESSES;
+        }
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     m_blockman.m_dirty_blockindex.insert(pindexNew);

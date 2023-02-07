@@ -140,6 +140,12 @@ enum BlockStatus : uint32_t {
      * on a background chainstate. See `doc/design/assumeutxo.md`.
      */
     BLOCK_ASSUMED_VALID      =   256,
+
+    /**
+     * If set, this indicates that the block is serialized on disk without its
+     * witnesses. Only set for blocks with valid or assumed-valid witnesses.
+     */
+    BLOCK_PRUNED_WITNESSES   =   512,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -321,6 +327,12 @@ public:
     {
         AssertLockHeld(::cs_main);
         return nStatus & BLOCK_ASSUMED_VALID;
+    }
+
+    bool HasPrunedWitnesses() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
+        return nStatus & BLOCK_PRUNED_WITNESSES;
     }
 
     //! Raise the validity level of this block index entry.
