@@ -95,7 +95,7 @@ def main():
     with open(dirname + "/trusted-keys", "r", encoding="utf8") as f:
         trusted_keys = f.read().splitlines()
 
-    # Set commit and branch and set variables
+    # Set commit and variables
     current_commit = args.commit
     if ' ' in current_commit:
         print("Commit must not contain spaces", file=sys.stderr)
@@ -104,7 +104,6 @@ def main():
     no_sha1 = True
     prev_commit = ""
     initial_commit = current_commit
-    branch = subprocess.check_output([GIT, 'show', '-s', '--format=%H', initial_commit]).decode('utf8').splitlines()[0]
 
     # Iterate through commits
     while True:
@@ -164,15 +163,11 @@ def main():
         allow_unclean = current_commit in unclean_merge_allowed
         if len(parents) == 2 and check_merge and not allow_unclean:
             current_tree = subprocess.check_output([GIT, 'show', '--format=%T', current_commit]).decode('utf8').splitlines()[0]
-            subprocess.call([GIT, 'checkout', '--force', '--quiet', parents[0]])
-            subprocess.call([GIT, 'merge', '--no-ff', '--quiet', '--no-gpg-sign', parents[1]], stdout=subprocess.DEVNULL)
-            recreated_tree = subprocess.check_output([GIT, 'show', '--format=format:%T', 'HEAD']).decode('utf8').splitlines()[0]
+            recreated_tree = subprocess.check_output([GIT, "merge-tree", parents[0], parents[1]]).decode('utf8').splitlines()[0]
             if current_tree != recreated_tree:
                 print("Merge commit {} is not clean".format(current_commit), file=sys.stderr)
-                subprocess.call([GIT, 'diff', current_commit])
-                subprocess.call([GIT, 'checkout', '--force', '--quiet', branch])
+                subprocess.call([GIT, 'diff', recreated_tree, current_tree])
                 sys.exit(1)
-            subprocess.call([GIT, 'checkout', '--force', '--quiet', branch])
 
         prev_commit = current_commit
         current_commit = parents[0]
