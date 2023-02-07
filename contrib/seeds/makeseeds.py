@@ -173,6 +173,7 @@ def ip_stats(ips: List[Dict]) -> str:
 def parse_args():
     argparser = argparse.ArgumentParser(description='Generate a list of bitcoin node seed ip addresses.')
     argparser.add_argument("-a","--asmap", help='the location of the asmap asn database file (required)', required=True)
+    argparser.add_argument("-s","--seeds", help='the location of the DNS seeds file (required)', required=True)
     return argparser.parse_args()
 
 def main():
@@ -184,7 +185,8 @@ def main():
     print('Done.', file=sys.stderr)
 
     print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
-    lines = sys.stdin.readlines()
+    with open(args.seeds, 'r', encoding='utf8') as f:
+        lines = f.readlines()
     ips = [parseline(line) for line in lines]
     print('Done.', file=sys.stderr)
 
