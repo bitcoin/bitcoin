@@ -25,6 +25,7 @@ static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
+static constexpr uint8_t DB_PRUNED_WITNESSES{'W'};
 
 // Keys used in previous version that might still be found in the DB:
 static constexpr uint8_t DB_COINS{'c'};
@@ -177,6 +178,19 @@ size_t CCoinsViewDB::EstimateSize() const
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
     return Read(std::make_pair(DB_BLOCK_FILES, nFile), info);
+}
+
+bool CBlockTreeDB::WritePrunedWitnesses(bool pruned_witnesses)
+{
+    if (pruned_witnesses) {
+        return Write(DB_PRUNED_WITNESSES, uint8_t{'1'});
+    }
+    return Erase(DB_PRUNED_WITNESSES);
+}
+
+void CBlockTreeDB::ReadPrunedWitnesses(bool& pruned_witnesses)
+{
+    pruned_witnesses = Exists(DB_PRUNED_WITNESSES);
 }
 
 bool CBlockTreeDB::WriteReindexing(bool fReindexing) {

@@ -90,6 +90,8 @@ public:
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
     bool ReadLastBlockFile(int &nFile);
+    bool WritePrunedWitnesses(bool pruned_witnesses);
+    void ReadPrunedWitnesses(bool& pruned_witnesses);
     bool WriteReindexing(bool fReindexing);
     void ReadReindexing(bool &fReindexing);
     bool WriteFlag(const std::string &name, bool fValue);
