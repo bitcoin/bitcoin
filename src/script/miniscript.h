@@ -280,7 +280,7 @@ constexpr uint32_t MaxScriptSize(MiniscriptContext ms_ctx)
 Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys, MiniscriptContext ms_ctx);
 
 //! Helper function for Node::CalcScriptLen.
-size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys);
+size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys, MiniscriptContext ms_ctx);
 
 //! A helper sanitizer/checker for the output of CalcType.
 Type SanitizeType(Type x);
@@ -437,7 +437,7 @@ private:
             subsize += sub->ScriptSize();
         }
         Type sub0type = subs.size() > 0 ? subs[0]->GetType() : ""_mst;
-        return internal::ComputeScriptLen(fragment, sub0type, subsize, k, subs.size(), keys.size());
+        return internal::ComputeScriptLen(fragment, sub0type, subsize, k, subs.size(), keys.size(), m_script_ctx);
     }
 
     /* Apply a recursive algorithm to a Miniscript tree, without actual recursive calls.
@@ -1698,7 +1698,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 auto& [key, key_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::WRAP_C, Vector(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_K, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
-                script_size += 34;
+                script_size += IsTapscript(ctx.MsContext()) ? 33 : 34;
             } else if (Const("pkh(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
@@ -1712,7 +1712,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 auto& [key, key_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_K, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
-                script_size += 33;
+                script_size += IsTapscript(ctx.MsContext()) ? 32 : 33;
             } else if (Const("pk_h(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
@@ -2058,7 +2058,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 break;
             }
             // Public keys
-            if (in[0].second.size() == 33) {
+            if (in[0].second.size() == 33 || in[0].second.size() == 32) {
                 auto key = ctx.FromPKBytes(in[0].second.begin(), in[0].second.end());
                 if (!key) return {};
                 ++in;

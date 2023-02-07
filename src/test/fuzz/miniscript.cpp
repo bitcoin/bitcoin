@@ -796,7 +796,8 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
             // Update predicted resource limits. Since every leaf Miniscript node is at least one
             // byte long, we move one byte from each child to their parent. A similar technique is
             // used in the miniscript::internal::Parse function to prevent runaway string parsing.
-            scriptsize += miniscript::internal::ComputeScriptLen(node_info->fragment, ""_mst, node_info->subtypes.size(), node_info->k, node_info->subtypes.size(), node_info->keys.size()) - 1;
+            scriptsize += miniscript::internal::ComputeScriptLen(node_info->fragment, ""_mst, node_info->subtypes.size(), node_info->k, node_info->subtypes.size(),
+                                                                 node_info->keys.size(), miniscript::MiniscriptContext::P2WSH) - 1;
             if (scriptsize > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
             switch (node_info->fragment) {
             case Fragment::MULTI_A:

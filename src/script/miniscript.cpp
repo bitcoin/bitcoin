@@ -258,11 +258,12 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
     assert(false);
 }
 
-size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys) {
+size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs,
+                        size_t n_keys, MiniscriptContext ms_ctx) {
     switch (fragment) {
         case Fragment::JUST_1:
         case Fragment::JUST_0: return 1;
-        case Fragment::PK_K: return 34;
+        case Fragment::PK_K: return IsTapscript(ms_ctx) ? 33 : 34;
         case Fragment::PK_H: return 3 + 21;
         case Fragment::OLDER:
         case Fragment::AFTER: return 1 + BuildScript(k).size();
