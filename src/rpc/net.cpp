@@ -730,7 +730,7 @@ static RPCHelpMan setban()
     if (!isSubnet) {
         const std::optional<CNetAddr> addr{LookupHost(request.params[0].get_str(), false)};
         if (addr.has_value()) {
-            netAddr = addr.value();
+            netAddr = static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{addr.value(), /*port=*/0}));
         }
     }
     else

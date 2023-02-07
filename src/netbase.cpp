@@ -653,9 +653,10 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 
     const size_t slash_pos{subnet_str.find_last_of('/')};
     const std::string str_addr{subnet_str.substr(0, slash_pos)};
-    const std::optional<CNetAddr> addr{LookupHost(str_addr, /*fAllowLookup=*/false)};
+    std::optional<CNetAddr> addr{LookupHost(str_addr, /*fAllowLookup=*/false)};
 
     if (addr.has_value()) {
+        addr = static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{addr.value(), /*port=*/0}));
         if (slash_pos != subnet_str.npos) {
             const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
             uint8_t netmask;
