@@ -804,7 +804,7 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, co
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
     if (request.params[1].get_str() != "") {
-        ptx.pubKeyOperator = ParseBLSPubKey(request.params[1].get_str(), "operator BLS address");
+        ptx.pubKeyOperator = ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", specific_legacy_bls_scheme);
     }
     if (request.params[2].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[2].get_str(), "voting address");
