@@ -221,4 +221,10 @@
 /* Define to build with syscall sandbox support. */
 #cmakedefine USE_SYSCALL_SANDBOX
 
+/* Define if external signer support is enabled. */
+#cmakedefine ENABLE_EXTERNAL_SIGNER 1
+
+/* Defined to avoid Boost::Process trying to use Boost Filesystem */
+#cmakedefine BOOST_PROCESS_USE_STD_FS 1
+
 #endif //BITCOIN_CONFIG_H

@@ -193,3 +193,43 @@ if(MULTIPROCESS)
     message(FATAL_ERROR "\"-DMULTIPROCESS=ON\" specified, but libmultiprocess library was not found.")
   endif()
 endif()
+
+if(WITH_EXTERNAL_SIGNER)
+  if(TARGET Boost::boost AND TARGET Threads::Threads)
+    set(CMAKE_REQUIRED_LIBRARIES Boost::boost Threads::Threads)
+  endif()
+
+  # Boost 1.78 and 1.79 require the following workaround.
+  # See: https://github.com/boostorg/process/issues/235
+  set(CMAKE_REQUIRED_FLAGS "-Wno-error=narrowing")
+
+  check_cxx_source_compiles("
+    #define BOOST_PROCESS_USE_STD_FS
+    #include <boost/process.hpp>
+
+    int main()
+    {
+      namespace bp = boost::process;
+      bp::opstream stdin_stream;
+      bp::ipstream stdout_stream;
+      bp::child c(\"dummy\", bp::std_out > stdout_stream, bp::std_err > stdout_stream, bp::std_in < stdin_stream);
+      stdin_stream << std::string{\"test\"} << std::endl;
+      if (c.running()) c.terminate();
+      c.wait();
+      c.exit_code();
+    }
+    " HAVE_BOOST_PROCESS_H
+  )
+
+  if(HAVE_BOOST_PROCESS_H)
+    set(ENABLE_EXTERNAL_SIGNER TRUE)
+    set(BOOST_PROCESS_USE_STD_FS TRUE)
+    set(WITH_EXTERNAL_SIGNER ON)
+  elseif(WITH_EXTERNAL_SIGNER STREQUAL "AUTO")
+    set(WITH_EXTERNAL_SIGNER OFF)
+  else()
+    message(FATAL_ERROR "External signer support requested, but is not supported by this Boost.Process version.")
+  endif()
+  set(CMAKE_REQUIRED_FLAGS)
+  set(CMAKE_REQUIRED_LIBRARIES)
+endif()
