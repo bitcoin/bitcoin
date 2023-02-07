@@ -10,6 +10,7 @@
 
 #include <limits>
 // SYSCOIN
+#include <cmath>
 #include <map>
 #include <vector>
 
