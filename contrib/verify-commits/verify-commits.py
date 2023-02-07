@@ -114,11 +114,26 @@ def main():
         if current_commit == verified_root:
             print('There is a valid path from "{}" to {} where all commits are signed!'.format(initial_commit, verified_root))
             sys.exit(0)
-        if current_commit == verified_sha512_root:
-            if verify_tree:
+        else:
+            # Make sure this commit isn't older than trusted roots
+            check_root_older_res = subprocess.run([GIT, "merge-base", "--is-ancestor", verified_root, current_commit])
+            if check_root_older_res.returncode != 0:
+                print(f"\"{current_commit}\" predates the trusted root, stopping!")
+                sys.exit(0)
+
+        if verify_tree:
+            if current_commit == verified_sha512_root:
                 print("All Tree-SHA512s matched up to {}".format(verified_sha512_root), file=sys.stderr)
-            verify_tree = False
-            no_sha1 = False
+                verify_tree = False
+                no_sha1 = False
+            else:
+                # Skip the tree check if we are older than the trusted root
+                check_root_older_res = subprocess.run([GIT, "merge-base", "--is-ancestor", verified_sha512_root, current_commit])
+                if check_root_older_res.returncode != 0:
+                    print(f"\"{current_commit}\" predates the trusted SHA512 root, disabling tree verification.")
+                    verify_tree = False
+                    no_sha1 = False
+
 
         os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
         allow_revsig = current_commit in revsig_allowed
