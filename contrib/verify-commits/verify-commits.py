@@ -92,6 +92,8 @@ def main():
         unclean_merge_allowed = f.read().splitlines()
     with open(dirname + "/allow-incorrect-sha512-commits", "r", encoding="utf8") as f:
         incorrect_sha512_allowed = f.read().splitlines()
+    with open(dirname + "/trusted-keys", "r", encoding="utf8") as f:
+        trusted_keys = f.read().splitlines()
 
     # Set commit and branch and set variables
     current_commit = args.commit
@@ -120,10 +122,19 @@ def main():
             no_sha1 = False
 
         os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
-        os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG'] = "1" if current_commit in revsig_allowed else "0"
+        allow_revsig = current_commit in revsig_allowed
 
         # Check that the commit (and parents) was signed with a trusted key
-        if subprocess.call([GIT, '-c', 'gpg.program={}/gpg.sh'.format(dirname), 'verify-commit', current_commit], stdout=subprocess.DEVNULL):
+        valid_sig = False
+        verify_res = subprocess.run([GIT, '-c', 'gpg.program={}/gpg.sh'.format(dirname), 'verify-commit', "--raw", current_commit], capture_output=True)
+        for line in verify_res.stderr.decode().splitlines():
+            if line.startswith("[GNUPG:] VALIDSIG "):
+                key = line.split(" ")[-1]
+                valid_sig = key in trusted_keys
+            elif (line.startswith("[GNUPG:] REVKEYSIG ") or line.startswith("[GNUPG:] EXPKEYSIG ")) and not allow_revsig:
+                valid_sig = False
+                break
+        if not valid_sig:
             if prev_commit != "":
                 print("No parent of {} was signed with a trusted key!".format(prev_commit), file=sys.stderr)
                 print("Parents are:", file=sys.stderr)
