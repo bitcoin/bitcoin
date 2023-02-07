@@ -13,6 +13,7 @@ class CConnman;
 class CTxMemPool;
 class ChainstateManager;
 class PeerManager;
+class BanMan;
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -20,6 +21,8 @@ struct NodeContext;
 node::NodeContext& EnsureAnyNodeContext(const std::any& context);
 CTxMemPool& EnsureMemPool(const node::NodeContext& node);
 CTxMemPool& EnsureAnyMemPool(const std::any& context);
+BanMan& EnsureBanman(const node::NodeContext& node);
+BanMan& EnsureAnyBanman(const std::any& context);
 ArgsManager& EnsureArgsman(const node::NodeContext& node);
 ArgsManager& EnsureAnyArgsman(const std::any& context);
 ChainstateManager& EnsureChainman(const node::NodeContext& node);
