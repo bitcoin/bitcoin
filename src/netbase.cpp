@@ -774,3 +774,12 @@ bool IsBadPort(uint16_t port)
     }
     return false;
 }
+
+CService MaybeFlipIPv6toCJDNS(const CService& service)
+{
+    CService ret{service};
+    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && g_reachable_nets.Contains(NET_CJDNS)) {
+        ret.m_net = NET_CJDNS;
+    }
+    return ret;
+}

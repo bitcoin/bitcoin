@@ -269,22 +269,6 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
     return std::nullopt;
 }
 
-/**
- * If an IPv6 address belongs to the address range used by the CJDNS network and
- * the CJDNS network is reachable (-cjdnsreachable config is set), then change
- * the type from NET_IPV6 to NET_CJDNS.
- * @param[in] service Address to potentially convert.
- * @return a copy of `service` either unmodified or changed to CJDNS.
- */
-CService MaybeFlipIPv6toCJDNS(const CService& service)
-{
-    CService ret{service};
-    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && g_reachable_nets.Contains(NET_CJDNS)) {
-        ret.m_net = NET_CJDNS;
-    }
-    return ret;
-}
-
 // learn a new local address
 bool AddLocal(const CService& addr_, int nScore)
 {

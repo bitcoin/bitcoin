@@ -166,8 +166,6 @@ void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
 CService GetLocalAddress(const CNode& peer);
-CService MaybeFlipIPv6toCJDNS(const CService& service);
-
 
 extern bool fDiscover;
 extern bool fListen;
