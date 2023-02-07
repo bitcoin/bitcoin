@@ -1414,6 +1414,11 @@ void SetupEnvironment()
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 #endif
+
+#ifndef WIN32
+    constexpr mode_t private_umask = 0077;
+    umask(private_umask);
+#endif
 }
 
 bool SetupNetworking()
