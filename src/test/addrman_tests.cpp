@@ -192,6 +192,66 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     BOOST_CHECK_EQUAL(ports.size(), 3U);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_select_by_network)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_IPV4).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV4).first.IsValid());
+
+    // add ipv4 address to the new table
+    CNetAddr source = ResolveIP("252.2.2.2");
+    CService addr1 = ResolveService("250.1.1.1", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_IPV4).first == addr1);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV6).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_ONION).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_I2P).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_CJDNS).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_CJDNS).first.IsValid());
+    BOOST_CHECK(addrman->Select(/*new_only=*/false).first == addr1);
+
+    // add I2P address to the new table
+    CAddress i2p_addr;
+    i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_I2P).first == i2p_addr);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_I2P).first == i2p_addr);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV6).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_ONION).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_CJDNS).first.IsValid());
+
+    // bump I2P address to tried table
+    BOOST_CHECK(addrman->Good(i2p_addr));
+
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_I2P).first.IsValid());
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_I2P).first == i2p_addr);
+
+    // add another I2P address to the new table
+    CAddress i2p_addr2;
+    i2p_addr2.SetSpecial("c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr2}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_I2P).first == i2p_addr2);
+
+    // ensure that both new and tried table are selected from
+    bool new_selected{false};
+    bool tried_selected{false};
+
+    while (!new_selected || !tried_selected) {
+        const CAddress selected{addrman->Select(/*new_only=*/false, NET_I2P).first};
+        BOOST_REQUIRE(selected == i2p_addr || selected == i2p_addr2);
+        if (selected == i2p_addr) {
+            tried_selected = true;
+        } else {
+            new_selected = true;
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
