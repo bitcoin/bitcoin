@@ -109,6 +109,10 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
+  - Use a named cast or functional cast, not a C-Style cast. When casting
+    between integer types, use functional casts such as `int(x)` or `int{x}`
+    instead of `(int) x`. When casting between more complex types, use static_cast.
+    Use reinterpret_cast and const_cast as appropriate.
 
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
