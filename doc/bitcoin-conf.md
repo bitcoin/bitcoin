@@ -59,7 +59,7 @@ The `includeconf=<file>` option in the `bitcoin.conf` file can be used to includ
 
 Operating System | Data Directory | Example Path
 -- | -- | --
-Windows | `%APPDATA%\Bitcoin\` | `C:\Users\username\AppData\Roaming\Bitcoin\bitcoin.conf`
+Windows | `%LOCALAPPDATA%\Bitcoin\` | `C:\Users\username\AppData\Local\Bitcoin\bitcoin.conf`
 Linux | `$HOME/.bitcoin/` | `/home/username/.bitcoin/bitcoin.conf`
 macOS | `$HOME/Library/Application Support/Bitcoin/` | `/Users/username/Library/Application Support/Bitcoin/bitcoin.conf`
 

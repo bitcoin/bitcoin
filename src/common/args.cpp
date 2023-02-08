@@ -696,12 +696,19 @@ bool HasTestOption(const ArgsManager& args, const std::string& test_option)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows: C:\Users\Username\AppData\Roaming\Bitcoin
+    // Windows:
+    //   old: C:\Users\Username\AppData\Roaming\Bitcoin
+    //   new: C:\Users\Username\AppData\Local\Bitcoin
     // macOS: ~/Library/Application Support/Bitcoin
     // Unix-like: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    // Check for existence of datadir in old location and keep it there
+    fs::path legacy_path = GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    if (fs::exists(legacy_path)) return legacy_path;
+
+    // Otherwise, fresh installs can start in the new, "proper" location
+    return GetSpecialFolderPath(CSIDL_LOCAL_APPDATA) / "Bitcoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
