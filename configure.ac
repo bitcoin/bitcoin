@@ -1496,7 +1496,7 @@ if test "$use_natpmp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-if test "$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoin_util$build_syscoind$syscoin_enable_qt$use_tests$use_bench" = "nononononononono"; then
+if test "$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoin_util$build_syscoind$syscoin_enable_qt$use_tests$use_bench$enable_fuzz_binary" = "nonononononononono"; then
   use_boost=no
 else
   use_boost=yes
