@@ -668,6 +668,12 @@ private:
     /** Update peer state based on received headers message */
     void UpdatePeerStateForReceivedHeaders(CNode& pfrom, const CBlockIndex& last_header, bool received_new_header, bool may_have_more_headers);
 
+    /** Whether a header should be announced when we are pruning. We should
+     * only announce headers for which the past MIN_BLOCKS_TO_KEEP blocks are
+     * stored on disk with witnesses. */
+    bool ShouldAnnounceHeadersWhilePruning(const CBlockIndex& header_to_announce) const
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     void SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req);
 
     /** Register with TxRequestTracker that an INV has been received from a
@@ -1879,7 +1885,8 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         return;
     m_highest_fast_announce = pindex->nHeight;
 
-    if (!DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) return;
+    if (!DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT) ||
+        (m_chainman.m_blockman.IsPruneMode() && !ShouldAnnounceHeadersWhilePruning(*pindex))) return;
 
     uint256 hashBlock(pblock->GetHash());
     const std::shared_future<CSerializedNetMsg> lazy_ser{
@@ -1913,6 +1920,22 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
     });
 }
 
+bool PeerManagerImpl::ShouldAnnounceHeadersWhilePruning(const CBlockIndex& header_to_announce) const
+{
+    const CBlockIndex* walk = &header_to_announce;
+    while (walk && walk->nHeight > std::max(header_to_announce.nHeight - (int)MIN_BLOCKS_TO_KEEP, 0)) {
+        if (walk->HasPrunedWitnesses() || m_chainman.IsAssumedValid(*walk)) {
+            return false;
+        }
+
+        walk = walk->pprev;
+    }
+
+    // TODO once we return true here we won't ever return false (unless the
+    // node is restarted), in which case we could skip the above loop.
+    return true;
+}
+
 /**
  * Update our best height and announce any block hashes which weren't previously
  * in m_chainman.ActiveChain() to our peers.
@@ -1928,6 +1951,12 @@ void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlock
     // Find the hashes of all blocks that weren't previously in the best chain.
     std::vector<uint256> vHashes;
     const CBlockIndex *pindexToAnnounce = pindexNew;
+
+    if (m_chainman.m_blockman.IsPruneMode() &&
+        WITH_LOCK(cs_main, return !ShouldAnnounceHeadersWhilePruning(*pindexToAnnounce))) {
+        return;
+    }
+
     while (pindexToAnnounce != pindexFork) {
         vHashes.push_back(pindexToAnnounce->GetBlockHash());
         pindexToAnnounce = pindexToAnnounce->pprev;
@@ -2161,9 +2190,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         pfrom.fDisconnect = true;
         return;
     }
-    // Pruned nodes may have deleted the block, so check whether
-    // it's available before trying to send.
-    if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
+    // Pruned nodes may have deleted the block or might not have the witnesses
+    // for it, so check whether everything is available before trying to send.
+    if (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->HasPrunedWitnesses()) {
         return;
     }
     std::shared_ptr<const CBlock> pblock;
