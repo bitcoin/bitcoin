@@ -935,7 +935,9 @@ if test "$TARGET_OS" != "windows"; then
   AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])
 fi
 
-dnl All versions of gcc that we commonly use for building are subject to bug
+dnl Versions of gcc prior to 12.1 (commit
+dnl https://github.com/gcc-mirror/gcc/commit/551aa75778a4c5165d9533cd447c8fc822f583e1)
+dnl are subject to a bug, see the gccbug_90348 test case and
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348. To work around that, set
 dnl -fstack-reuse=none for all gcc builds. (Only gcc understands this flag)
 AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-reuse=none"])
