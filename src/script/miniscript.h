@@ -1050,9 +1050,9 @@ private:
             if (node.GetType() << "f"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.has_sig);
             if (node.GetType() << "s"_mst && ret.sat.available != Availability::NO) assert(ret.sat.has_sig);
 
-            // For 'e' nodes, a non-malleable dissatisfaction must exist.
-            if (node.GetType() << "e"_mst) assert(ret.nsat.available != Availability::NO);
-            if (node.GetType() << "e"_mst) assert(!ret.nsat.malleable);
+            // For non-malleable 'e' nodes, a non-malleable dissatisfaction must exist.
+            if (node.GetType() << "me"_mst) assert(ret.nsat.available != Availability::NO);
+            if (node.GetType() << "me"_mst) assert(!ret.nsat.malleable);
 
             // For 'm' nodes, if a satisfaction exists, it must be non-malleable.
             if (node.GetType() << "m"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.malleable);
