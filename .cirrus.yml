@@ -333,7 +333,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac_native_arm64.sh"
 
 task:
-  name: 'ARM64 Android APK [focal]'
+  name: 'ARM64 Android APK [jammy]'
   << : *BASE_TEMPLATE
   android_sdk_cache:
     folder: "depends/SDKs/android"
@@ -343,7 +343,7 @@ task:
     fingerprint_script: git rev-list -1 HEAD ./depends
   << : *MAIN_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_android.sh"
