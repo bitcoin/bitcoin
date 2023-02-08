@@ -130,7 +130,7 @@ static void BLSDKG_GenerateContributions(benchmark::Bench& bench, uint32_t epoch
 #define BENCH_GenerateContributions(name, quorumSize, epoch_iters) \
     static void BLSDKG_GenerateContributions_##name##_##quorumSize(benchmark::Bench& bench) \
     {                                                \
-        BLSDKG_InitDKG(bench, epoch_iters, quorumSize); \
+        BLSDKG_GenerateContributions(bench, epoch_iters, quorumSize); \
     } \
     BENCHMARK(BLSDKG_GenerateContributions_##name##_##quorumSize)
 
@@ -166,8 +166,8 @@ static void BLSDKG_InitDKG(benchmark::Bench& bench, uint32_t epoch_iters, int qu
     } \
     BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize)
 
-BENCH_GenerateContributions(simple, 10, 50);
-BENCH_GenerateContributions(simple, 50, 5);
+BENCH_GenerateContributions(simple, 50, 50);
+BENCH_GenerateContributions(simple, 100, 5);
 
 BENCH_InitDKG(simple, 10, 100)
 BENCH_InitDKG(simple, 50, 10)
