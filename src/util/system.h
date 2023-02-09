@@ -492,7 +492,6 @@ private:
      *
      * @param net_specific Append network identifier to the returned path
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
-     * @post Returned directory path is created unless it is empty
      */
     const fs::path& GetDataDir(bool net_specific) const;
 

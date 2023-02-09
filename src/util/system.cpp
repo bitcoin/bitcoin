@@ -417,8 +417,7 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
     LOCK(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
 
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
+    // Used cached path if available
     if (!path.empty()) return path;
 
     const fs::path datadir{GetPathArg("-datadir")};
@@ -432,15 +431,8 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
         path = GetDefaultDataDir();
     }
 
-    if (!fs::exists(path)) {
-        fs::create_directories(path / "wallets");
-    }
-
     if (net_specific && !BaseParams().DataDir().empty()) {
         path /= fs::PathFromString(BaseParams().DataDir());
-        if (!fs::exists(path)) {
-            fs::create_directories(path / "wallets");
-        }
     }
 
     return path;
@@ -512,6 +504,7 @@ bool ArgsManager::IsArgSet(const std::string& strArg) const
 
 bool ArgsManager::InitSettings(std::string& error)
 {
+    EnsureDataDir();
     if (!GetSettingsPath()) {
         return true; // Do nothing if settings file disabled.
     }
@@ -999,8 +992,8 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         m_config_sections.clear();
     }
 
-    const fs::path conf_path = GetPathArg("-conf", BITCOIN_CONF_FILENAME);
-    std::ifstream stream{GetConfigFile(conf_path)};
+    const auto conf_path{GetConfigFilePath()};
+    std::ifstream stream{conf_path};
 
     // not ok to have a config file specified that cannot be opened
     if (IsArgSet("-conf") && !stream.good()) {
