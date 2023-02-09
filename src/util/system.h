@@ -242,6 +242,11 @@ protected:
     void SelectConfigNetwork(const std::string& network);
 
     [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error);
+
+    /**
+     * Return config file path (read-only)
+     */
+    fs::path GetConfigFilePath() const;
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
@@ -474,6 +479,12 @@ protected:
      * useful for troubleshooting.
      */
     void LogArgs() const;
+
+    /**
+     * If datadir does not exist, create it along with wallets/
+     * subdirectory(s).
+     */
+    void EnsureDataDir() const;
 
 private:
     /**

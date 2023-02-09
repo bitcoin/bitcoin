@@ -446,6 +446,27 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
     return path;
 }
 
+void ArgsManager::EnsureDataDir() const
+{
+    /**
+     * "/wallets" subdirectories are created in all **new**
+     * datadirs, because wallet code will create new wallets in the "wallets"
+     * subdirectory only if exists already, otherwise it will create them in
+     * the top-level datadir where they could interfere with other files.
+     * Wallet init code currently avoids creating "wallets" directories itself
+     * for backwards compatibility, but this be changed in the future and
+     * wallet code here could go away (#16220).
+     */
+    auto path{GetDataDir(false)};
+    if (!fs::exists(path)) {
+        fs::create_directories(path / "wallets");
+    }
+    path = GetDataDir(true);
+    if (!fs::exists(path)) {
+        fs::create_directories(path / "wallets");
+    }
+}
+
 void ArgsManager::ClearPathCache()
 {
     LOCK(cs_args);
@@ -963,6 +984,11 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         }
     }
     return true;
+}
+
+fs::path ArgsManager::GetConfigFilePath() const
+{
+    return GetConfigFile(GetPathArg("-conf", BITCOIN_CONF_FILENAME));
 }
 
 bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
