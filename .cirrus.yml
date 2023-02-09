@@ -49,7 +49,7 @@ container_depends_template: &CONTAINER_DEPENDS_TEMPLATE
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   depends_built_cache:
     folder: "depends/built"
-    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-list -1 HEAD ./depends)
+    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
 
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *CONTAINER_DEPENDS_TEMPLATE
@@ -342,7 +342,7 @@ task:
     fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.2.8568313"
   depends_sources_cache:
     folder: "depends/sources"
-    fingerprint_script: git rev-list -1 HEAD ./depends
+    fingerprint_script: git rev-parse HEAD:depends/packages
   << : *MAIN_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
