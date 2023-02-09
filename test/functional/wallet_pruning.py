@@ -39,11 +39,15 @@ class WalletPruningTest(BitcoinTestFramework):
 
     def mine_large_blocks(self, node, n):
         # Get the block parameters for the first block
-        best_block = node.getblock(node.getbestblockhash())
+        best_block = node.getblockheader(node.getbestblockhash())
         height = int(best_block["height"]) + 1
         self.nTime = max(self.nTime, int(best_block["time"])) + 1
         previousblockhash = int(best_block["hash"], 16)
         big_script = CScript([OP_RETURN] + [OP_TRUE] * 950000)
+        # Set mocktime to accept all future blocks
+        for i in self.nodes:
+            if i.running:
+                i.setmocktime(self.nTime + 600 * n)
         for _ in range(n):
             block = create_block(hashprev=previousblockhash, ntime=self.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
             block.solve()
@@ -57,9 +61,6 @@ class WalletPruningTest(BitcoinTestFramework):
             # Simulate 10 minutes of work time per block
             # Important for matching a timestamp with a block +- some window
             self.nTime += 600
-            for n in self.nodes:
-                if n.running:
-                    n.setmocktime(self.nTime) # Update node's time to accept future blocks
         self.sync_all()
 
     def test_wallet_import_pruned(self, wallet_name):
