@@ -73,6 +73,7 @@ public:
         Listen,                 // bool
         Server,                 // bool
         EnablePSBTControls,     // bool
+        MaskValues,             // bool
         OptionIDRowCount,
     };
 
@@ -121,6 +122,7 @@ private:
     bool fCoinControlFeatures;
     bool m_sub_fee_from_amount;
     bool m_enable_psbt_controls;
+    bool m_mask_values;
 
     //! In-memory settings for display. These are stored persistently by the
     //! bitcoin node but it's also nice to store them in memory to prevent them

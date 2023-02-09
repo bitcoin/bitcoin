@@ -173,6 +173,7 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 void OverviewPage::setPrivacy(bool privacy)
 {
     m_privacy = privacy;
+    clientModel->getOptionsModel()->setOption(OptionsModel::OptionID::MaskValues, privacy);
     const auto& balances = walletModel->getCachedBalance();
     if (balances.balance != -1) {
         setBalance(balances);

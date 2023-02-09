@@ -227,6 +227,8 @@ bool OptionsModel::Init(bilingual_str& error)
     m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
     Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
 
+    m_mask_values = settings.value("mask_values", false).toBool();
+
     return true;
 }
 
@@ -438,6 +440,8 @@ QVariant OptionsModel::getOption(OptionID option) const
         return SettingToBool(setting(), DEFAULT_LISTEN);
     case Server:
         return SettingToBool(setting(), false);
+    case MaskValues:
+        return m_mask_values;
     default:
         return QVariant();
     }
@@ -620,6 +624,10 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
             update(value.toBool());
             setRestartRequired(true);
         }
+        break;
+    case MaskValues:
+        m_mask_values = value.toBool();
+        settings.setValue("mask_values", m_mask_values);
         break;
     default:
         break;
