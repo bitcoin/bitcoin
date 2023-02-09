@@ -41,14 +41,16 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
     fee = newFee;
 }
 
-void WalletModelTransaction::reassignAmounts()
+void WalletModelTransaction::reassignAmounts(const int nChangePos)
 {
     // For each recipient look for a matching CTxOut in walletTransaction and reassign amounts
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
         SendCoinsRecipient& rcp = (*it);
         {
+            int nPos = 0;
             for (const auto& txout : wtx.get()->vout) {
+                if (nPos++ == nChangePos) continue; // ignore change output
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;
