@@ -55,14 +55,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *CONTAINER_DEPENDS_TEMPLATE
   << : *MAIN_TEMPLATE
 
-macos_native_task_template: &MACOS_NATIVE_TASK_TEMPLATE
-  << : *BASE_TEMPLATE
-  check_clang_script:
-    - clang --version
-  brew_install_script:
-    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
-  << : *MAIN_TEMPLATE
-
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
@@ -328,7 +320,12 @@ task:
   macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: ghcr.io/cirruslabs/macos-ventura-xcode:14.1  # https://cirrus-ci.org/guide/macOS
-  << : *MACOS_NATIVE_TASK_TEMPLATE
+  << : *BASE_TEMPLATE
+  check_clang_script:
+    - clang --version
+  brew_install_script:
+    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
+  << : *MAIN_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     CI_USE_APT_INSTALL: "no"
