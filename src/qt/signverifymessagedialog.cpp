@@ -145,8 +145,8 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
-    const CKeyID* keyID = std::get_if<CKeyID>(&destination);
-    if (!keyID) {
+    const PKHash* pkhash = std::get_if<PKHash>(&destination);
+    if (!pkhash) {
         ui->addressIn_SM->setValid(false);
         ui->statusLabel_SM->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
         ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
@@ -162,7 +162,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CKey key;
-    if (!model->wallet().getPrivKey(GetScriptForDestination(destination), *keyID, key))
+    if (!model->wallet().getPrivKey(GetScriptForDestination(destination), CKeyID(*pkhash), key))
     {
         ui->statusLabel_SM->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
         ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));

@@ -34,7 +34,7 @@ maybe_error CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
         return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee-dest"};
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
-    if (payoutDest == CTxDestination(keyIDOwner) || payoutDest == CTxDestination(keyIDVoting)) {
+    if (payoutDest == CTxDestination(PKHash(keyIDOwner)) || payoutDest == CTxDestination(PKHash(keyIDVoting))) {
         return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee-reuse"};
     }
 
@@ -61,8 +61,8 @@ std::string CProRegTx::MakeSignString() const
 
     s += strPayout + "|";
     s += strprintf("%d", nOperatorReward) + "|";
-    s += EncodeDestination(keyIDOwner) + "|";
-    s += EncodeDestination(keyIDVoting) + "|";
+    s += EncodeDestination(PKHash(keyIDOwner)) + "|";
+    s += EncodeDestination(PKHash(keyIDVoting)) + "|";
 
     // ... and also the full hash of the payload as a protection against malleability and replays
     s += ::SerializeHash(*this).ToString();
@@ -79,7 +79,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(keyIDOwner), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(keyIDVoting), payee);
+        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee);
 }
 
 maybe_error CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
@@ -130,7 +130,7 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s)",
-        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(keyIDVoting), payee);
+        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee);
 }
 
 maybe_error CProUpRevTx::IsTriviallyValid(bool is_bls_legacy_scheme) const

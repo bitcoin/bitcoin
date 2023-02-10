@@ -593,19 +593,19 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     }
 
-    const CKeyID *keyID = std::get_if<CKeyID>(&dest);
-    if (!keyID) {
+    const PKHash *pkhash = std::get_if<PKHash>(&dest);
+    if (!pkhash) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
 
-    CScript script_pub_key = GetScriptForDestination(*keyID);
+    CScript script_pub_key = GetScriptForDestination(*pkhash);
     const SigningProvider* provider = pwallet->GetSigningProvider(script_pub_key);
     if (!provider) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
     }
 
     CKey key;
-    if (!provider->GetKey(*keyID, key)) {
+    if (!provider->GetKey(CKeyID(*pkhash), key)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
     }
 
@@ -1031,13 +1031,13 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
 
     // Construct using pay-to-script-hash:
     CScript inner = CreateMultisigRedeemscript(required, pubkeys);
-    CScriptID innerID(inner);
+    ScriptHash innerHash(inner);
     spk_man.AddCScript(inner);
 
-    pwallet->SetAddressBook(innerID, label, "send");
+    pwallet->SetAddressBook(innerHash, label, "send");
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("address", EncodeDestination(innerID));
+    result.pushKV("address", EncodeDestination(innerHash));
     result.pushKV("redeemScript", HexStr(inner));
     return result;
 }
@@ -3161,7 +3161,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
             if (provider) {
                 if (scriptPubKey.IsPayToScriptHash()) {
-                    const CScriptID& hash = CScriptID(std::get<CScriptID>(address));
+                    const CScriptID& hash = CScriptID(std::get<ScriptHash>(address));
                     CScript redeemScript;
                     if (provider->GetCScript(hash, redeemScript)) {
                         entry.pushKV("redeemScript", HexStr(redeemScript));
@@ -3573,7 +3573,8 @@ public:
 
     UniValue operator()(const CNoDestination &dest) const { return UniValue(UniValue::VOBJ); }
 
-    UniValue operator()(const CKeyID &keyID) const {
+    UniValue operator()(const PKHash& pkhash) const {
+        CKeyID keyID(pkhash);
         UniValue obj(UniValue::VOBJ);
         CPubKey vchPubKey;
         if (provider && provider->GetPubKey(keyID, vchPubKey)) {
@@ -3583,7 +3584,8 @@ public:
         return obj;
     }
 
-    UniValue operator()(const CScriptID &scriptID) const {
+    UniValue operator()(const ScriptHash& scriptHash) const {
+        CScriptID scriptID(scriptHash);
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
         if (provider && provider->GetCScript(scriptID, subscript)) {
@@ -3719,7 +3721,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
-        const CKeyID *key_id = std::get_if<CKeyID>(&dest);
+        const PKHash *pkhash = std::get_if<PKHash>(&dest);
         if (const CKeyMetadata* meta = spk_man->GetMetadata(dest)) {
             ret.pushKV("timestamp", meta->nCreateTime);
             CHDChain hdChainCurrent;
@@ -3727,7 +3729,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             if (legacy_spk_man != nullptr) {
                 LOCK(pwallet->cs_KeyStore);
                 AssertLockHeld(legacy_spk_man->cs_KeyStore);
-                if (key_id && pwallet->mapHdPubKeys.count(*key_id) && legacy_spk_man->GetHDChain(hdChainCurrent)) {
+                if (pkhash && pwallet->mapHdPubKeys.count(CKeyID(*pkhash)) && legacy_spk_man->GetHDChain(hdChainCurrent)) {
                     ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
                 }
             }

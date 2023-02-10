@@ -85,8 +85,8 @@ public:
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString(false));
-        obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
-        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
+        obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
+        obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
 
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
@@ -214,7 +214,7 @@ public:
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
+        obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));

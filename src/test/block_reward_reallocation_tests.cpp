@@ -144,7 +144,7 @@ static CScript GenerateRandomAddress()
 {
     CKey key;
     key.MakeNewKey(false);
-    return GetScriptForDestination(key.GetPubKey().GetID());
+    return GetScriptForDestination(PKHash(key.GetPubKey()));
 }
 
 static constexpr int threshold(int attempt)

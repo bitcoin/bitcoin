@@ -25,7 +25,7 @@ bool LegacyScriptPubKeyMan::GetNewDestination(CTxDestination& dest, std::string&
         return false;
     }
     //LearnRelatedScripts(new_key);
-    dest = new_key.GetID();
+    dest = PKHash(new_key);
     return true;
 }
 
@@ -261,7 +261,7 @@ bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
         return false;
     }
-    address = keypool.vchPubKey.GetID();
+    address = PKHash(keypool.vchPubKey);
     return true;
 }
 
@@ -716,9 +716,9 @@ const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& des
 {
     AssertLockHeld(cs_wallet);
 
-    const CKeyID *key_id = std::get_if<CKeyID>(&dest);
-    if (key_id != nullptr && !key_id->IsNull()) {
-        auto it = mapKeyMetadata.find(*key_id);
+    const PKHash *pkhash = std::get_if<PKHash>(&dest);
+    if (pkhash != nullptr && !pkhash->IsNull()) {
+        auto it = mapKeyMetadata.find(CKeyID(*pkhash));
         if (it != mapKeyMetadata.end()) {
             return &it->second;
         }
@@ -782,7 +782,7 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
     if (needsDB) encrypted_batch = nullptr;
     // check if we need to remove from watch-only
     CScript script;
-    script = GetScriptForDestination(pubkey.GetID());
+    script = GetScriptForDestination(PKHash(pubkey));
     if (HaveWatchOnly(script)) {
         RemoveWatchOnly(script);
     }
@@ -807,7 +807,7 @@ bool LegacyScriptPubKeyMan::LoadCScript(const CScript& redeemScript)
      * these. Do not add them to the wallet and warn. */
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
     {
-        std::string strAddr = EncodeDestination(CScriptID(redeemScript));
+        std::string strAddr = EncodeDestination(ScriptHash(redeemScript));
         WalletLogPrintf("%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n", __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
         return true;
     }
@@ -1077,7 +1077,7 @@ bool LegacyScriptPubKeyMan::AddHDPubKey(WalletBatch &batch, const CExtPubKey &ex
 
     // check if we need to remove from watch-only
     CScript script;
-    script = GetScriptForDestination(extPubKey.pubkey.GetID());
+    script = GetScriptForDestination(PKHash(extPubKey.pubkey));
     if (HaveWatchOnly(script))
         RemoveWatchOnly(script);
     script = GetScriptForRawPubKey(extPubKey.pubkey);

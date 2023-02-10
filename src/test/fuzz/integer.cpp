@@ -157,9 +157,9 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)au256.size();
     (void)au256.ToString();
 
-    const CKeyID key_id{u160};
-    const CScriptID script_id{u160};
-    // CTxDestination = CNoDestination ∪ CKeyID ∪ CScriptID
+    const PKHash key_id{u160};
+    const ScriptHash script_id{u160};
+    // CTxDestination = CNoDestination ∪ PKHash ∪ ScriptHash
     const std::vector<CTxDestination> destinations{key_id, script_id};
     for (const CTxDestination& destination : destinations) {
         (void)DescribeAddress(destination);

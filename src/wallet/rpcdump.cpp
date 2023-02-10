@@ -137,7 +137,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
         CPubKey pubkey = key.GetPubKey();
         CHECK_NONFATAL(key.VerifyPubKey(pubkey));
-        CKeyID vchAddress = pubkey.GetID();
+        PKHash vchAddress = PKHash(pubkey);
         {
             pwallet->MarkDirty();
 
@@ -146,7 +146,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
             }
 
             // Use timestamp of 1 to scan the whole chain
-            if (!spk_man.ImportPrivKeys({{vchAddress, key}}, 1)) {
+            if (!spk_man.ImportPrivKeys({{CKeyID(vchAddress), key}}, 1)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
         }
@@ -260,7 +260,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             pwallet->ImportScripts(scripts, 0 /* timestamp */);
 
             if (fP2SH) {
-                scripts.insert(GetScriptForDestination(CScriptID(redeem_script)));
+                scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
             }
 
             pwallet->ImportScriptPubKeys(strLabel, scripts, false /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);
@@ -436,7 +436,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
         LOCK(pwallet->cs_wallet);
 
         std::set<CScript> script_pub_keys;
-        script_pub_keys.insert(GetScriptForDestination(pubKey.GetID()));
+        script_pub_keys.insert(GetScriptForDestination(PKHash(pubKey)));
 
         pwallet->MarkDirty();
 
@@ -577,15 +577,16 @@ UniValue importwallet(const JSONRPCRequest& request)
 
                 CPubKey pubkey = key.GetPubKey();
                 CHECK_NONFATAL(key.VerifyPubKey(pubkey));
+                PKHash pkhash = PKHash(pubkey);
                 CKeyID keyid = pubkey.GetID();
-                pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
+                pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(pkhash));
                 if (!pwallet->ImportPrivKeys({{keyid, key}}, time)) {
-                    pwallet->WalletLogPrintf("Error importing key for %s\n", EncodeDestination(keyid));
+                    pwallet->WalletLogPrintf("Error importing key for %s\n", EncodeDestination(pkhash));
                     fGood = false;
                     continue;
                 }
                 if (has_label)
-                    pwallet->SetAddressBook(keyid, label, "receive");
+                    pwallet->SetAddressBook(pkhash, label, "receive");
 
                 nTimeBegin = std::min(nTimeBegin, time);
                 progress++;
@@ -710,10 +711,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (spk_man.HaveKey(keyid)) {
-                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(PKHash(keyid)));
                 continue;
             }
-            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(PKHash(keyid)));
             if (!spk_man.AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
@@ -755,10 +756,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (spk_man.HaveKey(keyid)) {
-                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(PKHash(keyid)));
                 continue;
             }
-            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(PKHash(keyid)));
             if (!spk_man.AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
@@ -827,12 +828,12 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
     }
-    const CKeyID *keyID = std::get_if<CKeyID>(&dest);
-    if (!keyID) {
+    const PKHash *pkhash= std::get_if<PKHash>(&dest);
+    if (!pkhash) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     }
     CKey vchSecret;
-    if (!spk_man.GetKey(*keyID, vchSecret)) {
+    if (!spk_man.GetKey(CKeyID(*pkhash), vchSecret)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
     return EncodeSecret(vchSecret);
@@ -937,19 +938,16 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-    std::map<CTxDestination, int64_t> mapKeyBirth;
+    std::map<CKeyID, int64_t> mapKeyBirth;
     const std::map<CKeyID, int64_t>& mapKeyPool = spk_man.GetAllReserveKeys();
     pwallet->GetKeyBirthTimes(mapKeyBirth);
 
     std::set<CScriptID> scripts = spk_man.GetCScripts();
-    // TODO: include scripts in GetKeyBirthTimes() output instead of separate
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
     for (const auto& entry : mapKeyBirth) {
-        if (const CKeyID* keyID = std::get_if<CKeyID>(&entry.first)) { // set and test
-            vKeyBirth.push_back(std::make_pair(entry.second, *keyID));
-        }
+        vKeyBirth.push_back(std::make_pair(entry.second, entry.first));
     }
     mapKeyBirth.clear();
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
@@ -1010,13 +1008,14 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
+        const PKHash &pkhash = PKHash(keyid);
         std::string strTime = FormatISO8601DateTime(it->first);
-        std::string strAddr = EncodeDestination(keyid);
+        std::string strAddr = EncodeDestination(PKHash(keyid));
         CKey key;
         if (spk_man.GetKey(keyid, key)) {
             file << strprintf("%s %s ", EncodeSecret(key), strTime);
-            if (pwallet->mapAddressBook.count(keyid)) {
-                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook[keyid].name));
+            if (pwallet->mapAddressBook.count(pkhash)) {
+                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook[pkhash].name));
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else {
@@ -1029,7 +1028,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     for (const CScriptID &scriptid : scripts) {
         CScript script;
         std::string create_time = "0";
-        std::string address = EncodeDestination(scriptid);
+        std::string address = EncodeDestination(ScriptHash(scriptid));
         // get birth times for scripts with metadata
         auto it = spk_man.m_script_metadata.find(scriptid);
         if (it != spk_man.m_script_metadata.end()) {

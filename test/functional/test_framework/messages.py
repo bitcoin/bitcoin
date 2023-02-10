@@ -27,7 +27,7 @@ import struct
 import time
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes
+from test_framework.util import hex_str_to_bytes, assert_equal
 
 import dash_hash
 
@@ -577,6 +577,8 @@ class CBlockHeader:
                % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
                   time.ctime(self.nTime), self.nBits, self.nNonce)
 
+BLOCK_HEADER_SIZE = len(CBlockHeader().serialize())
+assert_equal(BLOCK_HEADER_SIZE, 80)
 
 class CBlock(CBlockHeader):
     __slots__ = ("vtx",)

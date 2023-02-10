@@ -129,7 +129,7 @@ static CMutableTransaction CreateProUpServTx(const CTxMemPool& mempool, SimpleUT
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
-    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -150,7 +150,7 @@ static CMutableTransaction CreateProUpRegTx(const CTxMemPool& mempool, SimpleUTX
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
-    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
     SetTxPayload(tx, proTx);
@@ -168,7 +168,7 @@ static CMutableTransaction CreateProUpRevTx(const CTxMemPool& mempool, SimpleUTX
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
-    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -185,7 +185,7 @@ static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
 
     CKey key;
     key.MakeNewKey(false);
-    proTx.scriptPayout = GetScriptForDestination(key.GetPubKey().GetID());
+    proTx.scriptPayout = GetScriptForDestination(PKHash(key.GetPubKey()));
 
     CMutableTransaction tx2 = tx;
     SetTxPayload(tx2, proTx);
@@ -197,7 +197,7 @@ static CScript GenerateRandomAddress()
 {
     CKey key;
     key.MakeNewKey(false);
-    return GetScriptForDestination(key.GetPubKey().GetID());
+    return GetScriptForDestination(PKHash(key.GetPubKey()));
 }
 
 static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
@@ -268,7 +268,7 @@ void FuncDIP3Protx(TestChainSetup& setup)
 {
     CKey sporkKey;
     sporkKey.MakeNewKey(false);
-    sporkManager->SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
+    sporkManager->SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
     sporkManager->SetPrivKey(EncodeSecret(sporkKey));
 
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
@@ -463,8 +463,8 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
     collateralKey.MakeNewKey(true);
     operatorKey.MakeNewKey();
 
-    auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
-    auto scriptCollateral = GetScriptForDestination(collateralKey.GetPubKey().GetID());
+    auto scriptPayout = GetScriptForDestination(PKHash(payoutKey.GetPubKey()));
+    auto scriptCollateral = GetScriptForDestination(PKHash(collateralKey.GetPubKey()));
 
     // Create a MN with an external collateral
     CMutableTransaction tx_collateral;
@@ -545,7 +545,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     collateralKey.MakeNewKey(true);
     operatorKey.MakeNewKey();
 
-    auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
+    auto scriptPayout = GetScriptForDestination(PKHash(payoutKey.GetPubKey()));
 
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 2);
@@ -594,8 +594,8 @@ void FuncVerifyDB(TestChainSetup& setup)
     collateralKey.MakeNewKey(true);
     operatorKey.MakeNewKey();
 
-    auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
-    auto scriptCollateral = GetScriptForDestination(collateralKey.GetPubKey().GetID());
+    auto scriptPayout = GetScriptForDestination(PKHash(payoutKey.GetPubKey()));
+    auto scriptCollateral = GetScriptForDestination(PKHash(collateralKey.GetPubKey()));
 
     // Create a MN with an external collateral
     CMutableTransaction tx_collateral;

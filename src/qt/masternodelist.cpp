@@ -219,8 +219,8 @@ void MasternodeList::updateDIP3List()
     mnList.ForEachMN(false, [&](auto& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
             bool fMyMasternode = setOutpts.count(dmn.collateralOutpoint) ||
-                walletModel->wallet().isSpendable(dmn.pdmnState->keyIDOwner) ||
-                walletModel->wallet().isSpendable(dmn.pdmnState->keyIDVoting) ||
+                walletModel->wallet().isSpendable(PKHash(dmn.pdmnState->keyIDOwner)) ||
+                walletModel->wallet().isSpendable(PKHash(dmn.pdmnState->keyIDVoting)) ||
                 walletModel->wallet().isSpendable(dmn.pdmnState->scriptPayout) ||
                 walletModel->wallet().isSpendable(dmn.pdmnState->scriptOperatorPayout);
             if (!fMyMasternode) return;
@@ -274,10 +274,10 @@ void MasternodeList::updateDIP3List()
         }
         QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(EncodeDestination(dmn.pdmnState->keyIDOwner));
+        QString ownerStr = QString::fromStdString(EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));
         QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
 
-        QString votingStr = QString::fromStdString(EncodeDestination(dmn.pdmnState->keyIDVoting));
+        QString votingStr = QString::fromStdString(EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)));
         QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
 
         QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn.proTxHash.ToString()));

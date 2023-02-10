@@ -205,7 +205,7 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
-    bool ParseParameters(int argc, const char* const argv[], std::string& error);
+    [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error);
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**

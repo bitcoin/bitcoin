@@ -7,7 +7,7 @@
 #include <key.h>             // For CKey
 #include <key_io.h>          // For DecodeDestination()
 #include <pubkey.h>          // For CPubKey
-#include <script/standard.h> // For CTxDestination, IsValidDestination(), CKeyID
+#include <script/standard.h> // For CTxDestination, IsValidDestination(), PKHash
 #include <serialize.h>       // For SER_GETHASH
 #include <util/message.h>
 #include <util/strencodings.h> // For DecodeBase64()
@@ -31,7 +31,7 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_INVALID_ADDRESS;
     }
 
-    if (std::get_if<CKeyID>(&destination) == nullptr) {
+    if (std::get_if<PKHash>(&destination) == nullptr) {
         return MessageVerificationResult::ERR_ADDRESS_NO_KEY;
     }
 
@@ -46,7 +46,7 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
     }
 
-    if (!(CTxDestination(pubkey.GetID()) == destination)) {
+    if (!(CTxDestination(PKHash(pubkey)) == destination)) {
         return MessageVerificationResult::ERR_NOT_SIGNED;
     }
 

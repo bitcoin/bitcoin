@@ -813,7 +813,7 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
         // likely superfluous and can be optimized out
         assert(spk_man != nullptr);
         for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
-            if (GetDestData(keyid, "used", nullptr)) {
+            if (GetDestData(PKHash(keyid), "used", nullptr)) {
                 return true;
             }
         }
@@ -4073,7 +4073,7 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 
 /** @} */ // end of Actions
 
-void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t>& mapKeyBirth) const {
+void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
     AssertLockHeld(cs_wallet);
     mapKeyBirth.clear();
 

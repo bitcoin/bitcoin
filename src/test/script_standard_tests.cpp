@@ -153,23 +153,23 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s.clear();
     s << ToByteVector(pubkey) << OP_CHECKSIG;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get_if<CKeyID>(&address) &&
-                *std::get_if<CKeyID>(&address) == pubkey.GetID());
+    BOOST_CHECK(std::get_if<PKHash>(&address) &&
+                *std::get_if<PKHash>(&address) == PKHash(pubkey));
 
     // TxoutType::PUBKEYHASH
     s.clear();
     s << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get_if<CKeyID>(&address) &&
-                *std::get_if<CKeyID>(&address) == pubkey.GetID());
+    BOOST_CHECK(std::get_if<PKHash>(&address) &&
+                *std::get_if<PKHash>(&address) == PKHash(pubkey));
 
     // TxoutType::SCRIPTHASH
     CScript redeemScript(s); // initialize with leftover P2PKH script
     s.clear();
     s << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get_if<CScriptID>(&address) &&
-                *std::get_if<CScriptID>(&address) == CScriptID(redeemScript));
+    BOOST_CHECK(std::get_if<ScriptHash>(&address) &&
+                *std::get_if<ScriptHash>(&address) == ScriptHash(redeemScript));
 
     // TxoutType::MULTISIG
     s.clear();
@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TxoutType::PUBKEY);
     BOOST_CHECK_EQUAL(addresses.size(), 1U);
     BOOST_CHECK_EQUAL(nRequired, 1);
-    BOOST_CHECK(std::get_if<CKeyID>(&addresses[0]) &&
-                *std::get_if<CKeyID>(&addresses[0]) == pubkeys[0].GetID());
+    BOOST_CHECK(std::get_if<PKHash>(&addresses[0]) &&
+                *std::get_if<PKHash>(&addresses[0]) == PKHash(pubkeys[0]));
 
     // TxoutType::PUBKEYHASH
     s.clear();
@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TxoutType::PUBKEYHASH);
     BOOST_CHECK_EQUAL(addresses.size(), 1U);
     BOOST_CHECK_EQUAL(nRequired, 1);
-    BOOST_CHECK(std::get_if<CKeyID>(&addresses[0]) &&
-                *std::get_if<CKeyID>(&addresses[0]) == pubkeys[0].GetID());
+    BOOST_CHECK(std::get_if<PKHash>(&addresses[0]) &&
+                *std::get_if<PKHash>(&addresses[0]) == PKHash(pubkeys[0]));
 
     // TxoutType::SCRIPTHASH
     CScript redeemScript(s); // initialize with leftover P2PKH script
@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TxoutType::SCRIPTHASH);
     BOOST_CHECK_EQUAL(addresses.size(), 1U);
     BOOST_CHECK_EQUAL(nRequired, 1);
-    BOOST_CHECK(std::get_if<CScriptID>(&addresses[0]) &&
-                *std::get_if<CScriptID>(&addresses[0]) == CScriptID(redeemScript));
+    BOOST_CHECK(std::get_if<ScriptHash>(&addresses[0]) &&
+                *std::get_if<ScriptHash>(&addresses[0]) == ScriptHash(redeemScript));
 
     // TxoutType::MULTISIG
     s.clear();
@@ -237,10 +237,10 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TxoutType::MULTISIG);
     BOOST_CHECK_EQUAL(addresses.size(), 2U);
     BOOST_CHECK_EQUAL(nRequired, 2);
-    BOOST_CHECK(std::get_if<CKeyID>(&addresses[0]) &&
-                *std::get_if<CKeyID>(&addresses[0]) == pubkeys[0].GetID());
-    BOOST_CHECK(std::get_if<CKeyID>(&addresses[1]) &&
-                *std::get_if<CKeyID>(&addresses[1]) == pubkeys[1].GetID());
+    BOOST_CHECK(std::get_if<PKHash>(&addresses[0]) &&
+                *std::get_if<PKHash>(&addresses[0]) == PKHash(pubkeys[0]));
+    BOOST_CHECK(std::get_if<PKHash>(&addresses[1]) &&
+                *std::get_if<PKHash>(&addresses[1]) == PKHash(pubkeys[1]));
 
     // TxoutType::NULL_DATA
     s.clear();
@@ -259,17 +259,17 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
 
     CScript expected, result;
 
-    // CKeyID
+    // PKHash
     expected.clear();
-    expected << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-    result = GetScriptForDestination(pubkeys[0].GetID());
+    expected << OP_DUP << OP_HASH160 << ToByteVector(PKHash(pubkeys[0])) << OP_EQUALVERIFY << OP_CHECKSIG;
+    result = GetScriptForDestination(PKHash(pubkeys[0]));
     BOOST_CHECK(result == expected);
 
-    // CScriptID
+    // ScriptHash
     CScript redeemScript(result);
     expected.clear();
-    expected << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
-    result = GetScriptForDestination(CScriptID(redeemScript));
+    expected << OP_HASH160 << ToByteVector(ScriptHash(redeemScript)) << OP_EQUAL;
+    result = GetScriptForDestination(ScriptHash(redeemScript));
     BOOST_CHECK(result == expected);
 
     // CNoDestination
