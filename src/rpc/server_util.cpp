@@ -37,6 +37,20 @@ CTxMemPool& EnsureAnyMemPool(const std::any& context)
     return EnsureMemPool(EnsureAnyNodeContext(context));
 }
 
+
+BanMan& EnsureBanman(const node::NodeContext& node)
+{
+    if (!node.banman) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
+    }
+    return *node.banman;
+}
+
+BanMan& EnsureAnyBanman(const std::any& context)
+{
+    return EnsureBanman(EnsureAnyNodeContext(context));
+}
+
 ArgsManager& EnsureArgsman(const node::NodeContext& node)
 {
     if (!node.args) {
