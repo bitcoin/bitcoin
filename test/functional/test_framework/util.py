@@ -310,6 +310,7 @@ def random_bytes(n):
 
 # SYSCOIN The maximum number of nodes a single test can spawn
 MAX_NODES = 15
+MASTERNODE_COLLATERAL = 100
 # Don't assign rpc or p2p ports lower than this
 PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each

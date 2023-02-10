@@ -484,9 +484,11 @@ static RPCHelpMan protx_register_fund()
 
     SetTxPayload(tx, ptx);
     UniValue res = SignAndSendSpecialTx(request, *pwallet, tx, fSubmit);
-    uint256 txid = ParseHashV(res,"txhash");
-    LOCK(pwallet->cs_wallet);
-    pwallet->LockCoin(COutPoint(txid, ptx.collateralOutpoint.n));
+    if(fSubmit) {
+        uint256 txid = ParseHashV(res,"txhash");
+        LOCK(pwallet->cs_wallet);
+        pwallet->LockCoin(COutPoint(txid, ptx.collateralOutpoint.n));
+    }
     return res;
 },
     };
@@ -685,6 +687,10 @@ static RPCHelpMan protx_register_submit()
     ptx.vchSig = *DecodeBase64(request.params[1].get_str().c_str());
 
     SetTxPayload(tx, ptx);
+    {
+        LOCK(pwallet->cs_wallet);
+        pwallet->LockCoin(COutPoint(tx.GetHash(), ptx.collateralOutpoint.n));
+    }
     return SignAndSendSpecialTx(request, *pwallet, tx);
 },
     };

@@ -28,6 +28,7 @@ from .p2p import NetworkThread
 from .test_node import TestNode
 from .util import (
     MAX_NODES,
+    MASTERNODE_COLLATERAL,
     PortSeed,
     assert_equal,
     check_json_precision,
@@ -1018,7 +1019,6 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """Checks whether the syscall sandbox was compiled."""
         return self.config["components"].getboolean("ENABLE_SYSCALL_SANDBOX")
 
-MASTERNODE_COLLATERAL = 100
 
 
 class MasternodeInfo:
@@ -1096,20 +1096,25 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Preparing %d masternodes" % self.mn_count)
         for idx in range(0, self.mn_count):
             self.prepare_masternode(idx)
+        self.sync_all()
 
     def prepare_masternode(self, idx):
+        register_fund = (idx % 2) == 0
+
         bls = self.nodes[0].bls_generate()
         address = self.nodes[0].getnewaddress()
         txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
 
-        txraw = self.nodes[0].getrawtransaction(txid, True)
         collateral_vout = 0
-        for vout_idx in range(0, len(txraw["vout"])):
-            vout = txraw["vout"][vout_idx]
-            if vout["value"] == MASTERNODE_COLLATERAL:
-                collateral_vout = vout_idx
-        self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
+        if not register_fund:
+            txraw = self.nodes[0].getrawtransaction(txid, True)
+            for vout_idx in range(0, len(txraw["vout"])):
+                vout = txraw["vout"][vout_idx]
+                if vout["value"] == MASTERNODE_COLLATERAL:
+                    collateral_vout = vout_idx
+            self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
+    
         # send to same address to reserve some funds for fees
         self.nodes[0].sendtoaddress(address, 0.001)
 
@@ -1117,14 +1122,26 @@ class DashTestFramework(SyscoinTestFramework):
         votingAddr = self.nodes[0].getnewaddress()
         rewardsAddr = self.nodes[0].getnewaddress()
         port = p2p_port(len(self.nodes) + idx)
-        if (idx % 2) == 0 :
-            self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-            proTxHash = self.nodes[0].protx_register_fund(address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+        ipAndPort = '127.0.0.1:%d' % port
+        operatorReward = idx
+        submit = (idx % 4) < 2
+        if register_fund:
+            # self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
+            protx_result = self.nodes[0].protx_register_fund(address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            proTxHash = self.nodes[0].protx_register(txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            protx_result = self.nodes[0].protx_register(txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
 
-        self.generate(self.nodes[0], 1)
+        if submit:
+            proTxHash = protx_result
+        else:
+            proTxHash = self.nodes[0].sendrawtransaction(protx_result)
+
+        if operatorReward > 0:
+            self.generate(self.nodes[0], 1)
+            operatorPayoutAddress = self.nodes[0].getnewaddress()
+            self.nodes[0].protx_update_service(proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, address)
+
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
 
         self.log.info("Prepared masternode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
@@ -1149,6 +1166,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         # restart faucet node
         self.start_node(0)
+        force_finish_mnsync(self.nodes[0])
 
     def start_masternodes(self):
         self.log.info("Starting %d masternodes", self.mn_count)
@@ -1160,7 +1178,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
-            self.connect_nodes(self.mninfo[idx].node.index, 0)
+            self.connect_nodes(self.mninfo[idx].nodeIdx, 0)
 
 
         # start up nodes in parallel

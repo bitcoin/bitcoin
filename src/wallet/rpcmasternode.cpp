@@ -31,6 +31,7 @@ static RPCHelpMan masternode_outputs()
         CoinFilterParams coins_params;
         coins_params.min_amount = nMNCollateralRequired;
         coins_params.max_amount = nMNCollateralRequired;
+        coins_params.skip_locked = false;
         vPossibleCoins = AvailableCoins(*pwallet, nullptr, /*feerate=*/ std::nullopt, coins_params).All();
     }
 
