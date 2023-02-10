@@ -54,7 +54,7 @@ class Handler;
 //! internal workings of the bitcoin node, and not being very convenient to use.
 //! Chain methods should be cleaned up and simplified over time. Examples:
 //!
-//! * The initMessage() and showProgress() methods which the wallet uses to send
+//! * The initMessages() and showProgress() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
 //!   communicate with each other without going through the node
 //!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).

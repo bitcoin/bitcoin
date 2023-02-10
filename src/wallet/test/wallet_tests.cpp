@@ -534,10 +534,7 @@ public:
         bilingual_str error;
         CCoinControl dummy;
         BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, changePos, error, dummy));
-        {
-            LOCK2(wallet->cs_wallet, cs_main);
-            wallet->CommitTransaction(tx, {}, {});
-        }
+        wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -746,10 +743,7 @@ public:
         bilingual_str strError;
         CCoinControl coinControl;
         BOOST_CHECK(wallet->CreateTransaction(GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl));
-        {
-            LOCK2(wallet->cs_wallet, cs_main);
-            wallet->CommitTransaction(tx, {}, {});
-        }
+        wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -1087,10 +1081,7 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
                                         tx1, fee, changePos, error, dummy));
     BOOST_CHECK(wallet->CreateTransaction({CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
                                         tx2, fee, changePos, error, dummy));
-    {
-        LOCK2(wallet->cs_wallet, cs_main);
-        wallet->CommitTransaction(tx1, {}, {});
-    }
+    wallet->CommitTransaction(tx1, {}, {});
     BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 0);
     CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));
     {
@@ -1143,11 +1134,20 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
 //! conditions if it's called the same time an incoming transaction shows up in
 //! the mempool or a new block.
 //!
-//! It isn't possible for a unit test to totally verify there aren't race
-//! conditions without hooking into the implementation more, so this test just
-//! verifies that new transactions are detected during loading without any
-//! notifications at all, to infer that timing of notifications shouldn't
-//! matter. The test could be extended to cover other scenarios in the future.
+//! It isn't possible to verify there aren't race condition in every case, so
+//! this test just checks two specific cases and ensures that timing of
+//! notifications in these cases doesn't prevent the wallet from detecting
+//! transactions.
+//!
+//! In the first case, block and mempool transactions are created before the
+//! wallet is loaded, but notifications about these transactions are delayed
+//! until after it is loaded. The notifications are superfluous in this case, so
+//! the test verifies the transactions are detected before they arrive.
+//!
+//! In the second case, block and mempool transactions are created after the
+//! wallet rescan and notifications are immediately synced, to verify the wallet
+//! must already have a handler in place for them, and there's no gap after
+//! rescanning where new transactions in new blocks could be lost.
 BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
@@ -1159,6 +1159,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
     AddKey(*wallet, key);
     TestUnloadWallet(std::move(wallet));
 
+
     // Add log hook to detect AddToWallet events from rescans, blockConnected,
     // and transactionAddedToMempool notifications
     int addtx_count = 0;
@@ -1167,20 +1168,13 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
         return false;
     });
 
+
     bool rescan_completed = false;
     DebugLogHelper rescan_check("[default wallet] Rescan completed", [&](const std::string* s) {
-        if (s) {
-            // For now, just assert that cs_main is being held during the
-            // rescan, ensuring that a new block couldn't be connected
-            // that the wallet would miss. After
-            // https://github.com/bitcoin/bitcoin/pull/16426 when cs_main is no
-            // longer held, the test can be extended to append a new block here
-            // and check it's handled correctly.
-            // AssertLockHeld(::cs_main);
-            rescan_completed = true;
-        }
+        if (s) rescan_completed = true;
         return false;
     });
+
 
     // Block the queue to prevent the wallet receiving blockConnected and
     // transactionAddedToMempool notifications, and create block and mempool
@@ -1196,27 +1190,52 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
     auto mempool_tx = TestSimpleSpend(*m_coinbase_txns[1], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
     BOOST_CHECK(chain->broadcastTransaction(MakeTransactionRef(mempool_tx), error, DEFAULT_TRANSACTION_MAXFEE, false));
 
+
     // Reload wallet and make sure new transactions are detected despite events
     // being blocked
     wallet = TestLoadWallet(*chain);
     BOOST_CHECK(rescan_completed);
     BOOST_CHECK_EQUAL(addtx_count, 2);
-    unsigned int block_tx_time, mempool_tx_time;
     {
         LOCK(wallet->cs_wallet);
-        block_tx_time = wallet->mapWallet.at(block_tx.GetHash()).nTimeReceived;
-        mempool_tx_time = wallet->mapWallet.at(mempool_tx.GetHash()).nTimeReceived;
+        BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_tx.GetHash()), 1);
+        BOOST_CHECK_EQUAL(wallet->mapWallet.count(mempool_tx.GetHash()), 1);
     }
+
 
     // Unblock notification queue and make sure stale blockConnected and
     // transactionAddedToMempool events are processed
     promise.set_value();
     SyncWithValidationInterfaceQueue();
     BOOST_CHECK_EQUAL(addtx_count, 4);
+
+    TestUnloadWallet(std::move(wallet));
+
+
+    // Load wallet again, this time creating new block and mempool transactions
+    // paying to the wallet as the wallet finishes loading and syncing the
+    // queue so the events have to be handled immediately. Releasing the wallet
+    // lock during the sync is a little artificial but is needed to avoid a
+    // deadlock during the sync and simulates a new block notification happening
+    // as soon as possible.
+    addtx_count = 0;
+    auto handler = HandleLoadWallet([&](std::unique_ptr<interfaces::Wallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->wallet()->cs_wallet) {
+            BOOST_CHECK(rescan_completed);
+            m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+            block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
+            m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+            mempool_tx = TestSimpleSpend(*m_coinbase_txns[3], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
+            BOOST_CHECK(chain->broadcastTransaction(MakeTransactionRef(mempool_tx), error, DEFAULT_TRANSACTION_MAXFEE, false));
+            LEAVE_CRITICAL_SECTION(wallet->wallet()->cs_wallet);
+            SyncWithValidationInterfaceQueue();
+            ENTER_CRITICAL_SECTION(wallet->wallet()->cs_wallet);
+        });
+    wallet = TestLoadWallet(*chain);
+    BOOST_CHECK_EQUAL(addtx_count, 4);
     {
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK_EQUAL(block_tx_time, wallet->mapWallet.at(block_tx.GetHash()).nTimeReceived);
-        BOOST_CHECK_EQUAL(mempool_tx_time, wallet->mapWallet.at(mempool_tx.GetHash()).nTimeReceived);
+        BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_tx.GetHash()), 1);
+        BOOST_CHECK_EQUAL(wallet->mapWallet.count(mempool_tx.GetHash()), 1);
     }
 
     TestUnloadWallet(std::move(wallet));

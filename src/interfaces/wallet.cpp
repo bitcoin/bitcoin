@@ -317,7 +317,7 @@ public:
         WalletValueMap value_map,
         WalletOrderForm order_form) override
     {
-        LOCK2(m_wallet->cs_wallet, cs_main);
+        LOCK(m_wallet->cs_wallet);
         ReserveDestination m_dest(m_wallet.get());
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }

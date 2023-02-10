@@ -139,7 +139,7 @@ public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::optional<int> getHeight() override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         int height = ::ChainActive().Height();
         if (height >= 0) {
             return height;
@@ -148,7 +148,7 @@ public:
     }
     std::optional<int> getBlockHeight(const uint256& hash) override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         CBlockIndex* block = LookupBlockIndex(hash);
         if (block && ::ChainActive().Contains(block)) {
             return block->nHeight;
@@ -157,7 +157,7 @@ public:
     }
     uint256 getBlockHash(int height) override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetBlockHash();
