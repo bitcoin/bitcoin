@@ -66,6 +66,26 @@ class RPCMasternodeTest(DashTestFramework):
             assert_equal(gbt_masternode[i]["script"], payments_masternode["payees"][i]["script"])
             assert_equal(gbt_masternode[i]["amount"], payments_masternode["payees"][i]["amount"])
 
+        self.log.info("test that `masternode payments` results and `protx info` results match")
+        # we expect some masternodes to have 0 operator reward and some to have non-0 operator reward
+        checked_0_operator_reward = False
+        checked_non_0_operator_reward = False
+        while not checked_0_operator_reward or not checked_non_0_operator_reward:
+            payments_masternode = self.nodes[0].masternode("payments")[0]["masternodes"][0]
+            protx_info = self.nodes[0].protx("info", payments_masternode["proTxHash"])
+            if len(payments_masternode["payees"]) == 1:
+                assert_equal(protx_info["state"]["payoutAddress"], payments_masternode["payees"][0]["address"])
+                checked_0_operator_reward = True
+            else:
+                assert_equal(len(payments_masternode["payees"]), 2)
+                option1 = protx_info["state"]["payoutAddress"] == payments_masternode["payees"][0]["address"] and \
+                    protx_info["state"]["operatorPayoutAddress"] == payments_masternode["payees"][1]["address"]
+                option2 = protx_info["state"]["payoutAddress"] == payments_masternode["payees"][1]["address"] and \
+                    protx_info["state"]["operatorPayoutAddress"] == payments_masternode["payees"][0]["address"]
+                assert option1 or option2
+                checked_non_0_operator_reward = True
+            self.nodes[0].generate(1)
+
         self.log.info("test that `masternode outputs` show correct list")
         addr1 = self.nodes[0].getnewaddress()
         addr2 = self.nodes[0].getnewaddress()

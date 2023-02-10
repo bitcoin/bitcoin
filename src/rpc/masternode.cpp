@@ -461,7 +461,8 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
             payeesArr.push_back(obj);
         }
 
-        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
+        // NOTE: we use _previous_ block to find a payee for the current one
+        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex->pprev).GetMNPayee();
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
         protxObj.pushKV("amount", payedPerMasternode);
         protxObj.pushKV("payees", payeesArr);
