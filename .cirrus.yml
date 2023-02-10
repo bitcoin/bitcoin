@@ -49,7 +49,7 @@ container_depends_template: &CONTAINER_DEPENDS_TEMPLATE
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   depends_built_cache:
     folder: "depends/built"
-    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-list -1 HEAD ./depends)
+    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
 
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *CONTAINER_DEPENDS_TEMPLATE
