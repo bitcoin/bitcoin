@@ -1054,6 +1054,14 @@ bool LegacyScriptPubKeyMan::SetCryptedHDChain(const CHDChain& chain)
     return true;
 }
 
+bool LegacyScriptPubKeyMan::HaveHDKey(const CKeyID &address, CHDChain& hdChainCurrent) const
+{
+    LOCK(cs_KeyStore);
+
+    if (!mapHdPubKeys.count(address)) return false;
+    return GetHDChain(hdChainCurrent);
+}
+
 bool LegacyScriptPubKeyMan::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);

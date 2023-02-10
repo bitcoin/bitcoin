@@ -3737,9 +3737,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             CHDChain hdChainCurrent;
             LegacyScriptPubKeyMan* legacy_spk_man = pwallet->GetLegacyScriptPubKeyMan();
             if (legacy_spk_man != nullptr) {
-                LOCK(pwallet->cs_KeyStore);
-                AssertLockHeld(legacy_spk_man->cs_KeyStore);
-                if (pkhash && pwallet->mapHdPubKeys.count(CKeyID(*pkhash)) && legacy_spk_man->GetHDChain(hdChainCurrent)) {
+                if (pkhash && legacy_spk_man->HaveHDKey(CKeyID(*pkhash), hdChainCurrent)) {
                     ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
                 }
             }

@@ -362,6 +362,9 @@ public:
     //! Fetches a pubkey from mapWatchKeys if it exists there
     bool GetWatchPubKey(const CKeyID &address, CPubKey &pubkey_out) const;
 
+    //! HaveHDKey similar to HaveKey() but checks only mapHdPubKeys
+    bool HaveHDKey(const CKeyID &address, CHDChain& hdChainCurrent) const;
+
     /* SigningProvider overrides */
     //! HaveKey implementation that also checks the mapHdPubKeys
     bool HaveKey(const CKeyID &address) const override;
