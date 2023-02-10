@@ -7,6 +7,7 @@ env:  # Global defaults
   CCACHE_SIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
+  CCACHE_COMPILERCHECK: "content"  # Hash the content of the compiler binary rather than its mtime and size
 
 cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
