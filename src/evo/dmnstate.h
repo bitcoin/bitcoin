@@ -183,7 +183,7 @@ public:
     {
         READWRITE(VARINT(obj.fields));
 #define DMN_STATE_DIFF_LINE(f) \
-        if (obj.fields & Field_pubKeyOperator) {\
+        if (strcmp(#f, "pubKeyOperator") == 0 && (obj.fields & Field_pubKeyOperator)) {\
             /* TODO: implement migration to Basic BLS after the fork */ \
             READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), true)); \
         } else if (obj.fields & Field_##f) READWRITE(obj.state.f);
