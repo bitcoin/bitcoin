@@ -37,6 +37,8 @@ main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
   ccache_cache:
     folder: "/tmp/ccache_dir"
+    fingerprint_key: 2023-02-11
+    reupload_on_changes: true
   ci_script:
     - ./ci/test_run_all.sh
 
