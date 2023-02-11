@@ -536,7 +536,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         with p2p_lock:
             assert "getblocktxn" in test_node.last_message
             absolute_indexes = test_node.last_message["getblocktxn"].block_txn_request.to_absolute()
-        assert_equal(absolute_indexes, [6, 7, 8, 9, 10])
+        assert all(x in absolute_indexes for x in [6, 7, 8, 9, 10])
 
         # Now give an incorrect response.
         # Note that it's possible for bitcoind to be smart enough to know we're

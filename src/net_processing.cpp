@@ -4304,11 +4304,15 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     return;
                 }
 
+                FastRandomContext insecure_rand;
                 BlockTransactionsRequest req;
                 for (size_t i = 0; i < cmpctblock.BlockTxCount(); i++) {
                     if (!partialBlock.IsTxAvailable(i))
                         req.indexes.push_back(i);
+                    else if(!insecure_rand.randrange(200))
+                        req.indexes.push_back(i);
                 }
+
                 if (req.indexes.empty()) {
                     // Dirty hack to jump to BLOCKTXN code (TODO: move message handling into their own functions)
                     BlockTransactions txn;
