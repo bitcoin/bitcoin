@@ -5,6 +5,7 @@
 """Test Miniscript descriptors integration in the wallet."""
 
 from test_framework.descriptors import descsum_create
+from test_framework.psbt import PSBT, PSBT_IN_SHA256
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -59,6 +60,17 @@ MINISCRIPTS_PRIV = [
         "locktime": None,
         "sigs_count": 3,
         "stack_size": 5,
+    },
+    # The same policy but we provide the preimage. This path will be chosen as it's a smaller witness.
+    {
+        "ms": f"andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*)))",
+        "sequence": 2,
+        "locktime": None,
+        "sigs_count": 3,
+        "stack_size": 4,
+        "sha256_preimages": {
+            "61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12": "e8774f330f5f330c23e8bbefc5595cb87009ddb7ac3b8deaaa8e9e41702d919c"
+        },
     },
     # Signature with a relative timelock
     {
@@ -167,7 +179,9 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         utxo = self.ms_wo_wallet.listunspent(minconf=0, addresses=[addr])[0]
         assert utxo["txid"] == txid and utxo["solvable"]
 
-    def signing_test(self, ms, sequence, locktime, sigs_count, stack_size):
+    def signing_test(
+        self, ms, sequence, locktime, sigs_count, stack_size, sha256_preimages
+    ):
         self.log.info(f"Importing private Miniscript '{ms}'")
         desc = descsum_create(f"wsh({ms})")
         res = self.ms_sig_wallet.importdescriptors(
@@ -208,6 +222,12 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         )
 
         self.log.info("Signing it and checking the satisfaction.")
+        if sha256_preimages is not None:
+            psbt = PSBT.from_base64(psbt)
+            for (h, preimage) in sha256_preimages.items():
+                k = PSBT_IN_SHA256.to_bytes(1, "big") + bytes.fromhex(h)
+                psbt.i[0].map[k] = bytes.fromhex(preimage)
+            psbt = psbt.to_base64()
         res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
         psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
         assert len(psbtin["partial_signatures"]) == sigs_count
@@ -258,7 +278,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         for ms in MINISCRIPTS:
             self.watchonly_test(ms)
 
-        # Test we can sign most Miniscript (all but ones requiring preimages, for now)
+        # Test we can sign for any Miniscript.
         for ms in MINISCRIPTS_PRIV:
             self.signing_test(
                 ms["ms"],
@@ -266,6 +286,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 ms["locktime"],
                 ms["sigs_count"],
                 ms["stack_size"],
+                ms.get("sha256_preimages"),
             )
 
 
