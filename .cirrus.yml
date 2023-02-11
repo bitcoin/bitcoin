@@ -5,7 +5,7 @@ env:  # Global defaults
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
   CCACHE_SIZE: "200M"
-  CCACHE_DIR: "/tmp/ccache_dir"
+  CCACHE_DIR: '${CIRRUS_WORKING_DIR}/ccache_dir'
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
 cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
@@ -35,7 +35,7 @@ base_template: &BASE_TEMPLATE
 main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
   ccache_cache:
-    folder: "/tmp/ccache_dir"
+    folder: '${CCACHE_DIR}'
   ci_script:
     - ./ci/test_run_all.sh
 
