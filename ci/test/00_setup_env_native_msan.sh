@@ -20,4 +20,4 @@ export GOAL="install"
 export BITCOIN_CONFIG="--with-sanitizers=memory --disable-hardening --with-asm=no CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 export USE_MEMORY_SANITIZER="true"
 export RUN_FUNCTIONAL_TESTS="false"
-export CCACHE_SIZE=250M
+export CCACHE_SIZE=400M

@@ -15,3 +15,4 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-debug CC='clang -m32' CXX='clang++ -m32' LDFLAGS='--rtlib=compiler-rt -lgcc_s'"
 export TEST_RUNNER_ENV="BITCOIND=bitcoin-node"
 export TEST_RUNNER_EXTRA="--nosandbox"
+export CCACHE_SIZE=400M
