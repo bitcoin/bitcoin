@@ -295,9 +295,9 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
         const auto& llmq_params = llmq::GetLLMQParams(type);
         bool rotation_enabled = llmq::utils::IsQuorumRotationEnabled(type, pindexTip);
-        size_t quorums_num = rotation_enabled ? llmq_params.signingActiveQuorumCount : 1;
+        int quorums_num = rotation_enabled ? llmq_params.signingActiveQuorumCount : 1;
 
-        for (int quorumIndex = 0; quorumIndex < quorums_num; ++quorumIndex) {
+        for (const int quorumIndex : irange::range(quorums_num)) {
             UniValue obj(UniValue::VOBJ);
             obj.pushKV("llmqType", std::string(llmq_params.name));
             obj.pushKV("quorumIndex", quorumIndex);

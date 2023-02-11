@@ -27,19 +27,19 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
 
     for (uint8_t idx = 1; idx < vectors.size(); idx++) {
         UniValue test = vectors[idx];
-        uint32_t txHeight;
         uint256 txHash;
         std::string txType;
         CMutableTransaction tx;
         try {
             // Additional data
-            txHeight = test[0].get_int();
+            int32_t txHeight = test[0].get_int();
             txHash = uint256S(test[1].get_str());
             txType = test[2].get_str();
             // Raw transaction
             CDataStream stream(ParseHex(test[3].get_str()), SER_NETWORK, PROTOCOL_VERSION);
             stream >> tx;
             // Sanity check
+            BOOST_CHECK(txHeight > 1);
             BOOST_CHECK_EQUAL(tx.nVersion, 3);
             BOOST_CHECK_EQUAL(tx.GetHash(), txHash);
             // Deserialization based on transaction nType

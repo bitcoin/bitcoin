@@ -30,11 +30,11 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& m
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     int nonMasternodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound &&
+        if ((!pnode->fInbound &&
             !pnode->fFeeler &&
             !pnode->m_manual_connection &&
             !pnode->m_masternode_connection &&
-            !pnode->m_masternode_probe_connection
+            !pnode->m_masternode_probe_connection)
             ||
             // treat unverified MNs as non-MNs here
             pnode->GetVerifiedProRegTxHash().IsNull()) {

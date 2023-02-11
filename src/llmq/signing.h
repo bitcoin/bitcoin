@@ -164,8 +164,8 @@ class CSigningManager
 private:
     mutable CCriticalSection cs;
 
-    CConnman& connman;
     CRecoveredSigsDb db;
+    CConnman& connman;
     const CQuorumManager& qman;
 
     // Incoming and not verified yet

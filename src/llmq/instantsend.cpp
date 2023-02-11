@@ -853,8 +853,10 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
 {
     const CBlockIndex* pBlockIndexTip = WITH_LOCK(cs_main, return ::ChainActive().Tip());
     if (pBlockIndexTip && utils::GetInstantSendLLMQType(qman, pBlockIndexTip) == Params().GetConsensus().llmqTypeDIP0024InstantSend) {
-        // Don't short circuit. Try to process deterministic and not deterministic islocks
-        return ProcessPendingInstantSendLocks(true) & ProcessPendingInstantSendLocks(false);
+        // Don't short circuit. Try to process both deterministic and not deterministic islocks independable
+        bool deterministicRes = ProcessPendingInstantSendLocks(true);
+        bool nondeterministicRes = ProcessPendingInstantSendLocks(false);
+        return deterministicRes && nondeterministicRes;
     } else {
         return ProcessPendingInstantSendLocks(false);
     }

@@ -260,7 +260,7 @@ public:
     explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
                                  CChainLocksHandler& _clhandler, const std::unique_ptr<CMasternodeSync>& mn_sync, bool unitTests, bool fWipe) :
-        db(unitTests, fWipe), mempool(_mempool), connman(_connman), spork_manager(sporkManager), qman(_qman), sigman(_sigman), shareman(_shareman),
+        db(unitTests, fWipe), connman(_connman), mempool(_mempool), spork_manager(sporkManager), qman(_qman), sigman(_sigman), shareman(_shareman),
         clhandler(_clhandler), m_mn_sync(mn_sync)
     {
         workInterrupt.reset();

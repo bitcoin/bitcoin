@@ -58,12 +58,12 @@ BlockAssembler::Options::Options() {
 
 BlockAssembler::BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
                                const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                               llmq::CInstantSendManager& isman, CEvoDB& evoDb, const CTxMemPool& mempool, const CChainParams& params, const Options& options)
-    : spork_manager(sporkManager),
-      governance_manager(governanceManager),
-      quorum_block_processor(quorumBlockProcessor),
+                               llmq::CInstantSendManager& isman, CEvoDB& evoDb, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
       chainparams(params),
       m_mempool(mempool),
+      spork_manager(sporkManager),
+      governance_manager(governanceManager),
+      quorum_block_processor(quorumBlockProcessor),
       m_clhandler(clhandler),
       m_isman(isman),
       m_evoDb(evoDb)

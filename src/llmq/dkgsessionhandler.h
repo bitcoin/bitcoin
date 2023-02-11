@@ -134,12 +134,12 @@ public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager,
                        CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CConnman& _connman, int _quorumIndex) :
             params(_params),
+            connman(_connman),
+            quorumIndex(_quorumIndex),
             blsWorker(_blsWorker),
             dkgManager(_dkgManager),
             dkgDebugManager(_dkgDebugManager),
             quorumBlockProcessor(_quorumBlockProcessor),
-            connman(_connman),
-            quorumIndex(_quorumIndex),
             curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _dkgManager, _dkgDebugManager, _connman)),
             pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
             pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),

@@ -1006,7 +1006,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         //Extract last 64 bits of selectionHash
         uint64_t b = selectionHash.GetUint64(3);
         //Take last n bits of b
-        int signer = int((((1 << n) - 1) & (b >> (64 - n - 1))));
+        uint64_t signer = (((1 << n) - 1) & (b >> (64 - n - 1)));
 
         if (signer > quorums.size()) {
             return nullptr;
@@ -1014,7 +1014,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         auto itQuorum = std::find_if(quorums.begin(),
                                      quorums.end(),
                                      [signer](const CQuorumCPtr& obj) {
-                                         return int(obj->qc->quorumIndex) == signer;
+                                         return uint64_t(obj->qc->quorumIndex) == signer;
                                      });
         if (itQuorum == quorums.end()) {
             return nullptr;

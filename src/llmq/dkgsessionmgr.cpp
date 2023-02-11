@@ -23,7 +23,7 @@ static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
 CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager, bool unitTests, bool fWipe) :
         db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
-        blsWorker(_blsWorker), connman(_connman), dkgDebugManager(_dkgDebugManager), quorumBlockProcessor(_quorumBlockProcessor),spork_manager(sporkManager)
+        blsWorker(_blsWorker), connman(_connman), spork_manager(sporkManager), dkgDebugManager(_dkgDebugManager), quorumBlockProcessor(_quorumBlockProcessor)
 {
     if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) {
         // Regular nodes do not care about any DKG internals, bail out
@@ -462,7 +462,7 @@ void CDKGSessionManager::CleanupOldContributions() const
 
     for (const auto& params : Params().GetConsensus().llmqs) {
         // For how many blocks recent DKG info should be kept
-        const size_t MAX_STORE_DEPTH = 2 * params.signingActiveQuorumCount * params.dkgInterval;
+        const int MAX_STORE_DEPTH = 2 * params.signingActiveQuorumCount * params.dkgInterval;
 
         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, uint8_t(params.type));
 

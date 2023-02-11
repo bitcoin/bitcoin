@@ -122,7 +122,7 @@ private:
 
 public:
     explicit CCoinJoinClientSession(CWallet& pwallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
-        mixingWallet(pwallet), m_mn_sync(mn_sync)
+        m_mn_sync(mn_sync), mixingWallet(pwallet)
     {
     }
 
@@ -205,7 +205,7 @@ public:
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
     explicit CCoinJoinClientManager(CWallet& wallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
-        mixingWallet(wallet), m_mn_sync(mn_sync) {}
+        m_mn_sync(mn_sync), mixingWallet(wallet) {}
 
     void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
 

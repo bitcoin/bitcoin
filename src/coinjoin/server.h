@@ -76,10 +76,11 @@ private:
 
 public:
     explicit CCoinJoinServer(CConnman& _connman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
-        vecSessionCollaterals(),
-        fUnitTest(false),
         connman(_connman),
-        m_mn_sync(mn_sync) {};
+        m_mn_sync(mn_sync),
+        vecSessionCollaterals(),
+        fUnitTest(false)
+    {}
 
     void ProcessMessage(CNode& pfrom, std::string_view msg_type, CDataStream& vRecv);
 

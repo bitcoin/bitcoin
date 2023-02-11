@@ -31,7 +31,7 @@ struct CActiveMasternodeInfo {
 };
 
 
-class CActiveMasternodeManager : public CValidationInterface
+class CActiveMasternodeManager final : public CValidationInterface
 {
 public:
     enum masternode_state_t {

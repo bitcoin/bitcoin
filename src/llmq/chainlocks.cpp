@@ -25,9 +25,14 @@ namespace llmq
 std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
 CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
-    scheduler(std::make_unique<CScheduler>()), mempool(_mempool), connman(_connman), spork_manager(sporkManager), sigman(_sigman), shareman(_shareman),
-    scheduler_thread(std::make_unique<std::thread>([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); })),
-    m_mn_sync(mn_sync)
+    connman(_connman),
+    mempool(_mempool),
+    spork_manager(sporkManager),
+    sigman(_sigman),
+    shareman(_shareman),
+    m_mn_sync(mn_sync),
+    scheduler(std::make_unique<CScheduler>()),
+    scheduler_thread(std::make_unique<std::thread>([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); }))
 {
 }
 
