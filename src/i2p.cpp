@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -336,7 +336,7 @@ void Session::GenerateAndSavePrivateKey(const Sock& sock)
 {
     DestGenerate(sock);
 
-    // umask is set to 077 in init.cpp, which is ok (unless -sysperms is given)
+    // umask is set to 0077 in util/system.cpp, which is ok.
     if (!WriteBinaryFile(m_private_key_file,
                          std::string(m_private_key.begin(), m_private_key.end()))) {
         throw std::runtime_error(

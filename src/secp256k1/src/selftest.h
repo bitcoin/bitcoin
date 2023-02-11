@@ -25,7 +25,7 @@ static int secp256k1_selftest_sha256(void) {
     return secp256k1_memcmp_var(out, output32, 32) == 0;
 }
 
-static int secp256k1_selftest(void) {
+static int secp256k1_selftest_passes(void) {
     return secp256k1_selftest_sha256();
 }
 

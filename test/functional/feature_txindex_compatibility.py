@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that legacy txindex will be disabled on upgrade.
@@ -42,7 +42,6 @@ class TxindexCompatibilityTest(BitcoinTestFramework):
 
     def run_test(self):
         mini_wallet = MiniWallet(self.nodes[1])
-        mini_wallet.rescan_utxos()
         spend_utxo = mini_wallet.get_utxo()
         mini_wallet.send_self_transfer(from_node=self.nodes[1], utxo_to_spend=spend_utxo)
         self.generate(self.nodes[1], 1)

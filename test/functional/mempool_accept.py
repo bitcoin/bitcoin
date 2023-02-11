@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool acceptance of raw transactions."""
@@ -58,14 +58,17 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         """Wrapper to check result of testmempoolaccept on node_0's mempool"""
         result_test = self.nodes[0].testmempoolaccept(*args, **kwargs)
         for r in result_test:
-            r.pop('wtxid')  # Skip check for now
+            # Skip these checks for now
+            r.pop('wtxid')
+            if "fees" in r:
+                r["fees"].pop("effective-feerate")
+                r["fees"].pop("effective-includes")
         assert_equal(result_expected, result_test)
         assert_equal(self.nodes[0].getmempoolinfo()['size'], self.mempool_size)  # Must not change mempool state
 
     def run_test(self):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
-        self.wallet.rescan_utxos()
 
         self.log.info('Start with empty mempool, and 200 blocks')
         self.mempool_size = 0

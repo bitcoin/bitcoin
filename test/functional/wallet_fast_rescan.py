@@ -40,7 +40,6 @@ class WalletFastRescanTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         wallet = MiniWallet(node)
-        wallet.rescan_utxos()
 
         self.log.info("Create descriptor wallet with backup")
         WALLET_BACKUP_FILENAME = os.path.join(node.datadir, 'wallet.bak')

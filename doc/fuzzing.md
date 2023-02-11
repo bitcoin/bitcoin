@@ -136,10 +136,10 @@ You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
 `clang` does not come first in your path.
 
-Full configure that was tested on macOS Catalina with `brew` installed `llvm`:
+Full configure that was tested on macOS with `brew` installed `llvm`:
 
 ```sh
-./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
+./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined --disable-asm CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
@@ -283,8 +283,8 @@ $ sudo apt-get install libtool libtool-bin wget automake autoconf bison gdb
 ```
 
 At this point, you must install the .NET core.  The process differs, depending on your Linux distribution.
-See [this link](https://docs.microsoft.com/en-us/dotnet/core/install/linux) for details.
-On ubuntu 20.04, the following should work:
+See [this link](https://learn.microsoft.com/en-us/dotnet/core/install/linux) for details.
+On Ubuntu 20.04, the following should work:
 
 ```sh
 $ wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb

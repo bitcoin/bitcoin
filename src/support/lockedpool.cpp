@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,9 @@
 #endif
 
 #include <algorithm>
+#include <limits>
+#include <stdexcept>
+#include <utility>
 #ifdef ARENA_DEBUG
 #include <iomanip>
 #include <iostream>
@@ -277,8 +280,8 @@ size_t PosixLockedPageAllocator::GetLimit()
 /*******************************************************************************/
 // Implementation: LockedPool
 
-LockedPool::LockedPool(std::unique_ptr<LockedPageAllocator> allocator_in, LockingFailed_Callback lf_cb_in):
-    allocator(std::move(allocator_in)), lf_cb(lf_cb_in), cumulative_bytes_locked(0)
+LockedPool::LockedPool(std::unique_ptr<LockedPageAllocator> allocator_in, LockingFailed_Callback lf_cb_in)
+    : allocator(std::move(allocator_in)), lf_cb(lf_cb_in)
 {
 }
 

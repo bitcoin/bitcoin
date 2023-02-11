@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,6 +39,7 @@
 #include <memory>
 #include <optional>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 class AddrMan;
@@ -968,6 +969,12 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+
+    /**
+     Return reachable networks for which we have no addresses in addrman and therefore
+     may require loading fixed seeds.
+     */
+    std::unordered_set<Network> GetReachableEmptyNetworks() const;
 
     /**
      * Return vector of current BLOCK_RELAY peers.

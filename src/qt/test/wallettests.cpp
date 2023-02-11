@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -289,7 +289,7 @@ void TestGUI(interfaces::Node& node)
     std::vector<std::string> requests = walletModel.wallet().getAddressReceiveRequests();
     QCOMPARE(requests.size(), size_t{1});
     RecentRequestEntry entry;
-    CDataStream{MakeUCharSpan(requests[0]), SER_DISK, CLIENT_VERSION} >> entry;
+    DataStream{MakeUCharSpan(requests[0])} >> entry;
     QCOMPARE(entry.nVersion, int{1});
     QCOMPARE(entry.id, int64_t{1});
     QVERIFY(entry.date.isValid());

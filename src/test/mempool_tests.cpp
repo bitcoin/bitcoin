@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
 
     CTxMemPool& testPool = *Assert(m_node.mempool);
-    LOCK2(cs_main, testPool.cs);
+    LOCK2(::cs_main, testPool.cs);
 
     // Nothing in pool, remove should do nothing:
     unsigned int poolSize = testPool.size();
@@ -202,10 +202,9 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx7.vout[1].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx7.vout[1].nValue = 1 * COIN;
 
-    CTxMemPool::setEntries setAncestorsCalculated;
-    std::string dummy;
-    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(2'000'000LL).FromTx(tx7), setAncestorsCalculated, CTxMemPool::Limits::NoLimits(), dummy), true);
-    BOOST_CHECK(setAncestorsCalculated == setAncestors);
+    auto ancestors_calculated{pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), CTxMemPool::Limits::NoLimits())};
+    BOOST_REQUIRE(ancestors_calculated.has_value());
+    BOOST_CHECK(*ancestors_calculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx7), setAncestors);
     BOOST_CHECK_EQUAL(pool.size(), 7U);
@@ -261,9 +260,9 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx10.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx10.vout[0].nValue = 10 * COIN;
 
-    setAncestorsCalculated.clear();
-    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(200'000LL).Time(NodeSeconds{4s}).FromTx(tx10), setAncestorsCalculated, CTxMemPool::Limits::NoLimits(), dummy), true);
-    BOOST_CHECK(setAncestorsCalculated == setAncestors);
+    ancestors_calculated = pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(NodeSeconds{4s}).FromTx(tx10), CTxMemPool::Limits::NoLimits());
+    BOOST_REQUIRE(ancestors_calculated);
+    BOOST_CHECK(*ancestors_calculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx10), setAncestors);
 

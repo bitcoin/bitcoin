@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@ class CConnman;
 class CTxMemPool;
 class ChainstateManager;
 class PeerManager;
+class BanMan;
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -20,6 +21,8 @@ struct NodeContext;
 node::NodeContext& EnsureAnyNodeContext(const std::any& context);
 CTxMemPool& EnsureMemPool(const node::NodeContext& node);
 CTxMemPool& EnsureAnyMemPool(const std::any& context);
+BanMan& EnsureBanman(const node::NodeContext& node);
+BanMan& EnsureAnyBanman(const std::any& context);
 ArgsManager& EnsureArgsman(const node::NodeContext& node);
 ArgsManager& EnsureAnyArgsman(const std::any& context);
 ChainstateManager& EnsureChainman(const node::NodeContext& node);

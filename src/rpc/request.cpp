@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -86,7 +86,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
 
     /** the umask determines what permissions are used to create this file -
-     * these are set to 077 in init.cpp unless overridden with -sysperms.
+     * these are set to 0077 in util/system.cpp.
      */
     std::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);

@@ -343,19 +343,11 @@ void bench_rfc6979_hmac_sha256(void* arg, int iters) {
     }
 }
 
-void bench_context_verify(void* arg, int iters) {
+void bench_context(void* arg, int iters) {
     int i;
     (void)arg;
     for (i = 0; i < iters; i++) {
-        secp256k1_context_destroy(secp256k1_context_create(SECP256K1_CONTEXT_VERIFY));
-    }
-}
-
-void bench_context_sign(void* arg, int iters) {
-    int i;
-    (void)arg;
-    for (i = 0; i < iters; i++) {
-        secp256k1_context_destroy(secp256k1_context_create(SECP256K1_CONTEXT_SIGN));
+        secp256k1_context_destroy(secp256k1_context_create(SECP256K1_CONTEXT_NONE));
     }
 }
 
@@ -395,8 +387,7 @@ int main(int argc, char **argv) {
     if (d || have_flag(argc, argv, "hash") || have_flag(argc, argv, "hmac")) run_benchmark("hash_hmac_sha256", bench_hmac_sha256, bench_setup, NULL, &data, 10, iters);
     if (d || have_flag(argc, argv, "hash") || have_flag(argc, argv, "rng6979")) run_benchmark("hash_rfc6979_hmac_sha256", bench_rfc6979_hmac_sha256, bench_setup, NULL, &data, 10, iters);
 
-    if (d || have_flag(argc, argv, "context") || have_flag(argc, argv, "verify")) run_benchmark("context_verify", bench_context_verify, bench_setup, NULL, &data, 10, 1 + iters/1000);
-    if (d || have_flag(argc, argv, "context") || have_flag(argc, argv, "sign")) run_benchmark("context_sign", bench_context_sign, bench_setup, NULL, &data, 10, 1 + iters/100);
+    if (d || have_flag(argc, argv, "context")) run_benchmark("context_create", bench_context, bench_setup, NULL, &data, 10, iters);
 
     return 0;
 }

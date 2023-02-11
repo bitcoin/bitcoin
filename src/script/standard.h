@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -217,7 +217,7 @@ struct TaprootSpendData
      *  inference can reconstruct the full tree. Within each set, the control
      *  blocks are sorted by size, so that the signing logic can easily
      *  prefer the cheapest one. */
-    std::map<std::pair<CScript, int>, std::set<std::vector<unsigned char>, ShortestVectorFirstComparator>> scripts;
+    std::map<std::pair<std::vector<unsigned char>, int>, std::set<std::vector<unsigned char>, ShortestVectorFirstComparator>> scripts;
     /** Merge other TaprootSpendData (for the same scriptPubKey) into this. */
     void Merge(TaprootSpendData other);
 };
@@ -229,7 +229,7 @@ private:
     /** Information about a tracked leaf in the Merkle tree. */
     struct LeafInfo
     {
-        CScript script;                      //!< The script.
+        std::vector<unsigned char> script;   //!< The script.
         int leaf_version;                    //!< The leaf version for that script.
         std::vector<uint256> merkle_branch;  //!< The hashing partners above this leaf.
     };
@@ -296,7 +296,7 @@ public:
     /** Add a new script at a certain depth in the tree. Add() operations must be called
      *  in depth-first traversal order of binary tree. If track is true, it will be included in
      *  the GetSpendData() output. */
-    TaprootBuilder& Add(int depth, const CScript& script, int leaf_version, bool track = true);
+    TaprootBuilder& Add(int depth, Span<const unsigned char> script, int leaf_version, bool track = true);
     /** Like Add(), but for a Merkle node with a given hash to the tree. */
     TaprootBuilder& AddOmitted(int depth, const uint256& hash);
     /** Finalize the construction. Can only be called when IsComplete() is true.
@@ -314,7 +314,7 @@ public:
     /** Compute spending data (after Finalize()). */
     TaprootSpendData GetSpendData() const;
     /** Returns a vector of tuples representing the depth, leaf version, and script */
-    std::vector<std::tuple<uint8_t, uint8_t, CScript>> GetTreeTuples() const;
+    std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> GetTreeTuples() const;
     /** Returns true if there are any tapscripts */
     bool HasScripts() const { return !m_branch.empty(); }
 };
@@ -325,6 +325,6 @@ public:
  * std::nullopt is returned. Otherwise, a vector of (depth, script, leaf_ver) tuples is
  * returned, corresponding to a depth-first traversal of the script tree.
  */
-std::optional<std::vector<std::tuple<int, CScript, int>>> InferTaprootTree(const TaprootSpendData& spenddata, const XOnlyPubKey& output);
+std::optional<std::vector<std::tuple<int, std::vector<unsigned char>, int>>> InferTaprootTree(const TaprootSpendData& spenddata, const XOnlyPubKey& output);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

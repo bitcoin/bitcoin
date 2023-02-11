@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,7 +25,6 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // We shouldn't ever be running with the checkqueue on a single core machine.
     if (GetNumCores() <= 1) return;
 
-    const ECCVerifyHandle verify_handle;
     ECC_Start();
 
     struct PrevectorJob {

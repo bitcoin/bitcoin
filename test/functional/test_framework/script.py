@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Functionality to build scripts, as well as signature hash functions.
@@ -597,6 +597,13 @@ class CScript(bytes):
             lastOpcode = opcode
         return n
 
+    def IsWitnessProgram(self):
+        """A witness program is any valid CScript that consists of a 1-byte
+           push opcode followed by a data push between 2 and 40 bytes."""
+        return ((4 <= len(self) <= 42) and
+                (self[0] == OP_0 or (OP_1 <= self[0] <= OP_16)) and
+                (self[1] + 2 == len(self)))
+
 
 SIGHASH_DEFAULT = 0 # Taproot-only default, semantics same as SIGHASH_ALL
 SIGHASH_ALL = 1
@@ -824,10 +831,10 @@ def taproot_tree_helper(scripts):
     if len(scripts) == 1:
         # One entry: treat as a leaf
         script = scripts[0]
-        assert(not callable(script))
+        assert not callable(script)
         if isinstance(script, list):
             return taproot_tree_helper(script)
-        assert(isinstance(script, tuple))
+        assert isinstance(script, tuple)
         version = LEAF_VERSION_TAPSCRIPT
         name = script[0]
         code = script[1]

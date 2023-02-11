@@ -119,10 +119,10 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     SIPROUND;
     SIPROUND;
     v0 ^= d;
-    v3 ^= ((uint64_t)4) << 59;
+    v3 ^= (uint64_t{4}) << 59;
     SIPROUND;
     SIPROUND;
-    v0 ^= ((uint64_t)4) << 59;
+    v0 ^= (uint64_t{4}) << 59;
     v2 ^= 0xFF;
     SIPROUND;
     SIPROUND;
@@ -159,7 +159,7 @@ uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint3
     SIPROUND;
     SIPROUND;
     v0 ^= d;
-    d = (((uint64_t)36) << 56) | extra;
+    d = ((uint64_t{36}) << 56) | extra;
     v3 ^= d;
     SIPROUND;
     SIPROUND;

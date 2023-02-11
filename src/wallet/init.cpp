@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -121,9 +121,6 @@ bool WalletInit::ParameterInteraction() const
     if (gArgs.IsArgSet("-zapwallettxes")) {
         return InitError(Untranslated("-zapwallettxes has been removed. If you are attempting to remove a stuck transaction from your wallet, please use abandontransaction instead."));
     }
-
-    if (gArgs.GetBoolArg("-sysperms", false))
-        return InitError(Untranslated("-sysperms is not allowed in combination with enabled wallet functionality"));
 
     return true;
 }

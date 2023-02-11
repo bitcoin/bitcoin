@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,9 +32,8 @@ QT_END_NAMESPACE
 
 enum class BlockSource {
     NONE,
-    REINDEX,
     DISK,
-    NETWORK
+    NETWORK,
 };
 
 enum class SyncType {
@@ -72,8 +71,8 @@ public:
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
 
-    //! Returns enum BlockSource of the current importing/syncing state
-    enum BlockSource getBlockSource() const;
+    //! Returns the block source of the current importing/syncing state
+    BlockSource getBlockSource() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
@@ -104,9 +103,9 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
-    PeerTableModel *peerTableModel;
+    PeerTableModel* peerTableModel{nullptr};
     PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
-    BanTableModel *banTableModel;
+    BanTableModel* banTableModel{nullptr};
 
     //! A thread to interact with m_node asynchronously
     QThread* const m_thread;

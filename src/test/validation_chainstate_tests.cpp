@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         COutPoint outp{txid, 0};
         newcoin.nHeight = 1;
         newcoin.out.nValue = InsecureRand32();
-        newcoin.out.scriptPubKey.assign((uint32_t)56, 1);
+        newcoin.out.scriptPubKey.assign(uint32_t{56}, 1);
         coins_view.AddCoin(outp, std::move(newcoin), false);
 
         return outp;

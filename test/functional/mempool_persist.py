@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
@@ -59,7 +59,6 @@ class MempoolPersistTest(BitcoinTestFramework):
 
     def run_test(self):
         self.mini_wallet = MiniWallet(self.nodes[2])
-        self.mini_wallet.rescan_utxos()
         if self.is_sqlite_compiled():
             self.nodes[2].createwallet(
                 wallet_name="watch",

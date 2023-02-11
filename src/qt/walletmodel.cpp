@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,10 +46,6 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     m_client_model(&client_model),
     m_node(client_model.node()),
     optionsModel(client_model.getOptionsModel()),
-    addressTableModel(nullptr),
-    transactionTableModel(nullptr),
-    recentRequestsTableModel(nullptr),
-    cachedEncryptionStatus(Unencrypted),
     timer(new QTimer(this))
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
@@ -212,7 +208,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return AmountExceedsBalance;
     }
 
-    {
+    try {
         CAmount nFeeRequired = 0;
         int nChangePosRet = -1;
 
@@ -240,6 +236,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         if (nFeeRequired > m_wallet->getDefaultMaxTxFee()) {
             return AbsurdFee;
         }
+    } catch (const std::runtime_error& err) {
+        // Something unexpected happened, instruct user to report this bug.
+        Q_EMIT message(tr("Send Coins"), QString::fromStdString(err.what()),
+                       CClientUIInterface::MSG_ERROR);
+        return TransactionCreationFailed;
     }
 
     return SendCoinsReturn(OK);

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -53,8 +53,8 @@ static const uint16_t DEFAULT_TOR_SOCKS_PORT = 9050;
 
 /****** Low-level TorControlConnection ********/
 
-TorControlConnection::TorControlConnection(struct event_base *_base):
-    base(_base), b_conn(nullptr)
+TorControlConnection::TorControlConnection(struct event_base* _base)
+    : base(_base)
 {
 }
 

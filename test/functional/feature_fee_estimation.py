@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
@@ -297,7 +297,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Split two coinbases into many small utxos
         self.start_node(0)
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.rescan_utxos()
         self.initial_split(self.nodes[0])
         self.log.info("Finished splitting")
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -104,7 +104,7 @@ struct ScriptParserContext {
         return key.data;
     }
 
-    const std::vector<unsigned char> ToPKHBytes(const Key& key) const
+    std::vector<unsigned char> ToPKHBytes(const Key& key) const
     {
         if (key.is_hash) return key.data;
         const auto h = Hash160(key.data);

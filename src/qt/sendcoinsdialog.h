@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,12 +62,12 @@ Q_SIGNALS:
 
 private:
     Ui::SendCoinsDialog *ui;
-    ClientModel *clientModel;
-    WalletModel *model;
+    ClientModel* clientModel{nullptr};
+    WalletModel* model{nullptr};
     std::unique_ptr<wallet::CCoinControl> m_coin_control;
     std::unique_ptr<WalletModelTransaction> m_current_transaction;
-    bool fNewRecipientAllowed;
-    bool fFeeMinimized;
+    bool fNewRecipientAllowed{true};
+    bool fFeeMinimized{true};
     const PlatformStyle *platformStyle;
 
     // Copy PSBT to clipboard and offer to save it.

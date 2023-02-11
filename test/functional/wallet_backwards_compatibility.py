@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Backwards compatibility functional test
@@ -193,18 +193,18 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_equal(txs[1]["txid"], tx1_id)
                         assert_equal(txs[2]["walletconflicts"], [tx1_id])
                         assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-                        assert not(txs[1]["abandoned"])
+                        assert not txs[1]["abandoned"]
                         assert_equal(txs[1]["confirmations"], -1)
                         assert_equal(txs[2]["blockindex"], 1)
                         assert txs[3]["abandoned"]
                         assert_equal(txs[4]["walletconflicts"], [tx3_id])
                         assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-                        assert not(hasattr(txs[3], "blockindex"))
+                        assert not hasattr(txs[3], "blockindex")
                     elif wallet_name == "w2":
-                        assert(info['private_keys_enabled'] == False)
+                        assert info['private_keys_enabled'] == False
                         assert info['keypoolsize'] == 0
                     else:
-                        assert(info['private_keys_enabled'] == True)
+                        assert info['private_keys_enabled'] == True
                         assert info['keypoolsize'] == 0
         else:
             for node in legacy_nodes:

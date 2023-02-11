@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <utility>
 
-const std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
+std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
 
 /**
  * MainSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.

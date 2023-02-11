@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test external signer.
@@ -174,7 +174,7 @@ class WalletSignerTest(BitcoinTestFramework):
         mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
         mock_psbt_final = mock_wallet.finalizepsbt(mock_psbt_signed["psbt"])
         mock_tx = mock_psbt_final["hex"]
-        assert(mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"])
+        assert mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"]
 
         # # Create a new wallet and populate with specific public keys, in order
         # # to work with the mock signed PSBT.
@@ -203,7 +203,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # assert_equal(result[1], {'success': True})
         assert_equal(hww.getwalletinfo()["txcount"], 1)
 
-        assert(hww.testmempoolaccept([mock_tx])[0]["allowed"])
+        assert hww.testmempoolaccept([mock_tx])[0]["allowed"]
 
         with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w", encoding="utf8") as f:
             f.write(mock_psbt_signed["psbt"])
@@ -212,13 +212,13 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Don't broadcast transaction yet so the RPC returns the raw hex
         res = hww.send(outputs={dest:0.5},options={"add_to_wallet": False})
-        assert(res["complete"])
+        assert res["complete"]
         assert_equal(res["hex"], mock_tx)
 
         self.log.info('Test sendall using hww1')
 
         res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()],options={"add_to_wallet": False})
-        assert(res["complete"])
+        assert res["complete"]
         assert_equal(res["hex"], mock_tx)
         # Broadcast transaction so we can bump the fee
         hww.sendrawtransaction(res["hex"])

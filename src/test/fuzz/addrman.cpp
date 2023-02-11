@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -117,7 +117,7 @@ void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
             const std::chrono::seconds time_penalty{fast_random_context.randrange(100000001)};
             addrman.Add({addr}, source, time_penalty);
 
-            if (n > 0 && addrman.size() % n == 0) {
+            if (n > 0 && addrman.Size() % n == 0) {
                 addrman.Good(addr, Now<NodeSeconds>());
             }
 
@@ -304,7 +304,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         /*network=*/std::nullopt);
     (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool());
-    (void)const_addr_man.size();
+    (void)const_addr_man.Size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
     data_stream << const_addr_man;
 }

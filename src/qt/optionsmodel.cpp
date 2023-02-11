@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
-static const QString GetDefaultProxyAddress();
+static QString GetDefaultProxyAddress();
 
 /** Map GUI option ID to node setting name. */
 static const char* SettingName(OptionsModel::OptionID option)
@@ -227,6 +227,8 @@ bool OptionsModel::Init(bilingual_str& error)
     m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
     Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
 
+    m_mask_values = settings.value("mask_values", false).toBool();
+
     return true;
 }
 
@@ -308,7 +310,7 @@ static std::string ProxyString(bool is_set, QString ip, QString port)
     return is_set ? QString(ip + ":" + port).toStdString() : "";
 }
 
-static const QString GetDefaultProxyAddress()
+static QString GetDefaultProxyAddress()
 {
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
 }
@@ -435,6 +437,8 @@ QVariant OptionsModel::getOption(OptionID option) const
         return SettingToBool(setting(), DEFAULT_LISTEN);
     case Server:
         return SettingToBool(setting(), false);
+    case MaskValues:
+        return m_mask_values;
     default:
         return QVariant();
     }
@@ -611,6 +615,10 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
             update(value.toBool());
             setRestartRequired(true);
         }
+        break;
+    case MaskValues:
+        m_mask_values = value.toBool();
+        settings.setValue("mask_values", m_mask_values);
         break;
     default:
         break;

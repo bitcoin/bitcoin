@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,13 +7,16 @@
 #define BITCOIN_NODE_UTXO_SNAPSHOT_H
 
 #include <fs.h>
-#include <uint256.h>
+#include <kernel/cs_main.h>
 #include <serialize.h>
-#include <validation.h>
+#include <sync.h>
+#include <uint256.h>
 
+#include <cstdint>
 #include <optional>
+#include <string_view>
 
-extern RecursiveMutex cs_main;
+class Chainstate;
 
 namespace node {
 //! Metadata describing a serialized version of a UTXO set from which an

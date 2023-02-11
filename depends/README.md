@@ -98,6 +98,8 @@ The following can be set when running make: `make FOO=bar`
 - `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
 - `C_STANDARD`: Set the C standard version used. Defaults to `c11`.
 - `CXX_STANDARD`: Set the C++ standard version used. Defaults to `c++17`.
+- `NO_BOOST`: Don't download/build/cache Boost
+- `NO_LIBEVENT`: Don't download/build/cache Libevent
 - `NO_QT`: Don't download/build/cache Qt and its dependencies
 - `NO_QR`: Don't download/build/cache packages needed for enabling qrencode
 - `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ

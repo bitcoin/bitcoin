@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -321,7 +321,7 @@ public:
 };
 
 static bool
-ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
+ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
              CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     try {
@@ -759,7 +759,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
     return true;
 }
 
-bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn)
+bool ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn)
 {
     CWalletScanState dummy_wss;
     LOCK(pwallet->cs_wallet);
@@ -812,7 +812,8 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #endif
 
         // Get cursor
-        if (!m_batch->StartCursor())
+        std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
+        if (!cursor)
         {
             pwallet->WalletLogPrintf("Error getting wallet database cursor\n");
             return DBErrors::CORRUPT;
@@ -821,16 +822,13 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         while (true)
         {
             // Read next record
-            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+            DataStream ssKey{};
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            bool ret = m_batch->ReadAtCursor(ssKey, ssValue, complete);
-            if (complete) {
+            DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
+            if (status == DatabaseCursor::Status::DONE) {
                 break;
-            }
-            else if (!ret)
-            {
-                m_batch->CloseCursor();
+            } else if (status == DatabaseCursor::Status::FAIL) {
+                cursor.reset();
                 pwallet->WalletLogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
@@ -878,7 +876,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
-    m_batch->CloseCursor();
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man_pair : wss.m_active_external_spks) {
@@ -974,7 +971,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx)
+DBErrors WalletBatch::FindWalletTxHashes(std::vector<uint256>& tx_hashes)
 {
     DBErrors result = DBErrors::LOAD_OK;
 
@@ -986,7 +983,8 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
         }
 
         // Get cursor
-        if (!m_batch->StartCursor())
+        std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
+        if (!cursor)
         {
             LogPrintf("Error getting wallet database cursor\n");
             return DBErrors::CORRUPT;
@@ -995,14 +993,12 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
         while (true)
         {
             // Read next record
-            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            bool ret = m_batch->ReadAtCursor(ssKey, ssValue, complete);
-            if (complete) {
+            DataStream ssKey{};
+            DataStream ssValue{};
+            DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
+            if (status == DatabaseCursor::Status::DONE) {
                 break;
-            } else if (!ret) {
-                m_batch->CloseCursor();
+            } else if (status == DatabaseCursor::Status::FAIL) {
                 LogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
@@ -1012,25 +1008,21 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
             if (strType == DBKeys::TX) {
                 uint256 hash;
                 ssKey >> hash;
-                vTxHash.push_back(hash);
-                vWtx.emplace_back(/*tx=*/nullptr, TxStateInactive{});
-                ssValue >> vWtx.back();
+                tx_hashes.push_back(hash);
             }
         }
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
-    m_batch->CloseCursor();
 
     return result;
 }
 
 DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<uint256>& vTxHashOut)
 {
-    // build list of wallet TXs and hashes
+    // build list of wallet TX hashes
     std::vector<uint256> vTxHash;
-    std::list<CWalletTx> vWtx;
-    DBErrors err = FindWalletTx(vTxHash, vWtx);
+    DBErrors err = FindWalletTxHashes(vTxHash);
     if (err != DBErrors::LOAD_OK) {
         return err;
     }
@@ -1114,7 +1106,8 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
 {
     // Get cursor
-    if (!m_batch->StartCursor())
+    std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
+    if (!cursor)
     {
         return false;
     }
@@ -1123,16 +1116,12 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
     while (true)
     {
         // Read next record
-        CDataStream key(SER_DISK, CLIENT_VERSION);
-        CDataStream value(SER_DISK, CLIENT_VERSION);
-        bool complete;
-        bool ret = m_batch->ReadAtCursor(key, value, complete);
-        if (complete) {
+        DataStream key{};
+        DataStream value{};
+        DatabaseCursor::Status status = cursor->Next(key, value);
+        if (status == DatabaseCursor::Status::DONE) {
             break;
-        }
-        else if (!ret)
-        {
-            m_batch->CloseCursor();
+        } else if (status == DatabaseCursor::Status::FAIL) {
             return false;
         }
 
@@ -1146,7 +1135,6 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
             m_batch->Erase(key_data);
         }
     }
-    m_batch->CloseCursor();
     return true;
 }
 

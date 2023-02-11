@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
@@ -163,6 +163,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(basic2.getbalance(), basic2_balance)
         self.assert_list_txs_equal(basic2.listtransactions(), basic2_txs)
 
+        # Now test migration on a descriptor wallet
+        self.log.info("Test \"nothing to migrate\" when the user tries to migrate a wallet with no legacy data")
+        assert_raises_rpc_error(-4, "Error: This wallet is already a descriptor wallet", basic2.migratewallet)
+
     def test_multisig(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 
@@ -258,7 +262,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.log.info("Test migration of a wallet with watchonly imports")
         imports0 = self.create_legacy_wallet("imports0")
 
-        # Exteranl address label
+        # External address label
         imports0.setlabel(default.getnewaddress(), "external")
 
         # Normal non-watchonly tx
@@ -310,6 +314,13 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(watchonly.getbalance(), watchonly_bal)
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", watchonly.gettransaction, received_txid)
         assert_equal(len(watchonly.listtransactions(include_watchonly=True)), 3)
+
+        # Check that labels were migrated and persisted to watchonly wallet
+        self.nodes[0].unloadwallet("imports0_watchonly")
+        self.nodes[0].loadwallet("imports0_watchonly")
+        labels = watchonly.listlabels()
+        assert "external" in labels
+        assert "imported" in labels
 
     def test_no_privkeys(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)

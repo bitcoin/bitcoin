@@ -58,6 +58,8 @@ SECP256K1_API size_t secp256k1_context_preallocated_size(
  *                     bytes, as detailed above.
  *           flags:    which parts of the context to initialize.
  *
+ *  See secp256k1_context_create (in secp256k1.h) for further details.
+ *
  *  See also secp256k1_context_randomize (in secp256k1.h)
  *  and secp256k1_context_preallocated_destroy.
  */

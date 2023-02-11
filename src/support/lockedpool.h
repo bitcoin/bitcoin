@@ -5,11 +5,11 @@
 #ifndef BITCOIN_SUPPORT_LOCKEDPOOL_H
 #define BITCOIN_SUPPORT_LOCKEDPOOL_H
 
-#include <stdint.h>
+#include <cstddef>
 #include <list>
 #include <map>
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 
 /**
@@ -198,7 +198,7 @@ private:
 
     std::list<LockedPageArena> arenas;
     LockingFailed_Callback lf_cb;
-    size_t cumulative_bytes_locked;
+    size_t cumulative_bytes_locked{0};
     /** Mutex protects access to this pool's data structures, including arenas.
      */
     mutable std::mutex mutex;

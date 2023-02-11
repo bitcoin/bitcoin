@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -415,8 +415,9 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
-void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
-    assert(!node::fPruneMode || AllowPrune());
+void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
+{
+    assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
 
     if (AllowPrune() && block) {
         node::PruneLockInfo prune_lock;
