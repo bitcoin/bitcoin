@@ -13,7 +13,6 @@
  * Instantiate this class in static context only e.g.
  *  
  * static volatile MclStaticInitializer for_side_effect_only;
- * static MclG1Point p;
 */
 class MclInitializer
 {
