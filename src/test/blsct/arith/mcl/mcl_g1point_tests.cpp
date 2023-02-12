@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <blsct/arith/elements.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <blsct/arith/mcl/mcl_initializer.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <boost/test/unit_test.hpp>
 #include <set>

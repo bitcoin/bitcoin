@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <blsct/arith/mcl/mcl_initializer.h>
 #include <numeric>
 #include <streams.h>
 

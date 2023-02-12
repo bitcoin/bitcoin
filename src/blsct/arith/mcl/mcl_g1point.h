@@ -13,10 +13,11 @@
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
+#include <blsct/arith/mcl/static_mcl_init.h>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
-static volatile MclInitializer for_side_effect_only;
+static volatile StaticMclInit for_side_effect_only;
 
 class MclG1Point
 {
