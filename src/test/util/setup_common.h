@@ -92,7 +92,8 @@ struct BasicTestingSetup {
 
     const fs::path m_path_root;
     ArgsManager m_args;
-    volatile MclInitializer mi;
+private:
+    volatile MclInitializer m_for_side_effect_only;
 };
 
 /** Testing setup that performs all steps up until right before
