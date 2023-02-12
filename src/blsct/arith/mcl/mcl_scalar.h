@@ -15,7 +15,6 @@
 #include <vector>
 #include <array>
 
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <hash.h>

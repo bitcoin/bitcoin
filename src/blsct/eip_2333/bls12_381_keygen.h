@@ -7,7 +7,6 @@
 #define NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
 
 #include <array>
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <crypto/sha256.h>
