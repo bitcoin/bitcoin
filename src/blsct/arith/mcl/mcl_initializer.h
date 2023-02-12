@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 /**
- * Instantiate this class in static context only e.g.
+ * Should instantiate this class in static context only e.g.
  *  
  * static volatile MclStaticInitializer for_side_effect_only;
 */
