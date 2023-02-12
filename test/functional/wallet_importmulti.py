@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC.
@@ -35,6 +35,9 @@ from test_framework.wallet_util import (
 
 
 class ImportMultiTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"]]
@@ -873,6 +876,25 @@ class ImportMultiTest(BitcoinTestFramework):
         for i in range(0, 5):
             addr = wrpc.getnewaddress('', 'bech32')
             assert_equal(addr, addresses[i])
+
+        # Create wallet with passphrase
+        self.log.info('Test watchonly imports on a wallet with a passphrase, without unlocking')
+        self.nodes[1].createwallet(wallet_name='w1', blank=True, passphrase='pass')
+        wrpc = self.nodes[1].get_wallet_rpc('w1')
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
+                                wrpc.importmulti, [{
+                                    'desc': descsum_create('wpkh(' + pub1 + ')'),
+                                    "timestamp": "now",
+                                }])
+
+        result = wrpc.importmulti(
+            [{
+                'desc': descsum_create('wpkh(' + pub1 + ')'),
+                "timestamp": "now",
+                "watchonly": True,
+            }]
+        )
+        assert result[0]['success']
 
 
 if __name__ == '__main__':

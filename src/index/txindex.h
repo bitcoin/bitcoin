@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,8 @@
 #define BITCOIN_INDEX_TXINDEX_H
 
 #include <index/base.h>
+
+static constexpr bool DEFAULT_TXINDEX{false};
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
@@ -20,16 +22,16 @@ protected:
 private:
     const std::unique_ptr<DB> m_db;
 
+    bool AllowPrune() const override { return false; }
+
 protected:
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+    bool CustomAppend(const interfaces::BlockInfo& block) override;
 
     BaseIndex::DB& GetDB() const override;
 
-    const char* GetName() const override { return "txindex"; }
-
 public:
     /// Constructs the index, which becomes available to be queried.
-    explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Destructor is declared because this class contains a unique_ptr to an incomplete type.
     virtual ~TxIndex() override;

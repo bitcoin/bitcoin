@@ -8,7 +8,6 @@ from decimal import Decimal
 import random
 import threading
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import get_rpc_proxy
 from test_framework.wallet import MiniWallet
@@ -61,9 +60,6 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.generate(miniwallets[0], 1)  # generate a block on own node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
-
-        # Add enough mature utxos to the wallets, so that all txs spend confirmed coins
-        self.generate(self.nodes[0], COINBASE_MATURITY)
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
         thr = LongpollThread(self.nodes[0])

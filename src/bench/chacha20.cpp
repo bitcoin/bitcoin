@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,6 +39,6 @@ static void CHACHA20_1MB(benchmark::Bench& bench)
     CHACHA20(bench, BUFFER_SIZE_LARGE);
 }
 
-BENCHMARK(CHACHA20_64BYTES);
-BENCHMARK(CHACHA20_256BYTES);
-BENCHMARK(CHACHA20_1MB);
+BENCHMARK(CHACHA20_64BYTES, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CHACHA20_256BYTES, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CHACHA20_1MB, benchmark::PriorityLevel::HIGH);

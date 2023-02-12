@@ -26,7 +26,7 @@ int ecdh_hash_function_custom(unsigned char *output, const unsigned char *x, con
 
 void test_ecdh_api(void) {
     /* Setup context that just counts errors */
-    secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     secp256k1_pubkey point;
     unsigned char res[32];
     unsigned char s_one[32] = { 0 };
@@ -60,7 +60,7 @@ void test_ecdh_generator_basepoint(void) {
 
     s_one[31] = 1;
     /* Check against pubkey creation when the basepoint is the generator */
-    for (i = 0; i < 100; ++i) {
+    for (i = 0; i < 2 * count; ++i) {
         secp256k1_sha256 sha;
         unsigned char s_b32[32];
         unsigned char output_ecdh[65];
@@ -123,10 +123,43 @@ void test_bad_scalar(void) {
     CHECK(secp256k1_ecdh(ctx, output, &point, s_overflow, ecdh_hash_function_test_fail, NULL) == 0);
 }
 
+/** Test that ECDH(sG, 1/s) == ECDH((1/s)G, s) == ECDH(G, 1) for a few random s. */
+void test_result_basepoint(void) {
+    secp256k1_pubkey point;
+    secp256k1_scalar rand;
+    unsigned char s[32];
+    unsigned char s_inv[32];
+    unsigned char out[32];
+    unsigned char out_inv[32];
+    unsigned char out_base[32];
+    int i;
+
+    unsigned char s_one[32] = { 0 };
+    s_one[31] = 1;
+    CHECK(secp256k1_ec_pubkey_create(ctx, &point, s_one) == 1);
+    CHECK(secp256k1_ecdh(ctx, out_base, &point, s_one, NULL, NULL) == 1);
+
+    for (i = 0; i < 2 * count; i++) {
+        random_scalar_order(&rand);
+        secp256k1_scalar_get_b32(s, &rand);
+        secp256k1_scalar_inverse(&rand, &rand);
+        secp256k1_scalar_get_b32(s_inv, &rand);
+
+        CHECK(secp256k1_ec_pubkey_create(ctx, &point, s) == 1);
+        CHECK(secp256k1_ecdh(ctx, out, &point, s_inv, NULL, NULL) == 1);
+        CHECK(secp256k1_memcmp_var(out, out_base, 32) == 0);
+
+        CHECK(secp256k1_ec_pubkey_create(ctx, &point, s_inv) == 1);
+        CHECK(secp256k1_ecdh(ctx, out_inv, &point, s, NULL, NULL) == 1);
+        CHECK(secp256k1_memcmp_var(out_inv, out_base, 32) == 0);
+    }
+}
+
 void run_ecdh_tests(void) {
     test_ecdh_api();
     test_ecdh_generator_basepoint();
     test_bad_scalar();
+    test_result_basepoint();
 }
 
 #endif /* SECP256K1_MODULE_ECDH_TESTS_H */

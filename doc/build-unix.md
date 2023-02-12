@@ -72,7 +72,7 @@ executables, which are based on BerkeleyDB 4.8. If you do not care about wallet 
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
+Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
 
     sudo apt install libminiupnpc-dev libnatpmp-dev
 
@@ -133,7 +133,7 @@ pass `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley D
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
+Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
 
     sudo dnf install miniupnpc-devel libnatpmp-devel
 
@@ -176,38 +176,34 @@ miniupnpc
 
 [miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for UPnP behavior desired:
-
-    --without-miniupnpc      No UPnP support, miniupnp not required
-    --disable-upnp-default   (the default) UPnP support turned off by default at runtime
-    --enable-upnp-default    UPnP support turned on by default at runtime
+turned off by default.
 
 libnatpmp
 ---------
 
 [libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
 from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
-turned off by default. See the configure options for NAT-PMP behavior desired:
-
-    --without-natpmp          No NAT-PMP support, libnatpmp not required
-    --disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
-    --enable-natpmp-default   NAT-PMP support turned on by default at runtime
+turned off by default.
 
 Berkeley DB
 -----------
 
 The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
-recommended to use Berkeley DB 4.8. If you have to build it yourself, you can
-use [the installation script included in contrib/](/contrib/install_db4.sh)
-like so:
-
-```shell
-./contrib/install_db4.sh `pwd`
+recommended to use Berkeley DB 4.8. If you have to build it yourself, and don't
+want to use any other libraries built in depends, you can do:
+```bash
+make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
+...
+to: /path/to/bitcoin/depends/x86_64-pc-linux-gnu
 ```
+and configure using the following:
+```bash
+export BDB_PREFIX="/path/to/bitcoin/depends/x86_64-pc-linux-gnu"
 
-from the root of the repository.
-
-Otherwise, you can build Bitcoin Core from self-compiled [depends](/depends/README.md).
+./configure \
+    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
+    BDB_CFLAGS="-I${BDB_PREFIX}/include"
+```
 
 **Note**: You only need Berkeley DB if the legacy wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
 
@@ -277,42 +273,14 @@ A list of additional configure flags can be displayed with:
 
 Setup and Build Example: Arch Linux
 -----------------------------------
-This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
+This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman -S git base-devel boost libevent python
+    pacman --sync --needed autoconf automake boost gcc git libevent libtool make pkgconf python sqlite
     git clone https://github.com/bitcoin/bitcoin.git
     cd bitcoin/
     ./autogen.sh
-    ./configure --disable-wallet --without-gui --without-miniupnpc
+    ./configure
     make check
+    ./src/bitcoind
 
-Note:
-Enabling wallet support requires either compiling against a Berkeley DB newer than 4.8 (package `db`) using `--with-incompatible-bdb`,
-or building and depending on a local version of Berkeley DB 4.8. The readily available Arch Linux packages are currently built using
-`--with-incompatible-bdb` according to the [PKGBUILD](https://github.com/archlinux/svntogit-community/blob/packages/bitcoin/trunk/PKGBUILD).
-As mentioned above, when maintaining portability of the wallet between the standard Bitcoin Core distributions and independently built
-node software is desired, Berkeley DB 4.8 must be used.
-
-
-ARM Cross-compilation
--------------------
-These steps can be performed on, for example, an Ubuntu VM. The depends system
-will also work on other Linux distributions, however the commands for
-installing the toolchain will be different.
-
-Make sure you install the build requirements mentioned above.
-Then, install the toolchain and curl:
-
-    sudo apt-get install g++-arm-linux-gnueabihf curl
-
-To build executables for ARM:
-
-    cd depends
-    make HOST=arm-linux-gnueabihf NO_QT=1
-    cd ..
-    ./autogen.sh
-    CONFIG_SITE=$PWD/depends/arm-linux-gnueabihf/share/config.site ./configure --enable-reduce-exports LDFLAGS=-static-libstdc++
-    make
-
-
-For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+If you intend to work with legacy Berkeley DB wallets, see [Berkeley DB](#berkeley-db) section.

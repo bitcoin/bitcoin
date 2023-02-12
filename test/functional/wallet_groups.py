@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet group functionality."""
@@ -16,6 +16,9 @@ from test_framework.util import (
 
 
 class WalletGroupTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5
@@ -26,6 +29,11 @@ class WalletGroupTest(BitcoinTestFramework):
             ["-maxapsfee=0.00002719"],
             ["-maxapsfee=0.00002720"],
         ]
+
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")   # whitelist peers to speed up tx relay / mempool sync
+            args.append(f"-paytxfee={20 * 1e3 / 1e8}")  # apply feerate of 20 sats/vB across all nodes
+
         self.rpc_timeout = 480
 
     def skip_test_if_missing_module(self):
@@ -150,7 +158,7 @@ class WalletGroupTest(BitcoinTestFramework):
         assert_equal(2, len(tx6["vout"]))
 
         # Empty out node2's wallet
-        self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)
+        self.nodes[2].sendall(recipients=[self.nodes[0].getnewaddress()])
         self.sync_all()
         self.generate(self.nodes[0], 1)
 

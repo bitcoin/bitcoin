@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
@@ -72,6 +72,13 @@ class AcceptBlockTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+    def check_hash_in_chaintips(self, node, blockhash):
+        tips = node.getchaintips()
+        for x in tips:
+            if x["hash"] == blockhash:
+                return True
+        return False
+
     def run_test(self):
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
@@ -89,10 +96,15 @@ class AcceptBlockTest(BitcoinTestFramework):
             blocks_h2[i].solve()
             block_time += 1
         test_node.send_and_ping(msg_block(blocks_h2[0]))
-        min_work_node.send_and_ping(msg_block(blocks_h2[1]))
+
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"AcceptBlockHeader: not adding new block header {blocks_h2[1].hash}, missing anti-dos proof-of-work validation"]):
+            min_work_node.send_and_ping(msg_block(blocks_h2[1]))
 
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 1)
+
+        # Ensure that the header of the second block was also not accepted by node1
+        assert_equal(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash), False)
         self.log.info("First height 2 block accepted by node0; correctly rejected by node1")
 
         # 3. Send another block that builds on genesis.
@@ -257,16 +269,11 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(block_291))
 
         # At this point we've sent an obviously-bogus block, wait for full processing
-        # without assuming whether we will be disconnected or not
-        try:
-            # Only wait a short while so the test doesn't take forever if we do get
-            # disconnected
-            test_node.sync_with_ping(timeout=1)
-        except AssertionError:
-            test_node.wait_for_disconnect()
+        # and assume disconnection
+        test_node.wait_for_disconnect()
 
-            self.nodes[0].disconnect_p2ps()
-            test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].disconnect_p2ps()
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
 
         # We should have failed reorg and switched back to 290 (but have block 291)
         assert_equal(self.nodes[0].getblockcount(), 290)

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,7 +23,7 @@ FUZZ_TARGET(chain)
     disk_block_index->phashBlock = &zero;
     {
         LOCK(::cs_main);
-        (void)disk_block_index->GetBlockHash();
+        (void)disk_block_index->ConstructBlockHash();
         (void)disk_block_index->GetBlockPos();
         (void)disk_block_index->GetBlockTime();
         (void)disk_block_index->GetBlockTimeMax();
@@ -31,7 +31,6 @@ FUZZ_TARGET(chain)
         (void)disk_block_index->GetUndoPos();
         (void)disk_block_index->HaveTxsDownloaded();
         (void)disk_block_index->IsValid();
-        (void)disk_block_index->ToString();
     }
 
     const CBlockHeader block_header = disk_block_index->GetBlockHeader();

@@ -16,17 +16,16 @@ define $(package)_set_vars
   $(package)_config_opts_netbsd=--with-pic
   $(package)_config_opts_openbsd=--with-pic
   $(package)_config_opts_android=--with-pic
-  $(package)_cxxflags+=-std=c++17
 endef
 
 define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/remove_libstd_link.patch && \
-  patch -p1 < $($(package)_patch_dir)/netbsd_kevent_void.patch && \
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub config
+  patch -p1 < $($(package)_patch_dir)/netbsd_kevent_void.patch
 endef
 
 define $(package)_config_cmds
   ./autogen.sh && \
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub config && \
   $($(package)_autoconf)
 endef
 

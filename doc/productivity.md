@@ -9,6 +9,7 @@ Table of Contents
    * [Disable features with `./configure`](#disable-features-with-configure)
    * [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
    * [Only build what you need](#only-build-what-you-need)
+   * [Compile on multiple machines](#compile-on-multiple-machines)
    * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
    * [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base)
 * [Writing code](#writing-code)
@@ -80,6 +81,10 @@ make -C src bitcoin_bench
 ```
 
 (You can and should combine this with `-j`, as above, for a parallel build.)
+
+### Compile on multiple machines
+
+If you have more than one computer at your disposal, you can use [distcc](https://www.distcc.org) to speed up compilation. This is easiest when all computers run the same operating system and compiler version.
 
 ### Multiple working directories with `git worktrees`
 

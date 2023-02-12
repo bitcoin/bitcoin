@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,13 +41,14 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
         return false;
     }
 
-    CHashWriter hasher(0, 0);
+    HashWriter hasher{};
 
     WalletDatabase& db = wallet.GetDatabase();
     std::unique_ptr<DatabaseBatch> batch = db.MakeBatch();
 
     bool ret = true;
-    if (!batch->StartCursor()) {
+    std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
+    if (!cursor) {
         error = _("Error: Couldn't create cursor into database");
         ret = false;
     }
@@ -66,15 +67,15 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
 
         // Read the records
         while (true) {
-            CDataStream ss_key(SER_DISK, CLIENT_VERSION);
-            CDataStream ss_value(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            ret = batch->ReadAtCursor(ss_key, ss_value, complete);
-            if (complete) {
+            DataStream ss_key{};
+            DataStream ss_value{};
+            DatabaseCursor::Status status = cursor->Next(ss_key, ss_value);
+            if (status == DatabaseCursor::Status::DONE) {
                 ret = true;
                 break;
-            } else if (!ret) {
+            } else if (status == DatabaseCursor::Status::FAIL) {
                 error = _("Error reading next record from wallet database");
+                ret = false;
                 break;
             }
             std::string key_str = HexStr(ss_key);
@@ -85,7 +86,7 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
         }
     }
 
-    batch->CloseCursor();
+    cursor.reset();
     batch.reset();
 
     // Close the wallet after we're done with it. The caller won't be doing this
@@ -132,7 +133,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     std::ifstream dump_file{dump_path};
 
     // Compute the checksum
-    CHashWriter hasher(0, 0);
+    HashWriter hasher{};
     uint256 checksum;
 
     // Check the magic and version
@@ -201,7 +202,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
 
     // dummy chain interface
     bool ret = true;
-    std::shared_ptr<CWallet> wallet(new CWallet(nullptr /* chain */, name, gArgs, std::move(database)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet(new CWallet(/*chain=*/nullptr, name, gArgs, std::move(database)), WalletToolReleaseWallet);
     {
         LOCK(wallet->cs_wallet);
         DBErrors load_wallet_ret = wallet->LoadWallet();
@@ -254,8 +255,8 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
             std::vector<unsigned char> k = ParseHex(key);
             std::vector<unsigned char> v = ParseHex(value);
 
-            CDataStream ss_key(k, SER_DISK, CLIENT_VERSION);
-            CDataStream ss_value(v, SER_DISK, CLIENT_VERSION);
+            DataStream ss_key{k};
+            DataStream ss_value{v};
 
             if (!batch->Write(ss_key, ss_value)) {
                 error = strprintf(_("Error: Unable to write record to new wallet"));

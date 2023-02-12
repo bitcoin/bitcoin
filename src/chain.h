@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,10 +9,11 @@
 #include <arith_uint256.h>
 #include <consensus/params.h>
 #include <flatfile.h>
+#include <kernel/cs_main.h>
 #include <primitives/block.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <uint256.h>
+#include <util/time.h>
 
 #include <vector>
 
@@ -37,8 +38,6 @@ static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
  * Ref: https://github.com/bitcoin/bitcoin/pull/1026
  */
 static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
-
-extern RecursiveMutex cs_main;
 
 class CBlockFileInfo
 {
@@ -138,7 +137,7 @@ enum BlockStatus : uint32_t {
      * If set, this indicates that the block index entry is assumed-valid.
      * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
      * It almost certainly means that the block's full validation is pending
-     * on a background chainstate. See `doc/assumeutxo.md`.
+     * on a background chainstate. See `doc/design/assumeutxo.md`.
      */
     BLOCK_ASSUMED_VALID      =   256,
 };
@@ -213,10 +212,6 @@ public:
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
 
-    CBlockIndex()
-    {
-    }
-
     explicit CBlockIndex(const CBlockHeader& block)
         : nVersion{block.nVersion},
           hashMerkleRoot{block.hashMerkleRoot},
@@ -263,6 +258,7 @@ public:
 
     uint256 GetBlockHash() const
     {
+        assert(phashBlock != nullptr);
         return *phashBlock;
     }
 
@@ -274,6 +270,11 @@ public:
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
      */
     bool HaveTxsDownloaded() const { return nChainTx != 0; }
+
+    NodeSeconds Time() const
+    {
+        return NodeSeconds{std::chrono::seconds{nTime}};
+    }
 
     int64_t GetBlockTime() const
     {
@@ -301,13 +302,7 @@ public:
         return pbegin[(pend - pbegin) / 2];
     }
 
-    std::string ToString() const
-    {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, nHeight,
-            hashMerkleRoot.ToString(),
-            GetBlockHash().ToString());
-    }
+    std::string ToString() const;
 
     //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
@@ -355,6 +350,24 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
+
+    CBlockIndex() = default;
+    ~CBlockIndex() = default;
+
+protected:
+    //! CBlockIndex should not allow public copy construction because equality
+    //! comparison via pointer is very common throughout the codebase, making
+    //! use of copy a footgun. Also, use of copies do not have the benefit
+    //! of simplifying lifetime considerations due to attributes like pprev and
+    //! pskip, which are at risk of becoming dangling pointers in a copied
+    //! instance.
+    //!
+    //! We declare these protected instead of simply deleting them so that
+    //! CDiskBlockIndex can reuse copy construction.
+    CBlockIndex(const CBlockIndex&) = default;
+    CBlockIndex& operator=(const CBlockIndex&) = delete;
+    CBlockIndex(CBlockIndex&&) = delete;
+    CBlockIndex& operator=(CBlockIndex&&) = delete;
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
@@ -402,7 +415,7 @@ public:
         READWRITE(obj.nNonce);
     }
 
-    uint256 GetBlockHash() const
+    uint256 ConstructBlockHash() const
     {
         CBlockHeader block;
         block.nVersion = nVersion;
@@ -414,16 +427,8 @@ public:
         return block.GetHash();
     }
 
-
-    std::string ToString() const
-    {
-        std::string str = "CDiskBlockIndex(";
-        str += CBlockIndex::ToString();
-        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString(),
-            hashPrev.ToString());
-        return str;
-    }
+    uint256 GetBlockHash() = delete;
+    std::string ToString() = delete;
 };
 
 /** An in-memory indexed chain of blocks. */
@@ -479,10 +484,10 @@ public:
     }
 
     /** Set/initialize a chain with a given tip. */
-    void SetTip(CBlockIndex* pindex);
+    void SetTip(CBlockIndex& block);
 
-    /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
-    CBlockLocator GetLocator(const CBlockIndex* pindex = nullptr) const;
+    /** Return a CBlockLocator that refers to the tip in of this chain. */
+    CBlockLocator GetLocator() const;
 
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex* FindFork(const CBlockIndex* pindex) const;
@@ -490,5 +495,11 @@ public:
     /** Find the earliest block with timestamp equal or greater than the given time and height equal or greater than the given height. */
     CBlockIndex* FindEarliestAtLeast(int64_t nTime, int height) const;
 };
+
+/** Get a locator for a block index entry. */
+CBlockLocator GetLocator(const CBlockIndex* index);
+
+/** Construct a list of hash entries to put in a locator.  */
+std::vector<uint256> LocatorEntries(const CBlockIndex* index);
 
 #endif // BITCOIN_CHAIN_H

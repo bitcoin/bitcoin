@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test external signer.
@@ -77,10 +77,7 @@ class RPCSignerTest(BitcoinTestFramework):
         )
         self.clear_mock_result(self.nodes[1])
 
-        result = self.nodes[1].enumeratesigners()
-        assert_equal(len(result['signers']), 2)
-        assert_equal(result['signers'][0]["fingerprint"], "00000001")
-        assert_equal(result['signers'][0]["name"], "trezor_t")
+        assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
 
 if __name__ == '__main__':
     RPCSignerTest().main()

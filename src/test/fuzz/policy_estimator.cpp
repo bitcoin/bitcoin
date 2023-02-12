@@ -1,12 +1,15 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/mempool_entry.h>
 #include <policy/fees.h>
+#include <policy/fees_args.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/mempool.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 
@@ -15,15 +18,20 @@
 #include <string>
 #include <vector>
 
+namespace {
+const BasicTestingSetup* g_setup;
+} // namespace
+
 void initialize_policy_estimator()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
+    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    CBlockPolicyEstimator block_policy_estimator;
+    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args)};
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -70,7 +78,7 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
     }
     {
         FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);
-        CAutoFile fuzzed_auto_file = fuzzed_auto_file_provider.open();
+        AutoFile fuzzed_auto_file{fuzzed_auto_file_provider.open()};
         block_policy_estimator.Write(fuzzed_auto_file);
         block_policy_estimator.Read(fuzzed_auto_file);
     }

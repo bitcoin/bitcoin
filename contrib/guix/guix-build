@@ -132,7 +132,7 @@ for host in $HOSTS; do
                 echo "Found macOS SDK at '${OSX_SDK}', using..."
                 break
             else
-                echo "macOS SDK does not exist at '${OSX_SDK}', please place the extracted, untarred SDK there to perform darwin builds, exiting..."
+                echo "macOS SDK does not exist at '${OSX_SDK}', please place the extracted, untarred SDK there to perform darwin builds, or define SDK_PATH environment variable. Exiting..."
                 exit 1
             fi
             ;;

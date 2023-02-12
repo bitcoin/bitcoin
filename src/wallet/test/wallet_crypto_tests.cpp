@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(passphrase) {
 
     std::string hash(GetRandHash().ToString());
     std::vector<unsigned char> vchSalt(8);
-    GetRandBytes(vchSalt.data(), vchSalt.size());
+    GetRandBytes(vchSalt);
     uint32_t rounds = InsecureRand32();
     if (rounds > 30000)
         rounds = 30000;

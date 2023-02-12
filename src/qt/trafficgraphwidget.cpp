@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,15 +19,10 @@
 #define XMARGIN                 10
 #define YMARGIN                 10
 
-TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
-    QWidget(parent),
-    timer(nullptr),
-    fMax(0.0f),
-    vSamplesIn(),
-    vSamplesOut(),
-    nLastBytesIn(0),
-    nLastBytesOut(0),
-    clientModel(nullptr)
+TrafficGraphWidget::TrafficGraphWidget(QWidget* parent)
+    : QWidget(parent),
+      vSamplesIn(),
+      vSamplesOut()
 {
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);

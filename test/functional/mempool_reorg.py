@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool re-org scenarios.
@@ -31,7 +31,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Add 4 coinbase utxos to the miniwallet")
         # Block 76 contains the first spendable coinbase txs.
         first_block = 76
-        wallet.rescan_utxos()
 
         # Three scenarios for re-orging coinbase spends in the memory pool:
         # 1. Direct coinbase spend  :  spend_1
@@ -53,8 +52,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         utxo = wallet.get_utxo(txid=coinbase_txids[0])
         timelock_tx = wallet.create_self_transfer(
             utxo_to_spend=utxo,
-            mempool_valid=False,
-            locktime=self.nodes[0].getblockcount() + 2
+            locktime=self.nodes[0].getblockcount() + 2,
         )['hex']
 
         self.log.info("Check that the time-locked transaction is too immature to spend")
@@ -69,10 +67,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Create spend_2_1 and spend_3_1")
-        spend_2_utxo = wallet.get_utxo(txid=spend_2['txid'])
-        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2_utxo)
-        spend_3_utxo = wallet.get_utxo(txid=spend_3['txid'])
-        spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3_utxo)
+        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"])
+        spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3["new_utxo"])
 
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])

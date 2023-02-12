@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +34,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     LOCK(wallet_instance->cs_wallet);
 
     wallet_instance->SetMinVersion(FEATURE_LATEST);
-    wallet_instance->AddWalletFlags(wallet_creation_flags);
+    wallet_instance->InitWalletFlags(wallet_creation_flags);
 
     if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
@@ -47,7 +47,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     wallet_instance->TopUpKeyPool();
 }
 
-static const std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, const ArgsManager& args, DatabaseOptions options)
+static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, const ArgsManager& args, DatabaseOptions options)
 {
     DatabaseStatus status;
     bilingual_str error;
@@ -58,7 +58,7 @@ static const std::shared_ptr<CWallet> MakeWallet(const std::string& name, const 
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance{new CWallet(nullptr /* chain */, name, args, std::move(database)), WalletToolReleaseWallet};
+    std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, args, std::move(database)), WalletToolReleaseWallet};
     DBErrors load_wallet_ret;
     try {
         load_wallet_ret = wallet_instance->LoadWallet();

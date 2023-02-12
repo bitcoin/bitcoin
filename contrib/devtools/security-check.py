@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -11,10 +11,6 @@ import sys
 from typing import List
 
 import lief #type:ignore
-
-# temporary constant, to be replaced with lief.ELF.ARCH.RISCV
-# https://github.com/lief-project/LIEF/pull/562
-LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
 
 def check_ELF_RELRO(binary) -> bool:
     '''
@@ -101,7 +97,6 @@ def check_ELF_separate_code(binary):
     for segment in binary.segments:
         if segment.type ==  lief.ELF.SEGMENT_TYPES.LOAD:
             for section in segment.sections:
-                assert(section.name not in flags_per_section)
                 flags_per_section[section.name] = segment.flags
     # Spot-check ELF LOAD program header flags per section
     # If these sections exist, check them against the expected R/W/E flags
@@ -150,6 +145,12 @@ def check_PE_control_flow(binary) -> bool:
     if content == [243, 15, 30, 250]: # endbr64
         return True
     return False
+
+def check_PE_Canary(binary) -> bool:
+    '''
+    Check for use of stack canary
+    '''
+    return binary.has_symbol('__stack_chk_fail')
 
 def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
@@ -208,6 +209,7 @@ BASE_PE = [
     ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION),
     ('CONTROL_FLOW', check_PE_control_flow),
+    ('Canary', check_PE_Canary),
 ]
 
 BASE_MACHO = [
@@ -222,7 +224,7 @@ CHECKS = {
         lief.ARCHITECTURES.ARM: BASE_ELF,
         lief.ARCHITECTURES.ARM64: BASE_ELF,
         lief.ARCHITECTURES.PPC: BASE_ELF,
-        LIEF_ELF_ARCH_RISCV: BASE_ELF,
+        lief.ARCHITECTURES.RISCV: BASE_ELF,
     },
     lief.EXE_FORMATS.PE: {
         lief.ARCHITECTURES.X86: BASE_PE,
@@ -250,12 +252,9 @@ if __name__ == '__main__':
                 continue
 
             if arch == lief.ARCHITECTURES.NONE:
-                if binary.header.machine_type == LIEF_ELF_ARCH_RISCV:
-                    arch = LIEF_ELF_ARCH_RISCV
-                else:
-                    print(f'{filename}: unknown architecture')
-                    retval = 1
-                    continue
+                print(f'{filename}: unknown architecture')
+                retval = 1
+                continue
 
             failed: List[str] = []
             for (name, func) in CHECKS[etype][arch]:

@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2020 The Bitcoin Core developers
+// Copyright (c) 2010-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,11 +32,14 @@ enum class TransactionError {
     MAX_FEE_EXCEEDED,
     EXTERNAL_SIGNER_NOT_FOUND,
     EXTERNAL_SIGNER_FAILED,
+    INVALID_PACKAGE,
 };
 
 bilingual_str TransactionErrorString(const TransactionError error);
 
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
+
+bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& strPort);
 
 bilingual_str AmountHighWarn(const std::string& optname);
 

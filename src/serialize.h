@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -472,10 +472,10 @@ struct CustomUintFormatter
         if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
         if (BigEndian) {
             uint64_t raw = htobe64(v);
-            s.write({BytePtr(&raw) + 8 - Bytes, Bytes});
+            s.write({AsBytePtr(&raw) + 8 - Bytes, Bytes});
         } else {
             uint64_t raw = htole64(v);
-            s.write({BytePtr(&raw), Bytes});
+            s.write({AsBytePtr(&raw), Bytes});
         }
     }
 
@@ -485,10 +485,10 @@ struct CustomUintFormatter
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
-            s.read({BytePtr(&raw) + 8 - Bytes, Bytes});
+            s.read({AsBytePtr(&raw) + 8 - Bytes, Bytes});
             v = static_cast<I>(be64toh(raw));
         } else {
-            s.read({BytePtr(&raw), Bytes});
+            s.read({AsBytePtr(&raw), Bytes});
             v = static_cast<I>(le64toh(raw));
         }
     }
@@ -519,6 +519,29 @@ struct CompactSizeFormatter
         WriteCompactSize<Stream>(s, v);
     }
 };
+
+template <typename U, bool LOSSY = false>
+struct ChronoFormatter {
+    template <typename Stream, typename Tp>
+    void Unser(Stream& s, Tp& tp)
+    {
+        U u;
+        s >> u;
+        // Lossy deserialization does not make sense, so force Wnarrowing
+        tp = Tp{typename Tp::duration{typename Tp::duration::rep{u}}};
+    }
+    template <typename Stream, typename Tp>
+    void Ser(Stream& s, Tp tp)
+    {
+        if constexpr (LOSSY) {
+            s << U(tp.time_since_epoch().count());
+        } else {
+            s << U{tp.time_since_epoch().count()};
+        }
+    }
+};
+template <typename U>
+using LossyChronoFormatter = ChronoFormatter<U, true>;
 
 class CompactSizeWriter
 {
@@ -982,11 +1005,11 @@ struct CSerActionUnserialize
 class CSizeComputer
 {
 protected:
-    size_t nSize;
+    size_t nSize{0};
 
     const int nVersion;
 public:
-    explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
+    explicit CSizeComputer(int nVersionIn) : nVersion(nVersionIn) {}
 
     void write(Span<const std::byte> src)
     {

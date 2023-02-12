@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -151,7 +151,7 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
 struct PrecomputedTransactionData
 {
     // BIP341 precomputed data.
-    // These are single-SHA256, see https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#cite_note-15.
+    // These are single-SHA256, see https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#cite_note-16.
     uint256 m_prevouts_single_hash;
     uint256 m_sequences_single_hash;
     uint256 m_outputs_single_hash;
@@ -233,9 +233,9 @@ static constexpr size_t TAPROOT_CONTROL_NODE_SIZE = 32;
 static constexpr size_t TAPROOT_CONTROL_MAX_NODE_COUNT = 128;
 static constexpr size_t TAPROOT_CONTROL_MAX_SIZE = TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * TAPROOT_CONTROL_MAX_NODE_COUNT;
 
-extern const CHashWriter HASHER_TAPSIGHASH; //!< Hasher with tag "TapSighash" pre-fed to it.
-extern const CHashWriter HASHER_TAPLEAF;    //!< Hasher with tag "TapLeaf" pre-fed to it.
-extern const CHashWriter HASHER_TAPBRANCH;  //!< Hasher with tag "TapBranch" pre-fed to it.
+extern const HashWriter HASHER_TAPSIGHASH; //!< Hasher with tag "TapSighash" pre-fed to it.
+extern const HashWriter HASHER_TAPLEAF;    //!< Hasher with tag "TapLeaf" pre-fed to it.
+extern const HashWriter HASHER_TAPBRANCH;  //!< Hasher with tag "TapBranch" pre-fed to it.
 
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
@@ -307,10 +307,10 @@ using MutableTransactionSignatureChecker = GenericTransactionSignatureChecker<CM
 class DeferringSignatureChecker : public BaseSignatureChecker
 {
 protected:
-    BaseSignatureChecker& m_checker;
+    const BaseSignatureChecker& m_checker;
 
 public:
-    DeferringSignatureChecker(BaseSignatureChecker& checker) : m_checker(checker) {}
+    DeferringSignatureChecker(const BaseSignatureChecker& checker) : m_checker(checker) {}
 
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override
     {
@@ -333,7 +333,10 @@ public:
 };
 
 /** Compute the BIP341 tapleaf hash from leaf version & script. */
-uint256 ComputeTapleafHash(uint8_t leaf_version, const CScript& script);
+uint256 ComputeTapleafHash(uint8_t leaf_version, Span<const unsigned char> script);
+/** Compute the BIP341 tapbranch hash from two branches.
+  * Spans must be 32 bytes each. */
+uint256 ComputeTapbranchHash(Span<const unsigned char> a, Span<const unsigned char> b);
 /** Compute the BIP341 taproot script tree Merkle root from control block and leaf hash.
  *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
 uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint256& tapleaf_hash);
@@ -343,8 +346,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
-
-bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
 
 int FindAndDelete(CScript& script, const CScript& b);
 

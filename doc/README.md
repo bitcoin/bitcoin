@@ -53,7 +53,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)
-- [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
 - [Source Code Documentation (External Link)](https://doxygen.bitcoincore.org/)
 - [Translation Process](translation_process.md)
@@ -64,6 +63,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [BIPS](bips.md)
 - [Dnsseed Policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
+- [Internal Design Docs](design/)
 
 ### Resources
 * Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
@@ -71,7 +71,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [Assumeutxo design](assumeutxo.md)
 - [bitcoin.conf Configuration File](bitcoin-conf.md)
 - [CJDNS Support](cjdns.md)
 - [Files](files.md)

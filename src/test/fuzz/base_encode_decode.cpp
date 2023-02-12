@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,19 +14,14 @@
 #include <string>
 #include <vector>
 
-void initialize_base_encode_decode()
-{
-    static const ECCVerifyHandle verify_handle;
-}
-
-FUZZ_TARGET_INIT(base_encode_decode, initialize_base_encode_decode)
+FUZZ_TARGET(base_encode_decode)
 {
     const std::string random_encoded_string(buffer.begin(), buffer.end());
 
     std::vector<unsigned char> decoded;
     if (DecodeBase58(random_encoded_string, decoded, 100)) {
         const std::string encoded_string = EncodeBase58(decoded);
-        assert(encoded_string == TrimString(encoded_string));
+        assert(encoded_string == TrimStringView(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
@@ -36,17 +31,16 @@ FUZZ_TARGET_INIT(base_encode_decode, initialize_base_encode_decode)
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
-    bool pf_invalid;
-    std::string decoded_string = DecodeBase32(random_encoded_string, &pf_invalid);
-    if (!pf_invalid) {
-        const std::string encoded_string = EncodeBase32(decoded_string);
-        assert(encoded_string == TrimString(encoded_string));
+    auto result = DecodeBase32(random_encoded_string);
+    if (result) {
+        const std::string encoded_string = EncodeBase32(*result);
+        assert(encoded_string == TrimStringView(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
-    decoded_string = DecodeBase64(random_encoded_string, &pf_invalid);
-    if (!pf_invalid) {
-        const std::string encoded_string = EncodeBase64(decoded_string);
+    result = DecodeBase64(random_encoded_string);
+    if (result) {
+        const std::string encoded_string = EncodeBase64(*result);
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 #include <key_io.h>
 #include <memusage.h>
 #include <netbase.h>
+#include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
 #include <protocol.h>
@@ -87,9 +88,6 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     }
     (void)GetSizeOfCompactSize(u64);
     (void)GetSpecialScriptSize(u32);
-    if (!MultiplicationOverflow(i64, static_cast<int64_t>(::nBytesPerSigOp)) && !AdditionOverflow(i64 * ::nBytesPerSigOp, static_cast<int64_t>(4))) {
-        (void)GetVirtualTransactionSize(i64, i64);
-    }
     if (!MultiplicationOverflow(i64, static_cast<int64_t>(u32)) && !AdditionOverflow(i64, static_cast<int64_t>(4)) && !AdditionOverflow(i64 * u32, static_cast<int64_t>(4))) {
         (void)GetVirtualTransactionSize(i64, i64, u32);
     }
@@ -154,7 +152,7 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     const CScriptID script_id{u160};
 
     {
-        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+        DataStream stream{};
 
         uint256 deserialized_u256;
         stream << u256;
@@ -219,7 +217,7 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     }
 
     {
-        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+        DataStream stream{};
 
         ser_writedata64(stream, u64);
         const uint64_t deserialized_u64 = ser_readdata64(stream);
@@ -247,7 +245,7 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     }
 
     {
-        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+        DataStream stream{};
 
         WriteCompactSize(stream, u64);
         try {

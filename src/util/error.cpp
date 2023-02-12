@@ -1,12 +1,14 @@
-// Copyright (c) 2010-2021 The Bitcoin Core developers
+// Copyright (c) 2010-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/error.h>
 
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/translation.h>
+
+#include <cassert>
+#include <string>
 
 bilingual_str TransactionErrorString(const TransactionError err)
 {
@@ -35,6 +37,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("External signer not found");
         case TransactionError::EXTERNAL_SIGNER_FAILED:
             return Untranslated("External signer failed to sign");
+        case TransactionError::INVALID_PACKAGE:
+            return Untranslated("Transaction rejected due to invalid package");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
@@ -43,6 +47,11 @@ bilingual_str TransactionErrorString(const TransactionError err)
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind)
 {
     return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
+}
+
+bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& invalid_value)
+{
+    return strprintf(_("Invalid port specified in %s: '%s'"), optname, invalid_value);
 }
 
 bilingual_str AmountHighWarn(const std::string& optname)

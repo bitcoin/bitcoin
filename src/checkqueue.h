@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,7 +66,7 @@ private:
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. */
-    bool Loop(bool fMaster)
+    bool Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
         std::vector<T> vChecks;
@@ -140,7 +140,7 @@ public:
     }
 
     //! Create a pool of new worker threads.
-    void StartWorkerThreads(const int threads_num)
+    void StartWorkerThreads(const int threads_num) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         {
             LOCK(m_mutex);
@@ -159,13 +159,13 @@ public:
     }
 
     //! Wait until execution finishes, and return whether all evaluations were successful.
-    bool Wait()
+    bool Wait() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         return Loop(true /* master thread */);
     }
 
     //! Add a batch of checks to the queue
-    void Add(std::vector<T>& vChecks)
+    void Add(std::vector<T>& vChecks) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         if (vChecks.empty()) {
             return;
@@ -188,7 +188,7 @@ public:
     }
 
     //! Stop all of the worker threads.
-    void StopWorkerThreads()
+    void StopWorkerThreads() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         WITH_LOCK(m_mutex, m_request_stop = true);
         m_worker_cv.notify_all();
@@ -199,11 +199,12 @@ public:
         WITH_LOCK(m_mutex, m_request_stop = false);
     }
 
+    bool HasThreads() const { return !m_worker_threads.empty(); }
+
     ~CCheckQueue()
     {
         assert(m_worker_threads.empty());
     }
-
 };
 
 /**

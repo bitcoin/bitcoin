@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@ struct WalletTestingSetup : public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~WalletTestingSetup();
 
-    std::unique_ptr<interfaces::WalletLoader> m_wallet_loader = interfaces::MakeWalletLoader(*m_node.chain, *Assert(m_node.args));
+    std::unique_ptr<interfaces::WalletLoader> m_wallet_loader;
     CWallet m_wallet;
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };

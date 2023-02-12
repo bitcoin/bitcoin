@@ -1,4 +1,4 @@
-BIPs that are implemented by Bitcoin Core (up-to-date up to **v23.0**):
+BIPs that are implemented by Bitcoin Core (up-to-date up to **v24.0**):
 
 * [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575))
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
@@ -28,6 +28,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v23.0**):
   and it is disabled by default at build time since **v0.19.0** ([PR #15584](https://github.com/bitcoin/bitcoin/pull/15584)).
   It has been removed as of **v0.20.0** ([PR 17165](https://github.com/bitcoin/bitcoin/pull/17165)).
 * [`BIP 84`](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki): The experimental descriptor wallets introduced in **v0.21.0** by default use the Hierarchical Deterministic Wallet derivation proposed by BIP 84. ([PR #16528](https://github.com/bitcoin/bitcoin/pull/16528))
+* [`BIP 86`](https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki): Descriptor wallets by default use the Hierarchical Deterministic Wallet derivation proposed by BIP 86 since **v23.0** ([PR #22364](https://github.com/bitcoin/bitcoin/pull/22364)).
 * [`BIP 90`](https://github.com/bitcoin/bips/blob/master/bip-0090.mediawiki): Trigger mechanism for activation of BIPs 34, 65, and 66 has been simplified to block height checks since **v0.14.0** ([PR #8391](https://github.com/bitcoin/bitcoin/pull/8391)).
 * [`BIP 111`](https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki): `NODE_BLOOM` service bit added, and enforced for all peer versions as of **v0.13.0** ([PR #6579](https://github.com/bitcoin/bitcoin/pull/6579) and [PR #6641](https://github.com/bitcoin/bitcoin/pull/6641)).
 * [`BIP 112`](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki): The CHECKSEQUENCEVERIFY opcode has been implemented since **v0.12.1** ([PR #7524](https://github.com/bitcoin/bitcoin/pull/7524)), and has been *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
@@ -58,6 +59,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v23.0**):
   with mainnet activation as of **v0.21.1** ([PR 21377](https://github.com/bitcoin/bitcoin/pull/21377),
   [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
+* [`BIP 371`](https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki): Taproot fields for PSBT as of **v24.0** ([PR 22558](https://github.com/bitcoin/bitcoin/pull/22558)).
 * [`BIP 380`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki)
   [`381`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki)
   [`382`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki)

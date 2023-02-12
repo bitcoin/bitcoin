@@ -187,7 +187,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     if verbose:
         print(f"Inspecting with otool: {binaryPath}")
     otoolbin=os.getenv("OTOOL", "otool")
-    otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, text=True)
     if otool.returncode != 0:
         sys.stderr.write(otool.stderr)
         sys.stderr.flush()
@@ -211,7 +211,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     return libraries
 
 def runInstallNameTool(action: str, *args):
-    installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
+    installnametoolbin=os.getenv("INSTALL_NAME_TOOL", "install_name_tool")
     run([installnametoolbin, "-"+action] + list(args), check=True)
 
 def changeInstallName(oldName: str, newName: str, binaryPath: str, verbose: int):
@@ -544,6 +544,22 @@ ds.close()
 if platform.system() == "Darwin":
     subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
 
+print("+ Installing background.tiff +")
+
+bg_path = os.path.join('dist', '.background', 'background.tiff')
+os.mkdir(os.path.dirname(bg_path))
+
+tiff_path = os.path.join('contrib', 'macdeploy', 'background.tiff')
+shutil.copy2(tiff_path, bg_path)
+
+# ------------------------------------------------
+
+print("+ Generating symlink for /Applications +")
+
+os.symlink("/Applications", os.path.join('dist', "Applications"))
+
+# ------------------------------------------------
+
 if config.dmg is not None:
 
     print("+ Preparing .dmg disk image +")
@@ -561,30 +577,17 @@ if config.dmg is not None:
 
     tempname: str = appname + ".temp.dmg"
 
-    run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, universal_newlines=True)
+    run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, text=True)
 
     if verbose:
         print("Attaching temp image...")
-    output = run(["hdiutil", "attach", tempname, "-readwrite"], check=True, universal_newlines=True, stdout=PIPE).stdout
-
-    m = re.search(r"/Volumes/(.+$)", output)
-    disk_root = m.group(0)
-
-    print("+ Applying fancy settings +")
-
-    bg_path = os.path.join(disk_root, ".background", os.path.basename('background.tiff'))
-    os.mkdir(os.path.dirname(bg_path))
-    if verbose:
-        print('background.tiff', "->", bg_path)
-    shutil.copy2('contrib/macdeploy/background.tiff', bg_path)
-
-    os.symlink("/Applications", os.path.join(disk_root, "Applications"))
+    output = run(["hdiutil", "attach", tempname, "-readwrite"], check=True, text=True, stdout=PIPE).stdout
 
     print("+ Finalizing .dmg disk image +")
 
-    run(["hdiutil", "detach", f"/Volumes/{appname}"], universal_newlines=True)
+    run(["hdiutil", "detach", f"/Volumes/{appname}"], text=True)
 
-    run(["hdiutil", "convert", tempname, "-format", "UDZO", "-o", appname, "-imagekey", "zlib-level=9"], check=True, universal_newlines=True)
+    run(["hdiutil", "convert", tempname, "-format", "UDZO", "-o", appname, "-imagekey", "zlib-level=9"], check=True, text=True)
 
     os.unlink(tempname)
 

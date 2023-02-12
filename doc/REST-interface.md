@@ -31,13 +31,14 @@ Supported API
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
+Responds with 404 if the transaction doesn't exist.
 
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
 
 #### Blocks
-`GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
-`GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
+- `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
+- `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns a block, in binary, hex-encoded binary or JSON formats.
 Responds with 404 if the block doesn't exist.
@@ -47,17 +48,23 @@ The HTTP request and response are both handled entirely in-memory.
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
 #### Blockheaders
-`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+`GET /rest/headers/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
+*Deprecated (but not removed) since 24.0:*
+`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+
 #### Blockfilter Headers
-`GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+`GET /rest/blockfilterheaders/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
 
 Given a block hash: returns <COUNT> amount of blockfilter headers in upward
 direction for the filter type <FILTERTYPE>.
 Returns empty if the block doesn't exist or it isn't in the active chain.
+
+*Deprecated (but not removed) since 24.0:*
+`GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 #### Blockfilters
 `GET /rest/blockfilter/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>`
@@ -70,30 +77,32 @@ Responds with 404 if the block doesn't exist.
 `GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
 
 Given a height: returns hash of block in best-block-chain at height provided.
+Responds with 404 if block not found.
 
 #### Chaininfos
 `GET /rest/chaininfo.json`
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
-* chain : (string) current network name (main, test, signet, regtest)
-* blocks : (numeric) the current number of blocks processed in the server
-* headers : (numeric) the current number of headers we have validated
-* bestblockhash : (string) the hash of the currently best block
-* difficulty : (numeric) the current difficulty
-* mediantime : (numeric) the median time of the 11 blocks before the most recent block on the blockchain
-* verificationprogress : (numeric) estimate of verification progress [0..1]
-* chainwork : (string) total amount of work in active chain, in hexadecimal
-* pruned : (boolean) if the blocks are subject to pruning
-* pruneheight : (numeric) highest block available
-* softforks : (array) status of softforks in progress
+Refer to the `getblockchaininfo` RPC help for details.
+
+#### Deployment info
+`GET /rest/deploymentinfo.json`
+`GET /rest/deploymentinfo/<BLOCKHASH>.json`
+
+Returns an object containing various state info regarding deployments of
+consensus changes at the current chain tip, or at <BLOCKHASH> if provided.
+Only supports JSON as output format.
+Refer to the `getdeploymentinfo` RPC help for details.
 
 #### Query UTXO set
-`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
+- `GET /rest/getutxos/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
+- `GET /rest/getutxos/checkmempool/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
 
-The getutxo command allows querying of the UTXO set given a set of outpoints.
-See BIP64 for input and output serialisation:
-https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki
+The getutxos endpoint allows querying the UTXO set, given a set of outpoints.
+With the `/checkmempool/` option, the mempool is also taken into account.
+See [BIP64](https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki) for
+input and output serialization (relevant for `bin` and `hex` output formats).
 
 Example:
 ```
@@ -121,14 +130,15 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 #### Memory pool
 `GET /rest/mempool/info.json`
 
-Returns various information about the TX mempool.
+Returns various information about the transaction mempool.
 Only supports JSON as output format.
-Refer to the `getmempoolinfo` RPC for documentation of the fields.
+Refer to the `getmempoolinfo` RPC help for details.
 
 `GET /rest/mempool/contents.json`
 
-Returns transactions in the TX mempool.
+Returns the transactions in the mempool.
 Only supports JSON as output format.
+Refer to the `getrawmempool` RPC help for details.
 
 Risks
 -------------

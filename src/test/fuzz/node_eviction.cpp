@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/net.h>
 
 #include <algorithm>
 #include <cassert>
@@ -32,6 +33,8 @@ FUZZ_TARGET(node_eviction)
             /*prefer_evict=*/fuzzed_data_provider.ConsumeBool(),
             /*m_is_local=*/fuzzed_data_provider.ConsumeBool(),
             /*m_network=*/fuzzed_data_provider.PickValueInArray(ALL_NETWORKS),
+            /*m_noban=*/fuzzed_data_provider.ConsumeBool(),
+            /*m_conn_type=*/fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES),
         });
     }
     // Make a copy since eviction_candidates may be in some valid but otherwise

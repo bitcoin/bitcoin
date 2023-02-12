@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,12 +6,18 @@
 #define BITCOIN_INDEX_BASE_H
 
 #include <dbwrapper.h>
-#include <threadinterrupt.h>
+#include <interfaces/chain.h>
+#include <util/threadinterrupt.h>
 #include <validationinterface.h>
+
+#include <string>
 
 class CBlock;
 class CBlockIndex;
-class CChainState;
+class Chainstate;
+namespace interfaces {
+class Chain;
+} // namespace interfaces
 
 struct IndexSummary {
     std::string name;
@@ -51,6 +57,10 @@ private:
     /// Whether the index is in sync with the main chain. The flag is flipped
     /// from false to true once, after which point this starts processing
     /// ValidationInterface notifications to stay in sync.
+    ///
+    /// Note that this will latch to true *immediately* upon startup if
+    /// `m_chainstate->m_chain` is empty, which will be the case upon startup
+    /// with an empty datadir if, e.g., `-txindex=1` is specified.
     std::atomic<bool> m_synced{false};
 
     /// The last block in the chain that the index is in sync with.
@@ -58,6 +68,9 @@ private:
 
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
+
+    /// Read best block locator and check that data needed to sync has not been pruned.
+    bool Init();
 
     /// Sync the index with the block index starting from the current best block.
     /// Intended to be run in its own thread, m_thread_sync, and can be
@@ -75,35 +88,45 @@ private:
     /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
     /// getting corrupted.
     bool Commit();
+
+    /// Loop over disconnected blocks and call CustomRewind.
+    bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
+    virtual bool AllowPrune() const = 0;
+
 protected:
-    CChainState* m_chainstate{nullptr};
+    std::unique_ptr<interfaces::Chain> m_chain;
+    Chainstate* m_chainstate{nullptr};
+    const std::string m_name;
 
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
-    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
-
     /// Initialize internal state from the database and block index.
-    [[nodiscard]] virtual bool Init();
+    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockKey>& block) { return true; }
 
     /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+    [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo& block) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.
-    virtual bool CommitInternal(CDBBatch& batch);
+    virtual bool CustomCommit(CDBBatch& batch) { return true; }
 
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
-    virtual bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+    [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) { return true; }
 
     virtual DB& GetDB() const = 0;
 
     /// Get the name of the index for display in logs.
-    virtual const char* GetName() const = 0;
+    const std::string& GetName() const LIFETIMEBOUND { return m_name; }
+
+    /// Update the internal best block index as well as the prune lock.
+    void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
+    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 
@@ -118,7 +141,7 @@ public:
 
     /// Start initializes the sync state and registers the instance as a
     /// ValidationInterface so that it stays in sync with blockchain updates.
-    [[nodiscard]] bool Start(CChainState& active_chainstate);
+    [[nodiscard]] bool Start();
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();

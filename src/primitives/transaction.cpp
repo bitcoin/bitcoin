@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,10 +7,15 @@
 
 #include <consensus/amount.h>
 #include <hash.h>
+#include <script/script.h>
+#include <serialize.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <util/strencodings.h>
+#include <version.h>
 
-#include <assert.h>
+#include <cassert>
+#include <stdexcept>
 
 std::string COutPoint::ToString() const
 {

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ namespace util {
 //! @note UniValue is used here for convenience and because it can be easily
 //!       serialized in a readable format. But any other variant type that can
 //!       be assigned strings, int64_t, and bool values and has get_str(),
-//!       get_int64(), get_bool(), isNum(), isBool(), isFalse(), isTrue() and
+//!       getInt<int64_t>(), get_bool(), isNum(), isBool(), isFalse(), isTrue() and
 //!       isNull() methods can be substituted if there's a need to move away
 //!       from UniValue. (An implementation with boost::variant was posted at
 //!       https://github.com/bitcoin/bitcoin/pull/15934/files#r337691812)
@@ -55,12 +55,18 @@ bool WriteSettings(const fs::path& path,
 //! @param ignore_default_section_config - ignore values in the default section
 //!                                        of the config file (part before any
 //!                                        [section] keywords)
+//! @param ignore_nonpersistent - ignore non-persistent settings values (forced
+//!                               settings values and values specified on the
+//!                               command line). Only return settings in the
+//!                               read-only config and read-write settings
+//!                               files.
 //! @param get_chain_name - enable special backwards compatible behavior
 //!                         for GetChainName
 SettingsValue GetSetting(const Settings& settings,
     const std::string& section,
     const std::string& name,
     bool ignore_default_section_config,
+    bool ignore_nonpersistent,
     bool get_chain_name);
 
 //! Get combined setting value similar to GetSetting(), except if setting was

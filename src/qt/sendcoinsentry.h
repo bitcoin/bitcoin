@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 
 #include <qt/sendcoinsrecipient.h>
 
-#include <QStackedWidget>
+#include <QWidget>
 
 class WalletModel;
 class PlatformStyle;
@@ -22,10 +22,8 @@ namespace Ui {
 
 /**
  * A single entry in the dialog for sending bitcoins.
- * Stacked widget, with different UIs for payment requests
- * with a strong payee identity.
  */
-class SendCoinsEntry : public QStackedWidget
+class SendCoinsEntry : public QWidget
 {
     Q_OBJECT
 
@@ -75,7 +73,7 @@ protected:
 private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
-    WalletModel *model;
+    WalletModel* model{nullptr};
     const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);

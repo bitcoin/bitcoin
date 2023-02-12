@@ -81,8 +81,7 @@ SECP256K1_API int secp256k1_xonly_pubkey_cmp(
 
 /** Converts a secp256k1_pubkey into a secp256k1_xonly_pubkey.
  *
- *  Returns: 1 if the public key was successfully converted
- *           0 otherwise
+ *  Returns: 1 always.
  *
  *  Args:         ctx: pointer to a context object.
  *  Out: xonly_pubkey: pointer to an x-only public key object for placing the converted public key.
@@ -109,7 +108,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_from_pubke
  *           invalid (only when the tweak is the negation of the corresponding
  *           secret key). 1 otherwise.
  *
- *  Args:           ctx: pointer to a context object initialized for verification.
+ *  Args:           ctx: pointer to a context object.
  *  Out:  output_pubkey: pointer to a public key to store the result. Will be set
  *                       to an invalid value if this function returns 0.
  *  In: internal_pubkey: pointer to an x-only pubkey to apply the tweak to.
@@ -138,7 +137,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add(
  *
  *  Returns: 0 if the arguments are invalid or the tweaked pubkey is not the
  *           result of tweaking the internal_pubkey with tweak32. 1 otherwise.
- *  Args:            ctx: pointer to a context object initialized for verification.
+ *  Args:            ctx: pointer to a context object.
  *  In: tweaked_pubkey32: pointer to a serialized xonly_pubkey.
  *     tweaked_pk_parity: the parity of the tweaked pubkey (whose serialization
  *                        is passed in as tweaked_pubkey32). This must match the
@@ -160,7 +159,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add_
  *
  *  Returns: 1: secret was valid, keypair is ready to use
  *           0: secret was invalid, try again with a different secret
- *  Args:    ctx: pointer to a context object, initialized for signing.
+ *  Args:    ctx: pointer to a context object (not secp256k1_context_static).
  *  Out: keypair: pointer to the created keypair.
  *  In:   seckey: pointer to a 32-byte secret key.
  */
@@ -172,7 +171,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_create(
 
 /** Get the secret key from a keypair.
  *
- *  Returns: 0 if the arguments are invalid. 1 otherwise.
+ *  Returns: 1 always.
  *  Args:   ctx: pointer to a context object.
  *  Out: seckey: pointer to a 32-byte buffer for the secret key.
  *  In: keypair: pointer to a keypair.
@@ -185,7 +184,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_sec(
 
 /** Get the public key from a keypair.
  *
- *  Returns: 0 if the arguments are invalid. 1 otherwise.
+ *  Returns: 1 always.
  *  Args:    ctx: pointer to a context object.
  *  Out: pubkey: pointer to a pubkey object. If 1 is returned, it is set to
  *               the keypair public key. If not, it's set to an invalid value.
@@ -202,7 +201,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
  *  This is the same as calling secp256k1_keypair_pub and then
  *  secp256k1_xonly_pubkey_from_pubkey.
  *
- *  Returns: 0 if the arguments are invalid. 1 otherwise.
+ *  Returns: 1 always.
  *  Args:   ctx: pointer to a context object.
  *  Out: pubkey: pointer to an xonly_pubkey object. If 1 is returned, it is set
  *               to the keypair public key after converting it to an
@@ -229,7 +228,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_xonly_pub(
  *           invalid (only when the tweak is the negation of the keypair's
  *           secret key). 1 otherwise.
  *
- *  Args:       ctx: pointer to a context object initialized for verification.
+ *  Args:       ctx: pointer to a context object.
  *  In/Out: keypair: pointer to a keypair to apply the tweak to. Will be set to
  *                   an invalid value if this function returns 0.
  *  In:     tweak32: pointer to a 32-byte tweak. If the tweak is invalid according

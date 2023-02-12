@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,9 +6,12 @@
 #define BITCOIN_WALLET_COINSELECTION_H
 
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
+#include <util/system.h>
+#include <util/check.h>
 
 #include <optional>
 
@@ -20,6 +23,14 @@ static constexpr CAmount CHANGE_UPPER{1000000};
 
 /** A UTXO under consideration for use in funding a new transaction. */
 struct COutput {
+private:
+    /** The output's value minus fees required to spend it.*/
+    std::optional<CAmount> effective_value;
+
+    /** The fee required to spend this output at the transaction's target feerate. */
+    std::optional<CAmount> fee;
+
+public:
     /** The outpoint identifying this UTXO */
     COutPoint outpoint;
 
@@ -55,16 +66,10 @@ struct COutput {
     /** Whether the transaction containing this output is sent from the owning wallet */
     bool from_me;
 
-    /** The output's value minus fees required to spend it. Initialized as the output's absolute value. */
-    CAmount effective_value;
-
-    /** The fee required to spend this output at the transaction's target feerate. */
-    CAmount fee{0};
-
     /** The fee required to spend this output at the consolidation feerate. */
     CAmount long_term_fee{0};
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : outpoint{outpoint},
           txout{txout},
           depth{depth},
@@ -73,9 +78,22 @@ struct COutput {
           solvable{solvable},
           safe{safe},
           time{time},
-          from_me{from_me},
-          effective_value{txout.nValue}
-    {}
+          from_me{from_me}
+    {
+        if (feerate) {
+            fee = input_bytes < 0 ? 0 : feerate.value().GetFee(input_bytes);
+            effective_value = txout.nValue - fee.value();
+        }
+    }
+
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
+        : COutput(outpoint, txout, depth, input_bytes, spendable, solvable, safe, time, from_me)
+    {
+        // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
+        assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));
+        fee = fees;
+        effective_value = txout.nValue - fee.value();
+    }
 
     std::string ToString() const;
 
@@ -83,6 +101,20 @@ struct COutput {
     {
         return outpoint < rhs.outpoint;
     }
+
+    CAmount GetFee() const
+    {
+        assert(fee.has_value());
+        return fee.value();
+    }
+
+    CAmount GetEffectiveValue() const
+    {
+        assert(effective_value.has_value());
+        return effective_value.value();
+    }
+
+    bool HasEffectiveValue() const { return effective_value.has_value(); }
 };
 
 /** Parameters for one iteration of Coin Selection. */
@@ -96,10 +128,12 @@ struct CoinSelectionParams {
     /** Mininmum change to target in Knapsack solver: select coins to cover the payment and
      * at least this value of change. */
     CAmount m_min_change_target{0};
+    /** Minimum amount for creating a change output.
+     * If change budget is smaller than min_change then we forgo creation of change output.
+     */
+    CAmount min_viable_change{0};
     /** Cost of creating the change output. */
     CAmount m_change_fee{0};
-    /** The pre-determined minimum value to target when funding a change output. */
-    CAmount m_change_target{0};
     /** Cost of creating the change output + cost of spending the change output in the future. */
     CAmount m_cost_of_change{0};
     /** The targeted feerate of the transaction being built. */
@@ -154,6 +188,7 @@ struct CoinEligibilityFilter
     /** When avoid_reuse=true and there are full groups (OUTPUT_GROUP_MAX_ENTRIES), whether or not to use any partial groups.*/
     const bool m_include_partial_groups{false};
 
+    CoinEligibilityFilter() = delete;
     CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_ancestors) {}
     CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants) {}
     CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants, bool include_partial) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants), m_include_partial_groups(include_partial) {}
@@ -192,6 +227,8 @@ struct OutputGroup
     /** Indicate that we are subtracting the fee from outputs.
      * When true, the value that is used for coin selection is the UTXO's real value rather than effective value */
     bool m_subtract_fee_outputs{false};
+    /** Total weight of the UTXOs in this group. */
+    int m_weight{0};
 
     OutputGroup() {}
     OutputGroup(const CoinSelectionParams& params) :
@@ -225,8 +262,9 @@ struct OutputGroup
 [[nodiscard]] CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
 
-/** Chooose a random change target for each transaction to make it harder to fingerprint the Core
+/** Choose a random change target for each transaction to make it harder to fingerprint the Core
  * wallet based on the change output values of transactions it creates.
+ * Change target covers at least change fees and adds a random value on top of it.
  * The random value is between 50ksat and min(2 * payment_value, 1milsat)
  * When payment_value <= 25ksat, the value is just 50ksat.
  *
@@ -236,37 +274,74 @@ struct OutputGroup
  * coins selected are just sufficient to cover the payment amount ("unnecessary input" heuristic).
  *
  * @param[in]   payment_value   Average payment value of the transaction output(s).
+ * @param[in]   change_fee      Fee for creating a change output.
  */
-[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng);
+[[nodiscard]] CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_fee, FastRandomContext& rng);
+
+enum class SelectionAlgorithm : uint8_t
+{
+    BNB = 0,
+    KNAPSACK = 1,
+    SRD = 2,
+    MANUAL = 3,
+};
+
+std::string GetAlgorithmName(const SelectionAlgorithm algo);
 
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
     std::set<COutput> m_selected_inputs;
-    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
-    const CAmount m_target;
+    /** The target the algorithm selected for. Equal to the recipient amount plus non-input fees */
+    CAmount m_target;
+    /** The algorithm used to produce this result */
+    SelectionAlgorithm m_algo;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
     bool m_use_effective{false};
     /** The computed waste */
     std::optional<CAmount> m_waste;
+    /** Total weight of the selected inputs */
+    int m_weight{0};
+
+    template<typename T>
+    void InsertInputs(const T& inputs)
+    {
+        // Store sum of combined input sets to check that the results have no shared UTXOs
+        const size_t expected_count = m_selected_inputs.size() + inputs.size();
+        util::insert(m_selected_inputs, inputs);
+        if (m_selected_inputs.size() != expected_count) {
+            throw std::runtime_error(STR_INTERNAL_BUG("Shared UTXOs among selection results"));
+        }
+    }
 
 public:
-    explicit SelectionResult(const CAmount target)
-        : m_target(target) {}
+    explicit SelectionResult(const CAmount target, SelectionAlgorithm algo)
+        : m_target(target), m_algo(algo) {}
 
     SelectionResult() = delete;
 
     /** Get the sum of the input values */
     [[nodiscard]] CAmount GetSelectedValue() const;
 
+    [[nodiscard]] CAmount GetSelectedEffectiveValue() const;
+
     void Clear();
 
     void AddInput(const OutputGroup& group);
+    void AddInputs(const std::set<COutput>& inputs, bool subtract_fee_outputs);
 
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
-    void ComputeAndSetWaste(CAmount change_cost);
+    void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
+
+    /**
+     * Combines the @param[in] other selection result into 'this' selection result.
+     *
+     * Important note:
+     * There must be no shared 'COutput' among the two selection results being combined.
+     */
+    void Merge(const SelectionResult& other);
 
     /** Get m_selected_inputs */
     const std::set<COutput>& GetInputSet() const;
@@ -274,6 +349,31 @@ public:
     std::vector<COutput> GetShuffledInputVector() const;
 
     bool operator<(SelectionResult other) const;
+
+    /** Get the amount for the change output after paying needed fees.
+     *
+     * The change amount is not 100% precise due to discrepancies in fee calculation.
+     * The final change amount (if any) should be corrected after calculating the final tx fees.
+     * When there is a discrepancy, most of the time the final change would be slightly bigger than estimated.
+     *
+     * Following are the possible factors of discrepancy:
+     *  + non-input fees always include segwit flags
+     *  + input fee estimation always include segwit stack size
+     *  + input fees are rounded individually and not collectively, which leads to small rounding errors
+     *  - input counter size is always assumed to be 1vbyte
+     *
+     * @param[in]  min_viable_change  Minimum amount for change output, if change would be less then we forgo change
+     * @param[in]  change_fee         Fees to include change output in the tx
+     * @returns Amount for change output, 0 when there is no change.
+     *
+     */
+    CAmount GetChange(const CAmount min_viable_change, const CAmount change_fee) const;
+
+    CAmount GetTarget() const { return m_target; }
+
+    SelectionAlgorithm GetAlgo() const { return m_algo; }
+
+    int GetWeight() const { return m_weight; }
 };
 
 std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change);

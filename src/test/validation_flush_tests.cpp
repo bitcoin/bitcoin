@@ -1,30 +1,23 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <sync.h>
 #include <test/util/setup_common.h>
-#include <txmempool.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
-using node::BlockManager;
-
-BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, ChainTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, TestingSetup)
 
 //! Test utilities for detecting when we need to flush the coins cache based
 //! on estimated memory usage.
 //!
-//! @sa CChainState::GetCoinsCacheSizeState()
+//! @sa Chainstate::GetCoinsCacheSizeState()
 //!
 BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 {
-    CTxMemPool mempool;
-    BlockManager blockman{};
-    CChainState chainstate{&mempool, blockman, *Assert(m_node.chainman)};
-    chainstate.InitCoinsDB(/*cache_size_bytes=*/1 << 10, /*in_memory=*/true, /*should_wipe=*/false);
-    WITH_LOCK(::cs_main, chainstate.InitCoinsCache(1 << 10));
+    Chainstate& chainstate{m_node.chainman->ActiveChainstate()};
 
     constexpr bool is_64_bit = sizeof(void*) == 8;
 
@@ -38,7 +31,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         COutPoint outp{txid, 0};
         newcoin.nHeight = 1;
         newcoin.out.nValue = InsecureRand32();
-        newcoin.out.scriptPubKey.assign((uint32_t)56, 1);
+        newcoin.out.scriptPubKey.assign(uint32_t{56}, 1);
         coins_view.AddCoin(outp, std::move(newcoin), false);
 
         return outp;

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #define BITCOIN_UTIL_EPOCHGUARD_H
 
 #include <threadsafety.h>
+#include <util/macros.h>
 
 #include <cassert>
 
@@ -96,6 +97,6 @@ public:
     }
 };
 
-#define WITH_FRESH_EPOCH(epoch) const Epoch::Guard PASTE2(epoch_guard_, __COUNTER__)(epoch)
+#define WITH_FRESH_EPOCH(epoch) const Epoch::Guard UNIQUE_NAME(epoch_guard_)(epoch)
 
 #endif // BITCOIN_UTIL_EPOCHGUARD_H

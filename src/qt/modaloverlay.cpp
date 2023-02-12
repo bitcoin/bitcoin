@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,13 +12,10 @@
 #include <QPropertyAnimation>
 #include <QResizeEvent>
 
-ModalOverlay::ModalOverlay(bool enable_wallet, QWidget *parent) :
-QWidget(parent),
-ui(new Ui::ModalOverlay),
-bestHeaderHeight(0),
-bestHeaderDate(QDateTime()),
-layerIsVisible(false),
-userClosed(false)
+ModalOverlay::ModalOverlay(bool enable_wallet, QWidget* parent)
+    : QWidget(parent),
+      ui(new Ui::ModalOverlay),
+      bestHeaderDate(QDateTime())
 {
     ui->setupUi(this);
     connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
@@ -78,12 +75,15 @@ bool ModalOverlay::event(QEvent* ev) {
     return QWidget::event(ev);
 }
 
-void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
+void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate, bool presync)
 {
-    if (count > bestHeaderHeight) {
+    if (!presync && count > bestHeaderHeight) {
         bestHeaderHeight = count;
         bestHeaderDate = blockDate;
         UpdateHeaderSyncLabel();
+    }
+    if (presync) {
+        UpdateHeaderPresyncLabel(count, blockDate);
     }
 }
 
@@ -156,6 +156,11 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
 void ModalOverlay::UpdateHeaderSyncLabel() {
     int est_headers_left = bestHeaderDate.secsTo(QDateTime::currentDateTime()) / Params().GetConsensus().nPowTargetSpacing;
     ui->numberOfBlocksLeft->setText(tr("Unknown. Syncing Headers (%1, %2%)…").arg(bestHeaderHeight).arg(QString::number(100.0 / (bestHeaderHeight + est_headers_left) * bestHeaderHeight, 'f', 1)));
+}
+
+void ModalOverlay::UpdateHeaderPresyncLabel(int height, const QDateTime& blockDate) {
+    int est_headers_left = blockDate.secsTo(QDateTime::currentDateTime()) / Params().GetConsensus().nPowTargetSpacing;
+    ui->numberOfBlocksLeft->setText(tr("Unknown. Pre-syncing Headers (%1, %2%)…").arg(height).arg(QString::number(100.0 / (height + est_headers_left) * height, 'f', 1)));
 }
 
 void ModalOverlay::toggleVisibility()

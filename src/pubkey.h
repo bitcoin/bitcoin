@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -218,7 +218,7 @@ public:
     bool Decompress();
 
     //! Derive BIP32 child pubkey.
-    bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+    [[nodiscard]] bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 };
 
 class XOnlyPubKey
@@ -286,6 +286,9 @@ public:
     bool operator==(const XOnlyPubKey& other) const { return m_keydata == other.m_keydata; }
     bool operator!=(const XOnlyPubKey& other) const { return m_keydata != other.m_keydata; }
     bool operator<(const XOnlyPubKey& other) const { return m_keydata < other.m_keydata; }
+
+    //! Implement serialization without length prefixes since it is a fixed length
+    SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
 };
 
 struct CExtPubKey {
@@ -324,24 +327,7 @@ struct CExtPubKey {
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     void EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const;
     void DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]);
-    bool Derive(CExtPubKey& out, unsigned int nChild) const;
+    [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild) const;
 };
-
-/** Users of this module must hold an ECCVerifyHandle. The constructor and
- *  destructor of these are not allowed to run in parallel, though. */
-class ECCVerifyHandle
-{
-    static int refcount;
-
-public:
-    ECCVerifyHandle();
-    ~ECCVerifyHandle();
-};
-
-typedef struct secp256k1_context_struct secp256k1_context;
-
-/** Access to the internal secp256k1 context used for verification. Only intended to be used
- *  by key.cpp. */
-const secp256k1_context* GetVerifyContext();
 
 #endif // BITCOIN_PUBKEY_H

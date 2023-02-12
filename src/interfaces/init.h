@@ -1,9 +1,14 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_INTERFACES_INIT_H
 #define BITCOIN_INTERFACES_INIT_H
+
+#include <interfaces/chain.h>
+#include <interfaces/echo.h>
+#include <interfaces/node.h>
+#include <interfaces/wallet.h>
 
 #include <memory>
 
@@ -12,11 +17,7 @@ struct NodeContext;
 } // namespace node
 
 namespace interfaces {
-class Chain;
-class Echo;
 class Ipc;
-class Node;
-class WalletLoader;
 
 //! Initial interface created when a process is first started, and used to give
 //! and get access to other interfaces (Node, Chain, Wallet, etc).
@@ -29,11 +30,11 @@ class Init
 {
 public:
     virtual ~Init() = default;
-    virtual std::unique_ptr<Node> makeNode();
-    virtual std::unique_ptr<Chain> makeChain();
-    virtual std::unique_ptr<WalletLoader> makeWalletLoader(Chain& chain);
-    virtual std::unique_ptr<Echo> makeEcho();
-    virtual Ipc* ipc();
+    virtual std::unique_ptr<Node> makeNode() { return nullptr; }
+    virtual std::unique_ptr<Chain> makeChain() { return nullptr; }
+    virtual std::unique_ptr<WalletLoader> makeWalletLoader(Chain& chain) { return nullptr; }
+    virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
+    virtual Ipc* ipc() { return nullptr; }
 };
 
 //! Return implementation of Init interface for the node process. If the argv

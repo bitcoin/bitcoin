@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <span.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace spanparsing {
@@ -36,6 +37,30 @@ bool Func(const std::string& str, Span<const char>& sp);
  */
 Span<const char> Expr(Span<const char>& sp);
 
+/** Split a string on any char found in separators, returning a vector.
+ *
+ * If sep does not occur in sp, a singleton with the entirety of sp is returned.
+ *
+ * Note that this function does not care about braces, so splitting
+ * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
+ */
+template <typename T = Span<const char>>
+std::vector<T> Split(const Span<const char>& sp, std::string_view separators)
+{
+    std::vector<T> ret;
+    auto it = sp.begin();
+    auto start = it;
+    while (it != sp.end()) {
+        if (separators.find(*it) != std::string::npos) {
+            ret.emplace_back(start, it);
+            start = it + 1;
+        }
+        ++it;
+    }
+    ret.emplace_back(start, it);
+    return ret;
+}
+
 /** Split a string on every instance of sep, returning a vector.
  *
  * If sep does not occur in sp, a singleton with the entirety of sp is returned.
@@ -43,7 +68,11 @@ Span<const char> Expr(Span<const char>& sp);
  * Note that this function does not care about braces, so splitting
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
  */
-std::vector<Span<const char>> Split(const Span<const char>& sp, char sep);
+template <typename T = Span<const char>>
+std::vector<T> Split(const Span<const char>& sp, char sep)
+{
+    return Split<T>(sp, std::string_view{&sep, 1});
+}
 
 } // namespace spanparsing
 

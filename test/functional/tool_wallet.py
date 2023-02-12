@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-wallet."""
@@ -19,6 +19,9 @@ BUFFER_SIZE = 16 * 1024
 
 
 class ToolWalletTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -34,7 +37,7 @@ class ToolWalletTest(BitcoinTestFramework):
         if not self.options.descriptors and 'create' in args:
             default_args.append('-legacy')
 
-        return subprocess.Popen([binary] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        return subprocess.Popen([binary] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     def assert_raises_tool_error(self, error, *args):
         p = self.bitcoin_wallet_process(*args)
@@ -68,7 +71,7 @@ class ToolWalletTest(BitcoinTestFramework):
         result = 'unchanged' if new == old else 'increased!'
         self.log.debug('Wallet file timestamp {}'.format(result))
 
-    def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0):
+    def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0, imported_privs=0):
         wallet_name = self.default_wallet_name if name == "" else name
         if self.options.descriptors:
             output_types = 4  # p2pkh, p2sh, segwit, bech32m
@@ -83,7 +86,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 Keypool Size: %d
                 Transactions: %d
                 Address Book: %d
-            ''' % (wallet_name, keypool * output_types, transactions, address))
+            ''' % (wallet_name, keypool * output_types, transactions, imported_privs * 3 + address))
         else:
             output_types = 3  # p2pkh, p2sh, segwit. Legacy wallets do not support bech32m.
             return textwrap.dedent('''\
@@ -97,7 +100,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 Keypool Size: %d
                 Transactions: %d
                 Address Book: %d
-            ''' % (wallet_name, keypool, transactions, address * output_types))
+            ''' % (wallet_name, keypool, transactions, (address + imported_privs) * output_types))
 
     def read_dump(self, filename):
         dump = OrderedDict()
@@ -219,7 +222,7 @@ class ToolWalletTest(BitcoinTestFramework):
         # shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling info: {}'.format(timestamp_before))
-        out = self.get_expected_info_output(address=1)
+        out = self.get_expected_info_output(imported_privs=1)
         self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
@@ -250,7 +253,7 @@ class ToolWalletTest(BitcoinTestFramework):
         shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling info: {}'.format(timestamp_before))
-        out = self.get_expected_info_output(transactions=1, address=1)
+        out = self.get_expected_info_output(transactions=1, imported_privs=1)
         self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         shasum_after = self.wallet_shasum()
         timestamp_after = self.wallet_timestamp()

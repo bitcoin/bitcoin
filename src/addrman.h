@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,10 @@
 #define BITCOIN_ADDRMAN_H
 
 #include <netaddress.h>
+#include <netgroup.h>
 #include <protocol.h>
 #include <streams.h>
-#include <timedata.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <memory>
@@ -88,7 +89,7 @@ protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
-    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
+    explicit AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
 
@@ -98,31 +99,37 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_);
 
-    //! Return the number of (unique) addresses in all tables.
-    size_t size() const;
+    /**
+    * Return size information about addrman.
+    *
+    * @param[in] net              Select addresses only from specified network (nullopt = all)
+    * @param[in] in_new           Select addresses only from one table (true = new, false = tried, nullopt = both)
+    * @return                     Number of unique addresses that match specified options.
+    */
+    size_t Size(std::optional<Network> net = std::nullopt, std::optional<bool> in_new = std::nullopt) const;
 
     /**
      * Attempt to add one or more addresses to addrman's new table.
      *
      * @param[in] vAddr           Address records to attempt to add.
      * @param[in] source          The address of the node that sent us these addr records.
-     * @param[in] nTimePenalty    A "time penalty" to apply to the address record's nTime. If a peer
+     * @param[in] time_penalty    A "time penalty" to apply to the address record's nTime. If a peer
      *                            sends us an address record with nTime=n, then we'll add it to our
-     *                            addrman with nTime=(n - nTimePenalty).
+     *                            addrman with nTime=(n - time_penalty).
      * @return    true if at least one address is successfully added. */
-    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
+    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty = 0s);
 
     /**
      * Mark an address record as accessible and attempt to move it to addrman's tried table.
      *
      * @param[in] addr            Address record to attempt to move to tried table.
-     * @param[in] nTime           The time that we were last connected to this peer.
+     * @param[in] time            The time that we were last connected to this peer.
      * @return    true if the address is successfully moved from the new table to the tried table.
      */
-    bool Good(const CService& addr, int64_t nTime = GetAdjustedTime());
+    bool Good(const CService& addr, NodeSeconds time = Now<NodeSeconds>());
 
     //! Mark an entry as connection attempted to.
-    void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());
+    void Attempt(const CService& addr, bool fCountFailure, NodeSeconds time = Now<NodeSeconds>());
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
     void ResolveCollisions();
@@ -132,18 +139,18 @@ public:
      * attempting to evict.
      *
      * @return CAddress The record for the selected tried peer.
-     *         int64_t  The last time we attempted to connect to that peer.
+     *         seconds  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, int64_t> SelectTriedCollision();
+    std::pair<CAddress, NodeSeconds> SelectTriedCollision();
 
     /**
      * Choose an address to connect to.
      *
      * @param[in] newOnly  Whether to only select addresses from the new table.
      * @return    CAddress The record for the selected peer.
-     *            int64_t  The last time we attempted to connect to that peer.
+     *            seconds  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, int64_t> Select(bool newOnly = false) const;
+    std::pair<CAddress, NodeSeconds> Select(bool newOnly = false) const;
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
@@ -165,14 +172,12 @@ public:
      *  not leak information about currently connected peers.
      *
      * @param[in]   addr     The address of the peer we were connected to
-     * @param[in]   nTime    The time that we were last connected to this peer
+     * @param[in]   time     The time that we were last connected to this peer
      */
-    void Connected(const CService& addr, int64_t nTime = GetAdjustedTime());
+    void Connected(const CService& addr, NodeSeconds time = Now<NodeSeconds>());
 
     //! Update an entry's service bits.
     void SetServices(const CService& addr, ServiceFlags nServices);
-
-    const std::vector<bool>& GetAsmap() const;
 
     /** Test-only function
      * Find the address record in AddrMan and return information about its

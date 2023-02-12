@@ -65,12 +65,6 @@
    obj:*/libdb_cxx-*.so
 }
 {
-   Suppress leaks on init
-   Memcheck:Leak
-   ...
-   fun:_Z11AppInitMainR11NodeContext
-}
-{
    Suppress leaks on shutdown
    Memcheck:Leak
    ...
@@ -81,21 +75,6 @@
    Memcheck:Leak
    ...
    obj:/usr/lib64/libgdk-3.so.0.2404.7
-}
-{
-   Suppress leveldb warning (leveldb::InitModule()) - https://github.com/google/leveldb/issues/113
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:_Znwm
-   fun:_ZN7leveldbL10InitModuleEv
-}
-{
-   Suppress leveldb warning (leveldb::Env::Default()) - https://github.com/google/leveldb/issues/113
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:_Znwm
-   ...
-   fun:_ZN7leveldbL14InitDefaultEnvEv
 }
 {
    Suppress leveldb leak
@@ -111,16 +90,6 @@
    fun:_Znwm
    ...
    fun:GetCoin
-}
-{
-   Suppress boost warning
-   Memcheck:Leak
-   fun:_Znwm
-   ...
-   fun:_ZN5boost9unit_test9framework5state17execute_test_treeEmjPKNS2_23random_generator_helperE
-   fun:_ZN5boost9unit_test9framework3runEmb
-   fun:_ZN5boost9unit_test14unit_test_mainEPFbvEiPPc
-   fun:main
 }
 {
    Suppress LogInstance still reachable memory warning

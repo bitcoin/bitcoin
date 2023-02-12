@@ -6,6 +6,7 @@ https://bitcoincore.org
 For an immediately usable, binary version of the Bitcoin Core software, see
 https://bitcoincore.org/en/download/
 
+
 Further information about Bitcoin Core is available in the [doc folder](/doc)
 
 What Bitcoin Core is used for?
@@ -16,14 +17,16 @@ check more of bitcoin core here [Bitcoin core](https://bitcoin.org/en/bitcoin-co
 
 What is Bitcoin?
 ----------------
+=======
+What is Bitcoin Core?
+---------------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
 
-For more information read the original Bitcoin whitepaper.
+Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
+validate blocks and transactions. It also includes a wallet and graphical user
+interface, which can be optionally built.
+
+Further information about Bitcoin Core is available in the [doc folder](/doc).
 
 License
 -------

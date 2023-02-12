@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,10 +10,10 @@
 #include <util/strencodings.h>
 
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
-#include <stdlib.h>
 #include <string.h>
 #include <system_error>
 #include <unistd.h>

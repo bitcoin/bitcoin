@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +34,7 @@ struct bilingual_str;
 namespace wallet {
 
 struct WalletDatabaseFileId {
-    u_int8_t value[DB_FILE_ID_LEN];
+    uint8_t value[DB_FILE_ID_LEN];
     bool operator==(const WalletDatabaseFileId& rhs) const;
 };
 
@@ -51,7 +51,7 @@ private:
 
 public:
     std::unique_ptr<DbEnv> dbenv;
-    std::map<std::string, std::reference_wrapper<BerkeleyDatabase>> m_databases;
+    std::map<fs::path, std::reference_wrapper<BerkeleyDatabase>> m_databases;
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
     bool m_use_shared_memory;
@@ -70,7 +70,7 @@ public:
     void Flush(bool fShutdown);
     void CheckpointLSN(const std::string& strFile);
 
-    void CloseDb(const std::string& strFile);
+    void CloseDb(const fs::path& filename);
     void ReloadDbEnv();
 
     DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
@@ -97,10 +97,10 @@ public:
     BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, std::string filename, const DatabaseOptions& options) :
-        WalletDatabase(), env(std::move(env)), strFile(std::move(filename)), m_max_log_mb(options.max_log_mb)
+    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
+        WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
     {
-        auto inserted = this->env->m_databases.emplace(strFile, std::ref(*this));
+        auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
         assert(inserted.second);
     }
 
@@ -141,7 +141,7 @@ public:
     bool Verify(bilingual_str& error);
 
     /** Return path to main database filename */
-    std::string Filename() override { return fs::PathToString(env->Directory() / strFile); }
+    std::string Filename() override { return fs::PathToString(env->Directory() / m_filename); }
 
     std::string Format() override { return "bdb"; }
     /**
@@ -158,47 +158,58 @@ public:
     /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
     std::unique_ptr<Db> m_db;
 
-    std::string strFile;
+    fs::path m_filename;
     int64_t m_max_log_mb;
 
     /** Make a BerkeleyBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
 };
 
+/** RAII class that automatically cleanses its data on destruction */
+class SafeDbt final
+{
+    Dbt m_dbt;
+
+public:
+    // construct Dbt with internally-managed data
+    SafeDbt();
+    // construct Dbt with provided data
+    SafeDbt(void* data, size_t size);
+    ~SafeDbt();
+
+    // delegate to Dbt
+    const void* get_data() const;
+    uint32_t get_size() const;
+
+    // conversion operator to access the underlying Dbt
+    operator Dbt*();
+};
+
+class BerkeleyCursor : public DatabaseCursor
+{
+private:
+    Dbc* m_cursor;
+
+public:
+    explicit BerkeleyCursor(BerkeleyDatabase& database);
+    ~BerkeleyCursor() override;
+
+    Status Next(DataStream& key, DataStream& value) override;
+};
+
 /** RAII class that provides access to a Berkeley database */
 class BerkeleyBatch : public DatabaseBatch
 {
-    /** RAII class that automatically cleanses its data on destruction */
-    class SafeDbt final
-    {
-        Dbt m_dbt;
-
-    public:
-        // construct Dbt with internally-managed data
-        SafeDbt();
-        // construct Dbt with provided data
-        SafeDbt(void* data, size_t size);
-        ~SafeDbt();
-
-        // delegate to Dbt
-        const void* get_data() const;
-        u_int32_t get_size() const;
-
-        // conversion operator to access the underlying Dbt
-        operator Dbt*();
-    };
-
 private:
-    bool ReadKey(CDataStream&& key, CDataStream& value) override;
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true) override;
-    bool EraseKey(CDataStream&& key) override;
-    bool HasKey(CDataStream&& key) override;
+    bool ReadKey(DataStream&& key, DataStream& value) override;
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
+    bool EraseKey(DataStream&& key) override;
+    bool HasKey(DataStream&& key) override;
 
 protected:
-    Db* pdb;
+    Db* pdb{nullptr};
     std::string strFile;
-    DbTxn* activeTxn;
-    Dbc* m_cursor;
+    DbTxn* activeTxn{nullptr};
     bool fReadOnly;
     bool fFlushOnClose;
     BerkeleyEnvironment *env;
@@ -214,9 +225,7 @@ public:
     void Flush() override;
     void Close() override;
 
-    bool StartCursor() override;
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override;
-    void CloseCursor() override;
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,17 +10,18 @@
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #ifdef WIN32
-#include <compat.h> // for Windows API
+#include <compat/compat.h>
 #include <wincrypt.h>
 #endif
-#include <logging.h>  // for LogPrintf()
+#include <logging.h>
 #include <randomenv.h>
 #include <support/allocators/secure.h>
+#include <span.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <thread>
 
 #ifndef WIN32
@@ -61,7 +62,7 @@ static inline int64_t GetPerformanceCounter() noexcept
     __asm__ volatile ("rdtsc" : "=a"(r1), "=d"(r2)); // Constrain r1 to rax and r2 to rdx.
     return (r2 << 32) | r1;
 #else
-    // Fall back to using C++11 clock (usually microsecond or nanosecond precision)
+    // Fall back to using standard library clock (usually microsecond or nanosecond precision)
     return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #endif
 }
@@ -96,7 +97,7 @@ static void ReportHardwareRand()
     // This must be done in a separate function, as InitHardwareRand() may be indirectly called
     // from global constructors, before logging is initialized.
     if (g_rdseed_supported) {
-        LogPrintf("Using RdSeed as additional entropy source\n");
+        LogPrintf("Using RdSeed as an additional entropy source\n");
     }
     if (g_rdrand_supported) {
         LogPrintf("Using RdRand as an additional entropy source\n");
@@ -369,11 +370,9 @@ public:
         InitHardwareRand();
     }
 
-    ~RNGState()
-    {
-    }
+    ~RNGState() = default;
 
-    void AddEvent(uint32_t event_info) noexcept
+    void AddEvent(uint32_t event_info) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_events_mutex)
     {
         LOCK(m_events_mutex);
 
@@ -387,7 +386,7 @@ public:
     /**
      * Feed (the hash of) all events added through AddEvent() to hasher.
      */
-    void SeedEvents(CSHA512& hasher) noexcept
+    void SeedEvents(CSHA512& hasher) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_events_mutex)
     {
         // We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
         // since we want it to be fast as network peers may be able to trigger it repeatedly.
@@ -406,7 +405,7 @@ public:
      *
      * If this function has never been called with strong_seed = true, false is returned.
      */
-    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept
+    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         assert(num <= 32);
         unsigned char buf[64];
@@ -439,7 +438,7 @@ public:
 
 RNGState& GetRNGState() noexcept
 {
-    // This C++11 idiom relies on the guarantee that static variable are initialized
+    // This idiom relies on the guarantee that static variable are initialized
     // on first call, even when multiple parallel calls are permitted.
     static std::vector<RNGState, secure_allocator<RNGState>> g_rng(1);
     return g_rng[0];
@@ -578,27 +577,22 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
     }
 }
 
-void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
-void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
+void GetRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST); }
+void GetStrongRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW); }
 void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
 bool g_mock_deterministic_tests{false};
 
-uint64_t GetRand(uint64_t nMax) noexcept
+uint64_t GetRandInternal(uint64_t nMax) noexcept
 {
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
-}
-
-int GetRandInt(int nMax) noexcept
-{
-    return GetRand(nMax);
 }
 
 uint256 GetRandHash() noexcept
 {
     uint256 hash;
-    GetRandBytes((unsigned char*)&hash, sizeof(hash));
+    GetRandBytes(hash);
     return hash;
 }
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -130,6 +130,8 @@ bool LoadWallets(WalletContext& context)
                 chain.initError(error);
                 return false;
             }
+
+            NotifyWalletLoaded(context, pwallet);
             AddWallet(context, pwallet);
         }
         return true;
@@ -149,7 +151,7 @@ void StartWallets(WalletContext& context, CScheduler& scheduler)
     if (context.args->GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
         scheduler.scheduleEvery([&context] { MaybeCompactWalletDB(context); }, std::chrono::milliseconds{500});
     }
-    scheduler.scheduleEvery([&context] { MaybeResendWalletTxs(context); }, std::chrono::milliseconds{1000});
+    scheduler.scheduleEvery([&context] { MaybeResendWalletTxs(context); }, 1min);
 }
 
 void FlushWallets(WalletContext& context)

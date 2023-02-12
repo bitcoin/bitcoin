@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -60,7 +60,7 @@ void CBloomFilter::insert(Span<const unsigned char> vKey)
 
 void CBloomFilter::insert(const COutPoint& outpoint)
 {
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream{};
     stream << outpoint;
     insert(MakeUCharSpan(stream));
 }
@@ -81,7 +81,7 @@ bool CBloomFilter::contains(Span<const unsigned char> vKey) const
 
 bool CBloomFilter::contains(const COutPoint& outpoint) const
 {
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream{};
     stream << outpoint;
     return contains(MakeUCharSpan(stream));
 }
@@ -239,7 +239,7 @@ bool CRollingBloomFilter::contains(Span<const unsigned char> vKey) const
 
 void CRollingBloomFilter::reset()
 {
-    nTweak = GetRand(std::numeric_limits<unsigned int>::max());
+    nTweak = GetRand<unsigned int>();
     nEntriesThisGeneration = 0;
     nGeneration = 1;
     std::fill(data.begin(), data.end(), 0);

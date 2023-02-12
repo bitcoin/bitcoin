@@ -140,6 +140,15 @@ void bench_scalar_inverse_var(void* arg, int iters) {
     CHECK(j <= iters);
 }
 
+void bench_field_half(void* arg, int iters) {
+    int i;
+    bench_inv *data = (bench_inv*)arg;
+
+    for (i = 0; i < iters; i++) {
+        secp256k1_fe_half(&data->fe[0]);
+    }
+}
+
 void bench_field_normalize(void* arg, int iters) {
     int i;
     bench_inv *data = (bench_inv*)arg;
@@ -245,6 +254,15 @@ void bench_group_add_affine_var(void* arg, int iters) {
     }
 }
 
+void bench_group_add_zinv_var(void* arg, int iters) {
+    int i;
+    bench_inv *data = (bench_inv*)arg;
+
+    for (i = 0; i < iters; i++) {
+        secp256k1_gej_add_zinv_var(&data->gej[0], &data->gej[0], &data->ge[1], &data->gej[0].y);
+    }
+}
+
 void bench_group_to_affine_var(void* arg, int iters) {
     int i;
     bench_inv *data = (bench_inv*)arg;
@@ -325,19 +343,11 @@ void bench_rfc6979_hmac_sha256(void* arg, int iters) {
     }
 }
 
-void bench_context_verify(void* arg, int iters) {
+void bench_context(void* arg, int iters) {
     int i;
     (void)arg;
     for (i = 0; i < iters; i++) {
-        secp256k1_context_destroy(secp256k1_context_create(SECP256K1_CONTEXT_VERIFY));
-    }
-}
-
-void bench_context_sign(void* arg, int iters) {
-    int i;
-    (void)arg;
-    for (i = 0; i < iters; i++) {
-        secp256k1_context_destroy(secp256k1_context_create(SECP256K1_CONTEXT_SIGN));
+        secp256k1_context_destroy(secp256k1_context_create(SECP256K1_CONTEXT_NONE));
     }
 }
 
@@ -354,6 +364,7 @@ int main(int argc, char **argv) {
     if (d || have_flag(argc, argv, "scalar") || have_flag(argc, argv, "inverse")) run_benchmark("scalar_inverse", bench_scalar_inverse, bench_setup, NULL, &data, 10, iters);
     if (d || have_flag(argc, argv, "scalar") || have_flag(argc, argv, "inverse")) run_benchmark("scalar_inverse_var", bench_scalar_inverse_var, bench_setup, NULL, &data, 10, iters);
 
+    if (d || have_flag(argc, argv, "field") || have_flag(argc, argv, "half")) run_benchmark("field_half", bench_field_half, bench_setup, NULL, &data, 10, iters*100);
     if (d || have_flag(argc, argv, "field") || have_flag(argc, argv, "normalize")) run_benchmark("field_normalize", bench_field_normalize, bench_setup, NULL, &data, 10, iters*100);
     if (d || have_flag(argc, argv, "field") || have_flag(argc, argv, "normalize")) run_benchmark("field_normalize_weak", bench_field_normalize_weak, bench_setup, NULL, &data, 10, iters*100);
     if (d || have_flag(argc, argv, "field") || have_flag(argc, argv, "sqr")) run_benchmark("field_sqr", bench_field_sqr, bench_setup, NULL, &data, 10, iters*10);
@@ -366,6 +377,7 @@ int main(int argc, char **argv) {
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_var", bench_group_add_var, bench_setup, NULL, &data, 10, iters*10);
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine", bench_group_add_affine, bench_setup, NULL, &data, 10, iters*10);
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine_var", bench_group_add_affine_var, bench_setup, NULL, &data, 10, iters*10);
+    if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_zinv_var", bench_group_add_zinv_var, bench_setup, NULL, &data, 10, iters*10);
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "to_affine")) run_benchmark("group_to_affine_var", bench_group_to_affine_var, bench_setup, NULL, &data, 10, iters);
 
     if (d || have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("wnaf_const", bench_wnaf_const, bench_setup, NULL, &data, 10, iters);
@@ -375,8 +387,7 @@ int main(int argc, char **argv) {
     if (d || have_flag(argc, argv, "hash") || have_flag(argc, argv, "hmac")) run_benchmark("hash_hmac_sha256", bench_hmac_sha256, bench_setup, NULL, &data, 10, iters);
     if (d || have_flag(argc, argv, "hash") || have_flag(argc, argv, "rng6979")) run_benchmark("hash_rfc6979_hmac_sha256", bench_rfc6979_hmac_sha256, bench_setup, NULL, &data, 10, iters);
 
-    if (d || have_flag(argc, argv, "context") || have_flag(argc, argv, "verify")) run_benchmark("context_verify", bench_context_verify, bench_setup, NULL, &data, 10, 1 + iters/1000);
-    if (d || have_flag(argc, argv, "context") || have_flag(argc, argv, "sign")) run_benchmark("context_sign", bench_context_sign, bench_setup, NULL, &data, 10, 1 + iters/100);
+    if (d || have_flag(argc, argv, "context")) run_benchmark("context_create", bench_context, bench_setup, NULL, &data, 10, iters);
 
     return 0;
 }

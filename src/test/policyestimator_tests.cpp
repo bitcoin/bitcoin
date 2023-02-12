@@ -1,9 +1,10 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees.h>
 #include <policy/policy.h>
+#include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/time.h>
@@ -12,12 +13,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, ChainTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    CBlockPolicyEstimator feeEst;
-    CTxMemPool mpool(&feeEst);
+    CBlockPolicyEstimator& feeEst = *Assert(m_node.fee_estimator);
+    CTxMemPool& mpool = *Assert(m_node.mempool);
     LOCK2(cs_main, mpool.cs);
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 4; k++) { // add 4 fee txs
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                mpool.addUnchecked(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                 txHashes[j].push_back(hash);
             }
         }
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 4; k++) { // add 4 fee txs
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                mpool.addUnchecked(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                 txHashes[j].push_back(hash);
             }
         }
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 4; k++) { // add 4 fee txs
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                mpool.addUnchecked(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                 CTransactionRef ptx = mpool.get(hash);
                 if (ptx)
                     block.push_back(ptx);

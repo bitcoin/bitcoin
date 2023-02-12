@@ -152,7 +152,7 @@ outdir_for_host() {
 unsigned_tarball_for_host() {
     case "$1" in
         *mingw*)
-            echo "$(outdir_for_host "$1")/${DISTNAME}-win-unsigned.tar.gz"
+            echo "$(outdir_for_host "$1")/${DISTNAME}-win64-unsigned.tar.gz"
             ;;
         *darwin*)
             echo "$(outdir_for_host "$1")/${DISTNAME}-${1}-unsigned.tar.gz"

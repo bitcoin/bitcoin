@@ -1,0 +1,76 @@
+Note that this has been modified from the original commit, to use __has_include
+instead of __has_include__, as the later was causing build failures with GCC 10.
+See also: http://lists.busybox.net/pipermail/buildroot/2020-July/590376.html.
+
+https://sourceware.org/git/?p=glibc.git;a=commit;h=0b9c84906f653978fb8768c7ebd0ee14a47e662e
+
+From 562c52cc81a4e456a62e6455feb32732049e9070 Mon Sep 17 00:00:00 2001
+From: "H.J. Lu" <hjl.tools@gmail.com>
+Date: Mon, 31 Dec 2018 09:26:42 -0800
+Subject: [PATCH] riscv: Use __has_include__ to include <asm/syscalls.h> [BZ
+ #24022]
+
+<asm/syscalls.h> has been removed by
+
+commit 27f8899d6002e11a6e2d995e29b8deab5aa9cc25
+Author: David Abdurachmanov <david.abdurachmanov@gmail.com>
+Date:   Thu Nov 8 20:02:39 2018 +0100
+
+    riscv: add asm/unistd.h UAPI header
+
+    Marcin Juszkiewicz reported issues while generating syscall table for riscv
+    using 4.20-rc1. The patch refactors our unistd.h files to match some other
+    architectures.
+
+    - Add asm/unistd.h UAPI header, which has __ARCH_WANT_NEW_STAT only for 64-bit
+    - Remove asm/syscalls.h UAPI header and merge to asm/unistd.h
+    - Adjust kernel asm/unistd.h
+
+    So now asm/unistd.h UAPI header should show all syscalls for riscv.
+
+<asm/syscalls.h> may be restored by
+
+Subject: [PATCH] riscv: restore asm/syscalls.h UAPI header
+Date: Tue, 11 Dec 2018 09:09:35 +0100
+
+UAPI header asm/syscalls.h was merged into UAPI asm/unistd.h header,
+which did resolve issue with missing syscalls macros resulting in
+glibc (2.28) build failure. It also broke glibc in a different way:
+asm/syscalls.h is being used by glibc. I noticed this while doing
+Fedora 30/Rawhide mass rebuild.
+
+The patch returns asm/syscalls.h header and incl. it into asm/unistd.h.
+I plan to send a patch to glibc to use asm/unistd.h instead of
+asm/syscalls.h
+
+In the meantime, we use __has_include__, which was added to GCC 5, to
+check if <asm/syscalls.h> exists before including it.  Tested with
+build-many-glibcs.py for riscv against kernel 4.19.12 and 4.20-rc7.
+
+	[BZ #24022]
+	* sysdeps/unix/sysv/linux/riscv/flush-icache.c: Check if
+	<asm/syscalls.h> exists with __has_include__ before including it.
+---
+ sysdeps/unix/sysv/linux/riscv/flush-icache.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/sysdeps/unix/sysv/linux/riscv/flush-icache.c b/sysdeps/unix/sysv/linux/riscv/flush-icache.c
+index d612ef4c6c..0b2042620b 100644
+--- a/sysdeps/unix/sysv/linux/riscv/flush-icache.c
++++ b/sysdeps/unix/sysv/linux/riscv/flush-icache.c
+@@ -21,7 +21,11 @@
+ #include <stdlib.h>
+ #include <atomic.h>
+ #include <sys/cachectl.h>
+-#include <asm/syscalls.h>
++#if __has_include (<asm/syscalls.h>)
++# include <asm/syscalls.h>
++#else
++# include <asm/unistd.h>
++#endif
+ 
+ typedef int (*func_type) (void *, void *, unsigned long int);
+ 
+-- 
+2.31.1
+

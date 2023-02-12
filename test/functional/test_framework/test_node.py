@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for bitcoind node under test"""
@@ -102,8 +102,12 @@ class TestNode():
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
+            "-debugexclude=rand",
             "-uacomment=testnode%d" % i,
         ]
+        if self.descriptors is None:
+            self.args.append("-disablewallet")
+
         if use_valgrind:
             default_suppressions_file = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -118,6 +122,8 @@ class TestNode():
             self.args.append("-logthreadnames")
         if self.version_is_at_least(219900):
             self.args.append("-logsourcelocations")
+        if self.version_is_at_least(239000):
+            self.args.append("-loglevel=trace")
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
@@ -331,7 +337,7 @@ class TestNode():
             return
         self.log.debug("Stopping node")
         try:
-            # Do not use wait argument when testing older nodes, e.g. in feature_backwards_compatibility.py
+            # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
             if self.version_is_at_least(180000):
                 self.stop(wait=wait)
             else:
@@ -381,6 +387,21 @@ class TestNode():
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
         wait_until_helper(self.is_node_stopped, timeout=timeout, timeout_factor=self.timeout_factor)
 
+    def replace_in_config(self, replacements):
+        """
+        Perform replacements in the configuration file.
+        The substitutions are passed as a list of search-replace-tuples, e.g.
+            [("old", "new"), ("foo", "bar"), ...]
+        """
+        with open(self.bitcoinconf, 'r', encoding='utf8') as conf:
+            conf_data = conf.read()
+        for replacement in replacements:
+            assert_equal(len(replacement), 2)
+            old, new = replacement[0], replacement[1]
+            conf_data = conf_data.replace(old, new)
+        with open(self.bitcoinconf, 'w', encoding='utf8') as conf:
+            conf.write(conf_data)
+
     @property
     def chain_path(self) -> Path:
         return Path(self.datadir) / self.chain
@@ -423,7 +444,7 @@ class TestNode():
         self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
     @contextlib.contextmanager
-    def wait_for_debug_log(self, expected_msgs, timeout=60, ignore_case=False):
+    def wait_for_debug_log(self, expected_msgs, timeout=60):
         """
         Block until we see a particular debug log message fragment or until we exceed the timeout.
         Return:
@@ -431,18 +452,17 @@ class TestNode():
         """
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_bytes()
-        re_flags = re.MULTILINE | (re.IGNORECASE if ignore_case else 0)
 
         yield
 
         while True:
             found = True
-            with open(self.debug_log_path, encoding='utf-8') as dl:
+            with open(self.debug_log_path, "rb") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
 
             for expected_msg in expected_msgs:
-                if re.search(re.escape(expected_msg), log, flags=re_flags) is None:
+                if expected_msg not in log:
                     found = False
 
             if found:
@@ -545,6 +565,7 @@ class TestNode():
 
         Will throw if bitcoind starts without an error.
         Will throw if an expected_msg is provided and it does not match bitcoind's stdout."""
+        assert not self.running
         with tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False) as log_stderr, \
              tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
             try:
@@ -616,12 +637,16 @@ class TestNode():
 
         return p2p_conn
 
-    def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", **kwargs):
+    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, p2p_idx, connection_type="outbound-full-relay", **kwargs):
         """Add an outbound p2p connection from node. Must be an
         "outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler" connection.
 
         This method adds the p2p connection to the self.p2ps list and returns
         the connection to the caller.
+
+        p2p_idx must be different for simultaneously connected peers. When reusing it for the next peer
+        after disconnecting the previous one, it is necessary to wait for the disconnect to finish to avoid
+        a race condition.
         """
 
         def addconnection_callback(address, port):
@@ -638,8 +663,9 @@ class TestNode():
             p2p_conn.wait_for_connect()
             self.p2ps.append(p2p_conn)
 
-            p2p_conn.wait_for_verack()
-            p2p_conn.sync_with_ping()
+            if wait_for_verack:
+                p2p_conn.wait_for_verack()
+                p2p_conn.sync_with_ping()
 
         return p2p_conn
 
@@ -648,7 +674,8 @@ class TestNode():
         return len([peer for peer in self.getpeerinfo() if peer['subver'] == P2P_SUBVERSION])
 
     def disconnect_p2ps(self):
-        """Close all p2p connections to the node."""
+        """Close all p2p connections to the node.
+        Use only after each p2p has sent a version message to ensure the wait works."""
         for p in self.p2ps:
             p.peer_disconnect()
         del self.p2ps[:]
@@ -711,7 +738,6 @@ class TestNodeCLI():
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
-        assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same bitcoin-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
             p_args += ["-named"]
@@ -719,7 +745,7 @@ class TestNodeCLI():
             p_args += [command]
         p_args += pos_args + named_args
         self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
-        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()
         if returncode:

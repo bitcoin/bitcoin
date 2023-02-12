@@ -1,12 +1,12 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 // This is a translation to GCC extended asm syntax from YASM code by Intel
 // (available at the bottom of this file).
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 #if defined(__x86_64__) || defined(__amd64__)
 

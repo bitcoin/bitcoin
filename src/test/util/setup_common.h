@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,20 +8,22 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
-#include <util/system.h>
 #include <node/caches.h>
 #include <node/context.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <random.h>
 #include <stdexcept>
-#include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/vector.h>
 
 #include <functional>
 #include <type_traits>
 #include <vector>
+
+class Chainstate;
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
@@ -81,8 +83,7 @@ static constexpr CAmount CENT{1000000};
  * This just configures logging, data dir and chain parameters.
  */
 struct BasicTestingSetup {
-    ECCVerifyHandle globalVerifyHandle;
-    node::NodeContext m_node;
+    node::NodeContext m_node; // keep as first member to be destructed last
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
@@ -105,7 +106,16 @@ struct ChainTestingSetup : public BasicTestingSetup {
 /** Testing setup that configures a complete environment.
  */
 struct TestingSetup : public ChainTestingSetup {
-    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    bool m_coins_db_in_memory{true};
+    bool m_block_tree_db_in_memory{true};
+
+    void LoadVerifyActivateChainstate();
+
+    explicit TestingSetup(
+        const std::string& chainName = CBaseChainParams::MAIN,
+        const std::vector<const char*>& extra_args = {},
+        const bool coins_db_in_memory = true,
+        const bool block_tree_db_in_memory = true);
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
@@ -122,7 +132,11 @@ class CScript;
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestingSetup {
-    TestChain100Setup(const std::vector<const char*>& extra_args = {});
+    TestChain100Setup(
+        const std::string& chain_name = CBaseChainParams::REGTEST,
+        const std::vector<const char*>& extra_args = {},
+        const bool coins_db_in_memory = true,
+        const bool block_tree_db_in_memory = true);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -131,7 +145,7 @@ struct TestChain100Setup : public TestingSetup {
      */
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey,
-                                 CChainState* chainstate = nullptr);
+                                 Chainstate* chainstate = nullptr);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -140,7 +154,7 @@ struct TestChain100Setup : public TestingSetup {
     CBlock CreateBlock(
         const std::vector<CMutableTransaction>& txns,
         const CScript& scriptPubKey,
-        CChainState& chainstate);
+        Chainstate& chainstate);
 
     //! Mine a series of new blocks on the active chain.
     void mineBlocks(int num_blocks);
@@ -164,6 +178,19 @@ struct TestChain100Setup : public TestingSetup {
                                                       CAmount output_amount = CAmount(1 * COIN),
                                                       bool submit = true);
 
+    /** Create transactions spending from m_coinbase_txns. These transactions will only spend coins
+     * that exist in the current chain, but may be premature coinbase spends, have missing
+     * signatures, or violate some other consensus rules. They should only be used for testing
+     * mempool consistency. All transactions will have some random number of inputs and outputs
+     * (between 1 and 24). Transactions may or may not be dependent upon each other; if dependencies
+     * exit, every parent will always be somewhere in the list before the child so each transaction
+     * can be submitted in the same order they appear in the list.
+     * @param[in]   submit      When true, submit transactions to the mempool.
+     *                          When false, return them but don't submit them.
+     * @returns A vector of transactions that can be submitted to the mempool.
+     */
+    std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
+
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -184,33 +211,6 @@ std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseCha
 
     return std::make_unique<T>(chain_name, arguments);
 }
-
-class CTxMemPoolEntry;
-
-struct TestMemPoolEntryHelper
-{
-    // Default values
-    CAmount nFee;
-    int64_t nTime;
-    unsigned int nHeight;
-    bool spendsCoinbase;
-    unsigned int sigOpCost;
-    LockPoints lp;
-
-    TestMemPoolEntryHelper() :
-        nFee(0), nTime(0), nHeight(1),
-        spendsCoinbase(false), sigOpCost(4) { }
-
-    CTxMemPoolEntry FromTx(const CMutableTransaction& tx) const;
-    CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
-
-    // Change the default value
-    TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
-    TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
-    TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
-};
 
 CBlock getBlock13b8a();
 

@@ -29,7 +29,7 @@ class DescriptorTest(BitcoinTestFramework):
 
     def run_test(self):
         assert_raises_rpc_error(-1, 'getdescriptorinfo', self.nodes[0].getdescriptorinfo)
-        assert_raises_rpc_error(-3, 'Expected type string', self.nodes[0].getdescriptorinfo, 1)
+        assert_raises_rpc_error(-3, 'JSON value of type number is not of expected type string', self.nodes[0].getdescriptorinfo, 1)
         assert_raises_rpc_error(-5, "'' is not a valid descriptor function", self.nodes[0].getdescriptorinfo, "")
 
         # P2PK output with the specified public key.

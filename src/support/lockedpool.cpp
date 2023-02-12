@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,6 @@
 #endif
 
 #ifdef WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <windows.h>
 #else
 #include <sys/mman.h> // for mmap
@@ -22,6 +19,9 @@
 #endif
 
 #include <algorithm>
+#include <limits>
+#include <stdexcept>
+#include <utility>
 #ifdef ARENA_DEBUG
 #include <iomanip>
 #include <iostream>
@@ -202,7 +202,10 @@ void Win32LockedPageAllocator::FreeLocked(void* addr, size_t len)
 
 size_t Win32LockedPageAllocator::GetLimit()
 {
-    // TODO is there a limit on Windows, how to get it?
+    size_t min, max;
+    if(GetProcessWorkingSetSize(GetCurrentProcess(), &min, &max) != 0) {
+        return min;
+    }
     return std::numeric_limits<size_t>::max();
 }
 #endif
@@ -234,12 +237,6 @@ PosixLockedPageAllocator::PosixLockedPageAllocator()
     page_size = sysconf(_SC_PAGESIZE);
 #endif
 }
-
-// Some systems (at least OS X) do not define MAP_ANONYMOUS yet and define
-// MAP_ANON which is deprecated
-#ifndef MAP_ANONYMOUS
-#define MAP_ANONYMOUS MAP_ANON
-#endif
 
 void *PosixLockedPageAllocator::AllocateLocked(size_t len, bool *lockingSuccess)
 {
@@ -283,14 +280,13 @@ size_t PosixLockedPageAllocator::GetLimit()
 /*******************************************************************************/
 // Implementation: LockedPool
 
-LockedPool::LockedPool(std::unique_ptr<LockedPageAllocator> allocator_in, LockingFailed_Callback lf_cb_in):
-    allocator(std::move(allocator_in)), lf_cb(lf_cb_in), cumulative_bytes_locked(0)
+LockedPool::LockedPool(std::unique_ptr<LockedPageAllocator> allocator_in, LockingFailed_Callback lf_cb_in)
+    : allocator(std::move(allocator_in)), lf_cb(lf_cb_in)
 {
 }
 
-LockedPool::~LockedPool()
-{
-}
+LockedPool::~LockedPool() = default;
+
 void* LockedPool::alloc(size_t size)
 {
     std::lock_guard<std::mutex> lock(mutex);

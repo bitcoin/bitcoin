@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -96,7 +96,7 @@ template<typename C>
 class Span
 {
     C* m_data;
-    std::size_t m_size;
+    std::size_t m_size{0};
 
     template <class T>
     struct is_Span_int : public std::false_type {};
@@ -107,7 +107,7 @@ class Span
 
 
 public:
-    constexpr Span() noexcept : m_data(nullptr), m_size(0) {}
+    constexpr Span() noexcept : m_data(nullptr) {}
 
     /** Construct a span from a begin pointer and a size.
      *
@@ -245,19 +245,19 @@ T& SpanPopBack(Span<T>& span)
 
 //! Convert a data pointer to a std::byte data pointer.
 //! Where possible, please use the safer AsBytes helpers.
-inline const std::byte* BytePtr(const void* data) { return reinterpret_cast<const std::byte*>(data); }
-inline std::byte* BytePtr(void* data) { return reinterpret_cast<std::byte*>(data); }
+inline const std::byte* AsBytePtr(const void* data) { return reinterpret_cast<const std::byte*>(data); }
+inline std::byte* AsBytePtr(void* data) { return reinterpret_cast<std::byte*>(data); }
 
 // From C++20 as_bytes and as_writeable_bytes
 template <typename T>
 Span<const std::byte> AsBytes(Span<T> s) noexcept
 {
-    return {BytePtr(s.data()), s.size_bytes()};
+    return {AsBytePtr(s.data()), s.size_bytes()};
 }
 template <typename T>
 Span<std::byte> AsWritableBytes(Span<T> s) noexcept
 {
-    return {BytePtr(s.data()), s.size_bytes()};
+    return {AsBytePtr(s.data()), s.size_bytes()};
 }
 
 template <typename V>

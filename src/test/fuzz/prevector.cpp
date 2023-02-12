@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,8 +59,8 @@ public:
             --pos;
             assert(v == real_vector[pos]);
         }
-        CDataStream ss1(SER_DISK, 0);
-        CDataStream ss2(SER_DISK, 0);
+        DataStream ss1{};
+        DataStream ss2{};
         ss1 << real_vector;
         ss2 << pre_vector;
         assert(ss1.size() == ss2.size());
@@ -161,7 +161,7 @@ public:
         pre_vector.shrink_to_fit();
     }
 
-    void swap()
+    void swap() noexcept
     {
         real_vector.swap(real_vector_alt);
         pre_vector.swap(pre_vector_alt);

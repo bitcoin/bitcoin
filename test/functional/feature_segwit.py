@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2021 The Bitcoin Core developers
+# Copyright (c) 2016-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
@@ -78,6 +78,9 @@ txs_mined = {}  # txindex from txid to blockhash
 
 
 class SegWitTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
@@ -608,6 +611,11 @@ class SegWitTest(BitcoinTestFramework):
                 self.restart_node(1)
                 assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
                 assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
+
+        self.log.info('Test negative and unknown rpcserialversion throw an init error')
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(["-rpcserialversion=-1"], "Error: rpcserialversion must be non-negative.")
+        self.nodes[0].assert_start_raises_init_error(["-rpcserialversion=100"], "Error: Unknown rpcserialversion requested.")
 
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_spendable_utxo(self.nodes[0], 50)

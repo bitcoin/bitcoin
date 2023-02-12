@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC calls related to net.
@@ -11,7 +11,6 @@ from decimal import Decimal
 from itertools import product
 import time
 
-from test_framework.blocktools import COINBASE_MATURITY
 import test_framework.messages
 from test_framework.p2p import (
     P2PInterface,
@@ -43,7 +42,6 @@ def assert_net_servicesnames(servicesflag, servicenames):
 
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001000"], ["-minrelaytxfee=0.00000500"]]
         self.supports_cli = False
@@ -51,9 +49,6 @@ class NetTest(BitcoinTestFramework):
     def run_test(self):
         # We need miniwallet to make a transaction
         self.wallet = MiniWallet(self.nodes[0])
-        self.generate(self.wallet, 1)
-        # Get out of IBD for the minfeefilter and getpeerinfo tests.
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # By default, the test framework sets up an addnode connection from
         # node 1 --> node0. By connecting node0 --> node 1, we're left with
@@ -107,6 +102,55 @@ class NetTest(BitcoinTestFramework):
         # Check dynamically generated networks list in getpeerinfo help output.
         assert "(ipv4, ipv6, onion, i2p, cjdns, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
 
+        self.log.info("Check getpeerinfo output before a version message was sent")
+        no_version_peer_id = 2
+        no_version_peer_conntime = int(time.time())
+        self.nodes[0].setmocktime(no_version_peer_conntime)
+        with self.nodes[0].assert_debug_log([f"Added connection peer={no_version_peer_id}"]):
+            no_version_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+        self.nodes[0].setmocktime(0)
+        peer_info = self.nodes[0].getpeerinfo()[no_version_peer_id]
+        peer_info.pop("addr")
+        peer_info.pop("addrbind")
+        assert_equal(
+            peer_info,
+            {
+                "addr_processed": 0,
+                "addr_rate_limited": 0,
+                "addr_relay_enabled": False,
+                "bip152_hb_from": False,
+                "bip152_hb_to": False,
+                "bytesrecv": 0,
+                "bytesrecv_per_msg": {},
+                "bytessent": 0,
+                "bytessent_per_msg": {},
+                "connection_type": "inbound",
+                "conntime": no_version_peer_conntime,
+                "id": no_version_peer_id,
+                "inbound": True,
+                "inflight": [],
+                "last_block": 0,
+                "last_transaction": 0,
+                "lastrecv": 0,
+                "lastsend": 0,
+                "minfeefilter": Decimal("0E-8"),
+                "network": "not_publicly_routable",
+                "permissions": [],
+                "presynced_headers": -1,
+                "relaytxes": False,
+                "services": "0000000000000000",
+                "servicesnames": [],
+                "startingheight": -1,
+                "subver": "",
+                "synced_blocks": -1,
+                "synced_headers": -1,
+                "timeoffset": 0,
+                "version": 0,
+            },
+        )
+        no_version_peer.peer_disconnect()
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 2)
+
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
         # Test getnettotals and getpeerinfo by doing a ping. The bytes
@@ -136,7 +180,8 @@ class NetTest(BitcoinTestFramework):
             self.nodes[0].setnetworkactive(state=False)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
         # Wait a bit for all sockets to close
-        self.wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
+        for n in self.nodes:
+            self.wait_until(lambda: n.getnetworkinfo()['connections'] == 0, timeout=3)
 
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.nodes[0].setnetworkactive(state=True)
@@ -256,6 +301,13 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("Test that adding an empty address fails")
         assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
         assert_equal(node.getnodeaddresses(count=0), [])
+
+        self.log.debug("Test that non-bool tried fails")
+        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
+
+        self.log.debug("Test that adding an address with invalid port fails")
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress,address="1.2.3.4", port=65536)
 
         self.log.debug("Test that adding a valid address to the tried table succeeds")
         assert_equal(node.addpeeraddress(address="1.2.3.4", tried=True, port=8333), {"success": True})

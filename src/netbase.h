@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <netaddress.h>
 #include <serialize.h>
 #include <util/sock.h>
@@ -221,10 +221,6 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
  */
 bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
 
-/** Disable or enable blocking-mode for a socket */
-bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
-/** Set the TCP_NODELAY flag on a socket */
-bool SetSocketNoDelay(const SOCKET& hSocket);
 void InterruptSocks5(bool interrupt);
 
 /**

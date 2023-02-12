@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -69,8 +69,8 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
 
     const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
     std::string reason;
-    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, /* permit_bare_multisig= */ true, dust_relay_fee, reason);
-    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, /* permit_bare_multisig= */ false, dust_relay_fee, reason);
+    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, std::nullopt, /* permit_bare_multisig= */ true, dust_relay_fee, reason);
+    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, std::nullopt, /* permit_bare_multisig= */ false, dust_relay_fee, reason);
     if (is_standard_without_permit_bare_multisig) {
         assert(is_standard_with_permit_bare_multisig);
     }
@@ -92,7 +92,6 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)GetTransactionWeight(tx);
     (void)GetVirtualTransactionSize(tx);
     (void)IsFinalTx(tx, /* nBlockHeight= */ 1024, /* nBlockTime= */ 1024);
-    (void)IsStandardTx(tx, reason);
     (void)RecursiveDynamicUsage(tx);
     (void)SignalsOptInRBF(tx);
 
@@ -102,6 +101,6 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)IsWitnessStandard(tx, coins_view_cache);
 
     UniValue u(UniValue::VOBJ);
-    TxToUniv(tx, /*hashBlock=*/uint256::ZERO, u);
-    TxToUniv(tx, /*hashBlock=*/uint256::ONE, u);
+    TxToUniv(tx, /*block_hash=*/uint256::ZERO, /*entry=*/u);
+    TxToUniv(tx, /*block_hash=*/uint256::ONE, /*entry=*/u);
 }

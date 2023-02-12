@@ -1,8 +1,9 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <hash.h>
 #include <key_io.h>
 #include <rpc/util.h>
 #include <util/moneystr.h>
@@ -18,39 +19,39 @@
 namespace wallet {
 static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    std::set<CTxDestination> address_set;
-
+    std::vector<CTxDestination> addresses;
     if (by_label) {
         // Get the set of addresses assigned to label
-        std::string label = LabelFromValue(params[0]);
-        address_set = wallet.GetLabelAddresses(label);
+        addresses = wallet.ListAddrBookAddresses(CWallet::AddrBookFilter{LabelFromValue(params[0])});
+        if (addresses.empty()) throw JSONRPCError(RPC_WALLET_ERROR, "Label not found in wallet");
     } else {
         // Get the address
         CTxDestination dest = DecodeDestination(params[0].get_str());
         if (!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
         }
-        CScript script_pub_key = GetScriptForDestination(dest);
-        if (!wallet.IsMine(script_pub_key)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Address not found in wallet");
+        addresses.emplace_back(dest);
+    }
+
+    // Filter by own scripts only
+    std::set<CScript> output_scripts;
+    for (const auto& address : addresses) {
+        auto output_script{GetScriptForDestination(address)};
+        if (wallet.IsMine(output_script)) {
+            output_scripts.insert(output_script);
         }
-        address_set.insert(dest);
+    }
+
+    if (output_scripts.empty()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Address not found in wallet");
     }
 
     // Minimum confirmations
     int min_depth = 1;
     if (!params[1].isNull())
-        min_depth = params[1].get_int();
+        min_depth = params[1].getInt<int>();
 
     const bool include_immature_coinbase{params[2].isNull() ? false : params[2].get_bool()};
-
-    // Excluding coinbase outputs is deprecated
-    // It can be enabled by setting deprecatedrpc=exclude_coinbase
-    const bool include_coinbase{!wallet.chain().rpcEnableDeprecated("exclude_coinbase")};
-
-    if (include_immature_coinbase && !include_coinbase) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "include_immature_coinbase is incompatible with deprecated exclude_coinbase");
-    }
 
     // Tally
     CAmount amount = 0;
@@ -59,15 +60,14 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (depth < min_depth
             // Coinbase with less than 1 confirmation is no longer in the main chain
-            || (wtx.IsCoinBase() && (depth < 1 || !include_coinbase))
+            || (wtx.IsCoinBase() && (depth < 1))
             || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
         {
             continue;
         }
 
         for (const CTxOut& txout : wtx.tx->vout) {
-            CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && wallet.IsMine(address) && address_set.count(address)) {
+            if (output_scripts.count(txout.scriptPubKey) > 0) {
                 amount += txout.nValue;
             }
         }
@@ -104,7 +104,7 @@ RPCHelpMan getreceivedbyaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -112,7 +112,7 @@ RPCHelpMan getreceivedbyaddress()
 
     LOCK(pwallet->cs_wallet);
 
-    return ValueFromAmount(GetReceived(*pwallet, request.params, /* by_label */ false));
+    return ValueFromAmount(GetReceived(*pwallet, request.params, /*by_label=*/false));
 },
     };
 }
@@ -145,7 +145,7 @@ RPCHelpMan getreceivedbylabel()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -153,7 +153,7 @@ RPCHelpMan getreceivedbylabel()
 
     LOCK(pwallet->cs_wallet);
 
-    return ValueFromAmount(GetReceived(*pwallet, request.params, /* by_label */ true));
+    return ValueFromAmount(GetReceived(*pwallet, request.params, /*by_label=*/true));
 },
     };
 }
@@ -166,7 +166,7 @@ RPCHelpMan getbalance()
                 "The available balance is what the wallet considers currently spendable, and is\n"
                 "thus affected by options which limit spendability such as -spendzeroconfchange.\n",
                 {
-                    {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
+                    {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Only include transactions confirmed at least this many times."},
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also include balance in watch-only addresses (see 'importaddress')"},
                     {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{true}, "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
@@ -185,7 +185,7 @@ RPCHelpMan getbalance()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -200,7 +200,7 @@ RPCHelpMan getbalance()
 
     int min_depth = 0;
     if (!request.params[1].isNull()) {
-        min_depth = request.params[1].get_int();
+        min_depth = request.params[1].getInt<int>();
     }
 
     bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
@@ -224,7 +224,7 @@ RPCHelpMan getunconfirmedbalance()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -283,15 +283,13 @@ RPCHelpMan lockunspent()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
-
-    RPCTypeCheckArgument(request.params[0], UniValue::VBOOL);
 
     bool fUnlock = request.params[0].get_bool();
 
@@ -305,9 +303,7 @@ RPCHelpMan lockunspent()
         return true;
     }
 
-    RPCTypeCheckArgument(request.params[1], UniValue::VARR);
-
-    const UniValue& output_params = request.params[1];
+    const UniValue& output_params = request.params[1].get_array();
 
     // Create and validate the COutPoints first.
 
@@ -324,7 +320,7 @@ RPCHelpMan lockunspent()
             });
 
         const uint256 txid(ParseHashO(o, "txid"));
-        const int nOutput = find_value(o, "vout").get_int();
+        const int nOutput = find_value(o, "vout").getInt<int>();
         if (nOutput < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }
@@ -342,11 +338,11 @@ RPCHelpMan lockunspent()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
         }
 
-        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
+        if (pwallet->IsSpent(outpt)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
         }
 
-        const bool is_locked = pwallet->IsLockedCoin(outpt.hash, outpt.n);
+        const bool is_locked = pwallet->IsLockedCoin(outpt);
 
         if (fUnlock && !is_locked) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected locked output");
@@ -408,7 +404,7 @@ RPCHelpMan listlockunspent()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     LOCK(pwallet->cs_wallet);
 
@@ -460,7 +456,7 @@ RPCHelpMan getbalances()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
-    if (!rpc_wallet) return NullUniValue;
+    if (!rpc_wallet) return UniValue::VNULL;
     const CWallet& wallet = *rpc_wallet;
 
     // Make sure the results are valid at least up to the most recent block
@@ -514,14 +510,15 @@ RPCHelpMan listunspent()
                     },
                     {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include outputs that are not safe to spend\n"
                               "See description of \"safe\" attribute below."},
-                    {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
+                    {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "JSON with query options",
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
+                            {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase UTXOs"}
                         },
-                        "query_options"},
+                        RPCArgOptions{.oneline_description="query_options"}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -544,6 +541,9 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
                             {RPCResult::Type::BOOL, "reused", /*optional=*/true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
                             {RPCResult::Type::STR, "desc", /*optional=*/true, "(only when solvable) A descriptor for spending this output"},
+                            {RPCResult::Type::ARR, "parent_descs", /*optional=*/false, "List of parent descriptors for the scriptPubKey of this coin.", {
+                                {RPCResult::Type::STR, "desc", "The descriptor string."},
+                            }},
                             {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
                                                             "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                             "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
@@ -560,23 +560,20 @@ RPCHelpMan listunspent()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     int nMinDepth = 1;
     if (!request.params[0].isNull()) {
-        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        nMinDepth = request.params[0].get_int();
+        nMinDepth = request.params[0].getInt<int>();
     }
 
     int nMaxDepth = 9999999;
     if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
-        nMaxDepth = request.params[1].get_int();
+        nMaxDepth = request.params[1].getInt<int>();
     }
 
     std::set<CTxDestination> destinations;
     if (!request.params[2].isNull()) {
-        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
         UniValue inputs = request.params[2].get_array();
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
@@ -592,14 +589,11 @@ RPCHelpMan listunspent()
 
     bool include_unsafe = true;
     if (!request.params[3].isNull()) {
-        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
         include_unsafe = request.params[3].get_bool();
     }
 
-    CAmount nMinimumAmount = 0;
-    CAmount nMaximumAmount = MAX_MONEY;
-    CAmount nMinimumSumAmount = MAX_MONEY;
-    uint64_t nMaximumCount = 0;
+    CoinFilterParams filter_coins;
+    filter_coins.min_amount = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -610,20 +604,25 @@ RPCHelpMan listunspent()
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
+                {"include_immature_coinbase", UniValueType(UniValue::VBOOL)}
             },
             true, true);
 
         if (options.exists("minimumAmount"))
-            nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+            filter_coins.min_amount = AmountFromValue(options["minimumAmount"]);
 
         if (options.exists("maximumAmount"))
-            nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+            filter_coins.max_amount = AmountFromValue(options["maximumAmount"]);
 
         if (options.exists("minimumSumAmount"))
-            nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+            filter_coins.min_sum_amount = AmountFromValue(options["minimumSumAmount"]);
 
         if (options.exists("maximumCount"))
-            nMaximumCount = options["maximumCount"].get_int64();
+            filter_coins.max_count = options["maximumCount"].getInt<int64_t>();
+
+        if (options.exists("include_immature_coinbase")) {
+            filter_coins.include_immature_coinbase = options["include_immature_coinbase"].get_bool();
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -639,7 +638,7 @@ RPCHelpMan listunspent()
         cctl.m_max_depth = nMaxDepth;
         cctl.m_include_unsafe_inputs = include_unsafe;
         LOCK(pwallet->cs_wallet);
-        AvailableCoins(*pwallet, vecOutputs, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, filter_coins).All();
     }
 
     LOCK(pwallet->cs_wallet);
@@ -650,7 +649,7 @@ RPCHelpMan listunspent()
         CTxDestination address;
         const CScript& scriptPubKey = out.txout.scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsSpentKey(out.outpoint.hash, out.outpoint.n);
+        bool reused = avoid_reuse && pwallet->IsSpentKey(scriptPubKey);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
@@ -681,8 +680,7 @@ RPCHelpMan listunspent()
                             CHECK_NONFATAL(extracted);
                             // Also return the witness script
                             const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(witness_destination);
-                            CScriptID id;
-                            CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                            CScriptID id{RIPEMD160(whash)};
                             CScript witnessScript;
                             if (provider->GetCScript(id, witnessScript)) {
                                 entry.pushKV("witnessScript", HexStr(witnessScript));
@@ -691,8 +689,7 @@ RPCHelpMan listunspent()
                     }
                 } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
                     const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(address);
-                    CScriptID id;
-                    CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                    CScriptID id{RIPEMD160(whash)};
                     CScript witnessScript;
                     if (provider->GetCScript(id, witnessScript)) {
                         entry.pushKV("witnessScript", HexStr(witnessScript));
@@ -723,6 +720,7 @@ RPCHelpMan listunspent()
                 entry.pushKV("desc", descriptor->ToString());
             }
         }
+        PushParentDescriptors(*pwallet, scriptPubKey, entry);
         if (avoid_reuse) entry.pushKV("reused", reused);
         entry.pushKV("safe", out.safe);
         results.push_back(entry);

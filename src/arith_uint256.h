@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,22 +24,19 @@ template<unsigned int BITS>
 class base_uint
 {
 protected:
+    static_assert(BITS / 32 > 0 && BITS % 32 == 0, "Template parameter BITS must be a positive multiple of 32.");
     static constexpr int WIDTH = BITS / 32;
     uint32_t pn[WIDTH];
 public:
 
     base_uint()
     {
-        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
-
         for (int i = 0; i < WIDTH; i++)
             pn[i] = 0;
     }
 
     base_uint(const base_uint& b)
     {
-        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
-
         for (int i = 0; i < WIDTH; i++)
             pn[i] = b.pn[i];
     }
@@ -53,8 +50,6 @@ public:
 
     base_uint(uint64_t b)
     {
-        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
-
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
         for (int i = 2; i < WIDTH; i++)
@@ -63,7 +58,7 @@ public:
 
     explicit base_uint(const std::string& str);
 
-    const base_uint operator~() const
+    base_uint operator~() const
     {
         base_uint ret;
         for (int i = 0; i < WIDTH; i++)
@@ -71,7 +66,7 @@ public:
         return ret;
     }
 
-    const base_uint operator-() const
+    base_uint operator-() const
     {
         base_uint ret;
         for (int i = 0; i < WIDTH; i++)
@@ -176,7 +171,7 @@ public:
         return *this;
     }
 
-    const base_uint operator++(int)
+    base_uint operator++(int)
     {
         // postfix operator
         const base_uint ret = *this;
@@ -193,7 +188,7 @@ public:
         return *this;
     }
 
-    const base_uint operator--(int)
+    base_uint operator--(int)
     {
         // postfix operator
         const base_uint ret = *this;
@@ -204,16 +199,16 @@ public:
     int CompareTo(const base_uint& b) const;
     bool EqualTo(uint64_t b) const;
 
-    friend inline const base_uint operator+(const base_uint& a, const base_uint& b) { return base_uint(a) += b; }
-    friend inline const base_uint operator-(const base_uint& a, const base_uint& b) { return base_uint(a) -= b; }
-    friend inline const base_uint operator*(const base_uint& a, const base_uint& b) { return base_uint(a) *= b; }
-    friend inline const base_uint operator/(const base_uint& a, const base_uint& b) { return base_uint(a) /= b; }
-    friend inline const base_uint operator|(const base_uint& a, const base_uint& b) { return base_uint(a) |= b; }
-    friend inline const base_uint operator&(const base_uint& a, const base_uint& b) { return base_uint(a) &= b; }
-    friend inline const base_uint operator^(const base_uint& a, const base_uint& b) { return base_uint(a) ^= b; }
-    friend inline const base_uint operator>>(const base_uint& a, int shift) { return base_uint(a) >>= shift; }
-    friend inline const base_uint operator<<(const base_uint& a, int shift) { return base_uint(a) <<= shift; }
-    friend inline const base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
+    friend inline base_uint operator+(const base_uint& a, const base_uint& b) { return base_uint(a) += b; }
+    friend inline base_uint operator-(const base_uint& a, const base_uint& b) { return base_uint(a) -= b; }
+    friend inline base_uint operator*(const base_uint& a, const base_uint& b) { return base_uint(a) *= b; }
+    friend inline base_uint operator/(const base_uint& a, const base_uint& b) { return base_uint(a) /= b; }
+    friend inline base_uint operator|(const base_uint& a, const base_uint& b) { return base_uint(a) |= b; }
+    friend inline base_uint operator&(const base_uint& a, const base_uint& b) { return base_uint(a) &= b; }
+    friend inline base_uint operator^(const base_uint& a, const base_uint& b) { return base_uint(a) ^= b; }
+    friend inline base_uint operator>>(const base_uint& a, int shift) { return base_uint(a) >>= shift; }
+    friend inline base_uint operator<<(const base_uint& a, int shift) { return base_uint(a) <<= shift; }
+    friend inline base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
     friend inline bool operator==(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) == 0; }
     friend inline bool operator!=(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) != 0; }
     friend inline bool operator>(const base_uint& a, const base_uint& b) { return a.CompareTo(b) > 0; }
@@ -283,5 +278,7 @@ public:
 
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
+
+extern template class base_uint<256>;
 
 #endif // BITCOIN_ARITH_UINT256_H

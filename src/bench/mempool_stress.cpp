@@ -1,8 +1,9 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <kernel/mempool_entry.h>
 #include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -86,9 +87,9 @@ static void ComplexMemPool(benchmark::Bench& bench)
     if (bench.complexityN() > 1) {
         childTxs = static_cast<int>(bench.complexityN());
     }
-    std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /* min_ancestors */ 1);
+    std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /*min_ancestors=*/1);
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN);
-    CTxMemPool pool;
+    CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
     LOCK2(cs_main, pool.cs);
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         for (auto& tx : ordered_coins) {
@@ -102,18 +103,17 @@ static void ComplexMemPool(benchmark::Bench& bench)
 static void MempoolCheck(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
-    const int childTxs = bench.complexityN() > 1 ? static_cast<int>(bench.complexityN()) : 2000;
-    const std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /* min_ancestors */ 5);
-    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN, {"-checkmempool=1"});
-    CTxMemPool pool;
+    auto testing_setup = MakeNoLogFileContext<TestChain100Setup>(CBaseChainParams::REGTEST, {"-checkmempool=1"});
+    CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
     LOCK2(cs_main, pool.cs);
+    testing_setup->PopulateMempool(det_rand, 400, true);
     const CCoinsViewCache& coins_tip = testing_setup.get()->m_node.chainman->ActiveChainstate().CoinsTip();
-    for (auto& tx : ordered_coins) AddTx(tx, pool);
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.check(coins_tip, /* spendheight */ 2);
+        // Bump up the spendheight so we don't hit premature coinbase spend errors.
+        pool.check(coins_tip, /*spendheight=*/300);
     });
 }
 
-BENCHMARK(ComplexMemPool);
-BENCHMARK(MempoolCheck);
+BENCHMARK(ComplexMemPool, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MempoolCheck, benchmark::PriorityLevel::HIGH);

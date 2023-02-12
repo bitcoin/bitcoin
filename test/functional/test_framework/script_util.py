@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful Script constants and utils."""
@@ -13,12 +13,13 @@ from test_framework.script import (
     OP_EQUAL,
     OP_EQUALVERIFY,
     OP_HASH160,
+    OP_RETURN,
     hash160,
     sha256,
 )
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
-# non-witness size of at least 82 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
+# non-witness size of at least 65 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
 # src/policy/policy.h). Considering a Tx with the smallest possible single
 # input (blank, empty scriptSig), and with an output omitting the scriptPubKey,
 # we get to a minimum size of 60 bytes:
@@ -28,15 +29,15 @@ from test_framework.script import (
 # Output:      8 [Amount] + 1 [scriptPubKeyLen] = 9 bytes
 #
 # Hence, the scriptPubKey of the single output has to have a size of at
-# least 22 bytes, which corresponds to the size of a P2WPKH scriptPubKey.
-# The following script constant consists of a single push of 21 bytes of 'a':
-#   <PUSH_21> <21-bytes of 'a'>
-# resulting in a 22-byte size. It should be used whenever (small) fake
-# scriptPubKeys are needed, to guarantee that the minimum transaction size is
-# met.
-DUMMY_P2WPKH_SCRIPT = CScript([b'a' * 21])
-DUMMY_2_P2WPKH_SCRIPT = CScript([b'b' * 21])
+# least 5 bytes.
+MIN_STANDARD_TX_NONWITNESS_SIZE = 65
+MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
+assert MIN_PADDING == 5
 
+# This script cannot be spent, allowing dust output values under
+# standardness checks
+DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
+assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
 
 def key_to_p2pk_script(key):
     key = check_key(key)
@@ -103,6 +104,11 @@ def script_to_p2sh_p2wsh_script(script):
     script = check_script(script)
     p2shscript = CScript([OP_0, sha256(script)])
     return script_to_p2sh_script(p2shscript)
+
+
+def output_key_to_p2tr_script(key):
+    assert len(key) == 32
+    return program_to_witness_script(1, key)
 
 
 def check_key(key):

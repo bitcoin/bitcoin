@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <streams.h>
+#include <util/system.h>
 #include <validation.h>
 
 // These are the two major time-sinks which happen after we have fully received
@@ -49,5 +50,5 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(DeserializeBlockTest);
-BENCHMARK(DeserializeAndCheckBlockTest);
+BENCHMARK(DeserializeBlockTest, benchmark::PriorityLevel::HIGH);
+BENCHMARK(DeserializeAndCheckBlockTest, benchmark::PriorityLevel::HIGH);

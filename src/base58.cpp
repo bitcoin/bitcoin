@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2021 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -126,7 +126,7 @@ std::string EncodeBase58(Span<const unsigned char> input)
 
 bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)
 {
-    if (!ValidAsCString(str)) {
+    if (!ContainsNoNUL(str)) {
         return false;
     }
     return DecodeBase58(str.c_str(), vchRet, max_ret_len);
@@ -160,7 +160,7 @@ std::string EncodeBase58Check(Span<const unsigned char> input)
 
 bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret)
 {
-    if (!ValidAsCString(str)) {
+    if (!ContainsNoNUL(str)) {
         return false;
     }
     return DecodeBase58Check(str.c_str(), vchRet, max_ret);

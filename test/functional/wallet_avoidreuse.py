@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the avoid_reuse and setwalletflag features."""
@@ -63,6 +63,8 @@ def assert_balances(node, mine, margin=0.001):
         assert_approx(got[k], v, margin)
 
 class AvoidReuseTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
 
     def set_test_params(self):
         self.num_nodes = 2
@@ -117,6 +119,19 @@ class AvoidReuseTest(BitcoinTestFramework):
         # Attempting to set flag to its current state should throw
         assert_raises_rpc_error(-8, "Wallet flag is already set to false", self.nodes[0].setwalletflag, 'avoid_reuse', False)
         assert_raises_rpc_error(-8, "Wallet flag is already set to true", self.nodes[1].setwalletflag, 'avoid_reuse', True)
+
+        assert_raises_rpc_error(-8, "Unknown wallet flag: abc", self.nodes[0].setwalletflag, 'abc', True)
+
+        # Create a wallet with avoid reuse, and test that disabling it afterwards persists
+        self.nodes[1].createwallet(wallet_name="avoid_reuse_persist", avoid_reuse=True)
+        w = self.nodes[1].get_wallet_rpc("avoid_reuse_persist")
+        assert_equal(w.getwalletinfo()["avoid_reuse"], True)
+        w.setwalletflag("avoid_reuse", False)
+        assert_equal(w.getwalletinfo()["avoid_reuse"], False)
+        w.unloadwallet()
+        self.nodes[1].loadwallet("avoid_reuse_persist")
+        assert_equal(w.getwalletinfo()["avoid_reuse"], False)
+        w.unloadwallet()
 
     def test_immutable(self):
         '''Test immutable wallet flags'''
@@ -180,7 +195,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         # getbalances should show no used, 10 btc trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
         # node 0 should not show a used entry, as it does not enable avoid_reuse
-        assert("used" not in self.nodes[0].getbalances()["mine"])
+        assert "used" not in self.nodes[0].getbalances()["mine"]
 
         self.nodes[1].sendtoaddress(retaddr, 5)
         self.generate(self.nodes[0], 1)

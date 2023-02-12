@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 export LC_ALL=C
@@ -69,28 +69,11 @@ unset CPLUS_INCLUDE_PATH
 unset OBJC_INCLUDE_PATH
 unset OBJCPLUS_INCLUDE_PATH
 
-export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC}/lib64:${NATIVE_GCC_STATIC}/lib:${NATIVE_GCC_STATIC}/lib64"
+export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC_STATIC}/lib"
 export C_INCLUDE_PATH="${NATIVE_GCC}/include"
 export CPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
 export OBJC_INCLUDE_PATH="${NATIVE_GCC}/include"
 export OBJCPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
-
-prepend_to_search_env_var() {
-    export "${1}=${2}${!1:+:}${!1}"
-}
-
-case "$HOST" in
-    *darwin*)
-        # When targeting darwin, zlib is required by native_libdmg-hfsplus.
-        zlib_store_path=$(store_path "zlib")
-        zlib_static_store_path=$(store_path "zlib" static)
-
-        prepend_to_search_env_var LIBRARY_PATH "${zlib_static_store_path}/lib:${zlib_store_path}/lib"
-        prepend_to_search_env_var C_INCLUDE_PATH "${zlib_store_path}/include"
-        prepend_to_search_env_var CPLUS_INCLUDE_PATH "${zlib_store_path}/include"
-        prepend_to_search_env_var OBJC_INCLUDE_PATH "${zlib_store_path}/include"
-        prepend_to_search_env_var OBJCPLUS_INCLUDE_PATH "${zlib_store_path}/include"
-esac
 
 # Set environment variables to point the CROSS toolchain to the right
 # includes/libs for $HOST
@@ -209,7 +192,6 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
-                                   qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
 
@@ -236,6 +218,7 @@ CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disab
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
+HOST_CFLAGS+=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
 case "$HOST" in
     *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=." ;;
     *mingw*)  HOST_CFLAGS+=" -fno-ident" ;;
@@ -260,10 +243,6 @@ esac
 # https://sourceware.org/binutils/docs-2.35/ld/PowerPC64-ELF64.html
 case "$HOST" in
     *powerpc64*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,--no-tls-get-addr-optimize" ;;
-esac
-
-case "$HOST" in
-    powerpc64-linux-*|riscv64-linux-*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,-z,noexecstack" ;;
 esac
 
 # Make $HOST-specific native binaries from depends available in $PATH
@@ -332,8 +311,7 @@ mkdir -p "$DISTSRC"
             mkdir -p "unsigned-app-${HOST}"
             cp  --target-directory="unsigned-app-${HOST}" \
                 osx_volname \
-                contrib/macdeploy/detached-sig-create.sh \
-                "${BASEPREFIX}/${HOST}"/native/bin/dmg
+                contrib/macdeploy/detached-sig-create.sh
             mv --target-directory="unsigned-app-${HOST}" dist
             (
                 cd "unsigned-app-${HOST}"
@@ -381,6 +359,12 @@ mkdir -p "$DISTSRC"
                 cp "${DISTSRC}/README.md" "${DISTNAME}/"
                 ;;
         esac
+
+        # copy over the example bitcoin.conf file. if contrib/devtools/gen-bitcoin-conf.sh
+        # has not been run before buildling, this file will be a stub
+        cp "${DISTSRC}/share/examples/bitcoin.conf" "${DISTNAME}/"
+
+        cp -r "${DISTSRC}/share/rpcauth" "${DISTNAME}/share/"
 
         # Finally, deterministically produce {non-,}debug binary tarballs ready
         # for release

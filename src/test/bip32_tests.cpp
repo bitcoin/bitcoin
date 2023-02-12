@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2021 The Bitcoin Core developers
+// Copyright (c) 2013-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -120,8 +120,9 @@ const std::vector<std::string> TEST5 = {
     "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHL"
 };
 
-void RunTest(const TestVector &test) {
-    std::vector<unsigned char> seed = ParseHex(test.strHexMaster);
+void RunTest(const TestVector& test)
+{
+    std::vector<std::byte> seed{ParseHex<std::byte>(test.strHexMaster)};
     CExtKey key;
     CExtPubKey pubkey;
     key.SetSeed(seed);
@@ -181,6 +182,24 @@ BOOST_AUTO_TEST_CASE(bip32_test5) {
         BOOST_CHECK_MESSAGE(!dec_extkey.key.IsValid(), "Decoding '" + str + "' as xprv should fail");
         BOOST_CHECK_MESSAGE(!dec_extpubkey.pubkey.IsValid(), "Decoding '" + str + "' as xpub should fail");
     }
+}
+
+BOOST_AUTO_TEST_CASE(bip32_max_depth) {
+    CExtKey key_parent{DecodeExtKey(test1.vDerive[0].prv)}, key_child;
+    CExtPubKey pubkey_parent{DecodeExtPubKey(test1.vDerive[0].pub)}, pubkey_child;
+
+    // We can derive up to the 255th depth..
+    for (auto i = 0; i++ < 255;) {
+        BOOST_CHECK(key_parent.Derive(key_child, 0));
+        std::swap(key_parent, key_child);
+        BOOST_CHECK(pubkey_parent.Derive(pubkey_child, 0));
+        std::swap(pubkey_parent, pubkey_child);
+    }
+
+    // But trying to derive a non-existent 256th depth will fail!
+    BOOST_CHECK(key_parent.nDepth == 255 && pubkey_parent.nDepth == 255);
+    BOOST_CHECK(!key_parent.Derive(key_child, 0));
+    BOOST_CHECK(!pubkey_parent.Derive(pubkey_child, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

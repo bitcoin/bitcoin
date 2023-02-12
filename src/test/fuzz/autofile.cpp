@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@ FUZZ_TARGET(autofile)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);
-    CAutoFile auto_file = fuzzed_auto_file_provider.open();
+    AutoFile auto_file{fuzzed_auto_file_provider.open()};
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -53,8 +53,6 @@ FUZZ_TARGET(autofile)
             });
     }
     (void)auto_file.Get();
-    (void)auto_file.GetType();
-    (void)auto_file.GetVersion();
     (void)auto_file.IsNull();
     if (fuzzed_data_provider.ConsumeBool()) {
         FILE* f = auto_file.release();

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
@@ -75,15 +75,15 @@ Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(SynchronizationState)
+Q_DECLARE_METATYPE(SyncType)
 Q_DECLARE_METATYPE(uint256)
-
-using node::NodeContext;
 
 static void RegisterMetaTypes()
 {
     // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection
     qRegisterMetaType<bool*>();
     qRegisterMetaType<SynchronizationState>();
+    qRegisterMetaType<SyncType>();
   #ifdef ENABLE_WALLET
     qRegisterMetaType<WalletModel*>();
   #endif
@@ -95,6 +95,12 @@ static void RegisterMetaTypes()
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
     qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
+
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+    qRegisterMetaTypeStreamOperators<BitcoinUnit>("BitcoinUnit");
+#else
+    qRegisterMetaType<BitcoinUnit>("BitcoinUnit");
+#endif
 }
 
 static QString GetLangTerritory()
@@ -133,21 +139,30 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
     // - First load the translator for the base language, without territory
     // - Then load the more specific locale translator
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+    const QString translation_path{QLibraryInfo::location(QLibraryInfo::TranslationsPath)};
+#else
+    const QString translation_path{QLibraryInfo::path(QLibraryInfo::TranslationsPath)};
+#endif
     // Load e.g. qt_de.qm
-    if (qtTranslatorBase.load("qt_" + lang, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (qtTranslatorBase.load("qt_" + lang, translation_path)) {
         QApplication::installTranslator(&qtTranslatorBase);
+    }
 
     // Load e.g. qt_de_DE.qm
-    if (qtTranslator.load("qt_" + lang_territory, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (qtTranslator.load("qt_" + lang_territory, translation_path)) {
         QApplication::installTranslator(&qtTranslator);
+    }
 
     // Load e.g. bitcoin_de.qm (shortcut "de" needs to be defined in bitcoin.qrc)
-    if (translatorBase.load(lang, ":/translations/"))
+    if (translatorBase.load(lang, ":/translations/")) {
         QApplication::installTranslator(&translatorBase);
+    }
 
     // Load e.g. bitcoin_de_DE.qm (shortcut "de_DE" needs to be defined in bitcoin.qrc)
-    if (translator.load(lang_territory, ":/translations/"))
+    if (translator.load(lang_territory, ":/translations/")) {
         QApplication::installTranslator(&translator);
+    }
 }
 
 static bool InitSettings()
@@ -213,14 +228,8 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 static int qt_argc = 1;
 static const char* qt_argv = "bitcoin-qt";
 
-BitcoinApplication::BitcoinApplication():
-    QApplication(qt_argc, const_cast<char **>(&qt_argv)),
-    optionsModel(nullptr),
-    clientModel(nullptr),
-    window(nullptr),
-    pollShutdownTimer(nullptr),
-    returnValue(0),
-    platformStyle(nullptr)
+BitcoinApplication::BitcoinApplication()
+    : QApplication(qt_argc, const_cast<char**>(&qt_argv))
 {
     // Qt runs setlocale(LC_ALL, "") on initialization.
     RegisterMetaTypes();
@@ -257,9 +266,26 @@ void BitcoinApplication::createPaymentServer()
 }
 #endif
 
-void BitcoinApplication::createOptionsModel(bool resetSettings)
+bool BitcoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(this, resetSettings);
+    optionsModel = new OptionsModel(node(), this);
+    if (resetSettings) {
+        optionsModel->Reset();
+    }
+    bilingual_str error;
+    if (!optionsModel->Init(error)) {
+        fs::path settings_path;
+        if (gArgs.GetSettingsPath(&settings_path)) {
+            error += Untranslated("\n");
+            std::string quoted_path = strprintf("%s", fs::quoted(fs::PathToString(settings_path)));
+            error.original += strprintf("Settings file %s might be corrupt or invalid.", quoted_path);
+            error.translated += tr("Settings file %1 might be corrupt or invalid.").arg(QString::fromStdString(quoted_path)).toStdString();
+        }
+        InitError(error);
+        QMessageBox::critical(nullptr, PACKAGE_NAME, QString::fromStdString(error.translated));
+        return false;
+    }
+    return true;
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
@@ -279,18 +305,13 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
     assert(!m_splash);
     m_splash = new SplashScreen(networkStyle);
-    // We don't hold a direct pointer to the splash screen after creation, but the splash
-    // screen will take care of deleting itself when finish() happens.
     m_splash->show();
-    connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
-    connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
 }
 
 void BitcoinApplication::createNode(interfaces::Init& init)
 {
     assert(!m_node);
     m_node = init.makeNode();
-    if (optionsModel) optionsModel->setNode(*m_node);
     if (m_splash) m_splash->setNode(*m_node);
 }
 
@@ -306,7 +327,9 @@ void BitcoinApplication::startThread()
 
     /*  communication to and from thread */
     connect(&m_executor.value(), &InitExecutor::initializeResult, this, &BitcoinApplication::initializeResult);
-    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &QCoreApplication::quit);
+    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, [] {
+        QCoreApplication::exit(0);
+    });
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &BitcoinApplication::handleRunawayException);
     connect(this, &BitcoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
@@ -324,7 +347,7 @@ void BitcoinApplication::parameterSetup()
 
 void BitcoinApplication::InitPruneSetting(int64_t prune_MiB)
 {
-    optionsModel->SetPruneTargetGB(PruneMiBtoGB(prune_MiB), true);
+    optionsModel->SetPruneTargetGB(PruneMiBtoGB(prune_MiB));
 }
 
 void BitcoinApplication::requestInitialize()
@@ -339,6 +362,9 @@ void BitcoinApplication::requestShutdown()
     for (const auto w : QGuiApplication::topLevelWindows()) {
         w->hide();
     }
+
+    delete m_splash;
+    m_splash = nullptr;
 
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
@@ -379,10 +405,13 @@ void BitcoinApplication::requestShutdown()
 void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
 {
     qDebug() << __func__ << ": Initialization result: " << success;
+
     // Set exit result.
     returnValue = success ? EXIT_SUCCESS : EXIT_FAILURE;
-    if(success)
-    {
+    if(success) {
+        delete m_splash;
+        m_splash = nullptr;
+
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qInfo() << "Platform customization:" << platformStyle->getName();
         clientModel = new ClientModel(node(), optionsModel);
@@ -405,7 +434,6 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
         } else {
             window->showMinimized();
         }
-        Q_EMIT splashFinished();
         Q_EMIT windowShown(window);
 
 #ifdef ENABLE_WALLET
@@ -422,7 +450,6 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
 #endif
         pollShutdownTimer->start(SHUTDOWN_POLLING_DELAY);
     } else {
-        Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
         requestShutdown();
     }
 }
@@ -497,9 +524,11 @@ int GuiMain(int argc, char* argv[])
     Q_INIT_RESOURCE(bitcoin);
     Q_INIT_RESOURCE(bitcoin_locale);
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 
 #if defined(QT_QPA_PLATFORM_ANDROID)
     QApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
@@ -557,29 +586,30 @@ int GuiMain(int argc, char* argv[])
     // Gracefully exit if the user cancels
     if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
-    /// - Do not call gArgs.GetDataDirNet() before this step finishes
+    /// 6a. Determine availability of data directory
     if (!CheckDataDirOption()) {
         InitError(strprintf(Untranslated("Specified data directory \"%s\" does not exist.\n"), gArgs.GetArg("-datadir", "")));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
-    if (!gArgs.ReadConfigFiles(error, true)) {
-        InitError(strprintf(Untranslated("Error reading configuration file: %s\n"), error));
-        QMessageBox::critical(nullptr, PACKAGE_NAME,
-            QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
-        return EXIT_FAILURE;
-    }
-
-    /// 7. Determine network (and switch to network specific options)
-    // - Do not call Params() before this step
-    // - Do this after parsing the configuration file, as the network can be switched there
-    // - QSettings() will use the new application name after this, resulting in network-specific settings
-    // - Needs to be done before createOptionsModel
-
-    // Check for chain settings (Params() calls are only valid after this clause)
     try {
+        /// 6b. Parse bitcoin.conf
+        /// - Do not call gArgs.GetDataDirNet() before this step finishes
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            InitError(strprintf(Untranslated("Error reading configuration file: %s\n"), error));
+            QMessageBox::critical(nullptr, PACKAGE_NAME,
+                QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
+            return EXIT_FAILURE;
+        }
+
+        /// 7. Determine network (and switch to network specific options)
+        // - Do not call Params() before this step
+        // - Do this after parsing the configuration file, as the network can be switched there
+        // - QSettings() will use the new application name after this, resulting in network-specific settings
+        // - Needs to be done before createOptionsModel
+
+        // Check for chain settings (Params() calls are only valid after this clause)
         SelectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
         InitError(Untranslated(strprintf("%s\n", e.what())));
@@ -631,18 +661,21 @@ int GuiMain(int argc, char* argv[])
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
     GUIUtil::LogQtInfo();
-    // Load GUI settings from QSettings
-    app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
-
-    if (did_show_intro) {
-        // Store intro dialog settings other than datadir (network specific)
-        app.InitPruneSetting(prune_MiB);
-    }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
     app.createNode(*init);
+
+    // Load GUI settings from QSettings
+    if (!app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false))) {
+        return EXIT_FAILURE;
+    }
+
+    if (did_show_intro) {
+        // Store intro dialog settings other than datadir (network specific)
+        app.InitPruneSetting(prune_MiB);
+    }
 
     int rv = EXIT_SUCCESS;
     try

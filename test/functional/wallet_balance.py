@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
@@ -46,6 +46,9 @@ def create_transactions(node, address, amt, fees):
     return txs
 
 class WalletTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -55,6 +58,9 @@ class WalletTest(BitcoinTestFramework):
             ['-limitdescendantcount=3', '-walletrejectlongchains=0'],
             [],
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -74,7 +80,17 @@ class WalletTest(BitcoinTestFramework):
         self.log.info("Mining blocks ...")
         self.generate(self.nodes[0], 1)
         self.generate(self.nodes[1], 1)
+
+        # Verify listunspent returns immature coinbase if 'include_immature_coinbase' is set
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1)
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': False})), 0)
+
         self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, ADDRESS_WATCHONLY)
+
+        # Verify listunspent returns all immature coinbases if 'include_immature_coinbase' is set
+        # For now, only the legacy wallet will see the coinbases going to the imported 'ADDRESS_WATCHONLY'
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': False})), 1 if self.options.descriptors else 2)
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1 if self.options.descriptors else COINBASE_MATURITY + 2)
 
         if not self.options.descriptors:
             # Tests legacy watchonly behavior which is not present (and does not need to be tested) in descriptor wallets
@@ -263,7 +279,6 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].invalidateblock(block_reorg)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY, sync_fun=self.no_op)
-        assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
 
         # Now confirm tx_orig
         self.restart_node(1, ['-persistmempool=0'])
@@ -272,6 +287,26 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(tx_orig)
         self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount + 1)  # The reorg recovered our fee of 1 coin
+
+        if not self.options.descriptors:
+            self.log.info('Check if mempool is taken into account after import*')
+            address = self.nodes[0].getnewaddress()
+            privkey = self.nodes[0].dumpprivkey(address)
+            self.nodes[0].sendtoaddress(address, 0.1)
+            self.nodes[0].unloadwallet('')
+            # check importaddress on fresh wallet
+            self.nodes[0].createwallet('w1', False, True)
+            self.nodes[0].importaddress(address)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], 0)
+            assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], Decimal('0.1'))
+            self.nodes[0].importprivkey(privkey)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
+            assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], 0)
+            self.nodes[0].unloadwallet('w1')
+            # check importprivkey on fresh wallet
+            self.nodes[0].createwallet('w2', False, True)
+            self.nodes[0].importprivkey(privkey)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
 
 
 if __name__ == '__main__':

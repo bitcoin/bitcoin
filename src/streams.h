@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,11 +13,11 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstdio>
 #include <ios>
 #include <limits>
 #include <optional>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <string>
 #include <utility>
@@ -182,15 +182,12 @@ public:
  * >> and << read and write unformatted data using the above serialization templates.
  * Fills with data in linear time; some stringstream implementations take N^2 time.
  */
-class CDataStream
+class DataStream
 {
 protected:
     using vector_type = SerializeData;
     vector_type vch;
     vector_type::size_type m_read_pos{0};
-
-    int nType;
-    int nVersion;
 
 public:
     typedef vector_type::allocator_type   allocator_type;
@@ -203,23 +200,9 @@ public:
     typedef vector_type::const_iterator   const_iterator;
     typedef vector_type::reverse_iterator reverse_iterator;
 
-    explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nType{nTypeIn},
-          nVersion{nVersionIn} {}
-
-    explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
-    explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
-        : vch(sp.data(), sp.data() + sp.size()),
-          nType{nTypeIn},
-          nVersion{nVersionIn} {}
-
-    template <typename... Args>
-    CDataStream(int nTypeIn, int nVersionIn, Args&&... args)
-        : nType{nTypeIn},
-          nVersion{nVersionIn}
-    {
-        ::SerializeMany(*this, std::forward<Args>(args)...);
-    }
+    explicit DataStream() {}
+    explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
+    explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
     std::string str() const
     {
@@ -269,13 +252,7 @@ public:
     // Stream subset
     //
     bool eof() const             { return size() == 0; }
-    CDataStream* rdbuf()         { return this; }
     int in_avail() const         { return size(); }
-
-    void SetType(int n)          { nType = n; }
-    int GetType() const          { return nType; }
-    void SetVersion(int n)       { nVersion = n; }
-    int GetVersion() const       { return nVersion; }
 
     void read(Span<value_type> dst)
     {
@@ -284,7 +261,7 @@ public:
         // Read from the beginning of the buffer
         auto next_read_pos{CheckedAdd(m_read_pos, dst.size())};
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
-            throw std::ios_base::failure("CDataStream::read(): end of data");
+            throw std::ios_base::failure("DataStream::read(): end of data");
         }
         memcpy(dst.data(), &vch[m_read_pos], dst.size());
         if (next_read_pos.value() == vch.size()) {
@@ -300,7 +277,7 @@ public:
         // Ignore from the beginning of the buffer
         auto next_read_pos{CheckedAdd(m_read_pos, num_ignore)};
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
-            throw std::ios_base::failure("CDataStream::ignore(): end of data");
+            throw std::ios_base::failure("DataStream::ignore(): end of data");
         }
         if (next_read_pos.value() == vch.size()) {
             m_read_pos = 0;
@@ -325,7 +302,7 @@ public:
     }
 
     template<typename T>
-    CDataStream& operator<<(const T& obj)
+    DataStream& operator<<(const T& obj)
     {
         // Serialize to this stream
         ::Serialize(*this, obj);
@@ -333,7 +310,7 @@ public:
     }
 
     template<typename T>
-    CDataStream& operator>>(T&& obj)
+    DataStream& operator>>(T&& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);
@@ -361,6 +338,42 @@ public:
             if (j == key.size())
                 j = 0;
         }
+    }
+};
+
+class CDataStream : public DataStream
+{
+private:
+    int nType;
+    int nVersion;
+
+public:
+    explicit CDataStream(int nTypeIn, int nVersionIn)
+        : nType{nTypeIn},
+          nVersion{nVersionIn} {}
+
+    explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
+    explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
+        : DataStream{sp},
+          nType{nTypeIn},
+          nVersion{nVersionIn} {}
+
+    int GetType() const          { return nType; }
+    void SetVersion(int n)       { nVersion = n; }
+    int GetVersion() const       { return nVersion; }
+
+    template <typename T>
+    CDataStream& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+
+    template <typename T>
+    CDataStream& operator>>(T&& obj)
+    {
+        ::Unserialize(*this, obj);
+        return *this;
     }
 };
 
@@ -465,53 +478,48 @@ public:
 };
 
 
-
 /** Non-refcounted RAII wrapper for FILE*
  *
  * Will automatically close the file when it goes out of scope if not null.
  * If you're returning the file pointer, return file.release().
  * If you need to close the file early, use file.fclose() instead of fclose(file).
  */
-class CAutoFile
+class AutoFile
 {
-private:
-    const int nType;
-    const int nVersion;
-
+protected:
     FILE* file;
 
 public:
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn)
-    {
-        file = filenew;
-    }
+    explicit AutoFile(FILE* filenew) : file{filenew} {}
 
-    ~CAutoFile()
+    ~AutoFile()
     {
         fclose();
     }
 
     // Disallow copies
-    CAutoFile(const CAutoFile&) = delete;
-    CAutoFile& operator=(const CAutoFile&) = delete;
+    AutoFile(const AutoFile&) = delete;
+    AutoFile& operator=(const AutoFile&) = delete;
 
-    void fclose()
+    int fclose()
     {
+        int retval{0};
         if (file) {
-            ::fclose(file);
+            retval = ::fclose(file);
             file = nullptr;
         }
+        return retval;
     }
 
     /** Get wrapped FILE* with transfer of ownership.
-     * @note This will invalidate the CAutoFile object, and makes it the responsibility of the caller
+     * @note This will invalidate the AutoFile object, and makes it the responsibility of the caller
      * of this function to clean up the returned FILE*.
      */
     FILE* release()             { FILE* ret = file; file = nullptr; return ret; }
 
     /** Get wrapped FILE* without transfer of ownership.
      * @note Ownership of the FILE* will remain with this class. Use this only if the scope of the
-     * CAutoFile outlives use of the passed pointer.
+     * AutoFile outlives use of the passed pointer.
      */
     FILE* Get() const           { return file; }
 
@@ -522,39 +530,61 @@ public:
     //
     // Stream subset
     //
-    int GetType() const          { return nType; }
-    int GetVersion() const       { return nVersion; }
-
     void read(Span<std::byte> dst)
     {
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::read: file handle is nullptr");
+        if (!file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
         if (fread(dst.data(), 1, dst.size(), file) != dst.size()) {
-            throw std::ios_base::failure(feof(file) ? "CAutoFile::read: end of file" : "CAutoFile::read: fread failed");
+            throw std::ios_base::failure(feof(file) ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
         }
     }
 
     void ignore(size_t nSize)
     {
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::ignore: file handle is nullptr");
+        if (!file) throw std::ios_base::failure("AutoFile::ignore: file handle is nullptr");
         unsigned char data[4096];
         while (nSize > 0) {
             size_t nNow = std::min<size_t>(nSize, sizeof(data));
             if (fread(data, 1, nNow, file) != nNow)
-                throw std::ios_base::failure(feof(file) ? "CAutoFile::ignore: end of file" : "CAutoFile::read: fread failed");
+                throw std::ios_base::failure(feof(file) ? "AutoFile::ignore: end of file" : "AutoFile::read: fread failed");
             nSize -= nNow;
         }
     }
 
     void write(Span<const std::byte> src)
     {
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::write: file handle is nullptr");
+        if (!file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
         if (fwrite(src.data(), 1, src.size(), file) != src.size()) {
-            throw std::ios_base::failure("CAutoFile::write: write failed");
+            throw std::ios_base::failure("AutoFile::write: write failed");
         }
     }
+
+    template <typename T>
+    AutoFile& operator<<(const T& obj)
+    {
+        if (!file) throw std::ios_base::failure("AutoFile::operator<<: file handle is nullptr");
+        ::Serialize(*this, obj);
+        return *this;
+    }
+
+    template <typename T>
+    AutoFile& operator>>(T&& obj)
+    {
+        if (!file) throw std::ios_base::failure("AutoFile::operator>>: file handle is nullptr");
+        ::Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+class CAutoFile : public AutoFile
+{
+private:
+    const int nType;
+    const int nVersion;
+
+public:
+    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : AutoFile{filenew}, nType(nTypeIn), nVersion(nVersionIn) {}
+    int GetType() const          { return nType; }
+    int GetVersion() const       { return nVersion; }
 
     template<typename T>
     CAutoFile& operator<<(const T& obj)
@@ -590,13 +620,12 @@ private:
     const int nVersion;
 
     FILE *src;            //!< source file
-    uint64_t nSrcPos;     //!< how many bytes have been read from source
-    uint64_t m_read_pos;    //!< how many bytes have been read from this
+    uint64_t nSrcPos{0};  //!< how many bytes have been read from source
+    uint64_t m_read_pos{0}; //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
     std::vector<std::byte> vchBuf; //!< the buffer
 
-protected:
     //! read data from the source to fill the buffer
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
@@ -614,9 +643,31 @@ protected:
         return true;
     }
 
+    //! Advance the stream's read pointer (m_read_pos) by up to 'length' bytes,
+    //! filling the buffer from the file so that at least one byte is available.
+    //! Return a pointer to the available buffer data and the number of bytes
+    //! (which may be less than the requested length) that may be accessed
+    //! beginning at that pointer.
+    std::pair<std::byte*, size_t> AdvanceStream(size_t length)
+    {
+        assert(m_read_pos <= nSrcPos);
+        if (m_read_pos + length > nReadLimit) {
+            throw std::ios_base::failure("Attempt to position past buffer limit");
+        }
+        // If there are no bytes available, read from the file.
+        if (m_read_pos == nSrcPos && length > 0) Fill();
+
+        size_t buffer_offset{static_cast<size_t>(m_read_pos % vchBuf.size())};
+        size_t buffer_available{static_cast<size_t>(vchBuf.size() - buffer_offset)};
+        size_t bytes_until_source_pos{static_cast<size_t>(nSrcPos - m_read_pos)};
+        size_t advance{std::min({length, buffer_available, bytes_until_source_pos})};
+        m_read_pos += advance;
+        return std::make_pair(&vchBuf[buffer_offset], advance);
+    }
+
 public:
     CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn)
-        : nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), m_read_pos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+        : nType(nTypeIn), nVersion(nVersionIn), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
@@ -651,22 +702,19 @@ public:
     //! read a number of bytes
     void read(Span<std::byte> dst)
     {
-        if (dst.size() + m_read_pos > nReadLimit) {
-            throw std::ios_base::failure("Read attempted past buffer limit");
-        }
         while (dst.size() > 0) {
-            if (m_read_pos == nSrcPos)
-                Fill();
-            unsigned int pos = m_read_pos % vchBuf.size();
-            size_t nNow = dst.size();
-            if (nNow + pos > vchBuf.size())
-                nNow = vchBuf.size() - pos;
-            if (nNow + m_read_pos > nSrcPos)
-                nNow = nSrcPos - m_read_pos;
-            memcpy(dst.data(), &vchBuf[pos], nNow);
-            m_read_pos += nNow;
-            dst = dst.subspan(nNow);
+            auto [buffer_pointer, length]{AdvanceStream(dst.size())};
+            memcpy(dst.data(), buffer_pointer, length);
+            dst = dst.subspan(length);
         }
+    }
+
+    //! Move the read position ahead in the stream to the given position.
+    //! Use SetPos() to back up in the stream, not SkipTo().
+    void SkipTo(const uint64_t file_pos)
+    {
+        assert(file_pos >= m_read_pos);
+        while (m_read_pos < file_pos) AdvanceStream(file_pos - m_read_pos);
     }
 
     //! return the current reading position

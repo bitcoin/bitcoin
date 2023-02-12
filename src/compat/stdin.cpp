@@ -1,23 +1,19 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <compat/stdin.h>
 
-#include <cstdio>       // for fileno(), stdin
+#include <cstdio>
 
 #ifdef WIN32
-#include <windows.h>    // for SetStdinEcho()
-#include <io.h>         // for isatty()
+#include <windows.h>
+#include <io.h>
 #else
-#include <termios.h>    // for SetStdinEcho()
-#include <unistd.h>     // for SetStdinEcho(), isatty()
-#include <poll.h>       // for StdinReady()
+#include <termios.h>
+#include <unistd.h>
+#include <poll.h>
 #endif
-
-#include <compat/stdin.h>
 
 // https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
 void SetStdinEcho(bool enable)
@@ -62,7 +58,7 @@ bool StdinReady()
     return false;
 #else
     struct pollfd fds;
-    fds.fd = 0; /* this is STDIN */
+    fds.fd = STDIN_FILENO;
     fds.events = POLLIN;
     return poll(&fds, 1, 0) == 1;
 #endif

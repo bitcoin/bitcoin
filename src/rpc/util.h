@@ -1,11 +1,10 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
-#include <node/coinstats.h>
 #include <node/transaction.h>
 #include <outputtype.h>
 #include <protocol.h>
@@ -21,6 +20,14 @@
 #include <string>
 #include <variant>
 #include <vector>
+
+static constexpr bool DEFAULT_RPC_DOC_CHECK{
+#ifdef RPC_DOC_CHECK
+    true
+#else
+    false
+#endif
+};
 
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
@@ -54,18 +61,6 @@ struct UniValueType {
     bool typeAny;
     UniValue::VType type;
 };
-
-/**
- * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
- * the right number of arguments are passed, just that any passed are the correct type.
- */
-void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValueType>& typesExpected, bool fAllowNull=false);
-
-/**
- * Type-check one argument; throws JSONRPCError if wrong type given.
- */
-void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected);
 
 /*
   Check for expected keys/value types in an Object.
@@ -130,6 +125,13 @@ enum class OuterType {
     NONE, // Only set on first recursion
 };
 
+struct RPCArgOptions {
+    bool skip_type_check{false};
+    std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
+    std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
+    bool hidden{false};                  //!< For testing only
+};
+
 struct RPCArg {
     enum class Type {
         OBJ,
@@ -147,70 +149,67 @@ struct RPCArg {
         /** Required arg */
         NO,
         /**
-         * Optional arg that is a named argument and has a default value of
-         * `null`. When possible, the default value should be specified.
-         */
-        OMITTED_NAMED_ARG,
-        /**
-         * Optional argument with default value omitted because they are
-         * implicitly clear. That is, elements in an array or object may not
-         * exist by default.
+         * Optional argument for which the default value is omitted from
+         * help text for one of two reasons:
+         * - It's a named argument and has a default value of `null`.
+         * - Its default value is implicitly clear. That is, elements in an
+         *    array may not exist by default.
          * When possible, the default value should be specified.
          */
         OMITTED,
     };
+    /** Hint for default value */
     using DefaultHint = std::string;
+    /** Default constant value */
     using Default = UniValue;
-    using Fallback = std::variant<Optional, /* hint for default value */ DefaultHint, /* default constant value */ Default>;
+    using Fallback = std::variant<Optional, DefaultHint, Default>;
+
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
-    const bool m_hidden;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
     const std::string m_description;
-    const std::string m_oneline_description; //!< Should be empty unless it is supposed to override the auto-generated summary line
-    const std::vector<std::string> m_type_str; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_type_str.at(0) will override the type of the value in a key-value pair, m_type_str.at(1) will override the type in the argument description.
+    const RPCArgOptions m_opts;
 
     RPCArg(
-        const std::string name,
-        const Type type,
-        const Fallback fallback,
-        const std::string description,
-        const std::string oneline_description = "",
-        const std::vector<std::string> type_str = {},
-        const bool hidden = false)
+        std::string name,
+        Type type,
+        Fallback fallback,
+        std::string description,
+        RPCArgOptions opts = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
-          m_hidden{hidden},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
-          m_oneline_description{std::move(oneline_description)},
-          m_type_str{std::move(type_str)}
+          m_opts{std::move(opts)}
     {
         CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_USER_KEYS);
     }
 
     RPCArg(
-        const std::string name,
-        const Type type,
-        const Fallback fallback,
-        const std::string description,
-        const std::vector<RPCArg> inner,
-        const std::string oneline_description = "",
-        const std::vector<std::string> type_str = {})
+        std::string name,
+        Type type,
+        Fallback fallback,
+        std::string description,
+        std::vector<RPCArg> inner,
+        RPCArgOptions opts = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
-          m_hidden{false},
           m_inner{std::move(inner)},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
-          m_oneline_description{std::move(oneline_description)},
-          m_type_str{std::move(type_str)}
+          m_opts{std::move(opts)}
     {
         CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_USER_KEYS);
     }
 
     bool IsOptional() const;
+
+    /**
+     * Check whether the request JSON type matches.
+     * Returns true if type matches, or object describing error(s) if not.
+     */
+    UniValue MatchesType(const UniValue& request) const;
 
     /** Return the first of all aliases */
     std::string GetFirstName() const;
@@ -220,7 +219,7 @@ struct RPCArg {
 
     /**
      * Return the type string of the argument.
-     * Set oneline to allow it to be overridden by a custom oneline type string (m_oneline_description).
+     * Set oneline to allow it to be overridden by a custom oneline type string (m_opts.oneline_description).
      */
     std::string ToString(bool oneline) const;
     /**
@@ -232,7 +231,7 @@ struct RPCArg {
      * Return the description string, including the argument type and whether
      * the argument is required.
      */
-    std::string ToDescriptionString() const;
+    std::string ToDescriptionString(bool is_named_arg) const;
 };
 
 struct RPCResult {
@@ -256,20 +255,22 @@ struct RPCResult {
     const std::string m_key_name;         //!< Only used for dicts
     const std::vector<RPCResult> m_inner; //!< Only used for arrays or dicts
     const bool m_optional;
+    const bool m_skip_type_check;
     const std::string m_description;
     const std::string m_cond;
 
     RPCResult(
-        const std::string cond,
-        const Type type,
-        const std::string m_key_name,
-        const bool optional,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
+        std::string cond,
+        Type type,
+        std::string m_key_name,
+        bool optional,
+        std::string description,
+        std::vector<RPCResult> inner = {})
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
           m_optional{optional},
+          m_skip_type_check{false},
           m_description{std::move(description)},
           m_cond{std::move(cond)}
     {
@@ -278,23 +279,25 @@ struct RPCResult {
     }
 
     RPCResult(
-        const std::string cond,
-        const Type type,
-        const std::string m_key_name,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
-        : RPCResult{cond, type, m_key_name, false, description, inner} {}
+        std::string cond,
+        Type type,
+        std::string m_key_name,
+        std::string description,
+        std::vector<RPCResult> inner = {})
+        : RPCResult{std::move(cond), type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner)} {}
 
     RPCResult(
-        const Type type,
-        const std::string m_key_name,
-        const bool optional,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
+        Type type,
+        std::string m_key_name,
+        bool optional,
+        std::string description,
+        std::vector<RPCResult> inner = {},
+        bool skip_type_check = false)
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
           m_optional{optional},
+          m_skip_type_check{skip_type_check},
           m_description{std::move(description)},
           m_cond{}
     {
@@ -302,11 +305,12 @@ struct RPCResult {
     }
 
     RPCResult(
-        const Type type,
-        const std::string m_key_name,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
-        : RPCResult{type, m_key_name, false, description, inner} {}
+        Type type,
+        std::string m_key_name,
+        std::string description,
+        std::vector<RPCResult> inner = {},
+        bool skip_type_check = false)
+        : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), skip_type_check} {}
 
     /** Append the sections of the result. */
     void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, const int current_indent = 0) const;
@@ -314,8 +318,10 @@ struct RPCResult {
     std::string ToStringObj() const;
     /** Return the description string, including the result type. */
     std::string ToDescriptionString() const;
-    /** Check whether the result JSON type matches. */
-    bool MatchesType(const UniValue& result) const;
+    /** Check whether the result JSON type matches.
+     * Returns true if type matches, or object describing error(s) if not.
+     */
+    UniValue MatchesType(const UniValue& result) const;
 
 private:
     void CheckInnerDoc() const;

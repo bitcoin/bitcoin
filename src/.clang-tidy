@@ -1,2 +1,20 @@
-Checks:          '-*,bugprone-argument-comment'
-WarningsAsErrors: bugprone-argument-comment
+Checks: '
+-*,
+bugprone-argument-comment,
+bugprone-use-after-move,
+misc-unused-using-decls,
+modernize-use-default-member-init,
+modernize-use-nullptr,
+performance-for-range-copy,
+performance-move-const-arg,
+performance-no-automatic-move,
+performance-unnecessary-copy-initialization,
+readability-const-return-type,
+readability-redundant-declaration,
+readability-redundant-string-init,
+'
+WarningsAsErrors: '*'
+CheckOptions:
+ - key: performance-move-const-arg.CheckTriviallyCopyableMove
+   value: false
+HeaderFilterRegex: '.'

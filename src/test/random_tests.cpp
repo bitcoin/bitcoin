@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,10 +26,20 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     FastRandomContext ctx2(true);
 
     for (int i = 10; i > 0; --i) {
-        BOOST_CHECK_EQUAL(GetRand(std::numeric_limits<uint64_t>::max()), uint64_t{10393729187455219830U});
-        BOOST_CHECK_EQUAL(GetRandInt(std::numeric_limits<int>::max()), int{769702006});
+        BOOST_CHECK_EQUAL(GetRand<uint64_t>(), uint64_t{10393729187455219830U});
+        BOOST_CHECK_EQUAL(GetRand<int>(), int{769702006});
         BOOST_CHECK_EQUAL(GetRandMicros(std::chrono::hours{1}).count(), 2917185654);
         BOOST_CHECK_EQUAL(GetRandMillis(std::chrono::hours{1}).count(), 2144374);
+    }
+    {
+        constexpr SteadySeconds time_point{1s};
+        FastRandomContext ctx{true};
+        BOOST_CHECK_EQUAL(7, ctx.rand_uniform_delay(time_point, 9s).time_since_epoch().count());
+        BOOST_CHECK_EQUAL(-6, ctx.rand_uniform_delay(time_point, -9s).time_since_epoch().count());
+        BOOST_CHECK_EQUAL(1, ctx.rand_uniform_delay(time_point, 0s).time_since_epoch().count());
+        BOOST_CHECK_EQUAL(1467825113502396065, ctx.rand_uniform_delay(time_point, 9223372036854775807s).time_since_epoch().count());
+        BOOST_CHECK_EQUAL(-970181367944767837, ctx.rand_uniform_delay(time_point, -9223372036854775807s).time_since_epoch().count());
+        BOOST_CHECK_EQUAL(24761, ctx.rand_uniform_delay(time_point, 9h).time_since_epoch().count());
     }
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
@@ -43,12 +53,22 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     BOOST_CHECK_EQUAL(ctx1.randbits(3), ctx2.randbits(3));
     BOOST_CHECK(ctx1.rand256() == ctx2.rand256());
     BOOST_CHECK(ctx1.randbytes(50) == ctx2.randbytes(50));
+    {
+        struct MicroClock {
+            using duration = std::chrono::microseconds;
+        };
+        FastRandomContext ctx{true};
+        // Check with clock type
+        BOOST_CHECK_EQUAL(47222, ctx.rand_uniform_duration<MicroClock>(1s).count());
+        // Check with time-point type
+        BOOST_CHECK_EQUAL(2782, ctx.rand_uniform_duration<SteadySeconds>(9h).count());
+    }
 
     // Check that a nondeterministic ones are not
     g_mock_deterministic_tests = false;
     for (int i = 10; i > 0; --i) {
-        BOOST_CHECK(GetRand(std::numeric_limits<uint64_t>::max()) != uint64_t{10393729187455219830U});
-        BOOST_CHECK(GetRandInt(std::numeric_limits<int>::max()) != int{769702006});
+        BOOST_CHECK(GetRand<uint64_t>() != uint64_t{10393729187455219830U});
+        BOOST_CHECK(GetRand<int>() != int{769702006});
         BOOST_CHECK(GetRandMicros(std::chrono::hours{1}) != std::chrono::microseconds{2917185654});
         BOOST_CHECK(GetRandMillis(std::chrono::hours{1}) != std::chrono::milliseconds{2144374});
     }
@@ -74,14 +94,14 @@ BOOST_AUTO_TEST_CASE(fastrandom_randbits)
         for (int j = 0; j < 1000; ++j) {
             uint64_t rangebits = ctx1.randbits(bits);
             BOOST_CHECK_EQUAL(rangebits >> bits, 0U);
-            uint64_t range = ((uint64_t)1) << bits | rangebits;
+            uint64_t range = (uint64_t{1}) << bits | rangebits;
             uint64_t rand = ctx2.randrange(range);
             BOOST_CHECK(rand < range);
         }
     }
 }
 
-/** Does-it-compile test for compatibility with standard C++11 RNG interface. */
+/** Does-it-compile test for compatibility with standard library RNG interface. */
 BOOST_AUTO_TEST_CASE(stdrandom_test)
 {
     FastRandomContext ctx;

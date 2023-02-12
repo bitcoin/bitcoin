@@ -15,10 +15,6 @@ from typing import List, Dict
 
 import lief #type:ignore
 
-# temporary constant, to be replaced with lief.ELF.ARCH.RISCV
-# https://github.com/lief-project/LIEF/pull/562
-LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
-
 # Debian 9 (Stretch) EOL: 2022. https://wiki.debian.org/DebianReleases#Production_Releases
 #
 # - g++ version 6.3.0 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=g%2B%2B)
@@ -39,32 +35,25 @@ LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    lief.ELF.ARCH.i386:   (2,18),
     lief.ELF.ARCH.x86_64: (2,18),
     lief.ELF.ARCH.ARM:    (2,18),
     lief.ELF.ARCH.AARCH64:(2,18),
     lief.ELF.ARCH.PPC64:  (2,18),
-    LIEF_ELF_ARCH_RISCV:  (2,27),
+    lief.ELF.ARCH.RISCV:  (2,27),
 },
 'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
-# See here for a description of _IO_stdin_used:
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
-'_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__',
-'__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
-'environ', '_environ', '__environ',
+'environ', '_environ', '__environ', '_fini', '_init', 'stdin',
+'stdout', 'stderr',
 }
 
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
-    lief.ELF.ARCH.i386:    {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux.so.2",
-    },
     lief.ELF.ARCH.x86_64:  {
         lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
     },
@@ -78,7 +67,7 @@ ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
         lief.ENDIANNESS.BIG: "/lib64/ld64.so.1",
         lief.ENDIANNESS.LITTLE: "/lib64/ld64.so.2",
     },
-    LIEF_ELF_ARCH_RISCV:    {
+    lief.ELF.ARCH.RISCV:    {
         lief.ENDIANNESS.LITTLE: "/lib/ld-linux-riscv64-lp64d.so.1",
     },
 }
@@ -200,7 +189,7 @@ def check_exported_symbols(binary) -> bool:
         if not symbol.exported:
             continue
         name = symbol.name
-        if binary.header.machine_type == LIEF_ELF_ARCH_RISCV or name in IGNORE_EXPORTS:
+        if binary.header.machine_type == lief.ELF.ARCH.RISCV or name in IGNORE_EXPORTS:
             continue
         print(f'{binary.name}: export of symbol {name} not allowed!')
         ok = False

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,9 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <string>
 #include <thread>
+#include <utility>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -16,7 +18,7 @@
 #include <util/threadnames.h>
 
 #ifdef HAVE_SYS_PRCTL_H
-#include <sys/prctl.h> // For prctl, PR_SET_NAME, PR_GET_NAME
+#include <sys/prctl.h>
 #endif
 
 //! Set the thread's name at the process level. Does not affect the

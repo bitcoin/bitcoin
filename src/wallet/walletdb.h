@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,7 +51,9 @@ enum class DBErrors
     EXTERNAL_SIGNER_SUPPORT_REQUIRED,
     LOAD_FAIL,
     NEED_REWRITE,
-    NEED_RESCAN
+    NEED_RESCAN,
+    UNKNOWN_DESCRIPTOR,
+    UNEXPECTED_LEGACY_ENTRY
 };
 
 namespace DBKeys {
@@ -84,6 +86,9 @@ extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
+
+// Keys in this set pertain only to the legacy wallet (LegacyScriptPubKeyMan) and are removed during migration from legacy to descriptors.
+extern const std::unordered_set<std::string> LEGACY_TYPES;
 } // namespace DBKeys
 
 /* simple HD chain data model */
@@ -268,13 +273,16 @@ public:
     bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
 
     DBErrors LoadWallet(CWallet* pwallet);
-    DBErrors FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx);
+    DBErrors FindWalletTxHashes(std::vector<uint256>& tx_hashes);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
     /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
     static bool IsKeyType(const std::string& strType);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+
+    //! Delete records of the given types
+    bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(const uint64_t flags);
     //! Begin a new transaction
@@ -295,12 +303,13 @@ void MaybeCompactWalletDB(WalletContext& context);
 using KeyFilterFn = std::function<bool(const std::string&)>;
 
 //! Unserialize a given Key-Value pair and load it into the wallet
-bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr);
+bool ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr);
 
 /** Return object for accessing dummy database with no read/write capabilities. */
 std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase();
 
 /** Return object for accessing temporary in-memory database. */
+std::unique_ptr<WalletDatabase> CreateMockWalletDatabase(DatabaseOptions& options);
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase();
 } // namespace wallet
 

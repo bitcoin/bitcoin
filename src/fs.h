@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <functional>
 #include <iomanip>
 #include <ios>
 #include <ostream>
@@ -34,7 +35,7 @@ public:
     // Allow path objects arguments for compatibility.
     path(std::filesystem::path path) : std::filesystem::path::path(std::move(path)) {}
     path& operator=(std::filesystem::path path) { std::filesystem::path::operator=(std::move(path)); return *this; }
-    path& operator/=(std::filesystem::path path) { std::filesystem::path::operator/=(std::move(path)); return *this; }
+    path& operator/=(std::filesystem::path path) { std::filesystem::path::operator/=(path); return *this; }
 
     // Allow literal string arguments, which are safe as long as the literals are ASCII.
     path(const char* c) : std::filesystem::path(c) {}
@@ -68,7 +69,11 @@ public:
 
 static inline path u8path(const std::string& utf8_str)
 {
+#if __cplusplus < 202002L
     return std::filesystem::u8path(utf8_str);
+#else
+    return std::filesystem::path(std::u8string{utf8_str.begin(), utf8_str.end()});
+#endif
 }
 
 // Disallow implicit std::string conversion for absolute to avoid
@@ -92,11 +97,30 @@ static inline auto quoted(const std::string& s)
 }
 
 // Allow safe path append operations.
-static inline path operator+(path p1, path p2)
+static inline path operator/(path p1, path p2)
 {
-    p1 += std::move(p2);
+    p1 /= std::move(p2);
     return p1;
 }
+static inline path operator/(path p1, const char* p2)
+{
+    p1 /= p2;
+    return p1;
+}
+static inline path operator+(path p1, const char* p2)
+{
+    p1 += p2;
+    return p1;
+}
+static inline path operator+(path p1, path::value_type p2)
+{
+    p1 += p2;
+    return p1;
+}
+
+// Disallow unsafe path append operations.
+template<typename T> static inline path operator/(path p1, T p2) = delete;
+template<typename T> static inline path operator+(path p1, T p2) = delete;
 
 // Disallow implicit std::string conversion for copy_file
 // to avoid locale-dependent encoding on Windows.
@@ -180,6 +204,7 @@ bool create_directories(const std::filesystem::path& p, std::error_code& ec) = d
 
 /** Bridge operations to C stdio */
 namespace fsbridge {
+    using FopenFn = std::function<FILE*(const fs::path&, const char*)>;
     FILE *fopen(const fs::path& p, const char *mode);
 
     /**

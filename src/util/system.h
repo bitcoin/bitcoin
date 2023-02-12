@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,8 +14,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <attributes.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
@@ -52,7 +51,7 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
-void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
+void PrintExceptionContinue(const std::exception* pex, std::string_view thread_name);
 
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
@@ -76,8 +75,8 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
  */
 [[nodiscard]] bool RenameOver(fs::path src, fs::path dest);
 
-bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
-void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name);
+bool LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only=false);
+void UnlockDirectory(const fs::path& directory, const fs::path& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
 bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes = 0);
 
@@ -98,7 +97,7 @@ bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
-fs::path GetConfigFile(const std::string& confPath);
+fs::path GetConfigFile(const fs::path& configuration_file_path);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -108,14 +107,6 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
-/**
- * Execute a command which returns JSON, and parse the result.
- *
- * @param str_command The command to execute, including any arguments
- * @param str_std_in string to pass to stdin
- * @return parsed JSON
- */
-UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -161,6 +152,15 @@ struct SectionInfo
     int m_line;
 };
 
+std::string SettingToString(const util::SettingsValue&, const std::string&);
+std::optional<std::string> SettingToString(const util::SettingsValue&);
+
+int64_t SettingToInt(const util::SettingsValue&, int64_t);
+std::optional<int64_t> SettingToInt(const util::SettingsValue&);
+
+bool SettingToBool(const util::SettingsValue&, bool);
+std::optional<bool> SettingToBool(const util::SettingsValue&);
+
 class ArgsManager
 {
 public:
@@ -175,6 +175,7 @@ public:
         // ALLOW_STRING = 0x08,   //!< unimplemented, draft implementation in #16545
         // ALLOW_LIST = 0x10,     //!< unimplemented, draft implementation in #16545
         DISALLOW_NEGATION = 0x20, //!< disallow -nofoo syntax
+        DISALLOW_ELISION = 0x40,  //!< disallow -foo syntax that doesn't assign any value
 
         DEBUG_ONLY = 0x100,
         /* Some options would cause cross-contamination if values for
@@ -249,12 +250,12 @@ protected:
      * on the command line or in a network-specific section in the
      * config file.
      */
-    const std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
+    std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
 
     /**
      * Log warnings for unrecognized section names in the config file.
      */
-    const std::list<SectionInfo> GetUnrecognizedSections() const;
+    std::list<SectionInfo> GetUnrecognizedSections() const;
 
     struct Command {
         /** The command (if one has been registered with AddCommand), or empty */
@@ -331,6 +332,7 @@ protected:
      * @return command-line argument or default value
      */
     std::string GetArg(const std::string& strArg, const std::string& strDefault) const;
+    std::optional<std::string> GetArg(const std::string& strArg) const;
 
     /**
      * Return path argument or default value
@@ -352,6 +354,7 @@ protected:
      * @return command-line argument (0 if invalid number) or default value
      */
     int64_t GetIntArg(const std::string& strArg, int64_t nDefault) const;
+    std::optional<int64_t> GetIntArg(const std::string& strArg) const;
 
     /**
      * Return boolean argument or default value
@@ -361,6 +364,7 @@ protected:
      * @return command-line argument or default value
      */
     bool GetBoolArg(const std::string& strArg, bool fDefault) const;
+    std::optional<bool> GetBoolArg(const std::string& strArg) const;
 
     /**
      * Set an argument if it doesn't already have a value
@@ -436,7 +440,7 @@ protected:
      * Get settings file path, or return false if read-write settings were
      * disabled with -nosettings.
      */
-    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false) const;
+    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false, bool backup = false) const;
 
     /**
      * Read settings file. Push errors to vector, or log them if null.
@@ -444,9 +448,16 @@ protected:
     bool ReadSettingsFile(std::vector<std::string>* errors = nullptr);
 
     /**
-     * Write settings file. Push errors to vector, or log them if null.
+     * Write settings file or backup settings file. Push errors to vector, or
+     * log them if null.
      */
-    bool WriteSettingsFile(std::vector<std::string>* errors = nullptr) const;
+    bool WriteSettingsFile(std::vector<std::string>* errors = nullptr, bool backup = false) const;
+
+    /**
+     * Get current setting from config file or read/write settings file,
+     * ignoring nonpersistent command line or forced settings values.
+     */
+    util::SettingsValue GetPersistentSetting(const std::string& name) const;
 
     /**
      * Access settings with lock held.

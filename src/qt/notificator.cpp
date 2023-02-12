@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,10 +14,11 @@
 #include <QTemporaryFile>
 #include <QVariant>
 #ifdef USE_DBUS
-#include <stdint.h>
+#include <QDBusMetaType>
 #include <QtDBus>
+#include <stdint.h>
 #endif
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include <qt/macnotificationhandler.h>
 #endif
 
@@ -31,11 +32,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
     QObject(_parent),
     parent(_parent),
     programName(_programName),
-    mode(None),
     trayIcon(_trayIcon)
-#ifdef USE_DBUS
-    ,interface(nullptr)
-#endif
 {
     if(_trayIcon && _trayIcon->supportsMessages())
     {
@@ -49,7 +46,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
         mode = Freedesktop;
     }
 #endif
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // check if users OS has support for NSUserNotification
     if( MacNotificationHandler::instance()->hasUserNotificationCenterSupport()) {
         mode = UserNotificationCenter;
@@ -70,10 +67,8 @@ Notificator::~Notificator()
 class FreedesktopImage
 {
 public:
-    FreedesktopImage() {}
+    FreedesktopImage() = default;
     explicit FreedesktopImage(const QImage &img);
-
-    static int metaType();
 
     // Image to variant that can be marshalled over DBus
     static QVariant toVariant(const QImage &img);
@@ -136,15 +131,10 @@ const QDBusArgument &operator>>(const QDBusArgument &a, FreedesktopImage &i)
     return a;
 }
 
-int FreedesktopImage::metaType()
-{
-    return qDBusRegisterMetaType<FreedesktopImage>();
-}
-
 QVariant FreedesktopImage::toVariant(const QImage &img)
 {
     FreedesktopImage fimg(img);
-    return QVariant(FreedesktopImage::metaType(), &fimg);
+    return QVariant(qDBusRegisterMetaType<FreedesktopImage>(), &fimg);
 }
 
 void Notificator::notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
@@ -216,7 +206,7 @@ void Notificator::notifySystray(Class cls, const QString &title, const QString &
     trayIcon->showMessage(title, text, sicon, millisTimeout);
 }
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 void Notificator::notifyMacUserNotificationCenter(const QString &title, const QString &text)
 {
     // icon is not supported by the user notification center yet. OSX will use the app icon.
@@ -236,7 +226,7 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
     case QSystemTray:
         notifySystray(cls, title, text, millisTimeout);
         break;
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     case UserNotificationCenter:
         notifyMacUserNotificationCenter(title, text);
         break;

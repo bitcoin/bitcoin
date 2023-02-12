@@ -1,14 +1,18 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 #define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
+#include <primitives/transaction.h>
 #include <validationinterface.h>
+
+#include <cstdint>
 #include <list>
 #include <memory>
 
+class CBlock;
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
@@ -35,7 +39,7 @@ protected:
 private:
     CZMQNotificationInterface();
 
-    void *pcontext;
+    void* pcontext{nullptr};
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 
