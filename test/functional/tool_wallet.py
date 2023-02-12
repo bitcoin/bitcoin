@@ -233,7 +233,8 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_tool_wallet_info_after_transaction()
         self.test_tool_wallet_create_on_existing_wallet()
         self.test_getwalletinfo_on_different_wallet()
-        self.test_salvage()
+        if self.is_bdb_compiled():
+            self.test_salvage()
 
 if __name__ == '__main__':
     ToolWalletTest().main()
