@@ -6,14 +6,13 @@
 ## Implementation class structure
 An implementation of `Generic Arith Classes` should have one top-level structure. The top-level structure should expose `Scalar`, `Point` and `Initializer` class aliases, and let each alias point to the actual implementation. Nothing else is enforced by `Generic Arith Classes` interface.
 
-For example, [struct Mcl](../arith//mcl/mcl.h) below is a top-level structure of the `Mcl` classes. Underneath it, there exist [MclScalar](../arith/mcl/mcl_scalar.h), [MclG1Point](../arith/mcl/mcl_g1point.h) and [MclInitializer](../arith/mcl/mcl_initializer.h) which are aliases of `Scalar`, `Point` and `Initializer` respectively.
+For example, [struct Mcl](../arith//mcl/mcl.h) below is a top-level structure of the `Mcl` classes. Underneath it, there exist [MclScalar](../arith/mcl/mcl_scalar.h) and [MclG1Point](../arith/mcl/mcl_g1point.h) which are aliases of `Scalar` and `Point`.
 
 ```c++
 struct Mcl
 {
   using Point = MclG1Point;
   using Scalar = MclScalar;
-  using Initializer = MclInitializer;
 };
 ```
 
@@ -35,11 +34,11 @@ This effectively makes the [Mcl](../arith//mcl/mcl.h) implementation an interfac
 ### From scratch
 Below is one way of developing a new implementation of `Generic Arith Classes`:
 
-1. Define the top-level structure that exposes aliases to its associated `Scalar`, `Point`, and `Initializer` classes. Let each alias point to an empty class.
+1. Define the top-level structure that exposes aliases to its associated `Scalar` and `Point` classes. Let each alias point to an empty class.
 
 2. Define a user class that takes the top-level class as a type parameter.
 
-3. Obtain `Scalar`, `Point` and `Initializer` classes from the type parameter in the user class. If `Scalars` and/or `Points` class(es) are needed, use `Elements` class which is a helper class to generate a vector class of `Scalar` or `Point` with commonly used functions.
+3. Obtain `Scalar` and `Point` classes from the type parameter in the user class. If `Scalars` and/or `Points` class(es) are needed, use `Elements` class which is a helper class to generate a vector class of `Scalar` or `Point` with commonly used functions.
 
    Below is an example taken from [range_proof_logic.h](../range_proof/range_proof_logic.h):
 
@@ -48,7 +47,6 @@ Below is one way of developing a new implementation of `Generic Arith Classes`:
     RangeProofLogic<T>::RangeProofLogic()
     {
         ...
-        using Initializer = typename T::Initializer;
         using Scalar = typename T::Scalar;
         using Point = typename T::Point;
         using Scalars = Elements<Scalar>;
@@ -62,7 +60,6 @@ Below is one way of developing a new implementation of `Generic Arith Classes`:
 - [Mcl](../arith/mcl/mcl.h) -- the top-level class of `Generic Arith Classes` implementation
 - [MclScalar](../arith/mcl/mcl_scalar.h) -- `Scalar` implementation of `Mcl`
 - [MclG1Point](../arith/mcl/mcl_g1point.h) -- `Point` implementation of `Mcl`
-- [MclInitializer](../arith/mcl/mcl_initializer.h) -- `Initializer` implementation of `Mcl`
 
 ### User Class
 - [RangeProofLogic](../range_proof/range_proof.h) -- User class of `Mcl` classes
