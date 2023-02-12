@@ -8,21 +8,19 @@
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <stdexcept>
+#include <blsct/arith/mcl/init/mcl_init.h>
 
 /**
- * Should instantiate this class in static context only e.g.
+ * This class should be instantiated in static context only e.g.
  *  
  * static volatile StaticMclInit for_side_effect_only;
 */
-class StaticMclInit
+class StaticMclInit : MclInit
 {
 public:
     StaticMclInit()
     {
-        if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
-            throw std::runtime_error("blsInit failed");
-        }
-        mclBn_setETHserialization(1);
+        Initialize();
     }
 };
 

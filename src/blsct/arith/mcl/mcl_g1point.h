@@ -13,7 +13,7 @@
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <blsct/arith/mcl/static_mcl_init.h>
+#include <blsct/arith/mcl/init/static_mcl_init.h>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
