@@ -12,7 +12,7 @@
 
 /**
  * This class should be instantiated in static context only e.g.
- *  
+ *
  * static volatile StaticMclInit for_side_effect_only;
 */
 class StaticMclInit: MclInit
