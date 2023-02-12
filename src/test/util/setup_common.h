@@ -92,6 +92,7 @@ struct BasicTestingSetup {
 
     const fs::path m_path_root;
     ArgsManager m_args;
+    volatile MclInitializer mi;
 };
 
 /** Testing setup that performs all steps up until right before
@@ -235,13 +236,6 @@ public:
 
 private:
     const std::string m_reason;
-};
-
-/**
- * Setup that initializes external mcl library
- */
-struct MclTestingSetup {
-    MclTestingSetup();
 };
 
 #endif // BITCOIN_TEST_UTIL_SETUP_COMMON_H

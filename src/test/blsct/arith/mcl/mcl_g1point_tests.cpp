@@ -13,7 +13,7 @@
 #include <set>
 #include <streams.h>
 
-BOOST_FIXTURE_TEST_SUITE(mcl_g1point_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(mcl_g1point_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_constructors)
 {

@@ -13,7 +13,7 @@
 #include <set>
 #include <streams.h>
 
-BOOST_FIXTURE_TEST_SUITE(mcl_integration_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(mcl_integration_tests, BasicTestingSetup)
 
 // gg^z == gg^(ones * z)
 BOOST_AUTO_TEST_CASE(test_gg_ones_times_z)

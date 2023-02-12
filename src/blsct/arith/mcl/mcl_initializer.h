@@ -1,24 +1,37 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2023 The Navcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-// Diverse arithmetic operations in the bls curve
-// inspired by https://github.com/b-g-goodell/research-lab/blob/master/source-code/StringCT-java/src/how/monero/hodl/bulletproof/Bulletproof.java
-// and https://github.com/monero-project/monero/blob/master/src/ringct/bulletproofs.cc
 
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_INITIALIZER_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_INITIALIZER_H
 
-#include <boost/thread/lock_guard.hpp>
-#include <boost/thread/mutex.hpp>
+#define BLS_ETH 1
+#include <bls/bls384_256.h>
+#include <stdexcept>
 
+/**
+ * Instante this class in static context only e.g.
+ *  
+ * static volatile MclStaticInitializer for_side_effect_only;
+ * static MclG1Point p;
+*/
 class MclInitializer
 {
 public:
-    static void Init();
+    MclInitializer()
+    {
+        static int c = 0;
+        static bool is_initialized = false;
+        //if (is_initialized) return;
 
-private:
-    inline static boost::mutex m_init_mutex;
+        if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
+            throw std::runtime_error("blsInit failed");
+        }
+        mclBn_setETHserialization(1);
+
+        is_initialized = true;
+        // printf("--------------> initialized mcl\n");
+    }
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_INITIALIZER_H

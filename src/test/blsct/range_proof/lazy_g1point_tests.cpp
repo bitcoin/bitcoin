@@ -9,7 +9,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(lazy_g1point_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(lazy_g1point_tests, BasicTestingSetup)
 
 using T = Mcl;
 using Point = T::Point;

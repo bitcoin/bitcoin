@@ -8,7 +8,7 @@
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(range_proof_with_transcript_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(range_proof_with_transcript_tests, BasicTestingSetup)
 
 using T = Mcl;
 

@@ -15,6 +15,7 @@
 #include <vector>
 #include <array>
 
+#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_initializer.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
@@ -22,6 +23,8 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <version.h>
+
+using namespace std::literals::string_literals;
 
 class MclScalar
 {
@@ -32,8 +35,6 @@ public:
     MclScalar(const mclBnFr& n_fr);
     MclScalar(const uint256& n);
     MclScalar(const std::string& s, int radix);
-
-    static void Init();
 
     MclScalar ApplyBitwiseOp(const MclScalar& a, const MclScalar& b,
                           std::function<uint8_t(uint8_t, uint8_t)> op) const;

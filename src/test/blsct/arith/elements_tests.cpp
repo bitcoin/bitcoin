@@ -12,7 +12,7 @@
 #include <set>
 #include <streams.h>
 
-BOOST_FIXTURE_TEST_SUITE(elements_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(elements_tests, BasicTestingSetup)
 
 using Point = MclG1Point;
 using Scalar = MclScalar;

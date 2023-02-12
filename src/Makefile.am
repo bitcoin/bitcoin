@@ -409,7 +409,6 @@ libbitcoin_node_a_SOURCES = \
   blockencodings.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
-  blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
   blsct/double_public_key.cpp \
@@ -965,7 +964,6 @@ libbitcoinkernel_la_SOURCES = \
   arith_uint256.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
-  blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
   blsct/double_public_key.cpp \

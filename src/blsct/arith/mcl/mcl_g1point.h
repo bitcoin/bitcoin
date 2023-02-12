@@ -9,11 +9,14 @@
 #include <string>
 #include <vector>
 
+#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
+
+static volatile MclInitializer mcl_g1point;
 
 class MclG1Point
 {
@@ -22,10 +25,7 @@ public:
     MclG1Point(const std::vector<uint8_t>& v);
     MclG1Point(const uint256& b);
     MclG1Point(const mclBnG1& p);
-
-    // used as static initializer/disposer
-    static void Init();
-    static void Dispose(); // exists for the sake of completeness. not actually used.
+    MclG1Point(const std::string& s);
 
     MclG1Point operator=(const mclBnG1& rhs);
     MclG1Point operator+(const MclG1Point& rhs) const;
@@ -70,10 +70,7 @@ public:
     UnderlyingType m_p;
 
     static constexpr int SERIALIZATION_SIZE = 384 / 8;
-
-private:
-    static mclBnG1* m_g; // Using mclBnG1 instead of MclG1Point to get around chiken-and-egg issue
-    static boost::mutex m_init_mutex;
+    static UnderlyingType m_g;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H

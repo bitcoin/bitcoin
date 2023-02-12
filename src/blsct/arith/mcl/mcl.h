@@ -17,7 +17,6 @@ struct Mcl
 {
   using Scalar = MclScalar;
   using Point = MclG1Point;
-  using Initializer = MclInitializer;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_H

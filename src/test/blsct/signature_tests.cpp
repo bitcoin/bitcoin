@@ -13,7 +13,7 @@
 
 namespace blsct {
 
-BOOST_FIXTURE_TEST_SUITE(signature_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(signature_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_serialization_with_func_calls)
 {

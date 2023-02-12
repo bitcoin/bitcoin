@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl_g1point.h>
+#include <blsct/arith/mcl/mcl_initializer.h>
 #include <numeric>
 #include <streams.h>
 
-mclBnG1* MclG1Point::m_g = nullptr;
-boost::mutex MclG1Point::m_init_mutex;
+mclBnG1 MclG1Point::m_g = MclG1Point("1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s).m_p;
 
 MclG1Point::MclG1Point()
 {
@@ -38,25 +38,11 @@ MclG1Point::MclG1Point(const uint256& b)
     m_p = temp.m_p;
 }
 
-void MclG1Point::Init()
+MclG1Point::MclG1Point(const std::string& s)
 {
-    boost::lock_guard<boost::mutex> lock(MclG1Point::m_init_mutex);
-    static bool is_initialized = false;
-    if (is_initialized) return;
-
-    MclInitializer::Init();
-    mclBnG1* g = new mclBnG1();
-    const char* serialized_g = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569";
-    if (mclBnG1_setStr(g, serialized_g, strlen(serialized_g), 10) == -1) {
-        throw std::runtime_error("MclG1Point::Init(): mclBnG1_setStr failed");
+    if (mclBnG1_setStr(&m_p, s.c_str(), s.length(), 10) == -1) {
+        throw std::runtime_error("MclG1Point(std::string): malformed serialization string");
     }
-    MclG1Point::m_g = g;
-    is_initialized = true;
-}
-
-void MclG1Point::Dispose()
-{
-    if (MclG1Point::m_g != nullptr) delete MclG1Point::m_g;
 }
 
 mclBnG1 MclG1Point::Underlying() const
@@ -115,7 +101,7 @@ MclG1Point MclG1Point::Double() const
 
 MclG1Point MclG1Point::GetBasePoint()
 {
-    MclG1Point g(*MclG1Point::m_g);
+    MclG1Point g(MclG1Point::m_g);
     return g;
 }
 

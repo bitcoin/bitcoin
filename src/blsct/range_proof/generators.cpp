@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/arith/mcl/mcl_initializer.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/config.h>
@@ -33,9 +34,6 @@ GeneratorsFactory<T>::GeneratorsFactory()
 
     boost::lock_guard<boost::mutex> lock(GeneratorsFactory<T>::m_init_mutex);
     if (GeneratorsFactory<T>::m_is_initialized) return;
-
-    T::Initializer::Init();
-    T::Point::Init();
 
     m_H = Point::GetBasePoint();
     Points Gi, Hi;
