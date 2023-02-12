@@ -26,7 +26,7 @@ public:
     MclG1Point(const std::vector<uint8_t>& v);
     MclG1Point(const uint256& b);
     MclG1Point(const mclBnG1& p);
-    MclG1Point(const std::string& s);
+    MclG1Point(const char* s);
 
     MclG1Point operator=(const mclBnG1& rhs);
     MclG1Point operator+(const MclG1Point& rhs) const;
