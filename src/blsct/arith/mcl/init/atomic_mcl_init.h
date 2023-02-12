@@ -12,7 +12,7 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
-class AtomicMclInit : MclInit 
+class AtomicMclInit: MclInit
 {
 public:
     AtomicMclInit()

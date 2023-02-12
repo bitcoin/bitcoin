@@ -15,7 +15,7 @@
  *  
  * static volatile StaticMclInit for_side_effect_only;
 */
-class StaticMclInit : MclInit
+class StaticMclInit: MclInit
 {
 public:
     StaticMclInit()
