@@ -4,9 +4,9 @@ Bitcoin Core integration/staging tree
 https://bitcoincore.org
 
 For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+https://bitcoincore.org/en/download/
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+Further information about Bitcoin Core is available in the [doc folder](/doc)
 
 What Bitcoin Core is used for?
 ------------------------------
