@@ -155,6 +155,9 @@ public:
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
 
+    //! Return the undo information for a block hash
+    virtual bool getUndoBlock(const uint256& block_hash, CBlockUndo& blockUndo) = 0;
+
     //! Find first block in the chain with timestamp >= the given time
     //! and height >= than the given height, return false if there is no block
     //! with a high enough timestamp and height. Optionally return block
