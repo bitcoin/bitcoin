@@ -444,10 +444,9 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
     // to the last OutputGroup in the vector for the scriptPubKey. When the last OutputGroup has
     // OUTPUT_GROUP_MAX_ENTRIES COutputs, a new OutputGroup is added to the end of the vector.
     typedef std::map<std::pair<CScript, OutputType>, std::vector<OutputGroup>> ScriptPubKeyToOutgroup;
-    const auto& group_outputs = [](
+    const auto& insert_output = [&](
             const std::shared_ptr<COutput>& output, OutputType type, size_t ancestors, size_t descendants,
-            ScriptPubKeyToOutgroup& groups_map, const CoinSelectionParams& coin_sel_params,
-            bool positive_only) {
+            ScriptPubKeyToOutgroup& groups_map) {
         std::vector<OutputGroup>& groups = groups_map[std::make_pair(output->txout.scriptPubKey,type)];
 
         if (groups.size() == 0) {
@@ -467,10 +466,7 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
             group = &groups.back();
         }
 
-        // Filter for positive only before adding the output to group
-        if (!positive_only || output->GetEffectiveValue() > 0) {
-            group->Insert(output, ancestors, descendants);
-        }
+        group->Insert(output, ancestors, descendants);
     };
 
     ScriptPubKeyToOutgroup spk_to_groups_map;
@@ -484,9 +480,13 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
             wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
 
             const auto& shared_output = std::make_shared<COutput>(output);
-            group_outputs(shared_output, type, ancestors, descendants, spk_to_groups_map, coin_sel_params, /*positive_only=*/ false);
-            group_outputs(shared_output, type, ancestors, descendants, spk_to_positive_groups_map,
-                          coin_sel_params, /*positive_only=*/ true);
+            // Filter for positive only before adding the output
+            if (output.GetEffectiveValue() > 0) {
+                insert_output(shared_output, type, ancestors, descendants, spk_to_positive_groups_map);
+            }
+
+            // 'All' groups
+            insert_output(shared_output, type, ancestors, descendants, spk_to_groups_map);
         }
     }
 
