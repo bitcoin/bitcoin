@@ -1319,9 +1319,8 @@ static UniValue bls_generate(const JSONRPCRequest& request)
     CBLSSecretKey sk;
     sk.MakeNewKey();
     bool bls_legacy_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
-    if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
-        bls_legacy_scheme = request.params[1].get_bool();
+    if (!request.params[0].isNull()) {
+        bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
     }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
@@ -1359,8 +1358,7 @@ static UniValue bls_fromsecret(const JSONRPCRequest& request)
     CBLSSecretKey sk = ParseBLSSecretKey(request.params[0].get_str(), "secretKey");
     bool bls_legacy_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
     if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
-        bls_legacy_scheme = request.params[1].get_bool();
+        bls_legacy_scheme = ParseBoolV(request.params[1], "bls_legacy_scheme");
     }
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("secret", sk.ToString());
