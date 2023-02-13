@@ -8,8 +8,7 @@ Be aware that the tests will be built and run in-place, so please run at your ow
 If the repository is not a fresh git clone, you might have to clean files from previous builds or test runs first.
 
 The ci needs to perform various sysadmin tasks such as installing packages or writing to the user's home directory.
-While most of the actions are done inside a docker container, this is not possible for all. Thus, cache directories,
-such as the depends cache, previous release binaries, or ccache, are mounted as read-write into the docker container. While it should be fine to run
+While it should be fine to run
 the ci system locally on you development box, the ci scripts can generally be assumed to have received less review and
 testing compared to other parts of the codebase. If you want to keep the work tree clean, you might want to run the ci
 system in a virtual machine with a Linux operating system of your choice.
