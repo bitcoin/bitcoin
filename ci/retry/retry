@@ -7,7 +7,10 @@ __sleep_amount() {
   if [ -n "$constant_sleep" ]; then
     sleep_time=$constant_sleep
   else
-    #TODO: check for awk
+    if ! command -v awk &> /dev/null; then
+      __log_out "Error: awk not found, please install awk."
+      exit 1
+    fi
     #TODO: check if user would rather use one of the other possible dependencies: python, ruby, bc, dc
     sleep_time=`awk "BEGIN {t = $min_sleep * $(( (1<<($attempts -1)) )); print (t > $max_sleep ? $max_sleep : t)}"`
   fi
