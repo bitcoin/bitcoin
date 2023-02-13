@@ -633,7 +633,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
     // permissive CoinEligibilityFilter.
-    util::Result<SelectionResult> res = [&] {
+    return [&] {
         // Place coins eligibility filters on a scope increasing order.
         std::vector<SelectionFilter> ordered_filters{
                 // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
@@ -684,8 +684,6 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         // Coin Selection failed.
         return res_detailed_errors.empty() ? util::Result<SelectionResult>(util::Error()) : res_detailed_errors.front();
     }();
-
-    return res;
 }
 
 static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& block_hash)
