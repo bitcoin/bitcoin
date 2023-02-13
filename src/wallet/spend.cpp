@@ -445,10 +445,10 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
     // OUTPUT_GROUP_MAX_ENTRIES COutputs, a new OutputGroup is added to the end of the vector.
     typedef std::map<std::pair<CScript, OutputType>, std::vector<OutputGroup>> ScriptPubKeyToOutgroup;
     const auto& group_outputs = [](
-            const COutput& output, OutputType type, size_t ancestors, size_t descendants,
+            const std::shared_ptr<COutput>& output, OutputType type, size_t ancestors, size_t descendants,
             ScriptPubKeyToOutgroup& groups_map, const CoinSelectionParams& coin_sel_params,
             bool positive_only) {
-        std::vector<OutputGroup>& groups = groups_map[std::make_pair(output.txout.scriptPubKey,type)];
+        std::vector<OutputGroup>& groups = groups_map[std::make_pair(output->txout.scriptPubKey,type)];
 
         if (groups.size() == 0) {
             // No OutputGroups for this scriptPubKey yet, add one
@@ -468,8 +468,8 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
         }
 
         // Filter for positive only before adding the output to group
-        if (!positive_only || output.GetEffectiveValue() > 0) {
-            group->Insert(std::make_shared<COutput>(output), ancestors, descendants);
+        if (!positive_only || output->GetEffectiveValue() > 0) {
+            group->Insert(output, ancestors, descendants);
         }
     };
 
@@ -483,8 +483,9 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
             size_t ancestors, descendants;
             wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
 
-            group_outputs(output, type, ancestors, descendants, spk_to_groups_map, coin_sel_params, /*positive_only=*/ false);
-            group_outputs(output, type, ancestors, descendants, spk_to_positive_groups_map,
+            const auto& shared_output = std::make_shared<COutput>(output);
+            group_outputs(shared_output, type, ancestors, descendants, spk_to_groups_map, coin_sel_params, /*positive_only=*/ false);
+            group_outputs(shared_output, type, ancestors, descendants, spk_to_positive_groups_map,
                           coin_sel_params, /*positive_only=*/ true);
         }
     }
