@@ -39,6 +39,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       --build-arg "FILE_ENV=${FILE_ENV}" \
       --tag="${CONTAINER_NAME}" \
       "${BASE_ROOT_DIR}"
+  docker volume create "${CONTAINER_NAME}_ccache" || true
+  docker volume create "${CONTAINER_NAME}_depends" || true
+  docker volume create "${CONTAINER_NAME}_previous_releases" || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
@@ -48,9 +51,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # shellcheck disable=SC2086
   CI_CONTAINER_ID=$(docker run $CI_CONTAINER_CAP --rm --interactive --detach --tty \
                   --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
-                  --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \
-                  --mount type=bind,src=$DEPENDS_DIR,dst=$DEPENDS_DIR \
-                  --mount type=bind,src=$PREVIOUS_RELEASES_DIR,dst=$PREVIOUS_RELEASES_DIR \
+                  --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
+                  --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
+                  --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
                   -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
