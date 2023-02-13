@@ -10,12 +10,20 @@ export LC_ALL=C.UTF-8
 # The ci system copies this folder.
 BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
 export BASE_ROOT_DIR
+# The destination root dir.
+if [ -z "${DANGER_RUN_CI_ON_HOST}" ] ; then
+  # This folder only exists on the ci host and will be a copy of BASE_ROOT_DIR
+  export CI_ROOT_DIR="/ci_root"
+else
+  # This folder is equal to BASE_ROOT_DIR and is read-write
+  export CI_ROOT_DIR="${BASE_ROOT_DIR}"
+fi
 # The depends dir.
 # This folder exists only on the ci guest, and on the ci host as a volume.
-export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
+export DEPENDS_DIR="${CI_ROOT_DIR}/depends"
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
 # This folder only exists on the ci host.
-export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
+export BASE_SCRATCH_DIR="${CI_ROOT_DIR}/ci/scratch"
 
 echo "Setting specific values in env"
 if [ -n "${FILE_ENV}" ]; then
@@ -65,7 +73,7 @@ export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out/$HOST}
 export BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_SCRATCH_DIR/build}
 # The folder for previous release binaries.
 # This folder exists only on the ci guest, and on the ci host as a volume.
-export PREVIOUS_RELEASES_DIR=${PREVIOUS_RELEASES_DIR:-$BASE_ROOT_DIR/releases/$HOST}
+export PREVIOUS_RELEASES_DIR="${CI_ROOT_DIR}/ci_prev_releases"
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 export CI_BASE_PACKAGES=${CI_BASE_PACKAGES:-build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3 rsync git procps bison}
 export GOAL=${GOAL:-install}

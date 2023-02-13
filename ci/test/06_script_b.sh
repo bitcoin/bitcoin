@@ -10,18 +10,18 @@ if [[ $HOST = *-mingw32 ]]; then
   # Generate all binaries, so that they can be wrapped
   CI_EXEC make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
   CI_EXEC make "$MAKEJOBS" -C src minisketch/test.exe VERBOSE=1
-  CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
+  CI_EXEC "${CI_ROOT_DIR}/ci/test/wrap-wine.sh"
 fi
 
 if [ -n "$QEMU_USER_CMD" ]; then
   # Generate all binaries, so that they can be wrapped
   CI_EXEC make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
   CI_EXEC make "$MAKEJOBS" -C src minisketch/test VERBOSE=1
-  CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
+  CI_EXEC "${CI_ROOT_DIR}/ci/test/wrap-qemu.sh"
 fi
 
 if [ -n "$USE_VALGRIND" ]; then
-  CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
+  CI_EXEC "${CI_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
@@ -79,7 +79,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " -p . ${MAKEJOBS}"\
           " -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"\
           " |& tee /tmp/iwyu_ci.out"
-  export P_CI_DIR="${BASE_ROOT_DIR}/src"
+  export P_CI_DIR="${CI_ROOT_DIR}/src"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/fix_includes.py --nosafe_headers < /tmp/iwyu_ci.out"
   CI_EXEC "git --no-pager diff"
 fi

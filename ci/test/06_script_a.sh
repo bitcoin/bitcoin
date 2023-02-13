@@ -37,7 +37,7 @@ fi
 CI_EXEC mkdir -p "${BASE_BUILD_DIR}"
 export P_CI_DIR="${BASE_BUILD_DIR}"
 
-CI_EXEC "${BASE_ROOT_DIR}/configure" --cache-file=config.cache "$BITCOIN_CONFIG_ALL" "$BITCOIN_CONFIG" || ( (CI_EXEC cat config.log) && false)
+CI_EXEC "${CI_ROOT_DIR}/configure" --cache-file=config.cache "$BITCOIN_CONFIG_ALL" "$BITCOIN_CONFIG" || ( (CI_EXEC cat config.log) && false)
 
 CI_EXEC make distdir VERSION="$HOST"
 

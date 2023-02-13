@@ -15,24 +15,19 @@ mkdir -p "${CCACHE_DIR}"
 mkdir -p "${PREVIOUS_RELEASES_DIR}"
 
 export ASAN_OPTIONS="detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
-export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/lsan"
-export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
-export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
+export LSAN_OPTIONS="suppressions=${CI_ROOT_DIR}/test/sanitizer_suppressions/lsan"
+export TSAN_OPTIONS="suppressions=${CI_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
+export UBSAN_OPTIONS="suppressions=${CI_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
 env | grep -E '^(BITCOIN_CONFIG|BASE_|QEMU_|CCACHE_|LC_ALL|BOOST_TEST_RANDOM|DEBIAN_FRONTEND|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS|PREVIOUS_RELEASES_DIR)' | tee /tmp/env
 if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
   CI_CONTAINER_CAP="--cap-add SYS_PTRACE"
 fi
 
-export P_CI_DIR="$PWD"
+export P_CI_DIR="${CI_ROOT_DIR}"
 export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
-  LOCAL_UID=$(id -u)
-  LOCAL_GID=$(id -g)
-
-  # the name isn't important, so long as we use the same UID
-  LOCAL_USER=nonroot
   DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
@@ -54,28 +49,22 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
-                  -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
                   $CONTAINER_NAME)
   export CI_CONTAINER_ID
 
-  # Create a non-root user inside the container which matches the local user.
-  #
-  # This prevents the root user in the container modifying the local file system permissions
-  # on the mounted directories
-  docker exec "$CI_CONTAINER_ID" useradd -u "$LOCAL_UID" -o -m "$LOCAL_USER"
-  docker exec "$CI_CONTAINER_ID" groupmod -o -g "$LOCAL_GID" "$LOCAL_USER"
-  docker exec "$CI_CONTAINER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
-  export CI_EXEC_CMD_PREFIX_ROOT="docker exec -u 0 $CI_CONTAINER_ID"
-  export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
+  export CI_EXEC_CMD_PREFIX_ROOT="docker exec ${CI_CONTAINER_ID}"
+  echo "Create ${CI_ROOT_DIR}"
+  $CI_EXEC_CMD_PREFIX_ROOT rsync --archive --stats --human-readable "/ro_base/" "${CI_ROOT_DIR}"
 else
   echo "Running on host system without docker wrapper"
   "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 fi
 
+# In a follow-up, one of the functions can be removed
 CI_EXEC () {
-  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $CI_EXEC_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 CI_EXEC_ROOT () {
   $CI_EXEC_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
@@ -139,11 +128,6 @@ if [[ "${RUN_TIDY}" == "true" ]]; then
     CI_EXEC "cd ${DIR_IWYU}/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-14 ../include-what-you-use"
     CI_EXEC_ROOT "cd ${DIR_IWYU}/build && make install $MAKEJOBS"
   fi
-fi
-
-if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  echo "Create $BASE_ROOT_DIR"
-  CI_EXEC rsync -a /ro_base/ "$BASE_ROOT_DIR"
 fi
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
