@@ -26,6 +26,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <support/cleanse.h>
 #include <txmempool.h>
 #include <util/bip32.h>
 #include <util/check.h>
@@ -3407,7 +3408,10 @@ bool CWallet::Lock()
 
     {
         LOCK(cs_wallet);
-        vMasterKey.clear();
+        if (!vMasterKey.empty()) {
+            memory_cleanse(vMasterKey.data(), vMasterKey.size() * sizeof(decltype(vMasterKey)::value_type));
+            vMasterKey.clear();
+        }
     }
 
     NotifyStatusChanged(this);
