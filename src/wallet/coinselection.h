@@ -222,8 +222,6 @@ struct OutputGroup
     CAmount effective_value{0};
     /** The fee to spend these UTXOs at the effective feerate. */
     CAmount fee{0};
-    /** The target feerate of the transaction we're trying to build. */
-    CFeeRate m_effective_feerate{0};
     /** The fee to spend these UTXOs at the long term feerate. */
     CAmount long_term_fee{0};
     /** The feerate for spending a created change output eventually (i.e. not urgently, and thus at
@@ -238,7 +236,6 @@ struct OutputGroup
 
     OutputGroup() {}
     OutputGroup(const CoinSelectionParams& params) :
-        m_effective_feerate(params.m_effective_feerate),
         m_long_term_feerate(params.m_long_term_feerate),
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
