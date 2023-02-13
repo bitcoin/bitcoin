@@ -1839,6 +1839,26 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     return startTime;
 }
 
+std::map<uint256, CPubKey> CWallet::GetSilentPaymentKeysPerBlock(const uint256& block_hash, const std::vector<CTransactionRef> vtx)
+{
+    CBlockUndo blockUndo;
+    if (!chain().getUndoBlock(block_hash, blockUndo)) {
+        return {};
+    }
+
+    std::map<uint256, CPubKey> items;
+
+    for(const auto& [txid, sum_tx_pubkeys, full_hash, truncated_hash]: silentpayment::GetSilentPaymentKeysPerBlock(block_hash, blockUndo, vtx))
+    {
+	// the hashes are not used here
+	(void)full_hash;
+	(void)truncated_hash;
+        items.emplace(txid, sum_tx_pubkeys);
+    }
+
+    return items;
+}
+
 /**
  * Scan the block chain (starting in start_block) for transactions
  * from or to us. If fUpdate is true, found transactions that already
