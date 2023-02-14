@@ -15,6 +15,14 @@ docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
 After building the container once, you can simply run the last command any time you
 want to lint.
 
+test runner
+===========
+
+To run the checks in the test runner outside the docker, use:
+
+```sh
+( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && cargo run )
+```
 
 check-doc.py
 ============
