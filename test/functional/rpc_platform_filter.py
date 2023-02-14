@@ -87,8 +87,8 @@ class HTTPBasicsTest(BitcoinTestFramework):
         test_command("getblockhash", [0], rpcuser_authpair_platform, 200)
         test_command("getblockcount", [], rpcuser_authpair_platform, 200)
         test_command("getbestchainlock", [], rpcuser_authpair_platform, 500)
-        test_command("quorum", ["sign", 100], rpcuser_authpair_platform, 500)
-        test_command("quorum", ["sign", 100, "0000000000000000000000000000000000000000000000000000000000000000",
+        test_command("quorum", ["sign", 106], rpcuser_authpair_platform, 500)
+        test_command("quorum", ["sign", 106, "0000000000000000000000000000000000000000000000000000000000000000",
                                 "0000000000000000000000000000000000000000000000000000000000000001"],
                                 rpcuser_authpair_platform, 200)
         test_command("quorum", ["verify"], rpcuser_authpair_platform, 500)

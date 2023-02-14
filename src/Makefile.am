@@ -165,6 +165,7 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl_stl.h \
   cxxtimer.hpp \
+  evo/dmn_types.h \
   evo/cbtx.h \
   evo/deterministicmns.h \
   evo/dmnstate.h \

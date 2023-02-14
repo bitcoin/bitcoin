@@ -336,7 +336,8 @@ static UniValue masternode_winners(const JSONRPCRequest& request)
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
 
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
-        auto payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
+        const CBlockIndex* pIndex = pindexTip->GetAncestor(h - 1);
+        auto payee = deterministicMNManager->GetListForBlock(pIndex).GetMNPayee(pIndex);
         std::string strPayments = GetRequiredPaymentsString(h, payee);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
         obj.pushKV(strprintf("%d", h), strPayments);
@@ -462,7 +463,7 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
         }
 
         // NOTE: we use _previous_ block to find a payee for the current one
-        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex->pprev).GetMNPayee();
+        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex->pprev).GetMNPayee(pindex->pprev);
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
         protxObj.pushKV("amount", payedPerMasternode);
         protxObj.pushKV("payees", payeesArr);
@@ -666,7 +667,14 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             objMN.pushKV("address", dmn.pdmnState->addr.ToString());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
+            objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));
+            if (dmn.nType == MnType::HighPerformance.index) {
+                objMN.pushKV("platformNodeID", dmn.pdmnState->platformNodeID.ToString());
+                objMN.pushKV("platformP2PPort", dmn.pdmnState->platformP2PPort);
+                objMN.pushKV("platformHTTPPort", dmn.pdmnState->platformHTTPPort);
+            }
             objMN.pushKV("pospenaltyscore", dmn.pdmnState->nPoSePenalty);
+            objMN.pushKV("consecutivePayments", dmn.pdmnState->nConsecutivePayments);
             objMN.pushKV("lastpaidtime", dmnToLastPaidTime(dmn));
             objMN.pushKV("lastpaidblock", dmn.pdmnState->nLastPaidHeight);
             objMN.pushKV("owneraddress", EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));

@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 
 #include <consensus/validation.h>
+#include <evo/dmn_types.h>
 #include <key_io.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -33,10 +34,13 @@ public:
     }
 
     uint16_t nVersion{LEGACY_BLS_VERSION};                 // message version
-    uint16_t nType{0};                                     // only 0 supported for now
+    uint16_t nType{MnType::Regular.index};
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
+    uint160 platformNodeID{};
+    uint16_t platformP2PPort{0};
+    uint16_t platformHTTPPort{0};
     CKeyID keyIDOwner;
     CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
@@ -66,6 +70,12 @@ public:
                 obj.scriptPayout,
                 obj.inputsHash
         );
+        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance.index) {
+            READWRITE(
+                obj.platformNodeID,
+                obj.platformP2PPort,
+                obj.platformHTTPPort);
+        }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(obj.vchSig);
         }
@@ -82,6 +92,7 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
+        obj.pushKV("type", nType);
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString(false));
@@ -94,7 +105,11 @@ public:
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION));
         obj.pushKV("operatorReward", (double)nOperatorReward / 100);
-
+        if (nType == MnType::HighPerformance.index) {
+            obj.pushKV("platformNodeID", platformNodeID.ToString());
+            obj.pushKV("platformP2PPort", platformP2PPort);
+            obj.pushKV("platformHTTPPort", platformHTTPPort);
+        }
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
@@ -114,8 +129,12 @@ public:
     }
 
     uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
+    uint16_t nType{MnType::Regular.index};
     uint256 proTxHash;
     CService addr;
+    uint160 platformNodeID{};
+    uint16_t platformP2PPort{0};
+    uint16_t platformHTTPPort{0};
     CScript scriptOperatorPayout;
     uint256 inputsHash; // replay protection
     CBLSSignature sig;
@@ -129,12 +148,22 @@ public:
             // unknown version, bail out early
             return;
         }
+        if (obj.nVersion == BASIC_BLS_VERSION) {
+            READWRITE(
+                obj.nType);
+        }
         READWRITE(
                 obj.proTxHash,
                 obj.addr,
                 obj.scriptOperatorPayout,
                 obj.inputsHash
         );
+        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance.index) {
+            READWRITE(
+                obj.platformNodeID,
+                obj.platformP2PPort,
+                obj.platformHTTPPort);
+        }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(
                     CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION), true)
@@ -149,11 +178,17 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
+        obj.pushKV("type", nType);
         obj.pushKV("proTxHash", proTxHash.ToString());
         obj.pushKV("service", addr.ToString(false));
         CTxDestination dest;
         if (ExtractDestination(scriptOperatorPayout, dest)) {
             obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
+        }
+        if (nType == MnType::HighPerformance.index) {
+            obj.pushKV("platformNodeID", platformNodeID.ToString());
+            obj.pushKV("platformP2PPort", platformP2PPort);
+            obj.pushKV("platformHTTPPort", platformHTTPPort);
         }
         obj.pushKV("inputsHash", inputsHash.ToString());
     }

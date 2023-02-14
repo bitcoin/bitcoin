@@ -131,7 +131,7 @@ std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqT
 {
     auto allMns = deterministicMNManager->GetListForBlock(pQuorumBaseBlockIndex);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pQuorumBaseBlockIndex->GetBlockHash()));
-    return allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier);
+    return allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier, IsLLMQTypeHPMNOnly(llmqType));
 }
 
 std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(Consensus::LLMQType llmqType, const CBlockIndex* pCycleQuorumBaseBlockIndex)
@@ -673,6 +673,11 @@ bool IsInstantSendLLMQTypeShared()
     return false;
 }
 
+bool IsLLMQTypeHPMNOnly(Consensus::LLMQType llmqType)
+{
+    return Params().GetConsensus().llmqTypePlatform == llmqType;
+}
+
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
 {
     // We need to deterministically select who is going to initiate the connection. The naive way would be to simply
@@ -930,6 +935,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             break;
         }
         case Consensus::LLMQType::LLMQ_TEST:
+        case Consensus::LLMQType::LLMQ_TEST_PLATFORM:
         case Consensus::LLMQType::LLMQ_400_60:
         case Consensus::LLMQType::LLMQ_400_85:
             break;

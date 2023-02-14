@@ -61,6 +61,8 @@ public:
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
+    uint16_t GetDefaultPlatformP2PPort() const { return nDefaultPlatformP2PPort; }
+    uint16_t GetDefaultPlatformHTTPPort() const { return nDefaultPlatformHTTPPort; }
 
     const CBlock& GenesisBlock() const { return genesis; }
     const CBlock& DevNetGenesisBlock() const { return devnetGenesis; }
@@ -145,6 +147,8 @@ protected:
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckMasternodesUpgraded;
+    uint16_t nDefaultPlatformP2PPort;
+    uint16_t nDefaultPlatformHTTPPort;
 
     void AddLLMQ(Consensus::LLMQType llmqType);
 };

@@ -2161,6 +2161,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     break; // out of the chainstate activation do-while
                 }
 
+                if (!deterministicMNManager->MigrateDBIfNeeded()) {
+                    strLoadError = _("Error upgrading evo database");
+                    break;
+                }
+
                 if (!llmq::quorumBlockProcessor->UpgradeDB()) {
                     strLoadError = _("Error upgrading evo database");
                     break;

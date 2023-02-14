@@ -6,6 +6,8 @@
 #define BITCOIN_EVO_SIMPLIFIEDMNS_H
 
 #include <bls/bls.h>
+#include <evo/deterministicmns.h>
+#include <evo/dmn_types.h>
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -32,6 +34,9 @@ public:
     CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     bool isValid{false};
+    uint16_t nType{MnType::Regular.index};
+    uint16_t platformHTTPPort{0};
+    uint160 platformNodeID{};
     CScript scriptPayout; // mem-only
     CScript scriptOperatorPayout; // mem-only
     uint16_t nVersion{LEGACY_BLS_VERSION}; // mem-only
@@ -47,7 +52,10 @@ public:
                pubKeyOperator == rhs.pubKeyOperator &&
                keyIDVoting == rhs.keyIDVoting &&
                isValid == rhs.isValid &&
-               nVersion == rhs.nVersion;
+               nVersion == rhs.nVersion &&
+               nType == rhs.nType &&
+               platformHTTPPort == rhs.platformHTTPPort &&
+               platformNodeID == rhs.platformNodeID;
     }
 
     bool operator!=(const CSimplifiedMNListEntry& rhs) const
@@ -65,6 +73,13 @@ public:
                 obj.keyIDVoting,
                 obj.isValid
                 );
+        if (obj.nVersion == BASIC_BLS_VERSION) {
+            READWRITE(obj.nType);
+            if (obj.nType == MnType::HighPerformance.index) {
+                READWRITE(obj.platformHTTPPort);
+                READWRITE(obj.platformNodeID);
+            }
+        }
     }
 
     uint256 CalcHash() const;
