@@ -117,7 +117,7 @@ public:
     bool autoBackupWallet(QString& strBackupWarningRet, QString& strBackupErrorRet);
     int64_t getKeysLeftSinceAutoBackup() const;
 
-    // RAI object for unlocking wallet, returned by requestUnlock()
+    // RAII object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
     {
     public:
@@ -126,19 +126,17 @@ public:
 
         bool isValid() const { return valid; }
 
-        // Copy constructor is disabled.
+        // Disable unused copy/move constructors/assignments explicitly.
         UnlockContext(const UnlockContext&) = delete;
-        // Move operator and constructor transfer the context
-        UnlockContext(UnlockContext&& obj) { CopyFrom(std::move(obj)); }
-        UnlockContext& operator=(UnlockContext&& rhs) { CopyFrom(std::move(rhs)); return *this; }
+        UnlockContext(UnlockContext&&) = delete;
+        UnlockContext& operator=(const UnlockContext&) = delete;
+        UnlockContext& operator=(UnlockContext&&) = delete;
+
     private:
         WalletModel *wallet;
-        bool valid;
-        mutable bool was_locked; // mutable, as it can be set to false by copying
-        mutable bool was_mixing; // mutable, as it can be set to false by copying
-
-        UnlockContext& operator=(const UnlockContext&) = default;
-        void CopyFrom(UnlockContext&& rhs);
+        const bool valid;
+        const bool was_locked;
+        const bool was_mixing;
     };
 
     UnlockContext requestUnlock(bool fForMixingOnly = false);
