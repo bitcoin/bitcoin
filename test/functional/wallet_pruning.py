@@ -123,7 +123,7 @@ class WalletPruningTest(BitcoinTestFramework):
 
         # A blk*.dat file is 128MB
         # Generate 250 light blocks
-        self.generate(self.nodes[0], 250, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 250)
         # Generate 50MB worth of large blocks in the blk00000.dat file
         self.mine_large_blocks(self.nodes[0], 50)
 
