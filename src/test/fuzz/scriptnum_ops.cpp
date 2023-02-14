@@ -85,12 +85,6 @@ FUZZ_TARGET(scriptnum_ops)
                 script_num = script_num & fuzzed_data_provider.ConsumeIntegral<int64_t>();
             },
             [&] {
-                script_num = script_num & ConsumeScriptNum(fuzzed_data_provider);
-            },
-            [&] {
-                script_num &= ConsumeScriptNum(fuzzed_data_provider);
-            },
-            [&] {
                 if (script_num == CScriptNum{std::numeric_limits<int64_t>::min()}) {
                     // Avoid assertion failure:
                     // ./script/script.h:279: CScriptNum CScriptNum::operator-() const: Assertion `m_value != std::numeric_limits<int64_t>::min()' failed.
@@ -118,9 +112,6 @@ FUZZ_TARGET(scriptnum_ops)
                     return;
                 }
                 script_num -= random_integer;
-            },
-            [&] {
-                script_num &= fuzzed_data_provider.ConsumeIntegral<int64_t>();
             });
         (void)script_num.getint();
         (void)script_num.getvch();
