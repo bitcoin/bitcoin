@@ -103,7 +103,7 @@ class ToolWalletTest(BitcoinTestFramework):
             Transactions: 0
             Address Book: 1
         ''')
-        self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
 
         self.start_node(0)
         self.nodes[0].upgradetohd()
