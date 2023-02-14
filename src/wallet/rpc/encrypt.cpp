@@ -68,7 +68,17 @@ RPCHelpMan walletpassphrase()
         }
 
         if (!pwallet->Unlock(strWalletPass)) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+            // Check if the passphrase has a null character (see #27067 for details)
+            if (strWalletPass.find('\0') == std::string::npos) {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+            } else {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered is incorrect. "
+                                                                    "It contains a null character (ie - a zero byte). "
+                                                                    "If the passphrase was set with a version of this software prior to 25.0, "
+                                                                    "please try again with only the characters up to — but not including — "
+                                                                    "the first null character. If this is successful, please set a new "
+                                                                    "passphrase to avoid this issue in the future.");
+            }
         }
 
         pwallet->TopUpKeyPool();
@@ -143,7 +153,16 @@ RPCHelpMan walletpassphrasechange()
     }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
-        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        // Check if the old passphrase had a null character (see #27067 for details)
+        if (strOldWalletPass.find('\0') == std::string::npos) {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        } else {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The old wallet passphrase entered is incorrect. "
+                                                                "It contains a null character (ie - a zero byte). "
+                                                                "If the old passphrase was set with a version of this software prior to 25.0, "
+                                                                "please try again with only the characters up to — but not including — "
+                                                                "the first null character.");
+        }
     }
 
     return UniValue::VNULL;
