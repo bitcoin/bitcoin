@@ -1,0 +1,10 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+# Pathspecs for subtrees
+:(exclude)src/crc32c/
+:(exclude)src/crypto/ctaes/
+:(exclude)src/leveldb/
+:(exclude)src/minisketch/
+:(exclude)src/secp256k1/

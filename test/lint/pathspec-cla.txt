@@ -1,0 +1,69 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#
+# Pathspecs to exclude paths from the CLA check
+#
+
+# Duh
+:(exclude)COPYING
+:(exclude)contrib/debian/copyright
+
+# Temporary exclusion, header can be added?
+:(exclude).cirrus.yml
+:(exclude).editorconfig
+:(exclude).gitattributes
+:(exclude)build_msvc
+:(exclude)ci/lint/Dockerfile
+:(exclude)ci/lint/docker-entrypoint.sh
+:(exclude)ci/test/wrapped-cl.bat
+:(exclude)ci/test_imagefile
+:(exclude)configure.ac
+:(exclude)contrib/guix/
+:(exclude)src/univalue
+:(exclude)depends/
+:(exclude)contrib/completions/
+:(exclude)*
+
+# Unknown
+:(exclude)*.md
+:(exclude)*.ts
+:(exclude)*.ui
+:(exclude)*.rc
+:(exclude).*
+:(exclude)*/.*
+:(exclude)*.patch
+
+# External copyright
+:(exclude)build-aux/
+:(exclude)ci/retry/retry
+:(exclude)contrib/devtools/clang-format-diff.py
+:(exclude)src/tinyformat.h
+:(exclude)src/bench/nanobench.h
+:(exclude)src/test/fuzz/FuzzedDataProvider.h
+
+# Raw data only
+:(exclude)contrib/verify-commits/allow*
+:(exclude)contrib/verify-commits/trusted*
+
+# See contrib/debian/copyright
+:(exclude)*.ttf
+:(exclude)*.icns
+:(exclude)*.bmp
+:(exclude)*.ico
+:(exclude)*.png
+:(exclude)*.svg
+:(exclude)*.tiff
+:(exclude)*.xpm
+
+# Test-only data
+:(exclude)*.raw
+:(exclude)*.json
+:(exclude)*.hex
+:(exclude)*.csv
+
+# Empty files, stubs, or auto-generated
+:(exclude)*/__init__.py
+:(exclude)doc/man/
+:(exclude)*/Cargo.lock
