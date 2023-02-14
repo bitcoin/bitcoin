@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <util/system.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -18,8 +19,8 @@ BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
 {
-    const auto params {CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN)};
-    BlockManager blockman {};
+    const auto params {CreateChainParams(gArgs, CBaseChainParams::MAIN)};
+    BlockManager blockman {gArgs.GetBlocksDirPath()};
     CChain chain {};
     // simulate adding a genesis block normally
     BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0, chain, *params, nullptr).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);

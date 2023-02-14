@@ -222,7 +222,7 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
         // pindex variable gives indexing code access to node internals. It
         // will be removed in upcoming commit
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
-        if (!UndoReadFromDisk(block_undo, pindex)) {
+        if (!UndoReadFromDisk(m_chainstate->m_blockman.m_blocks_dir, block_undo, pindex)) {
             return false;
         }
 

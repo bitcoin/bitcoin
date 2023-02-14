@@ -85,7 +85,7 @@ static RPCHelpMan gettxoutproof()
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.GetConsensus(), hashBlock);
+                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.GetConsensus(), hashBlock, chainman.m_blockman.m_blocks_dir);
                 if (!tx || hashBlock.IsNull()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
@@ -98,7 +98,7 @@ static RPCHelpMan gettxoutproof()
             }
 
             CBlock block;
-            if (!ReadBlockFromDisk(block, pblockindex, chainman.GetConsensus())) {
+            if (!ReadBlockFromDisk(chainman.m_blockman.m_blocks_dir, block, pblockindex, chainman.GetConsensus())) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
             }
 

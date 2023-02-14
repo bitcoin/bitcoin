@@ -182,6 +182,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
         .chainparams = chainparams,
         .adjusted_time_callback = GetAdjustedTime,
         .check_block_index = true,
+        .blocks_dir = m_args.GetBlocksDirPath(),
     };
     m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);

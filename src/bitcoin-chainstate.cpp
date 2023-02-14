@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
     const ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .adjusted_time_callback = NodeClock::now,
+        .blocks_dir = abs_datadir / "blocks",
     };
     ChainstateManager chainman{chainman_opts};
 

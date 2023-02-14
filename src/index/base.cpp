@@ -199,7 +199,7 @@ void BaseIndex::ThreadSync()
 
             CBlock block;
             interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
-            if (!ReadBlockFromDisk(block, pindex, consensus_params)) {
+            if (!ReadBlockFromDisk(m_chainstate->m_blockman.m_blocks_dir, block, pindex, consensus_params)) {
                 FatalError("%s: Failed to read block %s from disk",
                            __func__, pindex->GetBlockHash().ToString());
                 return;

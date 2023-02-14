@@ -28,11 +28,11 @@ struct BuildChainTestingSetup : public TestChain100Setup {
     bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
 };
 
-static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex* block_index,
+static bool CheckFilterLookups(const fs::path& blocks_dir, BlockFilterIndex& filter_index, const CBlockIndex* block_index,
                                uint256& last_header)
 {
     BlockFilter expected_filter;
-    if (!ComputeFilter(filter_index.GetFilterType(), block_index, expected_filter)) {
+    if (!ComputeFilter(blocks_dir, filter_index.GetFilterType(), block_index, expected_filter)) {
         BOOST_ERROR("ComputeFilter failed on block " << block_index->nHeight);
         return false;
     }
@@ -155,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         for (block_index = m_node.chainman->ActiveChain().Genesis();
              block_index != nullptr;
              block_index = m_node.chainman->ActiveChain().Next(block_index)) {
-            CheckFilterLookups(filter_index, block_index, last_header);
+            CheckFilterLookups(m_args.GetBlocksDirPath(), filter_index, block_index, last_header);
         }
     }
 
@@ -189,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
-        CheckFilterLookups(filter_index, block_index, chainA_last_header);
+        CheckFilterLookups(m_args.GetBlocksDirPath(), filter_index, block_index, chainA_last_header);
     }
 
     // Reorg to chain B.
@@ -207,7 +207,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
-        CheckFilterLookups(filter_index, block_index, chainB_last_header);
+        CheckFilterLookups(m_args.GetBlocksDirPath(), filter_index, block_index, chainB_last_header);
     }
 
     // Check that filters for stale blocks on A can be retrieved.
@@ -221,7 +221,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
-        CheckFilterLookups(filter_index, block_index, chainA_last_header);
+        CheckFilterLookups(m_args.GetBlocksDirPath(), filter_index, block_index, chainA_last_header);
     }
 
     // Reorg back to chain A.
@@ -241,14 +241,14 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
              block_index = m_node.chainman->m_blockman.LookupBlockIndex(chainA[i]->GetHash());
          }
          BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
-         CheckFilterLookups(filter_index, block_index, chainA_last_header);
+         CheckFilterLookups(m_args.GetBlocksDirPath(), filter_index, block_index, chainA_last_header);
 
          {
              LOCK(cs_main);
              block_index = m_node.chainman->m_blockman.LookupBlockIndex(chainB[i]->GetHash());
          }
          BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
-         CheckFilterLookups(filter_index, block_index, chainB_last_header);
+         CheckFilterLookups(m_args.GetBlocksDirPath(), filter_index, block_index, chainB_last_header);
      }
 
     // Test lookups for a range of filters/hashes.
