@@ -13,11 +13,12 @@ from test_framework.messages import (
     MAX_HEADERS_RESULTS,
     MAX_INV_SIZE,
     MAX_PROTOCOL_MESSAGE_LENGTH,
+    MSG_TX,
+    from_hex,
     msg_getdata,
     msg_headers,
     msg_inv,
     msg_ping,
-    MSG_TX,
     msg_version,
     ser_string,
 )
@@ -73,6 +74,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_oversized_inv_msg()
         self.test_oversized_getdata_msg()
         self.test_oversized_headers_msg()
+        self.test_invalid_pow_headers_msg()
         self.test_resource_exhaustion()
 
     def test_buffer(self):
@@ -247,6 +249,36 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_oversized_headers_msg(self):
         size = MAX_HEADERS_RESULTS + 1
         self.test_oversized_msg(msg_headers([CBlockHeader()] * size), size)
+
+    def test_invalid_pow_headers_msg(self):
+        self.log.info("Test headers message with invalid proof-of-work is logged as misbehaving and disconnects peer")
+        blockheader_tip_hash = self.nodes[0].getbestblockhash()
+        blockheader_tip = from_hex(CBlockHeader(), self.nodes[0].getblockheader(blockheader_tip_hash, False))
+
+        # send valid headers message first
+        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 0)
+        blockheader = CBlockHeader()
+        blockheader.hashPrevBlock = int(blockheader_tip_hash, 16)
+        blockheader.nTime = int(time.time())
+        blockheader.nBits = blockheader_tip.nBits
+        blockheader.rehash()
+        while not blockheader.hash.startswith('0'):
+            blockheader.nNonce += 1
+            blockheader.rehash()
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        peer.send_and_ping(msg_headers([blockheader]))
+        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 1)
+        chaintips = self.nodes[0].getchaintips()
+        assert_equal(chaintips[0]['status'], 'headers-only')
+        assert_equal(chaintips[0]['hash'], blockheader.hash)
+
+        # invalidate PoW
+        while not blockheader.hash.startswith('f'):
+            blockheader.nNonce += 1
+            blockheader.rehash()
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'header with invalid proof of work']):
+            peer.send_message(msg_headers([blockheader]))
+            peer.wait_for_disconnect()
 
     def test_resource_exhaustion(self):
         self.log.info("Test node stays up despite many large junk messages")
