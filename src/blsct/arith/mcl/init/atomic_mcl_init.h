@@ -18,7 +18,8 @@ public:
     AtomicMclInit()
     {
         boost::lock_guard<boost::mutex> lock(m_init_mutex);
-        static bool is_initialized = false;
+        static bool is_initialized = false;  // need separate flag from static counterpart
+
         if (is_initialized) return;
 
         Initialize();
