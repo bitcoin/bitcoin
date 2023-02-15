@@ -825,7 +825,13 @@ size_t CConnman::SocketSendData(CNode& node) const
             if (!node.m_sock) {
                 break;
             }
-            nBytes = node.m_sock->Send(reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
+            int flags = MSG_NOSIGNAL | MSG_DONTWAIT;
+#ifdef MSG_MORE
+            if (it + 1 != node.vSendMsg.end()) {
+                flags |= MSG_MORE;
+            }
+#endif
+            nBytes = node.m_sock->Send(reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, flags);
         }
         if (nBytes > 0) {
             node.m_last_send = GetTime<std::chrono::seconds>();
