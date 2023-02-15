@@ -48,6 +48,8 @@
 
 #include <univalue.h>
 
+#include <boost/signals2/signal.hpp>
+
 namespace interfaces {
 namespace {
 

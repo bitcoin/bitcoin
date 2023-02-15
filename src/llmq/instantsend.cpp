@@ -57,9 +57,9 @@ uint256 CInstantSendLock::GetRequestId() const
 ////////////////
 
 
-void CInstantSendDb::Upgrade()
+void CInstantSendDb::Upgrade(const CTxMemPool& mempool)
 {
-    LOCK2(cs_main, ::mempool.cs);
+    LOCK2(cs_main, mempool.cs);
     LOCK(cs_db);
     int v{0};
     if (!db->Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
@@ -1180,16 +1180,10 @@ void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& t
     RemoveConflictingLock(::SerializeHash(*islock), *islock);
 }
 
-void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     if (!IsInstantSendEnabled()) {
         return;
-    }
-
-    if (!vtxConflicted.empty()) {
-        for (const auto& tx : vtxConflicted) {
-            RemoveConflictedTx(*tx);
-        }
     }
 
     if (m_mn_sync->IsBlockchainSynced()) {
@@ -1321,7 +1315,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     if (!fUpgradedDB) {
         if (WITH_LOCK(cs_llmq_vbc, return VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0020, llmq_versionbitscache) == ThresholdState::ACTIVE)) {
-            db.Upgrade();
+            db.Upgrade(mempool);
             fUpgradedDB = true;
         }
     }

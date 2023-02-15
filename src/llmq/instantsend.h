@@ -120,7 +120,7 @@ public:
             db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
     {}
 
-    void Upgrade() LOCKS_EXCLUDED(cs_db);
+    void Upgrade(const CTxMemPool& mempool) LOCKS_EXCLUDED(cs_db);
 
     /**
      * This method is called when an InstantSend Lock is processed and adds the lock to the database
@@ -320,7 +320,7 @@ public:
 
     void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_pendingLocks);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
 
     bool AlreadyHave(const CInv& inv) const LOCKS_EXCLUDED(cs_pendingLocks);

@@ -22,6 +22,7 @@ class CConnman;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
+class CTxMemPool;
 class CValidationState;
 class CFeeRate;
 class CBlockIndex;
@@ -222,7 +223,7 @@ public:
         virtual ~Notifications() {}
         virtual void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) {}
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason) {}
-        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted, int height) {}
+        virtual void BlockConnected(const CBlock& block, int height) {}
         virtual void BlockDisconnected(const CBlock& block, int height) {}
         virtual void UpdatedBlockTip() {}
         virtual void ChainStateFlushed(const CBlockLocator& locator) {}

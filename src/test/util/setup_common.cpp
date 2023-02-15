@@ -169,16 +169,17 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
+    m_node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
+    m_node.mempool->setSanityCheck(1.0);
+
     m_node.chainman = &::g_chainman;
 
-    m_node.mempool = &::mempool;
-    m_node.mempool->setSanityCheck(1.0);
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
 
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman);
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*m_node.connman, ::masternodeSync);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*m_node.mempool, *m_node.connman, ::masternodeSync);
 #ifdef ENABLE_WALLET
     ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*m_node.connman, ::masternodeSync);
 #endif // ENABLE_WALLET
@@ -210,8 +211,8 @@ ChainTestingSetup::~ChainTestingSetup()
     ::sporkManager.reset();
     m_node.connman.reset();
     m_node.banman.reset();
-    UnloadBlockIndex(m_node.mempool);
-    m_node.mempool = nullptr;
+    UnloadBlockIndex(m_node.mempool.get());
+    m_node.mempool.reset();
     m_node.args = nullptr;
     m_node.scheduler.reset();
     m_node.llmq_ctx.reset();
@@ -228,7 +229,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb);
+    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, *m_node.mempool);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
