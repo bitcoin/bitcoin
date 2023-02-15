@@ -176,7 +176,8 @@ SYSCOIN_TESTS =\
   test/validation_flush_tests.cpp \
   test/validation_tests.cpp \
   test/validationinterface_tests.cpp \
-  test/versionbits_tests.cpp
+  test/versionbits_tests.cpp \
+  test/xoroshiro128plusplus_tests.cpp
 # FIXME: Update and re-enable these tests:
 #   miner_tests validation_test key_io_tests
 

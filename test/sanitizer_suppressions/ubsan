@@ -55,6 +55,7 @@ unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:txmempool.cpp
+unsigned-integer-overflow:xoroshiro128plusplus.h
 implicit-integer-sign-change:compat/stdin.cpp
 implicit-integer-sign-change:primitives/transaction.h
 implicit-integer-sign-change:crypto/
@@ -75,3 +76,4 @@ shift-base:streams.h
 shift-base:util/bip32.cpp
 shift-base:nevm/
 signed-integer-overflow:txmempool.cpp
+shift-base:xoroshiro128plusplus.h
