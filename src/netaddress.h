@@ -485,8 +485,6 @@ protected:
     /// Is this value valid? (only used to signal parse errors)
     bool valid;
 
-    bool SanityCheck() const;
-
 public:
     /**
      * Construct an invalid subnet (empty, `Match()` always returns false).

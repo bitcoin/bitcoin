@@ -37,7 +37,6 @@
 #
 # TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent stoul/strtol with locale
 #       independent ToIntegral<T>(...).
-# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 
 import re
 import sys
