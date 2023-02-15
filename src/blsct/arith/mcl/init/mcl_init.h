@@ -13,10 +13,10 @@ struct MclInit
 {
     void Initialize()
     {
-        // if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
-        //     throw std::runtime_error("blsInit failed");
-        // }
-        // mclBn_setETHserialization(1);
+        if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
+            throw std::runtime_error("blsInit failed");
+        }
+        mclBn_setETHserialization(1);
     }
 };
 
