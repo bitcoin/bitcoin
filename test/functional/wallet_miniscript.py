@@ -33,7 +33,7 @@ PUBKEYS = [
     "0211c7b2e18b6fd330f322de087da62da92ae2ae3d0b7cec7e616479cce175f183",
 ]
 
-MINISCRIPTS = [
+P2WSH_MINISCRIPTS = [
     # One of two keys
     f"or_b(pk({TPUBS[0]}/*),s:pk({TPUBS[1]}/*))",
     # A script similar (same spending policy) to BOLT3's offered HTLC (with anchor outputs)
@@ -42,6 +42,18 @@ MINISCRIPTS = [
     f"andor(multi(2,{TPUBS[0]}/*,{TPUBS[1]}/*),and_v(v:multi(4,{PUBKEYS[0]},{PUBKEYS[1]},{PUBKEYS[2]},{PUBKEYS[3]}),after(424242)),thresh(4,pkh({TPUBS[2]}/*),a:pkh({TPUBS[3]}/*),a:pkh({TPUBS[4]}/*),a:pkh({TPUBS[5]}/*)))",
     # Liquid-like federated pegin with emergency recovery keys
     f"or_i(and_b(pk({PUBKEYS[0]}),a:and_b(pk({PUBKEYS[1]}),a:and_b(pk({PUBKEYS[2]}),a:and_b(pk({PUBKEYS[3]}),s:pk({PUBKEYS[4]}))))),and_v(v:thresh(2,pkh({TPUBS[0]}/*),a:pkh({PUBKEYS[5]}),a:pkh({PUBKEYS[6]})),older(4209713)))",
+]
+
+DESCS = [
+    *[f"wsh({ms})" for ms in P2WSH_MINISCRIPTS],
+    # A Taproot with one of the above scripts as the single script path.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{P2WSH_MINISCRIPTS[0]})",
+    # A Taproot with two script paths among the above scripts.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}})",
+    # A Taproot with three script paths among the above scripts.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')}}})",
+    # A Taproot with all above scripts in its tree.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{{{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')},{P2WSH_MINISCRIPTS[3]}}}}})",
 ]
 
 MINISCRIPTS_PRIV = [
@@ -150,9 +162,9 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
         self.skip_if_no_sqlite()
 
-    def watchonly_test(self, ms):
-        self.log.info(f"Importing Miniscript '{ms}'")
-        desc = descsum_create(f"wsh({ms})")
+    def watchonly_test(self, desc):
+        self.log.info(f"Importing descriptor '{desc}'")
+        desc = descsum_create(f"{desc}")
         assert self.ms_wo_wallet.importdescriptors(
             [
                 {
@@ -166,11 +178,14 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         )[0]["success"]
 
         self.log.info("Testing we derive new addresses for it")
+        addr_type = "bech32m" if desc.startswith("tr(") else "bech32"
         assert_equal(
-            self.ms_wo_wallet.getnewaddress(), self.funder.deriveaddresses(desc, 0)[0]
+            self.ms_wo_wallet.getnewaddress(address_type=addr_type),
+            self.funder.deriveaddresses(desc, 0)[0],
         )
         assert_equal(
-            self.ms_wo_wallet.getnewaddress(), self.funder.deriveaddresses(desc, 1)[1]
+            self.ms_wo_wallet.getnewaddress(address_type=addr_type),
+            self.funder.deriveaddresses(desc, 1)[1],
         )
 
         self.log.info("Testing we detect funds sent to one of them")
@@ -290,8 +305,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         assert not res["success"] and "is not satisfiable" in res["error"]["message"]
 
         # Test we can track any type of Miniscript
-        for ms in MINISCRIPTS:
-            self.watchonly_test(ms)
+        for desc in DESCS:
+            self.watchonly_test(desc)
 
         # Test we can sign for any Miniscript.
         for ms in MINISCRIPTS_PRIV:
