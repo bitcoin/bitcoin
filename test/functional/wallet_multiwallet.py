@@ -157,10 +157,6 @@ class MultiWalletTest(BitcoinTestFramework):
         open(not_a_dir, 'a', encoding="utf8").close()
         self.nodes[0].assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
 
-        self.log.info("Do not allow -upgradewallet with multiwallet")
-        self.nodes[0].assert_start_raises_init_error(['-upgradewallet', '-wallet=w1', '-wallet=w2'], "Error: -upgradewallet is only allowed with a single wallet file")
-        self.nodes[0].assert_start_raises_init_error(['-upgradewallet=1', '-wallet=w1', '-wallet=w2'], "Error: -upgradewallet is only allowed with a single wallet file")
-
         # if wallets/ doesn't exist, datadir should be the default wallet dir
         wallet_dir2 = data_dir('walletdir')
         os.rename(wallet_dir(), wallet_dir2)
@@ -400,19 +396,6 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, exp_stderr, self.nodes[1].loadwallet, wallet)
         self.nodes[0].unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
-
-        # Fail to load if wallet is downgraded
-        shutil.copytree(os.path.join(self.options.data_wallets_dir, 'high_minversion'), wallet_dir('high_minversion'))
-        self.restart_node(0, extra_args=['-upgradewallet={}'.format(FEATURE_LATEST)])
-        assert {'name': 'high_minversion'} in self.nodes[0].listwalletdir()['wallets']
-        self.log.info("Fail -upgradewallet that results in downgrade")
-        assert_raises_rpc_error(
-            -4,
-            'Wallet loading failed. Error loading {}: Wallet requires newer version of {}'.format(
-                wallet_dir('high_minversion', 'wallet.dat'), "Dash Core"),
-            lambda: self.nodes[0].loadwallet(filename='high_minversion'),
-        )
-
 
 if __name__ == '__main__':
     MultiWalletTest().main()

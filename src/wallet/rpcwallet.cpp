@@ -2748,7 +2748,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     RPCHelpMan{"loadwallet",
         "\nLoads a wallet from a wallet file or directory."
         "\nNote that all wallet command-line options used when starting dashd will be"
-        "\napplied to the new wallet (eg -upgradewallet, rescan, etc).\n",
+        "\napplied to the new wallet (eg, rescan, etc).\n",
         {
             {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
             {"load_on_startup", RPCArg::Type::BOOL, /* default */ "null", "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
@@ -4064,6 +4064,42 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue upgradewallet(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"upgradewallet",
+        "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified\n"
+        "New keys may be generated and a new wallet backup will need to be made.",
+        {
+            {"version", RPCArg::Type::NUM, /* default */ strprintf("%d", FEATURE_LATEST), "The version number to upgrade to. Default is the latest wallet version"}
+        },
+        RPCResults{},
+        RPCExamples{
+            HelpExampleCli("upgradewallet", "120200")
+            + HelpExampleRpc("upgradewallet", "120200")
+        }
+    }.Check(request);
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    RPCTypeCheck(request.params, {UniValue::VNUM}, true);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    int version = 0;
+    if (!request.params[0].isNull()) {
+        version = request.params[0].get_int();
+    }
+
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    if (!pwallet->UpgradeWallet(version, error, warnings)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+    }
+    return error.original;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           argNames
@@ -4123,6 +4159,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name", "load_on_startup"} },
+    { "wallet",             "upgradewallet",                    &upgradewallet,                 {"version"} },
     { "wallet",             "upgradetohd",                      &upgradetohd,                   {"mnemonic", "mnemonicpassphrase", "walletpassphrase", "rescan"} },
     { "wallet",             "walletlock",                       &walletlock,                    {} },
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
