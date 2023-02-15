@@ -98,11 +98,11 @@ MclG1Point MclG1Point::Double() const
 
 MclG1Point MclG1Point::GetBasePoint()
 {
-    static MclG1Point* g = nullptr;
+    static mclBnG1* g = nullptr;
     if (g == nullptr) {
-        g = new MclG1Point();
+        g = new mclBnG1();
         auto g_str = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s;
-        if (mclBnG1_setStr(&g->m_p, g_str.c_str(), g_str.length(), 10) == -1) {
+        if (mclBnG1_setStr(g, g_str.c_str(), g_str.length(), 10) == -1) {
             throw std::runtime_error("MclG1Point::GetBasePoint(): mclBnG1_setStr failed");
         }
     }
