@@ -55,7 +55,10 @@ static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 static constexpr int8_t UNKNOWN_NETWORK{-1};
-static constexpr std::array NETWORKS{"ipv4", "ipv6", "onion", "i2p", "cjdns"};
+// See GetNetworkName() in netbase.cpp
+static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "onion", "i2p", "cjdns", "internal"};
+static constexpr std::array NETWORK_SHORT_NAMES{"npr", "ipv4", "ipv6", "onion", "i2p", "cjdns", "int"};
+static constexpr std::array UNREACHABLE_NETWORK_IDS{/*not_publicly_routable*/0, /*internal*/6};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -289,7 +292,7 @@ public:
         // Prepare result to return to user.
         UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
         uint64_t total{0}; // Total address count
-        for (size_t i = 0; i < NETWORKS.size(); ++i) {
+        for (size_t i = 1; i < NETWORKS.size() - 1; ++i) {
             addresses.pushKV(NETWORKS[i], counts.at(i));
             total += counts.at(i);
         }
@@ -506,7 +509,7 @@ public:
                 const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
                 const bool is_bip152_hb_to{peer["bip152_hb_to"].get_bool()};
-                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
+                m_peers.push_back({addr, sub_version, conn_type, NETWORK_SHORT_NAMES[network_id], age, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_addr_processed_length = std::max(ToString(addr_processed).length(), m_max_addr_processed_length);
                 m_max_addr_rate_limited_length = std::max(ToString(addr_rate_limited).length(), m_max_addr_rate_limited_length);
@@ -571,6 +574,13 @@ public:
                 reachable_networks.push_back(network_id);
             }
         };
+
+        for (const size_t network_id : UNREACHABLE_NETWORK_IDS) {
+            if (m_counts.at(2).at(network_id) == 0) continue;
+            result += strprintf("%8s", NETWORK_SHORT_NAMES.at(network_id)); // column header
+            reachable_networks.push_back(network_id);
+        }
+
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
 
@@ -636,7 +646,7 @@ public:
         "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
         "           \"feeler\" - short-lived connection for testing addresses\n"
         "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
-        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
+        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", \"cjdns\", or \"npr\" (not publicly routable))\n"
         "  mping    Minimum observed ping time, in milliseconds (ms)\n"
         "  ping     Last observed ping time, in milliseconds (ms)\n"
         "  send     Time since last message sent to the peer, in seconds\n"
