@@ -1671,7 +1671,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 // Therefore, we do not add them to addrman in the first place.
                 // In case previously unreachable networks become reachable
                 // (e.g. in case of -onlynet changes by the user), fixed seeds will
-                // be loaded only for networks for which we have no addressses.
+                // be loaded only for networks for which we have no addresses.
                 seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
                                                 [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
                                  seed_addrs.end());
