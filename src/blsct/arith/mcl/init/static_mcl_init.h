@@ -20,12 +20,7 @@ class StaticMclInit: MclInit
 public:
     StaticMclInit()
     {
-        static bool is_initialized = false;  // need separate flag from atomic counterpart
-        if (is_initialized) return;
-
         Initialize();
-
-        is_initialized = true;
     }
 };
 
