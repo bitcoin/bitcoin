@@ -9,6 +9,8 @@
 #include <clientversion.h>
 #include <hash.h>
 #include <netbase.h>
+#include <netgroup.h>
+#include <node/network.h>
 #include <random.h>
 #include <test/data/asmap.raw.h>
 #include <test/util/setup_common.h>

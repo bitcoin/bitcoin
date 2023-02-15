@@ -8,6 +8,7 @@
 
 #include <consensus/params.h>
 #include <netaddress.h>
+#include <node/network.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <uint256.h>

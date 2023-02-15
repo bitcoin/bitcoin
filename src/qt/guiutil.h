@@ -6,8 +6,7 @@
 #define BITCOIN_QT_GUIUTIL_H
 
 #include <consensus/amount.h>
-#include <net.h>
-#include <netaddress.h>
+#include <node/network.h>
 #include <util/check.h>
 #include <util/fs.h>
 
@@ -30,6 +29,7 @@
 class PlatformStyle;
 class QValidatedLineEdit;
 class SendCoinsRecipient;
+enum class ConnectionType;
 
 namespace interfaces
 {

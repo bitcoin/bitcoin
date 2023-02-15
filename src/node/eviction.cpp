@@ -4,8 +4,12 @@
 
 #include <node/eviction.h>
 
+#include <node/connection_types.h>
+#include <node/network.h>
+
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <functional>

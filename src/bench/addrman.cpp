@@ -6,6 +6,7 @@
 #include <bench/bench.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <protocol.h>
 #include <random.h>
 #include <util/check.h>
 #include <util/time.h>

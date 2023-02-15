@@ -4,6 +4,9 @@
 
 #include <netgroup.h>
 
+#include <netaddress.h>
+#include <node/network.h>
+
 #include <hash.h>
 #include <util/asmap.h>
 

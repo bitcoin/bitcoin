@@ -12,6 +12,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <node/network.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>

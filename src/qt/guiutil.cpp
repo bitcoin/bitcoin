@@ -16,6 +16,8 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <logging.h>
+#include <node/connection_types.h>
+#include <node/network.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <protocol.h>

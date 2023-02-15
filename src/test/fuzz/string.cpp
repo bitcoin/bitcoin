@@ -8,7 +8,7 @@
 #include <common/settings.h>
 #include <common/system.h>
 #include <common/url.h>
-#include <netbase.h>
+#include <node/network.h>
 #include <outputtype.h>
 #include <rpc/client.h>
 #include <rpc/request.h>

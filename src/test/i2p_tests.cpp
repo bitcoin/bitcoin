@@ -6,6 +6,7 @@
 #include <i2p.h>
 #include <logging.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <test/util/logging.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>

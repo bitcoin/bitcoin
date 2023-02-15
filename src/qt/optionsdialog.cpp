@@ -18,6 +18,7 @@
 #include <common/system.h>
 #include <interfaces/node.h>
 #include <netbase.h>
+#include <node/network.h>
 #include <txdb.h>
 #include <validation.h>
 

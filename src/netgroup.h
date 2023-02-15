@@ -5,10 +5,11 @@
 #ifndef BITCOIN_NETGROUP_H
 #define BITCOIN_NETGROUP_H
 
-#include <netaddress.h>
 #include <uint256.h>
 
 #include <vector>
+
+class CNetAddr;
 
 /**
  * Netgroup manager

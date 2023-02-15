@@ -13,6 +13,7 @@
 #include <qt/walletview.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/strencodings.h>
 
 #include <cassert>
 #include <fstream>

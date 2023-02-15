@@ -8,6 +8,8 @@
 #include <chainparams.h>
 #include <common/args.h>
 #include <merkleblock.h>
+#include <netgroup.h>
+#include <node/network.h>
 #include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>

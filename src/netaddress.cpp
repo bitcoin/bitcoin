@@ -8,6 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/sha3.h>
 #include <hash.h>
+#include <node/network.h>
 #include <prevector.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>

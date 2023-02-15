@@ -6,6 +6,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/network.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <streams.h>

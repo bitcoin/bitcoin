@@ -16,8 +16,7 @@
 #include <i2p.h>
 #include <net_permissions.h>
 #include <netaddress.h>
-#include <netbase.h>
-#include <netgroup.h>
+#include <node/network.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -47,6 +46,8 @@ class AddrMan;
 class BanMan;
 class CNode;
 class CScheduler;
+class NetGroupManager;
+enum class ConnectionDirection;
 struct bilingual_str;
 
 /** Default for -whitelistrelay. */
@@ -101,7 +102,6 @@ struct AddedNodeInfo
     bool fInbound;
 };
 
-class CNodeStats;
 class CClientUIInterface;
 
 struct CSerializedNetMsg {

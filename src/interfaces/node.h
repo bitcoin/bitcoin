@@ -9,8 +9,8 @@
 #include <consensus/amount.h>          // For CAmount
 #include <net.h>                       // For NodeId
 #include <net_types.h>                 // For banmap_t
-#include <netaddress.h>                // For Network
 #include <netbase.h>                   // For ConnectionDirection
+#include <node/network.h>
 #include <support/allocators/secure.h> // For SecureString
 #include <util/translation.h>
 

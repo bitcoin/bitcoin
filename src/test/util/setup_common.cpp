@@ -20,6 +20,7 @@
 #include <interfaces/chain.h>
 #include <kernel/mempool_entry.h>
 #include <net.h>
+#include <netgroup.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>

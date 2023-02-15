@@ -22,8 +22,11 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <netgroup.h>
+#include <node/connection_types.h>
 #include <node/eviction.h>
 #include <node/interface_ui.h>
+#include <node/network.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>

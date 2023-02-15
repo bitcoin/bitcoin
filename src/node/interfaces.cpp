@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addrdb.h>
 #include <banman.h>
 #include <blockfilter.h>
 #include <chain.h>
@@ -21,12 +20,12 @@
 #include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
-#include <netaddress.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/network.h>
 #include <node/transaction.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -59,6 +58,9 @@
 #include <utility>
 
 #include <boost/signals2/signal.hpp>
+
+class CNetAddr;
+class CSubNet;
 
 using interfaces::BlockTip;
 using interfaces::Chain;

@@ -16,6 +16,7 @@
 #include <deploymentstatus.h>
 #include <key_io.h>
 #include <net.h>
+#include <netbase.h>
 #include <node/context.h>
 #include <node/miner.h>
 #include <pow.h>

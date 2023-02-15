@@ -6,25 +6,28 @@
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
-#include <netaddress.h>
-#include <netgroup.h>
-#include <protocol.h>
-#include <streams.h>
+#include <node/network.h>
 #include <util/time.h>
 
 #include <cstdint>
+#include <ios>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
+
+class AddrManImpl;
+class CAddress;
+class CNetAddr;
+class CService;
+class NetGroupManager;
+enum ServiceFlags : uint64_t;
 
 class InvalidAddrManVersionError : public std::ios_base::failure
 {
 public:
     InvalidAddrManVersionError(std::string msg) : std::ios_base::failure(msg) { }
 };
-
-class AddrManImpl;
 
 /** Default for -checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};

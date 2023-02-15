@@ -8,6 +8,7 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <netaddress.h>
+#include <node/network.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>

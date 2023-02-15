@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <node/eviction.h>
 #include <net.h>
+#include <netaddress.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <span.h>

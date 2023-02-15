@@ -7,8 +7,8 @@
 
 #include <compat/compat.h>
 #include <node/eviction.h>
-#include <netaddress.h>
 #include <net.h>
+#include <node/network.h>
 #include <util/sock.h>
 
 #include <array>

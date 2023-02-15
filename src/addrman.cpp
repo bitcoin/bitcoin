@@ -10,6 +10,8 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <netaddress.h>
+#include <netgroup.h>
+#include <node/network.h>
 #include <protocol.h>
 #include <random.h>
 #include <serialize.h>

@@ -11,6 +11,7 @@
 
 #include <compat/compat.h>
 #include <netaddress.h>
+#include <node/network.h>
 #include <serialize.h>
 #include <util/sock.h>
 
@@ -69,10 +70,6 @@ struct ProxyCredentials
  */
 std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup);
 
-enum Network ParseNetwork(const std::string& net);
-std::string GetNetworkName(enum Network net);
-/** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
-std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
 bool GetProxy(enum Network net, Proxy &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);

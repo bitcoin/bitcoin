@@ -14,6 +14,7 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/network.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
 #include <util/thread.h>

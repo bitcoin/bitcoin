@@ -6,6 +6,7 @@
 
 #include <compat/compat.h>
 #include <netaddress.h>
+#include <node/network.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
