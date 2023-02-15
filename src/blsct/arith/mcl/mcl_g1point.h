@@ -71,7 +71,6 @@ public:
     UnderlyingType m_p;
 
     static constexpr int SERIALIZATION_SIZE = 384 / 8;
-    static UnderlyingType m_g;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H

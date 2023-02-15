@@ -6,8 +6,6 @@
 #include <numeric>
 #include <streams.h>
 
-mclBnG1 MclG1Point::m_g; // = MclG1Point("1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s).m_p;
-
 MclG1Point::MclG1Point()
 {
     mclBnG1_clear(&m_p);
@@ -100,8 +98,16 @@ MclG1Point MclG1Point::Double() const
 
 MclG1Point MclG1Point::GetBasePoint()
 {
-    MclG1Point g(MclG1Point::m_g);
-    return g;
+    static MclG1Point* g = nullptr;
+    if (g == nullptr) {
+        g = new MclG1Point();
+        auto g_str = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s;
+        if (mclBnG1_setStr(&g->m_p, g_str.c_str(), g_str.length(), 10) == -1) {
+            throw std::runtime_error("MclG1Point::GetBasePoint(): mclBnG1_setStr failed");
+        }
+    }
+    MclG1Point ret(*g);
+    return ret;
 }
 
 MclG1Point MclG1Point::MapToG1(const std::vector<uint8_t>& vec, const Endianness e)
