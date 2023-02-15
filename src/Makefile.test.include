@@ -175,7 +175,8 @@ BITCOIN_TESTS =\
   test/validation_chainstatemanager_tests.cpp \
   test/validation_flush_tests.cpp \
   test/validationinterface_tests.cpp \
-  test/versionbits_tests.cpp
+  test/versionbits_tests.cpp \
+  test/xoroshiro128plusplus_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \

@@ -29,6 +29,7 @@ unsigned-integer-overflow:stl_bvector.h
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
+unsigned-integer-overflow:xoroshiro128plusplus.h
 # std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
 implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
 vptr:bls/bls.h
@@ -73,3 +74,4 @@ implicit-signed-integer-truncation:test/skiplist_tests.cpp
 implicit-signed-integer-truncation:torcontrol.cpp
 implicit-unsigned-integer-truncation:crypto/*
 implicit-unsigned-integer-truncation:leveldb/*
+shift-base:xoroshiro128plusplus.h
