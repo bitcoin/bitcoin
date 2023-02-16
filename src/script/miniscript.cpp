@@ -172,8 +172,8 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             (y & "B"_mst).If(x << "Bdu"_mst) | // B=B_y*B_x*d_x*u_x
             (x & "o"_mst).If(y << "z"_mst) | // o=o_x*z_y
             (x & y & "m"_mst).If(x << "e"_mst && (x | y) << "s"_mst) | // m=m_x*m_y*e_x*(s_x+s_y)
-            (x & y & "zes"_mst) | // z=z_x*z_y, e=e_x*e_y, s=s_x*s_y
-            (y & "ufd"_mst) | // u=u_y, f=f_y, d=d_y
+            (x & y & "zs"_mst) | // z=z_x*z_y, s=s_x*s_y
+            (y & "ufde"_mst) | // u=u_y, f=f_y, d=d_y, e=e_y
             "x"_mst | // x
             ((x | y) & "ghij"_mst) | // g=g_x+g_y, h=h_x+h_y, i=i_x+i_y, j=j_x+j_y
             (x & y & "k"_mst); // k=k_x*k_y
@@ -201,7 +201,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             (y & z & "u"_mst) | // u=u_y*u_z
             (z & "f"_mst).If((x << "s"_mst) || (y << "f"_mst)) | // f=(s_x+f_y)*f_z
             (z & "d"_mst) | // d=d_z
-            (x & z & "e"_mst).If(x << "s"_mst || y << "f"_mst) | // e=e_x*e_z*(s_x+f_y)
+            (z & "e"_mst).If(x << "s"_mst || y << "f"_mst) | // e=e_z*(s_x+f_y)
             (x & y & z & "m"_mst).If(x << "e"_mst && (x | y | z) << "s"_mst) | // m=m_x*m_y*m_z*e_x*(s_x+s_y+s_z)
             (z & (x | y) & "s"_mst) | // s=s_z*(s_x+s_y)
             "x"_mst | // x
@@ -277,6 +277,76 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::THRESH: return subsize + n_subs + BuildScript(k).size();
     }
     assert(false);
+}
+
+InputStack& InputStack::SetAvailable(Availability avail) {
+    available = avail;
+    if (avail == Availability::NO) {
+        stack.clear();
+        size = std::numeric_limits<size_t>::max();
+        has_sig = false;
+        malleable = false;
+        non_canon = false;
+    }
+    return *this;
+}
+
+InputStack& InputStack::SetWithSig() {
+    has_sig = true;
+    return *this;
+}
+
+InputStack& InputStack::SetNonCanon() {
+    non_canon = true;
+    return *this;
+}
+
+InputStack& InputStack::SetMalleable(bool x) {
+    malleable = x;
+    return *this;
+}
+
+InputStack operator+(InputStack a, InputStack b) {
+    a.stack = Cat(std::move(a.stack), std::move(b.stack));
+    if (a.available != Availability::NO && b.available != Availability::NO) a.size += b.size;
+    a.has_sig |= b.has_sig;
+    a.malleable |= b.malleable;
+    a.non_canon |= b.non_canon;
+    if (a.available == Availability::NO || b.available == Availability::NO) {
+        a.SetAvailable(Availability::NO);
+    } else if (a.available == Availability::MAYBE || b.available == Availability::MAYBE) {
+        a.SetAvailable(Availability::MAYBE);
+    }
+    return a;
+}
+
+InputStack operator|(InputStack a, InputStack b) {
+    // If only one is invalid, pick the other one. If both are invalid, pick an arbitrary one.
+    if (a.available == Availability::NO) return b;
+    if (b.available == Availability::NO) return a;
+    // If only one of the solutions has a signature, we must pick the other one.
+    if (!a.has_sig && b.has_sig) return a;
+    if (!b.has_sig && a.has_sig) return b;
+    if (!a.has_sig && !b.has_sig) {
+        // If neither solution requires a signature, the result is inevitably malleable.
+        a.malleable = true;
+        b.malleable = true;
+    } else {
+        // If both options require a signature, prefer the non-malleable one.
+        if (b.malleable && !a.malleable) return a;
+        if (a.malleable && !b.malleable) return b;
+    }
+    // Between two malleable or two non-malleable solutions, pick the smaller one between
+    // YESes, and the bigger ones between MAYBEs. Prefer YES over MAYBE.
+    if (a.available == Availability::YES && b.available == Availability::YES) {
+        return std::move(a.size <= b.size ? a : b);
+    } else if (a.available == Availability::MAYBE && b.available == Availability::MAYBE) {
+        return std::move(a.size >= b.size ? a : b);
+    } else if (a.available == Availability::YES) {
+        return a;
+    } else {
+        return b;
+    }
 }
 
 std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script)

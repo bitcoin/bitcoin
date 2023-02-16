@@ -108,10 +108,12 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
             CMutableTransaction script_tx_to = tx_to;
             CMutableTransaction sign_transaction_tx_to = tx_to;
             if (n_in < tx_to.vin.size() && tx_to.vin[n_in].prevout.n < tx_from.vout.size()) {
-                (void)SignSignature(provider, tx_from, tx_to, n_in, fuzzed_data_provider.ConsumeIntegral<int>());
+                SignatureData empty;
+                (void)SignSignature(provider, tx_from, tx_to, n_in, fuzzed_data_provider.ConsumeIntegral<int>(), empty);
             }
             if (n_in < script_tx_to.vin.size()) {
-                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>());
+                SignatureData empty;
+                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>(), empty);
                 MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::vector<unsigned char> vch_sig;
                 CKeyID address;
