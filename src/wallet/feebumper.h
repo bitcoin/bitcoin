@@ -51,7 +51,8 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     CAmount& old_fee,
     CAmount& new_fee,
     CMutableTransaction& mtx,
-    bool require_mine);
+    bool require_mine,
+    const std::vector<CTxOut>& outputs);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was
