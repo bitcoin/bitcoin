@@ -205,20 +205,3 @@ MclScalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
     MclScalar hash(hasher.GetHash());
     return hash;
 }
-
-template <typename Stream>
-void MclG1Point::Serialize(Stream& s) const
-{
-    ::Serialize(s, GetVch());
-}
-template void MclG1Point::Serialize(CDataStream& s) const;
-template void MclG1Point::Serialize(CHashWriter& s) const;
-
-template <typename Stream>
-void MclG1Point::Unserialize(Stream& s)
-{
-    std::vector<uint8_t> vch;
-    ::Unserialize(s, vch);
-    SetVch(vch);
-}
-template void MclG1Point::Unserialize(CDataStream& s);

@@ -10,7 +10,6 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
-#include <blsct/arith/mcl/atomic_mcl_init.h>
 #include <serialize.h>
 #include <vector>
 #include <version.h>

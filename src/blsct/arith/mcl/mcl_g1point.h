@@ -12,8 +12,8 @@
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
-#include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/arith/mcl/init/static_mcl_init.h>
+#include <blsct/arith/mcl/mcl_scalar.h>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -23,6 +23,7 @@ private:
     // This initializes Mcl library for static context before
     // the library is used. Needs to be defined at the beginning.
     static volatile StaticMclInit for_side_effect_only;
+
 public:
     MclG1Point();
     MclG1Point(const std::vector<uint8_t>& v);
@@ -63,10 +64,18 @@ public:
     size_t GetSerializeSize() const;
 
     template <typename Stream>
-    void Serialize(Stream& s) const;
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, GetVch());
+    };
 
     template <typename Stream>
-    void Unserialize(Stream& s);
+    void Unserialize(Stream& s)
+    {
+        std::vector<uint8_t> vch;
+        ::Unserialize(s, vch);
+        SetVch(vch);
+    };
 
     using UnderlyingType = mclBnG1;
     UnderlyingType m_p;

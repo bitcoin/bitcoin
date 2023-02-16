@@ -170,10 +170,10 @@ public:
 
     CAmount nValue;
     CScript scriptPubKey;
-    RangeProof<Mcl> rangeProof;
     MclG1Point spendingKey;
     MclG1Point ephemeralKey;
     MclG1Point blindingKey;
+    RangeProof<Mcl> rangeProof;
     TokenId tokenId;
 
     CTxOut()
@@ -201,9 +201,9 @@ public:
         ::Serialize(s, scriptPubKey);
         if (nFlags & BLSCT_MARKER) {
             ::Serialize(s, SerializeRangeProof(rangeProof));
-            //::Serialize(s, spendingKey);
-            //::Serialize(s, blindingKey);
-            //::Serialize(s, ephemeralKey);
+            ::Serialize(s, spendingKey);
+            ::Serialize(s, blindingKey);
+            ::Serialize(s, ephemeralKey);
         }
         if (nFlags & TOKEN_MARKER)
             ::Serialize(s, tokenId);
@@ -222,9 +222,9 @@ public:
             std::vector<uint8_t> rangeProofVec;
             ::Unserialize(s, rangeProofVec);
             rangeProof = UnserializeRangeProof<Mcl>(rangeProofVec);
-            //::Unserialize(s, spendingKey);
-            //::Unserialize(s, blindingKey);
-            //::Unserialize(s, ephemeralKey);
+            ::Unserialize(s, spendingKey);
+            ::Unserialize(s, blindingKey);
+            ::Unserialize(s, ephemeralKey);
         }
         if (nFlags & TOKEN_MARKER)
             ::Unserialize(s, tokenId);

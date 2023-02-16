@@ -8,7 +8,6 @@
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/init/mcl_init.h>
-#include <stdexcept>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <iostream>
@@ -23,14 +22,13 @@
  *     static volatile AtomicMclInit for_side_effect_only;
  * }
  * ```
-*/
-class AtomicMclInit: MclInit
+ */
+class AtomicMclInit : MclInit
 {
 public:
     AtomicMclInit()
     {
         static bool is_initialized = false;
-
         if (is_initialized) return;
         boost::lock_guard<boost::mutex> lock(m_init_mutex);
 

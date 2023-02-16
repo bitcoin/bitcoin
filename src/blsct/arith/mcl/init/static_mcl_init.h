@@ -7,8 +7,9 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
-#include <stdexcept>
 #include <blsct/arith/mcl/init/mcl_init.h>
+#include <iostream>
+#include <stdexcept>
 
 /**
  * Note that:
@@ -21,8 +22,8 @@
  *   comipler optimization
  * - Defining this variable as a global variable results in
  *   memory leaks
-*/
-class StaticMclInit: MclInit
+ */
+class StaticMclInit : MclInit
 {
 public:
     StaticMclInit()
