@@ -17,8 +17,6 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
-static volatile StaticMclInit for_side_effect_only;
-
 class MclG1Point
 {
 public:

@@ -7,18 +7,19 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
-#include <stdexcept>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
+#include <iostream>
+#include <stdexcept>
 
 class AtomicMclInit
 {
 public:
     AtomicMclInit()
     {
-        boost::lock_guard<boost::mutex> lock(m_init_mutex);
         static bool is_initialized = false;
         if (is_initialized) return;
+        boost::lock_guard<boost::mutex> lock(m_init_mutex);
 
         if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
             throw std::runtime_error("blsInit failed");
@@ -27,6 +28,7 @@ public:
 
         is_initialized = true;
     }
+
 private:
     inline static boost::mutex m_init_mutex;
 };

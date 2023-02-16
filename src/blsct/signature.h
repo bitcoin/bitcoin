@@ -10,6 +10,7 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
+#include <blsct/arith/mcl/atomic_mcl_init.h>
 #include <serialize.h>
 #include <vector>
 #include <version.h>
@@ -23,17 +24,28 @@ public:
 
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& b);
-    size_t GetSerializeSize(int nVersion = PROTOCOL_VERSION) const;
+    size_t GetSerializeSize(int nVersion = PROTOCOL_VERSION) const
+    {
+        return ::GetSerializeSize(GetVch(), nVersion);
+    }
 
     template <typename Stream>
-    void Serialize(Stream& s) const;
+    void Serialize(Stream& s) const
+    {
+        s << GetVch();
+    }
 
     template <typename Stream>
-    void Unserialize(Stream& s);
+    void Unserialize(Stream& s)
+    {
+        std::vector<uint8_t> vch;
+        s >> vch;
+        SetVch(vch);
+    }
 
     blsSignature m_data;
 };
 
-}  // namespace blsct
+} // namespace blsct
 
-#endif  // NAVCOIN_BLSCT_SIGNATURE_H
+#endif // NAVCOIN_BLSCT_SIGNATURE_H

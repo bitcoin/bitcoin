@@ -6,7 +6,11 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/range_proof/range_proof.h>
+#include <blsct/signature.h>
 #include <consensus/amount.h>
+#include <ctokens/tokenid.h>
 #include <prevector.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -40,12 +44,16 @@ public:
 
     static constexpr uint32_t NULL_INDEX = std::numeric_limits<uint32_t>::max();
 
-    COutPoint(): n(NULL_INDEX) { }
-    COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
+    COutPoint() : n(NULL_INDEX) {}
+    COutPoint(const uint256& hashIn, uint32_t nIn) : hash(hashIn), n(nIn) {}
 
     SERIALIZE_METHODS(COutPoint, obj) { READWRITE(obj.hash, obj.n); }
 
-    void SetNull() { hash.SetNull(); n = NULL_INDEX; }
+    void SetNull()
+    {
+        hash.SetNull();
+        n = NULL_INDEX;
+    }
     bool IsNull() const { return (hash.IsNull() && n == NULL_INDEX); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
@@ -131,14 +139,14 @@ public:
         nSequence = SEQUENCE_FINAL;
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn = CScript(), uint32_t nSequenceIn = SEQUENCE_FINAL);
+    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn = CScript(), uint32_t nSequenceIn = SEQUENCE_FINAL);
 
     SERIALIZE_METHODS(CTxIn, obj) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
 
     friend bool operator==(const CTxIn& a, const CTxIn& b)
     {
-        return (a.prevout   == b.prevout &&
+        return (a.prevout == b.prevout &&
                 a.scriptSig == b.scriptSig &&
                 a.nSequence == b.nSequence);
     }
@@ -157,17 +165,70 @@ public:
 class CTxOut
 {
 public:
+    static const uint32_t BLSCT_MARKER = 0x1 << 0;
+    static const uint32_t TOKEN_MARKER = 0x1 << 1;
+
     CAmount nValue;
     CScript scriptPubKey;
+    RangeProof<Mcl> rangeProof;
+    MclG1Point spendingKey;
+    MclG1Point ephemeralKey;
+    MclG1Point blindingKey;
+    TokenId tokenId;
 
     CTxOut()
     {
         SetNull();
     }
 
-    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn, TokenId tokenId = TokenId());
 
-    SERIALIZE_METHODS(CTxOut, obj) { READWRITE(obj.nValue, obj.scriptPubKey); }
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        uint32_t nFlags = 0;
+
+        if (rangeProof.Vs.Size() > 0 || !spendingKey.IsUnity() || !blindingKey.IsUnity() || !ephemeralKey.IsUnity())
+            nFlags |= BLSCT_MARKER;
+        if (!tokenId.IsNull())
+            nFlags |= TOKEN_MARKER;
+        if (nFlags > 0) {
+            ::Serialize(s, std::numeric_limits<uint64_t>::max());
+            ::Serialize(s, nFlags);
+        } else {
+            ::Serialize(s, nValue);
+        }
+        ::Serialize(s, scriptPubKey);
+        if (nFlags & BLSCT_MARKER) {
+            ::Serialize(s, SerializeRangeProof(rangeProof));
+            //::Serialize(s, spendingKey);
+            //::Serialize(s, blindingKey);
+            //::Serialize(s, ephemeralKey);
+        }
+        if (nFlags & TOKEN_MARKER)
+            ::Serialize(s, tokenId);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        ::Unserialize(s, nValue);
+        uint32_t nFlags = 0;
+        if (nValue == std::numeric_limits<uint64_t>::max()) {
+            ::Unserialize(s, nFlags);
+        }
+        ::Unserialize(s, scriptPubKey);
+        if (nFlags & BLSCT_MARKER) {
+            std::vector<uint8_t> rangeProofVec;
+            ::Unserialize(s, rangeProofVec);
+            rangeProof = UnserializeRangeProof<Mcl>(rangeProofVec);
+            //::Unserialize(s, spendingKey);
+            //::Unserialize(s, blindingKey);
+            //::Unserialize(s, ephemeralKey);
+        }
+        if (nFlags & TOKEN_MARKER)
+            ::Unserialize(s, tokenId);
+    }
 
     void SetNull()
     {
@@ -182,8 +243,10 @@ public:
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
+        return (a.nValue == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.spendingKey == b.spendingKey && a.ephemeralKey == b.ephemeralKey &&
+                a.blindingKey == b.blindingKey);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
@@ -213,8 +276,9 @@ struct CMutableTransaction;
  *   - CScriptWitness scriptWitness; (deserialized into CTxIn)
  * - uint32_t nLockTime
  */
-template<typename Stream, typename TxType>
-inline void UnserializeTransaction(TxType& tx, Stream& s) {
+template <typename Stream, typename TxType>
+inline void UnserializeTransaction(TxType& tx, Stream& s)
+{
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
     s >> tx.nVersion;
@@ -250,10 +314,15 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+    if (tx.IsBLSCT()) {
+        s >> tx.balanceSig;
+        s >> tx.txSig;
+    }
 }
 
-template<typename Stream, typename TxType>
-inline void SerializeTransaction(const TxType& tx, Stream& s) {
+template <typename Stream, typename TxType>
+inline void SerializeTransaction(const TxType& tx, Stream& s)
+{
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
     s << tx.nVersion;
@@ -279,9 +348,13 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         }
     }
     s << tx.nLockTime;
+    if (tx.IsBLSCT()) {
+        s << tx.balanceSig;
+        s << tx.txSig;
+    }
 }
 
-template<typename TxType>
+template <typename TxType>
 inline CAmount CalculateOutputValue(const TxType& tx)
 {
     return std::accumulate(tx.vout.cbegin(), tx.vout.cend(), CAmount{0}, [](CAmount sum, const auto& txout) { return sum + txout.nValue; });
@@ -295,7 +368,8 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=2;
+    static const int32_t CURRENT_VERSION = 2;
+    static const int32_t BLSCT_MARKER = 1 << 5;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -306,6 +380,8 @@ public:
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
+    blsct::Signature balanceSig;
+    blsct::Signature txSig;
 
 private:
     /** Memory only. */
@@ -321,16 +397,20 @@ public:
     explicit CTransaction(CMutableTransaction&& tx);
 
     template <typename Stream>
-    inline void Serialize(Stream& s) const {
+    inline void Serialize(Stream& s) const
+    {
         SerializeTransaction(*this, s);
     }
 
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>
-    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
+    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s))
+    {
+    }
 
-    bool IsNull() const {
+    bool IsNull() const
+    {
         return vin.empty() && vout.empty();
     }
 
@@ -352,6 +432,11 @@ public:
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
 
+    bool IsBLSCT() const
+    {
+        return nVersion & BLSCT_MARKER;
+    }
+
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
         return a.hash == b.hash;
@@ -362,7 +447,7 @@ public:
         return a.hash != b.hash;
     }
 
-    std::string ToString() const;
+    std::string ToString(bool fIncludeSignatures = false) const;
 
     bool HasWitness() const
     {
@@ -376,29 +461,33 @@ public:
 };
 
 /** A mutable version of CTransaction. */
-struct CMutableTransaction
-{
+struct CMutableTransaction {
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
+    blsct::Signature balanceSig;
+    blsct::Signature txSig;
 
     explicit CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
 
     template <typename Stream>
-    inline void Serialize(Stream& s) const {
+    inline void Serialize(Stream& s) const
+    {
         SerializeTransaction(*this, s);
     }
 
 
     template <typename Stream>
-    inline void Unserialize(Stream& s) {
+    inline void Unserialize(Stream& s)
+    {
         UnserializeTransaction(*this, s);
     }
 
     template <typename Stream>
-    CMutableTransaction(deserialize_type, Stream& s) {
+    CMutableTransaction(deserialize_type, Stream& s)
+    {
         Unserialize(s);
     }
 
@@ -416,10 +505,19 @@ struct CMutableTransaction
         }
         return false;
     }
+
+    bool IsBLSCT() const
+    {
+        return nVersion & CTransaction::BLSCT_MARKER;
+    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
-template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
+template <typename Tx>
+static inline CTransactionRef MakeTransactionRef(Tx&& txIn)
+{
+    return std::make_shared<const CTransaction>(std::forward<Tx>(txIn));
+}
 
 /** A generic txid reference (txid or wtxid). */
 class GenTxid

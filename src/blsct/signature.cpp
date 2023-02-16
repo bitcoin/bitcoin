@@ -23,27 +23,6 @@ Signature Signature::Aggregate(const std::vector<blsct::Signature>& sigs)
     return aggr_sig;
 }
 
-size_t Signature::GetSerializeSize(int nVersion) const
-{
-    return ::GetSerializeSize(GetVch(), nVersion);
-}
-
-template <typename Stream>
-void Signature::Serialize(Stream& s) const
-{
-    ::Serialize(s, GetVch());
-}
-template void Signature::Serialize(CDataStream& s) const;
-
-template <typename Stream>
-void Signature::Unserialize(Stream& s)
-{
-    std::vector<uint8_t> vch;
-    ::Unserialize(s, vch);
-    SetVch(vch);
-}
-template void Signature::Unserialize(CDataStream& s);
-
 std::vector<uint8_t> Signature::GetVch() const
 {
     size_t ser_size = mclBn_getFpByteSize() * 2;
@@ -67,4 +46,4 @@ void Signature::SetVch(const std::vector<uint8_t>& buf)
     }
 }
 
-}  // namespace blsct
+} // namespace blsct

@@ -6,6 +6,8 @@
 #include <numeric>
 #include <streams.h>
 
+static volatile StaticMclInit for_side_effect_only;
+
 mclBnG1 MclG1Point::m_g = MclG1Point("1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s).m_p;
 
 MclG1Point::MclG1Point()
@@ -84,8 +86,8 @@ std::vector<MclG1Point> MclG1Point::operator*(const std::vector<MclScalar>& ss) 
     std::vector<MclG1Point> ret;
 
     MclG1Point p = *this;
-    for(size_t i = 0; i < ss.size(); ++i) {
-       MclG1Point q = p * ss[i];
+    for (size_t i = 0; i < ss.size(); ++i) {
+        MclG1Point q = p * ss[i];
         ret.push_back(q);
     }
     return ret;
@@ -200,7 +202,7 @@ size_t MclG1Point::GetSerializeSize() const
 
 MclScalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
-    CHashWriter hasher(0,0);
+    CHashWriter hasher(0, 0);
     hasher << *this;
     hasher << salt;
     MclScalar hash(hasher.GetHash());

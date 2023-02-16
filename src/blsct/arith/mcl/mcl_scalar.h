@@ -9,17 +9,19 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H
 
+#include <array>
 #include <functional>
 #include <stddef.h>
 #include <string>
 #include <vector>
-#include <array>
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
+#include <blsct/arith/mcl/atomic_mcl_init.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <hash.h>
 #include <serialize.h>
+#include <streams.h>
 #include <uint256.h>
 #include <version.h>
 
@@ -30,15 +32,16 @@ class MclScalar
 public:
     MclScalar(const int64_t& n = 0);
     MclScalar(const std::vector<uint8_t>& v);
-    template <size_t L> MclScalar(const std::array<uint8_t,L>& a);
+    template <size_t L>
+    MclScalar(const std::array<uint8_t, L>& a);
     MclScalar(const mclBnFr& n_fr);
     MclScalar(const uint256& n);
     MclScalar(const std::string& s, int radix);
 
     MclScalar ApplyBitwiseOp(const MclScalar& a, const MclScalar& b,
-                          std::function<uint8_t(uint8_t, uint8_t)> op) const;
+                             std::function<uint8_t(uint8_t, uint8_t)> op) const;
 
-    void operator=(const int64_t& n);  // using int64_t instead of uint64_t since underlying mcl lib takes int64_t
+    void operator=(const int64_t& n); // using int64_t instead of uint64_t since underlying mcl lib takes int64_t
 
     MclScalar operator+(const MclScalar& b) const;
     MclScalar operator-(const MclScalar& b) const;

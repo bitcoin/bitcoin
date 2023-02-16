@@ -17,6 +17,7 @@ TEST_UTIL_H = \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
+  blsct/signature.h \
   test/util/blockfilter.h \
   test/util/chainstate.h \
   test/util/logging.h \
@@ -44,6 +45,7 @@ libtest_util_a_SOURCES = \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
+  blsct/signature.h \
   test/util/blockfilter.cpp \
   test/util/logging.cpp \
   test/util/mining.cpp \

@@ -116,7 +116,8 @@ inline void addnextract2(limb_t& c0, limb_t& c1, const limb_t& a, limb_t& n)
 /** in_out = in_out^(2^sq) * mul */
 inline void square_n_mul(Num3072& in_out, const int sq, const Num3072& mul)
 {
-    for (int j = 0; j < sq; ++j) in_out.Square();
+    for (int j = 0; j < sq; ++j)
+        in_out.Square();
     in_out.Multiply(mul);
 }
 
@@ -154,7 +155,8 @@ Num3072 Num3072::GetInverse() const
 
     for (int i = 0; i < 11; ++i) {
         p[i + 1] = p[i];
-        for (int j = 0; j < (1 << i); ++j) p[i + 1].Square();
+        for (int j = 0; j < (1 << i); ++j)
+            p[i + 1].Square();
         p[i + 1].Multiply(p[i]);
     }
 
@@ -187,15 +189,18 @@ void Num3072::Multiply(const Num3072& a)
     for (int j = 0; j < LIMBS - 1; ++j) {
         limb_t d0 = 0, d1 = 0, d2 = 0;
         mul(d0, d1, this->limbs[1 + j], a.limbs[LIMBS + j - (1 + j)]);
-        for (int i = 2 + j; i < LIMBS; ++i) muladd3(d0, d1, d2, this->limbs[i], a.limbs[LIMBS + j - i]);
+        for (int i = 2 + j; i < LIMBS; ++i)
+            muladd3(d0, d1, d2, this->limbs[i], a.limbs[LIMBS + j - i]);
         mulnadd3(c0, c1, c2, d0, d1, d2, MAX_PRIME_DIFF);
-        for (int i = 0; i < j + 1; ++i) muladd3(c0, c1, c2, this->limbs[i], a.limbs[j - i]);
+        for (int i = 0; i < j + 1; ++i)
+            muladd3(c0, c1, c2, this->limbs[i], a.limbs[j - i]);
         extract3(c0, c1, c2, tmp.limbs[j]);
     }
 
     /* Compute limb N-1 of a*b into tmp. */
     assert(c2 == 0);
-    for (int i = 0; i < LIMBS; ++i) muladd3(c0, c1, c2, this->limbs[i], a.limbs[LIMBS - 1 - i]);
+    for (int i = 0; i < LIMBS; ++i)
+        muladd3(c0, c1, c2, this->limbs[i], a.limbs[LIMBS - 1 - i]);
     extract3(c0, c1, c2, tmp.limbs[LIMBS - 1]);
 
     /* Perform a second reduction. */
@@ -223,16 +228,19 @@ void Num3072::Square()
     /* Compute limbs 0..N-2 of this*this into tmp, including one reduction. */
     for (int j = 0; j < LIMBS - 1; ++j) {
         limb_t d0 = 0, d1 = 0, d2 = 0;
-        for (int i = 0; i < (LIMBS - 1 - j) / 2; ++i) muldbladd3(d0, d1, d2, this->limbs[i + j + 1], this->limbs[LIMBS - 1 - i]);
+        for (int i = 0; i < (LIMBS - 1 - j) / 2; ++i)
+            muldbladd3(d0, d1, d2, this->limbs[i + j + 1], this->limbs[LIMBS - 1 - i]);
         if ((j + 1) & 1) muladd3(d0, d1, d2, this->limbs[(LIMBS - 1 - j) / 2 + j + 1], this->limbs[LIMBS - 1 - (LIMBS - 1 - j) / 2]);
         mulnadd3(c0, c1, c2, d0, d1, d2, MAX_PRIME_DIFF);
-        for (int i = 0; i < (j + 1) / 2; ++i) muldbladd3(c0, c1, c2, this->limbs[i], this->limbs[j - i]);
+        for (int i = 0; i < (j + 1) / 2; ++i)
+            muldbladd3(c0, c1, c2, this->limbs[i], this->limbs[j - i]);
         if ((j + 1) & 1) muladd3(c0, c1, c2, this->limbs[(j + 1) / 2], this->limbs[j - (j + 1) / 2]);
         extract3(c0, c1, c2, tmp.limbs[j]);
     }
 
     assert(c2 == 0);
-    for (int i = 0; i < LIMBS / 2; ++i) muldbladd3(c0, c1, c2, this->limbs[i], this->limbs[LIMBS - 1 - i]);
+    for (int i = 0; i < LIMBS / 2; ++i)
+        muldbladd3(c0, c1, c2, this->limbs[i], this->limbs[LIMBS - 1 - i]);
     extract3(c0, c1, c2, tmp.limbs[LIMBS - 1]);
 
     /* Perform a second reduction. */
@@ -255,7 +263,8 @@ void Num3072::Square()
 void Num3072::SetToOne()
 {
     this->limbs[0] = 1;
-    for (int i = 1; i < LIMBS; ++i) this->limbs[i] = 0;
+    for (int i = 1; i < LIMBS; ++i)
+        this->limbs[i] = 0;
 }
 
 void Num3072::Divide(const Num3072& a)
@@ -275,7 +284,8 @@ void Num3072::Divide(const Num3072& a)
     if (this->IsOverflow()) this->FullReduce();
 }
 
-Num3072::Num3072(const unsigned char (&data)[BYTE_SIZE]) {
+Num3072::Num3072(const unsigned char (&data)[SIZE_BYTE])
+{
     for (int i = 0; i < LIMBS; ++i) {
         if (sizeof(limb_t) == 4) {
             this->limbs[i] = ReadLE32(data + 4 * i);
@@ -285,7 +295,8 @@ Num3072::Num3072(const unsigned char (&data)[BYTE_SIZE]) {
     }
 }
 
-void Num3072::ToBytes(unsigned char (&out)[BYTE_SIZE]) {
+void Num3072::ToBytes(unsigned char (&out)[SIZE_BYTE])
+{
     for (int i = 0; i < LIMBS; ++i) {
         if (sizeof(limb_t) == 4) {
             WriteLE32(out + i * 4, this->limbs[i]);
@@ -295,11 +306,12 @@ void Num3072::ToBytes(unsigned char (&out)[BYTE_SIZE]) {
     }
 }
 
-Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
-    unsigned char tmp[Num3072::BYTE_SIZE];
+Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in)
+{
+    unsigned char tmp[Num3072::SIZE_BYTE];
 
     uint256 hashed_in{(HashWriter{} << in).GetSHA256()};
-    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, Num3072::BYTE_SIZE);
+    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, Num3072::SIZE_BYTE);
     Num3072 out{tmp};
 
     return out;
@@ -313,9 +325,9 @@ MuHash3072::MuHash3072(Span<const unsigned char> in) noexcept
 void MuHash3072::Finalize(uint256& out) noexcept
 {
     m_numerator.Divide(m_denominator);
-    m_denominator.SetToOne();  // Needed to keep the MuHash object valid
+    m_denominator.SetToOne(); // Needed to keep the MuHash object valid
 
-    unsigned char data[Num3072::BYTE_SIZE];
+    unsigned char data[Num3072::SIZE_BYTE];
     m_numerator.ToBytes(data);
 
     out = (HashWriter{} << data).GetSHA256();
@@ -335,12 +347,14 @@ MuHash3072& MuHash3072::operator/=(const MuHash3072& div) noexcept
     return *this;
 }
 
-MuHash3072& MuHash3072::Insert(Span<const unsigned char> in) noexcept {
+MuHash3072& MuHash3072::Insert(Span<const unsigned char> in) noexcept
+{
     m_numerator.Multiply(ToNum3072(in));
     return *this;
 }
 
-MuHash3072& MuHash3072::Remove(Span<const unsigned char> in) noexcept {
+MuHash3072& MuHash3072::Remove(Span<const unsigned char> in) noexcept
+{
     m_denominator.Multiply(ToNum3072(in));
     return *this;
 }
