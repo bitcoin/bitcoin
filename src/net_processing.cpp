@@ -965,11 +965,11 @@ void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
-void PeerLogicValidation::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) {
+void PeerLogicValidation::FinalizeNode(const CNode& node) {
     NodeId nodeid = node.GetId();
-    fUpdateConnectionTime = false;
-    LOCK(cs_main);
     int misbehavior{0};
+    LOCK(cs_main);
+    {
     {
         PeerRef peer = GetPeerRef(nodeid);
         assert(peer != nullptr);
@@ -982,11 +982,6 @@ void PeerLogicValidation::FinalizeNode(const CNode& node, bool& fUpdateConnectio
 
     if (state->fSyncStarted)
         nSyncStarted--;
-
-    if (node.fSuccessfullyConnected && misbehavior == 0 && !node.m_block_relay_only_peer && !node.fInbound) {
-        // Note: we avoid changing visible addrman state for block-relay-only peers
-        fUpdateConnectionTime = true;
-    }
 
     for (const QueuedBlock& entry : state->vBlocksInFlight) {
         mapBlocksInFlight.erase(entry.hash);
@@ -1007,6 +1002,15 @@ void PeerLogicValidation::FinalizeNode(const CNode& node, bool& fUpdateConnectio
         assert(nPeersWithValidatedDownloads == 0);
         assert(g_outbound_peers_with_protect_from_disconnect == 0);
     }
+    } // cs_main
+
+    if (node.fSuccessfullyConnected && misbehavior == 0 && !node.m_block_relay_only_peer && !node.fInbound) {
+        // Only change visible addrman state for full outbound peers.  We don't
+        // call Connected() for feeler connections since they don't have
+        // fSuccessfullyConnected set.
+        m_addrman.Connected(node.addr);
+    }
+
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
 
@@ -1296,9 +1300,10 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
         (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, consensusParams) < STALE_RELAY_AGE_LIMIT);
 }
 
-PeerLogicValidation::PeerLogicValidation(CConnman& connman, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+PeerLogicValidation::PeerLogicValidation(CConnman& connman, CAddrMan& addrman, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
                                         std::unique_ptr<LLMQContext>& llmq_ctx)
     : m_connman(connman),
+      m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
@@ -2644,7 +2649,7 @@ void PeerLogicValidation::ProcessMessage(
         nServices = ServiceFlags(nServiceInt);
         if (!pfrom.fInbound)
         {
-            m_connman.SetServices(pfrom.addr, nServices);
+            m_addrman.SetServices(pfrom.addr, nServices);
         }
         if (!pfrom.fInbound && !pfrom.fFeeler && !pfrom.m_manual_connection && !HasAllDesirableServiceFlags(nServices))
         {
@@ -2782,7 +2787,7 @@ void PeerLogicValidation::ProcessMessage(
             // Get recent addresses
             m_connman.PushMessage(&pfrom, CNetMsgMaker(nSendVersion).Make(NetMsgType::GETADDR));
             pfrom.fGetAddr = true;
-            m_connman.MarkAddressGood(pfrom.addr);
+            m_addrman.Good(pfrom.addr);
         }
 
         std::string remoteAddr;
@@ -2954,7 +2959,7 @@ void PeerLogicValidation::ProcessMessage(
             if (fReachable)
                 vAddrOk.push_back(addr);
         }
-        m_connman.AddNewAddresses(vAddrOk, pfrom.addr, 2 * 60 * 60);
+        m_addrman.Add(vAddrOk, pfrom.addr, 2 * 60 * 60);
         if (vAddr.size() < 1000)
             pfrom.fGetAddr = false;
         if (pfrom.fOneShot)

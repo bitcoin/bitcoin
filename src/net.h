@@ -213,7 +213,7 @@ public:
         socketEventsMode = connOptions.socketEventsMode;
     }
 
-    CConnman(uint64_t seed0, uint64_t seed1);
+    CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman);
     ~CConnman();
     bool Start(CScheduler& scheduler, const Options& options);
 
@@ -399,9 +399,6 @@ public:
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     // Addrman functions
-    void SetServices(const CService &addr, ServiceFlags nServices);
-    void MarkAddressGood(const CAddress& addr);
-    void AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     std::vector<CAddress> GetAddresses();
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
@@ -580,7 +577,7 @@ private:
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
-    CAddrMan addrman;
+    CAddrMan& addrman;
     std::deque<std::string> vOneShots GUARDED_BY(cs_vOneShots);
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
@@ -708,7 +705,7 @@ public:
     virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
     virtual bool SendMessages(CNode* pnode) = 0;
     virtual void InitializeNode(CNode* pnode) = 0;
-    virtual void FinalizeNode(const CNode& node, bool& update_connection_time) = 0;
+    virtual void FinalizeNode(const CNode& node) = 0;
 
 protected:
     /**

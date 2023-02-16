@@ -2949,9 +2949,8 @@ void CConnman::SetNetworkActive(bool active)
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) :
-        addrman(Params().AllowMultiplePorts()),
-        nSeed0(nSeed0In), nSeed1(nSeed1In)
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in) :
+        addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
@@ -3309,11 +3308,7 @@ void CConnman::Stop()
 void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
-    bool fUpdateConnectionTime = false;
-    m_msgproc->FinalizeNode(*pnode, fUpdateConnectionTime);
-    if(fUpdateConnectionTime) {
-        addrman.Connected(pnode->addr);
-    }
+    m_msgproc->FinalizeNode(*pnode);
     delete pnode;
 }
 
@@ -3321,21 +3316,6 @@ CConnman::~CConnman()
 {
     Interrupt();
     Stop();
-}
-
-void CConnman::SetServices(const CService &addr, ServiceFlags nServices)
-{
-    addrman.SetServices(addr, nServices);
-}
-
-void CConnman::MarkAddressGood(const CAddress& addr)
-{
-    addrman.Good(addr);
-}
-
-void CConnman::AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty)
-{
-    addrman.Add(vAddr, addrFrom, nTimePenalty);
 }
 
 std::vector<CAddress> CConnman::GetAddresses()

@@ -52,7 +52,8 @@ FUZZ_TARGET_INIT(net, initialize_net)
     while (fuzzed_data_provider.ConsumeBool()) {
         switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 12)) {
         case 0: {
-            CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+            CAddrMan addrman;
+            CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
             node.CloseSocketDisconnect(&connman);
             break;
         }
