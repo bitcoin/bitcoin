@@ -6,39 +6,52 @@
 #define BITCOIN_EVO_DMN_TYPES_H
 
 #include <amount.h>
+#include <serialize.h>
+
 #include <cassert>
 #include <string_view>
 
-class CDeterministicMNType
-{
-public:
-    uint8_t index;
-    int32_t voting_weight;
-    CAmount collat_amount;
-    std::string_view description;
+enum class MnType : uint16_t {
+    Regular = 0,
+    HighPerformance = 1,
 };
 
-namespace MnType {
-constexpr auto Regular = CDeterministicMNType{
-    .index = 0,
+template<> struct is_serializable_enum<MnType> : std::true_type {};
+
+namespace dmn_types {
+
+struct mntype_struct
+{
+    const int32_t voting_weight;
+    const CAmount collat_amount;
+    const std::string_view description;
+};
+
+constexpr auto Regular = mntype_struct{
     .voting_weight = 1,
     .collat_amount = 1000 * COIN,
     .description = "Regular",
 };
-constexpr auto HighPerformance = CDeterministicMNType{
-    .index = 1,
+constexpr auto HighPerformance = mntype_struct{
     .voting_weight = 4,
     .collat_amount = 4000 * COIN,
     .description = "HighPerformance",
 };
-} // namespace MnType
 
-constexpr const auto& GetMnType(int index)
+[[nodiscard]] static constexpr bool IsCollateralAmount(CAmount amount)
 {
-    switch (index) {
-    case 0: return MnType::Regular;
-    case 1: return MnType::HighPerformance;
-    default: assert(false);
+    return amount == Regular.collat_amount ||
+        amount == HighPerformance.collat_amount;
+}
+
+} // namespace dmn_types
+
+[[nodiscard]] constexpr const dmn_types::mntype_struct GetMnType(MnType type)
+{
+    switch (type) {
+        case MnType::Regular: return dmn_types::Regular;
+        case MnType::HighPerformance: return dmn_types::HighPerformance;
+        default: assert(false);
     }
 }
 

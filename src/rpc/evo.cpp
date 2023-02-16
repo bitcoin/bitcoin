@@ -557,8 +557,9 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                                               const bool isExternalRegister,
                                               const bool isFundRegister,
                                               const bool isPrepareRegister,
-                                              const bool isHPMNrequested)
+                                              const MnType mnType)
 {
+    const bool isHPMNrequested = mnType == MnType::HighPerformance;
     if (isHPMNrequested) {
         if (isFundRegister && (request.fHelp || (request.params.size() < 10 || request.params.size() > 12))) {
             protx_register_fund_hpmn_help(request);
@@ -585,7 +586,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     bool isV19active = llmq::utils::IsV19Active(WITH_LOCK(cs_main, return ::ChainActive().Tip();));
-    if (isHPMNrequested && !isV19active) {
+    if (mnType == MnType::HighPerformance && !isV19active) {
         throw JSONRPCError(RPC_INVALID_REQUEST, "HPMN aren't allowed yet");
     }
 
@@ -601,8 +602,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     } else {
         ptx.nVersion = CProRegTx::GetVersion(isV19active);
     }
-    auto mn_type = isHPMNrequested ? MnType::HighPerformance : MnType::Regular;
-    ptx.nType = mn_type.index;
+    ptx.nType = mnType;
 
     if (isFundRegister) {
         CTxDestination collateralDest = DecodeDestination(request.params[paramIdx].get_str());
@@ -611,7 +611,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         }
         CScript collateralScript = GetScriptForDestination(collateralDest);
 
-        CAmount fundCollateral = mn_type.collat_amount;
+        CAmount fundCollateral = GetMnType(mnType).collat_amount;
         CTxOut collateralTxOut(fundCollateral, collateralScript);
         tx.vout.emplace_back(collateralTxOut);
 
@@ -705,7 +705,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     if (isFundRegister) {
-        CAmount fundCollateral = mn_type.collat_amount;
+        CAmount fundCollateral = GetMnType(mnType).collat_amount;
         uint32_t collateralIndex = (uint32_t) -1;
         for (uint32_t i = 0; i < tx.vout.size(); i++) {
             if (tx.vout[i].nValue == fundCollateral) {
@@ -765,7 +765,7 @@ static UniValue protx_register_hpmn(const JSONRPCRequest& request)
     bool isExternalRegister = request.strMethod == "protxregister_hpmn";
     bool isFundRegister = request.strMethod == "protxregister_fund_hpmn";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare_hpmn";
-    return protx_register_common_wrapper(request, false, isExternalRegister, isFundRegister, isPrepareRegister, true);
+    return protx_register_common_wrapper(request, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::HighPerformance);
 }
 
 static UniValue protx_register(const JSONRPCRequest& request)
@@ -773,7 +773,7 @@ static UniValue protx_register(const JSONRPCRequest& request)
     bool isExternalRegister = request.strMethod == "protxregister";
     bool isFundRegister = request.strMethod == "protxregister_fund";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare";
-    return protx_register_common_wrapper(request, false, isExternalRegister, isFundRegister, isPrepareRegister, false);
+    return protx_register_common_wrapper(request, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
 }
 
 static UniValue protx_register_legacy(const JSONRPCRequest& request)
@@ -781,7 +781,7 @@ static UniValue protx_register_legacy(const JSONRPCRequest& request)
     bool isExternalRegister = request.strMethod == "protxregister_legacy";
     bool isFundRegister = request.strMethod == "protxregister_fund_legacy";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare_legacy";
-    return protx_register_common_wrapper(request, true, isExternalRegister, isFundRegister, isPrepareRegister, false);
+    return protx_register_common_wrapper(request, true, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
 }
 
 static UniValue protx_register_submit(const JSONRPCRequest& request)
@@ -862,8 +862,9 @@ static void protx_update_service_hpmn_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, const bool isHPMNrequested)
+static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, const MnType mnType)
 {
+    const bool isHPMNrequested = mnType == MnType::HighPerformance;
     if (isHPMNrequested) {
         protx_update_service_hpmn_help(request);
     } else {
@@ -882,7 +883,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     CProUpServTx ptx;
     ptx.nVersion = CProUpServTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
-    ptx.nType = isHPMNrequested ? MnType::HighPerformance.index : MnType::Regular.index;
+    ptx.nType = mnType;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     if (!Lookup(request.params[1].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
@@ -917,10 +918,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
-    if (isHPMNrequested && dmn->nType != MnType::HighPerformance.index) {
-        throw std::runtime_error(strprintf("masternode with proTxHash %s is not a HPMN", ptx.proTxHash.ToString()));
-    } else if (!isHPMNrequested && dmn->nType == MnType::HighPerformance.index) {
-        throw std::runtime_error(strprintf("masternode with proTxHash %s is a HPMN", ptx.proTxHash.ToString()));
+    if (dmn->nType != mnType) {
+        throw std::runtime_error(strprintf("masternode with proTxHash %s is not a %s", ptx.proTxHash.ToString(), GetMnType(mnType).description));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -1505,9 +1504,9 @@ static UniValue protx(const JSONRPCRequest& request)
     } else if (command == "protxregister_submit") {
         return protx_register_submit(new_request);
     } else if (command == "protxupdate_service") {
-        return protx_update_service_common_wrapper(new_request, false);
+        return protx_update_service_common_wrapper(new_request, MnType::Regular);
     } else if (command == "protxupdate_service_hpmn") {
-        return protx_update_service_common_wrapper(new_request, true);
+        return protx_update_service_common_wrapper(new_request, MnType::HighPerformance);
     } else if (command == "protxupdate_registrar") {
         return protx_update_registrar(new_request);
     } else if (command == "protxupdate_registrar_legacy") {

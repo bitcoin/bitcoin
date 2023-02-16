@@ -15,7 +15,7 @@ maybe_error CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
         return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
-    if (nType != MnType::Regular.index && nType != MnType::HighPerformance.index) {
+    if (nType != MnType::Regular && nType != MnType::HighPerformance) {
         return {ValidationInvalidReason::CONSENSUS, "bad-protx-type"};
     }
     if (nMode != 0) {
@@ -80,7 +80,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, nType, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+                     nVersion, static_cast<int>(nType), collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
 maybe_error CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
@@ -101,7 +101,7 @@ std::string CProUpServTx::ToString() const
     }
 
     return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s, platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, nType, proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+                     nVersion, static_cast<int>(nType), proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
 maybe_error CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const

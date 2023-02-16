@@ -45,9 +45,9 @@ public:
     static constexpr uint16_t MN_TYPE_FORMAT = 1;
 
     CDeterministicMN() = delete; // no default constructor, must specify internalId
-    explicit CDeterministicMN(uint64_t _internalId, bool highPerformanceMasternode = false) :
+    explicit CDeterministicMN(uint64_t _internalId, MnType mnType = MnType::Regular) :
         internalId(_internalId),
-        nType(highPerformanceMasternode ? MnType::HighPerformance.index : MnType::Regular.index)
+        nType(mnType)
     {
         // only non-initial values
         assert(_internalId != std::numeric_limits<uint64_t>::max());
@@ -62,7 +62,7 @@ public:
     uint256 proTxHash;
     COutPoint collateralOutpoint;
     uint16_t nOperatorReward{0};
-    uint16_t nType{MnType::Regular.index};
+    MnType nType{MnType::Regular};
     std::shared_ptr<const CDeterministicMNState> pdmnState;
 
     template <typename Stream, typename Operation>
@@ -89,7 +89,7 @@ public:
         if (format_version >= MN_TYPE_FORMAT && (s.GetVersion() == CLIENT_VERSION || s.GetVersion() >= DMN_TYPE_PROTO_VERSION)) {
             READWRITE(nType);
         } else {
-            nType = MnType::Regular.index;
+            nType = MnType::Regular;
         }
     }
 
@@ -227,7 +227,7 @@ public:
 
     [[nodiscard]] size_t GetAllHPMNsCount() const
     {
-        return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance.index; });
+        return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance; });
     }
 
     /**

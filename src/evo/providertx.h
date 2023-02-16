@@ -34,7 +34,7 @@ public:
     }
 
     uint16_t nVersion{LEGACY_BLS_VERSION};                 // message version
-    uint16_t nType{MnType::Regular.index};
+    MnType nType{MnType::Regular};
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
@@ -70,7 +70,7 @@ public:
                 obj.scriptPayout,
                 obj.inputsHash
         );
-        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance.index) {
+        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance) {
             READWRITE(
                 obj.platformNodeID,
                 obj.platformP2PPort,
@@ -92,7 +92,7 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
-        obj.pushKV("type", nType);
+        obj.pushKV("type", static_cast<uint16_t>(nType));
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString(false));
@@ -105,7 +105,7 @@ public:
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION));
         obj.pushKV("operatorReward", (double)nOperatorReward / 100);
-        if (nType == MnType::HighPerformance.index) {
+        if (nType == MnType::HighPerformance) {
             obj.pushKV("platformNodeID", platformNodeID.ToString());
             obj.pushKV("platformP2PPort", platformP2PPort);
             obj.pushKV("platformHTTPPort", platformHTTPPort);
@@ -129,7 +129,7 @@ public:
     }
 
     uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
-    uint16_t nType{MnType::Regular.index};
+    MnType nType{MnType::Regular};
     uint256 proTxHash;
     CService addr;
     uint160 platformNodeID{};
@@ -158,7 +158,7 @@ public:
                 obj.scriptOperatorPayout,
                 obj.inputsHash
         );
-        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance.index) {
+        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance) {
             READWRITE(
                 obj.platformNodeID,
                 obj.platformP2PPort,
@@ -178,14 +178,14 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
-        obj.pushKV("type", nType);
+        obj.pushKV("type", static_cast<uint16_t>(nType));
         obj.pushKV("proTxHash", proTxHash.ToString());
         obj.pushKV("service", addr.ToString(false));
         CTxDestination dest;
         if (ExtractDestination(scriptOperatorPayout, dest)) {
             obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
         }
-        if (nType == MnType::HighPerformance.index) {
+        if (nType == MnType::HighPerformance) {
             obj.pushKV("platformNodeID", platformNodeID.ToString());
             obj.pushKV("platformP2PPort", platformP2PPort);
             obj.pushKV("platformHTTPPort", platformHTTPPort);

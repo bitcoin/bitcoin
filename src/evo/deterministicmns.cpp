@@ -192,7 +192,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(const CBlockIndex* pIndex)
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
                 // If the last payee is a HPMN, we need to check its consecutive payments and pay him again if needed
-                if (dmn->nType == MnType::HighPerformance.index && dmn->pdmnState->nConsecutivePayments < MnType::HighPerformance.voting_weight) {
+                if (dmn->nType == MnType::HighPerformance && dmn->pdmnState->nConsecutivePayments < dmn_types::HighPerformance.voting_weight) {
                     best = dmn;
                 }
             }
@@ -268,7 +268,7 @@ std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList
             return;
         }
         if (onlyHighPerformanceMasternodes) {
-            if (dmn->nType != MnType::HighPerformance.index)
+            if (dmn->nType != MnType::HighPerformance)
                 return;
         }
         // calculate sha256(sha256(proTxHash, confirmedHash), modifier) per MN
@@ -471,7 +471,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
                 dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
     }
 
-    if (dmn->nType == MnType::HighPerformance.index) {
+    if (dmn->nType == MnType::HighPerformance) {
         if (!AddUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate platformNodeID=%s", __func__,
@@ -512,7 +512,7 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
         throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate pubKeyOperator=%s", __func__,
                 oldDmn.proTxHash.ToString(), pdmnState->pubKeyOperator.Get().ToString())));
     }
-    if (dmn->nType == MnType::HighPerformance.index) {
+    if (dmn->nType == MnType::HighPerformance) {
         if (!UpdateUniqueProperty(*dmn, oldState->platformNodeID, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate platformNodeID=%s", __func__,
@@ -572,7 +572,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
                 proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
     }
 
-    if (dmn->nType == MnType::HighPerformance.index) {
+    if (dmn->nType == MnType::HighPerformance) {
         if (!DeleteUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a duplicate platformNodeID=%s", __func__,
@@ -745,11 +745,11 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
             }
 
-            if (proTx.nType == MnType::HighPerformance.index && !llmq::utils::IsV19Active(pindexPrev)) {
+            if (proTx.nType == MnType::HighPerformance && !llmq::utils::IsV19Active(pindexPrev)) {
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
             }
 
-            auto dmn = std::make_shared<CDeterministicMN>(newList.GetTotalRegisteredCount(), proTx.nType == MnType::HighPerformance.index);
+            auto dmn = std::make_shared<CDeterministicMN>(newList.GetTotalRegisteredCount(), proTx.nType);
             dmn->proTxHash = tx.GetHash();
 
             // collateralOutpoint is either pointing to an external collateral or to the ProRegTx itself
@@ -808,7 +808,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
             }
 
-            if (proTx.nType == MnType::HighPerformance.index && !llmq::utils::IsV19Active(pindexPrev)) {
+            if (proTx.nType == MnType::HighPerformance && !llmq::utils::IsV19Active(pindexPrev)) {
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
             }
 
@@ -820,17 +820,17 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (!dmn) {
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-hash");
             }
-            if (proTx.nType == MnType::HighPerformance.index && dmn->nType != MnType::HighPerformance.index) {
-                return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-type");
+            if (proTx.nType != dmn->nType) {
+                return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-type-mismatch");
             }
-            if (proTx.nType == MnType::Regular.index && dmn->nType != MnType::Regular.index) {
+            if (proTx.nType != MnType::Regular && proTx.nType != MnType::HighPerformance) {
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-type");
             }
 
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
             newState->addr = proTx.addr;
             newState->scriptOperatorPayout = proTx.scriptOperatorPayout;
-            if (proTx.nType == MnType::HighPerformance.index) {
+            if (proTx.nType == MnType::HighPerformance) {
                 newState->platformNodeID = proTx.platformNodeID;
                 newState->platformP2PPort = proTx.platformP2PPort;
                 newState->platformHTTPPort = proTx.platformHTTPPort;
@@ -946,7 +946,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         // No need to check if v19 is active, since HPMN ProRegTx are allowed only after v19 activation
         // TODO: Skip this code once v20 is active
         // Note: If the payee wasn't found in the current block that's fine
-        if (dmn->nType == MnType::HighPerformance.index) {
+        if (dmn->nType == MnType::HighPerformance) {
             ++newState->nConsecutivePayments;
             if (debugLogs) {
                 LogPrintf("CDeterministicMNManager::%s -- MN %s is a HPMN, bumping nConsecutivePayments to %d\n",
@@ -965,7 +965,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     auto newList2 = newList;
     newList2.ForEachMN(false, [&](auto& dmn) {
         if (payee != nullptr && dmn.proTxHash == payee->proTxHash) return;
-        if (dmn.nType != MnType::HighPerformance.index) return;
+        if (dmn.nType != MnType::HighPerformance) return;
         if (dmn.pdmnState->nConsecutivePayments == 0) return;
         if (debugLogs) {
             LogPrintf("CDeterministicMNManager::%s -- MN %s, reset nConsecutivePayments %d->0\n",
@@ -1399,7 +1399,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return false;
     }
 
-    if (ptx.nType == MnType::HighPerformance.index) {
+    if (ptx.nType == MnType::HighPerformance) {
         if (!CheckPlatformFields(ptx, state)) {
             return false;
         }
@@ -1510,7 +1510,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         return false;
     }
 
-    if (ptx.nType == MnType::HighPerformance.index) {
+    if (ptx.nType == MnType::HighPerformance) {
         if (!CheckPlatformFields(ptx, state)) {
             return false;
         }

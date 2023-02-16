@@ -34,7 +34,7 @@ public:
     CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     bool isValid{false};
-    uint16_t nType{MnType::Regular.index};
+    MnType nType{MnType::Regular};
     uint16_t platformHTTPPort{0};
     uint160 platformNodeID{};
     CScript scriptPayout; // mem-only
@@ -75,7 +75,7 @@ public:
                 );
         if (obj.nVersion == BASIC_BLS_VERSION) {
             READWRITE(obj.nType);
-            if (obj.nType == MnType::HighPerformance.index) {
+            if (obj.nType == MnType::HighPerformance) {
                 READWRITE(obj.platformHTTPPort);
                 READWRITE(obj.platformNodeID);
             }
