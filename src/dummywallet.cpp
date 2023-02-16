@@ -40,7 +40,6 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-rescan=<mode>",
         "-salvagewallet",
         "-spendzeroconfchange",
-        "-upgradewallet",
         "-wallet=<path>",
         "-walletbackupsdir=<dir>",
         "-walletbroadcast",

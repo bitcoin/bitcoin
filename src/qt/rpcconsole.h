@@ -108,7 +108,6 @@ public Q_SLOTS:
     /** Wallet repair options */
     void walletRescan1();
     void walletRescan2();
-    void walletUpgrade();
     void walletReindex();
 
     /** Append the message to the message widget */
