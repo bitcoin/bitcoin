@@ -81,7 +81,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
-        for mode in ["default", "fee_rate"]:
+        for mode in ["default", "fee_rate", "new_outputs"]:
             test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
         self.test_invalid_parameters(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
@@ -157,6 +157,14 @@ class BumpFeeTest(BitcoinTestFramework):
             assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 rbf_node.bumpfee, rbfid, {"estimate_mode": mode})
 
+        self.log.info("Test invalid outputs values")
+        assert_raises_rpc_error(-8, "Invalid parameter, output argument cannot be an empty array",
+                rbf_node.bumpfee, rbfid, {"outputs": []})
+        assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: " + dest_address,
+                rbf_node.bumpfee, rbfid, {"outputs": [{dest_address: 0.1}, {dest_address: 0.2}]})
+        assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data",
+                rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
+
         self.clear_mempool()
 
 
@@ -169,6 +177,10 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     if mode == "fee_rate":
         bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"fee_rate": str(NORMAL)})
         bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": NORMAL})
+    elif mode == "new_outputs":
+        new_address = peer_node.getnewaddress()
+        bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"outputs": {new_address: 0.0003}})
+        bumped_tx = rbf_node.bumpfee(rbfid, {"outputs": {new_address: 0.0003}})
     else:
         bumped_psbt = rbf_node.psbtbumpfee(rbfid)
         bumped_tx = rbf_node.bumpfee(rbfid)
@@ -192,6 +204,10 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     bumpedwtx = rbf_node.gettransaction(bumped_tx["txid"])
     assert_equal(oldwtx["replaced_by_txid"], bumped_tx["txid"])
     assert_equal(bumpedwtx["replaces_txid"], rbfid)
+    # if this is a new_outputs test, check that outputs were indeed replaced
+    if mode == "new_outputs":
+        assert len(bumpedwtx["details"]) == 1
+        assert bumpedwtx["details"][0]["address"] == new_address
     self.clear_mempool()
 
 
@@ -628,12 +644,14 @@ def test_change_script_match(self, rbf_node, dest_address):
     self.clear_mempool()
 
 
-def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
+def spend_one_input(node, dest_address, change_size=Decimal("0.00049000"), data=None):
     tx_input = dict(
         sequence=MAX_BIP125_RBF_SEQUENCE, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
     destinations = {dest_address: Decimal("0.00050000")}
     if change_size > 0:
         destinations[node.getrawchangeaddress()] = change_size
+    if data:
+        destinations['data'] = data
     rawtx = node.createrawtransaction([tx_input], destinations)
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])

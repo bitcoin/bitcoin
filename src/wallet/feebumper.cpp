@@ -155,7 +155,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs)
 {
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
@@ -222,11 +222,19 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         return result;
     }
 
-    // Fill in recipients(and preserve a single change key if there is one)
-    // While we're here, calculate the output amount
-    std::vector<CRecipient> recipients;
+    // Calculate the old output amount.
     CAmount output_value = 0;
-    for (const auto& output : wtx.tx->vout) {
+    for (const auto& old_output : wtx.tx->vout) {
+        output_value += old_output.nValue;
+    }
+
+    old_fee = input_value - output_value;
+
+    // Fill in recipients (and preserve a single change key if there
+    // is one). If outputs vector is non-empty, replace original
+    // outputs with its contents, otherwise use original outputs.
+    std::vector<CRecipient> recipients;
+    for (const auto& output : outputs.empty() ? wtx.tx->vout : outputs) {
         if (!OutputIsChange(wallet, output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
@@ -235,10 +243,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
         }
-        output_value += output.nValue;
     }
-
-    old_fee = input_value - output_value;
 
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
