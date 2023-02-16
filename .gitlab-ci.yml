@@ -251,6 +251,13 @@ linux64_cxx20-build:
   variables:
     BUILD_TARGET: linux64_cxx20
 
+linux64_sqlite-build:
+  extends: .build-template
+  needs:
+    - x86_64-pc-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64_sqlite
+
 linux64_fuzz-build:
   extends: .build-template
   needs:
@@ -311,6 +318,13 @@ linux64-test:
     - linux64-build
   variables:
     BUILD_TARGET: linux64
+
+linux64_sqlite-test:
+  extends: .test-template
+  needs:
+    - linux64_sqlite-build
+  variables:
+    BUILD_TARGET: linux64_sqlite
 
 linux64_tsan-test:
   extends:
