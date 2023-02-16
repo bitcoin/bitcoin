@@ -238,7 +238,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     return EncodeDestination(dest);
 }
 
-static UniValue getrawchangeaddress(const JSONRPCRequest& request)
+UniValue getrawchangeaddress(const JSONRPCRequest& request)
 {
     RPCHelpMan{"getrawchangeaddress",
         "\nReturns a new Dash address, for receiving change.\n"
@@ -972,7 +972,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
     return tx->GetHash().GetHex();
 }
 
-static UniValue addmultisigaddress(const JSONRPCRequest& request)
+UniValue addmultisigaddress(const JSONRPCRequest& request)
 {
     RPCHelpMan{"addmultisigaddress",
         "\nAdd a nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
@@ -3589,19 +3589,24 @@ public:
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
         if (provider && provider->GetCScript(scriptID, subscript)) {
-            std::vector<CTxDestination> addresses;
-            TxoutType whichType;
-            int nRequired;
-            ExtractDestinations(subscript, whichType, addresses, nRequired);
+            // Always present: script type and redeemscript
+            std::vector<std::vector<unsigned char>> solutions_data;
+            TxoutType whichType = Solver(subscript, solutions_data);
             obj.pushKV("script", GetTxnOutputType(whichType));
             obj.pushKV("hex", HexStr(subscript));
-            UniValue a(UniValue::VARR);
-            for (const CTxDestination& addr : addresses) {
-                a.push_back(EncodeDestination(addr));
+            if (whichType == TxoutType::MULTISIG) {
+                // Also report some information on multisig scripts (which do not have a corresponding address).
+                UniValue pubkeys(UniValue::VARR);
+                UniValue addresses(UniValue::VARR);
+                for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
+                    CPubKey pubkey(solutions_data[i]);
+                    pubkeys.push_back(HexStr(pubkey));
+                    addresses.push_back(EncodeDestination(PKHash(pubkey)));
+                }
+                obj.pushKV("pubkeys", std::move(pubkeys));
+                obj.pushKV("addresses", std::move(addresses));
+                obj.pushKV("sigsrequired", solutions_data[0][0]);
             }
-            obj.pushKV("addresses", a);
-            if (whichType == TxoutType::MULTISIG)
-                obj.pushKV("sigsrequired", nRequired);
         }
         return obj;
     }
@@ -3656,6 +3661,10 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                 {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "Array of pubkeys associated with the known redeemscript (only if \"script\" is \"multisig\").",
                 {
                     {RPCResult::Type::STR, "pubkey", ""},
+                }},
+                {RPCResult::Type::ARR, "addresses", /* optional */ true, "Array of addresses associated with the known redeemscript (only if \"script\" is \"multisig\").",
+                {
+                    {RPCResult::Type::STR, "address", ""},
                 }},
                 {RPCResult::Type::NUM, "sigsrequired", /* optional */ true, "The number of signatures required to spend multisig output (only if \"script\" is \"multisig\")."},
                 {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key, for single-key addresses."},

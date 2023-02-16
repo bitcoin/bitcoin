@@ -38,5 +38,7 @@ WalletContext& EnsureWalletContext(const CoreContext& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
+UniValue getrawchangeaddress(const JSONRPCRequest& request);
+UniValue addmultisigaddress(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
 #endif //BITCOIN_WALLET_RPCWALLET_H
