@@ -6,10 +6,6 @@
 #include <numeric>
 #include <streams.h>
 
-static volatile StaticMclInit for_side_effect_only;
-
-mclBnG1 MclG1Point::m_g = MclG1Point("1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s).m_p;
-
 MclG1Point::MclG1Point()
 {
     mclBnG1_clear(&m_p);
@@ -37,13 +33,6 @@ MclG1Point::MclG1Point(const uint256& b)
         throw std::runtime_error("MclG1Point(uint256): mclBnFp_mapToG1 failed");
     }
     m_p = temp.m_p;
-}
-
-MclG1Point::MclG1Point(const std::string& s)
-{
-    if (mclBnG1_setStr(&m_p, s.c_str(), s.length(), 10) == -1) {
-        throw std::runtime_error("MclG1Point(std::string): malformed serialization string");
-    }
 }
 
 mclBnG1 MclG1Point::Underlying() const
@@ -102,8 +91,16 @@ MclG1Point MclG1Point::Double() const
 
 MclG1Point MclG1Point::GetBasePoint()
 {
-    MclG1Point g(MclG1Point::m_g);
-    return g;
+    static mclBnG1* g = nullptr;
+    if (g == nullptr) {
+        g = new mclBnG1();
+        auto g_str = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s;
+        if (mclBnG1_setStr(g, g_str.c_str(), g_str.length(), 10) == -1) {
+            throw std::runtime_error("MclG1Point::GetBasePoint(): mclBnG1_setStr failed");
+        }
+    }
+    MclG1Point ret(*g);
+    return ret;
 }
 
 MclG1Point MclG1Point::MapToG1(const std::vector<uint8_t>& vec, const Endianness e)

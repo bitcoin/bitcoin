@@ -60,7 +60,6 @@ template <typename T>
 RangeProofLogic<T>::RangeProofLogic()
 {
     using Scalar = typename T::Scalar;
-    using Point = typename T::Point;
     using Scalars = Elements<Scalar>;
 
     if (m_is_initialized) return;

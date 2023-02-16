@@ -6,7 +6,6 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/lazy_g1point.h>
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
 
 template <typename T>

@@ -7,24 +7,37 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
+<<<<<<< HEAD:src/blsct/arith/mcl/atomic_mcl_init.h
+=======
+#include <blsct/arith/mcl/init/mcl_init.h>
+#include <stdexcept>
+>>>>>>> origin/master:src/blsct/arith/mcl/init/atomic_mcl_init.h
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <iostream>
 #include <stdexcept>
 
-class AtomicMclInit
+/**
+ * Define this class at the beginning of execution of each executable
+ * to initialize Mcl library for non-static context. volatile keyword
+ * is necessary to protect the line from comipler optimization. e.g.
+ * ```
+ * void main() {
+ *     static volatile AtomicMclInit for_side_effect_only;
+ * }
+ * ```
+*/
+class AtomicMclInit: MclInit
 {
 public:
     AtomicMclInit()
     {
         static bool is_initialized = false;
+
         if (is_initialized) return;
         boost::lock_guard<boost::mutex> lock(m_init_mutex);
 
-        if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
-            throw std::runtime_error("blsInit failed");
-        }
-        mclBn_setETHserialization(1);
+        Initialize();
 
         is_initialized = true;
     }
