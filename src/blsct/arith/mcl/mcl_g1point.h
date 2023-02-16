@@ -20,6 +20,8 @@
 class MclG1Point
 {
 private:
+    // This initializes Mcl library for static context before
+    // the library is used. Needs to be defined at the beginning.
     static volatile StaticMclInit for_side_effect_only;
 public:
     MclG1Point();
