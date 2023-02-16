@@ -17,10 +17,11 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
-//static volatile StaticMclInit for_side_effect_only;
-
 class MclG1Point
 {
+private:
+    // this line needs to at the begging of the class definition
+    static volatile StaticMclInit for_side_effect_only;
 public:
     MclG1Point();
     MclG1Point(const std::vector<uint8_t>& v);
