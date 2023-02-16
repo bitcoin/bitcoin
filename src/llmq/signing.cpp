@@ -577,7 +577,6 @@ void CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const std::
     bool ban = false;
     if (!PreVerifyRecoveredSig(qman, *recoveredSig, ban)) {
         if (ban) {
-            LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 100);
         }
         return;
@@ -752,7 +751,6 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
-            LOCK(cs_main);
             Misbehaving(nodeId, 100);
             continue;
         }

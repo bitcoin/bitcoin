@@ -185,7 +185,6 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     }
 
     if (vRecv.empty()) {
-        LOCK(cs_main);
         Misbehaving(pfrom.GetId(), 100);
         return;
     }
@@ -198,7 +197,6 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     vRecv.Rewind(sizeof(uint8_t));
 
     if (!Params().HasLLMQ(llmqType)) {
-        LOCK(cs_main);
         LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", ToUnderlying(llmqType));
         Misbehaving(pfrom.GetId(), 100);
         return;
@@ -219,7 +217,6 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     if (quorumIndex == -1) {
         CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
         if (pQuorumBaseBlockIndex == nullptr) {
-            LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
             // NOTE: do not insta-ban for this, we might be lagging behind
             Misbehaving(pfrom.GetId(), 10);
@@ -227,7 +224,6 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
         }
 
         if (!utils::IsQuorumTypeEnabled(llmqType, quorum_manager, pQuorumBaseBlockIndex->pprev)) {
-            LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
             Misbehaving(pfrom.GetId(), 100);
             return;
@@ -239,14 +235,12 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
                 llmqParams.signingActiveQuorumCount - 1 : 0;
 
         if (quorumIndex > quorumIndexMax) {
-            LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- invalid quorumHash %s\n", quorumHash.ToString());
             Misbehaving(pfrom.GetId(), 100);
             return;
         }
 
         if (!dkgSessionHandlers.count(std::make_pair(llmqType, quorumIndex))) {
-            LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- no session handlers for quorumIndex [%d]\n", quorumIndex);
             Misbehaving(pfrom.GetId(), 100);
             return;

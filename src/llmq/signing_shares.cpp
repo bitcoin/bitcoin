@@ -1402,7 +1402,6 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     }
 
     {
-        LOCK(cs_main);
         Misbehaving(nodeId, 100);
     }
 

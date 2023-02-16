@@ -788,7 +788,6 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
     }
 
     if (!islock->TriviallyValid()) {
-        LOCK(cs_main);
         Misbehaving(pfrom.GetId(), 100);
         return;
     }
@@ -798,14 +797,14 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
         const auto blockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(islock->cycleHash));
         if (blockIndex == nullptr) {
             // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
-            WITH_LOCK(cs_main, Misbehaving(pfrom.GetId(), 1));
+            Misbehaving(pfrom.GetId(), 1);
             return;
         }
 
         // Deterministic islocks MUST use rotation based llmq
         auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
         if (blockIndex->nHeight % GetLLMQParams(llmqType).dkgInterval != 0) {
-            WITH_LOCK(cs_main, Misbehaving(pfrom.GetId(), 100));
+            Misbehaving(pfrom.GetId(), 100);
             return;
         }
     }

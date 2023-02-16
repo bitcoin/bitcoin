@@ -240,10 +240,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     peerLogic->InitializeNode(&dummyNode1);
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode1.GetId(), 100); // Should get banned
-    }
+    Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     {
         LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
@@ -257,20 +254,14 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     peerLogic->InitializeNode(&dummyNode2);
     dummyNode2.nVersion = 1;
     dummyNode2.fSuccessfullyConnected = true;
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode2.GetId(), 50);
-    }
+    Misbehaving(dummyNode2.GetId(), 50);
     {
         LOCK(dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr2)); // 2 not banned yet...
     BOOST_CHECK(banman->IsDiscouraged(addr1));  // ... but 1 still should be
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode2.GetId(), 50);
-    }
+    Misbehaving(dummyNode2.GetId(), 50);
     {
         LOCK(dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
@@ -299,7 +290,6 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
     {
-        LOCK(cs_main);
         Misbehaving(dummyNode1.GetId(), 100);
     }
     {
@@ -308,7 +298,6 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr1));
     {
-        LOCK(cs_main);
         Misbehaving(dummyNode1.GetId(), 10);
     }
     {
@@ -317,7 +306,6 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr1));
     {
-        LOCK(cs_main);
         Misbehaving(dummyNode1.GetId(), 1);
     }
     {
@@ -350,10 +338,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     dummyNode.nVersion = 1;
     dummyNode.fSuccessfullyConnected = true;
 
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode.GetId(), 100);
-    }
+    Misbehaving(dummyNode.GetId(), 100);
     {
         LOCK(dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
