@@ -4146,7 +4146,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 skipped_l3_checks = true;
             }
         }
-        if (ShutdownRequested()) return VerifyDBResult::SUCCESS;
+        if (ShutdownRequested()) return VerifyDBResult::INTERRUPTED;
     }
     if (pindexFailure) {
         LogPrintf("Verification error: coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainstate.m_chain.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
@@ -4179,7 +4179,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 LogPrintf("Verification error: found unconnectable block at %d, hash=%s (%s)\n", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
-            if (ShutdownRequested()) return VerifyDBResult::SUCCESS;
+            if (ShutdownRequested()) return VerifyDBResult::INTERRUPTED;
         }
     }
 
