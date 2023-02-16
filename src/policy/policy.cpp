@@ -42,6 +42,10 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
+    // Anchor outputs have no dust limit
+    if (txout.scriptPubKey.IsPayToAnchor())
+        return 0;
+
     size_t nSize = GetSerializeSize(txout);
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
@@ -91,7 +95,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, bool permit_ephemeral_anchor, std::string& reason)
 {
     if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -140,6 +144,9 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
             nDataOut++;
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
+            return false;
+        } else if (whichType == TxoutType::ANCHOR && !permit_ephemeral_anchor) {
+            reason = "ephemeral-anchor";
             return false;
         } else if (IsDust(txout, dust_relay_fee)) {
             reason = "dust";
