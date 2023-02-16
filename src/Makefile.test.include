@@ -283,6 +283,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/message.cpp \
  test/fuzz/miniscript.cpp \
  test/fuzz/minisketch.cpp \
+ test/fuzz/mini_miner.cpp \
  test/fuzz/muhash.cpp \
  test/fuzz/multiplication_overflow.cpp \
  test/fuzz/net.cpp \
