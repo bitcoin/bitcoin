@@ -35,13 +35,6 @@ MclG1Point::MclG1Point(const uint256& b)
     m_p = temp.m_p;
 }
 
-MclG1Point::MclG1Point(const std::string& s)
-{
-    if (mclBnG1_setStr(&m_p, s.c_str(), s.length(), 10) == -1) {
-        throw std::runtime_error("MclG1Point(std::string): malformed serialization string");
-    }
-}
-
 mclBnG1 MclG1Point::Underlying() const
 {
     return m_p;

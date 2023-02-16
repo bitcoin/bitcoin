@@ -20,14 +20,12 @@
 class MclG1Point
 {
 private:
-    // this line needs to at the begging of the class definition
     static volatile StaticMclInit for_side_effect_only;
 public:
     MclG1Point();
     MclG1Point(const std::vector<uint8_t>& v);
     MclG1Point(const uint256& b);
     MclG1Point(const mclBnG1& p);
-    MclG1Point(const std::string& s);
 
     MclG1Point operator=(const mclBnG1& rhs);
     MclG1Point operator+(const MclG1Point& rhs) const;

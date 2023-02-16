@@ -11,11 +11,16 @@
 #include <blsct/arith/mcl/init/mcl_init.h>
 
 /**
- * This class should be instantiated in static context only e.g.
- * ```
- * static volatile StaticMclInit for_side_effect_only;
- * ```
- * Also needs to be inside a class definition to avoid memory leak
+ * Note that:
+ * - This class initializes Mcl library for static context
+ * - Define this variable before other static variables that
+ *   instantiate MclG1Point class directly or indirectly are
+ *   defined. Currently defined at the beginning of `MclG1Point`
+ *   class definition.
+ * - volatile keyword is necessary to protect the line from
+ *   comipler optimization
+ * - Defining this variable as a global variable results in
+ *   memory leaks
 */
 class StaticMclInit: MclInit
 {

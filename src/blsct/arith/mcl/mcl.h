@@ -12,6 +12,10 @@
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 
+/**
+ * Define a variable of type `AtomicMclInit` at the beginning
+ * of an execution path in order to use this set of arith classes
+ */
 struct Mcl
 {
   using Scalar = MclScalar;

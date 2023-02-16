@@ -12,6 +12,16 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
+/**
+ * Define this class at the beginning of execution of each executable
+ * to initialize Mcl library for non-static context. volatile keyword
+ * is necessary to protect the line from comipler optimization. e.g.
+ * ```
+ * void main() {
+ *     static volatile AtomicMclInit for_side_effect_only;
+ * }
+ * ```
+*/
 class AtomicMclInit: MclInit
 {
 public:
