@@ -7,11 +7,8 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
-<<<<<<< HEAD:src/blsct/arith/mcl/atomic_mcl_init.h
-=======
 #include <blsct/arith/mcl/init/mcl_init.h>
 #include <stdexcept>
->>>>>>> origin/master:src/blsct/arith/mcl/init/atomic_mcl_init.h
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <iostream>
