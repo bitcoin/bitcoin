@@ -4,9 +4,9 @@
 
 #include <key_io.h>
 #include <chainparams.h>
-#include <coinjoin/client.h>
 #include <logging.h>
 #include <script/descriptor.h>
+#include <ui_interface.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -265,7 +265,7 @@ bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination
     return true;
 }
 
-void LegacyScriptPubKeyMan::MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const uint256& hashBlock)
+void LegacyScriptPubKeyMan::MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const std::optional<int64_t>& block_time)
 {
     AssertLockHeld(cs_wallet);
     // extract addresses and check if they match with an unused keypool key
@@ -279,18 +279,15 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(WalletBatch &batch, const CScrip
                 WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
             }
         }
-        if (!hashBlock.IsNull()) {
-            int64_t block_time;
-            bool found_block = m_wallet.chain().findBlock(hashBlock, nullptr /* block */, &block_time);
-            assert(found_block);
-            if (mapKeyMetadata[keyid].nCreateTime > block_time) {
+        if (block_time) {
+            if (mapKeyMetadata[keyid].nCreateTime > *block_time) {
                 WalletLogPrintf("%s: Found a key which appears to be used earlier than we expected, updating metadata\n", __func__);
                 CPubKey vchPubKey;
                 bool res = GetPubKey(keyid, vchPubKey);
                 assert(res); // this should never fail
-                mapKeyMetadata[keyid].nCreateTime = block_time;
+                mapKeyMetadata[keyid].nCreateTime = *block_time;
                 batch.WriteKeyMetadata(mapKeyMetadata[keyid], vchPubKey, true);
-                UpdateTimeFirstKey(block_time);
+                UpdateTimeFirstKey(*block_time);
             }
         }
     }
@@ -368,73 +365,6 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
     if (!NewKeyPool()) {
         throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
     }
-}
-
-bool LegacyScriptPubKeyMan::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase)
-{
-    assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    LOCK(cs_wallet);
-
-    if (!m_storage.HasEncryptionKeys()) {
-        return false;
-    }
-
-    CCrypter crypter;
-    CKeyingMaterial vMasterKey;
-    CHDChain hdChainTmp;
-
-    // NOTE: an empty mnemonic means "generate a new one for me"
-    // NOTE: default mnemonic passphrase is an empty string
-    if (!hdChainTmp.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
-        throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
-    }
-
-    // add default account
-    hdChainTmp.AddAccount();
-    hdChainTmp.Debug(__func__);
-
-    for (const CWallet::MasterKeyMap::value_type& pMasterKey : m_wallet.mapMasterKeys) {
-        if (!crypter.SetKeyFromPassphrase(secureWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod)) {
-            return false;
-        }
-        // get vMasterKey to encrypt new hdChain
-        if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey)) {
-            continue; // try another master key
-        }
-
-        bool res = EncryptHDChain(vMasterKey, hdChainTmp);
-        assert(res);
-
-        CHDChain hdChainCrypted;
-        res = GetHDChain(hdChainCrypted);
-        assert(res);
-
-        DBG(
-            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()));
-            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
-        );
-
-        // ids should match, seed hashes should not
-        assert(hdChainTmp.GetID() == hdChainCrypted.GetID());
-        assert(hdChainTmp.GetSeedHash() != hdChainCrypted.GetSeedHash());
-
-        hdChainCrypted.Debug(__func__);
-
-        if (SetCryptedHDChainSingle(hdChainCrypted, false)) {
-            m_wallet.Lock();
-            if (!m_wallet.Unlock(secureWalletPassphrase)) {
-                // this should never happen
-                throw std::runtime_error(std::string(__func__) + ": Unlock failed");
-            }
-            if (!NewKeyPool()) {
-                throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
-            }
-            m_wallet.Lock();
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly)
@@ -1337,12 +1267,8 @@ bool LegacyScriptPubKeyMan::NewKeyPool()
             batch.ErasePool(nIndex);
         }
         setExternalKeyPool.clear();
-        auto it = coinJoinClientManagers.find(m_wallet.GetName());
-        if (it != coinJoinClientManagers.end()) {
-            it->second->StopMixing();
-        }
-        m_wallet.nKeysLeftSinceAutoBackup = 0;
 
+        m_storage.NewKeyPoolCallback();
         m_pool_key_to_index.clear();
 
         if (!TopUp()) {
@@ -1443,11 +1369,8 @@ void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex)
     {
         LOCK(cs_wallet);
         WalletBatch batch(m_storage.GetDatabase());
-        if (batch.ErasePool(nIndex))
-            --m_wallet.nKeysLeftSinceAutoBackup;
-        if (!nWalletBackups)
-            m_wallet.nKeysLeftSinceAutoBackup = 0;
-
+        bool erased = batch.ErasePool(nIndex);
+        m_storage.KeepDestinationCallback(erased);
         CPubKey pubkey;
         bool have_pk = GetPubKey(m_index_to_reserved_key.at(nIndex), pubkey);
         assert(have_pk);

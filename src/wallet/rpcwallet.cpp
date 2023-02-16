@@ -2719,7 +2719,7 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
     pwallet->SetMinVersion(FEATURE_HD);
 
     if (prev_encrypted) {
-        if (!spk_man->GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
+        if (!pwallet->GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
         }
     } else {

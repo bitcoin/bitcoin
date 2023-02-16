@@ -33,6 +33,10 @@ public:
     virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
     virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked(bool fForMixing = false) const = 0;
+
+    // methods below are unique from Dash due to different implementation of HD
+    virtual void NewKeyPoolCallback() = 0;
+    virtual void KeepDestinationCallback(bool erased) = 0;
 };
 
 //! Default for -keypool
@@ -163,7 +167,7 @@ public:
     virtual bool TopUp(unsigned int size = 0) { return false; }
 
     //! Mark unused addresses as being used
-    virtual void MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const uint256& hashBlock) {}
+    virtual void MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const std::optional<int64_t>& block_time) {}
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
@@ -282,7 +286,7 @@ public:
 
     bool TopUp(unsigned int size = 0) override;
 
-    void MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const uint256& hashBlock) override;
+    void MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const std::optional<int64_t>& block_time) override;
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
     void UpgradeKeyMetadata() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -410,7 +414,6 @@ public:
 
     /* Generates a new HD chain */
     void GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase);
-    bool GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase);
 
     /**
      * Explicitly make the wallet learn the related scripts for outputs to the

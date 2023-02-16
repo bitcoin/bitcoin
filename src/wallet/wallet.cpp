@@ -1010,7 +1010,14 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 if (auto spk_man = m_spk_man.get()) {
-                    spk_man->MarkUnusedAddresses(batch, txout.scriptPubKey, confirm.hashBlock);
+                    std::optional<int64_t> block_time;
+                    if (!confirm.hashBlock.IsNull()) {
+                        int64_t block_time_tmp;
+                        bool found_block = chain().findBlock(confirm.hashBlock, nullptr /* block */, &block_time_tmp);
+                        assert(found_block);
+                        block_time = block_time_tmp;
+                    }
+                    spk_man->MarkUnusedAddresses(batch, txout.scriptPubKey, block_time);
                 }
             }
 
@@ -1601,6 +1608,21 @@ void CWallet::UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag)
 void CWallet::UnsetBlankWalletFlag(WalletBatch& batch)
 {
     UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
+}
+
+void CWallet::NewKeyPoolCallback()
+{
+    auto it = coinJoinClientManagers.find(GetName());
+    if (it != coinJoinClientManagers.end()) {
+        it->second->StopMixing();
+    }
+    nKeysLeftSinceAutoBackup = 0;
+}
+
+void CWallet::KeepDestinationCallback(bool erased)
+{
+    if (erased) --nKeysLeftSinceAutoBackup;
+    if (!nWalletBackups) nKeysLeftSinceAutoBackup = 0;
 }
 
 bool CWallet::IsWalletFlagSet(uint64_t flag) const
@@ -5035,4 +5057,73 @@ const CKeyingMaterial& CWallet::GetEncryptionKey() const
 bool CWallet::HasEncryptionKeys() const
 {
     return !mapMasterKeys.empty();
+}
+
+bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase)
+{
+    assert(m_spk_man);
+
+    assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    LOCK(cs_wallet);
+
+    if (!HasEncryptionKeys()) {
+        return false;
+    }
+
+    CCrypter crypter;
+    CKeyingMaterial vMasterKey;
+    CHDChain hdChainTmp;
+
+    // NOTE: an empty mnemonic means "generate a new one for me"
+    // NOTE: default mnemonic passphrase is an empty string
+    if (!hdChainTmp.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
+        throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
+    }
+
+    // add default account
+    hdChainTmp.AddAccount();
+    hdChainTmp.Debug(__func__);
+
+    for (const CWallet::MasterKeyMap::value_type& pMasterKey : mapMasterKeys) {
+        if (!crypter.SetKeyFromPassphrase(secureWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod)) {
+            return false;
+        }
+        // get vMasterKey to encrypt new hdChain
+        if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey)) {
+            continue; // try another master key
+        }
+
+        bool res = m_spk_man->EncryptHDChain(vMasterKey, hdChainTmp);
+        assert(res);
+
+        CHDChain hdChainCrypted;
+        res = m_spk_man->GetHDChain(hdChainCrypted);
+        assert(res);
+
+        DBG(
+            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()));
+            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
+        );
+
+        // ids should match, seed hashes should not
+        assert(hdChainTmp.GetID() == hdChainCrypted.GetID());
+        assert(hdChainTmp.GetSeedHash() != hdChainCrypted.GetSeedHash());
+
+        hdChainCrypted.Debug(__func__);
+
+        if (m_spk_man->SetCryptedHDChainSingle(hdChainCrypted, false)) {
+            Lock();
+            if (!Unlock(secureWalletPassphrase)) {
+                // this should never happen
+                throw std::runtime_error(std::string(__func__) + ": Unlock failed");
+            }
+            if (!m_spk_man->NewKeyPool()) {
+                throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
+            }
+            Lock();
+            return true;
+        }
+    }
+
+    return false;
 }

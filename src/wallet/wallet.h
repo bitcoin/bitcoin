@@ -726,6 +726,12 @@ private:
     //! Unset the blank wallet flag and saves it to disk
     void UnsetBlankWalletFlag(WalletBatch& batch) override;
 
+    // Reset coinjoin and reset key counter
+    void NewKeyPoolCallback() override;
+
+    // Decreases amount of nKeysLeftSinceAutoBackup after KeepDestination
+    void KeepDestinationCallback(bool erased) override;
+
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -1193,6 +1199,9 @@ public:
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
+
+    /* Generates a new HD chain */
+    bool GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase);
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
     bool CanGetAddresses(bool internal = false);
