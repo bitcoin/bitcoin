@@ -34,9 +34,6 @@ GeneratorsFactory<T>::GeneratorsFactory()
     boost::lock_guard<boost::mutex> lock(GeneratorsFactory<T>::m_init_mutex);
     if (GeneratorsFactory<T>::m_is_initialized) return;
 
-    T::Initializer::Init();
-    T::Point::Init();
-
     m_H = Point::GetBasePoint();
     Points Gi, Hi;
     m_Gi = Gi;

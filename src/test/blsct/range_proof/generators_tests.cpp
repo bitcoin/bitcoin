@@ -14,7 +14,7 @@ using T = Mcl;
 using Point = T::Point;
 using Scalar = T::Scalar;
 
-BOOST_FIXTURE_TEST_SUITE(generators_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(generators_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_generators_get_instance)
 {

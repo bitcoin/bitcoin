@@ -2,10 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BLS_ETH 1
-
 #include <algorithm>
 #include <blsct/signature.h>
+#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <iterator>
 #include <streams.h>

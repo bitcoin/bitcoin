@@ -155,8 +155,10 @@ BITCOIN_CORE_H = \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
+  blsct/arith/mcl/init/atomic_mcl_init.h \
+  blsct/arith/mcl/init/mcl_init.h \
+  blsct/arith/mcl/init/static_mcl_init.h \
   blsct/arith/mcl/mcl_g1point.h \
-  blsct/arith/mcl/mcl_initializer.h \
   blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/mcl/mcl.h \
   blsct/arith/elements.h \
@@ -409,7 +411,6 @@ libbitcoin_node_a_SOURCES = \
   blockencodings.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
-  blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
   blsct/double_public_key.cpp \
@@ -965,7 +966,6 @@ libbitcoinkernel_la_SOURCES = \
   arith_uint256.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
-  blsct/arith/mcl/mcl_initializer.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
   blsct/double_public_key.cpp \

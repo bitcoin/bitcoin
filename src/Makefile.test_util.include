@@ -12,7 +12,9 @@ TEST_UTIL_H = \
   blsct/arith/endianness.h \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_scalar.h \
-  blsct/arith/mcl/mcl_initializer.h \
+  blsct/arith/mcl/init/atomic_mcl_init.h \
+  blsct/arith/mcl/init/mcl_init.h \
+  blsct/arith/mcl/init/static_mcl_init.h \
   blsct/double_public_key.h \
   blsct/private_key.h \
   blsct/public_key.h \
@@ -40,7 +42,6 @@ libtest_util_a_SOURCES = \
   blsct/arith/elements.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
-  blsct/arith/mcl/mcl_initializer.cpp \
   blsct/double_public_key.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \

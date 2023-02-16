@@ -41,11 +41,6 @@ MclScalar::MclScalar(const std::string& s, int radix)
     }
 }
 
-void MclScalar::Init()
-{
-    MclInitializer::Init();
-}
-
 MclScalar MclScalar::operator+(const MclScalar &rhs) const
 {
     MclScalar ret;

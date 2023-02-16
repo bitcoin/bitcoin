@@ -7,13 +7,12 @@
 #include <algorithm>
 #include <blsct/arith/elements.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <blsct/arith/mcl/mcl_initializer.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <boost/test/unit_test.hpp>
 #include <set>
 #include <streams.h>
 
-BOOST_FIXTURE_TEST_SUITE(mcl_g1point_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(mcl_g1point_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_constructors)
 {

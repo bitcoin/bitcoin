@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/eip_2333/bls12_381_keygen.h>
+#include <cmath>
 #include <crypto/sha256.h>
 #include <tinyformat.h>
 

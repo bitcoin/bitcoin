@@ -15,7 +15,7 @@
 
 namespace blsct {
 
-BOOST_FIXTURE_TEST_SUITE(sign_verify_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(sign_verify_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_compatibility_bet_bls_keys_and_blsct_keys)
 {

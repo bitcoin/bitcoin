@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 #include <util/strencodings.h>
 
-BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(range_proof_tests, BasicTestingSetup)
 
 using T = Mcl;
 using Point = T::Point;

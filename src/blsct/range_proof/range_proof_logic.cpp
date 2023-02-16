@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <blsct/arith/mcl/mcl_initializer.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/lazy_g1point.h>
@@ -60,16 +59,11 @@ template AmountRecoveryResult<Mcl> AmountRecoveryResult<Mcl>::failure();
 template <typename T>
 RangeProofLogic<T>::RangeProofLogic()
 {
-    using Initializer = typename T::Initializer;
     using Scalar = typename T::Scalar;
-    using Point = typename T::Point;
     using Scalars = Elements<Scalar>;
 
     if (m_is_initialized) return;
     boost::lock_guard<boost::mutex> lock(RangeProofLogic<T>::m_init_mutex);
-
-    Initializer::Init();
-    Point::Init();
 
     RangeProofLogic<T>::m_one = new Scalar(1);
     RangeProofLogic<T>::m_two = new Scalar(2);

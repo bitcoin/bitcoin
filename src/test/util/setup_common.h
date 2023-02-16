@@ -6,7 +6,7 @@
 #define BITCOIN_TEST_UTIL_SETUP_COMMON_H
 
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <blsct/arith/mcl/mcl_initializer.h>
+#include <blsct/arith/mcl/init/atomic_mcl_init.h>
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
@@ -92,6 +92,8 @@ struct BasicTestingSetup {
 
     const fs::path m_path_root;
     ArgsManager m_args;
+private:
+    volatile AtomicMclInit m_for_side_effect_only;
 };
 
 /** Testing setup that performs all steps up until right before
@@ -235,13 +237,6 @@ public:
 
 private:
     const std::string m_reason;
-};
-
-/**
- * Setup that initializes external mcl library
- */
-struct MclTestingSetup {
-    MclTestingSetup();
 };
 
 #endif // BITCOIN_TEST_UTIL_SETUP_COMMON_H

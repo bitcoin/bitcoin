@@ -10,14 +10,16 @@
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_H
 
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <blsct/arith/mcl/mcl_initializer.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 
+/**
+ * Define a variable of type `AtomicMclInit` at the beginning
+ * of an execution path in order to use this set of arith classes
+ */
 struct Mcl
 {
   using Scalar = MclScalar;
   using Point = MclG1Point;
-  using Initializer = MclInitializer;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_H

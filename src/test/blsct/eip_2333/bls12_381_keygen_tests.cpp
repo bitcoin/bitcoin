@@ -9,7 +9,7 @@
 #include <util/strencodings.h>
 #include <blsct/eip_2333/bls12_381_keygen.h>
 
-BOOST_FIXTURE_TEST_SUITE(bls12_381_keygen_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(bls12_381_keygen_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_i2osp)
 {
