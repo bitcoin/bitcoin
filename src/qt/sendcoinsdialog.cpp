@@ -203,7 +203,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         if (model->wallet().hasExternalSigner()) {
             //: "device" usually means a hardware wallet.
             ui->sendButton->setText(tr("Sign on device"));
-            if (gArgs.GetArg("-signer", "") != "") {
+            if (model->getOptionsModel()->hasSigner()) {
                 ui->sendButton->setEnabled(true);
                 ui->sendButton->setToolTip(tr("Connect your hardware wallet first."));
             } else {

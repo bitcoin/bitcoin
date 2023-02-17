@@ -46,7 +46,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
 
     {
         // Now try to load the wallet and verify the error.
-        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(database)));
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::UNKNOWN_DESCRIPTOR);
     }
 }
@@ -84,7 +84,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
 
     {   // Context setup.
         // Create and encrypt legacy wallet
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, CreateMockWalletDatabase()));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockWalletDatabase()));
         LOCK(wallet->cs_wallet);
         auto legacy_spkm = wallet->GetOrCreateLegacyScriptPubKeyMan();
         BOOST_CHECK(legacy_spkm->SetupGeneration(true));
@@ -112,7 +112,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
         // the records every time that 'CWallet::Unlock' gets called, which is not good.
 
         // Load the wallet and check that is encrypted
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, get_db(dbs)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", get_db(dbs)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
         BOOST_CHECK(wallet->IsCrypted());
         BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_KEY));
@@ -138,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
         }
 
         // Load the wallet and check that is encrypted
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(db)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
         BOOST_CHECK(wallet->IsCrypted());
         BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_KEY));
@@ -166,7 +166,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
             BOOST_CHECK(batch->Write(key, value, /*fOverwrite=*/true));
         }
 
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(db)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
     }
 
@@ -182,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
             BOOST_CHECK(db->MakeBatch(false)->Write(key, value, /*fOverwrite=*/true));
         }
 
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(db)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
     }
 }
