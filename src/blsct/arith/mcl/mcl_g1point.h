@@ -13,8 +13,6 @@
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <boost/thread/lock_guard.hpp>
-#include <boost/thread/mutex.hpp>
 
 class MclG1Point
 {
