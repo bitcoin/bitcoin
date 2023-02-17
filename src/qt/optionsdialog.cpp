@@ -406,24 +406,21 @@ void OptionsDialog::updateProxyValidationState()
 
 void OptionsDialog::updateDefaultProxyNets()
 {
+    CNetAddr ui_proxy_netaddr;
+    LookupHost(ui->proxyIp->text().toStdString(), ui_proxy_netaddr, /*fAllowLookup=*/false);
+    const CService ui_proxy{ui_proxy_netaddr, ui->proxyPort->text().toUShort()};
+
     Proxy proxy;
-    std::string strProxy;
-    QString strDefaultProxyGUI;
+    bool has_proxy;
 
-    model->node().getProxy(NET_IPV4, proxy);
-    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
-    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
+    has_proxy = model->node().getProxy(NET_IPV4, proxy);
+    ui->proxyReachIPv4->setChecked(has_proxy && proxy.proxy == ui_proxy);
 
-    model->node().getProxy(NET_IPV6, proxy);
-    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
-    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
+    has_proxy = model->node().getProxy(NET_IPV6, proxy);
+    ui->proxyReachIPv6->setChecked(has_proxy && proxy.proxy == ui_proxy);
 
-    model->node().getProxy(NET_ONION, proxy);
-    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
-    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+    has_proxy = model->node().getProxy(NET_ONION, proxy);
+    ui->proxyReachTor->setChecked(has_proxy && proxy.proxy == ui_proxy);
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

@@ -1397,7 +1397,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
             nonce, strSubVersion, nNodeStartingHeight, tx_relay));
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addr_you.ToString(), tx_relay, nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addr_you.ToStringAddrPort(), tx_relay, nodeid);
     } else {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, tx_relay, nodeid);
     }
@@ -3231,7 +3231,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Disconnect if we connected to ourself
         if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
         {
-            LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToString());
+            LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
             pfrom.fDisconnect = true;
             return;
         }
@@ -3358,11 +3358,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         std::string remoteAddr;
         if (fLogIPs)
-            remoteAddr = ", peeraddr=" + pfrom.addr.ToString();
+            remoteAddr = ", peeraddr=" + pfrom.addr.ToStringAddrPort();
 
         LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s\n",
                   cleanSubVer, pfrom.nVersion,
-                  peer->m_starting_height, addrMe.ToString(), fRelay, pfrom.GetId(),
+                  peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr);
 
         int64_t nTimeOffset = nTime - GetTime();
@@ -3405,7 +3405,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!pfrom.IsInboundConn()) {
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), peer->m_starting_height,
-                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
+                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : ""),
                       pfrom.ConnectionTypeAsString());
         }
 

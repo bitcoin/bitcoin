@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     // Test: Does Addrman respond correctly when empty.
     BOOST_CHECK_EQUAL(addrman->Size(), 0U);
     auto addr_null = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_null.ToString(), "[::]:0");
+    BOOST_CHECK_EQUAL(addr_null.ToStringAddrPort(), "[::]:0");
 
     // Test: Does Addrman::Add work as expected.
     CService addr1 = ResolveService("250.1.1.1", 8333);
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
     auto addr_ret1 = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addr_ret1.ToStringAddrPort(), "250.1.1.1:8333");
 
     // Test: Does IP address deduplication work correctly.
     //  Expected dup IP should not be added.
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     BOOST_CHECK(addrman->Add({CAddress(addr1_port, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman->Size(), 2U);
     auto addr_ret2 = addrman->Select().first;
-    BOOST_CHECK(addr_ret2.ToString() == "250.1.1.1:8333" || addr_ret2.ToString() == "250.1.1.1:8334");
+    BOOST_CHECK(addr_ret2.ToStringAddrPort() == "250.1.1.1:8333" || addr_ret2.ToStringAddrPort() == "250.1.1.1:8334");
 
     // Test: Add same IP but diff port to tried table; this converts the entry with
     // the specified port to tried, but not the other.
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     BOOST_CHECK_EQUAL(addrman->Size(), 2U);
     bool newOnly = true;
     auto addr_ret3 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addr_ret3.ToStringAddrPort(), "250.1.1.1:8333");
 }
 
 
@@ -146,16 +146,16 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
     bool newOnly = true;
     auto addr_ret1 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addr_ret1.ToStringAddrPort(), "250.1.1.1:8333");
 
     // Test: move addr to tried, select from new expected nothing returned.
     BOOST_CHECK(addrman->Good(CAddress(addr1, NODE_NONE)));
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
     auto addr_ret2 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret2.ToString(), "[::]:0");
+    BOOST_CHECK_EQUAL(addr_ret2.ToStringAddrPort(), "[::]:0");
 
     auto addr_ret3 = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addr_ret3.ToStringAddrPort(), "250.1.1.1:8333");
 
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
@@ -714,7 +714,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
     BOOST_CHECK(addrman->Size() == 0);
 
     // Empty addrman should return blank addrman info.
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // Add twenty two addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 
         // No collisions in tried.
         BOOST_CHECK(addrman->Good(addr));
-        BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     }
 
     // Ensure Good handles duplicates well.
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
         BOOST_CHECK(!addrman->Good(addr));
 
         // Verify duplicate address not marked as a collision.
-        BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     }
 }
 
@@ -758,13 +758,13 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     CService addr36 = ResolveService("250.1.1.36");
     BOOST_CHECK(addrman->Add({CAddress(addr36, NODE_NONE)}, source));
     BOOST_CHECK(!addrman->Good(addr36));
-    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.19:0");
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.19:0");
 
     // 36 should be discarded and 19 not evicted.
     // This means we keep 19 in the tried table and
     // 36 stays in the new table.
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // Lets create two collisions.
     for (unsigned int i = 37; i < 59; i++) {
@@ -778,18 +778,18 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     BOOST_CHECK(addrman->Add({CAddress(addr59, NODE_NONE)}, source));
     BOOST_CHECK(!addrman->Good(addr59));
 
-    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.10:0");
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.10:0");
 
     // Cause a second collision in the new table.
     BOOST_CHECK(!addrman->Add({CAddress(addr36, NODE_NONE)}, source));
 
     // 36 still cannot be moved from new to tried due to colliding with 19
     BOOST_CHECK(!addrman->Good(addr36));
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() != "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() != "[::]:0");
 
     // Resolve all collisions.
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 }
 
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman->Size() == 0);
 
     // Empty addrman should return blank addrman info.
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // Add 35 addresses
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -817,7 +817,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(!addrman->Good(addr));
 
     auto info = addrman->SelectTriedCollision().first;
-    BOOST_CHECK_EQUAL(info.ToString(), "250.1.1.19:0");
+    BOOST_CHECK_EQUAL(info.ToStringAddrPort(), "250.1.1.19:0");
 
     // Ensure test of address fails, so that it is evicted.
     // Update entry in tried by setting last good connection in the deep past.
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
     // Should swap 36 for 19.
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     AddressPosition addr_pos{addrman->FindAddressEntry(CAddress(addr, NODE_NONE)).value()};
     BOOST_CHECK(addr_pos.tried);
 
@@ -835,18 +835,18 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     // We check this by verifying Good() returns false and also verifying that
     // we have no collisions.
     BOOST_CHECK(!addrman->Good(addr));
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // 19 should fail as a collision (not a duplicate) if we now attempt to move
     // it to the tried table.
     CService addr19 = ResolveService("250.1.1.19");
     BOOST_CHECK(!addrman->Good(addr19));
-    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.36:0");
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.36:0");
 
     // Eviction is also successful if too much time has passed since last try
     SetMockTime(GetTime() + 4 * 60 *60);
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     //Now 19 is in tried again, and 36 back to new
     AddressPosition addr_pos19{addrman->FindAddressEntry(CAddress(addr19, NODE_NONE)).value()};
     BOOST_CHECK(addr_pos19.tried);

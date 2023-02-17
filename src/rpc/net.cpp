@@ -196,7 +196,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("id", stats.nodeid);
         obj.pushKV("addr", stats.m_addr_name);
         if (stats.addrBind.IsValid()) {
-            obj.pushKV("addrbind", stats.addrBind.ToString());
+            obj.pushKV("addrbind", stats.addrBind.ToStringAddrPort());
         }
         if (!(stats.addrLocal.empty())) {
             obj.pushKV("addrlocal", stats.addrLocal);
@@ -496,7 +496,7 @@ static RPCHelpMan getaddednodeinfo()
         UniValue addresses(UniValue::VARR);
         if (info.fConnected) {
             UniValue address(UniValue::VOBJ);
-            address.pushKV("address", info.resolvedAddress.ToString());
+            address.pushKV("address", info.resolvedAddress.ToStringAddrPort());
             address.pushKV("connected", info.fInbound ? "inbound" : "outbound");
             addresses.push_back(address);
         }
@@ -571,7 +571,7 @@ static UniValue GetNetworksInfo()
         obj.pushKV("name", GetNetworkName(network));
         obj.pushKV("limited", !IsReachable(network));
         obj.pushKV("reachable", IsReachable(network));
-        obj.pushKV("proxy", proxy.IsValid() ? proxy.proxy.ToStringIPPort() : std::string());
+        obj.pushKV("proxy", proxy.IsValid() ? proxy.proxy.ToStringAddrPort() : std::string());
         obj.pushKV("proxy_randomize_credentials", proxy.randomize_credentials);
         networks.push_back(obj);
     }
@@ -664,7 +664,7 @@ static RPCHelpMan getnetworkinfo()
         for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost)
         {
             UniValue rec(UniValue::VOBJ);
-            rec.pushKV("address", item.first.ToString());
+            rec.pushKV("address", item.first.ToStringAddr());
             rec.pushKV("port", item.second.nPort);
             rec.pushKV("score", item.second.nScore);
             localAddresses.push_back(rec);
@@ -901,7 +901,7 @@ static RPCHelpMan getnodeaddresses()
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
         obj.pushKV("services", (uint64_t)addr.nServices);
-        obj.pushKV("address", addr.ToStringIP());
+        obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
         obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
         ret.push_back(obj);
