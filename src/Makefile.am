@@ -204,8 +204,10 @@ BITCOIN_CORE_H = \
   node/chainstate.h \
   node/chainstatemanager_args.h \
   node/coin.h \
+  node/coins_view_args.h \
   node/connection_types.h \
   node/context.h \
+  node/database_args.h \
   node/eviction.h \
   node/interface_ui.h \
   node/mempool_args.h \
@@ -388,8 +390,10 @@ libbitcoin_node_a_SOURCES = \
   node/chainstate.cpp \
   node/chainstatemanager_args.cpp \
   node/coin.cpp \
+  node/coins_view_args.cpp \
   node/connection_types.cpp \
   node/context.cpp \
+  node/database_args.cpp \
   node/eviction.cpp \
   node/interface_ui.cpp \
   node/interfaces.cpp \
