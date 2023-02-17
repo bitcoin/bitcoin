@@ -1471,6 +1471,8 @@ void CConnman::ThreadDNSAddressSeed()
         }
 
         LogPrintf("Loading addresses from DNS seed %s\n", seed);
+        // If -proxy is in use, we make an ADDR_FETCH connection to the DNS resolved peer address
+        // for the base dns seed domain in chainparams
         if (HaveNameProxy()) {
             AddAddrFetch(seed);
         } else {
@@ -1492,8 +1494,9 @@ void CConnman::ThreadDNSAddressSeed()
                 }
                 addrman.Add(vAdd, resolveSource);
             } else {
-                // We now avoid directly using results from DNS Seeds which do not support service bit filtering,
-                // instead using them as a addrfetch to get nodes with our desired service bits.
+                // If the seed does not support a subdomain with our desired service bits,
+                // we make an ADDR_FETCH connection to the DNS resolved peer address for the
+                // base dns seed domain in chainparams
                 AddAddrFetch(seed);
             }
         }
@@ -1602,7 +1605,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
-            ProcessAddrFetch();
             for (const std::string& strAddr : connect)
             {
                 CAddress addr(CService(), NODE_NONE);
