@@ -1106,29 +1106,6 @@ bool CSubNet::IsValid() const
     return valid;
 }
 
-bool CSubNet::SanityCheck() const
-{
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-        return true;
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        return false;
-    }
-
-    for (size_t x = 0; x < network.m_addr.size(); ++x) {
-        if (network.m_addr[x] & ~netmask[x]) return false;
-    }
-
-    return true;
-}
-
 bool operator==(const CSubNet& a, const CSubNet& b)
 {
     return a.valid == b.valid && a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
