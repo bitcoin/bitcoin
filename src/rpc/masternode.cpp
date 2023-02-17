@@ -112,6 +112,23 @@ static UniValue masternode_count(const JSONRPCRequest& request)
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("total", total);
     obj.pushKV("enabled", enabled);
+
+    int hpmn_total = mnList.GetAllHPMNsCount();
+    int hpmn_enabled = mnList.GetValidHPMNsCount();
+
+    UniValue hpmnObj(UniValue::VOBJ);
+    hpmnObj.pushKV("total", hpmn_total);
+    hpmnObj.pushKV("enabled", hpmn_enabled);
+
+    UniValue regularObj(UniValue::VOBJ);
+    regularObj.pushKV("total", total - hpmn_total);
+    regularObj.pushKV("enabled", enabled - hpmn_enabled);
+
+    UniValue detailedObj(UniValue::VOBJ);
+    detailedObj.pushKV("regular", regularObj);
+    detailedObj.pushKV("hpmn", hpmnObj);
+    obj.pushKV("detailed", detailedObj);
+
     return obj;
 }
 
@@ -247,6 +264,7 @@ static UniValue masternode_status(const JSONRPCRequest& request)
     }
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
+        mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
         UniValue stateObj;

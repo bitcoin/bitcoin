@@ -230,6 +230,11 @@ public:
         return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance; });
     }
 
+    [[nodiscard]] size_t GetValidHPMNsCount() const
+    {
+        return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance && IsMNValid(*p.second); });
+    }
+
     /**
      * Execute a callback on all masternodes in the mnList. This will pass a reference
      * of each masternode to the callback function. This should be preferred over ForEachMNShared.

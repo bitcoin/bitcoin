@@ -46,6 +46,8 @@ class LLMQHPMNTest(DashTestFramework):
         self.log.info("Test that HPMN registration is rejected before v19")
         self.test_hpmn_is_rejected_before_v19()
 
+        self.test_masternode_count(expected_mns_count=4, expected_hpmns_count=0)
+
         self.activate_v19(expected_activation_height=900)
         self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
 
@@ -64,6 +66,7 @@ class LLMQHPMNTest(DashTestFramework):
             hpmn_protxhash_list.append(hpmn_info.proTxHash)
             self.nodes[0].generate(8)
             self.sync_blocks(self.nodes)
+            self.test_masternode_count(expected_mns_count=4, expected_hpmns_count=i+1)
             self.test_hpmn_update_service(hpmn_info)
 
         self.log.info("Test llmq_platform are formed only with HPMNs")
@@ -188,6 +191,13 @@ class LLMQHPMNTest(DashTestFramework):
         except:
             self.log.info("protx_hpmn rejected")
         assert_equal(protx_success, False)
+
+    def test_masternode_count(self, expected_mns_count, expected_hpmns_count):
+        mn_count = self.nodes[0].masternode('count')
+        assert_equal(mn_count['total'], expected_mns_count + expected_hpmns_count)
+        detailed_count = mn_count['detailed']
+        assert_equal(detailed_count['regular']['total'], expected_mns_count)
+        assert_equal(detailed_count['hpmn']['total'], expected_hpmns_count)
 
     def test_hpmn_update_service(self, hpmn_info):
         funds_address = self.nodes[0].getnewaddress()
