@@ -2129,7 +2129,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 auto dmn = mnList.GetValidMN(vPendingMasternodes.front());
                 vPendingMasternodes.erase(vPendingMasternodes.begin());
                 if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
-                    LogPrint(BCLog::NET, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddr());
+                    LogPrint(BCLog::NET, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddrPort());
                     return dmn;
                 }
             }
@@ -2138,7 +2138,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 // not-null
                 auto dmn = pending[GetRand(pending.size())];
                 LogPrint(BCLog::NET, "CConnman::%s -- opening quorum connection to %s, service=%s\n",
-                         _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddr());
+                         _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddrPort());
                 return dmn;
             }
 
@@ -2148,7 +2148,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 masternodePendingProbes.erase(dmn->proTxHash);
                 isProbe = MasternodeProbeConn::Is_Connection;
 
-                LogPrint(BCLog::NET, "CConnman::%s -- probing masternode %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddr());
+                LogPrint(BCLog::NET, "CConnman::%s -- probing masternode %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddrPort());
                 return dmn;
             }
             return nullptr;
@@ -2170,7 +2170,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         // should be in the list now if connection was opened
         CNode* pnode = FindNode(connectToDmn->pdmnState->addr);
         if(!pnode || !pnode->fDisconnect) {
-            LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToStringAddr());
+            LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToStringAddrPort());
             // Will take a few consequent failed attempts to PoSe-punish a MN.
             if (mmetaman.GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {
                 LogPrint(BCLog::NET, "CConnman::%s -- failed to connect to masternode %s too many times\n", __func__, connectToDmn->proTxHash.ToString());

@@ -135,7 +135,7 @@ UniValue GetNextMasternodeForPayment(size_t heightShift)
     UniValue obj(UniValue::VOBJ);
 
     obj.pushKV("height",        (int)(mnList.GetHeight() + heightShift));
-    obj.pushKV("IP:port",       payee->pdmnState->addr.ToStringAddr());
+    obj.pushKV("IP:port",       payee->pdmnState->addr.ToStringAddrPort());
     obj.pushKV("proTxHash",     payee->proTxHash.ToString());
     obj.pushKV("outpoint",      payee->collateralOutpoint.ToStringShort());
     obj.pushKV("payee",         IsValidDestination(payeeDest) ? EncodeDestination(payeeDest) : "UNKNOWN");
@@ -652,7 +652,7 @@ RPCHelpMan masternodelist()
         }
 
         if (strMode == "addr") {
-            std::string strAddress = dmn.pdmnState->addr.ToStringAddr();
+            std::string strAddress = dmn.pdmnState->addr.ToStringAddrPort();
             if (strFilter !="" && strAddress.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strAddress);
@@ -663,7 +663,7 @@ RPCHelpMan masternodelist()
                            payeeStr << " " << std::setw(10) <<
                            dmnToLastPaidTime(dmn) << " "  << std::setw(6) <<
                            dmn.pdmnState->nLastPaidHeight << " " <<
-                           dmn.pdmnState->addr.ToStringAddr();
+                           dmn.pdmnState->addr.ToStringAddrPort();
             std::string strFull = streamFull.str();
             if (strFilter !="" && strFull.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
@@ -673,7 +673,7 @@ RPCHelpMan masternodelist()
             streamInfo << std::setw(18) <<
                            dmnToStatus(dmn) << " " <<
                            payeeStr << " " <<
-                           dmn.pdmnState->addr.ToStringAddr();
+                           dmn.pdmnState->addr.ToStringAddrPort();
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
@@ -681,7 +681,7 @@ RPCHelpMan masternodelist()
         } else if (strMode == "json") {
             std::ostringstream streamInfo;
             streamInfo <<  dmn.proTxHash.ToString() << " " <<
-                           dmn.pdmnState->addr.ToStringAddr() << " " <<
+                           dmn.pdmnState->addr.ToStringAddrPort() << " " <<
                            payeeStr << " " <<
                            dmnToStatus(dmn) << " " <<
                            dmnToLastPaidTime(dmn) << " " <<
@@ -695,7 +695,7 @@ RPCHelpMan masternodelist()
                 strOutpoint.find(strFilter) == std::string::npos) return;
             UniValue objMN(UniValue::VOBJ);
             objMN.pushKV("proTxHash", dmn.proTxHash.ToString());
-            objMN.pushKV("address", dmn.pdmnState->addr.ToStringAddr());
+            objMN.pushKV("address", dmn.pdmnState->addr.ToStringAddrPort());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("collateralblock", dmn.pdmnState->nCollateralHeight);
