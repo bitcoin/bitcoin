@@ -186,13 +186,13 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        uint32_t nFlags = 0;
+        uint64_t nFlags = 0;
 
         if (rangeProof.Vs.Size() > 0 || !spendingKey.IsUnity() || !blindingKey.IsUnity() || !ephemeralKey.IsUnity())
             nFlags |= BLSCT_MARKER;
         if (!tokenId.IsNull())
             nFlags |= TOKEN_MARKER;
-        if (nFlags > 0) {
+        if (nFlags != 0) {
             ::Serialize(s, std::numeric_limits<CAmount>::max());
             ::Serialize(s, nFlags);
         } else {
@@ -213,7 +213,7 @@ public:
     void Unserialize(Stream& s)
     {
         ::Unserialize(s, nValue);
-        uint32_t nFlags = 0;
+        uint64_t nFlags = 0;
         if (nValue == std::numeric_limits<CAmount>::max()) {
             ::Unserialize(s, nFlags);
         }
@@ -226,8 +226,9 @@ public:
             ::Unserialize(s, blindingKey);
             ::Unserialize(s, ephemeralKey);
         }
-        if (nFlags & TOKEN_MARKER)
+        if (nFlags & TOKEN_MARKER) {
             ::Unserialize(s, tokenId);
+        }
     }
 
     void SetNull()

@@ -19,14 +19,15 @@ namespace blsct {
 class Signature
 {
 public:
+    Signature()
+    {
+        mclBnG2_clear(&m_data.v);
+    }
+
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
 
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& b);
-    size_t GetSerializeSize(int nVersion = PROTOCOL_VERSION) const
-    {
-        return ::GetSerializeSize(GetVch(), nVersion);
-    }
 
     template <typename Stream>
     void Serialize(Stream& s) const
