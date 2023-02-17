@@ -105,7 +105,7 @@ public:
         v_size = ::ReadCompactSize(s);
         m_vec.resize(v_size);
         Clear();
-        for (auto i = 0; i < v_size; i++) {
+        for (size_t i = 0; i < v_size; i++) {
             T n;
             std::vector<uint8_t> v;
             ::Unserialize(s, v);
