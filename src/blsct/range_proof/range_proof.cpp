@@ -33,9 +33,6 @@ template std::vector<uint8_t> SerializeRangeProof(const RangeProof<Mcl>& proof);
 template <typename T>
 RangeProof<T> UnserializeRangeProof(const std::vector<unsigned char>& vecIn)
 {
-    using Point = typename T::Point;
-    using Scalar = typename T::Scalar;
-
     RangeProof<T> retProof;
     CDataStream s(vecIn, 0, 0);
 
