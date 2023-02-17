@@ -576,7 +576,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
     // We don't expect m_tx_results for each transaction when basic sanity checks haven't passed.
     BOOST_CHECK(result_unrelated_submit.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
-    BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetRejectReason(), "package-not-child-with-parents");
+    BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetRejectReason(), "not-ancestor-package");
     BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
 
     // Parent and Child (and Grandchild) Package
@@ -611,16 +611,6 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
     CTransactionRef tx_grandchild = MakeTransactionRef(mtx_grandchild);
     package_3gen.push_back(tx_grandchild);
 
-    // 3 Generations is not allowed.
-    {
-        auto result_3gen_submit = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                    package_3gen, /*test_accept=*/false);
-        BOOST_CHECK(result_3gen_submit.m_state.IsInvalid());
-        BOOST_CHECK_EQUAL(result_3gen_submit.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
-        BOOST_CHECK_EQUAL(result_3gen_submit.m_state.GetRejectReason(), "package-not-child-with-parents");
-        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-    }
-
     // Parent and child package where transactions are invalid for reasons other than fee and
     // missing inputs, so the package validation isn't expected to happen.
     {
@@ -645,38 +635,28 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(result_quit_early.m_state.GetResult(), PackageValidationResult::PCKG_TX);
     }
 
-    // Child with missing parent.
-    mtx_child.vin.emplace_back(COutPoint(package_unrelated[0]->GetHash(), 0));
-    Package package_missing_parent;
-    package_missing_parent.push_back(tx_parent);
-    package_missing_parent.push_back(MakeTransactionRef(mtx_child));
+    // Submit package parent + child + grandchild.
     {
-        const auto result_missing_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                             package_missing_parent, /*test_accept=*/false);
-        BOOST_CHECK(result_missing_parent.m_state.IsInvalid());
-        BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
-        BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetRejectReason(), "package-not-child-with-unconfirmed-parents");
-        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-    }
+        auto result_3gen_submit = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                    package_3gen, /*test_accept=*/false);
+        expected_pool_size += 3;
+        BOOST_CHECK_MESSAGE(result_3gen_submit.m_state.IsValid(),
+                            "Package validation unexpectedly failed: " << result_3gen_submit.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(result_3gen_submit.m_tx_results.size(), package_3gen.size());
+        auto it_parent = result_3gen_submit.m_tx_results.find(tx_parent->GetWitnessHash());
+        auto it_child = result_3gen_submit.m_tx_results.find(tx_child->GetWitnessHash());
+        auto it_grandchild = result_3gen_submit.m_tx_results.find(tx_grandchild->GetWitnessHash());
 
-    // Submit package with parent + child.
-    {
-        const auto submit_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                           package_parent_child, /*test_accept=*/false);
-        expected_pool_size += 2;
-        BOOST_CHECK_MESSAGE(submit_parent_child.m_state.IsValid(),
-                            "Package validation unexpectedly failed: " << submit_parent_child.m_state.GetRejectReason());
-        BOOST_CHECK_EQUAL(submit_parent_child.m_tx_results.size(), package_parent_child.size());
-        auto it_parent = submit_parent_child.m_tx_results.find(tx_parent->GetWitnessHash());
-        auto it_child = submit_parent_child.m_tx_results.find(tx_child->GetWitnessHash());
-        BOOST_CHECK(it_parent != submit_parent_child.m_tx_results.end());
-        BOOST_CHECK(it_parent->second.m_state.IsValid());
         BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_parent)));
         BOOST_CHECK_EQUAL(it_parent->second.m_wtxids_fee_calculations.value().size(), 1);
         BOOST_CHECK_EQUAL(it_parent->second.m_wtxids_fee_calculations.value().front(), tx_parent->GetWitnessHash());
         BOOST_CHECK(it_child->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_child)));
         BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().size(), 1);
         BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().front(), tx_child->GetWitnessHash());
+
+        BOOST_CHECK(it_grandchild->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_grandchild)));
+        BOOST_CHECK_EQUAL(it_grandchild->second.m_wtxids_fee_calculations.value().size(), 1);
+        BOOST_CHECK_EQUAL(it_grandchild->second.m_wtxids_fee_calculations.value().front(), tx_grandchild->GetWitnessHash());
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
     }

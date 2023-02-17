@@ -820,7 +820,7 @@ static RPCHelpMan submitpackage()
 {
     return RPCHelpMan{"submitpackage",
         "Submit a package of raw transactions (serialized, hex-encoded) to local node.\n"
-        "The package must consist of a child with its parents, and none of the parents may depend on one another.\n"
+        "The package must only consist of a transaction with its unconfirmed ancestors.\n"
         "The package will be validated according to consensus and mempool policy rules. If all transactions pass, they will be accepted to mempool.\n"
         "This RPC is experimental and the interface may be unstable. Refer to doc/policy/packages.md for documentation on package policies.\n"
         "Warning: successful submission does not mean the transactions will propagate throughout the network.\n"
@@ -878,10 +878,6 @@ static RPCHelpMan submitpackage()
                 }
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
-            if (!IsChildWithParentsTree(txns)) {
-                throw JSONRPCTransactionError(TransactionError::INVALID_PACKAGE, "package topology disallowed. not child-with-parents or parents depend on each other.");
-            }
-
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
             Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();

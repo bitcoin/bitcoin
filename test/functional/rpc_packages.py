@@ -17,7 +17,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
-    assert_raises_rpc_error,
 )
 from test_framework.wallet import (
     DEFAULT_FEE,
@@ -325,17 +324,15 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.generate(node, 1)
 
     def test_submitpackage(self):
-        node = self.nodes[0]
-
         self.log.info("Submitpackage valid packages with 1 child and some number of parents")
         for num_parents in [1, 2, 24]:
             self.test_submit_child_with_parents(num_parents, False)
             self.test_submit_child_with_parents(num_parents, True)
-
-        self.log.info("Submitpackage only allows packages of 1 child with its parents")
-        # Chain of 3 transactions has too many generations
+        self.log.info("Submitpackage with a 25-generation chain")
         chain_hex = [t["hex"] for t in self.wallet.create_self_transfer_chain(chain_length=25)]
-        assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
+        chain_testmempoolaccept_result = self.nodes[0].testmempoolaccept(chain_hex)
+        chain_submitpackage_result = self.nodes[0].submitpackage(chain_hex)
+        self.assert_equal_package_results(self.nodes[0], chain_testmempoolaccept_result, chain_submitpackage_result)
 
 
 if __name__ == "__main__":
