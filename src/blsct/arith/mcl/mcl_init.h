@@ -11,7 +11,6 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <iostream>
-#include <stdexcept>
 
 /**
  * Create an instance of this class somewhere at the beginning
