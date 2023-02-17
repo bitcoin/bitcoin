@@ -65,7 +65,7 @@ enum class ConnectionType {
      * addresses from our AddrMan if MAX_BLOCK_RELAY_ONLY_CONNECTIONS
      * isn't reached yet.
      */
-    BLOCK_RELAY,
+    AUTOMATIC_BLOCK_RELAY,
 
     /**
      * AddrFetch connections are short lived connections used to solicit
@@ -77,7 +77,7 @@ enum class ConnectionType {
 
     /**
      * Manual-block-relay connections are manually added nodes (via -addnode)
-     * that behave like BLOCK_RELAY connections in that they don't participate in
+     * that behave like AUTOMATIC_BLOCK_RELAY connections in that they don't participate in
      * transaction and address relay, and also share the properties of MANUAL
      * connections. When the node is connected to a privacy network such as
      * Tor, manual block-relay-only connections to IPv4 or IPv6 nodes can be

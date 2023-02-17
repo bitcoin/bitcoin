@@ -447,7 +447,7 @@ public:
     bool IsAutomaticOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
-            case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::AUTOMATIC_BLOCK_RELAY:
                 return true;
             case ConnectionType::INBOUND:
             case ConnectionType::MANUAL:
@@ -469,7 +469,7 @@ public:
     }
 
     bool IsAutomaticBlockRelayConn() const {
-        return m_conn_type == ConnectionType::BLOCK_RELAY;
+        return m_conn_type == ConnectionType::AUTOMATIC_BLOCK_RELAY;
     }
 
     bool IsFeelerConn() const {
@@ -502,7 +502,7 @@ public:
             case ConnectionType::FEELER:
                 return false;
             case ConnectionType::OUTBOUND_FULL_RELAY:
-            case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::AUTOMATIC_BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
                 return true;
         } // no default case, so the compiler can warn about missing cases
@@ -856,7 +856,7 @@ public:
      * Attempts to open a connection. Currently only used from tests.
      *
      * @param[in]   address     Address of node to try connecting to
-     * @param[in]   conn_type   ConnectionType::OUTBOUND, ConnectionType::BLOCK_RELAY,
+     * @param[in]   conn_type   ConnectionType::OUTBOUND, ConnectionType::AUTOMATIC_BLOCK_RELAY,
      *                          ConnectionType::ADDR_FETCH or ConnectionType::FEELER
      * @return      bool        Returns false if there are no available
      *                          slots for this connection:
@@ -1020,7 +1020,7 @@ private:
     std::unordered_set<Network> GetReachableEmptyNetworks() const;
 
     /**
-     * Return vector of current BLOCK_RELAY peers.
+     * Return vector of current AUTOMATIC_BLOCK_RELAY peers.
      */
     std::vector<CAddress> GetCurrentAutomaticBlockRelayConns() const;
 

@@ -1084,7 +1084,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     case ConnectionType::OUTBOUND_FULL_RELAY:
         max_connections = m_max_outbound_full_relay;
         break;
-    case ConnectionType::BLOCK_RELAY:
+    case ConnectionType::AUTOMATIC_BLOCK_RELAY:
         max_connections = m_max_outbound_block_relay;
         break;
     // no limit for ADDR_FETCH because -seednode has no limit either
@@ -1730,7 +1730,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::MANUAL:
                     case ConnectionType::MANUAL_BLOCK_RELAY:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
-                    case ConnectionType::BLOCK_RELAY:
+                    case ConnectionType::AUTOMATIC_BLOCK_RELAY:
                         CAddress address{pnode->addr};
                         if (address.IsTor() || address.IsI2P() || address.IsCJDNS()) {
                             // Since our addrman-groups for these networks are
@@ -1754,9 +1754,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         bool fFeeler = false;
 
         // Determine what type of connection to open. Opening
-        // BLOCK_RELAY connections to addresses from anchors.dat gets the highest
+        // AUTOMATIC_BLOCK_RELAY connections to addresses from anchors.dat gets the highest
         // priority. Then we open OUTBOUND_FULL_RELAY priority until we
-        // meet our full-relay capacity. Then we open BLOCK_RELAY connection
+        // meet our full-relay capacity. Then we open AUTOMATIC_BLOCK_RELAY connection
         // until we hit our block-relay-only peer limit.
         // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
         // try opening an additional OUTBOUND_FULL_RELAY connection. If none of
@@ -1765,12 +1765,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // timer to decide if we should open a FEELER.
 
         if (!m_anchors.empty() && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
-            conn_type = ConnectionType::BLOCK_RELAY;
+            conn_type = ConnectionType::AUTOMATIC_BLOCK_RELAY;
             anchor = true;
         } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
             // OUTBOUND_FULL_RELAY
         } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
-            conn_type = ConnectionType::BLOCK_RELAY;
+            conn_type = ConnectionType::AUTOMATIC_BLOCK_RELAY;
         } else if (GetTryNewOutboundPeer()) {
             // OUTBOUND_FULL_RELAY
         } else if (now > next_extra_block_relay && m_start_extra_block_relay_peers) {
@@ -1796,7 +1796,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // connections, they do not get their own ConnectionType enum
             // (similar to how we deal with extra outbound peers).
             next_extra_block_relay = GetExponentialRand(now, EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
-            conn_type = ConnectionType::BLOCK_RELAY;
+            conn_type = ConnectionType::AUTOMATIC_BLOCK_RELAY;
         } else if (now > next_feeler) {
             next_feeler = GetExponentialRand(now, FEELER_INTERVAL);
             conn_type = ConnectionType::FEELER;

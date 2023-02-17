@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 
     // Add block-relay-only peers up to the limit
     for (int i = 0; i < max_outbound_block_relay; ++i) {
-        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
+        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::AUTOMATIC_BLOCK_RELAY);
     }
     peerLogic->CheckForStaleTipAndEvictPeers();
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
     }
 
     // Add an extra block-relay-only peer breaking the limit (mocks logic in ThreadOpenConnections)
-    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::AUTOMATIC_BLOCK_RELAY);
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     // The extra peer should only get marked for eviction after MINIMUM_CONNECT_TIME

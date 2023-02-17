@@ -378,7 +378,7 @@ static RPCHelpMan addconnection()
     if (conn_type_in == "outbound-full-relay") {
         conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
     } else if (conn_type_in == "block-relay-only") {
-        conn_type = ConnectionType::BLOCK_RELAY;
+        conn_type = ConnectionType::AUTOMATIC_BLOCK_RELAY;
     } else if (conn_type_in == "addr-fetch") {
         conn_type = ConnectionType::ADDR_FETCH;
     } else if (conn_type_in == "feeler") {

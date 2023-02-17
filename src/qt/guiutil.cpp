@@ -709,7 +709,7 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     case ConnectionType::OUTBOUND_FULL_RELAY: return prefix + QObject::tr("Full Relay");
     /*: Peer connection type that relays network information about
         blocks and not transactions or addresses. */
-    case ConnectionType::BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
+    case ConnectionType::AUTOMATIC_BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
     //: Peer connection type established manually through one of several methods.
     case ConnectionType::MANUAL: return prefix + QObject::tr("Manual");
     //: Short-lived peer connection type that tests the aliveness of known addresses.

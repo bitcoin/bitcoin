@@ -16,7 +16,7 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
         return "feeler";
     case ConnectionType::OUTBOUND_FULL_RELAY:
         return "outbound-full-relay";
-    case ConnectionType::BLOCK_RELAY:
+    case ConnectionType::AUTOMATIC_BLOCK_RELAY:
         return "block-relay-only";
     case ConnectionType::ADDR_FETCH:
         return "addr-fetch";
