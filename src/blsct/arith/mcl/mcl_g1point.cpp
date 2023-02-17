@@ -6,6 +6,8 @@
 #include <numeric>
 #include <streams.h>
 
+volatile StaticMclInit MclG1Point::for_side_effect_only{};
+
 MclG1Point::MclG1Point()
 {
     mclBnG1_clear(&m_p);

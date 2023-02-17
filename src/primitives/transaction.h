@@ -193,7 +193,7 @@ public:
         if (!tokenId.IsNull())
             nFlags |= TOKEN_MARKER;
         if (nFlags > 0) {
-            ::Serialize(s, std::numeric_limits<uint64_t>::max());
+            ::Serialize(s, std::numeric_limits<CAmount>::max());
             ::Serialize(s, nFlags);
         } else {
             ::Serialize(s, nValue);
@@ -214,7 +214,7 @@ public:
     {
         ::Unserialize(s, nValue);
         uint32_t nFlags = 0;
-        if (nValue == std::numeric_limits<uint64_t>::max()) {
+        if (nValue == std::numeric_limits<CAmount>::max()) {
             ::Unserialize(s, nFlags);
         }
         ::Unserialize(s, scriptPubKey);

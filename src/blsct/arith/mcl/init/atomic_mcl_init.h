@@ -28,9 +28,10 @@ class AtomicMclInit : MclInit
 public:
     AtomicMclInit()
     {
+        boost::lock_guard<boost::mutex> lock(m_init_mutex);
+
         static bool is_initialized = false;
         if (is_initialized) return;
-        boost::lock_guard<boost::mutex> lock(m_init_mutex);
 
         Initialize();
 
