@@ -11,6 +11,7 @@
 #include <pow.h>
 #include <random.h>
 #include <script/standard.h>
+#include <test/util/random.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <util/time.h>

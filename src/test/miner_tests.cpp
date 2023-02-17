@@ -9,6 +9,7 @@
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
+#include <test/util/random.h>
 #include <test/util/txmempool.h>
 #include <timedata.h>
 #include <txmempool.h>
