@@ -15,6 +15,7 @@ define $(package)_set_vars
   $(package)_config_opts+=-DEVENT__DISABLE_SAMPLES=ON -DEVENT__DISABLE_REGRESS=ON
   $(package)_config_opts+=-DEVENT__DISABLE_TESTS=ON -DEVENT__LIBRARY_TYPE=STATIC
   $(package)_cppflags += -D_GNU_SOURCE
+  $(package)_cppflags+=-D_FORTIFY_SOURCE=3
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0601
 endef
 
