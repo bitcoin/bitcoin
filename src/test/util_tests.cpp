@@ -9,6 +9,7 @@
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
 #include <sync.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/getuniquepath.h>

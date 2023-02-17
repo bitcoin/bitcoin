@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
