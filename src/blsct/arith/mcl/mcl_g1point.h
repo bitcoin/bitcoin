@@ -13,16 +13,11 @@
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <blsct/arith/mcl/init/static_mcl_init.h>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
 class MclG1Point
 {
-private:
-    // This initializes Mcl library for static context before
-    // the library is used. Needs to be defined at the beginning.
-    static volatile StaticMclInit for_side_effect_only;
 public:
     MclG1Point();
     MclG1Point(const std::vector<uint8_t>& v);
