@@ -110,7 +110,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     }
 
     // Check socket connectivity
-    LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
+    LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToStringAddrPort());
     {
         CNode* pnode = connman.FindNode(activeMasternodeInfo.service);
         if (pnode)
@@ -125,14 +125,14 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     std::unique_ptr<Sock> sockPtr = CreateSockTCP(activeMasternodeInfo.service);
     if(!sockPtr) {
         state = MASTERNODE_ERROR;
-        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
+        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToStringAddrPort();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
     
     if (sockPtr->Get() == INVALID_SOCKET) {
         state = MASTERNODE_ERROR;
-        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
+        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToStringAddrPort();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
@@ -141,7 +141,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {
         state = MASTERNODE_ERROR;
-        strError = "Could not connect to " + activeMasternodeInfo.service.ToString();
+        strError = "Could not connect to " + activeMasternodeInfo.service.ToStringAddrPort();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }

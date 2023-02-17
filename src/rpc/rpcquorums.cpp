@@ -202,7 +202,7 @@ static RPCHelpMan quorum_dkgstatus()
                 obj.pushKV("proTxHash", ec.ToString());
                 if (foundConnections.count(ec)) {
                     obj.pushKV("connected", true);
-                    obj.pushKV("address", foundConnections[ec].ToString());
+                    obj.pushKV("address", foundConnections[ec].ToStringAddr());
                 } else {
                     obj.pushKV("connected", false);
                 }

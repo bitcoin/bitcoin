@@ -222,7 +222,7 @@ void MasternodeList::updateDIP3List()
         }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
-        QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn.pdmnState->addr.ToString()));
+        QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn.pdmnState->addr.ToStringAddr()));
         QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
         QTableWidgetItem* PoSeScoreItem = new QTableWidgetItem(QString::number(dmn.pdmnState->nPoSePenalty));
         QTableWidgetItem* registeredItem = new QTableWidgetItem(QString::number(dmn.pdmnState->nRegisteredHeight));
@@ -389,7 +389,7 @@ void MasternodeList::copyService_clicked()
     if (!dmn) {
         return;
     }
-    QApplication::clipboard()->setText(QString::fromStdString(dmn->pdmnState->addr.ToString()));
+    QApplication::clipboard()->setText(QString::fromStdString(dmn->pdmnState->addr.ToStringAddr()));
 }
 void MasternodeList::copyPayout_clicked()
 {

@@ -238,7 +238,7 @@ bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams
                 if (!dmn) {
                     debugMsg += strprintf("  %s (not in valid MN set anymore)", c.ToString());
                 } else {
-                    debugMsg += strprintf("  %s (%s)", c.ToString(), dmn->pdmnState->addr.ToString());
+                    debugMsg += strprintf("  %s (%s)", c.ToString(), dmn->pdmnState->addr.ToStringAddr());
                 }
             }
             LogPrint(BCLog::NET, "%s\n", debugMsg.c_str());
@@ -288,7 +288,7 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
                 if (!dmn) {
                     debugMsg += strprintf("  %s (not in valid MN set anymore)", c.ToString());
                 } else {
-                    debugMsg += strprintf("  %s (%s)", c.ToString(), dmn->pdmnState->addr.ToString());
+                    debugMsg += strprintf("  %s (%s)", c.ToString(), dmn->pdmnState->addr.ToStringAddr());
                 }
             }
             LogPrint(BCLog::NET, "%s\n", debugMsg.c_str());

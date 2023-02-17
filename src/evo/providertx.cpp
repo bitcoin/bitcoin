@@ -412,7 +412,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-    nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(WitnessV0KeyHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
+    nVersion, collateralOutpoint.ToStringShort(), addr.ToStringAddr(), (double)nOperatorReward / 100, EncodeDestination(WitnessV0KeyHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
 }
 
 bool CProUpServTx::IsTriviallyValid(TxValidationState& state, bool is_basic_scheme_active) const
@@ -433,7 +433,7 @@ std::string CProUpServTx::ToString() const
     }
 
     return strprintf("CProUpServTx(nVersion=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s)",
-        nVersion, proTxHash.ToString(), addr.ToString(), payee);
+        nVersion, proTxHash.ToString(), addr.ToStringAddr(), payee);
 }
 
 bool CProUpRegTx::IsTriviallyValid(TxValidationState& state, bool is_basic_scheme_active) const

@@ -59,7 +59,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
         if (pnode->m_masternode_probe_connection && (GetTime<std::chrono::seconds>() - pnode->m_connected) < std::chrono::seconds(5)) return;
 
         if (fLogIPs) {
-            LogPrint(BCLog::NET, "Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
+            LogPrint(BCLog::NET, "Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToStringAddr());
         } else {
             LogPrint(BCLog::NET, "Closing Masternode connection: peer=%d\n", pnode->GetId());
         }
