@@ -71,7 +71,7 @@ class LLMQHPMNTest(DashTestFramework):
 
         self.log.info("Test llmq_platform are formed only with HPMNs")
         for i in range(3):
-            quorum_i_hash = self.mine_quorum(llmq_type_name='llmq_test_platform', llmq_type=106)
+            quorum_i_hash = self.mine_quorum(llmq_type_name='llmq_test_platform', llmq_type=106, expected_connections=2, expected_members=3, expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=3 )
             self.test_quorum_members_are_high_performance(quorum_i_hash, llmq_type=106)
 
         self.log.info("Test that HPMNs are present in MN list")
