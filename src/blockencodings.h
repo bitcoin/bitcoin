@@ -140,7 +140,7 @@ public:
     // SYSCOIN
     std::vector<unsigned char> vchNEVMBlockData{};
 
-    // Can be overriden for testing
+    // Can be overridden for testing
     using CheckBlockFn = std::function<bool(const CBlock&, BlockValidationState&, const Consensus::Params&, bool, bool)>;
     CheckBlockFn m_check_block_mock{nullptr};
 
