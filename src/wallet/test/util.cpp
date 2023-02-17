@@ -14,9 +14,9 @@
 #include <memory>
 
 namespace wallet {
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, ArgsManager& args, const CKey& key)
+std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", args, CreateMockWalletDatabase());
+    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockWalletDatabase());
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());

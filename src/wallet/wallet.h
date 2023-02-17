@@ -10,6 +10,7 @@
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <psbt.h>
@@ -19,7 +20,6 @@
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
 #include <validationinterface.h>
@@ -307,9 +307,6 @@ private:
     //! Unset the blank wallet flag and saves it to disk
     void UnsetBlankWalletFlag(WalletBatch& batch) override;
 
-    /** Provider of aplication-wide arguments. */
-    const ArgsManager& m_args;
-
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -373,9 +370,8 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const std::string& name, const ArgsManager& args, std::unique_ptr<WalletDatabase> database)
-        : m_args(args),
-          m_chain(chain),
+    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
+        : m_chain(chain),
           m_name(name),
           m_database(std::move(database))
     {
@@ -641,6 +637,12 @@ public:
     std::optional<OutputType> m_default_change_type{};
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
+
+    /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
+    int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
+
+    /** Notify external script when a wallet transaction comes in or is updated (handled by -walletnotify) */
+    std::string m_notify_tx_changed_script;
 
     size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);

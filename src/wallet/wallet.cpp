@@ -35,6 +35,7 @@
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
@@ -1109,7 +1110,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string strCmd = m_args.GetArg("-walletnotify", "");
+    std::string strCmd = m_notify_tx_changed_script;
 
     if (!strCmd.empty())
     {
@@ -2914,7 +2915,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     const auto start{SteadyClock::now()};
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, args, std::move(database)), ReleaseWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), ReleaseWallet);
+    walletInstance->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
+    walletInstance->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
+
+    // Load wallet
     bool rescan_required = false;
     DBErrors nLoadWalletRet = walletInstance->LoadWallet();
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
@@ -3538,7 +3543,7 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         return;
     }
 
-    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this));
+    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this, m_keypool_size));
     for (const auto& type : LEGACY_OUTPUT_TYPES) {
         m_internal_spk_managers[type] = spk_manager.get();
         m_external_spk_managers[type] = spk_manager.get();
@@ -3567,10 +3572,10 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
 void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
 {
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc));
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc, m_keypool_size));
         m_spk_managers[id] = std::move(spk_manager);
     } else {
-        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
         m_spk_managers[id] = std::move(spk_manager);
     }
 }
@@ -3581,7 +3586,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
-            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
+            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
             if (IsCrypted()) {
                 if (IsLocked()) {
                     throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
@@ -3637,7 +3642,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                     continue;
                 }
                 OutputType t =  *desc->GetOutputType();
-                auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this));
+                auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, m_keypool_size));
                 spk_manager->SetupDescriptor(std::move(desc));
                 uint256 id = spk_manager->GetID();
                 m_spk_managers[id] = std::move(spk_manager);
@@ -3753,7 +3758,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
         spk_man->UpdateWalletDescriptor(desc);
     } else {
-        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory

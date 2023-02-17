@@ -83,7 +83,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
-    CWallet wallet{test_setup->m_node.chain.get(), "", gArgs, CreateMockWalletDatabase()};
+    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -136,7 +136,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType>& output_type)
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
-    CWallet wallet{test_setup->m_node.chain.get(), "", gArgs, CreateMockWalletDatabase()};
+    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
