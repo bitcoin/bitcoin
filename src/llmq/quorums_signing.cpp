@@ -39,7 +39,11 @@ UniValue CRecoveredSig::ToJson() const
 
 CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe)
 {
-    db = std::make_unique<CDBWrapper>(fMemory ? "" : (gArgs.GetDataDirNet() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe);
+    db = std::make_unique<CDBWrapper>(DBParams{
+        .path = gArgs.GetDataDirNet() / "llmq/recsigdb",
+        .cache_bytes = static_cast<size_t>(8 << 20),
+        .memory_only = fMemory,
+        .wipe_data = fWipe});
     MigrateRecoveredSigs();
 }
 
@@ -50,7 +54,11 @@ void CRecoveredSigsDb::MigrateRecoveredSigs()
     LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- start\n", __func__);
 
     CDBBatch batch(*db);
-    auto oldDb = std::make_unique<CDBWrapper>(gArgs.GetDataDirNet() / "llmq", 8 << 20);
+    auto oldDb = std::make_unique<CDBWrapper>(DBParams{
+        .path = gArgs.GetDataDirNet() / "llmq",
+        .cache_bytes = static_cast<size_t>(8 << 20),
+        .memory_only = false,
+        .wipe_data = false});
     std::unique_ptr<CDBIterator> pcursor(oldDb->NewIterator());
 
     auto start_h = std::make_tuple(std::string("rs_h"), uint256());

@@ -35,7 +35,7 @@ class CEvoDB
 public:
     mutable RecursiveMutex cs;
 private:
-    CDBWrapper db;
+    std::unique_ptr<CDBWrapper> m_db;
 
     using RootTransaction = CDBTransaction<CDBWrapper, CDBBatch>;
     using CurTransaction = CDBTransaction<RootTransaction, RootTransaction>;
@@ -45,8 +45,8 @@ private:
     CurTransaction curDBTransaction;
 
 public:
-    explicit CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-
+    explicit CEvoDB(DBParams db_params);
+    
     std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction()
     {
         LOCK(cs);
@@ -89,7 +89,7 @@ public:
 
     CDBWrapper& GetRawDB()
     {
-        return db;
+        return *m_db;
     }
 
     size_t GetMemoryUsage() const
@@ -99,7 +99,7 @@ public:
 
     bool CommitRootTransaction();
 
-    bool IsEmpty() { return db.IsEmpty(); }
+    bool IsEmpty() { return m_db->IsEmpty(); }
 
     bool VerifyBestBlock(const uint256& hash);
     void WriteBestBlock(const uint256& hash);

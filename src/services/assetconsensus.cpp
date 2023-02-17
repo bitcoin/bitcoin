@@ -1139,27 +1139,6 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
 }
-CBlockIndexDB::CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "dbblockindex", nCacheSize, fMemory, fWipe) {
-    if(!ReadLastKnownHeight(nLastKnownHeightOnStart))
-        nLastKnownHeightOnStart = 0;
-}
-CNEVMTxRootsDB::CNEVMTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmtxroots", nCacheSize, fMemory, fWipe) {
-}
-
-CNEVMMintedTxDB::CNEVMMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmminttx", nCacheSize, fMemory, fWipe) {
-}
-
-CAssetDB::CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "asset", nCacheSize, fMemory, fWipe) {
-}
-
-CAssetNFTDB::CAssetNFTDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assetnft", nCacheSize, fMemory, fWipe) {
-}
-
-CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assets", nCacheSize, fMemory, fWipe) {
-}
-
-CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
-}
 void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, const int64_t& nMedianTime) {
     if(mapPoDA.empty()) {
         return;

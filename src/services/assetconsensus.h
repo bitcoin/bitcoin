@@ -17,7 +17,7 @@ class CNEVMData;
 class CNEVMTxRootsDB : public CDBWrapper {
     NEVMTxRootMap mapCache;
 public:
-    explicit CNEVMTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    using CDBWrapper::CDBWrapper;
     bool FlushErase(const std::vector<uint256> &vecBlockHashes);
     bool ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot);
     bool FlushCacheToDisk();
@@ -26,7 +26,7 @@ public:
 
 class CNEVMMintedTxDB : public CDBWrapper {
 public:
-    explicit CNEVMMintedTxDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    using CDBWrapper::CDBWrapper;
     bool FlushErase(const NEVMMintTxMap &mapMintKeys);
     bool FlushWrite(const NEVMMintTxMap &mapMintKeys);
 };
@@ -34,7 +34,7 @@ class CNEVMDataDB : public CDBWrapper {
 private:
     PoDAMAP mapCache;
 public:
-    explicit CNEVMDataDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    using CDBWrapper::CDBWrapper;
     bool FlushErase(const NEVMDataVec &vecDataKeys);
     bool FlushEraseMTPs(const NEVMDataVec &vecDataKeys);
     bool FlushCacheToDisk();
@@ -49,7 +49,7 @@ public:
 };
 class CAssetDB : public CDBWrapper {
 public:
-    explicit CAssetDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    using CDBWrapper::CDBWrapper;
     bool EraseAsset(const uint32_t& nBaseAsset) {
         return Erase(nBaseAsset);
     }   
@@ -65,17 +65,11 @@ public:
 
 class CAssetNFTDB : public CDBWrapper {
 public:
-    explicit CAssetNFTDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    using CDBWrapper::CDBWrapper;
     bool ExistsNFTAsset(const uint64_t& nAsset) {
         return Exists(nAsset);
     }
     bool Flush(const AssetMap &mapAssets);
-};
-
-class CAssetOldDB : public CDBWrapper {
-public:
-    explicit CAssetOldDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool Empty();
 };
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetNFTDB> passetnftdb;

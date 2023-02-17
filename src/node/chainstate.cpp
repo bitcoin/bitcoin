@@ -72,27 +72,65 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         LogPrintf("Asset Index enabled, allowing for an asset aware spending policy\n");
     }
     LogPrintf("Creating LLMQ and asset databases...\n");
-    passetdb.reset();
-    passetnftdb.reset();
-    pnevmtxrootsdb.reset();
-    pnevmtxmintdb.reset();
-    pblockindexdb.reset();
-    pnevmdatadb.reset();
     llmq::DestroyLLMQSystem();
     evoDb.reset();
-    evoDb.reset(new CEvoDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
+    evoDb = std::make_unique<CEvoDB>(DBParams{
+        .path = chainman.m_options.datadir / "evodb",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.fReindexGeth,
+        .options = chainman.m_options.block_tree_db});
     deterministicMNManager.reset();
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
     governance.reset();
     governance.reset(new CGovernanceManager(chainman));
     llmq::InitLLMQSystem(*evoDb, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, options.fReindexGeth);
-    passetdb.reset(new CAssetDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
-    passetnftdb.reset(new CAssetNFTDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
-    pnevmtxrootsdb.reset(new CNEVMTxRootsDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
-    pnevmtxmintdb.reset(new CNEVMMintedTxDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
-    pblockindexdb.reset(new CBlockIndexDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
+    passetdb.reset();
+    passetdb = std::make_unique<CAssetDB>(DBParams{
+        .path = chainman.m_options.datadir / "asset",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.fReindexGeth,
+        .options = chainman.m_options.block_tree_db});
+    passetnftdb.reset();
+    passetnftdb = std::make_unique<CAssetNFTDB>(DBParams{
+        .path = chainman.m_options.datadir / "assetnft",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.fReindexGeth,
+        .options = chainman.m_options.block_tree_db});
+    pnevmtxrootsdb.reset();
+    pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmtxroots",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.fReindexGeth,
+        .options = chainman.m_options.block_tree_db});
+    pnevmtxmintdb.reset();
+    pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmminttx",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.fReindexGeth,
+        .options = chainman.m_options.block_tree_db});
+    pblockindexdb.reset();
+    pblockindexdb = std::make_unique<CBlockIndexDB>(DBParams{
+        .path = chainman.m_options.datadir / "dbblockindex",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.fReindexGeth,
+        .options = chainman.m_options.block_tree_db});
+    if(!pblockindexdb->ReadLastKnownHeight(nLastKnownHeightOnStart))
+        nLastKnownHeightOnStart = 0;
     // PoDA data cannot be deleted from disk on reindex because chain on disk does not have PoDA information to recreate it
-    pnevmdatadb.reset(new CNEVMDataDB(cache_sizes.coins_db, options.block_tree_db_in_memory));
+    pnevmdatadb.reset();
+    pnevmdatadb = std::make_unique<CNEVMDataDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmdata",
+        .cache_bytes = static_cast<size_t>(cache_sizes.coins_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = false,
+        .options = chainman.m_options.coins_db});
+
     pnevmdatadb->ClearZeroMPT();
     if (!evoDb->CommitRootTransaction()) {
         return {ChainstateLoadStatus::FAILURE, _("Failed to commit EvoDB")};
@@ -104,7 +142,12 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // new CBlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree.reset(new CBlockTreeDB(cache_sizes.block_tree_db, options.block_tree_db_in_memory, options.reindex));
+    pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
+        .path = chainman.m_options.datadir / "blocks" / "index",
+        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.reindex,
+        .options = chainman.m_options.block_tree_db});
 
     if (options.reindex) {
         pblocktree->WriteReindexing(true);
@@ -209,24 +252,59 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // if coinsview is empty we clear all SYS db's overriding anything we did before
     if(coinsViewEmpty && !options.fReindexGeth) {
         LogPrintf("coinsViewEmpty recreating LLMQ and asset databases\n");
-        passetdb.reset();
-        passetnftdb.reset();
-        pnevmtxrootsdb.reset();
-        pnevmtxmintdb.reset();
-        pblockindexdb.reset();
-        pnevmdatadb.reset();
         llmq::DestroyLLMQSystem();
         evoDb.reset();
-        evoDb.reset(new CEvoDB(cache_sizes.evo_db, options.block_tree_db_in_memory, coinsViewEmpty));
+        evoDb = std::make_unique<CEvoDB>(DBParams{
+            .path = chainman.m_options.datadir / "evodb",
+            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = coinsViewEmpty,
+            .options = chainman.m_options.block_tree_db});
         deterministicMNManager.reset();
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
         llmq::InitLLMQSystem(*evoDb, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, coinsViewEmpty);
-        passetdb.reset(new CAssetDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
-        passetnftdb.reset(new CAssetNFTDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
-        pnevmtxrootsdb.reset(new CNEVMTxRootsDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
-        pnevmtxmintdb.reset(new CNEVMMintedTxDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
-        pblockindexdb.reset(new CBlockIndexDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
-        pnevmdatadb.reset(new CNEVMDataDB(cache_sizes.coins_db, options.block_tree_db_in_memory));
+        passetdb.reset();
+        passetdb = std::make_unique<CAssetDB>(DBParams{
+            .path = chainman.m_options.datadir / "asset",
+            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = coinsViewEmpty,
+            .options = chainman.m_options.block_tree_db});
+        passetnftdb.reset();
+        passetnftdb = std::make_unique<CAssetNFTDB>(DBParams{
+            .path = chainman.m_options.datadir / "assetnft",
+            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = coinsViewEmpty,
+            .options = chainman.m_options.block_tree_db});
+        pnevmtxrootsdb.reset();
+        pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
+            .path = chainman.m_options.datadir / "nevmtxroots",
+            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = coinsViewEmpty,
+            .options = chainman.m_options.block_tree_db});
+        pnevmtxmintdb.reset();
+        pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+            .path = chainman.m_options.datadir / "nevmminttx",
+            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = coinsViewEmpty,
+            .options = chainman.m_options.block_tree_db});
+        pblockindexdb.reset();
+        pblockindexdb = std::make_unique<CBlockIndexDB>(DBParams{
+            .path = chainman.m_options.datadir / "dbblockindex",
+            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = coinsViewEmpty,
+            .options = chainman.m_options.block_tree_db});
+        pnevmdatadb.reset();
+        pnevmdatadb = std::make_unique<CNEVMDataDB>(DBParams{
+            .path = chainman.m_options.datadir / "nevmdata",
+            .cache_bytes = static_cast<size_t>(cache_sizes.coins_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = false,
+            .options = chainman.m_options.coins_db});
         if (!evoDb->CommitRootTransaction()) {
             return {ChainstateLoadStatus::FAILURE, _("Failed to commit EvoDB")};
         }

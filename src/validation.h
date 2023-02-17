@@ -414,7 +414,7 @@ public:
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(fs::path ldb_name, size_t cache_size_bytes, bool in_memory, bool should_wipe);
+    CoinsViews(DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
     void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -1092,7 +1092,7 @@ class CBlockIndexDB : public CDBWrapper {
     const uint8_t LAST_KNOWN_HEIGHT_TAG = 'L';
     std::unordered_map<uint256, uint32_t, StaticSaltedHasher> mapCache;
 public:
-    explicit CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);  
+    using CDBWrapper::CDBWrapper;
     bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight);
     bool ReadLastKnownHeight(uint32_t& nHeight) {
         return Read(LAST_KNOWN_HEIGHT_TAG, nHeight);
