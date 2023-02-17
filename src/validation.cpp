@@ -569,8 +569,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     /**
-     * Package (more specific than just multiple transactions) acceptance. Package must be a child
-     * with all of its unconfirmed parents, and topologically sorted.
+     * Handle any list of transactions sensibly, even if unsorted. If not a well-formed
+     * AncestorPackage, transactions will not be validated or submitted.
      */
     PackageMempoolAcceptResult AcceptPackage(const Package& package, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1257,7 +1257,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
     // These context-free package limits can be done before taking the mempool lock.
     PackageValidationState package_state;
-    if (!IsPackageWellFormed(txns, package_state)) return PackageMempoolAcceptResult(package_state, {});
+    if (!IsPackageWellFormed(txns, package_state, /*require_sorted=*/true)) return PackageMempoolAcceptResult(package_state, {});
 
     std::vector<Workspace> workspaces{};
     workspaces.reserve(txns.size());
@@ -1386,49 +1386,17 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
     // Check that the package is well-formed. If it isn't, we won't try to validate any of the
     // transactions and thus won't return any MempoolAcceptResults, just a package-wide error.
-
     // Context-free package checks.
-    if (!IsPackageWellFormed(package, package_state_quit_early)) return PackageMempoolAcceptResult(package_state_quit_early, {});
-
-    // All transactions in the package must be a parent of the last transaction. This is just an
-    // opportunity for us to fail fast on a context-free check without taking the mempool lock.
-    if (!IsChildWithParents(package)) {
-        package_state_quit_early.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-child-with-parents");
+    if (!package.empty() && !IsPackageWellFormed(package, package_state_quit_early, /*require_sorted=*/false)) {
         return PackageMempoolAcceptResult(package_state_quit_early, {});
     }
-
     AncestorPackage packageified(package);
-    const auto& child = package.back();
-    std::unordered_set<uint256, SaltedTxidHasher> unconfirmed_parent_txids;
-    std::transform(package.cbegin(), package.cend() - 1,
-                   std::inserter(unconfirmed_parent_txids, unconfirmed_parent_txids.end()),
-                   [](const auto& tx) { return tx->GetHash(); });
-
-    // All child inputs must refer to a preceding package transaction or a confirmed UTXO. The only
-    // way to verify this is to look up the child's inputs in our current coins view (not including
-    // mempool), and enforce that all parents not present in the package be available at chain tip.
-    // Since this check can bring new coins into the coins cache, keep track of these coins and
-    // uncache them if we don't end up submitting this package to the mempool.
-    const CCoinsViewCache& coins_tip_cache = m_active_chainstate.CoinsTip();
-    for (const auto& input : child->vin) {
-        if (!coins_tip_cache.HaveCoinInCache(input.prevout)) {
-            args.m_coins_to_uncache.push_back(input.prevout);
-        }
-    }
-    // Using the MemPoolAccept m_view cache allows us to look up these same coins faster later.
-    // This should be connecting directly to CoinsTip, not to m_viewmempool, because we specifically
-    // require inputs to be confirmed if they aren't in the package.
-    m_view.SetBackend(m_active_chainstate.CoinsTip());
-    const auto package_or_confirmed = [this, &unconfirmed_parent_txids](const auto& input) {
-         return unconfirmed_parent_txids.count(input.prevout.hash) > 0 || m_view.HaveCoin(input.prevout);
-    };
-    if (!std::all_of(child->vin.cbegin(), child->vin.cend(), package_or_confirmed)) {
-        package_state_quit_early.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-child-with-unconfirmed-parents");
+    if (!packageified.IsAncestorPackage()) {
+        package_state_quit_early.Invalid(PackageValidationResult::PCKG_POLICY, "not-ancestor-package");
         return PackageMempoolAcceptResult(package_state_quit_early, {});
     }
-    // Protect against bugs where we pull more inputs from disk that miss being added to
-    // coins_to_uncache. The backend will be connected again when needed in PreChecks.
-    m_view.SetBackend(m_dummy);
+    const auto& child = package.back();
+    const auto child_subpackage = packageified.GetAncestorSet(child);
 
     LOCK(m_pool.cs);
     // Stores final results that won't change

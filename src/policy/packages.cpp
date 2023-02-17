@@ -51,7 +51,7 @@ bool IsConsistent(const Package& txns)
     return true;
 }
 
-bool IsPackageWellFormed(const Package& txns, PackageValidationState& state)
+bool IsPackageWellFormed(const Package& txns, PackageValidationState& state, bool require_sorted)
 {
     const unsigned int package_count = txns.size();
 
@@ -70,7 +70,7 @@ bool IsPackageWellFormed(const Package& txns, PackageValidationState& state)
     // An unsorted package will fail anyway on missing-inputs, but it's better to quit earlier and
     // fail on something less ambiguous (missing-inputs could also be an orphan or trying to
     // spend nonexistent coins).
-    if (!IsSorted(txns)) return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
+    if (require_sorted && !IsSorted(txns)) return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
     if (!IsConsistent(txns)) return state.Invalid(PackageValidationResult::PCKG_POLICY, "conflict-in-package");
     return true;
 }
