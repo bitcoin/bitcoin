@@ -155,12 +155,10 @@ BITCOIN_CORE_H = \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
-  blsct/arith/mcl/init/atomic_mcl_init.h \
-  blsct/arith/mcl/init/mcl_init.h \
-  blsct/arith/mcl/init/static_mcl_init.h \
-  blsct/arith/mcl/mcl_g1point.h \
-  blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/mcl/mcl.h \
+  blsct/arith/mcl/mcl_g1point.h \
+  blsct/arith/mcl/mcl_init.h \
+  blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
   blsct/common.h \
