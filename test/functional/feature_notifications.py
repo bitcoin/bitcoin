@@ -48,6 +48,12 @@ class NotificationsTest(BitcoinTestFramework):
         super().setup_network()
 
     def run_test(self):
+        if self.is_wallet_compiled():
+            # Make the wallets
+            # Ensures that node 0 and node 1 share the same wallet for the conflicting transaction tests below.
+            for i, name in enumerate(self.wallet_names):
+                self.nodes[i].createwallet(wallet_name=name, load_on_startup=True)
+
         self.log.info("test -blocknotify")
         block_count = 10
         blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)

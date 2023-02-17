@@ -23,6 +23,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Compare responses from getwalletinfo RPC and `dash-cli getwalletinfo`")
         if self.is_wallet_compiled():
+            self.nodes[0].createwallet(self.default_wallet_name)
             cli_response = self.nodes[0].cli.getwalletinfo()
             rpc_response = self.nodes[0].getwalletinfo()
             assert_equal(cli_response, rpc_response)

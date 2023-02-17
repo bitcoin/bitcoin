@@ -34,7 +34,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.log.info("Recover non-HD wallet to check different upgrade paths")
         node = self.nodes[0]
         self.stop_node(0)
-        shutil.copyfile(os.path.join(node.datadir, "non_hd.bak"), os.path.join(node.datadir, "regtest", "wallet.dat"))
+        shutil.copyfile(os.path.join(node.datadir, "non_hd.bak"), os.path.join(node.datadir, self.chain, self.default_wallet_name, self.wallet_data_filename))
         self.start_node(0)
         assert 'hdchainid' not in node.getwalletinfo()
 
@@ -68,7 +68,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("Should no longer be able to start it with HD disabled")
         self.stop_node(0)
-        node.assert_start_raises_init_error(['-usehd=0'], "Error: Error loading : You can't disable HD on an already existing HD wallet")
+        node.assert_start_raises_init_error(['-usehd=0'], "Error: Error loading %s: You can't disable HD on an already existing HD wallet" % self.default_wallet_name)
         self.start_node(0)
         balance_after = node.getbalance()
 

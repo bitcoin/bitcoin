@@ -1241,6 +1241,9 @@ public:
         LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
     };
 
+    /** Upgrade the wallet */
+    bool UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings);
+
     /** Get last block processed height */
     int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {

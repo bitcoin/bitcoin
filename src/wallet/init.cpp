@@ -62,7 +62,6 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-rescan=<mode>", "Rescan the block chain for missing wallet transactions on startup"
                                             " (1 = start from wallet creation time, 2 = start from genesis block)", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-spendzeroconfchange", strprintf("Spend unconfirmed change when sending transactions (default: %u)", DEFAULT_SPEND_ZEROCONF_CHANGE), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
-    argsman.AddArg("-upgradewallet", "Upgrade wallet to latest format on startup", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-wallet=<path>", "Specify wallet path to load at startup. Can be used multiple times to load multiple wallets. Path is to a directory containing wallet data and log files. If the path is not absolute, it is interpreted relative to <walletdir>. This only loads existing wallets and does not create new ones. For backwards compatibility this also accepts names of existing top-level data files in <walletdir>.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::WALLET);
     argsman.AddArg("-walletbackupsdir=<dir>", "Specify full path to directory for automatic wallet backups (must exist)", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-walletbroadcast", strprintf("Make the wallet broadcast transactions (default: %u)", DEFAULT_WALLETBROADCAST), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
@@ -129,8 +128,6 @@ bool WalletInit::ParameterInteraction() const
         return InitError(_("You can not start a masternode with wallet enabled."));
     }
 
-    const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
-
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
     }
@@ -144,12 +141,6 @@ bool WalletInit::ParameterInteraction() const
         LogPrintf("%s: Warning: incorrect -rescan mode, falling back to default value.\n", __func__);
         InitWarning(_("Incorrect -rescan mode, falling back to default value"));
         gArgs.ForceRemoveArg("rescan");
-    }
-
-    if (is_multiwallet) {
-        if (gArgs.GetBoolArg("-upgradewallet", false)) {
-            return InitError(strprintf(_("%s is only allowed with a single wallet file"), "-upgradewallet"));
-        }
     }
 
     if (gArgs.GetBoolArg("-sysperms", false))

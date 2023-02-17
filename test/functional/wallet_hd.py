@@ -29,7 +29,7 @@ class WalletHDTest(BitcoinTestFramework):
     def run_test(self):
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(['-usehd=0'], "Error: Error loading : You can't disable HD on an already existing HD wallet")
+        self.nodes[1].assert_start_raises_init_error(['-usehd=0'], "Error: Error loading %s: You can't disable HD on an already existing HD wallet" % self.default_wallet_name)
         self.start_node(1)
         self.connect_nodes(0, 1)
 

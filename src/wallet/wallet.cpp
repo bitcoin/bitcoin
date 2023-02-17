@@ -4306,27 +4306,9 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         }
     }
 
-    if (gArgs.GetBoolArg("-upgradewallet", fFirstRun))
-    {
-        int nMaxVersion = gArgs.GetArg("-upgradewallet", 0);
-        auto nMinVersion = DEFAULT_USE_HD_WALLET ? FEATURE_LATEST : FEATURE_COMPRPUBKEY;
-        if (nMaxVersion == 0) // the -upgradewallet without argument case
-        {
-            walletInstance->WalletLogPrintf("Performing wallet upgrade to %i\n", nMinVersion);
-            nMaxVersion = FEATURE_LATEST;
-            walletInstance->SetMinVersion(nMinVersion); // permanently upgrade the wallet immediately
-        }
-        else
-            walletInstance->WalletLogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-        if (nMaxVersion < walletInstance->GetVersion())
-        {
-            return unload_wallet(_("Cannot downgrade wallet"));
-        }
-        walletInstance->SetMaxVersion(nMaxVersion);
-    }
-
     if (fFirstRun)
     {
+        walletInstance->SetMaxVersion(FEATURE_LATEST);
         walletInstance->SetWalletFlags(wallet_creation_flags, false);
         if (!(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             // Create new HD chain
@@ -4594,6 +4576,27 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
     }
 
     return walletInstance;
+}
+
+bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings)
+{
+    int nMaxVersion = version;
+    auto nMinVersion = DEFAULT_USE_HD_WALLET ? FEATURE_LATEST : FEATURE_COMPRPUBKEY;
+    if (nMaxVersion == 0) {
+        WalletLogPrintf("Performing wallet upgrade to %i\n", nMinVersion);
+        nMaxVersion = FEATURE_LATEST;
+        SetMinVersion(nMinVersion); // permanently upgrade the wallet immediately
+    } else {
+        WalletLogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
+    }
+
+    if (nMaxVersion < GetVersion()) {
+        error = Untranslated("Cannot downgrade wallet");
+        return false;
+    }
+
+    SetMaxVersion(nMaxVersion);
+    return true;
 }
 
 void CWallet::postInitProcess()
