@@ -253,7 +253,9 @@ using Type = miniscript::Type;
 using miniscript::operator"" _mst;
 
 //! Construct a miniscript node as a shared_ptr.
-template<typename... Args> NodeRef MakeNodeRef(Args&&... args) { return miniscript::MakeNodeRef<CPubKey>(KEY_COMP, std::forward<Args>(args)...); }
+template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
+    return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, std::forward<Args>(args)...);
+}
 
 /** Information about a yet to be constructed Miniscript node. */
 struct NodeInfo {
@@ -762,6 +764,7 @@ NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = fals
         }
     }
     assert(stack.size() == 1);
+    stack[0]->DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
 
