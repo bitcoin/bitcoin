@@ -7,6 +7,7 @@
 #endif
 
 #include <arith_uint256.h>
+#include <blsct/arith/mcl/mcl_init.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -24,11 +25,11 @@
 #include <memory>
 #include <thread>
 
-static const int CONTINUE_EXECUTION=-1;
+static const int CONTINUE_EXECUTION = -1;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-static void SetupBitcoinUtilArgs(ArgsManager &argsman)
+static void SetupBitcoinUtilArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
 
@@ -58,7 +59,7 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
+                        "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
 
@@ -94,7 +95,7 @@ static void grind_task(uint32_t nBits, CBlockHeader header, uint32_t offset, uin
     finish = finish - (finish % step) + offset;
 
     while (!found && header.nNonce < finish) {
-        const uint32_t next = (finish - header.nNonce < 5000*step) ? finish : header.nNonce + 5000*step;
+        const uint32_t next = (finish - header.nNonce < 5000 * step) ? finish : header.nNonce + 5000 * step;
         do {
             if (UintToArith256(header.GetHash()) <= target) {
                 if (!found.exchange(true)) {
@@ -103,7 +104,7 @@ static void grind_task(uint32_t nBits, CBlockHeader header, uint32_t offset, uin
                 return;
             }
             header.nNonce += step;
-        } while(header.nNonce != next);
+        } while (header.nNonce != next);
     }
 }
 
@@ -147,6 +148,8 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
 
 MAIN_FUNCTION
 {
+    static volatile MclInit for_side_effect_only;
+
     ArgsManager& args = gArgs;
     SetupEnvironment();
 

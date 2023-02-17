@@ -175,6 +175,7 @@ public:
     MclG1Point blindingKey;
     RangeProof<Mcl> rangeProof;
     TokenId tokenId;
+    uint16_t viewTag;
 
     CTxOut()
     {
@@ -204,6 +205,7 @@ public:
             ::Serialize(s, spendingKey);
             ::Serialize(s, blindingKey);
             ::Serialize(s, ephemeralKey);
+            ::Serialize(s, viewTag);
         }
         if (nFlags & TOKEN_MARKER)
             ::Serialize(s, tokenId);
@@ -225,6 +227,7 @@ public:
             ::Unserialize(s, spendingKey);
             ::Unserialize(s, blindingKey);
             ::Unserialize(s, ephemeralKey);
+            ::Unserialize(s, viewTag);
         }
         if (nFlags & TOKEN_MARKER) {
             ::Unserialize(s, tokenId);
@@ -235,6 +238,7 @@ public:
     {
         nValue = -1;
         scriptPubKey.clear();
+        viewTag = 0;
     }
 
     bool IsNull() const
@@ -247,7 +251,7 @@ public:
         return (a.nValue == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey &&
                 a.spendingKey == b.spendingKey && a.ephemeralKey == b.ephemeralKey &&
-                a.blindingKey == b.blindingKey);
+                a.blindingKey == b.blindingKey && a.viewTag == b.viewTag);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
