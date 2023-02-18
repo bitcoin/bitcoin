@@ -1377,7 +1377,7 @@ BOOST_FIXTURE_TEST_CASE(script_PushData, BasicTestingSetup)
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_BAD_OPCODE);
 }
 
-BOOST_AUTO_TEST_CASE(script_cltv_truncated)
+BOOST_FIXTURE_TEST_CASE(script_cltv_truncated, BasicTestingSetup)
 {
     const auto script_cltv_trunc = CScript() << OP_CHECKLOCKTIMEVERIFY;
 
@@ -1649,7 +1649,7 @@ BOOST_FIXTURE_TEST_CASE(script_combineSigs, BasicTestingSetup)
     BOOST_CHECK(combined.scriptSig == partial3c);
 }
 
-BOOST_AUTO_TEST_CASE(script_standard_push)
+BOOST_FIXTURE_TEST_CASE(script_standard_push, BasicTestingSetup)
 {
     ScriptError err;
     for (int i = 0; i < 67000; i++) {
@@ -1670,7 +1670,7 @@ BOOST_AUTO_TEST_CASE(script_standard_push)
     }
 }
 
-BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
+BOOST_FIXTURE_TEST_CASE(script_IsPushOnly_on_invalid_scripts, BasicTestingSetup)
 {
     // IsPushOnly returns false when given a script containing only pushes that
     // are invalid due to truncation. IsPushOnly() is consensus critical
@@ -1681,7 +1681,7 @@ BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
     BOOST_CHECK(!CScript(direct, direct + sizeof(direct)).IsPushOnly());
 }
 
-BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
+BOOST_FIXTURE_TEST_CASE(script_GetScriptAsm, BasicTestingSetup)
 {
     BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2, true));
     BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY, true));
@@ -1717,7 +1717,7 @@ static CScript ScriptFromHex(const std::string& str)
     return CScript(data.begin(), data.end());
 }
 
-BOOST_AUTO_TEST_CASE(script_FindAndDelete)
+BOOST_FIXTURE_TEST_CASE(script_FindAndDelete, BasicTestingSetup)
 {
     // Exercise the FindAndDelete functionality
     CScript s;
@@ -1826,7 +1826,7 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     BOOST_CHECK(s == expect);
 }
 
-BOOST_AUTO_TEST_CASE(script_HasValidOps)
+BOOST_FIXTURE_TEST_CASE(script_HasValidOps, BasicTestingSetup)
 {
     // Exercise the HasValidOps functionality
     CScript script;
@@ -2187,7 +2187,7 @@ BOOST_FIXTURE_TEST_CASE(bip341_keypath_test_vectors, BasicTestingSetup)
     }
 }
 
-BOOST_AUTO_TEST_CASE(compute_tapbranch)
+BOOST_FIXTURE_TEST_CASE(compute_tapbranch, BasicTestingSetup)
 {
     uint256 hash1 = uint256S("8ad69ec7cf41c2a4001fd1f738bf1e505ce2277acdcaa63fe4765192497f47a7");
     uint256 hash2 = uint256S("f224a923cd0021ab202ab139cc56802ddb92dcfc172b9212261a539df79a112a");
@@ -2195,7 +2195,7 @@ BOOST_AUTO_TEST_CASE(compute_tapbranch)
     BOOST_CHECK_EQUAL(ComputeTapbranchHash(hash1, hash2), result);
 }
 
-BOOST_AUTO_TEST_CASE(compute_tapleaf)
+BOOST_FIXTURE_TEST_CASE(compute_tapleaf, BasicTestingSetup)
 {
     const uint8_t script[6] = {'f', 'o', 'o', 'b', 'a', 'r'};
     uint256 tlc0 = uint256S("edbc10c272a1215dcdcc11d605b9027b5ad6ed97cd45521203f136767b5b9c06");
