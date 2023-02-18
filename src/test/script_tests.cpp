@@ -2085,7 +2085,7 @@ static void AssetTest(const UniValue& test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(script_assets_test)
+BOOST_FIXTURE_TEST_CASE(script_assets_test, BasicTestingSetup)
 {
     // See src/test/fuzz/script_assets_test_minimizer.cpp for information on how to generate
     // the script_assets_test.json file used by this test.
