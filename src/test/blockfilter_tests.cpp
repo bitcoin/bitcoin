@@ -100,11 +100,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_basic_test, BasicTestingSetup)
     BlockFilter block_filter(BlockFilterType::BASIC, block, block_undo);
     const GCSFilter& filter = block_filter.GetFilter();
 
-    std::cout << "a\n";
     for (const CScript& script : included_scripts) {
         BOOST_CHECK(filter.Match(GCSFilter::Element(script.begin(), script.end())));
     }
-    std::cout << "b\n";
     for (const CScript& script : excluded_scripts) {
         BOOST_CHECK(!filter.Match(GCSFilter::Element(script.begin(), script.end())));
     }
@@ -116,25 +114,18 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_basic_test, BasicTestingSetup)
     stream << block_filter;
     stream >> block_filter2;
 
-    std::cout << "c\n";
     BOOST_CHECK_EQUAL(block_filter.GetFilterType(), block_filter2.GetFilterType());
-    std::cout << "d\n";
     BOOST_CHECK_EQUAL(block_filter.GetBlockHash(), block_filter2.GetBlockHash());
-    std::cout << "e\n";
     BOOST_CHECK(block_filter.GetEncodedFilter() == block_filter2.GetEncodedFilter());
 
     BlockFilter default_ctor_block_filter_1;
     BlockFilter default_ctor_block_filter_2;
-    std::cout << "f\n";
     BOOST_CHECK_EQUAL(default_ctor_block_filter_1.GetFilterType(), default_ctor_block_filter_2.GetFilterType());
-    std::cout << "g\n";
     BOOST_CHECK_EQUAL(default_ctor_block_filter_1.GetBlockHash(), default_ctor_block_filter_2.GetBlockHash());
-    std::cout << "h\n";
     BOOST_CHECK(default_ctor_block_filter_1.GetEncodedFilter() == default_ctor_block_filter_2.GetEncodedFilter());
-    std::cout << "i\n";
 }
 
-BOOST_AUTO_TEST_CASE(blockfilters_json_test)
+BOOST_FIXTURE_TEST_CASE(blockfilters_json_test, BasicTestingSetup)
 {
     UniValue json;
     std::string json_data(json_tests::blockfilters,
