@@ -15,7 +15,8 @@ BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, TestingSetup)
 //!
 //! @sa Chainstate::GetCoinsCacheSizeState()
 //!
-BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
+//!
+BOOST_FIXTURE_TEST_CASE(getcoinscachesizestate, BasicTestingSetup)
 {
     Chainstate& chainstate{m_node.chainman->ActiveChainstate()};
 
