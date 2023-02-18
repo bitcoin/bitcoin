@@ -27,6 +27,8 @@ private:
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
+    bool RequiresBlockUndoData() const override { return false; }
+
     BaseIndex::DB& GetDB() const override;
 
 public:

@@ -60,6 +60,8 @@ protected:
 
     bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
 
+    bool RequiresBlockUndoData() const override { return true; }
+
     BaseIndex::DB& GetDB() const LIFETIMEBOUND override { return *m_db; }
 
 public:
