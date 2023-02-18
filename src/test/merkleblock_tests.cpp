@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_CASE(merkleblock_construct_from_txids_found, BasicTestingSetu
  * Create a CMerkleBlock using a list of txids which will not be found in the
  * given block.
  */
-BOOST_AUTO_TEST_CASE(merkleblock_construct_from_txids_not_found)
+BOOST_FIXTURE_TEST_CASE(merkleblock_construct_from_txids_not_found, BasicTestingSetup)
 {
     CBlock block = getBlock13b8a();
 
