@@ -5,6 +5,8 @@
 #ifndef BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 #define BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 
+#include <cstdint>
+
 class CChainParams;
 
 namespace kernel {
@@ -16,6 +18,7 @@ namespace kernel {
 struct BlockManagerOpts {
     const CChainParams& chainparams;
     uint64_t prune_target{0};
+    bool fast_prune{false};
 };
 
 } // namespace kernel

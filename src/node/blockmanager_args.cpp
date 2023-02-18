@@ -31,6 +31,8 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockM
     }
     opts.prune_target = nPruneTarget;
 
+    if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
+
     return std::nullopt;
 }
 } // namespace node
