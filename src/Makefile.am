@@ -863,7 +863,7 @@ navcoin_cli_LDADD += $(EVENT_LIBS)
 
 # navcoin-tx binary #
 navcoin_tx_SOURCES = bitcoin-tx.cpp
-navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 navcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 navcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
@@ -909,7 +909,7 @@ endif
 
 # navcoin-util binary #
 navcoin_util_SOURCES = bitcoin-util.cpp
-navcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 navcoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 navcoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
