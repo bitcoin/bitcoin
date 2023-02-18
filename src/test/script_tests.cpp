@@ -449,7 +449,7 @@ std::string JSONPrettyPrint(const UniValue& univalue)
 }
 } // namespace
 
-BOOST_AUTO_TEST_CASE(script_build)
+BOOST_FIXTURE_TEST_CASE(script_build, BasicTestingSetup)
 {
     const KeyData keys;
 
@@ -1292,7 +1292,7 @@ BOOST_AUTO_TEST_CASE(script_build)
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(script_json_test)
+BOOST_FIXTURE_TEST_CASE(script_json_test, BasicTestingSetup)
 {
     // Read tests from test/data/script_tests.json
     // Format is an array of arrays
@@ -1335,7 +1335,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(script_PushData)
+BOOST_FIXTURE_TEST_CASE(script_PushData, BasicTestingSetup)
 {
     // Check that PUSHDATA1, PUSHDATA2, and PUSHDATA4 create the same value on
     // the stack as the 1-75 opcodes do.
