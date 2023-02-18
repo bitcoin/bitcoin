@@ -26,6 +26,7 @@ public:
 
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
 
+
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& b);
 
