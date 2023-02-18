@@ -21,8 +21,9 @@ BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
 {
     const auto params {CreateChainParams(ArgsManager{}, ChainType::MAIN)};
-    node::BlockManager::Options blockman_opts{
+    const BlockManager::Options blockman_opts{
         .chainparams = *params,
+        .blocks_dir = m_args.GetBlocksDirPath(),
     };
     BlockManager blockman{blockman_opts};
     CChain chain {};
