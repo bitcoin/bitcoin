@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/fuzz/fuzz.h>
-
+#include <blsct/arith/mcl/mcl_init.h>
 #include <fs.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <test/fuzz/fuzz.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/sock.h>
@@ -35,7 +35,8 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
  */
 static std::vector<const char*> g_args;
 
-static void SetArgs(int argc, char** argv) {
+static void SetArgs(int argc, char** argv)
+{
     for (int i = 1; i < argc; ++i) {
         // Only take into account arguments that start with `--`. The others are for the fuzz engine:
         // `fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5`
@@ -66,6 +67,8 @@ static TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
+    static volatile MclInit for_side_effect_only;
+
     // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
     CreateSock = [](const CService&) -> std::unique_ptr<Sock> { std::terminate(); };
 
