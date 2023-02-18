@@ -13,7 +13,6 @@
 #include <node/blockstorage.h>
 #include <undo.h>
 #include <util/fs_helpers.h>
-#include <validation.h>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -110,6 +109,13 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
 
     m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+}
+
+interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()
+{
+    interfaces::Chain::NotifyOptions options;
+    options.connect_undo_data = true;
+    return options;
 }
 
 bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
@@ -250,19 +256,7 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
 
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
-    CBlockUndo block_undo;
-
-    if (block.height > 0) {
-        // pindex variable gives indexing code access to node internals. It
-        // will be removed in upcoming commit
-        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
-        if (!m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
-            return false;
-        }
-    }
-
-    BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
-
+    BlockFilter filter(m_filter_type, *Assert(block.data), *Assert(block.undo_data));
     const uint256& header = filter.ComputeHeader(m_last_header);
     bool res = Write(filter, block.height, header);
     if (res) m_last_header = header; // update last header

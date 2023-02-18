@@ -52,6 +52,8 @@ private:
     std::optional<uint256> ReadFilterHeader(int height, const uint256& expected_block_hash);
 
 protected:
+    interfaces::Chain::NotifyOptions CustomOptions() override;
+
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
