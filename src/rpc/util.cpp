@@ -45,9 +45,12 @@ void RPCTypeCheckObj(const UniValue& o,
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("JSON value of type %s for field %s is not of expected type %s", uvTypeName(v.type()), t.first, uvTypeName(t.second.type)));
     }
 
-    if (fStrict) {
-        for (const std::string& k : o.getKeys()) {
-            if (typesExpected.count(k) == 0) {
+    if (fStrict)
+    {
+        for (const std::string& k : o.getKeys())
+        {
+            if (typesExpected.count(k) == 0)
+            {
                 std::string err = strprintf("Unexpected key %s", k);
                 throw JSONRPCError(RPC_TYPE_ERROR, err);
             }
@@ -73,7 +76,7 @@ uint256 ParseHashV(const UniValue& v, std::string strName)
     if (64 != strHex.length())
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", strName, 64, strHex.length(), strHex));
     if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strName + " must be hexadecimal string (not '" + strHex + "')");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return uint256S(strHex);
 }
 uint256 ParseHashO(const UniValue& o, std::string strKey)
@@ -86,7 +89,7 @@ std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
     if (v.isStr())
         strHex = v.get_str();
     if (!IsHex(strHex))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strName + " must be hexadecimal string (not '" + strHex + "')");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return ParseHex(strHex);
 }
 std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
@@ -105,7 +108,7 @@ std::string ShellQuote(const std::string& s)
 {
     std::string result;
     result.reserve(s.size() * 2);
-    for (const char ch : s) {
+    for (const char ch: s) {
         if (ch == '\'') {
             result += "'\''";
         } else {
@@ -122,7 +125,7 @@ std::string ShellQuote(const std::string& s)
  */
 std::string ShellQuoteIfNeeded(const std::string& s)
 {
-    for (const char ch : s) {
+    for (const char ch: s) {
         if (ch == ' ' || ch == '\'' || ch == '"') {
             return ShellQuote(s);
         }
@@ -131,7 +134,7 @@ std::string ShellQuoteIfNeeded(const std::string& s)
     return s;
 }
 
-} // namespace
+}
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
@@ -141,8 +144,10 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args)
 {
     std::string result = "> bitcoin-cli -named " + methodname;
-    for (const auto& argpair : args) {
-        const auto& value = argpair.second.isStr() ? argpair.second.get_str() : argpair.second.write();
+    for (const auto& argpair: args) {
+        const auto& value = argpair.second.isStr()
+                ? argpair.second.get_str()
+                : argpair.second.write();
         result += " " + argpair.first + "=" + ShellQuoteIfNeeded(value);
     }
     result += "\n";
@@ -152,20 +157,18 @@ std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList&
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", "
-           "\"method\": \"" +
-           methodname + "\", \"params\": [" + args + "]}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "]}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
 std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args)
 {
     UniValue params(UniValue::VOBJ);
-    for (const auto& param : args) {
+    for (const auto& param: args) {
         params.pushKV(param.first, param.second);
     }
 
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", "
-           "\"method\": \"" +
-           methodname + "\", \"params\": " + params.write() + "}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+           "\"method\": \"" + methodname + "\", \"params\": " + params.write() + "}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
 // Converts a hex string to a public key if possible
@@ -320,18 +323,18 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
 {
     switch (terr) {
-    case TransactionError::MEMPOOL_REJECTED:
-        return RPC_TRANSACTION_REJECTED;
-    case TransactionError::ALREADY_IN_CHAIN:
-        return RPC_TRANSACTION_ALREADY_IN_CHAIN;
-    case TransactionError::P2P_DISABLED:
-        return RPC_CLIENT_P2P_DISABLED;
-    case TransactionError::INVALID_PSBT:
-    case TransactionError::PSBT_MISMATCH:
-        return RPC_INVALID_PARAMETER;
-    case TransactionError::SIGHASH_MISMATCH:
-        return RPC_DESERIALIZATION_ERROR;
-    default: break;
+        case TransactionError::MEMPOOL_REJECTED:
+            return RPC_TRANSACTION_REJECTED;
+        case TransactionError::ALREADY_IN_CHAIN:
+            return RPC_TRANSACTION_ALREADY_IN_CHAIN;
+        case TransactionError::P2P_DISABLED:
+            return RPC_CLIENT_P2P_DISABLED;
+        case TransactionError::INVALID_PSBT:
+        case TransactionError::PSBT_MISMATCH:
+            return RPC_INVALID_PARAMETER;
+        case TransactionError::SIGHASH_MISMATCH:
+            return RPC_DESERIALIZATION_ERROR;
+        default: break;
     }
     return RPC_TRANSACTION_ERROR;
 }
@@ -377,7 +380,7 @@ struct Sections {
     {
         const auto indent = std::string(current_indent, ' ');
         const auto indent_next = std::string(current_indent + 2, ' ');
-        const bool push_name{outer_type == OuterType::OBJ};         // Dictionary keys must have a name
+        const bool push_name{outer_type == OuterType::OBJ}; // Dictionary keys must have a name
         const bool is_top_level_arg{outer_type == OuterType::NONE}; // True on the first recursion
 
         switch (arg.m_type) {
@@ -455,7 +458,7 @@ struct Sections {
             while (true) {
                 right += s.m_right.substr(begin, new_line_pos - begin);
                 if (new_line_pos == std::string::npos) {
-                    break; // No new line
+                    break; //No new line
                 }
                 right += "\n" + std::string(pad, ' ');
                 begin = s.m_right.find_first_not_of(' ', new_line_pos + 1);
@@ -583,9 +586,9 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
         }
         if (!mismatch.isNull()) {
             std::string explain{
-                mismatch.empty()     ? "no possible results defined" :
+                mismatch.empty() ? "no possible results defined" :
                 mismatch.size() == 1 ? mismatch[0].write(4) :
-                                       mismatch.write(4)};
+                mismatch.write(4)};
             throw std::runtime_error{
                 strprintf("Internal bug detected: RPC call \"%s\" returned incorrect type:\n%s\n%s %s\nPlease report this issue here: %s\n",
                           m_name, explain,
