@@ -21,6 +21,9 @@ class ChainstateManager;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
+namespace Consensus {
+    struct Params;
+}
 
 struct IndexSummary {
     std::string name;
@@ -93,6 +96,8 @@ private:
     /// Loop over disconnected blocks and call CustomRewind.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
+    bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
@@ -120,6 +125,9 @@ protected:
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
     [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) { return true; }
+
+    /// Whether the child class requires to receive block undo data inside 'CustomAppend'.
+    virtual bool RequiresBlockUndoData() const { return false; }
 
     virtual DB& GetDB() const = 0;
 
