@@ -32,6 +32,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockM
     opts.prune_target = nPruneTarget;
 
     if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
+    if (auto value{args.GetBoolArg("-stopafterblockimport")}) opts.stop_after_block_import = *value;
 
     return std::nullopt;
 }

@@ -20,7 +20,6 @@
 #include <unordered_map>
 #include <vector>
 
-class ArgsManager;
 class BlockValidationState;
 class CBlock;
 class CBlockFileInfo;
@@ -36,7 +35,6 @@ struct Params;
 }
 
 namespace node {
-static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
@@ -210,6 +208,8 @@ public:
 
     [[nodiscard]] bool LoadingBlocks() const { return m_importing || fReindex; }
 
+    [[nodiscard]] bool StopAfterBlockImport() const { return m_opts.stop_after_block_import; }
+
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();
 
@@ -249,7 +249,7 @@ public:
     void CleanupBlockRevFiles() const;
 };
 
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path);
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const fs::path& mempool_path);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
