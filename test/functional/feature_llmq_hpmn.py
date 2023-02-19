@@ -11,16 +11,40 @@ Checks HPMNs
 '''
 from _decimal import Decimal
 import random
+from io import BytesIO
 
+from test_framework.mininode import P2PInterface
 from test_framework.script import hash160
+from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, \
+    QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
-    assert_equal, p2p_port
+    assert_equal, p2p_port, wait_until
 )
 
 
 def extract_quorum_members(quorum_info):
     return [d['proTxHash'] for d in quorum_info["members"]]
+
+class TestP2PConn(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.last_mnlistdiff = None
+
+    def on_mnlistdiff(self, message):
+        self.last_mnlistdiff = message
+
+    def wait_for_mnlistdiff(self, timeout=30):
+        def received_mnlistdiff():
+            return self.last_mnlistdiff is not None
+        return wait_until(received_mnlistdiff, timeout=timeout)
+
+    def getmnlistdiff(self, baseBlockHash, blockHash):
+        msg = msg_getmnlistd(baseBlockHash, blockHash)
+        self.last_mnlistdiff = None
+        self.send_message(msg)
+        self.wait_for_mnlistdiff()
+        return self.last_mnlistdiff
 
 class LLMQHPMNTest(DashTestFramework):
     def set_test_params(self):
@@ -32,6 +56,9 @@ class LLMQHPMNTest(DashTestFramework):
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
 
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        null_hash = format(0, "064x")
+
         for i in range(len(self.nodes)):
             if i != 0:
                 self.connect_nodes(i, 0)
@@ -40,6 +67,10 @@ class LLMQHPMNTest(DashTestFramework):
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
+
+        expectedUpdated = [mn.proTxHash for mn in self.mninfo]
+        b_0 = self.nodes[0].getbestblockhash()
+        self.test_getmnlistdiff(null_hash, b_0, {}, [], expectedUpdated)
 
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
 
@@ -66,6 +97,11 @@ class LLMQHPMNTest(DashTestFramework):
             hpmn_protxhash_list.append(hpmn_info.proTxHash)
             self.nodes[0].generate(8)
             self.sync_blocks(self.nodes)
+
+            expectedUpdated.append(hpmn_info.proTxHash)
+            b_i = self.nodes[0].getbestblockhash()
+            self.test_getmnlistdiff(null_hash, b_i, {}, [], expectedUpdated)
+
             self.test_masternode_count(expected_mns_count=4, expected_hpmns_count=i+1)
             self.test_hpmn_update_service(hpmn_info)
 
@@ -217,6 +253,58 @@ class LLMQHPMNTest(DashTestFramework):
         self.nodes[0].generate(1)
         self.sync_all(self.nodes)
         self.log.info("Updated HPMN %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (hpmn_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
+
+    def test_getmnlistdiff(self, baseBlockHash, blockHash, baseMNList, expectedDeleted, expectedUpdated):
+        d = self.test_getmnlistdiff_base(baseBlockHash, blockHash)
+
+        # Assert that the deletedMNs and mnList fields are what we expected
+        assert_equal(set(d.deletedMNs), set([int(e, 16) for e in expectedDeleted]))
+        assert_equal(set([e.proRegTxHash for e in d.mnList]), set(int(e, 16) for e in expectedUpdated))
+
+        # Build a new list based on the old list and the info from the diff
+        newMNList = baseMNList.copy()
+        for e in d.deletedMNs:
+            newMNList.pop(format(e, '064x'))
+        for e in d.mnList:
+            newMNList[format(e.proRegTxHash, '064x')] = e
+
+        cbtx = CCbTx()
+        cbtx.deserialize(BytesIO(d.cbTx.vExtraPayload))
+
+        # Verify that the merkle root matches what we locally calculate
+        hashes = []
+        for mn in sorted(newMNList.values(), key=lambda mn: ser_uint256(mn.proRegTxHash)):
+            hashes.append(hash256(mn.serialize()))
+        merkleRoot = CBlock.get_merkle_root(hashes)
+        assert_equal(merkleRoot, cbtx.merkleRootMNList)
+
+        return newMNList
+
+    def test_getmnlistdiff_base(self, baseBlockHash, blockHash):
+        hexstr = self.nodes[0].getblockheader(blockHash, False)
+        header = FromHex(CBlockHeader(), hexstr)
+
+        d = self.test_node.getmnlistdiff(int(baseBlockHash, 16), int(blockHash, 16))
+        assert_equal(d.baseBlockHash, int(baseBlockHash, 16))
+        assert_equal(d.blockHash, int(blockHash, 16))
+
+        # Check that the merkle proof is valid
+        proof = CMerkleBlock(header, d.merkleProof)
+        proof = proof.serialize().hex()
+        assert_equal(self.nodes[0].verifytxoutproof(proof), [d.cbTx.hash])
+
+        # Check if P2P messages match with RPCs
+        d2 = self.nodes[0].protx("diff", baseBlockHash, blockHash)
+        assert_equal(d2["baseBlockHash"], baseBlockHash)
+        assert_equal(d2["blockHash"], blockHash)
+        assert_equal(d2["cbTxMerkleTree"], d.merkleProof.serialize().hex())
+        assert_equal(d2["cbTx"], d.cbTx.serialize().hex())
+        assert_equal(set([int(e, 16) for e in d2["deletedMNs"]]), set(d.deletedMNs))
+        assert_equal(set([int(e["proRegTxHash"], 16) for e in d2["mnList"]]), set([e.proRegTxHash for e in d.mnList]))
+        assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["deletedQuorums"]]), set(d.deletedQuorums))
+        assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["newQuorums"]]), set([QuorumId(e.llmqType, e.quorumHash) for e in d.newQuorums]))
+
+        return d
 
 if __name__ == '__main__':
     LLMQHPMNTest().main()
