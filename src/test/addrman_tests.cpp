@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     // the specified port to tried, but not the other.
     addrman->Good(CAddress(addr1_port, NODE_NONE));
     BOOST_CHECK_EQUAL(addrman->Size(), 2U);
-    bool newOnly = true;
-    auto addr_ret3 = addrman->Select(newOnly).first;
+    bool new_only = true;
+    auto addr_ret3 = addrman->Select(new_only).first;
     BOOST_CHECK_EQUAL(addr_ret3.ToStringAddrPort(), "250.1.1.1:8333");
 }
 
@@ -144,14 +144,14 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
-    bool newOnly = true;
-    auto addr_ret1 = addrman->Select(newOnly).first;
+    bool new_only = true;
+    auto addr_ret1 = addrman->Select(new_only).first;
     BOOST_CHECK_EQUAL(addr_ret1.ToStringAddrPort(), "250.1.1.1:8333");
 
     // Test: move addr to tried, select from new expected nothing returned.
     BOOST_CHECK(addrman->Good(CAddress(addr1, NODE_NONE)));
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
-    auto addr_ret2 = addrman->Select(newOnly).first;
+    auto addr_ret2 = addrman->Select(new_only).first;
     BOOST_CHECK_EQUAL(addr_ret2.ToStringAddrPort(), "[::]:0");
 
     auto addr_ret3 = addrman->Select().first;

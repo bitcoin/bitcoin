@@ -58,9 +58,9 @@ int AddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src, const NetGr
     return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
 }
 
-int AddrInfo::GetBucketPosition(const uint256& nKey, bool fNew, int nBucket) const
+int AddrInfo::GetBucketPosition(const uint256& nKey, bool fNew, int bucket) const
 {
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? uint8_t{'N'} : uint8_t{'K'}) << nBucket << GetKey()).GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? uint8_t{'N'} : uint8_t{'K'}) << bucket << GetKey()).GetCheapHash();
     return hash1 % ADDRMAN_BUCKET_SIZE;
 }
 
@@ -714,19 +714,19 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, NodeSeconds
     }
 }
 
-std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
+std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only) const
 {
     AssertLockHeld(cs);
 
     if (vRandom.empty()) return {};
-    if (newOnly && nNew == 0) return {};
+    if (new_only && nNew == 0) return {};
 
     // Decide if we are going to search the new or tried table
     bool search_tried;
     int bucket_count;
 
     // Use a 50% chance for choosing between tried and new table entries.
-    if (!newOnly &&
+    if (!new_only &&
        (nTried > 0 &&
         (nNew == 0 || insecure_rand.randbool() == 0))) {
         search_tried = true;
@@ -736,18 +736,18 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
         bucket_count = ADDRMAN_NEW_BUCKET_COUNT;
     }
 
-    double fChanceFactor = 1.0;
+    double chance_factor = 1.0;
     while (1) {
         // Pick a bucket, and an initial position in that bucket.
-        int nBucket = insecure_rand.randrange(bucket_count);
-        int nBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
+        int bucket = insecure_rand.randrange(bucket_count);
+        int initial_position = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
 
         // Iterate over the positions of that bucket, starting at the initial one,
         // and looping around.
         int i;
         for (i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
-            int position = (nBucketPos + i) % ADDRMAN_BUCKET_SIZE;
-            int node_id = GetEntry(search_tried, nBucket, position);
+            int position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
+            int node_id = GetEntry(search_tried, bucket, position);
             if (node_id != -1) break;
         }
 
@@ -755,20 +755,20 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
         if (i == ADDRMAN_BUCKET_SIZE) continue;
 
         // Find the entry to return.
-        int position = (nBucketPos + i) % ADDRMAN_BUCKET_SIZE;
-        int nId = GetEntry(search_tried, nBucket, position);
+        int position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
+        int nId = GetEntry(search_tried, bucket, position);
         const auto it_found{mapInfo.find(nId)};
         assert(it_found != mapInfo.end());
         const AddrInfo& info{it_found->second};
 
-        // With probability GetChance() * fChanceFactor, return the entry.
-        if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30)) {
+        // With probability GetChance() * chance_factor, return the entry.
+        if (insecure_rand.randbits(30) < chance_factor * info.GetChance() * (1 << 30)) {
             LogPrint(BCLog::ADDRMAN, "Selected %s from %s\n", info.ToStringAddrPort(), search_tried ? "tried" : "new");
             return {info, info.m_last_try};
         }
 
         // Otherwise start over with a (likely) different bucket, and increased chance factor.
-        fChanceFactor *= 1.2;
+        chance_factor *= 1.2;
     }
 }
 
@@ -1168,11 +1168,11 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::SelectTriedCollision()
     return ret;
 }
 
-std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool newOnly) const
+std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool new_only) const
 {
     LOCK(cs);
     Check();
-    auto addrRet = Select_(newOnly);
+    auto addrRet = Select_(new_only);
     Check();
     return addrRet;
 }
@@ -1266,9 +1266,9 @@ std::pair<CAddress, NodeSeconds> AddrMan::SelectTriedCollision()
     return m_impl->SelectTriedCollision();
 }
 
-std::pair<CAddress, NodeSeconds> AddrMan::Select(bool newOnly) const
+std::pair<CAddress, NodeSeconds> AddrMan::Select(bool new_only) const
 {
-    return m_impl->Select(newOnly);
+    return m_impl->Select(new_only);
 }
 
 std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
