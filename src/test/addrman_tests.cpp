@@ -252,6 +252,28 @@ BOOST_AUTO_TEST_CASE(addrman_select_by_network)
     }
 }
 
+BOOST_AUTO_TEST_CASE(addrman_select_special)
+{
+    // use a non-deterministic addrman to ensure a passing test isn't due to setup
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, /*deterministic=*/false, GetCheckRatio(m_node));
+
+    // add ipv4 address to the new table
+    CNetAddr source = ResolveIP("252.2.2.2");
+    CService addr1 = ResolveService("250.1.1.3", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+
+    // add I2P address to the tried table
+    CAddress i2p_addr;
+    i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr}, source));
+    BOOST_CHECK(addrman->Good(i2p_addr));
+
+    // since the only ipv4 address is on the new table, ensure that the new
+    // table gets selected even if new_only is false. if the table was being
+    // selected at random, this test will sporadically fail
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+}
+
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
