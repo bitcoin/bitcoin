@@ -719,12 +719,21 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
     AssertLockHeld(cs);
 
     if (vRandom.empty()) return {};
-
     if (newOnly && nNew == 0) return {};
+
+    // Decide if we are going to search the new or tried table
+    bool search_tried;
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
-       (nTried > 0 && (nNew == 0 || insecure_rand.randbool() == 0))) {
+       (nTried > 0 &&
+        (nNew == 0 || insecure_rand.randbool() == 0))) {
+        search_tried = true;
+    } else {
+        search_tried = false;
+    }
+
+    if (search_tried) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {
