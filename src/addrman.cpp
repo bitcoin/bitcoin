@@ -723,14 +723,17 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
 
     // Decide if we are going to search the new or tried table
     bool search_tried;
+    int bucket_count;
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
        (nTried > 0 &&
         (nNew == 0 || insecure_rand.randbool() == 0))) {
         search_tried = true;
+        bucket_count = ADDRMAN_TRIED_BUCKET_COUNT;
     } else {
         search_tried = false;
+        bucket_count = ADDRMAN_NEW_BUCKET_COUNT;
     }
 
     if (search_tried) {
@@ -738,18 +741,21 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
         double fChanceFactor = 1.0;
         while (1) {
             // Pick a tried bucket, and an initial position in that bucket.
-            int nKBucket = insecure_rand.randrange(ADDRMAN_TRIED_BUCKET_COUNT);
+            int nKBucket = insecure_rand.randrange(bucket_count);
             int nKBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
             // Iterate over the positions of that bucket, starting at the initial one,
             // and looping around.
             int i;
             for (i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
-                if (vvTried[nKBucket][(nKBucketPos + i) % ADDRMAN_BUCKET_SIZE] != -1) break;
+                int position = (nKBucketPos + i) % ADDRMAN_BUCKET_SIZE;
+                int node_id = GetEntry(search_tried, nKBucket, position);
+                if (node_id != -1) break;
             }
             // If the bucket is entirely empty, start over with a (likely) different one.
             if (i == ADDRMAN_BUCKET_SIZE) continue;
             // Find the entry to return.
-            int nId = vvTried[nKBucket][(nKBucketPos + i) % ADDRMAN_BUCKET_SIZE];
+            int position = (nKBucketPos + i) % ADDRMAN_BUCKET_SIZE;
+            int nId = GetEntry(search_tried, nKBucket, position);
             const auto it_found{mapInfo.find(nId)};
             assert(it_found != mapInfo.end());
             const AddrInfo& info{it_found->second};
@@ -766,18 +772,21 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool newOnly) const
         double fChanceFactor = 1.0;
         while (1) {
             // Pick a new bucket, and an initial position in that bucket.
-            int nUBucket = insecure_rand.randrange(ADDRMAN_NEW_BUCKET_COUNT);
+            int nUBucket = insecure_rand.randrange(bucket_count);
             int nUBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
             // Iterate over the positions of that bucket, starting at the initial one,
             // and looping around.
             int i;
             for (i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
-                if (vvNew[nUBucket][(nUBucketPos + i) % ADDRMAN_BUCKET_SIZE] != -1) break;
+                int position = (nUBucketPos + i) % ADDRMAN_BUCKET_SIZE;
+                int node_id = GetEntry(search_tried, nUBucket, position);
+                if (node_id != -1) break;
             }
             // If the bucket is entirely empty, start over with a (likely) different one.
             if (i == ADDRMAN_BUCKET_SIZE) continue;
             // Find the entry to return.
-            int nId = vvNew[nUBucket][(nUBucketPos + i) % ADDRMAN_BUCKET_SIZE];
+            int position = (nUBucketPos + i) % ADDRMAN_BUCKET_SIZE;
+            int nId = GetEntry(search_tried, nUBucket, position);
             const auto it_found{mapInfo.find(nId)};
             assert(it_found != mapInfo.end());
             const AddrInfo& info{it_found->second};
