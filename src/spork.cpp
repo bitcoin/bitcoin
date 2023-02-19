@@ -25,7 +25,7 @@
 
 std::unique_ptr<CSporkManager> sporkManager;
 
-std::optional<int64_t> CSporkManager::SporkValueIfActive(SporkId nSporkID) const
+std::optional<SporkValue> CSporkManager::SporkValueIfActive(SporkId nSporkID) const
 {
     AssertLockHeld(cs);
 
@@ -39,7 +39,7 @@ std::optional<int64_t> CSporkManager::SporkValueIfActive(SporkId nSporkID) const
     }
 
     // calc how many values we have and how many signers vote for every value
-    std::unordered_map<int64_t, int> mapValueCounts;
+    std::unordered_map<SporkValue, int> mapValueCounts;
     for (const auto& [_, spork] : mapSporksActive.at(nSporkID)) {
         mapValueCounts[spork.nValue]++;
         if (mapValueCounts.at(spork.nValue) >= nMinSporkKeys) {
@@ -188,7 +188,7 @@ void CSporkManager::ProcessGetSporks(CNode& peer, CConnman& connman)
 }
 
 
-bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& connman)
+bool CSporkManager::UpdateSpork(SporkId nSporkID, SporkValue nValue, CConnman& connman)
 {
     CSporkMessage spork(nSporkID, nValue, GetAdjustedTime());
 
@@ -229,7 +229,7 @@ bool CSporkManager::IsSporkActive(SporkId nSporkID) const
         }
     }
 
-    int64_t nSporkValue = GetSporkValue(nSporkID);
+    SporkValue nSporkValue = GetSporkValue(nSporkID);
     // Get time is somewhat costly it looks like
     bool ret = nSporkValue < GetAdjustedTime();
     // Only cache true values
@@ -240,7 +240,7 @@ bool CSporkManager::IsSporkActive(SporkId nSporkID) const
     return ret;
 }
 
-int64_t CSporkManager::GetSporkValue(SporkId nSporkID) const
+SporkValue CSporkManager::GetSporkValue(SporkId nSporkID) const
 {
     LOCK(cs);
 

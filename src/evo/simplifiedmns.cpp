@@ -150,26 +150,27 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
 
     std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
     std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
-    for (const auto& p : baseQuorums) {
-        for (const auto& p2 : p.second) {
-            baseQuorumHashes.emplace(p.first, p2->GetBlockHash());
+    for (const auto& [llmqType, vecBlockIndex] : baseQuorums) {
+        for (const auto& blockindex : vecBlockIndex) {
+            baseQuorumHashes.emplace(llmqType, blockindex->GetBlockHash());
         }
     }
-    for (const auto& p : quorums) {
-        for (const auto& p2 : p.second) {
-            quorumHashes.emplace(p.first, p2->GetBlockHash());
+    for (const auto& [llmqType, vecBlockIndex] : quorums) {
+        for (const auto& blockindex : vecBlockIndex) {
+            quorumHashes.emplace(llmqType, blockindex->GetBlockHash());
         }
     }
 
-    for (auto& p : baseQuorumHashes) {
+    for (const auto& p : baseQuorumHashes) {
         if (!quorumHashes.count(p)) {
             deletedQuorums.emplace_back((uint8_t)p.first, p.second);
         }
     }
-    for (auto& p : quorumHashes) {
+    for (const auto& p : quorumHashes) {
+        const auto& [llmqType, hash] = p;
         if (!baseQuorumHashes.count(p)) {
             uint256 minedBlockHash;
-            llmq::CFinalCommitmentPtr qc = quorum_block_processor.GetMinedCommitment(p.first, p.second, minedBlockHash);
+            llmq::CFinalCommitmentPtr qc = quorum_block_processor.GetMinedCommitment(llmqType, hash, minedBlockHash);
             if (qc == nullptr) {
                 return false;
             }

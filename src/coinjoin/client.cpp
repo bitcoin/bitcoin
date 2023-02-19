@@ -468,11 +468,11 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
     std::vector<CTxDSIn> vecTxDSInTmp;
     std::vector<CTxOut> vecTxOutTmp;
 
-    for (const auto& pair : vecPSInOutPairsIn) {
-        vecTxDSInTmp.emplace_back(pair.first);
-        vecTxOutTmp.emplace_back(pair.second);
-        tx.vin.emplace_back(pair.first);
-        tx.vout.emplace_back(pair.second);
+    for (const auto& [txDsIn, txOut] : vecPSInOutPairsIn) {
+        vecTxDSInTmp.emplace_back(txDsIn);
+        vecTxOutTmp.emplace_back(txOut);
+        tx.vin.emplace_back(txDsIn);
+        tx.vout.emplace_back(txOut);
     }
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::SendDenominate -- Submitting partial tx %s", tx.ToString()); /* Continued */
@@ -1363,9 +1363,9 @@ bool CCoinJoinClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds, s
         return true;
     }
 
-    for (const auto& pair : vecPSInOutPairsRet) {
-        mixingWallet.LockCoin(pair.first.prevout);
-        vecOutPointLocked.push_back(pair.first.prevout);
+    for (const auto& [txDsIn, txDsOut] : vecPSInOutPairsRet) {
+        mixingWallet.LockCoin(txDsIn.prevout);
+        vecOutPointLocked.push_back(txDsIn.prevout);
     }
 
     return true;
@@ -1677,17 +1677,17 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
         }
 
         bool finished = true;
-        for (const auto it : mapDenomCount) {
+        for (const auto [denom, count] : mapDenomCount) {
             // Check if this specific denom could use another loop, check that there aren't nCoinJoinDenomsGoal of this
             // denom and that our nValueLeft/nBalanceToDenominate is enough to create one of these denoms, if so, loop again.
-            if (it.second < CCoinJoinClientOptions::GetDenomsGoal() && txBuilder.CouldAddOutput(it.first) && nBalanceToDenominate > 0) {
+            if (count < CCoinJoinClientOptions::GetDenomsGoal() && txBuilder.CouldAddOutput(denom) && nBalanceToDenominate > 0) {
                 finished = false;
                 LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 1 - NOT finished - nDenomValue: %f, count: %d, nBalanceToDenominate: %f, %s\n",
-                                             __func__, (float) it.first / COIN, it.second, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
+                                             __func__, (float) denom / COIN, count, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
                 break;
             }
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 1 - FINISHED - nDenomValue: %f, count: %d, nBalanceToDenominate: %f, %s\n",
-                                         __func__, (float) it.first / COIN, it.second, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
+                                         __func__, (float) denom / COIN, count, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
         }
 
         if (finished) break;
@@ -1757,8 +1757,8 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 3 - nBalanceToDenominate: %f, %s\n", __func__, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
 
-    for (const auto it : mapDenomCount) {
-        LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 3 - DONE - nDenomValue: %f, count: %d\n", __func__, (float) it.first / COIN, it.second);
+    for (const auto [denom, count] : mapDenomCount) {
+        LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 3 - DONE - nDenomValue: %f, count: %d\n", __func__, (float) denom / COIN, count);
     }
 
     // No reasons to create mixing collaterals if we can't create denoms to mix

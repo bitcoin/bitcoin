@@ -231,8 +231,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::v
     }
 
     auto checkTxOut = [&](const CTxOut& txout) {
-        int nDenom = CCoinJoin::AmountToDenomination(txout.nValue);
-        if (nDenom != nSessionDenom) {
+        if (int nDenom = CCoinJoin::AmountToDenomination(txout.nValue); nDenom != nSessionDenom) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::IsValidInOuts -- ERROR: incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
                     nDenom, CCoinJoin::DenominationToString(nDenom), nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
             nMessageIDRet = ERR_DENOM;
@@ -364,9 +363,7 @@ bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCol
 
 std::string CCoinJoin::DenominationToString(int nDenom)
 {
-    CAmount nDenomAmount = DenominationToAmount(nDenom);
-
-    switch (nDenomAmount) {
+    switch (CAmount nDenomAmount = DenominationToAmount(nDenom)) {
         case  0: return "N/A";
         case -1: return "out-of-bounds";
         case -2: return "non-denom";
