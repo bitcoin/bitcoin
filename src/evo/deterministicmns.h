@@ -54,9 +54,9 @@ public:
     }
 
     template <typename Stream>
-    CDeterministicMN(deserialize_type, Stream& s)
+    CDeterministicMN(deserialize_type, Stream& s, const uint8_t format_version)
     {
-        s >> *this;
+        SerializationOp(s, CSerActionUnserialize(), format_version);
     }
 
     uint256 proTxHash;
@@ -202,16 +202,22 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s) {
+    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_TYPE_FORMAT) {
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
 
         SerializationOpBase(s, CSerActionUnserialize());
 
+        bool evodb_migration = (format_version == CDeterministicMN::CURRENT_MN_FORMAT);
         size_t cnt = ReadCompactSize(s);
         for (size_t i = 0; i < cnt; i++) {
-            AddMN(std::make_shared<CDeterministicMN>(deserialize, s), false);
+            if (evodb_migration) {
+                const auto dmn = std::make_shared<CDeterministicMN>(deserialize, s, format_version);
+                mnMap = mnMap.set(dmn->proTxHash, dmn);
+            } else {
+                AddMN(std::make_shared<CDeterministicMN>(deserialize, s, format_version), false);
+            }
         }
     }
 
@@ -565,7 +571,6 @@ public:
 
     bool IsDIP3Enforced(int nHeight = -1);
 
-    void MigrateDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
     bool MigrateDBIfNeeded();
 
     void DoMaintenance();

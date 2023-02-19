@@ -1177,30 +1177,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
     for (const auto& h : toDeleteDiffs) {
         mnListDiffsCache.erase(h);
     }
-}
 
-void CDeterministicMNManager::MigrateDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList)
-{
-    static const std::string DB_OLD_LIST_DIFF = "dmn_D";
-
-    CDataStream diff_data(SER_DISK, CLIENT_VERSION);
-    if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_DIFF, pindexNext->GetBlockHash()), diff_data)) {
-        newMNList = curMNList;
-        newMNList.SetBlockHash(pindexNext->GetBlockHash());
-        newMNList.SetHeight(pindexNext->nHeight);
-        return;
-    }
-
-    CDeterministicMNListDiff mndiff;
-    mndiff.Unserialize(diff_data, CDeterministicMN::CURRENT_MN_FORMAT);
-
-    // At this point, all masternodes included in the diff are set as regular masternodes by default.
-    // We can then write them in evoDB as the new serialisation format includes the type
-
-    batch.Write(std::make_pair(DB_LIST_DIFF, pindexNext->GetBlockHash()), mndiff);
-
-    // applies added/removed MNs
-    newMNList = curMNList.ApplyDiff(pindexNext, mndiff);
 }
 
 bool CDeterministicMNManager::MigrateDBIfNeeded()
@@ -1244,23 +1221,29 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
 
     CDBBatch batch(m_evoDb.GetRawDB());
 
-    CDeterministicMNList curMNList;
-    curMNList.SetHeight(Params().GetConsensus().DIP0003Height - 1);
-    curMNList.SetBlockHash(::ChainActive()[Params().GetConsensus().DIP0003Height - 1]->GetBlockHash());
-
     for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, ::ChainActive().Height() + 1)) {
         auto pindex = ::ChainActive()[nHeight];
-
-        CDeterministicMNList newMNList;
-        MigrateDiff(batch, pindex, curMNList, newMNList);
-
-        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0) {
-            batch.Write(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), newMNList);
-            m_evoDb.GetRawDB().WriteBatch(batch);
-            batch.Clear();
+        // Unserialise CDeterministicMNListDiff using CURRENT_MN_FORMAT and set it's type to the default value TYPE_REGULAR_MASTERNODE
+        // It will be later written with format MN_TYPE_FORMAT which includes the type field.
+        CDataStream diff_data(SER_DISK, CLIENT_VERSION);
+        if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_DIFF, pindex->GetBlockHash()), diff_data)) {
+            LogPrintf("CDeterministicMNManager::%s -- missing CDeterministicMNListDiff at height %d\n", __func__, nHeight);
+            return false;
         }
-
-        curMNList = newMNList;
+        CDeterministicMNListDiff mndiff;
+        mndiff.Unserialize(diff_data, CDeterministicMN::CURRENT_MN_FORMAT);
+        batch.Write(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), mndiff);
+        CDataStream snapshot_data(SER_DISK, CLIENT_VERSION);
+        if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot_data)) {
+            // it's ok, we write snapshots every DISK_SNAPSHOT_PERIOD blocks only
+            continue;
+        }
+        CDeterministicMNList mnList;
+        mnList.Unserialize(snapshot_data, CDeterministicMN::CURRENT_MN_FORMAT);
+        batch.Write(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), mnList);
+        m_evoDb.GetRawDB().WriteBatch(batch);
+        batch.Clear();
+        LogPrintf("CDeterministicMNManager::%s -- wrote snapshot at height %d\n", __func__, nHeight);
     }
 
     m_evoDb.GetRawDB().WriteBatch(batch);
