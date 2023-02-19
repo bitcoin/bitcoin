@@ -823,7 +823,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (proTx.nType != dmn->nType) {
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-type-mismatch");
             }
-            if (proTx.nType != MnType::Regular && proTx.nType != MnType::HighPerformance) {
+            if (!IsValidMnType(proTx.nType)) {
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-type");
             }
 
