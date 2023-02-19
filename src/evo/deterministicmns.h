@@ -457,7 +457,7 @@ public:
 
     std::vector<CDeterministicMNCPtr> addedMNs;
     // keys are all relating to the internalId of MNs
-    std::map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
+    std::unordered_map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
     std::set<uint64_t> removedMns;
 
     template<typename Stream>
