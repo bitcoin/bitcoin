@@ -131,7 +131,8 @@ std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqT
 {
     auto allMns = deterministicMNManager->GetListForBlock(pQuorumBaseBlockIndex);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pQuorumBaseBlockIndex->GetBlockHash()));
-    return allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier, IsLLMQTypeHPMNOnly(llmqType));
+    bool HPMNOnly = (Params().GetConsensus().llmqTypePlatform == llmqType) && IsV19Active(pQuorumBaseBlockIndex);
+    return allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier, HPMNOnly);
 }
 
 std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(Consensus::LLMQType llmqType, const CBlockIndex* pCycleQuorumBaseBlockIndex)
@@ -671,11 +672,6 @@ bool IsInstantSendLLMQTypeShared()
     }
 
     return false;
-}
-
-bool IsLLMQTypeHPMNOnly(Consensus::LLMQType llmqType)
-{
-    return Params().GetConsensus().llmqTypePlatform == llmqType;
 }
 
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
