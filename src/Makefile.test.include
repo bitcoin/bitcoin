@@ -152,6 +152,7 @@ BITCOIN_TESTS =\
   test/translation_tests.cpp \
   test/txindex_tests.cpp \
   test/txpackage_tests.cpp \
+  test/txpackagetracker_tests.cpp \
   test/txreconciliation_tests.cpp \
   test/txrequest_tests.cpp \
   test/txvalidation_tests.cpp \
