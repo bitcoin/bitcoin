@@ -30,6 +30,8 @@ struct SyncContext;
 static constexpr int16_t MAX_INDEX_WORKERS_COUNT = 100;
 /** Number of concurrent jobs during the initial sync process */
 static constexpr int16_t INDEX_WORKERS_COUNT = 0;
+/** Number of tasks processed by each worker */
+static constexpr int16_t INDEX_WORK_PER_CHUNK = 1000;
 
 struct IndexSummary {
     std::string name;
@@ -90,6 +92,7 @@ private:
     CThreadInterrupt m_interrupt;
 
     ThreadPool* m_thread_pool{nullptr};
+    int m_blocks_per_worker{INDEX_WORK_PER_CHUNK};
 
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
@@ -149,8 +152,9 @@ protected:
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
-    /// The 'std::any' result will be passed to 'CustomPostProcessBlocks()' so the index can (in the future)
-    /// process async result batches in a synchronous fashion (if required) and batch DB writes.
+    /// If 'AllowParallelSync()' returns true, 'ProcessBlock()' will run concurrently in batches.
+    /// The 'std::any' result will be passed to 'CustomPostProcessBlocks()' so the index can process
+    /// async result batches in a synchronous fashion (if required).
     [[nodiscard]] virtual std::any CustomProcessBlock(const interfaces::BlockInfo& block_info) {
         // If parallel sync is enabled, the child class must implement this method.
         if (AllowParallelSync()) assert(false);
@@ -163,10 +167,9 @@ protected:
         return true;
     }
 
-    /// Executed synchronously after each (currently synchronous) 'CustomProcessBlock()' call.
+    /// Executed synchronously after a batch of async 'CustomProcessBlock()' calls.
     /// Intended for work that must preserve block order — for example, linking results to
-    /// previous entries or performing batch database writes. Future implementations will receive
-    /// asynchronously produced batches to process in sequence before committing to disk.
+    /// previous entries or performing batch database writes.
     [[nodiscard]] virtual bool CustomPostProcessBlocks(const std::any& obj) { return true; };
 
 public:
@@ -205,7 +208,10 @@ public:
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
 
-    /// True if the child class allows concurrent sync.
+    /// Number of blocks each worker thread will process at a time
+    void SetBlocksPerWorker(int count) { m_blocks_per_worker = count; }
+
+    /// True if the child class allows concurrent sync (Implements CustomProcess and CustomPostProcess).
     virtual bool AllowParallelSync() { return false; }
 
     /// True if the child class requires CustomProcess to be called in-order
