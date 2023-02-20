@@ -2875,25 +2875,32 @@ std::vector<std::string> CWallet::GetAddressReceiveRequests() const
 {
     std::vector<std::string> values;
     for (const auto& [_, data] : m_address_book) {
-        for (const auto& [_, req] : data.GetReceiveRequests()) {
-            if (req.empty()) {
-                continue;
-            }
-            values.emplace_back(req);
+        const auto& req = data.GetReceiveRequest();
+        if (!req.has_value()) {
+            continue;
         }
+        values.emplace_back(req.value().second);
     }
     return values;
 }
 
 bool CWallet::RemoveAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id) {
     CAddressBookData& entry = m_address_book.at(dest);
-    entry.RemoveReceiveRequest(id);
+    const auto& req = entry.GetReceiveRequest();
+    if (!req.has_value()) {
+        return true;
+    }
+    Assume(req.value().first == id);
+    entry.RemoveReceiveRequest();
     return batch.EraseDestData(EncodeDestination(dest), "rr" + ToString(id));
 }
 
 bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id, const std::string& value)
 {
     CAddressBookData& data = m_address_book.at(dest);
+    if (data.GetReceiveRequest().has_value()) {
+        return false;
+    }
     data.SetReceiveRequest(id, value);
     return batch.WriteDestData(EncodeDestination(dest), "rr" + ToString(id), value);
 }

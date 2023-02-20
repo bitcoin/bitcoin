@@ -211,7 +211,7 @@ private:
     //! This address has been used in a transaction input
     bool m_input_used{false};
     //! Receive Request data sent by the GUI
-    std::map<int64_t, std::string> m_receive_requests;
+    std::optional<std::pair<int64_t, std::string>> m_receive_request;
 public:
     std::string purpose;
 
@@ -227,9 +227,9 @@ public:
     bool GetInputUsed() const { return m_input_used; }
     void SetInputUsed(bool value) { m_input_used = value; }
 
-    const std::map<int64_t, std::string> GetReceiveRequests() const { return m_receive_requests; }
-    void SetReceiveRequest(int64_t id, const std::string& request) { m_receive_requests[id] = request; }
-    bool RemoveReceiveRequest(int64_t id) { return m_receive_requests.erase(id); }
+    const std::optional<std::pair<int64_t, std::string>>& GetReceiveRequest() const { return m_receive_request; }
+    void SetReceiveRequest(int64_t id, const std::string& request) { m_receive_request.emplace(id, request); }
+    void RemoveReceiveRequest() { m_receive_request.reset(); }
 };
 
 struct CRecipient
