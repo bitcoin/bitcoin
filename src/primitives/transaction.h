@@ -159,6 +159,54 @@ public:
     std::string ToString() const;
 };
 
+class CTxOutBLSCTData
+{
+public:
+    MclG1Point spendingKey;
+    MclG1Point ephemeralKey;
+    MclG1Point blindingKey;
+    RangeProof<Mcl> rangeProof;
+    uint16_t viewTag;
+
+    CTxOutBLSCTData()
+    {
+        viewTag = 0;
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, SerializeRangeProof(rangeProof));
+        ::Serialize(s, spendingKey);
+        ::Serialize(s, blindingKey);
+        ::Serialize(s, ephemeralKey);
+        ::Serialize(s, viewTag);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        std::vector<uint8_t> rangeProofVec;
+        ::Unserialize(s, rangeProofVec);
+        rangeProof = UnserializeRangeProof<Mcl>(rangeProofVec);
+        ::Unserialize(s, spendingKey);
+        ::Unserialize(s, blindingKey);
+        ::Unserialize(s, ephemeralKey);
+        ::Unserialize(s, viewTag);
+    }
+
+    friend bool operator==(const CTxOutBLSCTData& a, const CTxOutBLSCTData& b)
+    {
+        return (a.spendingKey == b.spendingKey && a.ephemeralKey == b.ephemeralKey &&
+                a.blindingKey == b.blindingKey && a.viewTag == b.viewTag);
+    }
+
+    friend bool operator!=(const CTxOutBLSCTData& a, const CTxOutBLSCTData& b)
+    {
+        return !(a == b);
+    }
+};
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
@@ -170,12 +218,8 @@ public:
 
     CAmount nValue;
     CScript scriptPubKey;
-    MclG1Point spendingKey;
-    MclG1Point ephemeralKey;
-    MclG1Point blindingKey;
-    RangeProof<Mcl> rangeProof;
+    CTxOutBLSCTData blsctData;
     TokenId tokenId;
-    uint16_t viewTag;
 
     CTxOut()
     {
@@ -189,7 +233,7 @@ public:
     {
         uint64_t nFlags = 0;
 
-        if (rangeProof.Vs.Size() > 0 || !spendingKey.IsUnity() || !blindingKey.IsUnity() || !ephemeralKey.IsUnity())
+        if (blsctData.rangeProof.Vs.Size() > 0)
             nFlags |= BLSCT_MARKER;
         if (!tokenId.IsNull())
             nFlags |= TOKEN_MARKER;
@@ -201,11 +245,7 @@ public:
         }
         ::Serialize(s, scriptPubKey);
         if (nFlags & BLSCT_MARKER) {
-            ::Serialize(s, SerializeRangeProof(rangeProof));
-            ::Serialize(s, spendingKey);
-            ::Serialize(s, blindingKey);
-            ::Serialize(s, ephemeralKey);
-            ::Serialize(s, viewTag);
+            ::Serialize(s, blsctData);
         }
         if (nFlags & TOKEN_MARKER)
             ::Serialize(s, tokenId);
@@ -221,13 +261,7 @@ public:
         }
         ::Unserialize(s, scriptPubKey);
         if (nFlags & BLSCT_MARKER) {
-            std::vector<uint8_t> rangeProofVec;
-            ::Unserialize(s, rangeProofVec);
-            rangeProof = UnserializeRangeProof<Mcl>(rangeProofVec);
-            ::Unserialize(s, spendingKey);
-            ::Unserialize(s, blindingKey);
-            ::Unserialize(s, ephemeralKey);
-            ::Unserialize(s, viewTag);
+            ::Unserialize(s, blsctData);
         }
         if (nFlags & TOKEN_MARKER) {
             ::Unserialize(s, tokenId);
@@ -238,7 +272,7 @@ public:
     {
         nValue = -1;
         scriptPubKey.clear();
-        viewTag = 0;
+        blsctData.viewTag = 0;
     }
 
     bool IsNull() const
@@ -250,8 +284,7 @@ public:
     {
         return (a.nValue == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey &&
-                a.spendingKey == b.spendingKey && a.ephemeralKey == b.ephemeralKey &&
-                a.blindingKey == b.blindingKey && a.viewTag == b.viewTag);
+                a.tokenId == b.tokenId && a.blsctData == b.blsctData);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
