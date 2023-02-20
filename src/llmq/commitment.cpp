@@ -12,6 +12,7 @@
 #include <llmq/utils.h>
 #include <logging.h>
 #include <validation.h>
+#include <util/underlying.h>
 
 namespace llmq
 {
@@ -46,7 +47,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
     }
 
     if (!Params().HasLLMQ(llmqType)) {
-        LogPrintfFinalCommitment("q[%s] invalid llmqType=%d\n", quorumHash.ToString(), static_cast<uint8_t>(llmqType));
+        LogPrintfFinalCommitment("q[%s] invalid llmqType=%d\n", quorumHash.ToString(), ToUnderlying(llmqType));
         return false;
     }
     const auto& llmq_params = GetLLMQParams(llmqType);
@@ -149,7 +150,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
 bool CFinalCommitment::VerifyNull() const
 {
     if (!Params().HasLLMQ(llmqType)) {
-        LogPrintfFinalCommitment("q[%s]invalid llmqType=%d\n", quorumHash.ToString(), static_cast<uint8_t>(llmqType));
+        LogPrintfFinalCommitment("q[%s]invalid llmqType=%d\n", quorumHash.ToString(), ToUnderlying(llmqType));
         return false;
     }
 

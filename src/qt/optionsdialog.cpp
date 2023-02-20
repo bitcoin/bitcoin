@@ -20,6 +20,7 @@
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <util/underlying.h>
 
 #include <QButtonGroup>
 #include <QDataWidgetMapper>
@@ -291,7 +292,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
 
 void OptionsDialog::setCurrentTab(OptionsDialog::Tab tab)
 {
-    showPage(int(tab));
+    showPage(ToUnderlying(tab));
 }
 
 void OptionsDialog::setMapper()

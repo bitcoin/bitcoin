@@ -17,6 +17,7 @@
 #include <netmessagemaker.h>
 #include <spork.h>
 #include <util/irange.h>
+#include <util/underlying.h>
 
 #include <cxxtimer.hpp>
 
@@ -31,7 +32,7 @@ void CSigShare::UpdateKey()
 std::string CSigSesAnn::ToString() const
 {
     return strprintf("sessionId=%d, llmqType=%d, quorumHash=%s, id=%s, msgHash=%s",
-                     sessionId, static_cast<uint8_t>(getLlmqType()), getQuorumHash().ToString(), getId().ToString(), getMsgHash().ToString());
+                     sessionId, ToUnderlying(getLlmqType()), getQuorumHash().ToString(), getId().ToString(), getMsgHash().ToString());
 }
 
 void CSigSharesInv::Merge(const CSigSharesInv& inv2)
@@ -1516,7 +1517,7 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorumCPtr& qu
     sigShare.UpdateKey();
 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- created sigShare. signHash=%s, id=%s, msgHash=%s, llmqType=%d, quorum=%s, time=%s\n", __func__,
-              signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(), static_cast<uint8_t>(quorum->params.type), quorum->qc->quorumHash.ToString(), t.count());
+              signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(), ToUnderlying(quorum->params.type), quorum->qc->quorumHash.ToString(), t.count());
 
     return sigShare;
 }

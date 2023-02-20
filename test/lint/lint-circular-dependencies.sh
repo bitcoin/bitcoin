@@ -89,6 +89,8 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/snapshot -> llmq/utils -> llmq/snapshot"
     "spork -> validation -> spork"
     "governance/governance -> validation -> governance/governance"
+    "llmq/debug -> llmq/dkgsessionhandler -> llmq/debug"
+    "llmq/debug -> llmq/dkgsessionhandler -> llmq/dkgsession -> llmq/debug"
 )
 
 EXIT_CODE=0

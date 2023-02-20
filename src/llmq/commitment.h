@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 #include <util/irange.h>
 #include <util/strencodings.h>
+#include <util/underlying.h>
 
 #include <univalue.h>
 
@@ -114,7 +115,7 @@ public:
     {
         obj.setObject();
         obj.pushKV("version", int{nVersion});
-        obj.pushKV("llmqType", int(llmqType));
+        obj.pushKV("llmqType", ToUnderlying(llmqType));
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("quorumIndex", quorumIndex);
         obj.pushKV("signersCount", CountSigners());

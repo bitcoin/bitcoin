@@ -22,6 +22,7 @@
 #include <rpc/client.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/underlying.h>
 
 #include <univalue.h>
 
@@ -519,7 +520,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     pageButtons->addButton(ui->btnRepair, pageButtons->buttons().size());
     connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &RPCConsole::showPage);
 
-    showPage(int(TabTypes::INFO));
+    showPage(ToUnderlying(TabTypes::INFO));
 
     reloadThemedWidgets();
 }
@@ -1412,12 +1413,12 @@ void RPCConsole::showOrHideBanTableIfRequired()
 
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
-    showPage(int(tabType));
+    showPage(ToUnderlying(tabType));
 }
 
 QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
-    return pageButtons->button(int(tab_type))->text();
+    return pageButtons->button(ToUnderlying(tab_type))->text();
 }
 
 QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const

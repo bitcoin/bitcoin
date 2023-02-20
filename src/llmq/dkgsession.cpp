@@ -21,21 +21,22 @@
 #include <cxxtimer.hpp>
 #include <memory>
 #include <util/irange.h>
+#include <util/underlying.h>
 
 namespace llmq
 {
-static std::array<std::atomic<double>, int(DKGError::type::_COUNT)> simDkgErrorMap{};
+static std::array<std::atomic<double>, ToUnderlying(DKGError::type::_COUNT)> simDkgErrorMap{};
 
 void SetSimulatedDKGErrorRate(DKGError::type type, double rate)
 {
-    if (int(type) >= DKGError::type::_COUNT) return;
-    simDkgErrorMap[int(type)] = rate;
+    if (type >= DKGError::type::_COUNT) return;
+    simDkgErrorMap[ToUnderlying(type)] = rate;
 }
 
 double GetSimulatedErrorRate(DKGError::type type)
 {
-    if (int(type) >= DKGError::type::_COUNT) return 0;
-    return simDkgErrorMap[int(type)];
+    if (ToUnderlying(type) >= DKGError::type::_COUNT) return 0;
+    return simDkgErrorMap[ToUnderlying(type)];
 }
 
 bool CDKGSession::ShouldSimulateError(DKGError::type type) const

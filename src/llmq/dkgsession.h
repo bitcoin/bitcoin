@@ -12,6 +12,7 @@
 
 #include <llmq/commitment.h>
 #include <llmq/utils.h>
+#include <util/underlying.h>
 
 #include <optional>
 
@@ -42,7 +43,7 @@ public:
     template<typename Stream>
     inline void SerializeWithoutSig(Stream& s) const
     {
-        s << uint8_t(llmqType);
+        s << ToUnderlying(llmqType);
         s << quorumHash;
         s << proTxHash;
         s << *vvec;

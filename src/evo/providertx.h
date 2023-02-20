@@ -16,6 +16,7 @@
 #include <pubkey.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/underlying.h>
 
 class CBlockIndex;
 class CCoinsViewCache;
@@ -92,7 +93,7 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
-        obj.pushKV("type", static_cast<uint16_t>(nType));
+        obj.pushKV("type", ToUnderlying(nType));
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString(false));
@@ -178,7 +179,7 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
-        obj.pushKV("type", static_cast<uint16_t>(nType));
+        obj.pushKV("type", ToUnderlying(nType));
         obj.pushKV("proTxHash", proTxHash.ToString());
         obj.pushKV("service", addr.ToString(false));
         CTxDestination dest;

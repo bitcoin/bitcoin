@@ -17,6 +17,7 @@
 #include <netmessagemaker.h>
 #include <scheduler.h>
 #include <util/irange.h>
+#include <util/underlying.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -27,7 +28,7 @@ namespace llmq
 UniValue CRecoveredSig::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("llmqType", (int)llmqType);
+    ret.pushKV("llmqType", ToUnderlying(llmqType));
     ret.pushKV("quorumHash", quorumHash.ToString());
     ret.pushKV("id", id.ToString());
     ret.pushKV("msgHash", msgHash.ToString());

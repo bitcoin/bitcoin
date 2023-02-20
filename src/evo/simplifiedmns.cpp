@@ -21,6 +21,7 @@
 #include <univalue.h>
 #include <validation.h>
 #include <key_io.h>
+#include <util/underlying.h>
 
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
@@ -57,7 +58,7 @@ std::string CSimplifiedMNListEntry::ToString() const
     }
 
     return strprintf("CSimplifiedMNListEntry(nType=%d, proRegTxHash=%s, confirmedHash=%s, service=%s, pubKeyOperator=%s, votingAddress=%s, isValid=%d, payoutAddress=%s, operatorPayoutAddress=%s, platformHTTPPort=%d, platformNodeID=%s)",
-                     static_cast<int>(nType), proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), pubKeyOperator.Get().ToString(), EncodeDestination(PKHash(keyIDVoting)), isValid, payoutAddress, operatorPayoutAddress, platformHTTPPort, platformNodeID.ToString());
+                     ToUnderlying(nType), proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), pubKeyOperator.Get().ToString(), EncodeDestination(PKHash(keyIDVoting)), isValid, payoutAddress, operatorPayoutAddress, platformHTTPPort, platformNodeID.ToString());
 }
 
 void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
@@ -71,7 +72,7 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
     obj.pushKV("nVersion", nVersion);
-    obj.pushKV("nType", static_cast<uint16_t>(nType));
+    obj.pushKV("nType", ToUnderlying(nType));
     if (nType == MnType::HighPerformance) {
         obj.pushKV("platformHTTPPort", platformHTTPPort);
         obj.pushKV("platformNodeID", platformNodeID.ToString());

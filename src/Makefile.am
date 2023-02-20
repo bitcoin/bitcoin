@@ -310,6 +310,7 @@ BITCOIN_CORE_H = \
   util/message.h \
   util/moneystr.h \
   util/ranges.h \
+  util/underlying.h \
   util/serfloat.h \
   util/settings.h \
   util/sock.h \

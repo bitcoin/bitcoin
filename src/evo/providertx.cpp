@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <script/standard.h>
+#include <util/underlying.h>
 
 maybe_error CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
 {
@@ -80,7 +81,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, static_cast<int>(nType), collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
 maybe_error CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
@@ -101,7 +102,7 @@ std::string CProUpServTx::ToString() const
     }
 
     return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s, platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, static_cast<int>(nType), proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+                     nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
 maybe_error CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const

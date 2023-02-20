@@ -132,24 +132,7 @@ private:
 
 public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager,
-                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CConnman& _connman, int _quorumIndex) :
-            params(_params),
-            connman(_connman),
-            quorumIndex(_quorumIndex),
-            blsWorker(_blsWorker),
-            dkgManager(_dkgManager),
-            dkgDebugManager(_dkgDebugManager),
-            quorumBlockProcessor(_quorumBlockProcessor),
-            curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _dkgManager, _dkgDebugManager, _connman)),
-            pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-            pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
-            pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
-            pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
-    {
-        if (params.type == Consensus::LLMQType::LLMQ_NONE) {
-            throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
-        }
-    }
+                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CConnman& _connman, int _quorumIndex);
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);

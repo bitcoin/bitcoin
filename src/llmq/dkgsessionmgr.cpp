@@ -13,6 +13,7 @@
 #include <net_processing.h>
 #include <spork.h>
 #include <util/irange.h>
+#include <util/underlying.h>
 #include <validation.h>
 
 namespace llmq
@@ -198,7 +199,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
 
     if (!Params().HasLLMQ(llmqType)) {
         LOCK(cs_main);
-        LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", uint8_t(llmqType));
+        LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", ToUnderlying(llmqType));
         Misbehaving(pfrom.GetId(), 100);
         return;
     }
@@ -227,7 +228,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
 
         if (!utils::IsQuorumTypeEnabled(llmqType, quorum_manager, pQuorumBaseBlockIndex->pprev)) {
             LOCK(cs_main);
-            LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", uint8_t(llmqType));
+            LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
             Misbehaving(pfrom.GetId(), 100);
             return;
         }
@@ -464,7 +465,7 @@ void CDKGSessionManager::CleanupOldContributions() const
         // For how many blocks recent DKG info should be kept
         const int MAX_STORE_DEPTH = 2 * params.signingActiveQuorumCount * params.dkgInterval;
 
-        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, uint8_t(params.type));
+        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, ToUnderlying(params.type));
 
         CDBBatch batch(*db);
         size_t cnt_old{0}, cnt_all{0};
