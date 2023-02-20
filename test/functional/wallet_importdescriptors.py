@@ -331,7 +331,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                             wallet=wmulti_priv)
 
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1001) # Range end (1000) is inclusive, so 1001 addresses generated
-        addr = wmulti_priv.getnewaddress()
+        addr = wmulti_priv.getnewaddress() # uses receive 0
         assert_equal(addr, '8vEwYGKBMP3F2juEE36nNqh1uYpBv9QFyB') # Derived at m/84'/0'/0'/0
         change_addr = wmulti_priv.getrawchangeaddress()
         assert_equal(change_addr, '91WxMwg2NHD1PwHChhbAkeCN6nQ8ikdLEx')
@@ -339,7 +339,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         txid = w0.sendtoaddress(addr, 10)
         self.nodes[0].generate(6)
         self.sync_all()
-        wmulti_priv.sendtoaddress(w0.getnewaddress(), 8)
+        wmulti_priv.sendtoaddress(w0.getnewaddress(), 8) # uses change 1
         self.nodes[0].generate(6)
         self.sync_all()
 
@@ -364,9 +364,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                             wallet=wmulti_pub)
 
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 1000) # The first one was already consumed by previous import and is detected as used
-        addr = wmulti_pub.getnewaddress()
+        addr = wmulti_pub.getnewaddress() # uses receive 1
         assert_equal(addr, '91cA4fLGaDCr6b9W2c5j1ph9PDpq9WbEhk') # Derived at m/84'/0'/0'/1
-        change_addr = wmulti_pub.getrawchangeaddress()
+        change_addr = wmulti_pub.getrawchangeaddress() # uses receive 2
         assert_equal(change_addr, '91WxMwg2NHD1PwHChhbAkeCN6nQ8ikdLEx')
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)
         txid = w0.sendtoaddress(addr, 10)

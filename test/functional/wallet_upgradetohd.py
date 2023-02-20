@@ -62,7 +62,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
                     assert_equal(keypath, "m/44'/1'/0'/0/%d" % i)
                 else:
                     keypath = node.getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
-                    assert_equal(keypath, "m/44'/1'/0'/1/%d" % (i * 2))
+                    assert_equal(keypath, "m/44'/1'/0'/1/%d" % i)
 
         self.bump_mocktime(1)
         node.generate(1)
@@ -134,7 +134,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         assert node.upgradetohd(mnemonic)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
-        node.keypoolrefill(10)
+        node.keypoolrefill(5)
         assert balance_after != node.getbalance()
         node.rescanblockchain()
         assert_equal(balance_after, node.getbalance())
@@ -177,7 +177,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         # so we can't compare new balance to balance_non_HD here,
         # assert_equal(balance_non_HD, node.getbalance())  # won't work
         assert balance_non_HD != node.getbalance()
-        node.keypoolrefill(8)
+        node.keypoolrefill(4)
         node.rescanblockchain()
         # All coins should be recovered
         assert_equal(balance_after, node.getbalance())
@@ -201,7 +201,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         # so we can't compare new balance to balance_non_HD here,
         # assert_equal(balance_non_HD, node.getbalance())  # won't work
         assert balance_non_HD != node.getbalance()
-        node.keypoolrefill(8)
+        node.keypoolrefill(4)
         node.rescanblockchain()
         # All coins should be recovered
         assert_equal(balance_after, node.getbalance())

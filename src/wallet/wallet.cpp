@@ -3769,6 +3769,13 @@ bool CWallet::CreateTransaction(
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
+
+        // Re-use the change destination from the first creation attempt to avoid skipping BIP44 indexes
+        const int ungrouped_change_pos = nChangePosInOut;
+        if (ungrouped_change_pos != -1) {
+            ExtractDestination(tx->vout[ungrouped_change_pos].scriptPubKey, tmp_cc.destChange);
+        }
+
         CAmount nFeeRet2;
         int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
