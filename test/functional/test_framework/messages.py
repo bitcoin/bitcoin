@@ -72,6 +72,9 @@ DEFAULT_DESCENDANT_LIMIT = 25  # default max number of in-mempool descendants
 MAX_OP_RETURN_RELAY = 83
 
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
+TX_VERSION_BLSCT_MARKER = 1<<5
+OUTPUT_BLSCT_MARKER = 1<<0
+OUTPUT_TOKEN_MARKER = 1<<1
 
 def sha256(s):
     return hashlib.sha256(s).digest()
@@ -434,22 +437,203 @@ class CTxIn:
             % (repr(self.prevout), self.scriptSig.hex(),
                self.nSequence)
 
+class MclG1Point:
+    __slots__ = "p"
 
-class CTxOut:
-    __slots__ = ("nValue", "scriptPubKey")
-
-    def __init__(self, nValue=0, scriptPubKey=b""):
-        self.nValue = nValue
-        self.scriptPubKey = scriptPubKey
+    def __init__(self, point=b"\xc0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
+        self.p = point
 
     def deserialize(self, f):
-        self.nValue = struct.unpack("<q", f.read(8))[0]
-        self.scriptPubKey = deser_string(f)
+        self.p = deser_string(f)
 
     def serialize(self):
         r = b""
-        r += struct.pack("<q", self.nValue)
+        r += ser_string(self.p)
+        return r
+
+class MclScalar:
+    __slots__ = "s"
+
+    def __init__(self, scalar=b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
+        self.s = scalar
+
+    def deserialize(self, f):
+        self.s = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.s)
+        return r
+
+class BLSCTSignature:
+    __slots__ = ("sig")
+
+    def __init__(self, signature=b"\xc0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
+       self.sig = signature
+
+    def deserialize(self, f):
+        self.sig = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.sig)
+        return r
+
+class RangeProof:
+    __slots__ = ("Vs", "A", "T1", "T2", "mu", "tau_x", "Ls", "Rs", "a", "b", "t_hat")
+
+    def __init__(self, proof=None):
+        if proof is None:
+            self.Vs = []
+            self.Ls = []
+            self.Rs = []
+            self.A = MclG1Point()
+            self.T1 = MclG1Point()
+            self.T2 = MclG1Point()
+            self.mu = MclScalar()
+            self.tau_x = MclScalar()
+            self.a = MclScalar()
+            self.b = MclScalar()
+            self.t_hat = MclScalar()
+        else:
+            self.Vs = proof.Vs
+            self.Ls = proof.Ls
+            self.Rs = proof.Rs
+            self.A = proof.A
+            self.T1 = proof.T1
+            self.T2 = proof.T2
+            self.mu = proof.mu
+            self.tau_x = proof.tau_x
+            self.a = proof.a
+            self.b = proof.b
+            self.t_hat = proof.t_hat
+
+    def deserialize(self, f):
+        self.Vs = deser_vector(f, MclG1Point)
+        self.Ls = deser_vector(f, MclG1Point)
+        self.Rs = deser_vector(f, MclG1Point)
+        self.A.deserialize(f)
+        self.T1.deserialize(f)
+        self.T2.deserialize(f)
+        self.mu.deserialize(f)
+        self.tau_x.deserialize(f)
+        self.a.deserialize(f)
+        self.b.deserialize(f)
+        self.t_hat.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_vector(self.Vs)
+        r += ser_vector(self.Ls)
+        r += ser_vector(self.Rs)
+        r *= self.A.serialize()
+        r *= self.T1.serialize()
+        r *= self.T2.serialize()
+        r *= self.mu.serialize()
+        r *= self.tau_x.serialize()
+        r *= self.a.serialize()
+        r *= self.b.serialize()
+        r *= self.t_hat.serialize()
+        return r
+
+
+class CTxOutBLSCTData:
+    __slots__ = ("blindingKey", "spendingKey", "ephemeralKey", "rangeProof", "viewTag")
+
+    def __init__(self, blindingKey = MclG1Point(), spendingKey = MclG1Point(), ephemeralKey = MclG1Point(), rangeProof = RangeProof(), viewTag=0):
+        self.blindingKey = blindingKey
+        self.spendingKey = spendingKey
+        self.ephemeralKey = ephemeralKey
+        self.rangeProof = rangeProof
+        self.viewTag = viewTag
+
+    def deserialize(self, f):
+        self.spendingKey.deserialize(f)
+        self.blindingKey.deserialize(f)
+        self.ephemeralKey.deserialize(f)
+        self.rangeProof.deserialize(f)
+        self.viewTag = struct.unpack("<i", f.read(2))[0]
+
+    def serialize(self):
+        r = b""
+        r += self.spendingKey.serialize()
+        r += self.blindingKey.serialize()
+        r += self.ephemeralKey.serialize()
+        r += self.rangeProof.serialize()
+        r += struct.pack("<I", self.viewTag)[:2]
+        return r
+
+class TokenId:
+    __slots__ = ("token", "subid", "ephemeralKey", "rangeProof", "viewTag")
+
+    def __init__(self, token=0, subid=-1):
+        self.token = token
+        self.subid = subid
+
+    def deserialize(self, f):
+        self.token = deser_uint256(f)
+        self.subid = struct.unpack("<q", f.read(8))[0]
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.token)
+        r += struct.pack("<q", self.subid)
+        return r
+
+    def isNull(self):
+        if self.token == 0 and self.subid == -1:
+            return True
+        return False
+
+class CTxOut:
+    __slots__ = ("nValue", "scriptPubKey", "blsctData", "tokenId")
+
+    def __init__(self, nValue=0, scriptPubKey=b"", blsctData=CTxOutBLSCTData(), tokenId=TokenId()):
+        self.nValue = nValue
+        self.scriptPubKey = scriptPubKey
+        self.blsctData = blsctData
+        self.tokenId = tokenId
+
+    def deserialize(self, f):
+        self.nValue = struct.unpack("<q", f.read(8))[0]
+
+        flags = 0
+
+        if self.nValue == -1:
+            flags = struct.unpack("<q", f.read(8))[0]
+
+        self.scriptPubKey = deser_string(f)
+
+        if flags & OUTPUT_BLSCT_MARKER:
+            self.blsctData.deserialize(f)
+
+        if flags & OUTPUT_TOKEN_MARKER:
+            self.tokenId.deserialize(f)
+
+    def serialize(self):
+        flags = 0
+
+        if len(self.blsctData.rangeProof.Vs) > 0:
+            flags |= OUTPUT_BLSCT_MARKER
+        if not self.tokenId.isNull():
+            flags |= OUTPUT_TOKEN_MARKER
+
+        r = b""
+
+        if flags != 0:
+            r += struct.pack("<q", -1)
+            r += struct.pack("<q", flags)
+        else:
+            r += struct.pack("<q", self.nValue)
+
         r += ser_string(self.scriptPubKey)
+
+        if flags & OUTPUT_BLSCT_MARKER:
+            r += self.blsctData.serialize()
+
+        if flags & OUTPUT_TOKEN_MARKER:
+            r += self.tokenId.serialize()
+
         return r
 
     def __repr__(self):
@@ -526,9 +710,9 @@ class CTxWitness:
 
 class CTransaction:
     __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
-                 "wit")
+                 "wit", "txSig", "balanceSig")
 
-    def __init__(self, tx=None):
+    def __init__(self, tx=None, txSig = BLSCTSignature(), balanceSig = BLSCTSignature()):
         if tx is None:
             self.nVersion = 2
             self.vin = []
@@ -545,6 +729,8 @@ class CTransaction:
             self.sha256 = tx.sha256
             self.hash = tx.hash
             self.wit = copy.deepcopy(tx.wit)
+        self.txSig = txSig
+        self.balanceSig = balanceSig
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -565,6 +751,9 @@ class CTransaction:
         else:
             self.wit = CTxWitness()
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
+        if self.nVersion & TX_VERSION_BLSCT_MARKER:
+            self.balanceSig.deserialize(f)
+            self.txSig.deserialize(f)
         self.sha256 = None
         self.hash = None
 
@@ -574,6 +763,9 @@ class CTransaction:
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion & TX_VERSION_BLSCT_MARKER:
+            r += self.balanceSig.serialize()
+            r += self.txSig.serialize()
         return r
 
     # Only serialize with witness when explicitly called for
@@ -597,6 +789,9 @@ class CTransaction:
                     self.wit.vtxinwit.append(CTxInWitness())
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion & TX_VERSION_BLSCT_MARKER:
+            r += self.balanceSig.serialize()
+            r += self.txSig.serialize()
         return r
 
     # Regular serialization is with witness -- must explicitly
