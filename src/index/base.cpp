@@ -13,6 +13,7 @@
 #include <node/context.h>
 #include <node/database_args.h>
 #include <node/interface_ui.h>
+#include <util/threadpool.h>
 #include <tinyformat.h>
 #include <util/string.h>
 #include <util/thread.h>
@@ -142,7 +143,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
     return chain.Next(chain.FindFork(pindex_prev));
 }
 
-bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
+std::any BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
 {
     interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block_data);
 
@@ -166,19 +167,29 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
         block_info.undo_data = &block_undo;
     }
 
-    if (!CustomAppend(block_info)) {
-        FatalErrorf("%s: Failed to write block %s to index database",
-                    __func__, pindex->GetBlockHash().ToString());
-        return false;
+    const auto& any_obj = CustomProcessBlock(block_info);
+    if (!any_obj.has_value()) {
+        throw std::runtime_error(strprintf("%s: Failed to process block %s for index %s", __func__, pindex->GetBlockHash().GetHex(), GetName()));
     }
+    return any_obj;
+}
 
-    return true;
+std::vector<std::any> BaseIndex::ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end)
+{
+    std::vector<std::any> objs;
+    do {
+        objs.emplace_back(ProcessBlock(end));
+        end = end->pprev;
+    } while (end && start->pprev != end);
+    return objs;
 }
 
 void BaseIndex::Sync()
 {
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
+        bool parallel_sync_enabled = AllowParallelSync() && m_thread_pool;
+
         std::chrono::steady_clock::time_point last_log_time{0s};
         std::chrono::steady_clock::time_point last_locator_write_time{0s};
         while (true) {
@@ -217,11 +228,53 @@ void BaseIndex::Sync()
                 FatalErrorf("%s: Failed to rewind index %s to a previous chain tip", __func__, GetName());
                 return;
             }
-            pindex = pindex_next;
 
+            // By default, parallel sync disabled
+            int work_chunk = 1;
+            int workers_count = 0;
+            std::vector<std::future<std::vector<std::any>>> futures;
+            const CBlockIndex* it_start = pindex_next;
 
-            if (!ProcessBlock(pindex)) break; // error logged internally
+            if (parallel_sync_enabled) {
+                const int max_blocks_to_sync = m_tasks_per_worker * m_thread_pool->WorkersCount() + m_tasks_per_worker; // extra 'm_tasks_per_worker' due the active-wait.
+                const int tip_height = WITH_LOCK(cs_main, return m_chainstate->m_chain.Height());
+                const int remaining_blocks = tip_height - pindex_next->nHeight;
+                work_chunk = remaining_blocks > max_blocks_to_sync ? m_tasks_per_worker : remaining_blocks / (m_thread_pool->WorkersCount() + 1);
+                workers_count = m_thread_pool->WorkersCount();
+                if (work_chunk == 0) { // disable parallel sync if we are close to the tip
+                    workers_count = 0;
+                    work_chunk = 1;
+                }
 
+                for (int i = 0; i < workers_count; i++) {
+                    const CBlockIndex* it_end =  WITH_LOCK(::cs_main, return m_chainstate->m_chain[it_start->nHeight + work_chunk - 1]);
+                    // Async process
+                    futures.emplace_back(m_thread_pool->Submit(std::bind(&BaseIndex::ProcessBlocks, this, it_start, it_end)));
+                    // Update iterator
+                    it_start = WITH_LOCK(::cs_main, return NextSyncBlock(it_end, m_chainstate->m_chain));
+                }
+            }
+
+            // If we have only one block to process, run it directly.
+            // Otherwise, this is an active-wait, so we also process blocks in this thread until all workers finish.
+            const CBlockIndex* it_end = work_chunk == 1 ? it_start : WITH_LOCK(::cs_main, return m_chainstate->m_chain[it_start->nHeight + work_chunk - 1]);
+            std::packaged_task<std::vector<std::any>()> task(std::bind(&BaseIndex::ProcessBlocks, this, it_start, it_end));
+            futures.emplace_back(task.get_future());
+            task();
+
+            // Process blocks in-order
+            for (auto& future : futures) {
+                const auto& objs = future.get();
+                for (auto it = objs.rbegin(); it != objs.rend();) {
+                    if (!CustomPostProcessBlocks(*it)) break; // error logged internally
+                    it++;
+                }
+            }
+
+            // Keep moving
+            pindex = it_end;
+
+            // Commit changes
             auto current_time{std::chrono::steady_clock::now()};
             if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
                 LogPrintf("Syncing %s with block chain from height %d\n",
@@ -333,7 +386,7 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
         }
     }
 
-    if (ProcessBlock(pindex)) {
+    if (CustomPostProcessBlocks(ProcessBlock(pindex))) {
         // Setting the best block index is intentionally the last step of this
         // function, so BlockUntilSyncedToCurrentChain callers waiting for the
         // best block index to be updated can rely on the block being fully
