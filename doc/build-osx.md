@@ -153,10 +153,10 @@ For more information on ZMQ, see: [zmq.md](zmq.md)
 #### Test Suite Dependencies
 
 There is an included test suite that is useful for testing code changes when developing.
-To run the test suite (recommended), you will need to have Python 3 installed:
+To run the test suite (recommended), you will need to have [Python3](https://github.com/bitcoin/bitcoin/pull/26226) installed:
 
 ``` bash
-brew install python
+brew install python@3
 ```
 
 ---
