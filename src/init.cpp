@@ -1766,16 +1766,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
 
-    // Make mempool generally available in the node context. For example the connection manager, wallet, or RPC threads,
-    // which are all started after this, may use it from the node context.
     assert(!node.mempool);
-    node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
-    if (node.mempool) {
-        int ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
-        if (ratio != 0) {
-            node.mempool->setSanityCheck(1.0 / ratio);
-        }
-    }
+    int check_ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+    node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
     assert(!node.chainman);
     node.chainman = &g_chainman;
