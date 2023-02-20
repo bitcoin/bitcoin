@@ -7,6 +7,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <blsct/arith/mcl/mcl_init.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <common/url.h>
@@ -112,6 +113,7 @@ int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
 static bool AppInit(NodeContext& node, int argc, char* argv[])
 {
     bool fRet = false;
+    static volatile MclInit for_side_effect_only;
 
     util::ThreadSetInternalName("init");
 
@@ -131,7 +133,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n"
-                "\n";
+                        "\n";
             strUsage += args.GetHelpMessage();
         }
 
@@ -148,8 +150,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     TokenPipeEnd daemon_ep;
 #endif
     std::any context{&node};
-    try
-    {
+    try {
         if (!CheckDataDirOption()) {
             return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""))));
         }
@@ -190,8 +191,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         }
 
         node.kernel = std::make_unique<kernel::Context>();
-        if (!AppInitSanityChecks(*node.kernel))
-        {
+        if (!AppInitSanityChecks(*node.kernel)) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
@@ -202,7 +202,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
 
             // Daemonize
             switch (fork_daemon(1, 0, daemon_ep)) { // don't chdir (1), do close FDs (0)
-            case 0: // Child: continue.
+            case 0:                                 // Child: continue.
                 // If -daemonwait is not enabled, immediately send a success token the parent.
                 if (!args.GetBoolArg("-daemonwait", DEFAULT_DAEMONWAIT)) {
                     daemon_ep.TokenWrite(1);
@@ -226,14 +226,12 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
 #endif // HAVE_DECL_FORK
         }
         // Lock data directory after daemonization
-        if (!AppInitLockDataDirectory())
-        {
+        if (!AppInitLockDataDirectory()) {
             // If locking the data directory failed, exit immediately
             return false;
         }
         fRet = AppInitInterfaces(node) && AppInitMain(node);
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
     } catch (...) {
         PrintExceptionContinue(nullptr, "AppInit()");
