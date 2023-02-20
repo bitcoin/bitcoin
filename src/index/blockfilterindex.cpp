@@ -277,6 +277,23 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     return true;
 }
 
+std::any BlockFilterIndex::CustomProcessBlock(const interfaces::BlockInfo& block_info)
+{
+    return std::make_pair(BlockFilter(BlockFilterType::BASIC, *block_info.data, *block_info.undo_data), block_info.height);
+}
+
+bool BlockFilterIndex::CustomPostProcessBlocks(const std::any& obj)
+{
+    const auto& [filter, height] = std::any_cast<std::pair<BlockFilter, int>>(obj);
+    const uint256& header = filter.ComputeHeader(m_last_header);
+    if (!Write(filter, height, header)) {
+        LogError("Error writings filters, shutting down block filters index\n");
+        return false;
+    }
+    m_last_header = header;
+    return true;
+}
+
 [[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
                                        const std::string& index_name,
                                        int start_height, int stop_height)
