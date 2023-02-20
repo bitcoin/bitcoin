@@ -1161,6 +1161,42 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     RandAddEvent((uint32_t)id);
 }
 
+bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type)
+{
+    Optional<int> max_connections;
+    switch (conn_type) {
+    case ConnectionType::INBOUND:
+    case ConnectionType::MANUAL:
+        return false;
+    case ConnectionType::OUTBOUND_FULL_RELAY:
+        max_connections = m_max_outbound_full_relay;
+        break;
+    case ConnectionType::BLOCK_RELAY:
+        max_connections = m_max_outbound_block_relay;
+        break;
+    // no limit for ADDR_FETCH because -seednode has no limit either
+    case ConnectionType::ADDR_FETCH:
+        break;
+    // no limit for FEELER connections since they're short-lived
+    case ConnectionType::FEELER:
+        break;
+    } // no default case, so the compiler can warn about missing cases
+
+    // Count existing connections
+    int existing_connections = WITH_LOCK(cs_vNodes,
+                                         return std::count_if(vNodes.begin(), vNodes.end(), [conn_type](CNode* node) { return node->m_conn_type == conn_type; }););
+
+    // Max connections of specified type already exist
+    if (max_connections != nullopt && existing_connections >= max_connections) return false;
+
+    // Max total outbound connections already exist
+    CSemaphoreGrant grant(*semOutbound, true);
+    if (!grant) return false;
+
+    OpenNetworkConnection(CAddress(), false, &grant, address.c_str(), conn_type);
+    return true;
+}
+
 void CConnman::DisconnectNodes()
 {
     {
