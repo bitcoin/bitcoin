@@ -727,6 +727,7 @@ public:
     bool SetAddressUsed(WalletBatch& batch, const CTxDestination& dest, bool used) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<std::string> GetAddressReceiveRequests() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool RemoveAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

@@ -2888,24 +2888,17 @@ std::vector<std::string> CWallet::GetAddressReceiveRequests() const
     return values;
 }
 
+bool CWallet::RemoveAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id) {
+    CAddressBookData& entry = m_address_book.at(dest);
+    entry.RemoveReceiveRequest(id);
+    return batch.EraseDestData(EncodeDestination(dest), "rr" + ToString(id));
+}
+
 bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id, const std::string& value)
 {
-    const std::string key{"rr" + ToString(id)}; // "rr" prefix = "receive request" in destdata
     CAddressBookData& data = m_address_book.at(dest);
-    if (value.empty()) {
-        if (!data.RemoveReceiveRequest(id)) {
-            return false;
-        }
-        if (!batch.EraseDestData(EncodeDestination(dest), key)) {
-            return false;
-        }
-    } else {
-        data.SetReceiveRequest(id, value);
-        if (!batch.WriteDestData(EncodeDestination(dest), key, value)) {
-            return false;
-        }
-    }
-    return true;
+    data.SetReceiveRequest(id, value);
+    return batch.WriteDestData(EncodeDestination(dest), "rr" + ToString(id), value);
 }
 
 std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error_string)

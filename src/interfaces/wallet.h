@@ -120,7 +120,10 @@ public:
     //! Get receive requests.
     virtual std::vector<std::string> getAddressReceiveRequests() = 0;
 
-    //! Save or remove receive request.
+    //! Remove receive request.
+    virtual bool removeAddressReceiveRequest(const CTxDestination& dest, int64_t id) = 0;
+
+    //! Save receive request.
     virtual bool setAddressReceiveRequest(const CTxDestination& dest, int64_t id, const std::string& value) = 0;
 
     //! Display address on external signer
