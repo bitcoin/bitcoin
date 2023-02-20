@@ -2448,6 +2448,9 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         // Explicitly erase "used" record since we no longer store it in destdata
         batch.EraseDestData(strAddress, "used");
 
+        // Explicitly erase "rr" record since we no longer store it in destdata
+        batch.EraseDestData(strAddress, "rr");
+
         m_address_book.erase(address);
         is_mine = IsMine(address) != ISMINE_NO;
     }
@@ -2849,6 +2852,16 @@ void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, c
         return;
     }
 
+    // Special case for "rr" since we no loner store it in destdata
+    const std::string rr_prefix{"rr"};
+    if (!key.compare(0, rr_prefix.size(), rr_prefix)) {
+        std::string id_str = RemovePrefix(key, rr_prefix);
+        int64_t id;
+        Assume(ParseInt64(id_str, &id));
+        m_address_book[dest].SetReceiveRequest(id, value);
+        return;
+    }
+
     m_address_book[dest].destdata.insert(std::make_pair(key, value));
 }
 
@@ -2863,28 +2876,34 @@ bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 
 std::vector<std::string> CWallet::GetAddressReceiveRequests() const
 {
-    const std::string prefix{"rr"};
     std::vector<std::string> values;
-    for (const auto& address : m_address_book) {
-        for (const auto& data : address.second.destdata) {
-            if (!data.first.compare(0, prefix.size(), prefix)) {
-                values.emplace_back(data.second);
+    for (const auto& [_, data] : m_address_book) {
+        for (const auto& [_, req] : data.GetReceiveRequests()) {
+            if (req.empty()) {
+                continue;
             }
+            values.emplace_back(req);
         }
     }
     return values;
 }
 
-bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value)
+bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id, const std::string& value)
 {
-    const std::string key{"rr" + id}; // "rr" prefix = "receive request" in destdata
+    const std::string key{"rr" + ToString(id)}; // "rr" prefix = "receive request" in destdata
     CAddressBookData& data = m_address_book.at(dest);
     if (value.empty()) {
-        if (!batch.EraseDestData(EncodeDestination(dest), key)) return false;
-        data.destdata.erase(key);
+        if (!data.RemoveReceiveRequest(id)) {
+            return false;
+        }
+        if (!batch.EraseDestData(EncodeDestination(dest), key)) {
+            return false;
+        }
     } else {
-        if (!batch.WriteDestData(EncodeDestination(dest), key, value)) return false;
-        data.destdata[key] = value;
+        data.SetReceiveRequest(id, value);
+        if (!batch.WriteDestData(EncodeDestination(dest), key, value)) {
+            return false;
+        }
     }
     return true;
 }

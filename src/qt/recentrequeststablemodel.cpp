@@ -149,7 +149,7 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
         for (int i = 0; i < count; ++i)
         {
             const RecentRequestEntry* rec = &list[row+i];
-            if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), ToString(rec->id), ""))
+            if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), rec->id, ""))
                 return false;
         }
 
@@ -178,7 +178,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
     DataStream ss{};
     ss << newEntry;
 
-    if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(recipient.address.toStdString()), ToString(newEntry.id), ss.str()))
+    if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(recipient.address.toStdString()), newEntry.id, ss.str()))
         return;
 
     addNewRequest(newEntry);

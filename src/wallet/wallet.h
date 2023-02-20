@@ -210,6 +210,8 @@ private:
     std::string m_label;
     //! This address has been used in a transaction input
     bool m_input_used{false};
+    //! Receive Request data sent by the GUI
+    std::map<int64_t, std::string> m_receive_requests;
 public:
     std::string purpose;
 
@@ -227,6 +229,10 @@ public:
 
     bool GetInputUsed() const { return m_input_used; }
     void SetInputUsed(bool value) { m_input_used = value; }
+
+    const std::map<int64_t, std::string> GetReceiveRequests() const { return m_receive_requests; }
+    void SetReceiveRequest(int64_t id, const std::string& request) { m_receive_requests[id] = request; }
+    bool RemoveReceiveRequest(int64_t id) { return m_receive_requests.erase(id); }
 };
 
 struct CRecipient
@@ -721,7 +727,7 @@ public:
     bool SetAddressUsed(WalletBatch& batch, const CTxDestination& dest, bool used) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<std::string> GetAddressReceiveRequests() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

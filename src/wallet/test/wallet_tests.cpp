@@ -433,8 +433,8 @@ BOOST_AUTO_TEST_CASE(LoadReceiveRequests)
     LOCK(m_wallet.cs_wallet);
     WalletBatch batch{m_wallet.GetDatabase()};
     m_wallet.SetAddressUsed(batch, dest, true);
-    m_wallet.SetAddressReceiveRequest(batch, dest, "0", "val_rr0");
-    m_wallet.SetAddressReceiveRequest(batch, dest, "1", "val_rr1");
+    m_wallet.SetAddressReceiveRequest(batch, dest, 0, "val_rr0");
+    m_wallet.SetAddressReceiveRequest(batch, dest, 1, "val_rr1");
 
     auto values = m_wallet.GetAddressReceiveRequests();
     BOOST_CHECK_EQUAL(values.size(), 2U);

@@ -219,7 +219,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetAddressReceiveRequests();
     }
-    bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) override {
+    bool setAddressReceiveRequest(const CTxDestination& dest, int64_t id, const std::string& value) override {
         LOCK(m_wallet->cs_wallet);
         WalletBatch batch{m_wallet->GetDatabase()};
         return m_wallet->SetAddressReceiveRequest(batch, dest, id, value);
