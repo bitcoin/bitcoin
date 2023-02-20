@@ -10,6 +10,7 @@
 #include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
+#include <any>
 #include <string>
 
 class CBlock;
@@ -26,6 +27,8 @@ namespace Consensus {
 
 /** Number of concurrent jobs during the initial sync process */
 static constexpr int16_t INDEX_WORKERS_COUNT = 0;
+/** Number of tasks processed by each worker */
+static constexpr int16_t INDEX_WORK_PER_CHUNK = 1000;
 
 struct IndexSummary {
     std::string name;
@@ -86,6 +89,7 @@ private:
     CThreadInterrupt m_interrupt;
 
     std::shared_ptr<ThreadPool> m_thread_pool;
+    uint16_t m_tasks_per_worker{INDEX_WORK_PER_CHUNK};
 
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
@@ -100,7 +104,8 @@ private:
     /// Loop over disconnected blocks and call CustomRewind.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
-    bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+    std::any ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+    std::vector<std::any> ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end);
 
     virtual bool AllowPrune() const = 0;
 
@@ -138,6 +143,26 @@ protected:
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
+    /// If 'AllowParallelSync()' retrieves true, 'ProcessBlock()' will run concurrently in batches.
+    /// The 'std::any' result will be passed to 'PostProcessBlocks()' so the index can process
+    /// async result batches in a synchronous fashion (if required).
+    [[nodiscard]] virtual std::any CustomProcessBlock(const interfaces::BlockInfo& block_info) {
+        // If parallel sync is enabled, the child class must implement this method.
+        if (AllowParallelSync()) return std::any();
+
+        // Default, synchronous write
+        if (!CustomAppend(block_info)) {
+            throw std::runtime_error(strprintf("%s: Failed to write block %s to index database",
+                                               __func__, block_info.hash.ToString()));
+        }
+        return true;
+    }
+
+    /// 'PostProcessBlocks()' is called in a synchronous manner after a batch of async 'ProcessBlock()'
+    /// calls have completed.
+    /// Here the index usually links and dump information that cannot be processed in an asynchronous fashion.
+    [[nodiscard]] virtual bool CustomPostProcessBlocks(const std::any& obj) { return true; };
+
 public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
@@ -173,6 +198,8 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
+
+    void SetTasksPerWorker(int16_t count) { m_tasks_per_worker = count; }
 
     /// True if the child class allows concurrent sync.
     virtual bool AllowParallelSync() { return false; }
