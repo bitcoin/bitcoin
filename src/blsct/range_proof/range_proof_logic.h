@@ -16,8 +16,7 @@
 #include <hash.h>
 
 template <typename T>
-struct AmountRecoveryRequest
-{
+struct AmountRecoveryRequest {
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
     using Points = Elements<Point>;
@@ -36,16 +35,14 @@ struct AmountRecoveryRequest
 };
 
 template <typename T>
-struct RecoveredAmount
-{
+struct RecoveredAmount {
     using Scalar = typename T::Scalar;
 
     RecoveredAmount(
         const size_t& id,
         const CAmount& amount,
         const Scalar& gamma,
-        const std::string& message
-    ): id{id}, amount{amount}, gamma{gamma}, message{message} {}
+        const std::string& message) : id{id}, amount{amount}, gamma{gamma}, message{message} {}
 
     size_t id;
     CAmount amount;
@@ -54,9 +51,8 @@ struct RecoveredAmount
 };
 
 template <typename T>
-struct AmountRecoveryResult
-{
-    bool is_completed;  // done doesn't mean recovery success
+struct AmountRecoveryResult {
+    bool is_completed; // done doesn't mean recovery success
     std::vector<RecoveredAmount<T>> amounts;
 
     static AmountRecoveryResult<T> failure();
@@ -80,28 +76,23 @@ public:
         Scalars& vs,
         Point& nonce,
         const std::vector<uint8_t>& message,
-        const TokenId& token_id
-    ) const;
+        const TokenId& token_id) const;
 
     bool Verify(
         const std::vector<RangeProof<T>>& proofs,
-        const TokenId& token_id
-    ) const;
+        const TokenId& token_id) const;
 
     Point VerifyProofs(
         const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
         const Generators<T>& gens,
-        const size_t& max_mn
-    ) const;
+        const size_t& max_mn) const;
 
     AmountRecoveryResult<T> RecoverAmounts(
         const std::vector<AmountRecoveryRequest<T>>& reqs,
-        const TokenId& token_id
-    ) const;
+        const TokenId& token_id) const;
 
     static void ValidateProofsBySizes(
-        const std::vector<RangeProof<T>>& proofs
-    );
+        const std::vector<RangeProof<T>>& proofs);
 
 private:
     Scalar GetUint64Max() const;
@@ -109,21 +100,19 @@ private:
     Point GenerateBaseG1PointH(
         const Point& p,
         size_t index,
-        TokenId token_id
-    ) const;
+        TokenId token_id) const;
 
     bool InnerProductArgument(
         const size_t concat_input_values_in_bits,
         Points& Gi,
         Points& Hi,
         const Point& u,
-        const Scalar& cx_factor,  // factor to multiply to cL and cR
+        const Scalar& cx_factor, // factor to multiply to cL and cR
         Scalars& a,
         Scalars& b,
         const Scalar& y,
         RangeProof<T>& proof,
-        CHashWriter& transcript_gen
-    ) const;
+        CHashWriter& transcript_gen) const;
 
     // using pointers for Scalar and GeneratorsFactory to avoid default constructors to be called before mcl initialization
     // these variables are meant to be constant. do not make changes after initialization.
@@ -135,7 +124,7 @@ private:
     static Scalar* m_inner_prod_1x2_pows_64;
     static Scalar* m_uint64_max;
 
-    inline static boost::mutex m_init_mutex;
+    inline static std::mutex m_init_mutex;
     inline static bool m_is_initialized = false;
 };
 
