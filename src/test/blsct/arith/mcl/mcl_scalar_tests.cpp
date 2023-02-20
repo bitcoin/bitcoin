@@ -8,6 +8,7 @@
 #include <uint256.h>
 
 #include <cinttypes>
+#include <cmath>
 #include <limits>
 
 #define SCALAR_CURVE_ORDER_MINUS_1(x) MclScalar x("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000", 16)
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE(test_ctor_vec_uint8)
         uint64_t one = 1;
         {
             // test up to shift = 62 excluding the sign bit
-            for(size_t shift = 0; shift < 63; ++shift) {
+            for (size_t shift = 0; shift < 63; ++shift) {
                 int64_t i = one << shift;
                 MclScalar a(i);
                 BOOST_CHECK_EQUAL(a.GetUint64(), i);
@@ -469,7 +470,7 @@ BOOST_AUTO_TEST_CASE(test_pow)
         TestCase{3, 5, 243},
         TestCase{195, 7, 10721172396796875},
     };
-    for (auto tc: test_cases) {
+    for (auto tc : test_cases) {
         MclScalar a(tc.a);
         MclScalar b(tc.b);
         MclScalar c(tc.c);
@@ -484,7 +485,7 @@ BOOST_AUTO_TEST_CASE(test_pow)
 
 BOOST_AUTO_TEST_CASE(test_rand)
 {
-    std::vector<bool> tf {true, false};
+    std::vector<bool> tf{true, false};
     for (auto exclude_zero : tf) {
         unsigned int num_tries = 1000000;
         unsigned int num_dups = 0;
@@ -495,7 +496,7 @@ BOOST_AUTO_TEST_CASE(test_rand)
             if (exclude_zero && y == 0) BOOST_FAIL("expected non-zero");
             if (x == y) ++num_dups;
         }
-        auto dup_ratio = num_dups / (float) num_tries;
+        auto dup_ratio = num_dups / (float)num_tries;
         BOOST_CHECK(dup_ratio < 0.000001);
     }
 }
@@ -506,14 +507,14 @@ BOOST_AUTO_TEST_CASE(test_getuint64)
         // Scalar(int) operator takes int64_t, so let it take INT64_MAX
         MclScalar a(INT64_MAX);
         uint64_t b = a.GetUint64();
-        uint64_t c = 9223372036854775807ul;  // is INT64_MAX
+        uint64_t c = 9223372036854775807ul; // is INT64_MAX
         BOOST_CHECK_EQUAL(b, c);
     }
     {
         // assignment operator takes int64_t
         MclScalar base(0b1);
         int64_t n = 1;
-        for (uint8_t i=0; i<63; ++i) {  // test up to positive max of int64_t
+        for (uint8_t i = 0; i < 63; ++i) { // test up to positive max of int64_t
             MclScalar a = base << i;
             BOOST_CHECK_EQUAL(a.GetUint64(), n);
             n <<= 1;
@@ -810,10 +811,38 @@ BOOST_AUTO_TEST_CASE(test_get_bits)
 {
     // n is group order r minus 1
     std::vector<uint8_t> n_vec{
-        0x73, 0xed, 0xa7, 0x53, 0x29, 0x9d, 0x7d, 0x48, 0x33, 0x39,
-        0xd8, 0x08, 0x09, 0xa1, 0xd8, 0x05, 0x53, 0xbd, 0xa4, 0x02,
-        0xff, 0xfe, 0x5b, 0xfe, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
-        0x00, 0x00,
+        0x73,
+        0xed,
+        0xa7,
+        0x53,
+        0x29,
+        0x9d,
+        0x7d,
+        0x48,
+        0x33,
+        0x39,
+        0xd8,
+        0x08,
+        0x09,
+        0xa1,
+        0xd8,
+        0x05,
+        0x53,
+        0xbd,
+        0xa4,
+        0x02,
+        0xff,
+        0xfe,
+        0x5b,
+        0xfe,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
     };
     std::string n_hex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
     std::string n_bin("111001111101101101001110101001100101001100111010111110101001000001100110011100111011000000010000000100110100001110110000000010101010011101111011010010000000010111111111111111001011011111111101111111111111111111111111111111100000000000000000000000000000000");
@@ -852,17 +881,17 @@ BOOST_AUTO_TEST_CASE(test_get_bit)
         auto v = a.GetVch();
 
         // 5th byte from the last is 255
-        for (size_t i=0; i<8; ++i) {
+        for (size_t i = 0; i < 8; ++i) {
             BOOST_CHECK_EQUAL(a.GetSeriBit(4 * 8 + i), true);
         }
 
         // 9th byte from the last is 254
-        for (size_t i=0; i<8; ++i) {
+        for (size_t i = 0; i < 8; ++i) {
             BOOST_CHECK_EQUAL(a.GetSeriBit(8 * 8 + i), i != 0);
         }
 
         // 13th byte from the last is 2
-        for (size_t i=0; i<8; ++i) {
+        for (size_t i = 0; i < 8; ++i) {
             BOOST_CHECK_EQUAL(a.GetSeriBit(12 * 8 + i), i == 1);
         }
 
@@ -880,7 +909,7 @@ BOOST_AUTO_TEST_CASE(test_create_64_bit_shift)
     // serialized excess based on message "spaghetti meatballs"
     // = 7370616765747469206d65617462616c6c730000000000000001
     // = 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
-    std::vector<unsigned char> excess_ser {
+    std::vector<unsigned char> excess_ser{
         0,
         0,
         0,
@@ -912,15 +941,14 @@ BOOST_AUTO_TEST_CASE(test_create_64_bit_shift)
         0,
         0,
         0,
-        1
-    };
+        1};
     MclScalar excess;
     excess.SetVch(excess_ser);
 
     std::vector<unsigned char> vMsg = (excess >> 64).GetVch();
     std::vector<unsigned char> vMsgTrimmed(0);
     bool fFoundNonZero = false;
-    for (auto&it: vMsg) {
+    for (auto& it : vMsg) {
         if (it != '\0')
             fFoundNonZero = true;
         if (fFoundNonZero)
