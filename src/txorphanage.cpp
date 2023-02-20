@@ -214,7 +214,7 @@ bool TxOrphanage::HaveTxToReconsider(NodeId peer)
     return false;
 }
 
-void TxOrphanage::EraseForBlock(const CBlock& block)
+std::vector<uint256> TxOrphanage::EraseForBlock(const CBlock& block)
 {
     LOCK(m_mutex);
 
@@ -243,4 +243,5 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
+    return vOrphanErase;
 }
