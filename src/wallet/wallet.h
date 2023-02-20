@@ -204,8 +204,12 @@ public:
 class CAddressBookData
 {
 private:
+    //! The address is a change addres
     bool m_change{true};
+    //! The label
     std::string m_label;
+    //! This address has been used in a transaction input
+    bool m_input_used{false};
 public:
     std::string purpose;
 
@@ -220,6 +224,9 @@ public:
         m_change = false;
         m_label = label;
     }
+
+    bool GetInputUsed() const { return m_input_used; }
+    void SetInputUsed(bool value) { m_input_used = value; }
 };
 
 struct CRecipient

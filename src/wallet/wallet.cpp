@@ -2444,6 +2444,10 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         {
             batch.EraseDestData(strAddress, item.first);
         }
+
+        // Explicitly erase "used" record since we no longer store it in destdata
+        batch.EraseDestData(strAddress, "used");
+
         m_address_book.erase(address);
         is_mine = IsMine(address) != ISMINE_NO;
     }
@@ -2821,38 +2825,40 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanning_old
 
 bool CWallet::SetAddressUsed(WalletBatch& batch, const CTxDestination& dest, bool used)
 {
-    const std::string key{"used"};
-    if (std::get_if<CNoDestination>(&dest))
+    if (std::get_if<CNoDestination>(&dest)) {
         return false;
-
-    if (!used) {
-        if (auto* data = util::FindKey(m_address_book, dest)) data->destdata.erase(key);
-        return batch.EraseDestData(EncodeDestination(dest), key);
     }
 
-    const std::string value{"1"};
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
-    return batch.WriteDestData(EncodeDestination(dest), key, value);
+    // Update CAddressBookData
+    m_address_book[dest].SetInputUsed(used);
+
+    // Update the old database records
+    const std::string key{"used"};
+    if (used) {
+        return batch.WriteDestData(EncodeDestination(dest), key, "1");
+    } else {
+        return batch.EraseDestData(EncodeDestination(dest), key);
+    }
 }
 
 void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
 {
+    // Special case for "used" since we no longer store it in destdata
+    if (key == "used") {
+        m_address_book[dest].SetInputUsed(value == "1");
+        return;
+    }
+
     m_address_book[dest].destdata.insert(std::make_pair(key, value));
 }
 
 bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 {
-    const std::string key{"used"};
-    std::map<CTxDestination, CAddressBookData>::const_iterator i = m_address_book.find(dest);
-    if(i != m_address_book.end())
-    {
-        CAddressBookData::StringMap::const_iterator j = i->second.destdata.find(key);
-        if(j != i->second.destdata.end())
-        {
-            return true;
-        }
+    const CAddressBookData* entry = FindAddressBookEntry(dest, /*allow_change=*/true);
+    if(!entry) {
+        return false;
     }
-    return false;
+    return entry->GetInputUsed();
 }
 
 std::vector<std::string> CWallet::GetAddressReceiveRequests() const
