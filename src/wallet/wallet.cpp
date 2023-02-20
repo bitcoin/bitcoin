@@ -2425,8 +2425,9 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
     return SetAddressBookWithDB(batch, address, strName, strPurpose);
 }
 
-bool CWallet::DelAddressBook(const CTxDestination& address)
+bool CWallet::DelAddressBook(const CTxDestination& dest)
 {
+    std::string addr = EncodeDestination(dest);
     bool is_mine;
     WalletBatch batch(GetDatabase());
     {
@@ -2434,31 +2435,24 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         // If we want to delete receiving addresses, we need to take care that DestData "used" (and possibly newer DestData) gets preserved (and the "deleted" address transformed into a change entry instead of actually being deleted)
         // NOTE: This isn't a problem for sending addresses because they never have any DestData yet!
         // When adding new DestData, it should be considered here whether to retain or delete it (or move it?).
-        if (IsMine(address)) {
+        if (IsMine(dest)) {
             WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
             return false;
         }
-        // Delete destdata tuples associated with address
-        std::string strAddress = EncodeDestination(address);
-        for (const std::pair<const std::string, std::string> &item : m_address_book[address].destdata)
-        {
-            batch.EraseDestData(strAddress, item.first);
-        }
+        // Delete destdata records. There should only be "used" and "rr" records, so we will only remove those.
+        // However, it is possible that there are other destdata records, but we won't know about them.
+        // Loading should also catch such records and log a warning.
+        batch.EraseDestData(addr, "used");
+        batch.EraseDestData(addr, "rr");
 
-        // Explicitly erase "used" record since we no longer store it in destdata
-        batch.EraseDestData(strAddress, "used");
-
-        // Explicitly erase "rr" record since we no longer store it in destdata
-        batch.EraseDestData(strAddress, "rr");
-
-        m_address_book.erase(address);
-        is_mine = IsMine(address) != ISMINE_NO;
+        m_address_book.erase(dest);
+        is_mine = IsMine(dest) != ISMINE_NO;
     }
 
-    NotifyAddressBookChanged(address, "", is_mine, "", CT_DELETED);
+    NotifyAddressBookChanged(dest, "", is_mine, "", CT_DELETED);
 
-    batch.ErasePurpose(EncodeDestination(address));
-    return batch.EraseName(EncodeDestination(address));
+    batch.ErasePurpose(addr);
+    return batch.EraseName(addr);
 }
 
 size_t CWallet::KeypoolCountExternalKeys() const
@@ -2862,7 +2856,10 @@ void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, c
         return;
     }
 
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
+    // We should not see destdata with any other keys.
+    // If we do, log a warning, and assert when debugging.
+    WalletLogPrintf("Unknown destdata record found: %s\n", key);
+    Assume(false);
 }
 
 bool CWallet::IsAddressUsed(const CTxDestination& dest) const

@@ -217,9 +217,6 @@ public:
 
     CAddressBookData() : purpose("unknown") {}
 
-    typedef std::map<std::string, std::string> StringMap;
-    StringMap destdata;
-
     bool IsChange() const { return m_change; }
     const std::string& GetLabel() const { return m_label; }
     void SetLabel(const std::string& label) {
