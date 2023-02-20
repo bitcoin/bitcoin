@@ -97,7 +97,7 @@ std::string CBatchedSigShares::ToInvString() const
 
 static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, CSigBase from)
 {
-    const auto& llmq_params = GetLLMQParams((Consensus::LLMQType)from.getLlmqType());
+    const auto& llmq_params = GetLLMQParams(from.getLlmqType());
 
     s.llmqType = from.getLlmqType();
     s.quorumHash = from.getQuorumHash();

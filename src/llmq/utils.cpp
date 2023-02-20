@@ -35,7 +35,7 @@ namespace utils
 {
 // Forward declarations
 static std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex);
-static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(Consensus::LLMQType llmqType, const CBlockIndex* pCycleQuorumBaseBlockIndex);
+static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex);
 
 static std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const PreviousQuorumQuarters& quarters);
 
@@ -112,7 +112,7 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
             return quorumMembers;
         }
 
-        auto q = ComputeQuorumMembersByQuarterRotation(llmqType, pCycleQuorumBaseBlockIndex);
+        auto q = ComputeQuorumMembersByQuarterRotation(llmqParams, pCycleQuorumBaseBlockIndex);
         LOCK(cs_indexed_members);
         for (const size_t i : irange::range(q.size())) {
             mapIndexedQuorumMembers[llmqType].insert(std::make_pair(pCycleQuorumBaseBlockIndex->GetBlockHash(), i), q[i]);
@@ -136,9 +136,9 @@ std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqT
     return allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier, HPMNOnly);
 }
 
-std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(Consensus::LLMQType llmqType, const CBlockIndex* pCycleQuorumBaseBlockIndex)
+std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex)
 {
-    const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
+    const Consensus::LLMQType llmqType = llmqParams.type;
 
     const int cycleLength = llmqParams.dkgInterval;
     assert(pCycleQuorumBaseBlockIndex->nHeight % cycleLength == 0);
@@ -610,12 +610,14 @@ bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pi
 {
     assert(pindex);
 
-    if (!GetLLMQParams(llmqType).useRotation) {
+    const auto& llmqParams = GetLLMQParams(llmqType);
+
+    if (!llmqParams.useRotation) {
         return false;
     }
 
     LOCK(cs_llmq_vbc);
-    int cycleQuorumBaseHeight = pindex->nHeight - (pindex->nHeight % GetLLMQParams(llmqType).dkgInterval);
+    int cycleQuorumBaseHeight = pindex->nHeight - (pindex->nHeight % llmqParams.dkgInterval);
     if (cycleQuorumBaseHeight < 1) {
         return false;
     }
