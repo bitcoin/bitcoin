@@ -29,7 +29,7 @@ for i in range(10):
     addr.time = int(time.time()) + i
     addr.nServices = NODE_NETWORK | NODE_WITNESS
     addr.ip = "123.123.123.{}".format(i % 256)
-    addr.port = 8333 + i
+    addr.port = 9333 + i
     ADDRS.append(addr)
 
 
@@ -39,7 +39,7 @@ class AddrReceiver(P2PInterface):
         for addr in message.addrs:
             assert_equal(addr.nServices, 9)
             assert addr.ip.startswith('123.123.123.')
-            assert (8333 <= addr.port < 8343)
+            assert (9333 <= addr.port < 9343)
 
     def on_getaddr(self, message):
         # When the node sends us a getaddr, it increments the addr relay tokens for the connection by 1000
@@ -93,7 +93,7 @@ class AddrTest(BitcoinTestFramework):
             addr.time = self.mocktime + i
             addr.nServices = NODE_NETWORK | NODE_WITNESS
             addr.ip = f"{random.randrange(128,169)}.{random.randrange(1,255)}.{random.randrange(1,255)}.{random.randrange(1,255)}"
-            addr.port = 8333
+            addr.port = 9333
             addrs.append(addr)
         msg = msg_addr()
         msg.addrs = addrs
