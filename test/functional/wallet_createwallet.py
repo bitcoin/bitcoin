@@ -17,7 +17,7 @@ from test_framework.wallet_util import bytes_to_wif, generate_wif_key
 
 LEGACY_WALLET_MSG = "Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."
 EMPTY_PASSPHRASE_MSG = "Empty string given as passphrase, wallet will not be encrypted."
-EMPTY_PASSPHRASE_LEGACY_WALLET_MSG = f"{EMPTY_PASSPHRASE_MSG}\n{LEGACY_WALLET_MSG}"
+EMPTY_PASSPHRASE_LEGACY_WALLET_MSG = f"{EMPTY_PASSPHRASE_MSG} {LEGACY_WALLET_MSG}"
 
 
 class CreateWalletTest(BitcoinTestFramework):

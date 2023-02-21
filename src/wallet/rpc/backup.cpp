@@ -1926,7 +1926,7 @@ RPCHelpMan restorewallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    obj.pushKV("warning", Join(/*container=*/warnings, /*separator=*/Untranslated(" ")).original);
 
     return obj;
 

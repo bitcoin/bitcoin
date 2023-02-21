@@ -240,7 +240,7 @@ static RPCHelpMan loadwallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    obj.pushKV("warning", Join(/*container=*/warnings, /*separator=*/Untranslated(" ")).original);
 
     return obj;
 },
@@ -405,7 +405,7 @@ static RPCHelpMan createwallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    obj.pushKV("warning", Join(/*container=*/warnings, /*separator=*/Untranslated(" ")).original);
 
     return obj;
 },
@@ -464,7 +464,7 @@ static RPCHelpMan unloadwallet()
     UnloadWallet(std::move(wallet));
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    result.pushKV("warning", Join(/*container=*/warnings, /*separator=*/Untranslated(" ")).original);
     return result;
 },
     };
