@@ -30,6 +30,27 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
+/* Define to 1 if you have the <byteswap.h> header file. */
+#cmakedefine HAVE_BYTESWAP_H 1
+
+/* Define to 1 if you have the <endian.h> header file. */
+#cmakedefine HAVE_ENDIAN_H 1
+
+/* Define to 1 if you have the <sys/endian.h> header file. */
+#cmakedefine HAVE_SYS_ENDIAN_H 1
+
+/* Define to 1 if you have the <sys/prctl.h> header file. */
+#cmakedefine HAVE_SYS_PRCTL_H 1
+
+/* Define to 1 if you have the <sys/resources.h> header file. */
+#cmakedefine HAVE_SYS_RESOURCES_H 1
+
+/* Define to 1 if you have the <sys/vmmeter.h> header file. */
+#cmakedefine HAVE_SYS_VMMETER_H 1
+
+/* Define to 1 if you have the <vm/vm_param.h> header file. */
+#cmakedefine HAVE_VM_VM_PARAM_H 1
+
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
