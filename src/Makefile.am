@@ -253,6 +253,7 @@ BITCOIN_CORE_H = \
   support/cleanse.h \
   support/events.h \
   support/lockedpool.h \
+  sv2_template_provider.h \
   sync.h \
   threadinterrupt.h \
   threadsafety.h \
