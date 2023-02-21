@@ -87,6 +87,7 @@
 #include <util/syserror.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
+#include <util/threadpool.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -359,10 +360,12 @@ void Shutdown(NodeContext& node)
 
     // Stop and delete all indexes only after flushing background callbacks.
     for (auto* index : node.indexes) index->Stop();
+    if (node.m_index_threads) node.m_index_threads->Stop();
     if (g_txindex) g_txindex.reset();
     if (g_coin_stats_index) g_coin_stats_index.reset();
     DestroyAllBlockFilterIndexes();
     node.indexes.clear(); // all instances are nullptr now
+    if (node.m_index_threads) node.m_index_threads.reset();
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
     // missing a callback results in an unrecoverable situation, unclean shutdown
@@ -530,6 +533,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-indexworkers=<n>", strprintf("Number of worker threads spawned for the initial index synchronization (default: %d). These threads are shared across all indexes", INDEX_WORKERS_COUNT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     argsman.AddArg("-addnode=<ip>", strprintf("Add a node to connect to and attempt to keep the connection open (see the addnode RPC help for more info). This option can be specified multiple times to add multiple nodes; connections are limited to %u at a time and are counted separately from the -maxconnections limit.", MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -2176,6 +2180,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
 bool StartIndexBackgroundSync(NodeContext& node)
 {
+    if (node.indexes.empty()) return true;
+
     // Find the oldest block among all indexes.
     // This block is used to verify that we have the required blocks' data stored on disk,
     // starting from that point up to the current tip.
@@ -2214,7 +2220,19 @@ bool StartIndexBackgroundSync(NodeContext& node)
         }
     }
 
+    if (node.args->IsArgSet("-indexworkers")) {
+        int index_workers = node.args->GetIntArg("-indexworkers", INDEX_WORKERS_COUNT);
+        if (index_workers < 0 || index_workers > MAX_INDEX_WORKERS_COUNT) return InitError(Untranslated(strprintf("Invalid -indexworkers arg. Must be a number between 0 and %d", MAX_INDEX_WORKERS_COUNT)));
+
+        node.m_index_threads = std::make_unique<ThreadPool>("indexes");
+        node.m_index_threads->Start(index_workers);
+    }
+
     // Start threads
-    for (auto index : node.indexes) if (!index->StartBackgroundSync()) return false;
+    for (auto index : node.indexes) {
+        // Provide thread pool to indexes
+        if (node.m_index_threads && index->AllowParallelSync()) index->SetThreadPool(*node.m_index_threads);
+        if (!index->StartBackgroundSync()) return false;
+    }
     return true;
 }
