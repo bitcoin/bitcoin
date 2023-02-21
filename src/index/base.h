@@ -19,11 +19,17 @@ class CBlock;
 class CBlockIndex;
 class Chainstate;
 class ChainstateManager;
+class ThreadPool;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
 struct Task;
 struct SyncContext;
+
+/** Maximum number of threads a single thread pool instance can have */
+static constexpr int16_t MAX_INDEX_WORKERS_COUNT = 100;
+/** Number of concurrent jobs during the initial sync process */
+static constexpr int16_t INDEX_WORKERS_COUNT = 0;
 
 struct IndexSummary {
     std::string name;
@@ -82,6 +88,8 @@ private:
 
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
+
+    ThreadPool* m_thread_pool{nullptr};
 
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
@@ -169,6 +177,8 @@ public:
     /// Get the name of the index for display in logs.
     const std::string& GetName() const LIFETIMEBOUND { return m_name; }
 
+    void SetThreadPool(ThreadPool& thread_pool) { m_thread_pool = &thread_pool; }
+
     /// Blocks the current thread until the index is caught up to the current
     /// state of the block chain. This only blocks if the index has gotten in
     /// sync once and only needs to process blocks in the ValidationInterface
@@ -194,6 +204,9 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
+
+    /// True if the child class allows concurrent sync.
+    virtual bool AllowParallelSync() { return false; }
 
     /// True if the child class requires CustomProcess to be called in-order
     virtual bool OrderingRequired() { return true; }
