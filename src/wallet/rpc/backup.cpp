@@ -1650,9 +1650,13 @@ RPCHelpMan importdescriptors()
     }
 
     WalletRescanReserver reserver(*pwallet);
-    if (!reserver.reserve()) {
+    if (!reserver.reserve(/*with_passphrase=*/true)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
+
+    // Ensure that the wallet is not locked for the remainder of this RPC, as
+    // the passphrase is used to top up the keypool.
+    LOCK(pwallet->m_relock_mutex);
 
     const UniValue& requests = main_request.params[0];
     const int64_t minimum_timestamp = 1;

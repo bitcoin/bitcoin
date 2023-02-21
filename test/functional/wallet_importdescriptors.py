@@ -667,5 +667,33 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               success=True,
                               warnings=["Unknown output type, cannot set descriptor to active."])
 
+        self.log.info("Test importing a descriptor to an encrypted wallet")
+
+        descriptor = {"desc": descsum_create("pkh(" + xpriv + "/1h/*h)"),
+                              "timestamp": "now",
+                              "active": True,
+                              "range": [0,4000],
+                              "next_index": 4000}
+
+        self.nodes[0].createwallet("temp_wallet", blank=True, descriptors=True)
+        temp_wallet = self.nodes[0].get_wallet_rpc("temp_wallet")
+        temp_wallet.importdescriptors([descriptor])
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, temp_wallet.getnewaddress())
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, temp_wallet.getnewaddress())
+
+        self.nodes[0].createwallet("encrypted_wallet", blank=True, descriptors=True, passphrase="passphrase")
+        encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted_wallet")
+
+        descriptor["timestamp"] = 0
+        descriptor["next_index"] = 0
+
+        batch = []
+        batch.append(encrypted_wallet.walletpassphrase.get_request("passphrase", 3))
+        batch.append(encrypted_wallet.importdescriptors.get_request([descriptor]))
+
+        encrypted_wallet.batch(batch)
+
+        assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
+
 if __name__ == '__main__':
     ImportDescriptorsTest().main()
