@@ -1478,6 +1478,7 @@ static UniValue protx_diff(const JSONRPCRequest& request)
         "  update_service           - Create and send ProUpServTx to network\n"
         "  update_service_hpmn      - Create and send ProUpServTx to network for a HPMN\n"
         "  update_registrar         - Create and send ProUpRegTx to network\n"
+        "  update_registrar_legacy  - Create ProUpRegTx by parsing BLS using the legacy scheme, then send it to network\n"
         "  revoke                   - Create and send ProUpRevTx to network\n"
 #endif
         "  diff                     - Calculate a diff and a proof between two masternode lists\n",
