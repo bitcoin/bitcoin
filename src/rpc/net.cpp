@@ -139,6 +139,8 @@ static RPCHelpMan getpeerinfo()
                             {
                                 {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                             }},
+                            {RPCResult::Type::NUM, "addr_processed", "The total number of addresses processed, excluding those dropped due to rate limiting"},
+                            {RPCResult::Type::NUM, "addr_rate_limited", "The total number of addresses dropped due to rate limiting"},
                             {RPCResult::Type::BOOL, "whitelisted", /* optional */ true, "Whether the peer is whitelisted with default permissions\n"
                                                                                         "(DEPRECATED, returned only if config option -deprecatedrpc=whitelisted is passed)"},
                             {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
@@ -236,6 +238,8 @@ static RPCHelpMan getpeerinfo()
                 heights.push_back(height);
             }
             obj.pushKV("inflight", heights);
+            obj.pushKV("addr_processed", statestats.m_addr_processed);
+            obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         }
         if (IsDeprecatedRPCEnabled("whitelisted")) {
             // whitelisted is deprecated in v0.21 for removal in v0.22
@@ -326,6 +330,61 @@ static RPCHelpMan addnode()
     };
 }
 
+static RPCHelpMan addconnection()
+{
+    return RPCHelpMan{"addconnection",
+        "\nOpen an outbound connection to a specified node. This RPC is for testing only.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address and port to attempt connecting to."},
+            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\", \"addr-fetch\" or \"feeler\")."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                { RPCResult::Type::STR, "address", "Address of newly added connection." },
+                { RPCResult::Type::STR, "connection_type", "Type of connection opened." },
+            }},
+        RPCExamples{
+            HelpExampleCli("addconnection", "\"192.168.0.6:9333\" \"outbound-full-relay\"")
+            + HelpExampleRpc("addconnection", "\"192.168.0.6:9333\" \"outbound-full-relay\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
+    }
+
+    const std::string address = request.params[0].get_str();
+    const std::string conn_type_in{TrimString(request.params[1].get_str())};
+    ConnectionType conn_type{};
+    if (conn_type_in == "outbound-full-relay") {
+        conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+    } else if (conn_type_in == "block-relay-only") {
+        conn_type = ConnectionType::BLOCK_RELAY;
+    } else if (conn_type_in == "addr-fetch") {
+        conn_type = ConnectionType::ADDR_FETCH;
+    } else if (conn_type_in == "feeler") {
+        conn_type = ConnectionType::FEELER;
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, self.ToString());
+    }
+
+    CConnman& connman = EnsureConnman(request.context);
+
+    const bool success = connman.AddConnection(address, conn_type);
+    if (!success) {
+        throw JSONRPCError(RPC_CLIENT_NODE_CAPACITY_REACHED, "Error: Already at capacity for specified connection type.");
+    }
+
+    UniValue info(UniValue::VOBJ);
+    info.pushKV("address", address);
+    info.pushKV("connection_type", conn_type_in);
+
+    return info;
+},
+    };
+}
+
 static RPCHelpMan disconnectnode()
 {
     return RPCHelpMan{"disconnectnode",
@@ -338,9 +397,9 @@ static RPCHelpMan disconnectnode()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("disconnectnode", "\"192.168.0.6:8333\"")
+                    HelpExampleCli("disconnectnode", "\"192.168.0.6:9333\"")
             + HelpExampleCli("disconnectnode", "\"\" 1")
-            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
+            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:9333\"")
             + HelpExampleRpc("disconnectnode", "\"\", 1")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -856,8 +915,8 @@ static RPCHelpMan addpeeraddress()
             },
         },
         RPCExamples{
-            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333")
-    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333")
+            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 9333")
+    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 9333")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -910,6 +969,7 @@ static const CRPCCommand commands[] =
     { "network",            "clearbanned",            &clearbanned,            {} },
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
+    { "hidden",             "addconnection",          &addconnection,          {"address", "connection_type"} },
     { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
 };
 // clang-format on
