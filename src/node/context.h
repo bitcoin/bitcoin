@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
+#include <util/threadpool.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <functional>
@@ -90,6 +92,7 @@ struct NodeContext {
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
     std::thread background_init_thread;
+    std::unique_ptr<ThreadPool> m_index_threads;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class
