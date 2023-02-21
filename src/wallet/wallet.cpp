@@ -3404,7 +3404,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
     FeeCalculation feeCalc;
     CFeeRate discard_rate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
-    unsigned int nBytes{0};
+    int nBytes{0};
     {
         std::vector<CInputCoin> vecCoins;
         LOCK(cs_wallet);
