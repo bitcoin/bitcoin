@@ -1603,7 +1603,7 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman& connma
     assert(nRelayNodes <= best.size());
 
     auto sortfunc = [&best, &hasher, nRelayNodes, addr](CNode* pnode) {
-        if (pnode->nVersion >= CADDR_TIME_VERSION && pnode->IsAddrRelayPeer() && pnode->IsAddrCompatible(addr)) {
+        if (pnode->IsAddrRelayPeer() && pnode->IsAddrCompatible(addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                 if (hashKey > best[i].first) {
@@ -2738,11 +2738,8 @@ void PeerLogicValidation::ProcessMessage(
             }
 
             // Get recent addresses
-            if (pfrom.fOneShot || pfrom.nVersion >= CADDR_TIME_VERSION || m_connman.GetAddressCount() < 1000)
-            {
-                m_connman.PushMessage(&pfrom, CNetMsgMaker(nSendVersion).Make(NetMsgType::GETADDR));
-                pfrom.fGetAddr = true;
-            }
+            m_connman.PushMessage(&pfrom, CNetMsgMaker(nSendVersion).Make(NetMsgType::GETADDR));
+            pfrom.fGetAddr = true;
             m_connman.MarkAddressGood(pfrom.addr);
         }
 
@@ -2882,10 +2879,6 @@ void PeerLogicValidation::ProcessMessage(
 
         s >> vAddr;
 
-        // Don't want addr from older versions unless seeding
-        if (pfrom.nVersion < CADDR_TIME_VERSION && m_connman.GetAddressCount() > 1000)
-            return;
-
         if (!pfrom.IsAddrRelayPeer()) {
             return;
         }
@@ -2930,7 +2923,6 @@ void PeerLogicValidation::ProcessMessage(
             pfrom.fGetAddr = false;
         if (pfrom.fOneShot)
             pfrom.fDisconnect = true;
-        statsClient.gauge("peers.knownAddresses", m_connman.GetAddressCount(), 1.0f);
         return;
     }
 

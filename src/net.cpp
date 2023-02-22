@@ -3323,11 +3323,6 @@ CConnman::~CConnman()
     Stop();
 }
 
-size_t CConnman::GetAddressCount() const
-{
-    return addrman.size();
-}
-
 void CConnman::SetServices(const CService &addr, ServiceFlags nServices)
 {
     addrman.SetServices(addr, nServices);
