@@ -665,13 +665,13 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         }
         ptx.platformNodeID.SetHex(request.params[paramIdx + 6].get_str());
 
-        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 7].get_str(), "platformP2PPort");
+        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 7], "platformP2PPort");
         if (!ValidatePlatformPort(requestedPlatformP2PPort)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "platformP2PPort must be a valid port [1-65535]");
         }
         ptx.platformP2PPort = static_cast<uint16_t>(requestedPlatformP2PPort);
 
-        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 8].get_str(), "platformHTTPPort");
+        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 8], "platformHTTPPort");
         if (!ValidatePlatformPort(requestedPlatformHTTPPort)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "platformHTTPPort must be a valid port [1-65535]");
         }
@@ -899,13 +899,13 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         }
         ptx.platformNodeID.SetHex(request.params[paramIdx].get_str());
 
-        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 1].get_str(), "platformP2PPort");
+        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 1], "platformP2PPort");
         if (!ValidatePlatformPort(requestedPlatformP2PPort)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "platformP2PPort must be a valid port [1-65535]");
         }
         ptx.platformP2PPort = static_cast<uint16_t>(requestedPlatformP2PPort);
 
-        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 2].get_str(), "platformHTTPPort");
+        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 2], "platformHTTPPort");
         if (!ValidatePlatformPort(requestedPlatformHTTPPort)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "platformHTTPPort must be a valid port [1-65535]");
         }
@@ -1478,6 +1478,7 @@ static UniValue protx_diff(const JSONRPCRequest& request)
         "  update_service           - Create and send ProUpServTx to network\n"
         "  update_service_hpmn      - Create and send ProUpServTx to network for a HPMN\n"
         "  update_registrar         - Create and send ProUpRegTx to network\n"
+        "  update_registrar_legacy  - Create ProUpRegTx by parsing BLS using the legacy scheme, then send it to network\n"
         "  revoke                   - Create and send ProUpRevTx to network\n"
 #endif
         "  diff                     - Calculate a diff and a proof between two masternode lists\n",
