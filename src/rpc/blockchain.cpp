@@ -20,6 +20,7 @@
 #include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
@@ -89,6 +90,15 @@ ChainstateManager& EnsureChainman(const CoreContext& context)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
     }
     return *node.chainman;
+}
+
+CBlockPolicyEstimator& EnsureFeeEstimator(const CoreContext& context)
+{
+    NodeContext& node = EnsureNodeContext(context);
+    if (!node.fee_estimator) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
+    }
+    return *node.fee_estimator;
 }
 
 LLMQContext& EnsureLLMQContext(const CoreContext& context)
