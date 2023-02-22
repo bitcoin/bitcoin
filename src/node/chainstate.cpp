@@ -192,12 +192,23 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                                                          "Only rebuild the block database if you are sure that your computer's date and time are correct")};
             }
 
-            if (!CVerifyDB().VerifyDB(
-                    *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
-                    options.check_level,
-                    options.check_blocks)) {
+            VerifyDBResult result = CVerifyDB().VerifyDB(
+                *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
+                options.check_level,
+                options.check_blocks);
+            switch (result) {
+            case VerifyDBResult::SUCCESS:
+            case VerifyDBResult::INTERRUPTED:
+            case VerifyDBResult::SKIPPED_MISSING_BLOCKS:
+                break;
+            case VerifyDBResult::CORRUPTED_BLOCK_DB:
                 return {ChainstateLoadStatus::FAILURE, _("Corrupted block database detected")};
-            }
+            case VerifyDBResult::SKIPPED_L3_CHECKS:
+                if (options.require_full_verification) {
+                    return {ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE, _("Insufficient dbcache for block verification")};
+                }
+                break;
+            } // no default case, so the compiler can warn about missing cases
         }
     }
 
