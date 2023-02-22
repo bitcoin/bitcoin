@@ -268,6 +268,7 @@ void TestingSetup::LoadVerifyActivateChainstate()
     options.connman = Assert(m_node.connman.get());
     options.banman = Assert(m_node.banman.get());
     options.peerman = Assert(m_node.peerman.get());
+    options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");
     auto [status, error] = LoadChainstate(chainman, m_cache_sizes, options);
     assert(status == node::ChainstateLoadStatus::SUCCESS);
 
