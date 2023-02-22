@@ -282,7 +282,7 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
             else:
                 if predicate():
                     return True
-        except:
+        except Exception:
             if not allow_exception:
                 raise
         attempt += 1
@@ -474,7 +474,7 @@ def copy_datadir(from_node, to_node, dirname, chain):
             src = os.path.join(from_datadir, d)
             dst = os.path.join(to_datadir, d)
             shutil.copytree(src, dst)
-        except:
+        except Exception:
             pass
 
 # If a cookie file exists in the given datadir, delete it.
@@ -496,7 +496,7 @@ def get_chain_folder(datadir, chain):
             if chain in os.listdir(datadir)[i]:
                 chain = os.listdir(datadir)[i]
                 break
-    except:
+    except Exception:
         pass
     return chain
 

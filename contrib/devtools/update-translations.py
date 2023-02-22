@@ -56,7 +56,7 @@ def find_format_specifiers(s):
             break
         try:
             specifiers.append(s[percent+1])
-        except:
+        except Exception:
             print('Failed to get specifier')
         pos = percent+2
     return specifiers

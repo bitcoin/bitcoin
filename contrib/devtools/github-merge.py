@@ -306,7 +306,7 @@ def main():
                 print(range_diff_output.decode('utf-8'))
             try:
                 subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT])
-            except:
+            except Exception:
                 pass
             review_reply = ask_prompt("Do you want to continue with force push? Type 'yes' to continue or anything else to abort.").lower()
             if review_reply != 'yes':

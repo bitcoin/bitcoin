@@ -37,7 +37,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         def check_tx():
             try:
                 return node.getrawtransaction(txid)
-            except:
+            except Exception:
                 return False
         if self.wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
