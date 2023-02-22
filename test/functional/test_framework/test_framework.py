@@ -279,10 +279,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if seed is None:
             seed = random.randrange(sys.maxsize)
         else:
-            self.log.debug("User supplied random seed {}".format(seed))
+            self.log.info("User supplied random seed {}".format(seed))
 
         random.seed(seed)
-        self.log.debug("PRNG seed is: {}".format(seed))
+        self.log.info("PRNG seed is: {}".format(seed))
 
         self.log.debug('Setting up network thread')
         self.network_thread = NetworkThread()
