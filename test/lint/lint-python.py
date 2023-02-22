@@ -47,6 +47,7 @@ ENABLED = (
     'E711,'  # comparison to None should be 'if cond is None:'
     'E714,'  # test for object identity should be "is not"
     'E721,'  # do not compare types, use "isinstance()"
+    'E722,'  # do not use bare 'except'
     'E742,'  # do not define classes named "l", "O", or "I"
     'E743,'  # do not define functions named "l", "O", or "I"
     'E901,'  # SyntaxError: invalid syntax
