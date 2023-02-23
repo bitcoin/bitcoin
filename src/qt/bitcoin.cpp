@@ -176,7 +176,7 @@ static bool InitSettings()
     if (!gArgs.ReadSettingsFile(&errors)) {
         std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be read");
         std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
-        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
+        InitError(Untranslated(strprintf("%s:\n%s", error, MakeUnorderedList(errors))));
 
         QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Reset | QMessageBox::Abort);
         /*: Explanatory text shown on startup when the settings file cannot be read.
@@ -199,7 +199,7 @@ static bool InitSettings()
     if (!gArgs.WriteSettingsFile(&errors)) {
         std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be written");
         std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
-        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
+        InitError(Untranslated(strprintf("%s:\n%s", error, MakeUnorderedList(errors))));
 
         QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Ok);
         /*: Explanatory text shown on startup when the settings file could not be written.
@@ -546,7 +546,7 @@ int GuiMain(int argc, char* argv[])
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        InitError(strprintf(Untranslated("Error parsing command line arguments: %s\n"), error));
+        InitError(strprintf(Untranslated("Error parsing command line arguments: %s"), error));
         // Create a message box, because the gui has neither been created nor has subscribed to core signals
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             // message cannot be translated because translations have not been initialized
@@ -589,7 +589,7 @@ int GuiMain(int argc, char* argv[])
 
     /// 6a. Determine availability of data directory
     if (!CheckDataDirOption(gArgs)) {
-        InitError(strprintf(Untranslated("Specified data directory \"%s\" does not exist.\n"), gArgs.GetArg("-datadir", "")));
+        InitError(strprintf(Untranslated("Specified data directory \"%s\" does not exist."), gArgs.GetArg("-datadir", "")));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
@@ -598,7 +598,7 @@ int GuiMain(int argc, char* argv[])
         /// 6b. Parse bitcoin.conf
         /// - Do not call gArgs.GetDataDirNet() before this step finishes
         if (!gArgs.ReadConfigFiles(error, true)) {
-            InitError(strprintf(Untranslated("Error reading configuration file: %s\n"), error));
+            InitError(strprintf(Untranslated("Error reading configuration file: %s"), error));
             QMessageBox::critical(nullptr, PACKAGE_NAME,
                 QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
             return EXIT_FAILURE;
@@ -613,7 +613,7 @@ int GuiMain(int argc, char* argv[])
         // Check for chain settings (Params() calls are only valid after this clause)
         SelectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
-        InitError(Untranslated(strprintf("%s\n", e.what())));
+        InitError(Untranslated(strprintf("%s", e.what())));
         QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
     }
