@@ -628,11 +628,8 @@ libbitcoin_consensus_a_SOURCES = \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
-  util/check.h \
   util/strencodings.cpp \
   util/strencodings.h \
-  util/check.cpp \
-  util/check.h \
   version.h
 #
 

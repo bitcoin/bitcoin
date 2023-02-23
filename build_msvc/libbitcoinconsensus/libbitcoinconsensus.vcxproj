@@ -9,7 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\arith_uint256.cpp" />
-    <ClCompile Include="..\..\src\clientversion.cpp" />
     <ClCompile Include="..\..\src\consensus\merkle.cpp" />
     <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
     <ClCompile Include="..\..\src\crypto\aes.cpp" />
@@ -30,7 +29,6 @@
     <ClCompile Include="..\..\src\script\script.cpp" />
     <ClCompile Include="..\..\src\script\script_error.cpp" />
     <ClCompile Include="..\..\src\uint256.cpp" />
-    <ClCompile Include="..\..\src\util\check.cpp" />
     <ClCompile Include="..\..\src\util\strencodings.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

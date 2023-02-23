@@ -10,7 +10,6 @@
 #include <script/script_error.h>
 #include <span.h>
 #include <primitives/transaction.h>
-#include <util/check.h>
 
 #include <optional>
 #include <vector>
@@ -295,7 +294,8 @@ struct ScriptExecutionData
 
     DeferredCheck& NewDeferredCheck()
     {
-        Assert(m_deferred_checks)->emplace_back();
+        assert(m_deferred_checks != nullptr);
+        m_deferred_checks->emplace_back();
         return m_deferred_checks->back();
     }
 
