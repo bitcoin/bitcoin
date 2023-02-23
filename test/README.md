@@ -109,32 +109,55 @@ how many jobs to run, append `--jobs=n`
 The individual tests and the test_runner harness have many command-line
 options. Run `test/functional/test_runner.py -h` to see them all.
 
-#### Speed up test runs with a ramdisk
+#### Speed up test runs with a RAM disk
 
-If you have available RAM on your system you can create a ramdisk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
-Speed-up amount varies on each system (and according to your ram speed and other variables), but a 2-3x speed-up is not uncommon.
+If you have available RAM on your system you can create a RAM disk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
+Speed-up amount varies on each system (and according to your RAM speed and other variables), but a 2-3x speed-up is not uncommon.
 
-To create a 4GB ramdisk on Linux at `/mnt/tmp/`:
+**Linux**
+
+To create a 4 GiB RAM disk at `/mnt/tmp/`:
 
 ```bash
 sudo mkdir -p /mnt/tmp
 sudo mount -t tmpfs -o size=4g tmpfs /mnt/tmp/
 ```
 
-Configure the size of the ramdisk using the `size=` option.
-The size of the ramdisk needed is relative to the number of concurrent jobs the test suite runs.
-For example running the test suite with `--jobs=100` might need a 4GB ramdisk, but running with `--jobs=32` will only need a 2.5GB ramdisk.
+Configure the size of the RAM disk using the `size=` option.
+The size of the RAM disk needed is relative to the number of concurrent jobs the test suite runs.
+For example running the test suite with `--jobs=100` might need a 4 GiB RAM disk, but running with `--jobs=32` will only need a 2.5 GiB RAM disk.
 
-To use, run the test suite specifying the ramdisk as the `cachedir` and `tmpdir`:
+To use, run the test suite specifying the RAM disk as the `cachedir` and `tmpdir`:
 
 ```bash
 test/functional/test_runner.py --cachedir=/mnt/tmp/cache --tmpdir=/mnt/tmp
 ```
 
-Once finished with the tests and the disk, and to free the ram, simply unmount the disk:
+Once finished with the tests and the disk, and to free the RAM, simply unmount the disk:
 
 ```bash
 sudo umount /mnt/tmp
+```
+
+**macOS**
+
+To create a 4 GiB RAM disk named "ramdisk" at `/Volumes/ramdisk/`:
+
+```bash
+diskutil erasevolume HFS+ ramdisk $(hdiutil attach -nomount ram://8388608)
+```
+
+Configure the RAM disk size, expressed as the number of blocks, at the end of the command
+(`4096 MiB * 2048 blocks/MiB = 8388608 blocks` for 4 GiB). To run the tests using the RAM disk:
+
+```bash
+test/functional/test_runner.py --cachedir=/Volumes/ramdisk/cache --tmpdir=/Volumes/ramdisk/tmp
+```
+
+To unmount:
+
+```bash
+umount /Volumes/ramdisk
 ```
 
 #### Troubleshooting and debugging test failures
