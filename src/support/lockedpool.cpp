@@ -26,7 +26,6 @@
 #include <iomanip>
 #include <iostream>
 #endif
-#include <utility>
 
 LockedPoolManager* LockedPoolManager::_instance = nullptr;
 
