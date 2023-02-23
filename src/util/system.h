@@ -435,13 +435,6 @@ protected:
     std::optional<unsigned int> GetArgFlags(const std::string& name) const;
 
     /**
-     * Read and update settings file with saved settings. This needs to be
-     * called after SelectParams() because the settings file location is
-     * network-specific.
-     */
-    bool InitSettings(std::string& error);
-
-    /**
      * Get settings file path, or return false if read-write settings were
      * disabled with -nosettings.
      */
@@ -479,12 +472,6 @@ protected:
      * useful for troubleshooting.
      */
     void LogArgs() const;
-
-    /**
-     * If datadir does not exist, create it along with wallets/
-     * subdirectory(s).
-     */
-    void EnsureDataDir() const;
 
 private:
     /**
