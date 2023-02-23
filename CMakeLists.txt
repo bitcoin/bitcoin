@@ -53,6 +53,8 @@ set(configure_warnings)
 include(CheckSourceCompilesAndLinks)
 include(cmake/introspection.cmake)
 
+include(cmake/crc32c.cmake)
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
   check_pie_supported(OUTPUT_VARIABLE check_pie_output LANGUAGES CXX)
