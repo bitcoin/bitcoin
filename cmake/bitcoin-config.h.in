@@ -6,6 +6,9 @@
 
 #define BITCOIN_CONFIG_H
 
+/* Define this symbol if type char equals int8_t */
+#cmakedefine CHAR_EQUALS_INT8 1
+
 /* Version Build */
 #define CLIENT_VERSION_BUILD @PROJECT_VERSION_PATCH@
 
@@ -118,6 +121,12 @@
 /* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
    */
 #cmakedefine01 HAVE_DECL_SETSID
+
+/* Define if the visibility attribute is supported. */
+#cmakedefine HAVE_DEFAULT_VISIBILITY_ATTRIBUTE 1
+
+/* Define if the dllexport attribute is supported. */
+#cmakedefine HAVE_DLLEXPORT_ATTRIBUTE 1
 
 /* Define to 1 if you have the <endian.h> header file. */
 #cmakedefine HAVE_ENDIAN_H 1
