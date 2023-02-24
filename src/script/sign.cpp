@@ -114,10 +114,15 @@ static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigd
         pubkey = it->second.first;
         return true;
     }
-    // Look for pubkey in pubkey list
+    // Look for pubkey in pubkey lists
     const auto& pk_it = sigdata.misc_pubkeys.find(address);
     if (pk_it != sigdata.misc_pubkeys.end()) {
         pubkey = pk_it->second.first;
+        return true;
+    }
+    const auto& tap_pk_it = sigdata.tap_pubkeys.find(address);
+    if (tap_pk_it != sigdata.tap_pubkeys.end()) {
+        pubkey = tap_pk_it->second.GetEvenCorrespondingCPubKey();
         return true;
     }
     // Query the underlying provider
@@ -186,41 +191,35 @@ miniscript::Availability MsLookupHelper(const M& map, const K& key, V& value)
  * Context for solving a Miniscript.
  * If enough material (access to keys, hash preimages, ..) is given, produces a valid satisfaction.
  */
+template<typename Pk>
 struct Satisfier {
-    typedef CPubKey Key;
+    using Key = Pk;
 
     const SigningProvider& m_provider;
     SignatureData& m_sig_data;
     const BaseSignatureCreator& m_creator;
     const CScript& m_witness_script;
-    //! For now Miniscript is only available under P2WSH.
-    const miniscript::MiniscriptContext m_script_ctx{miniscript::MiniscriptContext::P2WSH};
+    //! The context of the script we are satisfying (either P2WSH or Tapscript).
+    const miniscript::MiniscriptContext m_script_ctx;
 
     explicit Satisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
                        const BaseSignatureCreator& creator LIFETIMEBOUND,
-                       const CScript& witscript LIFETIMEBOUND) : m_provider(provider),
-                                                                 m_sig_data(sig_data),
-                                                                 m_creator(creator),
-                                                                 m_witness_script(witscript) {}
+                       const CScript& witscript LIFETIMEBOUND,
+                       miniscript::MiniscriptContext script_ctx) : m_provider(provider),
+                                                                   m_sig_data(sig_data),
+                                                                   m_creator(creator),
+                                                                   m_witness_script(witscript),
+                                                                   m_script_ctx(script_ctx) {}
 
     static bool KeyCompare(const Key& a, const Key& b) {
         return a < b;
     }
 
-    //! Conversion from a raw public key.
-    template <typename I>
-    std::optional<Key> FromPKBytes(I first, I last) const
-    {
-        Key pubkey{first, last};
-        if (pubkey.IsValid()) return pubkey;
-        return {};
-    }
-
-    //! Conversion from a raw public key hash.
+    //! Get a CPubKey from a key hash. Note the key hash may be of an xonly pubkey.
     template<typename I>
-    std::optional<Key> FromPKHBytes(I first, I last) const {
+    std::optional<CPubKey> CPubFromPKHBytes(I first, I last) const {
         assert(last - first == 20);
-        Key pubkey;
+        CPubKey pubkey;
         CKeyID key_id;
         std::copy(first, last, key_id.begin());
         if (GetPubKey(m_provider, m_sig_data, key_id, pubkey)) return pubkey;
@@ -229,20 +228,11 @@ struct Satisfier {
     }
 
     //! Conversion to raw public key.
-    std::vector<unsigned char> ToPKBytes(const CPubKey& key) const { return {key.begin(), key.end()}; }
-
-    //! Satisfy a signature check.
-    miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
-        if (CreateSig(m_creator, m_sig_data, m_provider, sig, key, m_witness_script, SigVersion::WITNESS_V0)) {
-            return miniscript::Availability::YES;
-        }
-        return miniscript::Availability::NO;
-    }
+    std::vector<unsigned char> ToPKBytes(const Key& key) const { return {key.begin(), key.end()}; }
 
     //! Time lock satisfactions.
     bool CheckAfter(uint32_t value) const { return m_creator.Checker().CheckLockTime(CScriptNum(value)); }
     bool CheckOlder(uint32_t value) const { return m_creator.Checker().CheckSequence(CScriptNum(value)); }
-
 
     //! Hash preimage satisfactions.
     miniscript::Availability SatSHA256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
@@ -263,49 +253,81 @@ struct Satisfier {
     }
 };
 
+/** Miniscript satisfier specific to P2WSH context. */
+struct WshSatisfier: Satisfier<CPubKey> {
+    explicit WshSatisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
+                          const BaseSignatureCreator& creator LIFETIMEBOUND, const CScript& witscript LIFETIMEBOUND)
+                          : Satisfier(provider, sig_data, creator, witscript, miniscript::MiniscriptContext::P2WSH) {}
+
+    //! Conversion from a raw compressed public key.
+    template <typename I>
+    std::optional<CPubKey> FromPKBytes(I first, I last) const {
+        CPubKey pubkey{first, last};
+        if (pubkey.IsValid()) return pubkey;
+        return {};
+    }
+
+    //! Conversion from a raw compressed public key hash.
+    template<typename I>
+    std::optional<CPubKey> FromPKHBytes(I first, I last) const {
+        return Satisfier::CPubFromPKHBytes(first, last);
+    }
+
+    //! Satisfy an ECDSA signature check.
+    miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
+        if (CreateSig(m_creator, m_sig_data, m_provider, sig, key, m_witness_script, SigVersion::WITNESS_V0)) {
+            return miniscript::Availability::YES;
+        }
+        return miniscript::Availability::NO;
+    }
+};
+
+/** Miniscript satisfier specific to Tapscript context. */
+struct TapSatisfier: Satisfier<XOnlyPubKey> {
+    const uint256& m_leaf_hash;
+
+    explicit TapSatisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
+                          const BaseSignatureCreator& creator LIFETIMEBOUND, const CScript& script LIFETIMEBOUND,
+                          const uint256& leaf_hash LIFETIMEBOUND)
+                          : Satisfier(provider, sig_data, creator, script, miniscript::MiniscriptContext::TAPSCRIPT),
+                            m_leaf_hash(leaf_hash) {}
+
+    //! Conversion from a raw xonly public key.
+    template <typename I>
+    std::optional<XOnlyPubKey> FromPKBytes(I first, I last) const {
+        CHECK_NONFATAL(last - first == 32);
+        XOnlyPubKey pubkey;
+        std::copy(first, last, pubkey.begin());
+        return pubkey;
+    }
+
+    //! Conversion from a raw xonly public key hash.
+    template<typename I>
+    std::optional<XOnlyPubKey> FromPKHBytes(I first, I last) const {
+        if (auto pubkey = Satisfier::CPubFromPKHBytes(first, last)) return XOnlyPubKey{*pubkey};
+        return {};
+    }
+
+    //! Satisfy a BIP340 signature check.
+    miniscript::Availability Sign(const XOnlyPubKey& key, std::vector<unsigned char>& sig) const {
+        if (CreateTaprootScriptSig(m_creator, m_sig_data, m_provider, sig, key, m_leaf_hash, SigVersion::TAPSCRIPT)) {
+            return miniscript::Availability::YES;
+        }
+        return miniscript::Availability::NO;
+    }
+};
+
 static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, Span<const unsigned char> script_bytes, std::vector<valtype>& result)
 {
     // Only BIP342 tapscript signing is supported for now.
     if (leaf_version != TAPROOT_LEAF_TAPSCRIPT) return false;
-    SigVersion sigversion = SigVersion::TAPSCRIPT;
 
     uint256 leaf_hash = ComputeTapleafHash(leaf_version, script_bytes);
     CScript script = CScript(script_bytes.begin(), script_bytes.end());
 
-    // <xonly pubkey> OP_CHECKSIG
-    if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
-        XOnlyPubKey pubkey{Span{script}.subspan(1, 32)};
-        std::vector<unsigned char> sig;
-        if (CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion)) {
-            result = Vector(std::move(sig));
-            return true;
-        }
-        return false;
-    }
-
-    // multi_a scripts (<key> OP_CHECKSIG <key> OP_CHECKSIGADD <key> OP_CHECKSIGADD <k> OP_NUMEQUAL)
-    if (auto match = MatchMultiA(script)) {
-        std::vector<std::vector<unsigned char>> sigs;
-        int good_sigs = 0;
-        for (size_t i = 0; i < match->second.size(); ++i) {
-            XOnlyPubKey pubkey{*(match->second.rbegin() + i)};
-            std::vector<unsigned char> sig;
-            bool good_sig = CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion);
-            if (good_sig && good_sigs < match->first) {
-                ++good_sigs;
-                sigs.push_back(std::move(sig));
-            } else {
-                sigs.emplace_back();
-            }
-        }
-        if (good_sigs == match->first) {
-            result = std::move(sigs);
-            return true;
-        }
-        return false;
-    }
-
-    return false;
+    TapSatisfier ms_satisfier{provider, sigdata, creator, script, leaf_hash};
+    const auto ms = miniscript::FromScript(script, ms_satisfier);
+    return ms && ms->Satisfy(ms_satisfier, result) == miniscript::Availability::YES;
 }
 
 static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const WitnessV1Taproot& output, SignatureData& sigdata, std::vector<valtype>& result)
@@ -518,7 +540,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         // isn't fully solved. For instance the CHECKMULTISIG satisfaction in SignStep() pushes partial signatures
         // and the extractor relies on this behaviour to combine witnesses.
         if (!solved && result.empty()) {
-            Satisfier ms_satisfier{provider, sigdata, creator, witnessscript};
+            WshSatisfier ms_satisfier{provider, sigdata, creator, witnessscript};
             const auto ms = miniscript::FromScript(witnessscript, ms_satisfier);
             solved = ms && ms->Satisfy(ms_satisfier, result) == miniscript::Availability::YES;
         }
