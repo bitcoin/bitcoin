@@ -329,27 +329,51 @@ std::optional<uint32_t> ConsumeTimeLock(FuzzedDataProvider& provider) {
  *      bytes as the number of keys define the index of each key in the test data.
  *    - For thresh(), the next byte defines the threshold value and the following one the number of subs.
  */
-std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider) {
+std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider, Type type_needed) {
+    bool allow_B = (type_needed == ""_mst) || (type_needed << "B"_mst);
+    bool allow_K = (type_needed == ""_mst) || (type_needed << "K"_mst);
+    bool allow_V = (type_needed == ""_mst) || (type_needed << "V"_mst);
+    bool allow_W = (type_needed == ""_mst) || (type_needed << "W"_mst);
+
     switch (provider.ConsumeIntegral<uint8_t>()) {
-        case 0: return {{Fragment::JUST_0}};
-        case 1: return {{Fragment::JUST_1}};
-        case 2: return {{Fragment::PK_K, ConsumePubKey(provider)}};
-        case 3: return {{Fragment::PK_H, ConsumePubKey(provider)}};
+        case 0:
+            if (!allow_B) return {};
+            return {{Fragment::JUST_0}};
+        case 1:
+            if (!allow_B) return {};
+            return {{Fragment::JUST_1}};
+        case 2:
+            if (!allow_K) return {};
+            return {{Fragment::PK_K, ConsumePubKey(provider)}};
+        case 3:
+            if (!allow_K) return {};
+            return {{Fragment::PK_H, ConsumePubKey(provider)}};
         case 4: {
+            if (!allow_B) return {};
             const auto k = ConsumeTimeLock(provider);
             if (!k) return {};
             return {{Fragment::OLDER, *k}};
         }
         case 5: {
+            if (!allow_B) return {};
             const auto k = ConsumeTimeLock(provider);
             if (!k) return {};
             return {{Fragment::AFTER, *k}};
         }
-        case 6: return {{Fragment::SHA256, ConsumeSha256(provider)}};
-        case 7: return {{Fragment::HASH256, ConsumeHash256(provider)}};
-        case 8: return {{Fragment::RIPEMD160, ConsumeRipemd160(provider)}};
-        case 9: return {{Fragment::HASH160, ConsumeHash160(provider)}};
+        case 6:
+            if (!allow_B) return {};
+            return {{Fragment::SHA256, ConsumeSha256(provider)}};
+        case 7:
+            if (!allow_B) return {};
+            return {{Fragment::HASH256, ConsumeHash256(provider)}};
+        case 8:
+            if (!allow_B) return {};
+            return {{Fragment::RIPEMD160, ConsumeRipemd160(provider)}};
+        case 9:
+            if (!allow_B) return {};
+            return {{Fragment::HASH160, ConsumeHash160(provider)}};
         case 10: {
+            if (!allow_B) return {};
             const auto k = provider.ConsumeIntegral<uint8_t>();
             const auto n_keys = provider.ConsumeIntegral<uint8_t>();
             if (n_keys > 20 || k == 0 || k > n_keys) return {};
@@ -357,26 +381,59 @@ std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider) {
             for (auto& key: keys) key = ConsumePubKey(provider);
             return {{Fragment::MULTI, k, std::move(keys)}};
         }
-        case 11: return {{3, Fragment::ANDOR}};
-        case 12: return {{2, Fragment::AND_V}};
-        case 13: return {{2, Fragment::AND_B}};
-        case 15: return {{2, Fragment::OR_B}};
-        case 16: return {{2, Fragment::OR_C}};
-        case 17: return {{2, Fragment::OR_D}};
-        case 18: return {{2, Fragment::OR_I}};
+        case 11:
+            if (!(allow_B || allow_K || allow_V)) return {};
+            return {{{"B"_mst, type_needed, type_needed}, Fragment::ANDOR}};
+        case 12:
+            if (!(allow_B || allow_K || allow_V)) return {};
+            return {{{"V"_mst, type_needed}, Fragment::AND_V}};
+        case 13:
+            if (!allow_B) return {};
+            return {{{"B"_mst, "W"_mst}, Fragment::AND_B}};
+        case 15:
+            if (!allow_B) return {};
+            return {{{"B"_mst, "W"_mst}, Fragment::OR_B}};
+        case 16:
+            if (!allow_V) return {};
+            return {{{"B"_mst, "V"_mst}, Fragment::OR_C}};
+        case 17:
+            if (!allow_B) return {};
+            return {{{"B"_mst, "B"_mst}, Fragment::OR_D}};
+        case 18:
+            if (!(allow_B || allow_K || allow_V)) return {};
+            return {{{type_needed, type_needed}, Fragment::OR_I}};
         case 19: {
+            if (!allow_B) return {};
             auto k = provider.ConsumeIntegral<uint8_t>();
             auto n_subs = provider.ConsumeIntegral<uint8_t>();
             if (k == 0 || k > n_subs) return {};
-            return {{n_subs, Fragment::THRESH, k}};
+            std::vector<Type> subtypes;
+            subtypes.reserve(n_subs);
+            subtypes.emplace_back("B"_mst);
+            for (size_t i = 1; i < n_subs; ++i) subtypes.emplace_back("W"_mst);
+            return {{std::move(subtypes), Fragment::THRESH, k}};
         }
-        case 20: return {{1, Fragment::WRAP_A}};
-        case 21: return {{1, Fragment::WRAP_S}};
-        case 22: return {{1, Fragment::WRAP_C}};
-        case 23: return {{1, Fragment::WRAP_D}};
-        case 24: return {{1, Fragment::WRAP_V}};
-        case 25: return {{1, Fragment::WRAP_J}};
-        case 26: return {{1, Fragment::WRAP_N}};
+        case 20:
+            if (!allow_W) return {};
+            return {{{"B"_mst}, Fragment::WRAP_A}};
+        case 21:
+            if (!allow_W) return {};
+            return {{{"B"_mst}, Fragment::WRAP_S}};
+        case 22:
+            if (!allow_B) return {};
+            return {{{"K"_mst}, Fragment::WRAP_C}};
+        case 23:
+            if (!allow_B) return {};
+            return {{{"V"_mst}, Fragment::WRAP_D}};
+        case 24:
+            if (!allow_V) return {};
+            return {{{"B"_mst}, Fragment::WRAP_V}};
+        case 25:
+            if (!allow_B) return {};
+            return {{{"B"_mst}, Fragment::WRAP_J}};
+        case 26:
+            if (!allow_B) return {};
+            return {{{"B"_mst}, Fragment::WRAP_N}};
         default:
             break;
     }
@@ -709,7 +766,7 @@ std::optional<NodeInfo> ConsumeNodeSmart(FuzzedDataProvider& provider, Type type
  *   a NodeRef whose Type() matches the type fed to ConsumeNode.
  */
 template<typename F>
-NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = false) {
+NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
     /** A stack of miniscript Nodes being built up. */
     std::vector<NodeRef> stack;
     /** The queue of instructions. */
@@ -921,9 +978,9 @@ void FuzzInitSmart()
 FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    TestNode(GenNode([&](Type) {
-        return ConsumeNodeStable(provider);
-    }), provider);
+    TestNode(GenNode([&](Type needed_type) {
+        return ConsumeNodeStable(provider, needed_type);
+    }, ""_mst), provider);
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeSmart. */
