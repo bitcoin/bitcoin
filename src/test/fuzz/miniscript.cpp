@@ -261,8 +261,6 @@ template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
 struct NodeInfo {
     //! The type of this node
     Fragment fragment;
-    //! Number of subs of this node
-    uint8_t n_subs;
     //! The timelock value for older() and after(), the threshold value for multi() and thresh()
     uint32_t k;
     //! Keys for this node, if it has some
@@ -272,15 +270,13 @@ struct NodeInfo {
     //! The type requirements for the children of this node.
     std::vector<Type> subtypes;
 
-    NodeInfo(Fragment frag): fragment(frag), n_subs(0), k(0) {}
-    NodeInfo(Fragment frag, CPubKey key): fragment(frag), n_subs(0), k(0), keys({key}) {}
-    NodeInfo(Fragment frag, uint32_t _k): fragment(frag), n_subs(0), k(_k) {}
-    NodeInfo(Fragment frag, std::vector<unsigned char> h): fragment(frag), n_subs(0), k(0), hash(std::move(h)) {}
-    NodeInfo(uint8_t subs, Fragment frag): fragment(frag), n_subs(subs), k(0), subtypes(subs, ""_mst) {}
-    NodeInfo(uint8_t subs, Fragment frag, uint32_t _k): fragment(frag), n_subs(subs), k(_k), subtypes(subs, ""_mst)  {}
-    NodeInfo(std::vector<Type> subt, Fragment frag): fragment(frag), n_subs(subt.size()), k(0), subtypes(std::move(subt)) {}
-    NodeInfo(std::vector<Type> subt, Fragment frag, uint32_t _k): fragment(frag), n_subs(subt.size()), k(_k), subtypes(std::move(subt))  {}
-    NodeInfo(Fragment frag, uint32_t _k, std::vector<CPubKey> _keys): fragment(frag), n_subs(0), k(_k), keys(std::move(_keys)) {}
+    NodeInfo(Fragment frag): fragment(frag), k(0) {}
+    NodeInfo(Fragment frag, CPubKey key): fragment(frag), k(0), keys({key}) {}
+    NodeInfo(Fragment frag, uint32_t _k): fragment(frag), k(_k) {}
+    NodeInfo(Fragment frag, std::vector<unsigned char> h): fragment(frag), k(0), hash(std::move(h)) {}
+    NodeInfo(std::vector<Type> subt, Fragment frag): fragment(frag), k(0), subtypes(std::move(subt)) {}
+    NodeInfo(std::vector<Type> subt, Fragment frag, uint32_t _k): fragment(frag), k(_k), subtypes(std::move(subt))  {}
+    NodeInfo(Fragment frag, uint32_t _k, std::vector<CPubKey> _keys): fragment(frag), k(_k), keys(std::move(_keys)) {}
 };
 
 /** Pick an index in a collection from a single byte in the fuzzer's output. */
@@ -795,11 +791,11 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
             NodeInfo& info = *todo.back().second;
             // Gather children from the back of stack.
             std::vector<NodeRef> sub;
-            sub.reserve(info.n_subs);
-            for (size_t i = 0; i < info.n_subs; ++i) {
-                sub.push_back(std::move(*(stack.end() - info.n_subs + i)));
+            sub.reserve(info.subtypes.size());
+            for (size_t i = 0; i < info.subtypes.size(); ++i) {
+                sub.push_back(std::move(*(stack.end() - info.subtypes.size() + i)));
             }
-            stack.erase(stack.end() - info.n_subs, stack.end());
+            stack.erase(stack.end() - info.subtypes.size(), stack.end());
             // Construct new NodeRef.
             NodeRef node;
             if (info.keys.empty()) {
