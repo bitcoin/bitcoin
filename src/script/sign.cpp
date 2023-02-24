@@ -171,6 +171,98 @@ static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, Signatur
     return false;
 }
 
+template<typename M, typename K, typename V>
+miniscript::Availability MsLookupHelper(const M& map, const K& key, V& value)
+{
+    auto it = map.find(key);
+    if (it != map.end()) {
+        value = it->second;
+        return miniscript::Availability::YES;
+    }
+    return miniscript::Availability::NO;
+}
+
+/**
+ * Context for solving a Miniscript.
+ * If enough material (access to keys, hash preimages, ..) is given, produces a valid satisfaction.
+ */
+struct Satisfier {
+    typedef CPubKey Key;
+
+    const SigningProvider& m_provider;
+    SignatureData& m_sig_data;
+    const BaseSignatureCreator& m_creator;
+    const CScript& m_witness_script;
+    //! For now Miniscript is only available under P2WSH.
+    const miniscript::MiniscriptContext m_script_ctx{miniscript::MiniscriptContext::P2WSH};
+
+    explicit Satisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
+                       const BaseSignatureCreator& creator LIFETIMEBOUND,
+                       const CScript& witscript LIFETIMEBOUND) : m_provider(provider),
+                                                                 m_sig_data(sig_data),
+                                                                 m_creator(creator),
+                                                                 m_witness_script(witscript) {}
+
+    static bool KeyCompare(const Key& a, const Key& b) {
+        return a < b;
+    }
+
+    //! Conversion from a raw public key.
+    template <typename I>
+    std::optional<Key> FromPKBytes(I first, I last) const
+    {
+        Key pubkey{first, last};
+        if (pubkey.IsValid()) return pubkey;
+        return {};
+    }
+
+    //! Conversion from a raw public key hash.
+    template<typename I>
+    std::optional<Key> FromPKHBytes(I first, I last) const {
+        assert(last - first == 20);
+        Key pubkey;
+        CKeyID key_id;
+        std::copy(first, last, key_id.begin());
+        if (GetPubKey(m_provider, m_sig_data, key_id, pubkey)) return pubkey;
+        m_sig_data.missing_pubkeys.push_back(key_id);
+        return {};
+    }
+
+    //! Conversion to raw public key.
+    std::vector<unsigned char> ToPKBytes(const CPubKey& key) const { return {key.begin(), key.end()}; }
+
+    //! Satisfy a signature check.
+    miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
+        if (CreateSig(m_creator, m_sig_data, m_provider, sig, key, m_witness_script, SigVersion::WITNESS_V0)) {
+            return miniscript::Availability::YES;
+        }
+        return miniscript::Availability::NO;
+    }
+
+    //! Time lock satisfactions.
+    bool CheckAfter(uint32_t value) const { return m_creator.Checker().CheckLockTime(CScriptNum(value)); }
+    bool CheckOlder(uint32_t value) const { return m_creator.Checker().CheckSequence(CScriptNum(value)); }
+
+
+    //! Hash preimage satisfactions.
+    miniscript::Availability SatSHA256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
+        return MsLookupHelper(m_sig_data.sha256_preimages, hash, preimage);
+    }
+    miniscript::Availability SatRIPEMD160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
+        return MsLookupHelper(m_sig_data.ripemd160_preimages, hash, preimage);
+    }
+    miniscript::Availability SatHASH256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
+        return MsLookupHelper(m_sig_data.hash256_preimages, hash, preimage);
+    }
+    miniscript::Availability SatHASH160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
+        return MsLookupHelper(m_sig_data.hash160_preimages, hash, preimage);
+    }
+
+    miniscript::MiniscriptContext MsContext() const {
+        return m_script_ctx;
+    }
+};
+
 static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, Span<const unsigned char> script_bytes, std::vector<valtype>& result)
 {
     // Only BIP342 tapscript signing is supported for now.
@@ -381,98 +473,6 @@ static CScript PushAll(const std::vector<valtype>& values)
     }
     return result;
 }
-
-template<typename M, typename K, typename V>
-miniscript::Availability MsLookupHelper(const M& map, const K& key, V& value)
-{
-    auto it = map.find(key);
-    if (it != map.end()) {
-        value = it->second;
-        return miniscript::Availability::YES;
-    }
-    return miniscript::Availability::NO;
-}
-
-/**
- * Context for solving a Miniscript.
- * If enough material (access to keys, hash preimages, ..) is given, produces a valid satisfaction.
- */
-struct Satisfier {
-    typedef CPubKey Key;
-
-    const SigningProvider& m_provider;
-    SignatureData& m_sig_data;
-    const BaseSignatureCreator& m_creator;
-    const CScript& m_witness_script;
-    //! For now Miniscript is only available under P2WSH.
-    const miniscript::MiniscriptContext m_script_ctx{miniscript::MiniscriptContext::P2WSH};
-
-    explicit Satisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
-                       const BaseSignatureCreator& creator LIFETIMEBOUND,
-                       const CScript& witscript LIFETIMEBOUND) : m_provider(provider),
-                                                                 m_sig_data(sig_data),
-                                                                 m_creator(creator),
-                                                                 m_witness_script(witscript) {}
-
-    static bool KeyCompare(const Key& a, const Key& b) {
-        return a < b;
-    }
-
-    //! Conversion from a raw public key.
-    template <typename I>
-    std::optional<Key> FromPKBytes(I first, I last) const
-    {
-        Key pubkey{first, last};
-        if (pubkey.IsValid()) return pubkey;
-        return {};
-    }
-
-    //! Conversion from a raw public key hash.
-    template<typename I>
-    std::optional<Key> FromPKHBytes(I first, I last) const {
-        assert(last - first == 20);
-        Key pubkey;
-        CKeyID key_id;
-        std::copy(first, last, key_id.begin());
-        if (GetPubKey(m_provider, m_sig_data, key_id, pubkey)) return pubkey;
-        m_sig_data.missing_pubkeys.push_back(key_id);
-        return {};
-    }
-
-    //! Conversion to raw public key.
-    std::vector<unsigned char> ToPKBytes(const CPubKey& key) const { return {key.begin(), key.end()}; }
-
-    //! Satisfy a signature check.
-    miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
-        if (CreateSig(m_creator, m_sig_data, m_provider, sig, key, m_witness_script, SigVersion::WITNESS_V0)) {
-            return miniscript::Availability::YES;
-        }
-        return miniscript::Availability::NO;
-    }
-
-    //! Time lock satisfactions.
-    bool CheckAfter(uint32_t value) const { return m_creator.Checker().CheckLockTime(CScriptNum(value)); }
-    bool CheckOlder(uint32_t value) const { return m_creator.Checker().CheckSequence(CScriptNum(value)); }
-
-
-    //! Hash preimage satisfactions.
-    miniscript::Availability SatSHA256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
-        return MsLookupHelper(m_sig_data.sha256_preimages, hash, preimage);
-    }
-    miniscript::Availability SatRIPEMD160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
-        return MsLookupHelper(m_sig_data.ripemd160_preimages, hash, preimage);
-    }
-    miniscript::Availability SatHASH256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
-        return MsLookupHelper(m_sig_data.hash256_preimages, hash, preimage);
-    }
-    miniscript::Availability SatHASH160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
-        return MsLookupHelper(m_sig_data.hash160_preimages, hash, preimage);
-    }
-
-    miniscript::MiniscriptContext MsContext() const {
-        return m_script_ctx;
-    }
-};
 
 bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& fromPubKey, SignatureData& sigdata)
 {
