@@ -999,7 +999,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
 
 fs::path ArgsManager::GetConfigFilePath() const
 {
-    return GetConfigFile(GetPathArg("-conf", BITCOIN_CONF_FILENAME));
+    return GetConfigFile(GetPathArg("-conf", SYSCOIN_CONF_FILENAME));
 }
 
 bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)

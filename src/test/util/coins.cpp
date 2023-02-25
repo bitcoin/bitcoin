@@ -20,7 +20,8 @@ COutPoint AddTestCoin(CCoinsViewCache& coins_view)
     COutPoint outpoint{txid, /*nIn=*/0};
     new_coin.nHeight = 1;
     new_coin.out.nValue = InsecureRandMoneyAmount();
-    new_coin.out.scriptPubKey.assign(uint32_t{56}, 1);
+    // SYSCOIN account for extra coin data for assets
+    new_coin.out.scriptPubKey.assign(uint32_t{40}, 1);
     coins_view.AddCoin(outpoint, std::move(new_coin), /*possible_overwrite=*/false);
 
     return outpoint;

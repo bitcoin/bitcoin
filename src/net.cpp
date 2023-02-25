@@ -2363,6 +2363,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 }
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect, MasternodeProbeConn probe) {
+    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn::Is_Connection, probe);
 }
 
