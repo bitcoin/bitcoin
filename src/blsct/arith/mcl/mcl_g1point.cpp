@@ -8,7 +8,7 @@
 
 MclG1Point::MclG1Point()
 {
-    mclBnG1_clear(&m_p);
+//    mclBnG1_clear(&m_p);
 }
 
 MclG1Point::MclG1Point(const std::vector<uint8_t>& v)
