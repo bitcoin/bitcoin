@@ -46,4 +46,9 @@ void Signature::SetVch(const std::vector<uint8_t>& buf)
     }
 }
 
+bool Signature::operator==(const Signature& b) const
+{
+    return mclBnG2_isEqual(&m_data.v, &b.m_data.v);
+}
+
 } // namespace blsct

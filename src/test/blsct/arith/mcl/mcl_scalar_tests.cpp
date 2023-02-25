@@ -16,6 +16,16 @@
 
 BOOST_FIXTURE_TEST_SUITE(mcl_scalar_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(test_default_constructor)
+{
+    MclScalar p;
+    BOOST_CHECK(p.IsZero());
+
+    MclScalar p2;
+    BOOST_CHECK(p.GetVch() == p2.GetVch());
+    BOOST_CHECK(p == p2);
+}
+
 BOOST_AUTO_TEST_CASE(test_ctor_vec_uint8)
 {
     // input vector modulo curve order r should be set to Scalar

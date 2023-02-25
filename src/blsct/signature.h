@@ -21,12 +21,12 @@ class Signature
 public:
     Signature()
     {
-        mclBnG2_clear(&m_data.v);
+        // mclBnG2_clear(&m_data.v);
     }
 
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
 
-
+    bool operator==(const Signature& b) const;
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& b);
 
