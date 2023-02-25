@@ -767,6 +767,8 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
     std::vector<NodeRef> stack;
     /** The queue of instructions. */
     std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
+    /** Predict the number of (static) script ops. */
+    uint32_t ops{0};
 
     while (!todo.empty()) {
         // The expected type we have to construct.
@@ -775,6 +777,72 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
             // Fragment/children have not been decided yet. Decide them.
             auto node_info = ConsumeNode(type_needed);
             if (!node_info) return {};
+            // Update predicted resource limits.
+            switch (node_info->fragment) {
+            case Fragment::JUST_0:
+            case Fragment::JUST_1:
+                break;
+            case Fragment::PK_K:
+                break;
+            case Fragment::PK_H:
+                ops += 3;
+                break;
+            case Fragment::OLDER:
+            case Fragment::AFTER:
+                ops += 1;
+                break;
+            case Fragment::RIPEMD160:
+            case Fragment::SHA256:
+            case Fragment::HASH160:
+            case Fragment::HASH256:
+                ops += 4;
+                break;
+            case Fragment::ANDOR:
+                ops += 3;
+                break;
+            case Fragment::AND_V:
+                break;
+            case Fragment::AND_B:
+            case Fragment::OR_B:
+                ops += 1;
+                break;
+            case Fragment::OR_C:
+                ops += 2;
+                break;
+            case Fragment::OR_D:
+                ops += 3;
+                break;
+            case Fragment::OR_I:
+                ops += 3;
+                break;
+            case Fragment::THRESH:
+                ops += node_info->subtypes.size();
+                break;
+            case Fragment::MULTI:
+                ops += 1;
+                break;
+            case Fragment::WRAP_A:
+                ops += 2;
+                break;
+            case Fragment::WRAP_S:
+                ops += 1;
+                break;
+            case Fragment::WRAP_C:
+                ops += 1;
+                break;
+            case Fragment::WRAP_D:
+                ops += 3;
+                break;
+            case Fragment::WRAP_V:
+                break;
+            case Fragment::WRAP_J:
+                ops += 4;
+                break;
+            case Fragment::WRAP_N:
+                ops += 1;
+                break;
+            }
+            if (ops > MAX_OPS_PER_SCRIPT) return {};
             auto subtypes = node_info->subtypes;
             todo.back().second = std::move(node_info);
             todo.reserve(todo.size() + subtypes.size());
@@ -814,12 +882,18 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
                 assert(node->GetType() << type_needed);
             }
             if (!node->IsValid()) return {};
+            // Update resource predictions.
+            if (node->fragment == Fragment::WRAP_V && node->subs[0]->GetType() << "x"_mst) {
+                ops += 1;
+            }
+            if (ops > MAX_OPS_PER_SCRIPT) return {};
             // Move it to the stack.
             stack.push_back(std::move(node));
             todo.pop_back();
         }
     }
     assert(stack.size() == 1);
+    assert(stack[0]->GetStaticOps() == ops);
     stack[0]->DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
