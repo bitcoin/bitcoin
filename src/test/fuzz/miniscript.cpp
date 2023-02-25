@@ -769,6 +769,9 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
     std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
     /** Predict the number of (static) script ops. */
     uint32_t ops{0};
+    /** Predict the total script size (every unexplored subnode is counted as one, as every leaf is
+     *  at least one script byte). */
+    uint32_t scriptsize{1};
 
     while (!todo.empty()) {
         // The expected type we have to construct.
@@ -777,7 +780,11 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
             // Fragment/children have not been decided yet. Decide them.
             auto node_info = ConsumeNode(type_needed);
             if (!node_info) return {};
-            // Update predicted resource limits.
+            // Update predicted resource limits. Since every leaf Miniscript node is at least one
+            // byte long, we move one byte from each child to their parent. A similar technique is
+            // used in the miniscript::internal::Parse function to prevent runaway string parsing.
+            scriptsize += miniscript::internal::ComputeScriptLen(node_info->fragment, ""_mst, node_info->subtypes.size(), node_info->k, node_info->subtypes.size(), node_info->keys.size()) - 1;
+            if (scriptsize > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
             switch (node_info->fragment) {
             case Fragment::JUST_0:
             case Fragment::JUST_1:
@@ -834,6 +841,8 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
                 ops += 3;
                 break;
             case Fragment::WRAP_V:
+                // We don't account for OP_VERIFY here; that will be corrected for when the actual
+                // node is constructed below.
                 break;
             case Fragment::WRAP_J:
                 ops += 4;
@@ -885,8 +894,10 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
             // Update resource predictions.
             if (node->fragment == Fragment::WRAP_V && node->subs[0]->GetType() << "x"_mst) {
                 ops += 1;
+                scriptsize += 1;
             }
             if (ops > MAX_OPS_PER_SCRIPT) return {};
+            if (scriptsize > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
             // Move it to the stack.
             stack.push_back(std::move(node));
             todo.pop_back();
@@ -894,6 +905,7 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
     }
     assert(stack.size() == 1);
     assert(stack[0]->GetStaticOps() == ops);
+    assert(stack[0]->ScriptSize() == scriptsize);
     stack[0]->DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
