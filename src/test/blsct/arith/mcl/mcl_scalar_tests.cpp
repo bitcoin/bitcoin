@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(test_ctor_vec_uint8)
     }
     {
         uint256 ui(order_r_be);
-        MclScalar a(order_r_be);
+        MclScalar a(ui);
         BOOST_CHECK_EQUAL(a.GetString(), "0");
     }
 
