@@ -1118,7 +1118,7 @@ private:
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
     // SYSCOIN
-    void ThreadOpenMasternodeConnections();
+    void ThreadOpenMasternodeConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
