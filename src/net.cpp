@@ -2030,6 +2030,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
 void CConnman::ThreadOpenMasternodeConnections()
 {
+    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     // Connecting to specific addresses, no masternode connections available
     if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
         return;
