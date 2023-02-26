@@ -13,7 +13,6 @@
 #include <masternode/sync.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
-#include <script/sign.h>
 #include <shutdown.h>
 #include <util/irange.h>
 #include <util/moneystr.h>
@@ -575,7 +574,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, con
 
     // STEP 2: make sure our own inputs/outputs are present, otherwise refuse to sign
 
-    std::vector<CTxIn> sigs;
+    std::map<COutPoint, Coin> coins;
 
     for (const auto &entry: vecEntries) {
         // Check that the final transaction has all our outputs
@@ -618,32 +617,48 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, con
                 return false;
             }
 
-            LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- Signing my input %i\n", __func__, nMyInputIndex);
-            // TODO we're using amount=0 here but we should use the correct amount. This works because Dash ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
-            if (!SignSignature(*mixingWallet.GetSolvingProvider(prevPubKey), prevPubKey, finalMutableTransaction, nMyInputIndex, 0, int(SIGHASH_ALL | SIGHASH_ANYONECANPAY))) { // changes scriptSig
-                LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- Unable to sign my own transaction!\n", __func__);
-                // not sure what to do here, it will time out...?
-            }
-
-            sigs.push_back(finalMutableTransaction.vin[nMyInputIndex]);
-            LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- nMyInputIndex: %d, sigs.size(): %d, scriptSig=%s\n",
-                     __func__, nMyInputIndex, (int) sigs.size(),ScriptToAsmStr(finalMutableTransaction.vin[nMyInputIndex].scriptSig));
+            LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- found my input %i\n", __func__, nMyInputIndex);
+            // add a pair with an empty value
+            coins[finalMutableTransaction.vin.at(nMyInputIndex).prevout];
         }
     }
 
-    if (sigs.empty()) {
+    // fill values for found outpoints
+    mixingWallet.chain().findCoins(coins);
+    std::map<int, std::string> signing_errors;
+    mixingWallet.SignTransaction(finalMutableTransaction, coins, SIGHASH_ALL | SIGHASH_ANYONECANPAY, signing_errors);
+
+    for (const auto& [input_index, error_string] : signing_errors) {
+        // NOTE: this is a partial signing so it's expected for SignTransaction to return
+        // "Input not found or already spent" errors for inputs that aren't ours
+        if (error_string != "Input not found or already spent") {
+            LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- signing input %d failed: %s!\n", __func__, input_index, error_string);
+            UnlockCoins();
+            keyHolderStorage.ReturnAll();
+            SetNull();
+            return false;
+        }
+    }
+
+    std::vector<CTxIn> signed_inputs;
+    for (const auto& txin : finalMutableTransaction.vin) {
+        if (coins.find(txin.prevout) != coins.end()) {
+            signed_inputs.push_back(txin);
+        }
+    }
+
+    if (signed_inputs.empty()) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- can't sign anything!\n", __func__);
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();
-
         return false;
     }
 
     // push all of our signatures to the Masternode
-    LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- pushing sigs to the masternode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
+    LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- pushing signed inputs to the masternode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
     CNetMsgMaker msgMaker(peer.GetSendVersion());
-    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
+    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::DSSIGNFINALTX, signed_inputs));
     SetState(POOL_STATE_SIGNING);
     nTimeLastSuccessfulStep = GetTime();
 
@@ -1541,7 +1556,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
         txCollateral.vout.emplace_back(0, CScript() << OP_RETURN);
     }
 
-    if (!SignSignature(*mixingWallet.GetSolvingProvider(txout.scriptPubKey), txout.scriptPubKey, txCollateral, 0, txout.nValue, SIGHASH_ALL)) {
+    if (!mixingWallet.SignTransaction(txCollateral)) {
         strReason = "Unable to sign collateral transaction!";
         return false;
     }
