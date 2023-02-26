@@ -192,8 +192,8 @@ static RPCHelpMan bls_generate()
     {
         LOCK(cs_main);
         bls_legacy_scheme = !llmq::CLLMQUtils::IsV19Active(node.chainman->ActiveHeight());
-        if (!request.params[1].isNull()) {
-            bls_legacy_scheme = request.params[1].get_bool();
+        if (!request.params[0].isNull()) {
+            bls_legacy_scheme = request.params[0].get_bool();
         }
     }
     UniValue ret(UniValue::VOBJ);
