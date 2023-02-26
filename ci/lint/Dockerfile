@@ -1,29 +1,6 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Codespaces
-Marketplace
-Explore
- 
-@mowjoejoejoejoe 
-Your account has been flagged.
-Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed.
-https-www-bitore-net
-/
-demo-repository
-Private
-Fork your own copy of https-www-bitore-net/demo-repository
-Code
-Issues
-1
-Pull requests
-4
-Actions
-Projects
-Security
-Insights
-Settings
+BEGIN
+GLOW4
+!#/User/bin/Bash/
 .github/workflows/Rust.yml
 Revert "Update and rename .github/workflows/auto-assign.yml to ci :C:… #44
 Jobs
