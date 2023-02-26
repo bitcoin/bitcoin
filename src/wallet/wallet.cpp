@@ -4458,23 +4458,12 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
     if (!walletInstance->AutoBackupWallet(walletFile, error, warnings) && !error.original.empty()) {
         return nullptr;
     }
-    AddWallet(walletInstance);
-    auto unload_wallet = [&](const bilingual_str& strError) {
-        RemoveWallet(walletInstance, std::nullopt);
-        error = strError;
-        return nullptr;
-    };
-    DBErrors nLoadWalletRet;
-    try {
-        nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
-    } catch (const std::exception& e) {
-        RemoveWallet(walletInstance, std::nullopt);
-        throw;
-    }
+    DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK)
     {
         if (nLoadWalletRet == DBErrors::CORRUPT) {
-            return unload_wallet(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
+            error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
+            return nullptr;
         }
         else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR)
         {
@@ -4483,14 +4472,17 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
                 walletFile));
         }
         else if (nLoadWalletRet == DBErrors::TOO_NEW) {
-            return unload_wallet(strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, PACKAGE_NAME));
+            error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, PACKAGE_NAME);
+            return nullptr;
         }
         else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
-            return unload_wallet(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME));
+            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME);
+            return nullptr;
         }
         else {
-            return unload_wallet(strprintf(_("Error loading %s"), walletFile));
+            error = strprintf(_("Error loading %s"), walletFile);
+            return nullptr;
         }
     }
 
@@ -4511,12 +4503,14 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
                     CHDChain newHdChain;
                     std::vector<unsigned char> vchSeed = ParseHex(strSeed);
                     if (!newHdChain.SetSeed(SecureVector(vchSeed.begin(), vchSeed.end()), true)) {
-                        return unload_wallet(strprintf(_("%s failed"), "SetSeed"));
+                        error = strprintf(_("%s failed"), "SetSeed");
+                        return nullptr;
                     }
                     LOCK(walletInstance->cs_wallet);
                     if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
                         if (!spk_man->SetHDChainSingle(newHdChain, false)) {
-                            return unload_wallet(strprintf(_("%s failed"), "SetHDChainSingle"));
+                            error = strprintf(_("%s failed"), "SetHDChainSingle");
+                            return nullptr;
                         }
                     }
                     // add default account
@@ -4550,7 +4544,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
             LOCK(walletInstance->cs_wallet);
             if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
                 if (spk_man->CanGenerateKeys() && !spk_man->TopUp()) {
-                    return unload_wallet(_("Unable to generate initial keys"));
+                    error = _("Unable to generate initial keys");
+                    return nullptr;
                 }
             }
         }
@@ -4561,7 +4556,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         bilingual_str strBackupError;
         if(!walletInstance->AutoBackupWallet("", strBackupError, warnings)) {
             if (!strBackupError.original.empty()) {
-                return unload_wallet(strBackupError);
+                error = strBackupError;
+                return nullptr;
             }
         }
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
@@ -4578,12 +4574,12 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
     else if (gArgs.IsArgSet("-usehd")) {
         bool useHD = gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD) {
-            return unload_wallet(strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"),
-                                walletInstance->GetName()));
+            error = strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"), walletInstance->GetName());
+            return nullptr;
         }
         if (!walletInstance->IsHDEnabled() && useHD) {
-            return unload_wallet(strprintf(_("Error loading %s: You can't enable HD on an already existing non-HD wallet"),
-                                walletInstance->GetName()));
+            error = strprintf(_("Error loading %s: You can't enable HD on an already existing non-HD wallet"), walletInstance->GetName());
+            return nullptr;
         }
     }
 
@@ -4724,7 +4720,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
             }
 
             if (rescan_height != block_height) {
-                return unload_wallet(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
+                error = _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)");
+                return nullptr;
             }
         }
 
@@ -4750,12 +4747,15 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         {
             WalletRescanReserver reserver(walletInstance.get());
             if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), {} /* stop block */, reserver, true /* update */).status)) {
-                return unload_wallet(_("Failed to rescan the wallet during initialization"));
+                error = _("Failed to rescan the wallet during initialization");
+                return nullptr;
             }
         }
         walletInstance->ChainStateFlushed(chain.getTipLocator());
         walletInstance->database->IncrementUpdateCounter();
     }
+
+    coinJoinClientManagers.emplace(std::make_pair(walletInstance->GetName(), std::make_shared<CCoinJoinClientManager>(*walletInstance, ::masternodeSync)));
 
     {
         LOCK(cs_wallets);
