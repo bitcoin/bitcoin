@@ -41,8 +41,9 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // The number of bytes consumed by coin's heap data, i.e. CScript
     // (prevector<28, unsigned char>) when assigned 56 bytes of data per above.
     //
-    // See also: Coin::DynamicMemoryUsage().
-    constexpr unsigned int COIN_SIZE = is_64_bit ? 1328 : 1312;
+    // See also: Coin::DynamicMemoryUsage(). Size depends on TxOutCompression,
+    // should update this value when range proofs are added to the compressor.
+    constexpr unsigned int COIN_SIZE = is_64_bit ? 80 : 64;
 
     auto print_view_mem_usage = [](CCoinsViewCache& view) {
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
