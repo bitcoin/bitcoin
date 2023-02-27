@@ -4,22 +4,72 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
 
+import json
 import os
-from test_framework.authproxy import JSONRPCException
+from dataclasses import dataclass
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
 from threading import Thread
+from typing import Optional
 import subprocess
 
 
-def expect_http_status(expected_http_status, expected_rpc_code,
-                       fcn, *args):
-    try:
-        fcn(*args)
-        raise AssertionError(f"Expected RPC error {expected_rpc_code}, got none")
-    except JSONRPCException as exc:
-        assert_equal(exc.error["code"], expected_rpc_code)
-        assert_equal(exc.http_status, expected_http_status)
+RPC_INVALID_PARAMETER = -8
+RPC_METHOD_NOT_FOUND  = -32601
+RPC_INVALID_REQUEST   = -32600
+
+
+@dataclass
+class BatchOptions:
+    version: Optional[int] = None
+    notification: bool = False
+    request_fields: Optional[dict] = None
+    response_fields: Optional[dict] = None
+
+
+def format_request(options, idx, fields):
+    request = {}
+    if options.version == 1:
+        request.update(version="1.1")
+    elif options.version == 2:
+        request.update(jsonrpc="2.0")
+    elif options.version is not None:
+        raise NotImplementedError(f"Unknown JSONRPC version {options.version}")
+    if not options.notification:
+        request.update(id=idx)
+    request.update(fields)
+    if options.request_fields:
+        request.update(options.request_fields)
+    return request
+
+
+def format_response(options, idx, fields):
+    response = {}
+    response.update(id=None if options.notification else idx)
+    response.update(result=None, error=None)
+    response.update(fields)
+    if options.response_fields:
+        response.update(options.response_fields)
+    return response
+
+
+def send_raw_rpc(node, raw_body: bytes) -> tuple[object, int]:
+    return node._request("POST", "/", raw_body)
+
+
+def send_json_rpc(node, body: object) -> tuple[object, int]:
+    raw = json.dumps(body).encode("utf-8")
+    return send_raw_rpc(node, raw)
+
+
+def expect_http_rpc_status(expected_http_status, expected_rpc_error_code, node, method, params, version=1, notification=False):
+    req = format_request(BatchOptions(version, notification), 0, {"method": method, "params": params})
+    response, status = send_json_rpc(node, req)
+
+    if expected_rpc_error_code is not None:
+        assert_equal(response["error"]["code"], expected_rpc_error_code)
+
+    assert_equal(status, expected_http_status)
 
 
 def test_work_queue_getblock(node, got_exceeded_error):
@@ -51,34 +101,38 @@ class RPCInterfaceTest(BitcoinTestFramework):
     def test_batch_request(self):
         self.log.info("Testing basic JSON-RPC batch request...")
 
-        results = self.nodes[0].batch([
+        calls = [
             # A basic request that will work fine.
-            {"method": "getblockcount", "id": 1},
+            {"method": "getblockcount"},
             # Request that will fail.  The whole batch request should still
             # work fine.
-            {"method": "invalidmethod", "id": 2},
+            {"method": "invalidmethod"},
             # Another call that should succeed.
-            {"method": "getblockhash", "id": 3, "params": [0]},
-        ])
+            {"method": "getblockhash", "params": [0]},
+        ]
+        results = [
+            {"result": 0},
+            {"error": {"code": RPC_METHOD_NOT_FOUND, "message": "Method not found"}},
+            {"result": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"},
+            {"error": {"code": RPC_INVALID_REQUEST, "message": "Missing method"}},
+        ]
 
-        result_by_id = {}
-        for res in results:
-            result_by_id[res["id"]] = res
+        request = []
+        response = []
+        for idx, (call, result) in enumerate(zip(calls, results), 1):
+            options = BatchOptions()
+            request.append(format_request(options, idx, call))
+            response.append(format_response(options, idx, result))
 
-        assert_equal(result_by_id[1]['error'], None)
-        assert_equal(result_by_id[1]['result'], 0)
-
-        assert_equal(result_by_id[2]['error']['code'], -32601)
-        assert_equal(result_by_id[2]['result'], None)
-
-        assert_equal(result_by_id[3]['error'], None)
-        assert result_by_id[3]['result'] is not None
+        rpc_response, http_status = send_json_rpc(self.nodes[0], request)
+        assert_equal(http_status, 200)
+        assert_equal(rpc_response, response)
 
     def test_http_status_codes(self):
         self.log.info("Testing HTTP status codes for JSON-RPC requests...")
 
-        expect_http_status(404, -32601, self.nodes[0].invalidmethod)
-        expect_http_status(500, -8, self.nodes[0].getblockhash, 42)
+        expect_http_rpc_status(404, RPC_METHOD_NOT_FOUND,  self.nodes[0], "invalidmethod", [])
+        expect_http_rpc_status(500, RPC_INVALID_PARAMETER, self.nodes[0], "getblockhash", [42])
 
     def test_work_queue_exceeded(self):
         self.log.info("Testing work queue exceeded...")
