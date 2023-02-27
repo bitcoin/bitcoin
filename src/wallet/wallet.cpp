@@ -4031,7 +4031,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 return false;
             }
         } else {
-            // Labels for everything else (send) should be cloned to all
+            // Labels for everything else ("send") should be cloned to all
             if (data.watchonly_wallet) {
                 LOCK(data.watchonly_wallet->cs_wallet);
                 // Add to the watchonly. Preserve the labels, purpose, and change-ness
@@ -4040,7 +4040,6 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 if (!addr_pair.second.IsChange()) {
                     data.watchonly_wallet->m_address_book[addr_pair.first].SetLabel(label);
                 }
-                continue;
             }
             if (data.solvable_wallet) {
                 LOCK(data.solvable_wallet->cs_wallet);
@@ -4050,7 +4049,6 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 if (!addr_pair.second.IsChange()) {
                     data.solvable_wallet->m_address_book[addr_pair.first].SetLabel(label);
                 }
-                continue;
             }
         }
     }
