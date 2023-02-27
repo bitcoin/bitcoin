@@ -177,6 +177,12 @@ BOOST_AUTO_TEST_CASE(test_ctor_vec_uint8)
             BOOST_CHECK_EQUAL(a.GetString().c_str(), "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
         }
     }
+
+    /// default
+    {
+        MclScalar a;
+        BOOST_CHECK(mclBnFr_isZero(&a.m_fr) != 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_add)

@@ -19,6 +19,8 @@ namespace blsct {
 class Signature
 {
 public:
+    Signature();
+
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
 
     std::vector<uint8_t> GetVch() const;

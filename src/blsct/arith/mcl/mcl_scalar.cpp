@@ -4,6 +4,12 @@
 
 #include <blsct/arith/mcl/mcl_scalar.h>
 
+MclScalar::MclScalar()
+{
+    // Replacement of mclBnFr_clear to avoid segfault in static context
+    std::memset(&m_fr, 0, sizeof(MclScalar::UnderlyingType));
+}
+
 MclScalar::MclScalar(const int64_t& n)
 {
     mclBnFr_setInt(&m_fr, n);  // this takes int64_t
