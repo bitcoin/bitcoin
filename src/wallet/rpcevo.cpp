@@ -239,8 +239,8 @@ static RPCHelpMan protx_register()
         v19active = llmq::CLLMQUtils::IsV19Active(*pwallet->chain().getHeight());
     }
     bool specific_legacy_bls_scheme{!v19active};
-    if(request.params.size() >= 10) {
-        specific_legacy_bls_scheme = request.params[9].get_bool();
+    if(request.params.size() >= 11) {
+        specific_legacy_bls_scheme = request.params[10].get_bool();
     }
     if (specific_legacy_bls_scheme)
         ptx.nVersion = CProRegTx::LEGACY_BLS_VERSION;
@@ -758,7 +758,6 @@ static RPCHelpMan protx_update_service()
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
-
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered public key"));
     }
@@ -938,8 +937,8 @@ static RPCHelpMan protx_revoke()
             },
             RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
-                    HelpExampleCli("protx_update_registrar", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 0 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
-                + HelpExampleRpc("protx_update_registrar", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", 0, \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
+                    HelpExampleCli("protx_revoke", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 0 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
+                + HelpExampleRpc("protx_revoke", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", 0, \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
             },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
