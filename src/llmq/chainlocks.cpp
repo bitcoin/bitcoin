@@ -125,7 +125,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     if (!llmq::CSigningManager::VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, *llmq::quorumManager, clsig.getHeight(), requestId, clsig.getBlockHash(), clsig.getSig())) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
-            LOCK(cs_main);
             Misbehaving(from, 10);
         }
         return;

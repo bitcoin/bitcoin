@@ -10,6 +10,7 @@
 
 class ChainstateManager;
 class CTxMemPool;
+class CBlockPolicyEstimator;
 struct LLMQContext;
 struct NodeContext;
 struct WalletContext;
@@ -19,6 +20,7 @@ using CoreContext = std::variant<std::nullopt_t,
                                  std::reference_wrapper<WalletContext>,
                                  std::reference_wrapper<CTxMemPool>,
                                  std::reference_wrapper<ChainstateManager>,
+                                 std::reference_wrapper<CBlockPolicyEstimator>,
                                  std::reference_wrapper<LLMQContext>>;
 
 template<typename T>

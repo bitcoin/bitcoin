@@ -12,6 +12,8 @@
 
 class ArgsManager;
 class BanMan;
+class CAddrMan;
+class CBlockPolicyEstimator;
 class CConnman;
 class CScheduler;
 class CTxMemPool;
@@ -36,8 +38,10 @@ class WalletClient;
 //! any member functions. It should just be a collection of references that can
 //! be used without pulling in unwanted dependencies or functionality.
 struct NodeContext {
+    std::unique_ptr<CAddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
+    std::unique_ptr<CBlockPolicyEstimator> fee_estimator;
     std::unique_ptr<PeerLogicValidation> peer_logic;
     ChainstateManager* chainman{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     std::unique_ptr<BanMan> banman;

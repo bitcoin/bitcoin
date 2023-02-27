@@ -4,12 +4,14 @@
 
 #include <node/context.h>
 
+#include <addrman.h>
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <llmq/context.h>
 #include <evo/evodb.h>
 #include <net.h>
 #include <net_processing.h>
+#include <policy/fees.h>
 #include <scheduler.h>
 #include <txmempool.h>
 

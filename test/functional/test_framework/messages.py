@@ -255,7 +255,7 @@ class CAddress:
         self.ip = "0.0.0.0"
         self.port = 0
 
-    def deserialize(self, f, with_time=True):
+    def deserialize(self, f, *, with_time=True):
         """Deserialize from addrv1 format (pre-BIP155)"""
         if with_time:
             # VERSION messages serialize CAddress objects without time
@@ -267,7 +267,7 @@ class CAddress:
         self.ip = socket.inet_ntoa(f.read(4))
         self.port = struct.unpack(">H", f.read(2))[0]
 
-    def serialize(self, with_time=True):
+    def serialize(self, *, with_time=True):
         """Serialize in addrv1 format (pre-BIP155)"""
         assert self.net == self.NET_IPV4
         r = b""
@@ -1371,10 +1371,10 @@ class msg_version:
         self.nServices = struct.unpack("<Q", f.read(8))[0]
         self.nTime = struct.unpack("<q", f.read(8))[0]
         self.addrTo = CAddress()
-        self.addrTo.deserialize(f, False)
+        self.addrTo.deserialize(f, with_time=False)
 
         self.addrFrom = CAddress()
-        self.addrFrom.deserialize(f, False)
+        self.addrFrom.deserialize(f, with_time=False)
         self.nNonce = struct.unpack("<Q", f.read(8))[0]
         self.strSubVer = deser_string(f)
 
@@ -1394,8 +1394,8 @@ class msg_version:
         r += struct.pack("<i", self.nVersion)
         r += struct.pack("<Q", self.nServices)
         r += struct.pack("<q", self.nTime)
-        r += self.addrTo.serialize(False)
-        r += self.addrFrom.serialize(False)
+        r += self.addrTo.serialize(with_time=False)
+        r += self.addrFrom.serialize(with_time=False)
         r += struct.pack("<Q", self.nNonce)
         r += ser_string(self.strSubVer)
         r += struct.pack("<i", self.nStartingHeight)

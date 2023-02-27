@@ -129,7 +129,8 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
+        node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
+        node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
         chain = interfaces::MakeChain(node);
         wallet = std::make_unique<CWallet>(chain.get(), "", CreateMockWalletDatabase());
         bool firstRun;
@@ -229,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
     // Tests with single outpoint tallyItem
     {
         CompactTallyItem tallyItem = GetTallyItem({4999});
-        CTransactionBuilder txBuilder(wallet, tallyItem);
+        CTransactionBuilder txBuilder(wallet, tallyItem, *m_node.fee_estimator);
 
         BOOST_CHECK_EQUAL(txBuilder.CountOutputs(), 0);
         BOOST_CHECK_EQUAL(txBuilder.GetAmountInitial(), tallyItem.nAmount);
@@ -266,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
     // Tests with multiple outpoint tallyItem
     {
         CompactTallyItem tallyItem = GetTallyItem({10000, 20000, 30000, 40000, 50000});
-        CTransactionBuilder txBuilder(wallet, tallyItem);
+        CTransactionBuilder txBuilder(wallet, tallyItem, *m_node.fee_estimator);
         std::vector<CTransactionBuilderOutput*> vecOutputs;
         bilingual_str strResult;
 

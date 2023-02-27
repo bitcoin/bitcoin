@@ -21,7 +21,6 @@
 #include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
@@ -153,8 +152,6 @@ uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
-
-CBlockPolicyEstimator feeEstimator;
 
 // Internal stuff
 namespace {

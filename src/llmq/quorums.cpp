@@ -611,7 +611,6 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     auto errorHandler = [&](const std::string& strError, int nScore = 10) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pfrom.GetId());
         if (nScore > 0) {
-            LOCK(cs_main);
             Misbehaving(pfrom.GetId(), nScore);
         }
     };

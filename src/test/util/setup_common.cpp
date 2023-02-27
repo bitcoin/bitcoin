@@ -4,6 +4,7 @@
 
 #include <test/util/setup_common.h>
 
+#include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
@@ -28,6 +29,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <noui.h>
+#include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
@@ -130,11 +132,12 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
+    m_node.addrman = std::make_unique<CAddrMan>();
     m_node.chain = interfaces::MakeChain(m_node);
     g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
-    connman = std::make_unique<CConnman>(0x1337, 0x1337);
+    connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     deterministicMNManager.reset(new CDeterministicMNManager(*m_node.evodb, *connman));
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     static bool noui_connected = false;
@@ -169,12 +172,12 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
-    m_node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
-    m_node.mempool->setSanityCheck(1.0);
+    m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
+    m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
 
     m_node.chainman = &::g_chainman;
 
-    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
@@ -210,10 +213,11 @@ ChainTestingSetup::~ChainTestingSetup()
     ::governance.reset();
     ::sporkManager.reset();
     m_node.connman.reset();
+    m_node.addrman.reset();
+    m_node.args = nullptr;
     m_node.banman.reset();
     UnloadBlockIndex(m_node.mempool.get());
     m_node.mempool.reset();
-    m_node.args = nullptr;
     m_node.scheduler.reset();
     m_node.llmq_ctx.reset();
     m_node.chainman->Reset();
@@ -241,7 +245,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peer_logic = std::make_unique<PeerLogicValidation>(
-        *m_node.connman, m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx
+        *m_node.connman, *m_node.addrman, m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx
     );
     {
         CConnman::Options options;

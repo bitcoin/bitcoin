@@ -55,14 +55,14 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
 
     if (qc.IsNull()) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, peer.GetId());
-        WITH_LOCK(cs_main, Misbehaving(peer.GetId(), 100));
+        Misbehaving(peer.GetId(), 100);
         return;
     }
 
     if (!Params().HasLLMQ(qc.llmqType)) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                  ToUnderlying(qc.llmqType), peer.GetId());
-        WITH_LOCK(cs_main, Misbehaving(peer.GetId(), 100));
+        Misbehaving(peer.GetId(), 100);
         return;
     }
     auto type = qc.llmqType;
@@ -125,7 +125,7 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
                  __func__, qc.quorumHash.ToString(),
                  ToUnderlying(qc.llmqType), qc.quorumIndex, qc.nVersion, peer.GetId());
-        WITH_LOCK(cs_main, Misbehaving(peer.GetId(), 100));
+        Misbehaving(peer.GetId(), 100);
         return;
     }
 

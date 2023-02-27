@@ -113,7 +113,6 @@ void CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv)
     vRecv >> dsq;
 
     if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
-        LOCK(cs_main);
         Misbehaving(peer.GetId(), 100);
         return;
     }
@@ -123,7 +122,6 @@ void CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv)
         if (auto dmn = mnList.GetValidMN(dsq.m_protxHash)) {
             dsq.masternodeOutpoint = dmn->collateralOutpoint;
         } else {
-            LOCK(cs_main);
             Misbehaving(peer.GetId(), 10);
             return;
         }
@@ -159,7 +157,6 @@ void CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv)
     }
 
     if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-        LOCK(cs_main);
         Misbehaving(peer.GetId(), 10);
         return;
     }

@@ -219,7 +219,6 @@ void CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, std::str
         } else {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
             if ((exception.GetNodePenalty() != 0) && ::masternodeSync->IsSynced()) {
-                LOCK(cs_main);
                 Misbehaving(peer.GetId(), exception.GetNodePenalty());
             }
             return;
@@ -625,7 +624,6 @@ void CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
     if (netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
-        LOCK(cs_main);
         Misbehaving(peer.GetId(), 20);
         return;
     }

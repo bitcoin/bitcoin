@@ -120,7 +120,6 @@
 #include <zmq/zmqrpc.h>
 #endif
 
-static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
@@ -135,8 +134,6 @@ static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 #else
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
-
-static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 
 static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 /**
@@ -281,22 +278,14 @@ void PrepareShutdown(NodeContext& node)
     node.peer_logic.reset();
     node.connman.reset();
     node.banman.reset();
+    node.addrman.reset();
 
     if (node.mempool && node.mempool->IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
     }
 
-    if (fFeeEstimatesInitialized)
-    {
-        ::feeEstimator.FlushUnconfirmed();
-        fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-        CAutoFile est_fileout(fsbridge::fopen(est_path, "wb"), SER_DISK, CLIENT_VERSION);
-        if (!est_fileout.IsNull())
-            ::feeEstimator.Write(est_fileout);
-        else
-            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
-        fFeeEstimatesInitialized = false;
-    }
+    // Drop transactions we were still watching, and record fee estimations.
+    if (node.fee_estimator) node.fee_estimator->Flush();
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
@@ -405,6 +394,7 @@ void Shutdown(NodeContext& node)
     globalVerifyHandle.reset();
     ECC_Stop();
     node.mempool.reset();
+    node.fee_estimator.reset();
     node.chainman = nullptr;
     node.scheduler.reset();
 
@@ -1761,28 +1751,33 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
 
+    // see Step 2: parameter interactions for more information about these
+    fListen = args.GetBoolArg("-listen", DEFAULT_LISTEN);
+    fDiscover = args.GetBoolArg("-discover", true);
+    g_relay_txes = !args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+
+    assert(!node.addrman);
+    node.addrman = std::make_unique<CAddrMan>();
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
-    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
+    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()), *node.addrman);
 
-    // Make mempool generally available in the node context. For example the connection manager, wallet, or RPC threads,
-    // which are all started after this, may use it from the node context.
+    assert(!node.fee_estimator);
+    // Don't initialize fee estimation with old data if we don't relay transactions,
+    // as they would never get updated.
+    if (g_relay_txes) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
+
     assert(!node.mempool);
-    node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
-    if (node.mempool) {
-        int ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
-        if (ratio != 0) {
-            node.mempool->setSanityCheck(1.0 / ratio);
-        }
-    }
+    int check_ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+    node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
     assert(!node.chainman);
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
     node.peer_logic.reset(new PeerLogicValidation(
-        *node.connman, node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
+        *node.connman, *node.addrman, node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
     ));
     RegisterValidationInterface(node.peer_logic.get());
 
@@ -1893,11 +1888,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             SetReachable(NET_ONION, true);
         }
     }
-
-    // see Step 2: parameter interactions for more information about these
-    fListen = args.GetBoolArg("-listen", DEFAULT_LISTEN);
-    fDiscover = args.GetBoolArg("-discover", true);
-    g_relay_txes = !args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
     for (const std::string& strAddr : args.GetArgs("-externalip")) {
         CService addrLocal;
@@ -2264,13 +2254,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         return false;
     }
 
-    fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
-    // Allowed to fail as this file IS missing on first startup.
-    if (!est_filein.IsNull())
-        ::feeEstimator.Read(est_filein);
-    fFeeEstimatesInitialized = true;
-
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
@@ -2325,7 +2308,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.mempool, *node.connman, ::masternodeSync);
 #ifdef ENABLE_WALLET
-    ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, ::masternodeSync);
+    if (g_relay_txes) {
+        ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, ::masternodeSync);
+    }
 #endif // ENABLE_WALLET
 
     g_wallet_init_interface.InitCoinJoinSettings();
@@ -2396,8 +2381,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*::coinJoinServer)), std::chrono::seconds{1});
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET
-    } else if(CCoinJoinClientOptions::IsEnabled()) {
-        node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.mempool), std::ref(*node.connman)), std::chrono::seconds{1});
+    } else if (g_relay_txes && CCoinJoinClientOptions::IsEnabled()) {
+        node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.connman), std::ref(*node.fee_estimator), std::ref(*node.mempool)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }
 

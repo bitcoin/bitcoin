@@ -222,6 +222,9 @@ public:
     /** Calculation of highest target that estimates are tracked for */
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
+    /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
+    void Flush();
+
 private:
     mutable CCriticalSection m_cs_fee_estimator;
 

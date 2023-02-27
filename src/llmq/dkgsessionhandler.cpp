@@ -429,7 +429,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         if (!p.second) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to deserialize message, peer=%d\n", __func__, nodeId);
             {
-                LOCK(cs_main);
                 Misbehaving(nodeId, 100);
             }
             continue;
@@ -439,7 +438,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
             if (ban) {
                 LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, nodeId);
                 {
-                    LOCK(cs_main);
                     Misbehaving(nodeId, 100);
                 }
             }
@@ -470,7 +468,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         session.ReceiveMessage(*p.second, ban);
         if (ban) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
-            LOCK(cs_main);
             Misbehaving(nodeId, 100);
             badNodes.emplace(nodeId);
         }

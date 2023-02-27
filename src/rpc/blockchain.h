@@ -16,6 +16,7 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
+class CBlockPolicyEstimator;
 class CTxMemPool;
 class ChainstateManager;
 class UniValue;
@@ -55,8 +56,9 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_size);
 
 NodeContext& EnsureNodeContext(const CoreContext& context);
-LLMQContext& EnsureLLMQContext(const CoreContext& context);
 CTxMemPool& EnsureMemPool(const CoreContext& context);
 ChainstateManager& EnsureChainman(const CoreContext& context);
+CBlockPolicyEstimator& EnsureFeeEstimator(const CoreContext& context);
+LLMQContext& EnsureLLMQContext(const CoreContext& context);
 
 #endif

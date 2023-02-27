@@ -130,7 +130,6 @@ void CSporkManager::ProcessSpork(const CNode& peer, CConnman& connman, CDataStre
     }
 
     if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
-        LOCK(cs_main);
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
         Misbehaving(peer.GetId(), 100);
         return;
@@ -139,7 +138,6 @@ void CSporkManager::ProcessSpork(const CNode& peer, CConnman& connman, CDataStre
     auto opt_keyIDSigner = spork.GetSignerKeyID();
 
     if (opt_keyIDSigner == std::nullopt || WITH_LOCK(cs, return !setSporkPubKeyIDs.count(*opt_keyIDSigner))) {
-        LOCK(cs_main);
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
         Misbehaving(peer.GetId(), 100);
         return;

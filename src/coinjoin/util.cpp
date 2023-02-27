@@ -107,7 +107,7 @@ bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
     return true;
 }
 
-CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn) :
+CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn, const CBlockPolicyEstimator& fee_estimator) :
     pwallet(pwalletIn),
     dummyReserveDestination(pwalletIn.get()),
     tallyItem(tallyItemIn)
@@ -115,7 +115,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
     // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
     coinControl.m_discard_feerate = ::GetDiscardRate(*pwallet);
     // Generate a feerate which will be used by calculations of this class and also by CWallet::CreateTransaction
-    coinControl.m_feerate = std::max(::feeEstimator.estimateSmartFee(int(pwallet->m_confirm_target), nullptr, true), pwallet->m_pay_tx_fee);
+    coinControl.m_feerate = std::max(fee_estimator.estimateSmartFee(int(pwallet->m_confirm_target), nullptr, true), pwallet->m_pay_tx_fee);
     // Change always goes back to origin
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation

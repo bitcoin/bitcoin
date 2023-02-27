@@ -75,7 +75,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
-    "policy/fees -> txmempool -> validation -> policy/fees"
     "policy/policy -> policy/settings -> policy/policy"
     "evo/specialtxman -> validation -> evo/specialtxman"
 
