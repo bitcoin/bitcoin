@@ -970,6 +970,7 @@ libbitcoinkernel_la_SOURCES = \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
+  blsct/signature.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
