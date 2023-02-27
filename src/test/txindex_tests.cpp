@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
+#include <util/threadpool.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -75,6 +76,47 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(txindex_parallel_initial_sync, TestChain100Setup)
+{
+    int tip_height = 100; // pre-mined blocks
+    const uint16_t MINE_BLOCKS = 650;
+    for (int round = 0; round < 2; round++) { // two rounds to test sync from genesis and from a higher block
+        // Generate blocks
+        mineBlocks(MINE_BLOCKS);
+        const CBlockIndex* tip = WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip());
+        BOOST_REQUIRE(tip->nHeight == MINE_BLOCKS + tip_height);
+        tip_height = tip->nHeight;
+
+        // Init and start index
+        TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, /*f_memory=*/false);
+        BOOST_REQUIRE(txindex.Init());
+        std::shared_ptr<ThreadPool> thread_pool = std::make_shared<ThreadPool>();
+        thread_pool->Start(2);
+        txindex.SetThreadPool(thread_pool);
+        txindex.SetTasksPerWorker(200);
+
+        BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
+        BOOST_REQUIRE(txindex.StartBackgroundSync());
+
+        // Allow tx index to catch up with the block index.
+        IndexWaitSynced(txindex, *Assert(m_node.shutdown));
+
+        // Check that txindex has all txs that were in the chain before it started.
+        CTransactionRef tx_disk;
+        uint256 block_hash;
+        for (const auto& txn : m_coinbase_txns) {
+            if (!txindex.FindTx(txn->GetHash(), block_hash, tx_disk)) {
+                BOOST_ERROR("FindTx failed");
+            } else if (tx_disk->GetHash() != txn->GetHash()) {
+                BOOST_ERROR("Read incorrect tx");
+            }
+        }
+
+        txindex.Interrupt();
+        txindex.Stop();
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
