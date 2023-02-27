@@ -40,7 +40,7 @@ Below is one way of developing a new implementation of `Generic Arith Classes`:
 
 3. Obtain `Scalar` and `Point` classes from the type parameter in the user class. If `Scalars` and/or `Points` class(es) are needed, use `Elements` class which is a helper class to generate a vector class of `Scalar` or `Point` with commonly used functions.
 
-   Below is an example taken from [range_proof_logic.h](../range_proof/range_proof_logic.h):
+Below is an example taken from [range_proof_logic.h](../range_proof/range_proof_logic.h):
 
 ```c++
     template <typename T>
