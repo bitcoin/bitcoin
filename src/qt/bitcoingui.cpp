@@ -939,7 +939,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 {
 #ifdef ENABLE_WALLET
     if (walletFrame != nullptr) {
-        overviewButton->setEnabled(enabled);
+        // NOTE: overviewButton is always enabled
         sendCoinsButton->setEnabled(enabled);
         coinJoinCoinsButton->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
         receiveCoinsButton->setEnabled(enabled);
