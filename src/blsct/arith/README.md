@@ -57,7 +57,7 @@ Below is one way of developing a new implementation of `Generic Arith Classes`:
 
 ## Example implementation and user class
 ### Implementation
-- [Mcl](../arith/mcl/mcl.h) -- the top-level class of `Generic Arith Classes` implementation
+- [Mcl](../arith/mcl/mcl.h) -- the top-level class of `Generic Arith Classes` implementation 
 - [MclScalar](../arith/mcl/mcl_scalar.h) -- `Scalar` implementation of `Mcl`
 - [MclG1Point](../arith/mcl/mcl_g1point.h) -- `Point` implementation of `Mcl`
 
