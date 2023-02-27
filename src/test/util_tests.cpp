@@ -149,6 +149,18 @@ BOOST_AUTO_TEST_CASE(parse_hex)
     result = ParseHex(" 89 34 56 78");
     BOOST_CHECK(result.size() == 4 && result[0] == 0x89 && result[1] == 0x34 && result[2] == 0x56 && result[3] == 0x78);
 
+    // Mixed case and spaces are supported
+    result = ParseHex("     Ff        aA    ");
+    BOOST_CHECK(result.size() == 2 && result[0] == 0xff && result[1] == 0xaa);
+
+    // Empty string is supported
+    result = ParseHex("");
+    BOOST_CHECK(result.size() == 0);
+
+    // Spaces between nibbles is treated as end
+    result = ParseHex("AAF F");
+    BOOST_CHECK(result.size() == 1 && result[0] == 0xaa);
+
     // Embedded null is treated as end
     const std::string with_embedded_null{" 11 "s
                                          " \0 "
@@ -160,6 +172,10 @@ BOOST_AUTO_TEST_CASE(parse_hex)
     // Stop parsing at invalid value
     result = ParseHex("1234 invalid 1234");
     BOOST_CHECK(result.size() == 2 && result[0] == 0x12 && result[1] == 0x34);
+
+    // Truncated input is treated as end
+    result = ParseHex("12 3");
+    BOOST_CHECK(result.size() == 1 && result[0] == 0x12);
 }
 
 BOOST_AUTO_TEST_CASE(util_HexStr)
