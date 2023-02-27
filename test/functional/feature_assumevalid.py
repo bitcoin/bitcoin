@@ -47,17 +47,20 @@ from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, set_node_times)
 
+
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
+
 class AssumeValidTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = ["-dip3params=9000:9000", "-checkblockindex=0"]
+        self.rpc_timeout = 120
 
     def setup_network(self):
         self.add_nodes(3)
@@ -196,6 +199,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
         self.assert_blockchain_height(self.nodes[2], 101)
+
 
 if __name__ == '__main__':
     AssumeValidTest().main()
