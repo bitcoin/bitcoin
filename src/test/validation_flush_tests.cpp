@@ -38,9 +38,6 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         return outp;
     };
 
-    std::cout << "sizeof CTxOutBLSCTData " << sizeof(CTxOutBLSCTData) << "\n";
-    std::cout << "sizeof CTxOutBLSCTData optional " << sizeof(std::optional<CTxOutBLSCTData>) << "\n";
-
     // The number of bytes consumed by coin's heap data, i.e. CScript
     // (prevector<28, unsigned char>) when assigned 56 bytes of data per above.
     //
@@ -66,7 +63,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
                                                                   << " " << ((view.DynamicMemoryUsage() != 16) ? "true" : "false"));
     if (view.DynamicMemoryUsage() != 32 && view.DynamicMemoryUsage() != 16) {
         // Add a bunch of coins to see that we at least flip over to CRITICAL.
-
+        BOOST_TEST_MESSAGE("after condition");
         for (int i{0}; i < 1000; ++i) {
             COutPoint res = add_coin(view);
             BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << " coin " << i);
