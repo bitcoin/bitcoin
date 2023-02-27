@@ -12,6 +12,12 @@
 
 namespace blsct {
 
+Signature::Signature()
+{
+    // Replacement of mclBnG2_clear to avoid segfault in static context
+    std::memset(&m_data.v, 0, sizeof(mclBnG2));
+}
+
 Signature Signature::Aggregate(const std::vector<blsct::Signature>& sigs)
 {
     std::vector<blsSignature> bls_sigs;

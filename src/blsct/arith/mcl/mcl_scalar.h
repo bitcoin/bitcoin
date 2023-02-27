@@ -28,10 +28,7 @@ using namespace std::literals::string_literals;
 class MclScalar
 {
 public:
-    MclScalar()
-    {
-    }
-
+    MclScalar();
     MclScalar(const int64_t& n);
     MclScalar(const std::vector<uint8_t>& v);
     template <size_t L>

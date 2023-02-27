@@ -8,7 +8,8 @@
 
 MclG1Point::MclG1Point()
 {
-//    mclBnG1_clear(&m_p);
+    // Replacement of mclBnG1_clear to avoid segfault in static context
+    std::memset(&m_p, 0, sizeof(MclG1Point::UnderlyingType));
 }
 
 MclG1Point::MclG1Point(const std::vector<uint8_t>& v)
