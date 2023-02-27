@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 
         for (int i{0}; i < 1000; ++i) {
             COutPoint res = add_coin(view);
+            BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << " coin " << i);
             BOOST_CHECK_EQUAL(view.AccessCoin(res).DynamicMemoryUsage(), COIN_SIZE);
         }
 
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 
     for (int i{0}; i < COINS_UNTIL_CRITICAL; ++i) {
         COutPoint res = add_coin(view);
-        print_view_mem_usage(view);
+        BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << " coin " << 1000 + i);
         BOOST_CHECK_EQUAL(view.AccessCoin(res).DynamicMemoryUsage(), COIN_SIZE);
         BOOST_CHECK_EQUAL(
             chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes=*/0),
@@ -96,7 +97,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // Adding some additional coins will push us over the edge to CRITICAL.
     for (int i{0}; i < 4; ++i) {
         add_coin(view);
-        print_view_mem_usage(view);
+        BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << " coin " << 1003 + i);
         if (chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes=*/0) ==
             CoinsCacheSizeState::CRITICAL) {
             break;
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 
     for (int i{0}; i < 3; ++i) {
         add_coin(view);
-        print_view_mem_usage(view);
+        BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << " coin " << 1007 + i);
         BOOST_CHECK_EQUAL(
             chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes=*/1 << 10),
             CoinsCacheSizeState::OK);
@@ -139,6 +140,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // Using the default max_* values permits way more coins to be added.
     for (int i{0}; i < 1000; ++i) {
         add_coin(view);
+        BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage() << " coin " << 1010 + i);
         BOOST_CHECK_EQUAL(
             chainstate.GetCoinsCacheSizeState(),
             CoinsCacheSizeState::OK);
