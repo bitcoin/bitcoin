@@ -257,7 +257,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         imports0 = self.nodes[0].get_wallet_rpc("imports0")
         assert_equal(imports0.getwalletinfo()["descriptors"], False)
 
-        # Exteranl address label
+        # External address label
         imports0.setlabel(default.getnewaddress(), "external")
 
         # Normal non-watchonly tx
@@ -309,6 +309,13 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(watchonly.getbalance(), watchonly_bal)
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", watchonly.gettransaction, received_txid)
         assert_equal(len(watchonly.listtransactions(include_watchonly=True)), 3)
+
+        # Check that labels were migrated and persisted to watchonly wallet
+        self.nodes[0].unloadwallet("imports0_watchonly")
+        self.nodes[0].loadwallet("imports0_watchonly")
+        labels = watchonly.listlabels()
+        assert "external" in labels
+        assert "imported" in labels
 
     def test_no_privkeys(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -396,11 +403,75 @@ class WalletMigrationTest(BitcoinTestFramework):
     def test_encrypted(self):
         self.log.info("Test migration of an encrypted wallet")
         wallet = self.create_legacy_wallet("encrypted")
+        default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 
         wallet.encryptwallet("pass")
+        addr = wallet.getnewaddress()
+        txid = default.sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1)
+        bals = wallet.getbalances()
 
-        assert_raises_rpc_error(-15, "Error: migratewallet on encrypted wallets is currently unsupported.", wallet.migratewallet)
-        # TODO: Fix migratewallet so that we can actually migrate encrypted wallets
+        assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", wallet.migratewallet)
+        assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", wallet.migratewallet, None, "badpass")
+        assert_raises_rpc_error(-4, "The passphrase contains a null character", wallet.migratewallet, None, "pass\0with\0null")
+
+        wallet.migratewallet(passphrase="pass")
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], True)
+        assert_equal(info["format"], "sqlite")
+        assert_equal(info["unlocked_until"], 0)
+        wallet.gettransaction(txid)
+
+        assert_equal(bals, wallet.getbalances())
+
+    def test_unloaded(self):
+        self.log.info("Test migration of a wallet that isn't loaded")
+        wallet = self.create_legacy_wallet("notloaded")
+        default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        addr = wallet.getnewaddress()
+        txid = default.sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1)
+        bals = wallet.getbalances()
+
+        wallet.unloadwallet()
+
+        assert_raises_rpc_error(-8, "RPC endpoint wallet and wallet_name parameter specify different wallets", wallet.migratewallet, "someotherwallet")
+        assert_raises_rpc_error(-8, "Either RPC endpoint wallet or wallet_name parameter must be provided", self.nodes[0].migratewallet)
+        self.nodes[0].migratewallet("notloaded")
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], True)
+        assert_equal(info["format"], "sqlite")
+        wallet.gettransaction(txid)
+
+        assert_equal(bals, wallet.getbalances())
+
+    def test_unloaded_by_path(self):
+        self.log.info("Test migration of a wallet that isn't loaded, specified by path")
+        wallet = self.create_legacy_wallet("notloaded2")
+        default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        addr = wallet.getnewaddress()
+        txid = default.sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1)
+        bals = wallet.getbalances()
+
+        wallet.unloadwallet()
+
+        wallet_file_path = os.path.join(self.nodes[0].datadir, "regtest", "wallets", "notloaded2")
+        self.nodes[0].migratewallet(wallet_file_path)
+
+        # Because we gave the name by full path, the loaded wallet's name is that path too.
+        wallet = self.nodes[0].get_wallet_rpc(wallet_file_path)
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], True)
+        assert_equal(info["format"], "sqlite")
+        wallet.gettransaction(txid)
+
+        assert_equal(bals, wallet.getbalances())
 
     def run_test(self):
         self.generate(self.nodes[0], 101)
@@ -412,6 +483,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_no_privkeys()
         self.test_pk_coinbases()
         self.test_encrypted()
+        self.test_unloaded()
+        self.test_unloaded_by_path()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()

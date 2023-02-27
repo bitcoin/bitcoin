@@ -6,6 +6,7 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
+#include <attributes.h>
 #include <crypto/common.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
@@ -196,6 +197,30 @@ public:
         // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
+    }
+};
+
+/** Writes data to an underlying source stream, while hashing the written data. */
+template <typename Source>
+class HashedSourceWriter : public CHashWriter
+{
+private:
+    Source& m_source;
+
+public:
+    explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : CHashWriter{source.GetType(), source.GetVersion()}, m_source{source} {}
+
+    void write(Span<const std::byte> src)
+    {
+        m_source.write(src);
+        CHashWriter::write(src);
+    }
+
+    template <typename T>
+    HashedSourceWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
     }
 };
 
