@@ -92,6 +92,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">સરનામાં ની સૂચિ નો નિકાસ કરો</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">નિકાસ ની પ્ર્રાક્રિયા નિષ્ફળ ગયેલ છે</translation>
     </message>
@@ -239,6 +244,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -303,6 +329,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">ચિઠ્ઠી</translation>

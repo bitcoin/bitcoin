@@ -381,10 +381,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Earráid ag léamh %s! Léigh gach eochair i gceart, ach d’fhéadfadh sonraí idirbhirt nó iontrálacha leabhar seoltaí a bheidh in easnamh nó mícheart.</translation>
     </message>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">Earráid: Theip ar éisteacht le naisc teacht-isteach (chuir éist earráid %s ar ais)</translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation type="unfinished">Theip ar mheastachán táillí. Tá fallbackfee díchumasaithe. Fan cúpla bloc nó cumasaigh -fallbackfee.</translation>
     </message>
@@ -557,10 +553,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Earráid ag léamh ón mbunachar sonraí, ag múchadh.</translation>
     </message>
     <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">Earráid ag uasghrádú bunachar sonraí chainstate</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low for %s</source>
         <translation type="unfinished">Earráid: Tá spás ar diosca íseal do %s</translation>
     </message>
@@ -635,10 +627,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Is gá port a shainiú le -whitebind: '%s'</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation type="unfinished">Níl seachfhreastalaí sainithe. Úsáid -proxy=&lt;ip&gt; nó -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -783,10 +771,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Catagóir logáil gan tacaíocht %s=%s.</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">Ag uasghrádú bunachar sonraí UTXO</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
@@ -1015,6 +999,11 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">Níl aon sparán ar fáil</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">Ainm Sparán</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1455,6 +1444,30 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
 </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(de %n GB teastáil)</numerusform>
+            <numerusform>(de %n GB teastáil)</numerusform>
+            <numerusform>(de %n GB teastáil)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform>(%n GB teastáil do slabhra iomlán)</numerusform>
+            <numerusform>(%n GB teastáil do slabhra iomlán)</numerusform>
+            <numerusform>(%n GB teastáil do slabhra iomlán)</numerusform>
+        </translation>
+    </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Ar a laghad stórálfar %1 GB de shonraí  sa comhadlann seo, agus fásfaidh sé le himeacht ama.</translation>
@@ -1499,10 +1512,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">Mar gurb é seo an chéad uair a lainseáil an clár, is féidir leat a roghnú cá stórálfaidh %1 a chuid sonraí.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">Nuair a chliceálann tú Togha, tosóidh %1 ag íoslódáil agus ag próiseáil an blocshlabhra iomlán %4 (%2GB) ag tosú leis na hidirbhearta is luaithe %3 nuair a lainseáil %4 i dtosach.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -1777,10 +1786,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Úsáid seachfhreastalaí SOCKS5 ar leith chun sroicheadh piaraí trí sheirbhísí Tor oinniún:</translation>
     </message>
     <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation type="unfinished">Tá na roghanna socraithe sa dialóg seo sáraithe ag líne na n-orduithe nó sa chomhad cumraíochta:</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;Togha</translation>
     </message>
@@ -1798,14 +1803,17 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">Deimhnigh athshocrú roghanna</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">Atosú cliant ag teastáil chun athruithe a ghníomhachtú.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">Múchfar an cliant. Ar mhaith leat dul ar aghaidh?</translation>
     </message>
     <message>
@@ -2827,10 +2835,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">Meastar gur táille áiféiseach ard í táille níos airde ná %1.</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">Iarratas íocaíocht éagtha.</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -2911,28 +2915,12 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Teachtaireacht:</translation>
     </message>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">Iarratas íocaíocht neamhfíordheimhnithe é seo.</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">Iarratas íocaíocht fíordheimhnithe é seo.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished">Iontráil lipéad don seoladh seo chun é a chur le liosta na seoltaí úsáidte</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished">Teachtaireacht a bhí ceangailte leis an bitcoin: URI a stórálfar leis an idirbheart le haghaidh do thagairt. Nóta: Ní sheolfar an teachtaireacht seo thar líonra Bitcoin.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">Íoc chuig:</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">Meamram:</translation>
     </message>
 </context>
 <context>
@@ -3093,30 +3081,22 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished">faoi choimhlint le idirbheart le %1 dearbhuithe</translation>
     </message>
     <message>
-        <source>0/unconfirmed, %1</source>
-        <translation type="unfinished">0/neamhdheimhnithe, %1</translation>
-    </message>
-    <message>
-        <source>in memory pool</source>
-        <translation type="unfinished">i linn cuimhne</translation>
-    </message>
-    <message>
-        <source>not in memory pool</source>
-        <translation type="unfinished">ní i linn cuimhne</translation>
-    </message>
-    <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">tréigthe</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1/neamhdheimhnithe</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 dearbhuithe</translation>
     </message>
     <message>
