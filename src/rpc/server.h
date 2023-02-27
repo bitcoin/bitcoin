@@ -181,7 +181,7 @@ extern CRPCTable tableRPC;
 void StartRPC();
 void InterruptRPC();
 void StopRPC();
-std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
+UniValue JSONRPCExec(const JSONRPCRequest& jreq);
 
 // Drop witness when serializing for RPC?
 bool RPCSerializationWithoutWitness();

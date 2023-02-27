@@ -185,7 +185,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         // Set the URI
         jreq.URI = req->GetURI();
 
-        std::string strReply;
+        UniValue reply;
         bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
             LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
@@ -200,13 +200,12 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
             }
-            UniValue result = tableRPC.execute(jreq);
 
-            // Send reply
-            strReply = JSONRPCReply(result, NullUniValue, jreq.id);
+            reply = JSONRPCExec(jreq);
 
         // array of requests
         } else if (valRequest.isArray()) {
+            // Check authorization for each request's method
             if (user_has_whitelist) {
                 for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
                     if (!valRequest[reqIdx].isObject()) {
@@ -223,13 +222,27 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                     }
                 }
             }
-            strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
+
+            // Execute each request
+            UniValue ret(UniValue::VARR);
+            for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
+                // Batches include errors in the batch response, they do not throw
+                try {
+                    jreq.parse(valRequest[reqIdx]);
+                    ret.push_back(JSONRPCExec(jreq));
+                } catch (const UniValue& objError) {
+                    ret.push_back(JSONRPCReplyObj(NullUniValue, objError, jreq.id));
+                } catch (const std::exception& e) {
+                    ret.push_back(JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id));
+                }
+            }
+            reply = ret;
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
         req->WriteHeader("Content-Type", "application/json");
-        req->WriteReply(HTTP_OK, strReply);
+        req->WriteReply(HTTP_OK, reply.write() + "\n");
     } catch (const UniValue& objError) {
         JSONErrorReply(req, objError, jreq.id);
         return false;
