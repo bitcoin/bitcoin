@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // If the initial memory allocations of cacheCoins don't match these common
     // cases, we can't really continue to make assertions about memory usage.
     // End the test early.
+    BOOST_TEST_MESSAGE("CCoinsViewCache memory usage pre check: " << view.DynamicMemoryUsage());
     if (view.DynamicMemoryUsage() != 32 && view.DynamicMemoryUsage() != 16) {
         // Add a bunch of coins to see that we at least flip over to CRITICAL.
 
