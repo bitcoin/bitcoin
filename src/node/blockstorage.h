@@ -164,6 +164,12 @@ public:
     bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB(const Consensus::Params& consensus_params) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    /**
+     * Remove any pruned block & undo files that are still on disk.
+     * This could happen on some systems if the file was still being read while unlinked,
+     * or if we crash before unlinking.
+     */
+    void ScanAndUnlinkAlreadyPrunedFiles() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     // SYSCOIN
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header, enum BlockStatus nStatus = BLOCK_VALID_TREE) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
