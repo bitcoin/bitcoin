@@ -20,7 +20,7 @@ static const int INIT_PROTO_VERSION = 209;
 static const int MIN_PEER_PROTO_VERSION = 70215;
 
 //! minimum proto version of masternode to accept in DKGs
-static const int MIN_MASTERNODE_PROTO_VERSION = 70221;
+static const int MIN_MASTERNODE_PROTO_VERSION = 70227;
 
 //! protocol version is included in MNAUTH starting with this version
 static const int MNAUTH_NODE_VER_VERSION = 70218;
