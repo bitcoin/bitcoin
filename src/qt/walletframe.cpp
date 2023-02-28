@@ -14,7 +14,6 @@
 
 #include <cassert>
 
-#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -32,7 +31,7 @@ WalletFrame::WalletFrame(BitcoinGUI* _gui) :
     walletFrameLayout->addWidget(walletStack);
 
     // hbox for no wallet
-    QGroupBox* no_wallet_group = new QGroupBox(walletStack);
+    no_wallet_group = new QGroupBox(walletStack);
     QVBoxLayout* no_wallet_layout = new QVBoxLayout(no_wallet_group);
 
     QLabel *noWallet = new QLabel(tr("No wallet has been loaded.\nGo to File > Open Wallet to load a wallet.\n- OR -"));
@@ -172,6 +171,12 @@ void WalletFrame::gotoGovernancePage()
 void WalletFrame::gotoOverviewPage()
 {
     QMap<WalletModel*, WalletView*>::const_iterator i;
+
+    if (mapWalletViews.empty()) {
+        walletStack->setCurrentWidget(no_wallet_group);
+        return;
+    }
+
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoOverviewPage();
 }
