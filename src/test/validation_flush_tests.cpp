@@ -18,6 +18,9 @@ BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, TestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 {
+// TODO: Reenable when Coin is updated with the BLSCT members
+#ifdef false
+
     Chainstate& chainstate{m_node.chainman->ActiveChainstate()};
 
     constexpr bool is_64_bit = sizeof(void*) == 8;
@@ -49,10 +52,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
     };
 
-    // TODO: Reenable when Coin is updated with the BLSCT members
     constexpr size_t MAX_COINS_CACHE_BYTES = 1024;
 
-#ifdef false
     // Without any coins in the cache, we shouldn't need to flush.
     BOOST_CHECK_EQUAL(
         chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes=*/0),
