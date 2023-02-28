@@ -90,6 +90,7 @@ include(cmake/introspection.cmake)
 
 include(cmake/crc32c.cmake)
 include(cmake/leveldb.cmake)
+include(cmake/minisketch.cmake)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
