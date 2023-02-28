@@ -38,6 +38,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 # Configurable options.
 # When adding a new option, end the <help_text> with a full stop for consistency.
 include(CMakeDependentOption)
+option(ASM "Use assembly routines." ON)
 cmake_dependent_option(CXX20 "Enable compilation in C++20 mode." OFF "NOT MSVC" ON)
 
 if(CXX20)
@@ -145,6 +146,7 @@ else()
   message(" - LDFLAGS for executables ............ ${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
   message(" - LDFLAGS for shared libraries ....... ${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 endif()
+message("Use assembly routines ................. ${ASM}")
 message("\n")
 if(configure_warnings)
     message("  ******\n")
