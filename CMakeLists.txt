@@ -50,6 +50,41 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(configure_warnings)
 
+if(WIN32)
+  #[=[
+  This build system supports two ways to build binaries for Windows.
+
+  1. Building on Windows using MSVC.
+  Implementation notes:
+  - /DWIN32 and /D_WINDOWS definitions are included into the CMAKE_CXX_FLAGS_INIT
+    and CMAKE_CXX_FLAGS_INIT variables by default.
+  - A run-time library is selected using the CMAKE_MSVC_RUNTIME_LIBRARY variable.
+  - MSVC-specific options, for example, /Zc:__cplusplus, are additionally required.
+
+  2. Cross-compiling using MinGW.
+  Implementation notes:
+  - WIN32 and _WINDOWS definitions must be provided explicitly.
+  - A run-time library must be specified explicitly using _MT definition.
+  ]=]
+
+  add_compile_definitions(_WIN32_WINNT=0x0601 _WIN32_IE=0x0501 WIN32_LEAN_AND_MEAN NOMINMAX)
+
+  if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    add_compile_options(/utf-8 /Zc:__cplusplus)
+  endif()
+
+  if(MINGW)
+    add_compile_definitions(WIN32 _WINDOWS _MT)
+    # We require Windows 7 (NT 6.1) or later.
+    add_link_options(-Wl,--major-subsystem-version,6 -Wl,--minor-subsystem-version,1)
+  endif()
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  add_compile_definitions(MAC_OSX)
+endif()
+
 include(CheckSourceCompilesAndLinks)
 include(cmake/introspection.cmake)
 
