@@ -218,10 +218,12 @@ class MiniWallet:
         txid: get the first utxo we find from a specific transaction
         """
         self._utxos = sorted(self._utxos, key=lambda k: (k['value'], -k['height']))  # Put the largest utxo last
+        blocks_height = self._test_node.getblockchaininfo()['blocks']
+        mature_coins = list(filter(lambda utxo: not utxo['coinbase'] or COINBASE_MATURITY - 1 <= blocks_height - utxo['height'], self._utxos))
         if txid:
             utxo_filter: Any = filter(lambda utxo: txid == utxo['txid'], self._utxos)
         else:
-            utxo_filter = reversed(self._utxos)  # By default the largest utxo
+            utxo_filter = reversed(mature_coins)  # By default the largest utxo
         if vout is not None:
             utxo_filter = filter(lambda utxo: vout == utxo['vout'], utxo_filter)
         index = self._utxos.index(next(utxo_filter))
