@@ -14,6 +14,7 @@ from test_framework.util import (
     create_confirmed_utxos,
 )
 
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class MempoolUnbroadcastTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -51,6 +52,13 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         txFS = node.signrawtransactionwithwallet(txF["hex"])
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
 
+        # check transactions are in unbroadcast using rpc
+        mempoolinfo = self.nodes[0].getmempoolinfo()
+        assert_equal(mempoolinfo['unbroadcastcount'], 2)
+        mempool = self.nodes[0].getrawmempool(True)
+        for tx in mempool:
+            assert_equal(mempool[tx]['unbroadcast'], True)
+
         # check that second node doesn't have these two txns
         mempool = self.nodes[1].getrawmempool()
         assert rpc_tx_hsh not in mempool
@@ -63,24 +71,30 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
 
         # fast forward into the future & ensure that the second node has the txns
-        node.mockscheduler(15 * 60)  # 15 min in seconds
+        node.mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools(timeout=30)
         mempool = self.nodes[1].getrawmempool()
         assert rpc_tx_hsh in mempool
         assert wallet_tx_hsh in mempool
 
+        # check that transactions are no longer in first node's unbroadcast set
+        mempool = self.nodes[0].getrawmempool(True)
+        for tx in mempool:
+            assert_equal(mempool[tx]['unbroadcast'], False)
+
         self.log.info("Add another connection & ensure transactions aren't broadcast again")
 
         conn = node.add_p2p_connection(P2PTxInvStore())
-        node.mockscheduler(15 * 60)
-        time.sleep(5)
+        node.mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
+        time.sleep(2) # allow sufficient time for possibility of broadcast
         assert_equal(len(conn.get_invs()), 0)
+
+        self.disconnect_nodes(0, 1)
+        node.disconnect_p2ps()
 
     def test_txn_removal(self):
         self.log.info("Test that transactions removed from mempool are removed from unbroadcast set")
         node = self.nodes[0]
-        self.disconnect_nodes(0, 1)
-        node.disconnect_p2ps()
 
         # since the node doesn't have any connections, it will not receive
         # any GETDATAs & thus the transaction will remain in the unbroadcast set.

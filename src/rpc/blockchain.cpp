@@ -494,6 +494,7 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
         {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "parent transaction id"}}},
     RPCResult{RPCResult::Type::ARR, "spentby", "unconfirmed transactions spending outputs from this transaction",
         {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "child transaction id"}}},
+    RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
     RPCResult{RPCResult::Type::BOOL, "time", "True if this transaction was locked via InstantSend"}
 };}
 
@@ -544,6 +545,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
 
     info.pushKV("spentby", spent);
     info.pushKV("instantlock", isman ? (isman->IsLocked(tx.GetHash()) ? "true" : "false") : "unknown");
+    info.pushKV("unbroadcast", pool.IsUnbroadcastTx(tx.GetHash()));
 }
 
 UniValue MempoolToJSON(const CTxMemPool& pool, llmq::CInstantSendManager* isman, bool verbose)
@@ -1756,7 +1758,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, llmq::CInstantSendManager& is
     ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK()));
     ret.pushKV("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     ret.pushKV("instantsendlocks", (int64_t)isman.GetInstantSendLockCount());
-
+    ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
     return ret;
 }
 
@@ -1776,6 +1778,7 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
                 {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
                 {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
                 {RPCResult::Type::NUM, "instantsendlocks", "Number of unconfirmed InstantSend locks"},
+                {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"}
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")

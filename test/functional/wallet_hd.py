@@ -99,8 +99,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.sync_all()
 
         # Needs rescan
-        self.stop_node(1)
-        self.start_node(1, extra_args=self.extra_args[1] + ['-rescan'])
+        self.restart_node(1, extra_args=self.extra_args[1] + ['-rescan'])
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         # Try a RPC based rescan

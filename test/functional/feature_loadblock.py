@@ -71,8 +71,7 @@ class LoadblockTest(BitcoinTestFramework):
                        check=True)
 
         self.log.info("Restart second, unsynced node with bootstrap file")
-        self.stop_node(1)
-        self.start_node(1, ["-loadblock=" + bootstrap_file])
+        self.restart_node(1, extra_args=["-loadblock=" + bootstrap_file])
         assert_equal(self.nodes[1].getblockcount(), 100)  # start_node is blocking on all block files being imported
 
         assert_equal(self.nodes[1].getblockchaininfo()['blocks'], 100)

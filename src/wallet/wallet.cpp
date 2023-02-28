@@ -2306,10 +2306,6 @@ void CWallet::ResendWalletTransactions()
     nNextResend = GetTime() + (1 * 60 * 60) + GetRand(2 * 60 * 60);
     if (fFirst) return;
 
-    // Only do it if there's been a new block since last time
-    if (m_best_block_time < nLastResend) return;
-    nLastResend = GetTime();
-
     int submitted_tx_count = 0;
 
     { // cs_wallet scope

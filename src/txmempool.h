@@ -750,16 +750,25 @@ public:
     /** Adds a transaction to the unbroadcast set */
     void AddUnbroadcastTx(const uint256& txid) {
         LOCK(cs);
-        m_unbroadcast_txids.insert(txid);
+        // Sanity Check: the transaction should also be in the mempool
+        if (exists(txid)) {
+            m_unbroadcast_txids.insert(txid);
+        }
     }
 
     /** Removes a transaction from the unbroadcast set */
     void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
 
     /** Returns transactions in unbroadcast set */
-    const std::set<uint256> GetUnbroadcastTxs() const {
+    std::set<uint256> GetUnbroadcastTxs() const {
         LOCK(cs);
         return m_unbroadcast_txids;
+    }
+
+    /** Returns whether a txid is in the unbroadcast set */
+    bool IsUnbroadcastTx(const uint256& txid) const {
+        LOCK(cs);
+        return (m_unbroadcast_txids.count(txid) != 0);
     }
 
 private:

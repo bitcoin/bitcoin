@@ -88,8 +88,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Keep node connected and let it try to reorg the chain")
         good_tip = self.nodes[0].getbestblockhash()
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
-        self.stop_node(0)
-        self.start_node(0)
+        self.restart_node(0)
         self.connect_nodes(0, 1)
         assert self.nodes[0].getbestblockhash() == good_tip
         self.nodes[0].invalidateblock(good_tip)
@@ -119,11 +118,9 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.log.info("Should switch to the best non-conflicting tip (not to the most work chain) on restart")
         assert int(self.nodes[0].getblock(bad_tip)["chainwork"], 16) > int(self.nodes[1].getblock(good_tip)["chainwork"], 16)
-        self.stop_node(0)
-        self.start_node(0)
+        self.restart_node(0)
         self.nodes[0].invalidateblock(good_fork)
-        self.stop_node(0)
-        self.start_node(0)
+        self.restart_node(0)
         time.sleep(1)
         assert self.nodes[0].getbestblockhash() == good_tip
 

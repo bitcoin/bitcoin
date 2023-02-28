@@ -450,8 +450,7 @@ class WalletTest(BitcoinTestFramework):
 
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
-        self.stop_node(0)
-        self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
+        self.restart_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
 
         # wait until the wallet has submitted all transactions to the mempool
         wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
