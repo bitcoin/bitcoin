@@ -91,6 +91,9 @@ include(cmake/introspection.cmake)
 include(cmake/crc32c.cmake)
 include(cmake/leveldb.cmake)
 
+include(CheckStdFilesystem)
+check_std_filesystem()
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
   check_pie_supported(OUTPUT_VARIABLE check_pie_output LANGUAGES CXX)
