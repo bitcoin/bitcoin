@@ -880,15 +880,15 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-bool CheckDataDirOption()
+bool CheckDataDirOption(const ArgsManager& args)
 {
-    const fs::path datadir{gArgs.GetPathArg("-datadir")};
+    const fs::path datadir{args.GetPathArg("-datadir")};
     return datadir.empty() || fs::is_directory(fs::absolute(datadir));
 }
 
-fs::path GetConfigFile(const fs::path& configuration_file_path)
+fs::path GetConfigFile(const ArgsManager& args, const fs::path& configuration_file_path)
 {
-    return AbsPathForConfigVal(configuration_file_path, /*net_specific=*/false);
+    return AbsPathForConfigVal(args, configuration_file_path, /*net_specific=*/false);
 }
 
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
@@ -981,7 +981,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
 
 fs::path ArgsManager::GetConfigFilePath() const
 {
-    return GetConfigFile(GetPathArg("-conf", BITCOIN_CONF_FILENAME));
+    return GetConfigFile(*this, GetPathArg("-conf", BITCOIN_CONF_FILENAME));
 }
 
 bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
@@ -1040,7 +1040,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
-                std::ifstream conf_file_stream{GetConfigFile(fs::PathFromString(conf_file_name))};
+                std::ifstream conf_file_stream{GetConfigFile(*this, fs::PathFromString(conf_file_name))};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
@@ -1068,8 +1068,8 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     // If datadir is changed in .conf file:
-    gArgs.ClearPathCache();
-    if (!CheckDataDirOption()) {
+    ClearPathCache();
+    if (!CheckDataDirOption(*this)) {
         error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
         return false;
     }
@@ -1409,12 +1409,12 @@ int64_t GetStartupTime()
     return nStartupTime;
 }
 
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
+fs::path AbsPathForConfigVal(const ArgsManager& args, const fs::path& path, bool net_specific)
 {
     if (path.is_absolute()) {
         return path;
     }
-    return fsbridge::AbsPathJoin(net_specific ? gArgs.GetDataDirNet() : gArgs.GetDataDirBase(), path);
+    return fsbridge::AbsPathJoin(net_specific ? args.GetDataDirNet() : args.GetDataDirBase(), path);
 }
 
 void ScheduleBatchPriority()
