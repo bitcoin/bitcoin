@@ -49,7 +49,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
     };
 
-    constexpr size_t MAX_COINS_CACHE_BYTES = 1024;
+    // TODO: Update when Coin is updated with the BLSCT members
+    constexpr size_t MAX_COINS_CACHE_BYTES = 1500000;
 
     // Without any coins in the cache, we shouldn't need to flush.
     BOOST_CHECK_EQUAL(
