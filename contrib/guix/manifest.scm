@@ -566,7 +566,7 @@ inspecting signatures in Mach-O binaries.")
 (packages->manifest
  (append
   (list ;; The Basics
-        bash
+        bash-minimal
         which
         coreutils
         util-linux
