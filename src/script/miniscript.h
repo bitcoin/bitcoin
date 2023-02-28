@@ -1136,6 +1136,9 @@ public:
     //! Return the maximum number of ops needed to satisfy this script non-malleably.
     uint32_t GetOps() const { return ops.count + ops.sat.value; }
 
+    //! Return the number of ops in the script (not counting the dynamic ones that depend on execution).
+    uint32_t GetStaticOps() const { return ops.count; }
+
     //! Check the ops limit of this script against the consensus limit.
     bool CheckOpsLimit() const { return GetOps() <= MAX_OPS_PER_SCRIPT; }
 

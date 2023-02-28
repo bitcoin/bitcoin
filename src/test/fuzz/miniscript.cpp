@@ -261,8 +261,6 @@ template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
 struct NodeInfo {
     //! The type of this node
     Fragment fragment;
-    //! Number of subs of this node
-    uint8_t n_subs;
     //! The timelock value for older() and after(), the threshold value for multi() and thresh()
     uint32_t k;
     //! Keys for this node, if it has some
@@ -272,15 +270,13 @@ struct NodeInfo {
     //! The type requirements for the children of this node.
     std::vector<Type> subtypes;
 
-    NodeInfo(Fragment frag): fragment(frag), n_subs(0), k(0) {}
-    NodeInfo(Fragment frag, CPubKey key): fragment(frag), n_subs(0), k(0), keys({key}) {}
-    NodeInfo(Fragment frag, uint32_t _k): fragment(frag), n_subs(0), k(_k) {}
-    NodeInfo(Fragment frag, std::vector<unsigned char> h): fragment(frag), n_subs(0), k(0), hash(std::move(h)) {}
-    NodeInfo(uint8_t subs, Fragment frag): fragment(frag), n_subs(subs), k(0), subtypes(subs, ""_mst) {}
-    NodeInfo(uint8_t subs, Fragment frag, uint32_t _k): fragment(frag), n_subs(subs), k(_k), subtypes(subs, ""_mst)  {}
-    NodeInfo(std::vector<Type> subt, Fragment frag): fragment(frag), n_subs(subt.size()), k(0), subtypes(std::move(subt)) {}
-    NodeInfo(std::vector<Type> subt, Fragment frag, uint32_t _k): fragment(frag), n_subs(subt.size()), k(_k), subtypes(std::move(subt))  {}
-    NodeInfo(Fragment frag, uint32_t _k, std::vector<CPubKey> _keys): fragment(frag), n_subs(0), k(_k), keys(std::move(_keys)) {}
+    NodeInfo(Fragment frag): fragment(frag), k(0) {}
+    NodeInfo(Fragment frag, CPubKey key): fragment(frag), k(0), keys({key}) {}
+    NodeInfo(Fragment frag, uint32_t _k): fragment(frag), k(_k) {}
+    NodeInfo(Fragment frag, std::vector<unsigned char> h): fragment(frag), k(0), hash(std::move(h)) {}
+    NodeInfo(std::vector<Type> subt, Fragment frag): fragment(frag), k(0), subtypes(std::move(subt)) {}
+    NodeInfo(std::vector<Type> subt, Fragment frag, uint32_t _k): fragment(frag), k(_k), subtypes(std::move(subt))  {}
+    NodeInfo(Fragment frag, uint32_t _k, std::vector<CPubKey> _keys): fragment(frag), k(_k), keys(std::move(_keys)) {}
 };
 
 /** Pick an index in a collection from a single byte in the fuzzer's output. */
@@ -329,27 +325,51 @@ std::optional<uint32_t> ConsumeTimeLock(FuzzedDataProvider& provider) {
  *      bytes as the number of keys define the index of each key in the test data.
  *    - For thresh(), the next byte defines the threshold value and the following one the number of subs.
  */
-std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider) {
+std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider, Type type_needed) {
+    bool allow_B = (type_needed == ""_mst) || (type_needed << "B"_mst);
+    bool allow_K = (type_needed == ""_mst) || (type_needed << "K"_mst);
+    bool allow_V = (type_needed == ""_mst) || (type_needed << "V"_mst);
+    bool allow_W = (type_needed == ""_mst) || (type_needed << "W"_mst);
+
     switch (provider.ConsumeIntegral<uint8_t>()) {
-        case 0: return {{Fragment::JUST_0}};
-        case 1: return {{Fragment::JUST_1}};
-        case 2: return {{Fragment::PK_K, ConsumePubKey(provider)}};
-        case 3: return {{Fragment::PK_H, ConsumePubKey(provider)}};
+        case 0:
+            if (!allow_B) return {};
+            return {{Fragment::JUST_0}};
+        case 1:
+            if (!allow_B) return {};
+            return {{Fragment::JUST_1}};
+        case 2:
+            if (!allow_K) return {};
+            return {{Fragment::PK_K, ConsumePubKey(provider)}};
+        case 3:
+            if (!allow_K) return {};
+            return {{Fragment::PK_H, ConsumePubKey(provider)}};
         case 4: {
+            if (!allow_B) return {};
             const auto k = ConsumeTimeLock(provider);
             if (!k) return {};
             return {{Fragment::OLDER, *k}};
         }
         case 5: {
+            if (!allow_B) return {};
             const auto k = ConsumeTimeLock(provider);
             if (!k) return {};
             return {{Fragment::AFTER, *k}};
         }
-        case 6: return {{Fragment::SHA256, ConsumeSha256(provider)}};
-        case 7: return {{Fragment::HASH256, ConsumeHash256(provider)}};
-        case 8: return {{Fragment::RIPEMD160, ConsumeRipemd160(provider)}};
-        case 9: return {{Fragment::HASH160, ConsumeHash160(provider)}};
+        case 6:
+            if (!allow_B) return {};
+            return {{Fragment::SHA256, ConsumeSha256(provider)}};
+        case 7:
+            if (!allow_B) return {};
+            return {{Fragment::HASH256, ConsumeHash256(provider)}};
+        case 8:
+            if (!allow_B) return {};
+            return {{Fragment::RIPEMD160, ConsumeRipemd160(provider)}};
+        case 9:
+            if (!allow_B) return {};
+            return {{Fragment::HASH160, ConsumeHash160(provider)}};
         case 10: {
+            if (!allow_B) return {};
             const auto k = provider.ConsumeIntegral<uint8_t>();
             const auto n_keys = provider.ConsumeIntegral<uint8_t>();
             if (n_keys > 20 || k == 0 || k > n_keys) return {};
@@ -357,26 +377,59 @@ std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider) {
             for (auto& key: keys) key = ConsumePubKey(provider);
             return {{Fragment::MULTI, k, std::move(keys)}};
         }
-        case 11: return {{3, Fragment::ANDOR}};
-        case 12: return {{2, Fragment::AND_V}};
-        case 13: return {{2, Fragment::AND_B}};
-        case 15: return {{2, Fragment::OR_B}};
-        case 16: return {{2, Fragment::OR_C}};
-        case 17: return {{2, Fragment::OR_D}};
-        case 18: return {{2, Fragment::OR_I}};
+        case 11:
+            if (!(allow_B || allow_K || allow_V)) return {};
+            return {{{"B"_mst, type_needed, type_needed}, Fragment::ANDOR}};
+        case 12:
+            if (!(allow_B || allow_K || allow_V)) return {};
+            return {{{"V"_mst, type_needed}, Fragment::AND_V}};
+        case 13:
+            if (!allow_B) return {};
+            return {{{"B"_mst, "W"_mst}, Fragment::AND_B}};
+        case 15:
+            if (!allow_B) return {};
+            return {{{"B"_mst, "W"_mst}, Fragment::OR_B}};
+        case 16:
+            if (!allow_V) return {};
+            return {{{"B"_mst, "V"_mst}, Fragment::OR_C}};
+        case 17:
+            if (!allow_B) return {};
+            return {{{"B"_mst, "B"_mst}, Fragment::OR_D}};
+        case 18:
+            if (!(allow_B || allow_K || allow_V)) return {};
+            return {{{type_needed, type_needed}, Fragment::OR_I}};
         case 19: {
+            if (!allow_B) return {};
             auto k = provider.ConsumeIntegral<uint8_t>();
             auto n_subs = provider.ConsumeIntegral<uint8_t>();
             if (k == 0 || k > n_subs) return {};
-            return {{n_subs, Fragment::THRESH, k}};
+            std::vector<Type> subtypes;
+            subtypes.reserve(n_subs);
+            subtypes.emplace_back("B"_mst);
+            for (size_t i = 1; i < n_subs; ++i) subtypes.emplace_back("W"_mst);
+            return {{std::move(subtypes), Fragment::THRESH, k}};
         }
-        case 20: return {{1, Fragment::WRAP_A}};
-        case 21: return {{1, Fragment::WRAP_S}};
-        case 22: return {{1, Fragment::WRAP_C}};
-        case 23: return {{1, Fragment::WRAP_D}};
-        case 24: return {{1, Fragment::WRAP_V}};
-        case 25: return {{1, Fragment::WRAP_J}};
-        case 26: return {{1, Fragment::WRAP_N}};
+        case 20:
+            if (!allow_W) return {};
+            return {{{"B"_mst}, Fragment::WRAP_A}};
+        case 21:
+            if (!allow_W) return {};
+            return {{{"B"_mst}, Fragment::WRAP_S}};
+        case 22:
+            if (!allow_B) return {};
+            return {{{"K"_mst}, Fragment::WRAP_C}};
+        case 23:
+            if (!allow_B) return {};
+            return {{{"V"_mst}, Fragment::WRAP_D}};
+        case 24:
+            if (!allow_V) return {};
+            return {{{"B"_mst}, Fragment::WRAP_V}};
+        case 25:
+            if (!allow_B) return {};
+            return {{{"B"_mst}, Fragment::WRAP_J}};
+        case 26:
+            if (!allow_B) return {};
+            return {{{"B"_mst}, Fragment::WRAP_N}};
         default:
             break;
     }
@@ -709,11 +762,16 @@ std::optional<NodeInfo> ConsumeNodeSmart(FuzzedDataProvider& provider, Type type
  *   a NodeRef whose Type() matches the type fed to ConsumeNode.
  */
 template<typename F>
-NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = false) {
+NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
     /** A stack of miniscript Nodes being built up. */
     std::vector<NodeRef> stack;
     /** The queue of instructions. */
     std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
+    /** Predict the number of (static) script ops. */
+    uint32_t ops{0};
+    /** Predict the total script size (every unexplored subnode is counted as one, as every leaf is
+     *  at least one script byte). */
+    uint32_t scriptsize{1};
 
     while (!todo.empty()) {
         // The expected type we have to construct.
@@ -722,6 +780,78 @@ NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = fals
             // Fragment/children have not been decided yet. Decide them.
             auto node_info = ConsumeNode(type_needed);
             if (!node_info) return {};
+            // Update predicted resource limits. Since every leaf Miniscript node is at least one
+            // byte long, we move one byte from each child to their parent. A similar technique is
+            // used in the miniscript::internal::Parse function to prevent runaway string parsing.
+            scriptsize += miniscript::internal::ComputeScriptLen(node_info->fragment, ""_mst, node_info->subtypes.size(), node_info->k, node_info->subtypes.size(), node_info->keys.size()) - 1;
+            if (scriptsize > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
+            switch (node_info->fragment) {
+            case Fragment::JUST_0:
+            case Fragment::JUST_1:
+                break;
+            case Fragment::PK_K:
+                break;
+            case Fragment::PK_H:
+                ops += 3;
+                break;
+            case Fragment::OLDER:
+            case Fragment::AFTER:
+                ops += 1;
+                break;
+            case Fragment::RIPEMD160:
+            case Fragment::SHA256:
+            case Fragment::HASH160:
+            case Fragment::HASH256:
+                ops += 4;
+                break;
+            case Fragment::ANDOR:
+                ops += 3;
+                break;
+            case Fragment::AND_V:
+                break;
+            case Fragment::AND_B:
+            case Fragment::OR_B:
+                ops += 1;
+                break;
+            case Fragment::OR_C:
+                ops += 2;
+                break;
+            case Fragment::OR_D:
+                ops += 3;
+                break;
+            case Fragment::OR_I:
+                ops += 3;
+                break;
+            case Fragment::THRESH:
+                ops += node_info->subtypes.size();
+                break;
+            case Fragment::MULTI:
+                ops += 1;
+                break;
+            case Fragment::WRAP_A:
+                ops += 2;
+                break;
+            case Fragment::WRAP_S:
+                ops += 1;
+                break;
+            case Fragment::WRAP_C:
+                ops += 1;
+                break;
+            case Fragment::WRAP_D:
+                ops += 3;
+                break;
+            case Fragment::WRAP_V:
+                // We don't account for OP_VERIFY here; that will be corrected for when the actual
+                // node is constructed below.
+                break;
+            case Fragment::WRAP_J:
+                ops += 4;
+                break;
+            case Fragment::WRAP_N:
+                ops += 1;
+                break;
+            }
+            if (ops > MAX_OPS_PER_SCRIPT) return {};
             auto subtypes = node_info->subtypes;
             todo.back().second = std::move(node_info);
             todo.reserve(todo.size() + subtypes.size());
@@ -738,11 +868,11 @@ NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = fals
             NodeInfo& info = *todo.back().second;
             // Gather children from the back of stack.
             std::vector<NodeRef> sub;
-            sub.reserve(info.n_subs);
-            for (size_t i = 0; i < info.n_subs; ++i) {
-                sub.push_back(std::move(*(stack.end() - info.n_subs + i)));
+            sub.reserve(info.subtypes.size());
+            for (size_t i = 0; i < info.subtypes.size(); ++i) {
+                sub.push_back(std::move(*(stack.end() - info.subtypes.size() + i)));
             }
-            stack.erase(stack.end() - info.n_subs, stack.end());
+            stack.erase(stack.end() - info.subtypes.size(), stack.end());
             // Construct new NodeRef.
             NodeRef node;
             if (info.keys.empty()) {
@@ -753,17 +883,29 @@ NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = fals
                 node = MakeNodeRef(info.fragment, std::move(info.keys), info.k);
             }
             // Verify acceptability.
-            if (!node || !(node->GetType() << type_needed)) {
+            if (!node || (node->GetType() & "KVWB"_mst) == ""_mst) {
                 assert(!strict_valid);
                 return {};
             }
+            if (!(type_needed == ""_mst)) {
+                assert(node->GetType() << type_needed);
+            }
             if (!node->IsValid()) return {};
+            // Update resource predictions.
+            if (node->fragment == Fragment::WRAP_V && node->subs[0]->GetType() << "x"_mst) {
+                ops += 1;
+                scriptsize += 1;
+            }
+            if (ops > MAX_OPS_PER_SCRIPT) return {};
+            if (scriptsize > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
             // Move it to the stack.
             stack.push_back(std::move(node));
             todo.pop_back();
         }
     }
     assert(stack.size() == 1);
+    assert(stack[0]->GetStaticOps() == ops);
+    assert(stack[0]->ScriptSize() == scriptsize);
     stack[0]->DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
@@ -921,9 +1063,9 @@ void FuzzInitSmart()
 FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    TestNode(GenNode([&](Type) {
-        return ConsumeNodeStable(provider);
-    }), provider);
+    TestNode(GenNode([&](Type needed_type) {
+        return ConsumeNodeStable(provider, needed_type);
+    }, ""_mst), provider);
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeSmart. */
