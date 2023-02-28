@@ -4323,6 +4323,8 @@ bool ChainstateManager::LoadBlockIndex()
         bool ret = m_blockman.LoadBlockIndexDB(GetConsensus());
         if (!ret) return false;
 
+        m_blockman.ScanAndUnlinkAlreadyPrunedFiles();
+
         std::vector<CBlockIndex*> vSortedByHeight{m_blockman.GetAllBlockIndices()};
         std::sort(vSortedByHeight.begin(), vSortedByHeight.end(),
                   CBlockIndexHeightOnlyComparator());
