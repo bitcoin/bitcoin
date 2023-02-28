@@ -166,7 +166,7 @@ static const char* SYSCOIN_PID_FILENAME = "syscoind.pid";
 
 static fs::path GetPidFile(const ArgsManager& args)
 {
-    return AbsPathForConfigVal(args.GetPathArg("-pid", SYSCOIN_PID_FILENAME));
+    return AbsPathForConfigVal(args, args.GetPathArg("-pid", SYSCOIN_PID_FILENAME));
 }
 
 [[nodiscard]] static bool CreatePidFile(const ArgsManager& args)
