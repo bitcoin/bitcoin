@@ -99,14 +99,6 @@
    fun:_Z11LogInstancev
 }
 {
-   Suppress secp256k1_context_create still reachable memory warning
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   ...
-   fun:secp256k1_context_create
-}
-{
    Suppress BCLog::Logger::StartLogging() still reachable memory warning
    Memcheck:Leak
    match-leak-kinds: reachable
