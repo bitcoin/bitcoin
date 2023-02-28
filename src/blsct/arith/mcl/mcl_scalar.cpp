@@ -285,7 +285,8 @@ std::vector<uint8_t> MclScalar::GetVch(const bool trim_preceeding_zeros) const
     auto seri_size = MclScalar::GetSerializeSize();
     std::vector<uint8_t> vec(seri_size);
     if (mclBnFr_serialize(&vec[0], seri_size, &m_fr) == 0) {
-        throw std::runtime_error(std::string("Serialization failed"));
+        MclScalar ret;
+        return ret.GetVch();
     }
     if (!trim_preceeding_zeros) return vec;
 
@@ -307,7 +308,9 @@ void MclScalar::SetVch(const std::vector<uint8_t>& v)
         m_fr = x;
     } else {
         if (mclBnFr_setBigEndianMod(&m_fr, &v[0], v.size()) == -1) {
-            throw std::runtime_error(std::string("Failed to setBigEndianMod vector"));
+            mclBnFr x;
+            mclBnFr_clear(&x);
+            m_fr = x;
         }
     }
 }
