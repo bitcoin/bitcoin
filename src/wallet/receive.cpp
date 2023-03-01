@@ -149,7 +149,7 @@ CAmount CachedTxGetImmatureCredit(const CWallet& wallet, const CWalletTx& wtx, c
 {
     AssertLockHeld(wallet.cs_wallet);
 
-    if (wallet.IsTxImmatureCoinBase(wtx) && wallet.IsTxInMainChain(wtx)) {
+    if (wallet.IsTxImmatureCoinBase(wtx) && wtx.isConfirmed()) {
         return GetCachableAmount(wallet, wtx, CWalletTx::IMMATURE_CREDIT, filter);
     }
 
@@ -256,9 +256,8 @@ bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminef
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents)
 {
     AssertLockHeld(wallet.cs_wallet);
-    int nDepth = wallet.GetTxDepthInMainChain(wtx);
-    if (nDepth >= 1) return true;
-    if (nDepth < 0) return false;
+    if (wtx.isConfirmed()) return true;
+    if (wtx.isBlockConflicted()) return false;
     // using wtx's cached debit
     if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, wtx, ISMINE_ALL)) return false;
 
