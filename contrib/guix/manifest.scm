@@ -566,9 +566,9 @@ inspecting signatures in Mach-O binaries.")
 (packages->manifest
  (append
   (list ;; The Basics
-        bash
+        bash-minimal
         which
-        coreutils
+        coreutils-minimal
         util-linux
         ;; File(system) inspection
         file
@@ -611,5 +611,5 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils cmake-minimal xorriso python-signapple))
           (else '())))))
