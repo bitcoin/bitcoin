@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">匯出(&amp;E)</translation>
+        <translation type="unfinished">&amp;匯出</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -48,6 +48,10 @@
     <message>
         <source>Choose the address to receive coins with</source>
         <translation type="unfinished">選擇要接收幣的地址</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">選擇 (&amp;h)</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -168,7 +172,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">輸入錢包的新密碼短語。&lt;br/&gt;請使用&lt;b&gt;個或10個以上隨機字符&lt;/b&gt;或&lt;b&gt;個8個以上單詞3的密碼。</translation>
+        <translation type="unfinished">輸入錢包的新密碼短語。&lt;br/&gt;請使用&lt;b&gt;個或10個以上隨機字符&lt;/b&gt;或&lt;b&gt;個8個以上單詞&lt;/b&gt;的密碼。</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
@@ -237,12 +241,34 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">設定檔%1可能已經失效或無效</translation>
+    </message>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">失控異常</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">內部錯誤</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">發生了內部錯誤%1 將嘗試安全地繼續。 這是一個意外錯誤，可以按如下所述進行報告。</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">您想將設置重置為預設值，還是在不進行更改的情況下中止？</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">發生致命錯誤。檢查設置文件是否可寫入，或嘗試運行 -nosettings</translation>
+    </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">错误：指定的数据目录“%1”不存在。</translation>
@@ -256,6 +282,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">错误：%1</translation>
     </message>
     <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1還沒有安全退出……</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation type="unfinished">未知</translation>
     </message>
@@ -266,6 +296,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation type="unfinished">輸入 比特幣地址 (比如說 %1)</translation>
+    </message>
+    <message>
+        <source>Unroutable</source>
+        <translation type="unfinished">不可路由</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -361,6 +395,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">設定檔案無法讀取</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">設定檔案無法寫入</translation>
+    </message>
+    <message>
         <source>The %s developers</source>
         <translation type="unfinished">%s 開發人員</translation>
     </message>
@@ -379,10 +421,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation type="unfinished">讀取錢包檔 %s 時發生錯誤！所有的鑰匙都正確讀取了，但是交易資料或地址簿資料可能會缺少或不正確。</translation>
-    </message>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">錯誤: 聽候外來連線失敗(回傳錯誤 %s)</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
@@ -541,10 +579,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">讀取資料庫時發生錯誤，要關閉了。</translation>
     </message>
     <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">升級區塊鏈狀態資料庫時發生錯誤</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low for %s</source>
         <translation type="unfinished">错误： %s 所在的磁盘空间低。</translation>
     </message>
@@ -561,12 +595,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">初始化時重新掃描錢包失敗了</translation>
     </message>
     <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation type="unfinished">手續費費率(%s) 低於最低費率設置（%s)</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">匯入中...</translation>
+    </message>
+    <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation type="unfinished">創世區塊不正確或找不到。資料目錄錯了嗎？</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation type="unfinished">初始化時的基本檢查失敗了。%s 就要關閉了。</translation>
+    </message>
+    <message>
+        <source>Input not found or already spent</source>
+        <translation type="unfinished">找不到交易項，或可能已經花掉了</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
@@ -586,31 +632,55 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">參數 -%s=&lt;金額&gt; 指定的金額無效: '%s'</translation>
+        <translation type="unfinished">無效金額給 -%s=&lt;amount&gt;:'%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">設定 -discardfee=&lt;金額&gt; 的金額無效: '%s'</translation>
+        <translation type="unfinished">無效金額給 -丟棄費=&lt;amount&gt;; '%s' </translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">設定 -fallbackfee=&lt;金額&gt; 的金額無效: '%s'</translation>
+        <translation type="unfinished">無效金額給 -後備費用=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">設定 -paytxfee=&lt;金額&gt; 的金額無效: '%s' (至少要有 %s)</translation>
+        <translation type="unfinished">無效金額給 -支付費用&lt;amount&gt;:'%s' (必須至少%s)</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation type="unfinished">指定在 -whitelist 的網段無效: '%s'</translation>
     </message>
     <message>
+        <source>Loading P2P addresses…</source>
+        <translation type="unfinished">載入P2P地址中...</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation type="unfinished">正在載入黑名單中...</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation type="unfinished">載入區塊索引中...</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">載入錢包中...</translation>
+    </message>
+    <message>
+        <source>Missing amount</source>
+        <translation type="unfinished">缺少金額</translation>
+    </message>
+    <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">缺少用於估計交易規模的求解數據</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">指定 -whitebind 時必須包含通訊埠: '%s'</translation>
     </message>
     <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation type="unfinished">未指定代理伺服器。使用-proxy = &lt;ip&gt;或-proxy = &lt;ip:port&gt;。</translation>
+        <source>No addresses available</source>
+        <translation type="unfinished">沒有可用的地址</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -625,8 +695,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">修剪模式和 -txindex 參數不相容。</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation type="unfinished">修剪區塊資料庫中...</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation type="unfinished">因為系統的限制，將 -maxconnections 參數從 %d 降到了 %d</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">正在對區塊進行重新計算...</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">重新掃描中...</translation>
     </message>
     <message>
         <source>Section [%s] is not recognized.</source>
@@ -653,8 +735,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">指定的區塊目錄 "%s" 不存在。</translation>
     </message>
     <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">正在開始網路線程...</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">原始碼可以在 %s 取得。</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">這個指定的配置檔案%s不存在</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -685,12 +775,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">交易金額不能是負的</translation>
     </message>
     <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">交易尋找零輸出項超出範圍</translation>
+    </message>
+    <message>
         <source>Transaction has too long of a mempool chain</source>
         <translation type="unfinished">交易造成記憶池中的交易鏈太長</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">交易必須至少有一個收款人</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">需要交易一個找零地址，但是我們無法生成它。</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -717,6 +815,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">沒辦法產生密鑰</translation>
     </message>
     <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">無法開啟%s來寫入</translation>
+    </message>
+    <message>
+        <source>Unable to parse -maxuploadtarget: '%s'</source>
+        <translation type="unfinished">無法解析-最大上傳目標:'%s'</translation>
+    </message>
+    <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">無法啟動 HTTP 伺服器。詳情請看除錯紀錄。</translation>
     </message>
@@ -737,16 +843,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">在 -onlynet 指定了不明的網路別: '%s'</translation>
     </message>
     <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">未知的交易已經有新規則激活 (versionbit %i)</translation>
+    </message>
+    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">不支援的紀錄類別 %s=%s。</translation>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">正在升級 UTXO 資料庫</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation type="unfinished">使用者代理註解(%s)中含有不安全的字元。</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">正在驗證區塊數據...</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">正在驗證錢包...</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -796,6 +910,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">創建一個新錢包</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;最小化</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">錢包:</translation>
     </message>
@@ -829,16 +947,61 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;接收</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;選項...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;加密錢包...</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished">將錢包中之密鑰加密</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">&amp;備用錢包</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;更改密碼短語...</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">簽名 &amp;信息…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">用比特幣地址簽名訊息來證明位址是你的</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;驗證
+訊息...</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">驗證訊息是用來確定訊息是用指定的比特幣地址簽名的</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished">&amp;從檔案載入PSBT...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">開啟 &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">关钱包...</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">创建钱包...</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">关所有钱包...</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -855,6 +1018,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">分頁工具列</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">同步區塊頭 (%1%)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">正在與網絡同步…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">索引磁盤上的索引塊中...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">處理磁碟裡的區塊中...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation type="unfinished">正在重新索引磁盤上的區塊...</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">连到同行...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -875,12 +1062,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>已處裡%n個區塊的交易紀錄</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
         <translation type="unfinished">落後 %1</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">赶上...</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -909,6 +1100,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
         <translation type="unfinished">載入部分簽名的比特幣交易</translation>
+    </message>
+    <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">從剪貼簿載入PSBT</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
@@ -947,6 +1142,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">關閉錢包</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">恢復錢包...</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">從備份檔案中恢復錢包</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">關閉所有錢包</translation>
     </message>
@@ -971,8 +1176,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">没有可用的钱包</translation>
     </message>
     <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">錢包資料</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">載入錢包備份</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">恢復錢包</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">錢包名稱</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
-        <translation type="unfinished">視窗(&amp;W)</translation>
+        <translation type="unfinished">&amp;視窗</translation>
     </message>
     <message>
         <source>Zoom</source>
@@ -986,12 +1211,44 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 client</source>
         <translation type="unfinished">%1 客戶端</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;躲</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">&amp;顯示</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>已處理%n個區塊的交易歷史。</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">點擊查看更多操作</translation>
+    </message>
+    <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation type="unfinished">顯示節點選項卡</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">關閉網路紀錄</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">關閉網路紀錄</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">預先同步標頭(%1%)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1152,6 +1409,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">複製金額</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">复制和标签</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">复制和数量</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">複製交易&amp;ID與輸出序號</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">鎖定未消費金額額</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">解鎖未花費金額</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">複製數目</translation>
     </message>
@@ -1216,6 +1497,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">新增錢包</translation>
     </message>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
+        <translation type="unfinished">正在創建錢包&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">創建錢包失敗&lt;br&gt;</translation>
     </message>
@@ -1223,7 +1509,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create wallet warning</source>
         <translation type="unfinished">產生錢包警告:</translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">無法列出簽名器</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">偵測到的外接簽名器過多</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">載入錢包</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">正在載入錢包...</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1243,7 +1550,40 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">打開錢包</translation>
     </message>
-    </context>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
+        <translation type="unfinished">正在打開錢包&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">恢復錢包</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">正在恢復錢包&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">恢復錢包失敗</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">恢復錢包警告</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">恢復錢包訊息</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1314,10 +1654,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">描述符錢包</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">使用外接簽名裝置(例如: 實體錢包)。
+請先在設定選項中設定好外接簽名裝置。</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">外接簽名裝置</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">產生</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">編譯時沒有外接簽名器支援(外接簽名必須有此功能)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1394,6 +1748,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform>%nGB可用</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(需要 %n GB)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform>（完整區塊鏈需要％n GB）</numerusform>
+        </translation>
+    </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">在這個目錄中至少會存放 %1 GB 的資料，並且還會隨時間增加。</translation>
@@ -1406,7 +1778,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(足以恢復%n天內的備份)</numerusform>
         </translation>
     </message>
     <message>
@@ -1438,16 +1810,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">因為這是程式第一次啓動，你可以選擇 %1 儲存資料的地方。</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">在你按下「好」之後，%1 就會開始下載並處理整個 %4 區塊鏈(大小是  %2GB)，也就是從 %3 年 %4 剛剛起步時的最初交易開始。</translation>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">將區塊鏈儲存限制為</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">還原此設置需要重新下載整個區塊鏈。首先下載完整的鏈，然後再修剪它是更快的。禁用某些高級功能。</translation>
     </message>
     <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">一開始的同步作業非常的耗費資源，並且可能會暴露出之前沒被發現的電腦硬體問題。每次執行 %1 的時候都會繼續先前未完成的下載。</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">當你點擊「確認」，%1會開始下載，並從%3年最早的交易，處裡整個%4區塊鏈(大小:%2GB)</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1480,6 +1860,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1正在關機</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation type="unfinished">在這個視窗不見以前，請不要關掉電腦。</translation>
     </message>
@@ -1501,6 +1885,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of blocks left</source>
         <translation type="unfinished">剩餘區塊數</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">不明...</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">计算...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1526,7 +1918,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Esc</source>
         <translation type="unfinished">離開鍵</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">不明。正在同步標頭(%1, %2%)...</translation>
+    </message>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">不明。正在預先同步標頭(%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1675,7 +2075,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation type="unfinished">視窗(&amp;W)</translation>
+        <translation type="unfinished">&amp;視窗</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1722,16 +2122,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">使用個別的SOCKS＆5代理介由Tor onion服務到達peers：</translation>
     </message>
     <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation type="unfinished">这个对话框中的设置已被如下命令行选项或配置文件项覆盖：</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">好(&amp;O)</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
         <translation type="unfinished">取消(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">編譯時沒有外接簽名器支援(外接簽名必須有此功能)</translation>
     </message>
     <message>
         <source>default</source>
@@ -1743,14 +2144,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">確認重設選項</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">需要重新開始客戶端軟體來讓改變生效。</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">客戶端軟體就要關掉了。繼續做下去嗎？</translation>
     </message>
     <message>
@@ -1762,6 +2166,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
         <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">設定檔可以用來指定進階的使用選項，並且會覆蓋掉圖形介面的設定。不過，命令列的選項也會覆蓋掉設定檔中的選項。</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">继续</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1882,6 +2290,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">複製到剪貼簿</translation>
     </message>
     <message>
+        <source>Save…</source>
+        <translation type="unfinished">拯救...</translation>
+    </message>
+    <message>
         <source>Close</source>
         <translation type="unfinished">關閉</translation>
     </message>
@@ -1988,6 +2400,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation type="unfinished">Ping  時間</translation>
+    </message>
+    <message>
+        <source>Peer</source>
+        <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
+        <translation type="unfinished">同行</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2276,6 +2693,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">去:</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
         <source>&amp;Disconnect</source>
         <translation type="unfinished">斷線(&amp;D)</translation>
     </message>
@@ -2409,6 +2831,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">複製 &amp;URI</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">复制和标签</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">复制和数量</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -2740,10 +3174,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">高於 %1 的手續費會被認為是不合理。</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">付款的要求過期了。</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -2822,28 +3252,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">訊息:</translation>
     </message>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">這是個沒有驗證過身份的付款要求。</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">這是個已經驗證過身份的付款要求。</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished">請輸入這個地址的標籤，來把它加進去已使用過地址清單。</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished">附加在 Bitcoin 付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到 Bitcoin 網路上。</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">付給:</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">備註:</translation>
     </message>
 </context>
 <context>
@@ -3011,30 +3425,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished">跟一個目前確認 %1 次的交易互相衝突</translation>
     </message>
     <message>
-        <source>0/unconfirmed, %1</source>
-        <translation type="unfinished">0 次/未確認，%1</translation>
-    </message>
-    <message>
-        <source>in memory pool</source>
-        <translation type="unfinished">在記憶池中</translation>
-    </message>
-    <message>
-        <source>not in memory pool</source>
-        <translation type="unfinished">不在記憶池中</translation>
-    </message>
-    <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">已中止</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1 次/未確認</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">確認 %1 次</translation>
     </message>
     <message>
@@ -3337,6 +3743,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">最小金額</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">复制和标签</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">复制和数量</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">複製交易 &amp;ID</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">匯出交易記錄</translation>
     </message>
@@ -3497,7 +3919,7 @@ Go to File &gt; Open Wallet to load a wallet.
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">匯出(&amp;E)</translation>
+        <translation type="unfinished">&amp;匯出</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -3506,6 +3928,11 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Backup Wallet</source>
         <translation type="unfinished">備份錢包</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">錢包資料</translation>
     </message>
     <message>
         <source>Backup Failed</source>
