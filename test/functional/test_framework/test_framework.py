@@ -868,9 +868,6 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         except ImportError:
             raise SkipTest("python3-zmq module not available.")
 
-    def skip_if_no_syscoind_zmq(self):
-        """Skip the running test if syscoind has not been compiled with zmq support."""
-
     def skip_if_no_py_sqlite3(self):
         """Attempt to import the sqlite3 package and skip the test if the import fails."""
         try:
@@ -1114,7 +1111,7 @@ class DashTestFramework(SyscoinTestFramework):
                     collateral_vout = vout_idx
             self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
-    
+
         # send to same address to reserve some funds for fees
         self.nodes[0].sendtoaddress(address, 0.001)
 
@@ -1296,23 +1293,13 @@ class DashTestFramework(SyscoinTestFramework):
         ret = {**decoded, **ret}
         return ret
 
-    def wait_for_tx(self, txid, node, expected=True, timeout=15):
-        def check_tx():
-            try:
-                self.bump_mocktime(1)
-                return node.getrawtransaction(txid)
-            except:
-                return False
-        if wait_until_helper(check_tx, timeout=timeout, sleep=0.5) and not expected:
-            raise AssertionError("waiting unexpectedly succeeded")
-
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=60):
         def check_chainlocked_block():
             try:
                 self.bump_mocktime(1)
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"] is True
-            except:
+            except Exception:
                 return False
         if wait_until_helper(check_chainlocked_block, timeout=timeout, do_assert=expected, sleep=0.5) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
@@ -1329,7 +1316,7 @@ class DashTestFramework(SyscoinTestFramework):
             try:
                 self.bump_mocktime(1)
                 return node.getchainlocks()["recent_chainlock"]["blockhash"] == block_hash
-            except:
+            except Exception:
                 return False
         wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
 
@@ -1338,7 +1325,7 @@ class DashTestFramework(SyscoinTestFramework):
             try:
                 self.bump_mocktime(1)
                 return node.getchainlocks()["active_chainlock"]["blockhash"] == block_hash
-            except:
+            except Exception:
                 return False
         wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
 
