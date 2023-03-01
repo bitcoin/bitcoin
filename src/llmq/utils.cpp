@@ -23,6 +23,8 @@
 
 #include <optional>
 
+static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
+
 namespace llmq
 {
 
@@ -915,6 +917,11 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             }
             break;
         }
+        case Consensus::LLMQType::LLMQ_25_67:
+            if (pindex->nHeight < TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT) {
+                return false;
+            }
+            break;
         default:
             throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType)));
     }
