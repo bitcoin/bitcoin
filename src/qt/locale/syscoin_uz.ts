@@ -1,89 +1,95 @@
-<TS version="2.1" language="no">
+<TS version="2.1" language="uz">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Høyreklikk for å redigere addressen eller etikketen </translation>
+        <translation type="unfinished">Manzil yoki yorliqni o'zgartirish uchun o'ng tugmani bosing</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Lag en ny adresse</translation>
+        <translation type="unfinished">Yangi manzil yaratish</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Ny
-</translation>
+        <translation type="unfinished">Yangi</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopier den valgte adressen til systemutklippstavlen</translation>
+        <translation type="unfinished">Belgilangan manzilni tizim hotirasiga saqlash</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Kopier</translation>
+        <translation type="unfinished">&amp;Ko'chirmoq</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">C&amp;Tap</translation>
+        <translation type="unfinished">Yo&amp;pish</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Slett den valgte adressen fra listen </translation>
+        <translation type="unfinished">Tanlangan manzilni ro'yhatdan o'chiring</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Tast inn adressen eller etiketten for å søke</translation>
+        <translation type="unfinished">Qidirish uchun manzil yoki yorliqni kiriting</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Eksporter dataen i gjeldende fane til en fil </translation>
-    </message>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Eksporter</translation>
+        <translation type="unfinished">Joriy ichki oynaning ichidagi malumotlarni faylga yuklab olish</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Slett</translation>
+        <translation type="unfinished">o'chirish</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Velg adressen du vil sende mynter til </translation>
+        <translation type="unfinished">Tangalarni jo'natish uchun addressni tanlash</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Velg adressen du vil motta mynter med </translation>
+        <translation type="unfinished">Tangalarni qabul qilib olish uchun manzilni tanlang</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">tanlamoq</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Sender adresser </translation>
+        <translation type="unfinished">Yuboriladigan manzillar</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Mottar adresser </translation>
+        <translation type="unfinished">Qabul qilinadigan manzillar</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Dette er dine Syscoin adresser for å sende betalinger.Alltid sjekk mengden og mottaker adressen før du sender mynter.  </translation>
+        <translation type="unfinished">Quyidagilar to'lovlarni yuborish uchun Syscoin manzillaringizdir. Har doim yuborishdan oldin yuborilayotgan tangalar sonini va qabul qiluvchi manzilni tekshirib ko'ring.</translation>
+    </message>
+    <message>
+        <source>These are your Syscoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Bular to'lovlarni qabul qilishingiz uchun sizning Syscoin manzillaringizdir. Yangi qabul qiluvchi manzil yaratish uchun qabul qilish varag'idagi ''Yangi qabul qilish manzilini yaratish'' ustiga bosing. Faqat 'legacy' turdagi manzillar bilan xisobga kirish mumkin.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Koper adresse</translation>
+        <translation type="unfinished">&amp;manzildan nusxa olish</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">Yorliqni ko'chirish</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">O'zgartirmoq</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Eksporter adresse liste</translation>
+        <translation type="unfinished">Manzil ro'yhatini yuklab olish</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation type="unfinished">Eksportering feilet </translation>
-    </message>
-</context>
-<context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Address</source>
-        <translation type="unfinished">Adresse </translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Vergul bilan ajratilgan fayl</translation>
     </message>
     </context>
 <context>
@@ -182,14 +188,6 @@
     </message>
     </context>
 <context>
-    <name>PeerTableModel</name>
-    <message>
-        <source>Address</source>
-        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adresse </translation>
-    </message>
-    </context>
-<context>
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -212,23 +210,16 @@
 <context>
     <name>TransactionView</name>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Adresse </translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation type="unfinished">Eksportering feilet </translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Vergul bilan ajratilgan fayl</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Eksporter</translation>
-    </message>
-    <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Eksporter dataen i gjeldende fane til en fil </translation>
+        <translation type="unfinished">Joriy ichki oynaning ichidagi malumotlarni faylga yuklab olish</translation>
     </message>
     </context>
 </TS>
