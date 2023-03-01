@@ -2224,34 +2224,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp; مسار البرنامج النصي للموقّع الخارجي</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>Full path to a Syscoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">المسار الكامل إلى برنامج نصي متوافق مع Syscoin Core (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). احذر: يمكن أن تسرق البرامج الضارة عملاتك!</translation>
-    </message>
-    <message>
-        <source>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">فتح منفذ خادم البتكوين تلقائيا على الموجه. هذا فقط يعمل عندما يكون الموجه الخاص بك يدعم UPnP ومفعل ايضا.</translation>
-=======
         <source>Full path to a Syscoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
         <translation type="unfinished">‫مثال لمسار كامل متوافق مع البتكوين الأساسي Syscoin Core (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). احذر: يمكن أن تسرق البرمجيات الضارة عملاتك!‬</translation>
     </message>
     <message>
         <source>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation type="unfinished">‫فتح منفذ عميل البتكوين تلقائيا على الموجه. يعمل فقط عندما يكون الموجه الخاص بك يدعم UPnP ومفعل ايضا.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation type="unfinished">‫ربط المنفذ باستخدام &amp;UPnP‬</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>Automatically open the Syscoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">افتح منفذ عميل Syscoin تلقائيًا على جهاز التوجيه. يعمل هذا فقط عندما يدعم جهاز التوجيه الخاص بك NAT-PMP ويتم تمكينه. يمكن أن يكون المنفذ الخارجي عشوائيًا.</translation>
-=======
         <source>Automatically open the Syscoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
         <translation type="unfinished">‫افتح منفذ عميل بتكوين تلقائيًا على جهاز التوجيه. يعمل هذا فقط عندما يدعم جهاز التوجيه الخاص بك NAT-PMP ويتم تمكينه. يمكن أن يكون المنفذ الخارجي عشوائيًا.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Map port using NA&amp;T-PMP</source>
@@ -2690,13 +2676,8 @@ If you are receiving this error you should request the merchant provide a BIP21 
 ‬‫‫‫إذا كنت تتلقى هذا الخطأ ، يجب أن تطلب من المستلم تقديم عنوان URI متوافق مع BIP21.‬</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
-        <translation type="unfinished">لا يمكن تحليل العنوان (URI)! يمكن أن يحدث هذا بسبب عنوان بتكوين غير صالح أو معلمات عنوان (URI) غير صحيحة.</translation>
-=======
         <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
         <translation type="unfinished">‫لا يمكن تحليل العنوان (URI)! يمكن أن يحدث هذا بسبب عنوان بتكوين غير صالح أو محددات عنوان غير صحيحة.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -3241,13 +3222,8 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">&amp;رسالة:</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Syscoin network.</source>
-        <translation type="unfinished">رسالة اختيارية لإرفاقها بطلب الدفع، والتي سيتم عرضها عند فتح الطلب. ملاحظة: لن يتم إرسال الرسالة مع الدفعة عبر شبكة البتكوين.</translation>
-=======
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Syscoin network.</source>
         <translation type="unfinished">‫رسالة اختيارية لإرفاقها بطلب الدفع، والتي سيتم عرضها عند فتح الطلب. ملاحظة: لن يتم إرسال الرسالة مع العملية عبر شبكة البتكوين.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -3523,10 +3499,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">اخفاء اعدادات رسوم المعاملة</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
-        <translation type="unfinished">عندما يكون هناك حجم معاملات أقل من الفراغ في الكتل، المعدنون وعقد الترحيل أيضا من الممكن أن يفرضوا الحد الأدنى للرسوم. دفع الحد الأدنى للرسوم قد يكون على ما يرام، لكن كن حذرا بأنه هذا الشيء قد يؤدي الى معاملة لن تتأكد أبدا بمجرد أن الطلب على معاملات البتكوين قد أصبح أكثر مما تتحمله الشبكة.</translation>
-=======
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
 
 Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
@@ -3537,7 +3509,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
         <translation type="unfinished">‫قد يفرض المعدنون والأنواد الموصلة حدا أدنى للرسوم عندما يكون عدد العمليات قليل نسبة لسعة الطوابق. يمكنك دفع الحد الأدنى ولكن كن على دراية بأن العملية قد لا تنفذ في حالة أن الطلب على عمليات البتكوين فاق قدرة الشبكة على المعالجة.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -3799,13 +3770,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">‫اختر عنوانا تم استخدامه سابقا‬</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>The Syscoin address to send the payment to</source>
-        <translation type="unfinished">عنوان البت كوين المرسل اليه الدفع</translation>
-=======
         <source>The Syscoin address to send the payment to</source>
         <translation type="unfinished">‫عنوان البتكوين لارسال الدفعة له‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -3820,13 +3786,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">‫القيمة للإرسال في الوحدة المحددة‬</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less syscoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">سيتم خصم الرسوم من المبلغ الذي يتم إرساله. لذا سوف يتلقى المستلم مبلغ أقل من البتكوين المدخل في حقل المبلغ. في حالة تحديد عدة مستلمين، يتم تقسيم الرسوم بالتساوي.</translation>
-=======
         <source>The fee will be deducted from the amount being sent. The recipient will receive less syscoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation type="unfinished">‫سيتم خصم الرسوم من المبلغ الذي يتم إرساله. لذا سوف يتلقى المستلم قيمة أقل من البتكوين المدخل في حقل القيمة. في حالة تحديد عدة مستلمين، يتم تقسيم الرسوم بالتساوي.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -3845,21 +3806,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">‫أدخل مذكرة لهذا العنوان لإضافته إلى قائمة العناوين المستخدمة‬</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>A message that was attached to the syscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Syscoin network.</source>
-        <translation type="unfinished">الرسالة التي تم إرفاقها مع البتكوين: العنوان الذي سيتم تخزينه مع المعاملة للرجوع إليه. ملاحظة: لن يتم إرسال هذه الرسالة عبر شبكة البتكوين.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">ادفع &amp;الى :</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">مذكرة:</translation>
-=======
         <source>A message that was attached to the syscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Syscoin network.</source>
         <translation type="unfinished">‫الرسالة يتم إرفاقها مع البتكوين: الرابط سيتم تخزينه مع العملية لك للرجوع إليه. ملاحظة: لن يتم إرسال هذه الرسالة عبر شبكة البتكوين.‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
 </context>
 <context>
@@ -3884,21 +3832,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">&amp;توقيع الرسالة</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>You can sign messages/agreements with your addresses to prove you can receive syscoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">تستطيع توقيع رسائل/اتفاقات مع عناوينك لإثبات أنه بإمكانك استقبال بتكوين مرسل إليهم. كن حذرا من عدم توقيع أي شيء غامض أو عشوائي، كهجمات التصيد التي قد تحاول خداعك لتوقيع هويتك لديهم. وقع البيانات المفصلة بالكامل والتي أنت توافق عليها فقط.</translation>
-    </message>
-    <message>
-        <source>The Syscoin address to sign the message with</source>
-        <translation type="unfinished">عنوان البتكوين لتوقيع الرسالة به</translation>
-=======
         <source>You can sign messages/agreements with your addresses to prove you can receive syscoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation type="unfinished">‫تستطيع توقيع رسائل/اتفاقيات من عناوينك لإثبات أنه بإمكانك استلام بتكوين مرسل لهذه العناوين. كن حذرا من توقيع أي شيء غامض أو عشوائي، هجمات التصيد قد تحاول خداعك وانتحال هويتك. وقع البيانات الواضحة بالكامل والتي توافق عليها فقط.‬</translation>
     </message>
     <message>
         <source>The Syscoin address to sign the message with</source>
         <translation type="unfinished">عنوان البتكوين لتوقيع الرسالة منه</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3921,13 +3860,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">نسخ التوقيع الحالي إلى حافظة النظام</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>Sign the message to prove you own this Syscoin address</source>
-        <translation type="unfinished">وقع الرسالة لتثبت انك تمتلك عنوان البت كوين هذا</translation>
-=======
         <source>Sign the message to prove you own this Syscoin address</source>
         <translation type="unfinished">‫وقع الرسالة لتثبت انك تملك عنوان البتكوين هذا‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3950,13 +3884,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">أدخل عنوان المتلقي، راسل (تأكد من نسخ فواصل الأسطر، الفراغات، الخ.. تماما) والتوقيع أسفله لتأكيد الرسالة. كن حذرا من عدم قراءة داخل التوقيع أكثر مما هو موقع بالرسالة نفسها، لتجنب خداعك بهجوم man-in-the-middle. لاحظ أنه هذا لاثبات أن الجهة الموقعة تستقبل مع العنوان فقط، لا تستطيع اثبات الارسال لأي معاملة.</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>The Syscoin address the message was signed with</source>
-        <translation type="unfinished">عنوان البتكوين الذي تم توقيع الرسالة به</translation>
-=======
         <source>The Syscoin address the message was signed with</source>
         <translation type="unfinished">عنوان البتكوين الذي تم توقيع الرسالة منه</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -3967,13 +3896,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">‫التوقيع المعطى عند توقيع الرسالة‬</translation>
     </message>
     <message>
-<<<<<<< HEAD:src/qt/locale/syscoin_ar.ts
-        <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
-        <translation type="unfinished">تحقق من الرسالة للتأكد من توقيعها مع عنوان البتكوين المحدد</translation>
-=======
         <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
         <translation type="unfinished">‫تحقق من الرسالة للتأكد أنه تم توقيعها من عنوان البتكوين المحدد‬</translation>
->>>>>>> 4d24e9c571 (Merge syscoin/syscoin#27169: Update translations for 25.0 soft translation string freeze):src/qt/locale/syscoin_ar.ts
     </message>
     <message>
         <source>Verify &amp;Message</source>
