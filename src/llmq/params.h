@@ -196,7 +196,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .name = "llmq_test_dip0024",
         .useRotation = true,
         .size = 4,
-        .minSize = 3,
+        .minSize = 4,
         .threshold = 2,
 
         .dkgInterval = 24, // DKG cycle
