@@ -26,6 +26,17 @@
  *
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ *
+ * If the server receives a request with the JSON-RPC 2.0 marker `{"jsonrpc": "2.0"}`
+ * then Bitcoin will respond with a strictly specified response.
+ * It will only return an HTTP error code if an actual HTTP error is encountered
+ * such as the endpoint is not found (404) or the request is not formatted correctly (500).
+ * Otherwise the HTTP code is always OK (200) and RPC errors will be included in the
+ * response body.
+ *
+ * 2.0 spec: https://www.jsonrpc.org/specification
+ *
+ * Also see http://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
  */
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
