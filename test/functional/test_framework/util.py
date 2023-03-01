@@ -468,7 +468,7 @@ def copy_datadir(from_node, to_node, dirname):
             src = os.path.join(from_datadir, d)
             dst = os.path.join(to_datadir, d)
             shutil.copytree(src, dst)
-        except:
+        except Exception:
             pass
 
 # If a cookie file exists in the given datadir, delete it.
