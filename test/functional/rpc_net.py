@@ -85,6 +85,7 @@ class NetTest(BitcoinTestFramework):
         self.test_connection_count()
         self.test_getpeerinfo()
         self.test_getnettotals()
+        self.test_getnettotals_detailed()
         self.test_getnetworkinfo()
         self.test_addnode_getaddednodeinfo()
         self.test_service_flags()
@@ -212,8 +213,150 @@ class NetTest(BitcoinTestFramework):
             self.wait_until(lambda: peer_after()['bytesrecv_per_msg'].get('pong', 0) >= peer_before['bytesrecv_per_msg'].get('pong', 0) + ping_size, timeout=1)
             self.wait_until(lambda: peer_after()['bytessent_per_msg'].get('ping', 0) >= peer_before['bytessent_per_msg'].get('ping', 0) + ping_size, timeout=1)
 
+    def test_getnettotals_detailed(self):
+        self.log.info("Test getnettotals.detailed")
+
+        self.restart_node(0)
+        node0 = self.nodes[0]
+        self.connect_nodes(0, 1) # Generate some traffic.
+        # Wait for the initial messages to be sent/received (don't disconnect too early). "sendheaders" is the last one.
+        self.wait_until(lambda: "sendheaders" in node0.getnettotals()["detailed"]["recv"]["not_publicly_routable"]["manual"])
+        self.wait_until(lambda: "sendheaders" in node0.getnettotals()["detailed"]["sent"]["not_publicly_routable"]["manual"])
+        self.disconnect_nodes(0, 1) # Avoid random/unpredictable packets (e.g. ping) messing with the tests below.
+        assert_equal(len(node0.getpeerinfo()), 0)
+
+        # In v2 getnettotals counts also bytes that are not accounted at any message (the v2 handshake).
+        # Also the v2 handshake's size could vary.
+        if not self.options.v2transport:
+            self.log.info("Test getnettotals.detailed: compare sum of detailed byte count vs totalbytes*")
+            nettotals = self.nodes[0].getnettotals()
+            sum_recv_bytes = 0
+            sum_sent_bytes = 0
+            for network in nettotals["detailed"]["recv"].values():
+                for connection_type in network.values():
+                    for message_type in connection_type.values():
+                        sum_recv_bytes += message_type["bytes"]
+            for network in nettotals["detailed"]["sent"].values():
+                for connection_type in network.values():
+                    for message_type in connection_type.values():
+                        sum_sent_bytes += message_type["bytes"]
+            assert_equal(nettotals["totalbytessent"], sum_sent_bytes)
+            assert_equal(nettotals["totalbytesrecv"], sum_recv_bytes)
+
+        self.log.info("Test getnettotals.detailed: full output is as expected")
+        stats_full = node0.getnettotals()["detailed"]
+        if self.options.v2transport:
+            assert_equal(
+                stats_full,
+                {
+                    "recv": {
+                        "not_publicly_routable": {
+                            "manual": {
+                                "feefilter": {"bytes": 29, "count": 1},
+                                "getheaders": {"bytes": 666, "count": 1},
+                                "headers": {"bytes": 103, "count": 1},
+                                "ping": {"bytes": 29, "count": 1},
+                                "pong": {"bytes": 29, "count": 1},
+                                "sendaddrv2": {"bytes": 33, "count": 1},
+                                "sendcmpct": {"bytes": 30, "count": 1},
+                                "sendheaders": {"bytes": 33, "count": 1},
+                                "verack": {"bytes": 33, "count": 1},
+                                "version": {"bytes": 147, "count": 1},
+                                "wtxidrelay": {"bytes": 33, "count": 1},
+                            }
+                        }
+                    },
+                    "sent": {
+                        "not_publicly_routable": {
+                            "manual": {
+                                "feefilter": {"bytes": 29, "count": 1},
+                                "getaddr": {"bytes": 33, "count": 1},
+                                "getheaders": {"bytes": 666, "count": 1},
+                                "headers": {"bytes": 103, "count": 1},
+                                "ping": {"bytes": 29, "count": 1},
+                                "pong": {"bytes": 29, "count": 1},
+                                "sendaddrv2": {"bytes": 33, "count": 1},
+                                "sendcmpct": {"bytes": 30, "count": 1},
+                                "sendheaders": {"bytes": 33, "count": 1},
+                                "verack": {"bytes": 33, "count": 1},
+                                "version": {"bytes": 147, "count": 1},
+                                "wtxidrelay": {"bytes": 33, "count": 1},
+                            }
+                        }
+                    }
+                }
+            )
+        else:
+            assert_equal(
+                stats_full,
+                {
+                    "recv": {
+                        "not_publicly_routable": {
+                            "manual": {
+                                "feefilter": {"bytes": 32, "count": 1},
+                                "getheaders": {"bytes": 669, "count": 1},
+                                "headers": {"bytes": 106, "count": 1},
+                                "ping": {"bytes": 32, "count": 1},
+                                "pong": {"bytes": 32, "count": 1},
+                                "sendaddrv2": {"bytes": 24, "count": 1},
+                                "sendcmpct": {"bytes": 33, "count": 1},
+                                "sendheaders": {"bytes": 24, "count": 1},
+                                "verack": {"bytes": 24, "count": 1},
+                                "version": {"bytes": 138, "count": 1},
+                                "wtxidrelay": {"bytes": 24, "count": 1},
+                            }
+                        }
+                    },
+                    "sent": {
+                        "not_publicly_routable": {
+                            "manual": {
+                                "feefilter": {"bytes": 32, "count": 1},
+                                "getaddr": {"bytes": 24, "count": 1},
+                                "getheaders": {"bytes": 669, "count": 1},
+                                "headers": {"bytes": 106, "count": 1},
+                                "ping": {"bytes": 32, "count": 1},
+                                "pong": {"bytes": 32, "count": 1},
+                                "sendaddrv2": {"bytes": 24, "count": 1},
+                                "sendcmpct": {"bytes": 33, "count": 1},
+                                "sendheaders": {"bytes": 24, "count": 1},
+                                "verack": {"bytes": 24, "count": 1},
+                                "version": {"bytes": 138, "count": 1},
+                                "wtxidrelay": {"bytes": 24, "count": 1},
+                            }
+                        }
+                    }
+                }
+            )
+
+        self.log.info("Test getnettotals.detailed: message count and total number of bytes increment when PING is sent")
+        assert "inbound" not in node0.getnettotals()["detailed"]["sent"]["not_publicly_routable"]
+        node2 = node0.add_p2p_connection(P2PInterface())
+        assert_equal(len(node0.getpeerinfo()), 1)
+        # Wait for the initial PING (that is sent immediately after the connection is established) to go through.
+        self.wait_until(lambda: node0.getnettotals()["detailed"]["sent"]["not_publicly_routable"]["inbound"]["ping"]["count"] >= 1)
+        stats_before_ping = node0.getnettotals()["detailed"]
+        node0.ping()
+        self.wait_until(lambda: node0.getnettotals()["detailed"]["sent"]["not_publicly_routable"]["inbound"]["ping"]["count"] > stats_before_ping["sent"]["not_publicly_routable"]["inbound"]["ping"]["count"])
+        self.wait_until(lambda: node0.getnettotals()["detailed"]["sent"]["not_publicly_routable"]["inbound"]["ping"]["bytes"] > stats_before_ping["sent"]["not_publicly_routable"]["inbound"]["ping"]["bytes"])
+
+        self.log.info("Test getnettotals.detailed: when a message is broken in two, the stats only update once the full message has been received")
+        ping_msg = node2.build_message(test_framework.messages.msg_ping(nonce=12345))
+        stats_before_ping = node0.getnettotals()["detailed"]
+        # Send the message in two pieces.
+        cut_pos = 7 # Chosen at an arbitrary position within the header.
+        node2.send_raw_message(ping_msg[:cut_pos])
+        assert_equal(node0.getnettotals()["detailed"]["recv"]["not_publicly_routable"]["inbound"]["ping"], stats_before_ping["recv"]["not_publicly_routable"]["inbound"]["ping"])
+        # Send the rest of the ping.
+        node2.send_raw_message(ping_msg[cut_pos:])
+        self.wait_until(lambda: node0.getnettotals()["detailed"]["recv"]["not_publicly_routable"]["inbound"]["ping"]["count"] == stats_before_ping["recv"]["not_publicly_routable"]["inbound"]["ping"]["count"] + 1)
+
+        node2.peer_disconnect()
+
     def test_getnetworkinfo(self):
         self.log.info("Test getnetworkinfo")
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 0)
+        self.sync_all()
         info = self.nodes[0].getnetworkinfo()
         assert_equal(info['networkactive'], True)
         assert_equal(info['connections'], 2)
