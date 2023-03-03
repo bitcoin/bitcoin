@@ -56,10 +56,10 @@ DESCS = [
     f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{{{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')},{P2WSH_MINISCRIPTS[3]}}}}})",
 ]
 
-MINISCRIPTS_PRIV = [
+DESCS_PRIV = [
     # One of two keys, of which one private key is known
     {
-        "ms": f"or_i(pk({TPRVS[0]}/*),pk({TPUBS[0]}/*))",
+        "desc": f"wsh(or_i(pk({TPRVS[0]}/*),pk({TPUBS[0]}/*)))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 1,
@@ -67,7 +67,7 @@ MINISCRIPTS_PRIV = [
     },
     # A more complex policy, that can't be satisfied through the first branch (need for a preimage)
     {
-        "ms": f"andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*)))",
+        "desc": f"wsh(andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
@@ -75,7 +75,7 @@ MINISCRIPTS_PRIV = [
     },
     # The same policy but we provide the preimage. This path will be chosen as it's a smaller witness.
     {
-        "ms": f"andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*)))",
+        "desc": f"wsh(andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
@@ -86,7 +86,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with a relative timelock
     {
-        "ms": f"and_v(v:older(2),pk({TPRVS[0]}/*))",
+        "desc": f"wsh(and_v(v:older(2),pk({TPRVS[0]}/*)))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 1,
@@ -94,7 +94,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with an absolute timelock
     {
-        "ms": f"and_v(v:after(20),pk({TPRVS[0]}/*))",
+        "desc": f"wsh(and_v(v:after(20),pk({TPRVS[0]}/*)))",
         "sequence": None,
         "locktime": 20,
         "sigs_count": 1,
@@ -102,7 +102,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with both
     {
-        "ms": f"and_v(v:older(4),and_v(v:after(30),pk({TPRVS[0]}/*)))",
+        "desc": f"wsh(and_v(v:older(4),and_v(v:after(30),pk({TPRVS[0]}/*))))",
         "sequence": 4,
         "locktime": 30,
         "sigs_count": 1,
@@ -110,7 +110,7 @@ MINISCRIPTS_PRIV = [
     },
     # We have one key on each branch; Core signs both (can't finalize)
     {
-        "ms": f"c:andor(pk({TPRVS[0]}/*),pk_k({TPUBS[0]}),and_v(v:pk({TPRVS[1]}),pk_k({TPUBS[1]})))",
+        "desc": f"wsh(c:andor(pk({TPRVS[0]}/*),pk_k({TPUBS[0]}),and_v(v:pk({TPRVS[1]}),pk_k({TPUBS[1]}))))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 2,
@@ -118,7 +118,7 @@ MINISCRIPTS_PRIV = [
     },
     # We have all the keys, wallet selects the timeout path to sign since it's smaller and sequence is set
     {
-        "ms": f"andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pk({TPRVS[1]}),older(10)))",
+        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pk({TPRVS[1]}),older(10))))",
         "sequence": 10,
         "locktime": None,
         "sigs_count": 3,
@@ -126,7 +126,7 @@ MINISCRIPTS_PRIV = [
     },
     # We have all the keys, wallet selects the primary path to sign unconditionally since nsequence wasn't set to be valid for timeout path
     {
-        "ms": f"andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pkh({TPRVS[1]}),older(10)))",
+        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pkh({TPRVS[1]}),older(10))))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 3,
@@ -134,7 +134,7 @@ MINISCRIPTS_PRIV = [
     },
     # Finalizes to the smallest valid witness, regardless of sequence
     {
-        "ms": f"or_d(pk({TPRVS[0]}/*),and_v(v:pk({TPRVS[1]}),and_v(v:pk({TPRVS[2]}),older(10))))",
+        "desc": f"wsh(or_d(pk({TPRVS[0]}/*),and_v(v:pk({TPRVS[1]}),and_v(v:pk({TPRVS[2]}),older(10)))))",
         "sequence": 12,
         "locktime": None,
         "sigs_count": 3,
@@ -142,7 +142,7 @@ MINISCRIPTS_PRIV = [
     },
     # Liquid-like federated pegin with emergency recovery privkeys
     {
-        "ms": f"or_i(and_b(pk({TPUBS[0]}/*),a:and_b(pk({TPUBS[1]}),a:and_b(pk({TPUBS[2]}),a:and_b(pk({TPUBS[3]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[4]})),older(42)))",
+        "desc": f"wsh(or_i(and_b(pk({TPUBS[0]}/*),a:and_b(pk({TPUBS[1]}),a:and_b(pk({TPUBS[2]}),a:and_b(pk({TPUBS[3]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[4]})),older(42))))",
         "sequence": 42,
         "locktime": None,
         "sigs_count": 2,
@@ -198,10 +198,10 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         assert utxo["txid"] == txid and utxo["solvable"]
 
     def signing_test(
-        self, ms, sequence, locktime, sigs_count, stack_size, sha256_preimages
+        self, desc, sequence, locktime, sigs_count, stack_size, sha256_preimages
     ):
-        self.log.info(f"Importing private Miniscript '{ms}'")
-        desc = descsum_create(f"wsh({ms})")
+        self.log.info(f"Importing private Miniscript descriptor '{desc}'")
+        desc = descsum_create(desc)
         res = self.ms_sig_wallet.importdescriptors(
             [
                 {
@@ -309,14 +309,14 @@ class WalletMiniscriptTest(BitcoinTestFramework):
             self.watchonly_test(desc)
 
         # Test we can sign for any Miniscript.
-        for ms in MINISCRIPTS_PRIV:
+        for desc in DESCS_PRIV:
             self.signing_test(
-                ms["ms"],
-                ms["sequence"],
-                ms["locktime"],
-                ms["sigs_count"],
-                ms["stack_size"],
-                ms.get("sha256_preimages"),
+                desc["desc"],
+                desc["sequence"],
+                desc["locktime"],
+                desc["sigs_count"],
+                desc["stack_size"],
+                desc.get("sha256_preimages"),
             )
 
 
