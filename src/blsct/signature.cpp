@@ -10,6 +10,7 @@
 #include <streams.h>
 #include <tinyformat.h>
 
+
 namespace blsct {
 
 Signature::Signature()
