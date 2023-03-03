@@ -412,6 +412,33 @@ void univalue_readwrite()
 
     BOOST_CHECK_EQUAL(strJson1, v.write());
 
+    // Valid
+    BOOST_CHECK(v.read("1.0") && (v.get_real() == 1.0));
+    BOOST_CHECK(v.read("true") && v.get_bool());
+    BOOST_CHECK(v.read("[false]") && !v[0].get_bool());
+    BOOST_CHECK(v.read("{\"a\": true}") && v["a"].get_bool());
+    BOOST_CHECK(v.read("{\"1\": \"true\"}") && (v["1"].get_str() == "true"));
+    // Valid, with leading or trailing whitespace
+    BOOST_CHECK(v.read(" 1.0") && (v.get_real() == 1.0));
+    BOOST_CHECK(v.read("1.0 ") && (v.get_real() == 1.0));
+    BOOST_CHECK(v.read("0.00000000000000000000000000000000000001e+30 ") && v.get_real() == 1e-8);
+
+    BOOST_CHECK(!v.read(".19e-6")); //should fail, missing leading 0, therefore invalid JSON
+    // Invalid, initial garbage
+    BOOST_CHECK(!v.read("[1.0"));
+    BOOST_CHECK(!v.read("a1.0"));
+    // Invalid, trailing garbage
+    BOOST_CHECK(!v.read("1.0sds"));
+    BOOST_CHECK(!v.read("1.0]"));
+    // Invalid, keys have to be names
+    BOOST_CHECK(!v.read("{1: \"true\"}"));
+    BOOST_CHECK(!v.read("{true: 1}"));
+    BOOST_CHECK(!v.read("{[1]: 1}"));
+    BOOST_CHECK(!v.read("{{\"a\": \"a\"}: 1}"));
+    // BTC addresses should fail parsing
+    BOOST_CHECK(!v.read("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    BOOST_CHECK(!v.read("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"));
+
     /* Check for (correctly reporting) a parsing error if the initial
        JSON construct is followed by more stuff.  Note that whitespace
        is, of course, exempt.  */

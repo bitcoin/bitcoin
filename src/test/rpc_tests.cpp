@@ -278,41 +278,12 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000001000000")), 1LL); //should pass, cut trailing 0
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("19e-9")), UniValue); //should fail
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.19e-6")), 19); //should pass, leading 0 is present
+    BOOST_CHECK_EXCEPTION(AmountFromValue(".19e-6"), UniValue, HasJSON(R"({"code":-3,"message":"Invalid amount"})")); //should fail, no leading 0
 
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("92233720368.54775808")), UniValue); //overflow error
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e+11")), UniValue); //overflow error
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e11")), UniValue); //overflow error signless
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("93e+9")), UniValue); //overflow error
-}
-
-BOOST_AUTO_TEST_CASE(json_parse_errors)
-{
-    // Valid
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0").get_real(), 1.0);
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("true").get_bool(), true);
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("[false]")[0].get_bool(), false);
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("{\"a\": true}")["a"].get_bool(), true);
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("{\"1\": \"true\"}")["1"].get_str(), "true");
-    // Valid, with leading or trailing whitespace
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue(" 1.0").get_real(), 1.0);
-    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0 ").get_real(), 1.0);
-
-    BOOST_CHECK_THROW(AmountFromValue(ParseNonRFCJSONValue(".19e-6")), std::runtime_error); //should fail, missing leading 0, therefore invalid JSON
-    BOOST_CHECK_EQUAL(AmountFromValue(ParseNonRFCJSONValue("0.00000000000000000000000000000000000001e+30 ")), 1);
-    // Invalid, initial garbage
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("[1.0"), std::runtime_error);
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("a1.0"), std::runtime_error);
-    // Invalid, trailing garbage
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
-    // Invalid, keys have to be names
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{1: \"true\"}"), std::runtime_error);
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{true: 1}"), std::runtime_error);
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{[1]: 1}"), std::runtime_error);
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{{\"a\": \"a\"}: 1}"), std::runtime_error);
-    // BTC addresses should fail parsing
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
-    BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_ban)

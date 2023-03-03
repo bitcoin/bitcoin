@@ -159,10 +159,6 @@ FUZZ_TARGET(string)
     const util::Settings settings;
     (void)OnlyHasDefaultSectionSetting(settings, random_string_1, random_string_2);
     (void)ParseNetwork(random_string_1);
-    try {
-        (void)ParseNonRFCJSONValue(random_string_1);
-    } catch (const std::runtime_error&) {
-    }
     (void)ParseOutputType(random_string_1);
     (void)RemovePrefix(random_string_1, random_string_2);
     (void)ResolveErrMsg(random_string_1, random_string_2);
