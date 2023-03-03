@@ -22,6 +22,7 @@ TPUBS = [
     "tpubD6NzVbkrYhZ4XRMcMFMMFvzVt6jaDAtjZhD7JLwdPdMm9xa76DnxYYP7w9TZGJDVFkek3ArwVsuacheqqPog8TH5iBCX1wuig8PLXim4n9a",
     "tpubD6NzVbkrYhZ4WsqRzDmkL82SWcu42JzUvKWzrJHQ8EC2vEHRHkXj1De93sD3biLrKd8XGnamXURGjMbYavbszVDXpjXV2cGUERucLJkE6cy",
     "tpubDEFLeBkKTm8aiYkySz8hXAXPVnPSfxMi7Fxhg9sejUrkwJuRWvPdLEiXjTDbhGbjLKCZUDUUibLxTnK5UP1q7qYrSnPqnNe7M8mvAW1STcc",
+    "tpubD6NzVbkrYhZ4WR99ygpiJvPMAJiwahjLgGywc5vJx2gUfKUfEPCrbKmQczDPJZmLcyZzRb5Ti6rfUb89S2WFyPH7FDtD6RFDA1hdgTEgEUL",
 ]
 PUBKEYS = [
     "02aebf2d10b040eb936a6f02f44ee82f8b34f5c1ccb20ff3949c2b28206b7c1068",
@@ -148,6 +149,56 @@ DESCS_PRIV = [
         "sigs_count": 2,
         "stack_size": 8,
     },
+    # Each leaf needs two sigs. We've got one key on each. Will sign both but can't finalize.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pk({TPRVS[1]}/*),pk({TPUBS[2]}))}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 2,
+        "stack_size": None,
+    },
+    # The same but now the two leaves are identical. Will add a single sig that is valid for both. Can't finalize.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]}))}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 1,
+        "stack_size": None,
+    },
+    # The same but we have the two necessary privkeys on one of the leaves. Also it uses a pubkey hash.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pkh({TPRVS[1]}/*),pk({TPRVS[2]}))}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 3,
+        "stack_size": 5,
+    },
+    # A key immediately or one of two keys after a timelock. If both paths are available it'll use the
+    # non-timelocked path because it's a smaller witness.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPRVS[0]}/*),and_v(v:older(42),multi_a(1,{TPRVS[1]},{TPRVS[2]}))}})",
+        "sequence": 42,
+        "locktime": None,
+        "sigs_count": 3,
+        "stack_size": 3,
+    },
+    # A key immediately or one of two keys after a timelock. If the "primary" key isn't available though it'll
+    # use the timelocked path. Same remark for multi_a.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPUBS[1]}/*),and_v(v:older(42),multi_a(1,{TPRVS[0]},{TPRVS[1]}))}})",
+        "sequence": 42,
+        "locktime": None,
+        "sigs_count": 2,
+        "stack_size": 4,
+    },
+    # Liquid-like federated pegin with emergency recovery privkeys, but in a Taproot.
+    {
+        "desc": f"tr({TPUBS[1]}/*,{{and_b(pk({TPUBS[2]}/*),a:and_b(pk({TPUBS[3]}),a:and_b(pk({TPUBS[4]}),a:and_b(pk({TPUBS[5]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[6]})),older(42))}})",
+        "sequence": 42,
+        "locktime": None,
+        "sigs_count": 2,
+        "stack_size": 8,
+    },
 ]
 
 
@@ -201,6 +252,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self, desc, sequence, locktime, sigs_count, stack_size, sha256_preimages
     ):
         self.log.info(f"Importing private Miniscript descriptor '{desc}'")
+        is_taproot = desc.startswith("tr(")
         desc = descsum_create(desc)
         res = self.ms_sig_wallet.importdescriptors(
             [
@@ -216,7 +268,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         assert res[0]["success"], res
 
         self.log.info("Generating an address for it and testing it detects funds")
-        addr = self.ms_sig_wallet.getnewaddress()
+        addr_type = "bech32m" if is_taproot else "bech32"
+        addr = self.ms_sig_wallet.getnewaddress(address_type=addr_type)
         txid = self.funder.sendtoaddress(addr, 0.01)
         self.wait_until(lambda: txid in self.funder.getrawmempool())
         self.funder.generatetoaddress(1, self.funder.getnewaddress())
@@ -248,7 +301,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
             psbt = psbt.to_base64()
         res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
         psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
-        assert len(psbtin["partial_signatures"]) == sigs_count
+        sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
+        assert len(psbtin[sigs_field_name]) == sigs_count
         res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
         assert res["complete"] == (stack_size is not None)
 
