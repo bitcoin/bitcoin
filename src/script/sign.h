@@ -102,7 +102,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
  * @param provider   Utility containing the information necessary to solve a script.
  * @param fromPubKey The script to produce a satisfaction for.
  * @param txTo       The spending transaction.
- * @param nIn        The index of the input in `txTo` refering the output being spent.
+ * @param nIn        The index of the input in `txTo` referring the output being spent.
  * @param amount     The value of the output being spent.
  * @param nHashType  Signature hash type.
  * @param sig_data   Additional data provided to solve a script. Filled with the resulting satisfying
