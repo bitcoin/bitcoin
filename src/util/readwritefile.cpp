@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/readwritefile.h>
+
 #include <fs.h>
 
 #include <limits>
@@ -10,7 +12,7 @@
 #include <string>
 #include <utility>
 
-std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
+std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize)
 {
     FILE *f = fsbridge::fopen(filename, "rb");
     if (f == nullptr)
