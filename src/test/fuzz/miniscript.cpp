@@ -458,7 +458,7 @@ struct SmartInfo
                 Type type_zo = zo == 0 ? "z"_mst : zo == 1 ? "o"_mst : ""_mst;
                 for (int n = 0; n < 2; ++n) { /* select from (none),n */
                     if (zo == 0 && n == 1) continue; /* z conflicts with n */
-                    if (base == 3 && n == 1) continue; /* W conficts with n */
+                    if (base == 3 && n == 1) continue; /* W conflicts with n */
                     Type type_n = n == 0 ? ""_mst : "n"_mst;
                     for (int d = 0; d < 2; ++d) { /* select from (none),d */
                         if (base == 2 && d == 1) continue; /* V conflicts with d */
@@ -940,7 +940,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
     auto decoded = miniscript::FromScript(script, PARSER_CTX);
     assert(decoded);
     // Note we can't use *decoded == *node because the miniscript representation may differ, so we check that:
-    // - The script corresponding to that decoded form matchs exactly
+    // - The script corresponding to that decoded form matches exactly
     // - The type matches exactly
     assert(decoded->ToScript(PARSER_CTX) == script);
     assert(decoded->GetType() == node->GetType());
