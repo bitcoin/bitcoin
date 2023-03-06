@@ -43,13 +43,6 @@ extern const char * const BITCOIN_SETTINGS_FILENAME;
 void SetupEnvironment();
 bool SetupNetworking();
 
-template<typename... Args>
-bool error(const char* fmt, const Args&... args)
-{
-    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
-    return false;
-}
-
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
  * feature analogous to fsync().
