@@ -2922,7 +2922,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
         const uint256& orphan_wtxid = porphanTx->GetWitnessHash();
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
+            LogPrint(BCLog::TXPACKAGES, "   accepted orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
             m_orphanage.AddChildrenToWorkSet(*porphanTx);
             m_orphanage.EraseTx(orphanHash);
@@ -2932,7 +2932,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (state.IsInvalid()) {
-                LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s (wtxid=%s) from peer=%d. %s\n",
+                LogPrint(BCLog::TXPACKAGES, "   invalid orphan tx %s (wtxid=%s) from peer=%d. %s\n",
                     orphanHash.ToString(),
                     orphan_wtxid.ToString(),
                     peer.m_id,
@@ -2942,7 +2942,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
-            LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
+            LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
             if (state.GetResult() != TxValidationResult::TX_WITNESS_STRIPPED) {
                 // We can add the wtxid of this transaction to our reject filter.
                 // Do not add txids of witness transactions or witness-stripped
