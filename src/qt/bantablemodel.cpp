@@ -178,3 +178,9 @@ bool BanTableModel::shouldShow()
 {
     return priv->size() > 0;
 }
+
+bool BanTableModel::unban(const QModelIndex& index)
+{
+    CCombinedBan* ban{static_cast<CCombinedBan*>(index.internalPointer())};
+    return ban != nullptr && m_node.unban(ban->subnet);
+}

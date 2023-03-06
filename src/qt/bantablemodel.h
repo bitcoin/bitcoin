@@ -68,6 +68,8 @@ public:
 
     bool shouldShow();
 
+    bool unban(const QModelIndex& index);
+
 public Q_SLOTS:
     void refresh();
 
