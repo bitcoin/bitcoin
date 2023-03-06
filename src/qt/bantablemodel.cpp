@@ -43,7 +43,7 @@ public:
     /** Order (ascending or descending) to sort nodes by */
     Qt::SortOrder sortOrder;
 
-    /** Pull a full list of banned nodes from CNode into our cache */
+    /** Pull a full list of banned nodes from interfaces::Node into our cache */
     void refreshBanlist(interfaces::Node& node)
     {
         banmap_t banMap;
