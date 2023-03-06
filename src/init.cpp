@@ -70,6 +70,7 @@
 #include <txmempool.h>
 #include <util/asmap.h>
 #include <util/check.h>
+#include <util/fs_helpers.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>

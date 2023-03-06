@@ -8,8 +8,8 @@
 #include <logging.h>
 #include <random.h>
 #include <tinyformat.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <algorithm>
 #include <cassert>

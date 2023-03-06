@@ -12,7 +12,7 @@
 #include <qt/psbtoperationsdialog.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
-#include <util/system.h>
+#include <util/fs_helpers.h>
 
 #include <cassert>
 #include <fstream>

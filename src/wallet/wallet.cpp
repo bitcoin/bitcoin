@@ -32,6 +32,7 @@
 #include <util/check.h>
 #include <util/error.h>
 #include <util/fees.h>
+#include <util/fs_helpers.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/string.h>
@@ -39,8 +40,8 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
-#include <wallet/fees.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
+#include <wallet/fees.h>
 
 #include <univalue.h>
 
