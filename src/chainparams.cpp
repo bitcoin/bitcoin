@@ -93,8 +93,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000003404ba0801921119f903495e");
-        consensus.defaultAssumeValid = uint256S("0x00000000000000000009c97098b5295f7e5f183ac811fb5d1534040adb93cabd"); // 751565
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000004200315292c8bdc13e546bdc");
+        consensus.defaultAssumeValid = uint256S("0x00000000000000000001ab5cdb8f56ebc12419a1c12a528f576c535e976ae5e9"); // 779756
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -107,7 +107,7 @@ public:
         pchMessageStart[3] = 0xd9;
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 496;
+        m_assumed_blockchain_size = 543;
         m_assumed_chain_state_size = 6;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
@@ -168,10 +168,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 00000000000000000009c97098b5295f7e5f183ac811fb5d1534040adb93cabd
-            .nTime    = 1661697692,
-            .nTxCount = 760120522,
-            .dTxRate  = 2.925802860942233,
+            // Data from RPC: getchaintxstats 4096 00000000000000000001ab5cdb8f56ebc12419a1c12a528f576c535e976ae5e9
+            .nTime    = 1678203665,
+            .nTxCount = 811834437,
+            .dTxRate  = 3.521413854206197,
         };
     }
 };
@@ -213,8 +213,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000076f6e7cbd0beade5d20");
-        consensus.defaultAssumeValid = uint256S("0x0000000000000004877fa2d36316398528de4f347df2f8a96f76613a298ce060"); // 2344474
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000009187b7c3b56dbc42a6f");
+        consensus.defaultAssumeValid = uint256S("0x0000000000000011687aa6730b65137ca2549024b71bfda69d9eaf5eb7336749"); // 2423291
 
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
@@ -264,10 +264,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 0000000000000004877fa2d36316398528de4f347df2f8a96f76613a298ce060
-            .nTime    = 1661705221,
-            .nTxCount = 63531852,
-            .dTxRate  = 0.1079119341520164,
+            // Data from RPC: getchaintxstats 4096 0000000000000011687aa6730b65137ca2549024b71bfda69d9eaf5eb7336749
+            .nTime    = 1678204040,
+            .nTxCount = 65041246,
+            .dTxRate  = 0.06820774626044654,
         };
     }
 };
@@ -289,15 +289,15 @@ public:
             vSeeds.emplace_back("178.128.221.177");
             vSeeds.emplace_back("v7ajjeirttkbnt32wpy3c6w3emwnfr3fkla7hpxcfokr3ysd3kqtzmqd.onion:38333");
 
-            consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000001291fc22898");
-            consensus.defaultAssumeValid = uint256S("0x000000d1a0e224fa4679d2fb2187ba55431c284fa1b74cbc8cfda866fd4d2c09"); // 105495
+            consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000017aeaa97dea");
+            consensus.defaultAssumeValid = uint256S("0x0000001681c52f68f3b148a931574d23a54153231d4a6a0161799950e2453d97"); // 133021
             m_assumed_blockchain_size = 1;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
                 // Data from RPC: getchaintxstats 4096 000000d1a0e224fa4679d2fb2187ba55431c284fa1b74cbc8cfda866fd4d2c09
-                .nTime    = 1661702566,
-                .nTxCount = 1903567,
-                .dTxRate  = 0.02336701143027275,
+                .nTime    = 1678203585,
+                .nTxCount = 2207891,
+                .dTxRate  = 0.007109003813377025,
             };
         } else {
             const auto signet_challenge = args.GetArgs("-signetchallenge");
