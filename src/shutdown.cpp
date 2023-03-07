@@ -27,7 +27,7 @@ bool AbortNode(const std::string& strMessage, bilingual_str user_message)
     if (user_message.empty()) {
         user_message = _("A fatal internal error occurred, see debug.log for details");
     }
-    AbortError(user_message);
+    InitError(user_message);
     StartShutdown();
     return false;
 }
