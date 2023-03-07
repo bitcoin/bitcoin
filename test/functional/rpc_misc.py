@@ -63,6 +63,39 @@ class RpcMiscTest(BitcoinTestFramework):
         node.logging(include=['qt'])
         assert_equal(node.logging()['qt'], True)
 
+        # Test toggling all categories and none with the logging RPC.
+        for all_value in ['1', 'all']:
+            node.logging(exclude=[all_value])
+            assert all(v == False for v in node.logging().values())
+
+            node.logging(include=[all_value])
+            assert all(v == True for v in node.logging().values())
+
+            # RPC logging called with both included and excluded prioritizes excluded.
+            node.logging(include=[all_value], exclude=[all_value])
+            assert all(v == False for v in node.logging().values())
+
+        for none_value in ['0', 'none']:
+            node.logging(include=['all', 'net'], exclude=[none_value])
+            assert all(v == True for v in node.logging().values())
+
+            node.logging(include=[none_value])
+            assert all(v == True for v in node.logging().values())
+
+            node.logging(exclude=[none_value])
+            assert all(v == True for v in node.logging().values())
+
+            node.logging(exclude=['net', none_value])
+            assert all(v == True for v in node.logging().values())
+
+            # RPC logging called with both all and none prioritizes none.
+            node.logging(exclude=[none_value, '1'])
+            assert all(v == True for v in node.logging().values())
+
+            node.logging(exclude=['all'])
+            node.logging(include=['validation', none_value])
+            assert all(v == False for v in node.logging().values())
+
         # Test logging RPC returns the logging categories in alphabetical order.
         sorted_logging_categories = sorted(node.logging())
         assert_equal(list(node.logging()), sorted_logging_categories)
