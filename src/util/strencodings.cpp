@@ -96,8 +96,8 @@ std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
     }
     return vch;
 }
-template std::vector<std::byte> ParseHex(std::string_view);
-template std::vector<uint8_t> ParseHex(std::string_view);
+template std::optional<std::vector<std::byte>> TryParseHex(std::string_view);
+template std::optional<std::vector<uint8_t>> TryParseHex(std::string_view);
 
 bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 {
