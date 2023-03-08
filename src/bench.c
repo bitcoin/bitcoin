@@ -11,7 +11,7 @@
 #include "util.h"
 #include "bench.h"
 
-void help(int default_iters) {
+static void help(int default_iters) {
     printf("Benchmarks the following algorithms:\n");
     printf("    - ECDSA signing/verification\n");
 
