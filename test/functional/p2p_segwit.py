@@ -690,19 +690,19 @@ class SegWitTest(BitcoinTestFramework):
         # segwit activation.  Note that older bitcoind's that are not
         # segwit-aware would also reject this for failing CLEANSTACK.
         with self.nodes[0].assert_debug_log(
-                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mempool-script-verify-flag-failed (Witness program was passed an empty witness)']):
+                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mandatory-script-verify-flag-failed (Witness program was passed an empty witness)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # The transaction was detected as witness stripped above and not added to the reject
         # filter. Trying again will check it again and result in the same error.
         with self.nodes[0].assert_debug_log(
-                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mempool-script-verify-flag-failed (Witness program was passed an empty witness)']):
+                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mandatory-script-verify-flag-failed (Witness program was passed an empty witness)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Try to put the witness script in the scriptSig, should also fail.
         spend_tx.vin[0].scriptSig = CScript([p2wsh_pubkey, b'a'])
         with self.nodes[0].assert_debug_log(
-                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mempool-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)']):
+                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Now put the witness script in the witness, should succeed after
@@ -1254,7 +1254,7 @@ class SegWitTest(BitcoinTestFramework):
         # Now do the opposite: strip the witness entirely. This will be detected as witness stripping and
         # the (w)txid won't be added to the reject filter: we can try again and get the same error.
         tx3.wit.vtxinwit[0].scriptWitness.stack = []
-        reason = "was not accepted: mempool-script-verify-flag-failed (Witness program was passed an empty witness)"
+        reason = "was not accepted: mandatory-script-verify-flag-failed (Witness program was passed an empty witness)"
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=False, accepted=False, reason=reason)
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=False, accepted=False, reason=reason)
 
@@ -1361,9 +1361,8 @@ class SegWitTest(BitcoinTestFramework):
         # Now the node will no longer ask for getdata of this transaction when advertised by same txid
         self.std_node.announce_tx_and_wait_for_getdata(tx3, success=False)
 
-        # Spending a higher version witness output is not allowed by policy,
-        # even with the node that accepts non-standard txs.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason="reserved for soft-fork upgrades")
+        # Spending a higher version witness output is allowed on the node with -acceptnonstdtxn
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
         # Building a block with the transaction must be valid, however even without -acceptnonstdtxn.
         block = self.build_next_block()
