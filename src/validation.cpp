@@ -1137,7 +1137,7 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     const CTransaction& tx = *ws.m_ptx;
     TxValidationState& state = ws.m_state;
 
-    constexpr script_verify_flags scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+    const script_verify_flags scriptVerifyFlags = (m_pool.m_opts.require_standard ? STANDARD_SCRIPT_VERIFY_FLAGS : m_active_chainstate.m_chainman.m_all_consensus_script_flags);
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1177,9 +1177,11 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     // invalid blocks (using TestBlockValidity), however allowing such
     // transactions into the mempool can be exploited as a DoS attack.
     script_verify_flags currentBlockScriptVerifyFlags{GetBlockScriptFlags(*m_active_chainstate.m_chain.Tip(), m_active_chainstate.m_chainman)};
+    Assume((currentBlockScriptVerifyFlags & m_active_chainstate.m_chainman.m_all_consensus_script_flags) == currentBlockScriptVerifyFlags);
+
     if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags,
                                         ws.m_precomputed_txdata, m_active_chainstate.CoinsTip(), GetValidationCache())) {
-        LogError("BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not STANDARD flags %s, %s", hash.ToString(), state.ToString());
+        LogError("BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not mempool flags %s, %s", hash.ToString(), state.ToString());
         return Assume(false);
     }
 
@@ -2249,6 +2251,29 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
+namespace {
+template<script_verify_flag_name VFN>
+script_verify_flags add_pending_flag(const Consensus::Params& params, auto dep)
+{
+    static_assert((VFN & STANDARD_SCRIPT_VERIFY_FLAGS) == VFN, "pending flags must be included in STANDARD_SCRIPT_VERIFY_FLAGS");
+
+    if (DeploymentEnabled(params, dep)) return VFN;
+    return 0;
+}
+} // namespace
+
+script_verify_flags ChainstateManager::GetAllConsensusScriptFlags(const Consensus::Params& params)
+{
+    script_verify_flags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
+    flags |= add_pending_flag<SCRIPT_VERIFY_DERSIG>(params, Consensus::DEPLOYMENT_DERSIG);
+    flags |= add_pending_flag<SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY>(params, Consensus::DEPLOYMENT_CLTV);
+    flags |= add_pending_flag<SCRIPT_VERIFY_CHECKSEQUENCEVERIFY>(params, Consensus::DEPLOYMENT_CSV);
+    flags |= add_pending_flag<SCRIPT_VERIFY_NULLDUMMY>(params, Consensus::DEPLOYMENT_SEGWIT);
+
+    assert((flags & STANDARD_SCRIPT_VERIFY_FLAGS) == flags); // consensus flags should be a subset of STANDARD
+    return flags;
+}
+
 script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
 {
     const Consensus::Params& consensusparams = chainman.GetConsensus();
@@ -2286,6 +2311,9 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
+
+    // Note: flags returned from this function must also be included in
+    // GetAllConsensusScriptFlags() above.
 
     return flags;
 }
@@ -6153,6 +6181,7 @@ ChainstateManager::ChainstateManager(const util::SignalInterrupt& interrupt, Opt
       m_interrupt{interrupt},
       m_options{Flatten(std::move(options))},
       m_blockman{interrupt, std::move(blockman_options)},
+      m_all_consensus_script_flags{GetAllConsensusScriptFlags(m_options.chainparams.GetConsensus())},
       m_validation_cache{m_options.script_execution_cache_bytes, m_options.signature_cache_bytes}
 {
 }
