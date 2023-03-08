@@ -130,6 +130,7 @@ BASE_SCRIPTS = [
     'wallet_groups.py --descriptors',
     'p2p_blockfilters.py',
     'feature_assumevalid.py',
+    'feature_assumevalid_pruning.py',
     'wallet_taproot.py --descriptors',
     'feature_bip68_sequence.py',
     'rpc_packages.py',
