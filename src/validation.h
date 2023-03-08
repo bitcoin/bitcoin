@@ -827,8 +827,8 @@ private:
     // SYSCOIN
     bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    std::chrono::microseconds m_last_write{0};
-    std::chrono::microseconds m_last_flush{0};
+    SteadyClock::time_point m_last_write{};
+    SteadyClock::time_point m_last_flush{};
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
