@@ -7,6 +7,7 @@
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/private_key.h>
 #include <blsct/range_proof/range_proof.h>
 #include <blsct/signature.h>
 #include <consensus/amount.h>

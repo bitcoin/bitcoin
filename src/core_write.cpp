@@ -33,7 +33,7 @@ UniValue ValueFromAmount(const CAmount amount)
         remainder = -remainder;
     }
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
+                    strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
 }
 
 std::string FormatScript(const CScript& script)
@@ -60,7 +60,7 @@ std::string FormatScript(const CScript& script)
             }
             if (vch.size() > 0) {
                 ret += strprintf("0x%x 0x%x ", HexStr(std::vector<uint8_t>(it2, it - vch.size())),
-                                               HexStr(std::vector<uint8_t>(it - vch.size(), it)));
+                                 HexStr(std::vector<uint8_t>(it - vch.size(), it)));
             } else {
                 ret += strprintf("0x%x ", HexStr(std::vector<uint8_t>(it2, it)));
             }
@@ -74,11 +74,11 @@ std::string FormatScript(const CScript& script)
 
 const std::map<unsigned char, std::string> mapSigHashTypes = {
     {static_cast<unsigned char>(SIGHASH_ALL), std::string("ALL")},
-    {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_ANYONECANPAY), std::string("ALL|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_ALL | SIGHASH_ANYONECANPAY), std::string("ALL|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_NONE), std::string("NONE")},
-    {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_ANYONECANPAY), std::string("NONE|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_NONE | SIGHASH_ANYONECANPAY), std::string("NONE|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_SINGLE), std::string("SINGLE")},
-    {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
 };
 
 std::string SighashToStr(unsigned char sighash_type)
@@ -168,6 +168,36 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
     out.pushKV("type", GetTxnOutputType(type));
 }
 
+void RangeProofToUniv(const RangeProof<Mcl>& rp, UniValue& entry)
+{
+    UniValue Vs{UniValue::VARR};
+    for (size_t i = 0; i < rp.Vs.Size(); i++) {
+        Vs.push_back(HexStr(rp.Vs[i].GetVch()));
+    }
+    entry.pushKV("Vs", Vs);
+
+    UniValue Ls{UniValue::VARR};
+    for (size_t i = 0; i < rp.Ls.Size(); i++) {
+        Ls.push_back(HexStr(rp.Ls[i].GetVch()));
+    }
+    entry.pushKV("Ls", Ls);
+
+    UniValue Rs{UniValue::VARR};
+    for (size_t i = 0; i < rp.Rs.Size(); i++) {
+        Rs.push_back(HexStr(rp.Rs[i].GetVch()));
+    }
+    entry.pushKV("Rs", Rs);
+    entry.pushKV("A", HexStr(rp.A.GetVch()));
+    entry.pushKV("S", HexStr(rp.S.GetVch()));
+    entry.pushKV("T1", HexStr(rp.T1.GetVch()));
+    entry.pushKV("T2", HexStr(rp.T2.GetVch()));
+    entry.pushKV("tau_x", HexStr(rp.tau_x.GetVch()));
+    entry.pushKV("mu", HexStr(rp.mu.GetVch()));
+    entry.pushKV("a", HexStr(rp.a.GetVch()));
+    entry.pushKV("b", HexStr(rp.b.GetVch()));
+    entry.pushKV("t_hat", HexStr(rp.t_hat.GetVch()));
+}
+
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
@@ -243,6 +273,14 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         UniValue o(UniValue::VOBJ);
         ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
         out.pushKV("scriptPubKey", o);
+        out.pushKV("ephemeralKey", HexStr(txout.blsctData.ephemeralKey.GetVch()));
+        out.pushKV("spendingKey", HexStr(txout.blsctData.spendingKey.GetVch()));
+        out.pushKV("blindingKey", HexStr(txout.blsctData.blindingKey.GetVch()));
+        UniValue rp(UniValue::VOBJ);
+        RangeProofToUniv(txout.blsctData.rangeProof, /*out=*/rp);
+        out.pushKV("rangeProof", rp);
+        out.pushKV("viewTag", txout.blsctData.viewTag);
+        out.pushKV("tokenId", txout.tokenId.ToString());
         vout.push_back(out);
 
         if (have_undo) {
@@ -250,6 +288,9 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         }
     }
     entry.pushKV("vout", vout);
+
+    entry.pushKV("txSig", HexStr(tx.txSig.GetVch()));
+    entry.pushKV("balanceSig", HexStr(tx.balanceSig.GetVch()));
 
     if (have_undo) {
         const CAmount fee = amt_total_in - amt_total_out;
