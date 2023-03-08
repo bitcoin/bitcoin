@@ -1049,8 +1049,7 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     AssertLockHeld(m_pool.cs);
     const CTransaction& tx = *ws.m_ptx;
     TxValidationState& state = ws.m_state;
-
-    constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+    const unsigned int scriptVerifyFlags = (m_pool.m_require_standard ? STANDARD_SCRIPT_VERIFY_FLAGS : MANDATORY_SCRIPT_VERIFY_FLAGS);
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -2131,6 +2130,10 @@ public:
 static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
 {
     const Consensus::Params& consensusparams = chainman.GetConsensus();
+
+    // Note that any flags returned from this function (ie, specified
+    // here or in script_flag_exceptions) must also be included in
+    // MANDATORY_SCRIPT_VERIFY_FLAGS in policy/policy.h
 
     // BIP16 didn't become active until Apr 1 2012 (on mainnet, and
     // retroactively applied to testnet)

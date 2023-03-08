@@ -1391,9 +1391,8 @@ class SegWitTest(BitcoinTestFramework):
         # Now the node will no longer ask for getdata of this transaction when advertised by same txid
         self.std_node.announce_tx_and_wait_for_getdata(tx3, success=False)
 
-        # Spending a higher version witness output is not allowed by policy,
-        # even with the node that accepts non-standard txs.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason="reserved for soft-fork upgrades")
+        # Spending a higher version witness output is allowed on the node with -acceptnonstdtxn
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
         # Building a block with the transaction must be valid, however even without -acceptnonstdtxn.
         block = self.build_next_block()
