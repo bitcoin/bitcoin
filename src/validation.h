@@ -1042,6 +1042,12 @@ public:
     //! chainstate to avoid duplicating block metadata.
     node::BlockManager m_blockman;
 
+    /** Determine the potential consensus script flags for blocks in a chain */
+    static script_verify_flags GetAllConsensusScriptFlags(const Consensus::Params& params);
+
+    /** Store the potential consensus script flags for this manager's selected params */
+    const script_verify_flags m_all_consensus_script_flags;
+
     ValidationCache m_validation_cache;
 
     /**
