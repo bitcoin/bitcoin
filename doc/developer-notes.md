@@ -430,7 +430,7 @@ i.e. `CPPFLAGS="-DDEBUG_LOCKCONTENTION"`, then build and run bitcoind.
 
 You can then use the `-debug=lock` configuration option at bitcoind startup or
 `bitcoin-cli logging '["lock"]'` at runtime to turn on lock contention logging.
-It can be toggled off again with `bitcoin-cli logging [] '["lock"]'`.
+It can be toggled off again with `bitcoin-cli logging '[]' '["lock"]'`.
 
 ### Assertions and Checks
 
