@@ -2478,12 +2478,12 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
         }
-        const auto nNow = GetTime<std::chrono::microseconds>();
+        const auto nNow{SteadyClock::now()};
         // Avoid writing/flushing immediately after startup.
-        if (m_last_write.count() == 0) {
+        if (m_last_write == decltype(m_last_write){}) {
             m_last_write = nNow;
         }
-        if (m_last_flush.count() == 0) {
+        if (m_last_flush == decltype(m_last_flush){}) {
             m_last_flush = nNow;
         }
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
@@ -2544,7 +2544,7 @@ bool Chainstate::FlushStateToDisk(
             m_last_flush = nNow;
             full_flush_completed = true;
             TRACE5(utxocache, flush,
-                   (int64_t)(GetTimeMicros() - nNow.count()), // in microseconds (µs)
+                   int64_t{Ticks<std::chrono::microseconds>(SteadyClock::now() - nNow)},
                    (uint32_t)mode,
                    (uint64_t)coins_count,
                    (uint64_t)coins_mem_usage,
