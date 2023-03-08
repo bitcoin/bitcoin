@@ -120,35 +120,35 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                                                                                   {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
                                                                                   {RPCResult::Type::NUM, "n", "index"},
                                                                                   {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
-                                                                                  {RPCResult::Type::STR_HEX, "blindingKey", "hex-encoded blinding key"},
-                                                                                  {RPCResult::Type::STR_HEX, "ephemeralKey", "hex-encoded ephemeral key"},
-                                                                                  {RPCResult::Type::STR_HEX, "spendingKey", "hex-encoded spending key"},
-                                                                                  {RPCResult::Type::OBJ, "rangeProof", "output's range proof", {
-                                                                                                                                                   {RPCResult::Type::ARR, "Vs", "Vs", {
-                                                                                                                                                                                          {RPCResult::Type::STR_HEX, "", "hex-encoded point (if any)"},
-                                                                                                                                                                                      }},
-                                                                                                                                                   {RPCResult::Type::ARR, "Ls", "Ls", {
-                                                                                                                                                                                          {RPCResult::Type::STR_HEX, "", "hex-encoded point (if any)"},
-                                                                                                                                                                                      }},
-                                                                                                                                                   {RPCResult::Type::ARR, "Rs", "Rs", {
-                                                                                                                                                                                          {RPCResult::Type::STR_HEX, "", "hex-encoded point (if any)"},
-                                                                                                                                                                                      }},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "A", "hex-encoded point"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "S", "hex-encoded point"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "T1", "hex-encoded point"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "T2", "hex-encoded point"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "tau_x", "hex-encoded scalar"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "mu", "hex-encoded scalar"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "a", "hex-encoded scalar"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "b", "hex-encoded scalar"},
-                                                                                                                                                   {RPCResult::Type::STR_HEX, "t_hat", "hex-encoded scalar"},
-                                                                                                                                               }},
-                                                                                  {RPCResult::Type::STR, "tokenId", "output's token id"},
-                                                                                  {RPCResult::Type::NUM, "viewTag", "output's view tag"},
+                                                                                  {RPCResult::Type::STR_HEX, "blindingKey", /*optional=*/true, "hex-encoded blinding key"},
+                                                                                  {RPCResult::Type::STR_HEX, "ephemeralKey", /*optional=*/true, "hex-encoded ephemeral key"},
+                                                                                  {RPCResult::Type::STR_HEX, "spendingKey", /*optional=*/true, "hex-encoded spending key"},
+                                                                                  {RPCResult::Type::OBJ, "rangeProof", /*optional=*/true, "output's range proof", {
+                                                                                                                                                                      {RPCResult::Type::ARR, "Vs", "Vs", {
+                                                                                                                                                                                                             {RPCResult::Type::STR_HEX, "", "hex-encoded point (if any)"},
+                                                                                                                                                                                                         }},
+                                                                                                                                                                      {RPCResult::Type::ARR, "Ls", "Ls", {
+                                                                                                                                                                                                             {RPCResult::Type::STR_HEX, "", "hex-encoded point (if any)"},
+                                                                                                                                                                                                         }},
+                                                                                                                                                                      {RPCResult::Type::ARR, "Rs", "Rs", {
+                                                                                                                                                                                                             {RPCResult::Type::STR_HEX, "", "hex-encoded point (if any)"},
+                                                                                                                                                                                                         }},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "A", "hex-encoded point"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "S", "hex-encoded point"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "T1", "hex-encoded point"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "T2", "hex-encoded point"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "tau_x", "hex-encoded scalar"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "mu", "hex-encoded scalar"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "a", "hex-encoded scalar"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "b", "hex-encoded scalar"},
+                                                                                                                                                                      {RPCResult::Type::STR_HEX, "t_hat", "hex-encoded scalar"},
+                                                                                                                                                                  }},
+                                                                                  {RPCResult::Type::STR, "tokenId", /*optional=*/true, "output's token id"},
+                                                                                  {RPCResult::Type::NUM, "viewTag", /*optional=*/true, "output's view tag"},
                                                                               }},
                                            }},
-        {RPCResult::Type::STR_HEX, "balanceSig", "hex-encoded balance signature"},
-        {RPCResult::Type::STR_HEX, "txSig", "hex-encoded transaction signature"},
+        {RPCResult::Type::STR_HEX, "balanceSig", /*optional=*/true, "hex-encoded balance signature"},
+        {RPCResult::Type::STR_HEX, "txSig", /*optional=*/true, "hex-encoded transaction signature"},
     };
 }
 

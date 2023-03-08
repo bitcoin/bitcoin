@@ -273,14 +273,16 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         UniValue o(UniValue::VOBJ);
         ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
         out.pushKV("scriptPubKey", o);
-        out.pushKV("ephemeralKey", HexStr(txout.blsctData.ephemeralKey.GetVch()));
-        out.pushKV("spendingKey", HexStr(txout.blsctData.spendingKey.GetVch()));
-        out.pushKV("blindingKey", HexStr(txout.blsctData.blindingKey.GetVch()));
-        UniValue rp(UniValue::VOBJ);
-        RangeProofToUniv(txout.blsctData.rangeProof, /*out=*/rp);
-        out.pushKV("rangeProof", rp);
-        out.pushKV("viewTag", txout.blsctData.viewTag);
-        out.pushKV("tokenId", txout.tokenId.ToString());
+        if (tx.IsBLSCT()) {
+            out.pushKV("ephemeralKey", HexStr(txout.blsctData.ephemeralKey.GetVch()));
+            out.pushKV("spendingKey", HexStr(txout.blsctData.spendingKey.GetVch()));
+            out.pushKV("blindingKey", HexStr(txout.blsctData.blindingKey.GetVch()));
+            UniValue rp(UniValue::VOBJ);
+            RangeProofToUniv(txout.blsctData.rangeProof, /*out=*/rp);
+            out.pushKV("rangeProof", rp);
+            out.pushKV("viewTag", txout.blsctData.viewTag);
+            out.pushKV("tokenId", txout.tokenId.ToString());
+        }
         vout.push_back(out);
 
         if (have_undo) {
@@ -289,8 +291,10 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     }
     entry.pushKV("vout", vout);
 
-    entry.pushKV("txSig", HexStr(tx.txSig.GetVch()));
-    entry.pushKV("balanceSig", HexStr(tx.balanceSig.GetVch()));
+    if (tx.IsBLSCT()) {
+        entry.pushKV("txSig", HexStr(tx.txSig.GetVch()));
+        entry.pushKV("balanceSig", HexStr(tx.balanceSig.GetVch()));
+    }
 
     if (have_undo) {
         const CAmount fee = amt_total_in - amt_total_out;
