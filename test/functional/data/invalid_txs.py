@@ -267,7 +267,7 @@ def getDisabledOpcodeTemplate(opcode):
 
 class NonStandardAndInvalid(BadTxTemplate):
     """A non-standard transaction which is also consensus-invalid should return the first error."""
-    reject_reason = "mempool-script-verify-flag-failed (Using OP_CODESEPARATOR in non-witness script)"
+    reject_reason = "mempool-script-verify-flag-failed (OP_RETURN was encountered)"
     std_reject_reason = "scriptsig-not-pushonly"
     block_reject_reason = "block-script-verify-flag-failed (OP_RETURN was encountered)"
     valid_in_block = False
