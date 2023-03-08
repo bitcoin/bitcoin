@@ -617,7 +617,7 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
     }
 
     // Start wallet Coin Selection procedure
-    auto op_selection_result = AutomaticCoinSelection(wallet, available_coins, selection_target, coin_control, coin_selection_params);
+    auto op_selection_result = AutomaticCoinSelection(wallet, available_coins, selection_target, coin_selection_params);
     if (!op_selection_result) return op_selection_result;
 
     // If needed, add preset inputs to the automatic coin selection result
@@ -632,7 +632,7 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
     return op_selection_result;
 }
 
-util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CCoinControl& coin_control, const CoinSelectionParams& coin_selection_params)
+util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
 {
     unsigned int limit_ancestor_count = 0;
     unsigned int limit_descendant_count = 0;
@@ -641,12 +641,10 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
     const size_t max_descendants = (size_t)std::max<int64_t>(1, limit_descendant_count);
     const bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
-    // form groups from remaining coins; note that preset coins will not
-    // automatically have their associated (same address) coins included
-    if (coin_control.m_avoid_partial_spends && available_coins.Size() > OUTPUT_GROUP_MAX_ENTRIES) {
-        // Cases where we have 101+ outputs all pointing to the same destination may result in
-        // privacy leaks as they will potentially be deterministically sorted. We solve that by
-        // explicitly shuffling the outputs before processing
+    // Cases where we have 101+ outputs all pointing to the same destination may result in
+    // privacy leaks as they will potentially be deterministically sorted. We solve that by
+    // explicitly shuffling the outputs before processing
+    if (coin_selection_params.m_avoid_partial_spends && available_coins.Size() > OUTPUT_GROUP_MAX_ENTRIES) {
         available_coins.Shuffle(coin_selection_params.rng_fast);
     }
 
@@ -673,7 +671,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
             ordered_filters.push_back({CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, /*include_partial=*/true)});
             // Try with unsafe inputs if they are allowed. This may spend unconfirmed outputs
             // received from other wallets.
-            if (coin_control.m_include_unsafe_inputs) {
+            if (coin_selection_params.m_include_unsafe_inputs) {
                 ordered_filters.push_back({CoinEligibilityFilter(/*conf_mine=*/0, /*conf_theirs*/0, max_ancestors-1, max_descendants-1, /*include_partial=*/true)});
             }
             // Try with unlimited ancestors/descendants. The transaction will still need to meet
@@ -804,6 +802,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
+    coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
 
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;
