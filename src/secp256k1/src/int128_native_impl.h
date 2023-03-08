@@ -67,7 +67,12 @@ static SECP256K1_INLINE void secp256k1_i128_rshift(secp256k1_int128 *r, unsigned
    *r >>= n;
 }
 
+static SECP256K1_INLINE uint64_t secp256k1_i128_to_u64(const secp256k1_int128 *a) {
+   return (uint64_t)*a;
+}
+
 static SECP256K1_INLINE int64_t secp256k1_i128_to_i64(const secp256k1_int128 *a) {
+   VERIFY_CHECK(INT64_MIN <= *a && *a <= INT64_MAX);
    return *a;
 }
 
@@ -79,9 +84,10 @@ static SECP256K1_INLINE int secp256k1_i128_eq_var(const secp256k1_int128 *a, con
    return *a == *b;
 }
 
-static SECP256K1_INLINE int secp256k1_i128_check_pow2(const secp256k1_int128 *r, unsigned int n) {
+static SECP256K1_INLINE int secp256k1_i128_check_pow2(const secp256k1_int128 *r, unsigned int n, int sign) {
    VERIFY_CHECK(n < 127);
-   return (*r == (int128_t)1 << n);
+   VERIFY_CHECK(sign == 1 || sign == -1);
+   return (*r == (int128_t)((uint128_t)sign << n));
 }
 
 #endif
