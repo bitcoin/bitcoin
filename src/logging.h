@@ -180,6 +180,7 @@ namespace BCLog {
 
         bool WillLogCategory(LogFlags category) const;
         bool WillLogCategoryLevel(LogFlags category, Level level) const;
+        [[nodiscard]] static bool IsNoneCategory(const std::string& s) { return s == "0" || s == "none"; }
 
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;

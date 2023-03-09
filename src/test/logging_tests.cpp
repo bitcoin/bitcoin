@@ -260,4 +260,14 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(logging_IsNoneCategory, LogSetup)
+{
+    for (const char* const& c : {"none", "0"}) {
+        BOOST_CHECK(LogInstance().IsNoneCategory(c));
+    }
+    for (const char* const& c : {"", "NONE", "net", "all", "1"}) {
+        BOOST_CHECK(!LogInstance().IsNoneCategory(c));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

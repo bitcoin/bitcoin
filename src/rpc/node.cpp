@@ -184,21 +184,14 @@ static RPCHelpMan getmemoryinfo()
     };
 }
 
-static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
-    cats = cats.get_array();
-    for (unsigned int i = 0; i < cats.size(); ++i) {
-        std::string cat = cats[i].get_str();
-
-        bool success;
-        if (enable) {
-            success = LogInstance().EnableCategory(cat);
-        } else {
-            success = LogInstance().DisableCategory(cat);
-        }
-
-        if (!success) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
-        }
+static void EnableOrDisableLogCategories(const UniValue& categories, bool enable)
+{
+    const std::vector<UniValue>& cats{categories.get_array().getValues()};
+    if (std::any_of(cats.cbegin(), cats.cend(), [](const auto& c) { return LogInstance().IsNoneCategory(c.get_str()); })) return;
+    for (const auto& cat : cats) {
+        const std::string& c{cat.get_str()};
+        const bool success{enable ? LogInstance().EnableCategory(c) : LogInstance().DisableCategory(c)};
+        if (!success) throw JSONRPCError(RPC_INVALID_PARAMETER, "Unsupported logging category: " + c);
     }
 }
 
@@ -213,7 +206,7 @@ static RPCHelpMan logging()
             "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
             "In addition, the following are available as category names with special meanings:\n"
             "  - \"all\",  \"1\" : represent all logging categories.\n"
-            "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
+            "  - \"none\", \"0\" : even if other logging categories are specified (including \"all\" and \"1\"), ignore all of them.\n"
             ,
                 {
                     {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to debug logging",
