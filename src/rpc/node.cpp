@@ -184,6 +184,7 @@ static RPCHelpMan getmemoryinfo()
     };
 }
 
+// Maintain similar logic in both of the EnableOrDisableLogCategories() functions in the codebase.
 static void EnableOrDisableLogCategories(const UniValue& categories, bool enable)
 {
     const std::vector<UniValue>& cats{categories.get_array().getValues()};

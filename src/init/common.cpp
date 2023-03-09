@@ -80,29 +80,29 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
     return {};
 }
 
+// Maintain similar logic in both of the EnableOrDisableLogCategories() functions in the codebase.
+static void EnableOrDisableLogCategories(util::Result<void>& result, const ArgsManager& args, const std::string& opt, bool enable)
+{
+    if (!result || !args.IsArgSet(opt)) return;
+    const std::vector<std::string>& categories{args.GetArgs(opt)};
+    if (std::any_of(categories.cbegin(), categories.cend(), [](const auto& c) { return LogInstance().IsNoneCategory(c); })) return;
+    for (const auto& c : categories) {
+        const bool success{enable ? LogInstance().EnableCategory(c) : LogInstance().DisableCategory(c)};
+        if (!success) {
+            result = util::Error{strprintf(_("Unsupported logging category %s=%s."), opt, c)};
+            return;
+        }
+    }
+    return;
+}
+
 util::Result<void> SetLoggingCategories(const ArgsManager& args)
 {
-    if (args.IsArgSet("-debug")) {
-        // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
-        const std::vector<std::string> categories = args.GetArgs("-debug");
-
-        if (std::none_of(categories.begin(), categories.end(),
-            [](std::string cat){return cat == "0" || cat == "none";})) {
-            for (const auto& cat : categories) {
-                if (!LogInstance().EnableCategory(cat)) {
-                    return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
-                }
-            }
-        }
-    }
-
-    // Now remove the logging categories which were explicitly excluded
-    for (const std::string& cat : args.GetArgs("-debugexclude")) {
-        if (!LogInstance().DisableCategory(cat)) {
-            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
-        }
-    }
-    return {};
+    util::Result<void> result;
+    // debugexclude settings take priority over debug ones, so run debugexclude last
+    EnableOrDisableLogCategories(result, args, "-debug", /*enable=*/true);
+    EnableOrDisableLogCategories(result, args, "-debugexclude", /*enable=*/false);
+    return result;
 }
 
 bool StartLogging(const ArgsManager& args)
