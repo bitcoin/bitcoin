@@ -14,25 +14,53 @@ class LoggingTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-debug=0"]]
 
     def relative_log_path(self, name):
         return os.path.join(self.nodes[0].chain_path, name)
 
     def run_test(self):
-        # test default log file name
+        node = self.nodes[0]
+        self.log.info("Test default log file name and -debug=0")
         default_log_path = self.relative_log_path("debug.log")
         assert os.path.isfile(default_log_path)
+        assert all(v == False for v in node.logging().values())
 
-        # test alternative log file name in datadir
-        self.restart_node(0, ["-debuglogfile=foo.log"])
+        self.log.info("Test alternative log file name in datadir and -debugexclude={net,tor}")
+        self.restart_node(0, extra_args=[
+            "-debuglogfile=foo.log",
+            "-debugexclude=net",
+            "-debugexclude=tor",
+        ])
         assert os.path.isfile(self.relative_log_path("foo.log"))
+        # In addition to net and tor, leveldb/libevent/rand are excluded by the test framework.
+        result = node.logging()
+        for category in ["leveldb", "libevent", "net", "rand", "tor"]:
+            assert not result[category]
 
-        # test alternative log file name outside datadir
+        self.log.info("Test alternative log file name outside datadir and -debugexclude={none,qt}")
         tempname = os.path.join(self.options.tmpdir, "foo.log")
-        self.restart_node(0, [f"-debuglogfile={tempname}"])
+        self.restart_node(0, extra_args=[
+            f"-debuglogfile={tempname}",
+            "-debugexclude=none",
+            "-debugexclude=qt",
+        ])
         assert os.path.isfile(tempname)
+        # Expect the "none" value passed in -debugexclude=[none,qt] to mean that
+        # none of the categories passed with -debugexclude are excluded: neither
+        # qt passed here nor leveldb/libevent/rand passed by the test framework.
+        assert all(v == True for v in node.logging().values())
 
-        # check that invalid log (relative) will cause error
+        self.log.info("Test -debugexclude=1/all excludes all categories")
+        for all_value in ['1', 'all']:
+            self.restart_node(0, extra_args=[f"-debugexclude={all_value}"])
+            assert all(v == False for v in node.logging().values())
+
+        self.log.info("Test -debugexclude with no category passed defaults to -debugexclude=1/all")
+        self.restart_node(0, extra_args=["-debugexclude"])
+        assert all(v == False for v in node.logging().values())
+
+        self.log.info("Test invalid log (relative) raises")
         invdir = self.relative_log_path("foo")
         invalidname = os.path.join("foo", "foo.log")
         self.stop_node(0)
@@ -40,26 +68,26 @@ class LoggingTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error([f"-debuglogfile={invalidname}"], exp_stderr, match=ErrorMatch.FULL_REGEX)
         assert not os.path.isfile(os.path.join(invdir, "foo.log"))
 
-        # check that invalid log (relative) works after path exists
+        self.log.info("Test invalid log (relative) works after path exists")
         self.stop_node(0)
         os.mkdir(invdir)
         self.start_node(0, [f"-debuglogfile={invalidname}"])
         assert os.path.isfile(os.path.join(invdir, "foo.log"))
 
-        # check that invalid log (absolute) will cause error
+        self.log.info("Test invalid log (absolute) raises")
         self.stop_node(0)
         invdir = os.path.join(self.options.tmpdir, "foo")
         invalidname = os.path.join(invdir, "foo.log")
         self.nodes[0].assert_start_raises_init_error([f"-debuglogfile={invalidname}"], exp_stderr, match=ErrorMatch.FULL_REGEX)
         assert not os.path.isfile(os.path.join(invdir, "foo.log"))
 
-        # check that invalid log (absolute) works after path exists
+        self.log.info("Test invalid log (absolute) works after path exists")
         self.stop_node(0)
         os.mkdir(invdir)
         self.start_node(0, [f"-debuglogfile={invalidname}"])
         assert os.path.isfile(os.path.join(invdir, "foo.log"))
 
-        # check that -nodebuglogfile disables logging
+        self.log.info("Test -nodebuglogfile disables logging")
         self.stop_node(0)
         os.unlink(default_log_path)
         assert not os.path.isfile(default_log_path)
