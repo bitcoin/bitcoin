@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Syscoin Core Security Policy
+    url: https://github.com/syscoin/syscoin/blob/master/SECURITY.md
+    about: View security policy
+  - name: Syscoin Core Developers
+    url: https://syscoincore.org
+    about: Syscoin Core homepage
