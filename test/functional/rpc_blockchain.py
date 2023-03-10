@@ -597,6 +597,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert 'previousblockhash' not in node.getblock(node.getblockhash(0))
         assert 'nextblockhash' not in node.getblock(node.getbestblockhash())
 
+        self.log.info("Test getblock on header throws")
+        block = self.generateblock(node, output="raw(55)", transactions=[], submit=False)
+        node.submitheader(block["hex"])
+        node.getchaintips()
+        assert_raises_rpc_error(-1, "Block not found on disk", lambda: node.getblock(block["hash"]))
+
 
 if __name__ == '__main__':
     BlockchainTest().main()
