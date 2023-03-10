@@ -8,6 +8,8 @@ Syscoin Core version 4.4.0 is now available from:
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
+Note: Masternode operators should upgrade their sentinel to v4.4.0 
+
 Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/syscoin/syscoin/issues>
