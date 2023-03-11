@@ -455,6 +455,8 @@ public:
     CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to, const int nHeight) const;
     CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
+    void RepopulateUniquePropertyMap();
+
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
     void UpdateMN(const CDeterministicMN& oldDmn, const CDeterministicMNStateCPtr& pdmnState);
     void UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState);
