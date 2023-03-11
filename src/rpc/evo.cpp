@@ -1099,7 +1099,7 @@ static void protx_revoke_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_revoke_wrapper(const JSONRPCRequest& request, const bool specific_legacy_bls_scheme)
+static UniValue protx_revoke(const JSONRPCRequest& request)
 {
     protx_revoke_help(request);
 
@@ -1109,11 +1109,7 @@ static UniValue protx_revoke_wrapper(const JSONRPCRequest& request, const bool s
     EnsureWalletIsUnlocked(wallet.get());
 
     CProUpRevTx ptx;
-    if (specific_legacy_bls_scheme) {
-        ptx.nVersion = CProUpRevTx::LEGACY_BLS_VERSION;
-    } else {
-        ptx.nVersion = CProUpRevTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
-    }
+    ptx.nVersion = CProUpRevTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
@@ -1164,15 +1160,6 @@ static UniValue protx_revoke_wrapper(const JSONRPCRequest& request, const bool s
     return SignAndSendSpecialTx(request, tx);
 }
 
-static UniValue protx_revoke(const JSONRPCRequest& request)
-{
-    return protx_revoke_wrapper(request, false);
-}
-
-static UniValue protx_revoke_legacy(const JSONRPCRequest& request)
-{
-    return protx_revoke_wrapper(request, true);
-}
 #endif//ENABLE_WALLET
 
 static void protx_list_help(const JSONRPCRequest& request)
@@ -1514,8 +1501,6 @@ static UniValue protx(const JSONRPCRequest& request)
         return protx_update_registrar_legacy(new_request);
     } else if (command == "protxrevoke") {
         return protx_revoke(new_request);
-    } else if (command == "protxrevoke_legacy") {
-        return protx_revoke_legacy(new_request);
     } else
 #endif
     if (command == "protxlist") {
