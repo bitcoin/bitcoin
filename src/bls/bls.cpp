@@ -288,17 +288,22 @@ void CBLSSignature::SubInsecure(const CBLSSignature& o)
     cachedHash.SetNull();
 }
 
-bool CBLSSignature::VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const
+bool CBLSSignature::VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash, const bool specificLegacyScheme) const
 {
     if (!IsValid() || !pubKey.IsValid()) {
         return false;
     }
 
     try {
-        return Scheme(bls::bls_legacy_scheme.load())->Verify(pubKey.impl, bls::Bytes(hash.begin(), hash.size()), impl);
+        return Scheme(specificLegacyScheme)->Verify(pubKey.impl, bls::Bytes(hash.begin(), hash.size()), impl);
     } catch (...) {
         return false;
     }
+}
+
+bool CBLSSignature::VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const
+{
+    return VerifyInsecure(pubKey, hash, bls::bls_legacy_scheme.load());
 }
 
 bool CBLSSignature::VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const

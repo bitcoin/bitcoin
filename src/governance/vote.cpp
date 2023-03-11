@@ -240,7 +240,7 @@ bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
     const auto pindex = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
     bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->nTime;
     sig.SetByteVector(vchSig, is_bls_legacy_scheme);
-    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), is_bls_legacy_scheme)) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
