@@ -32,7 +32,7 @@ std::string CDeterministicMNState::ToString() const
                      EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.Get().ToString(), EncodeDestination(PKHash(keyIDVoting)), addr.ToStringIPPort(false), payoutAddress, operatorPayoutAddress);
 }
 
-void CDeterministicMNState::ToJson(UniValue& obj) const
+void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
 {
     obj.clear();
     obj.setObject();
@@ -46,6 +46,11 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
     obj.pushKV("revocationReason", nRevocationReason);
     obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
+    if (nType == MnType::HighPerformance) {
+        obj.pushKV("platformNodeID", platformNodeID.ToString());
+        obj.pushKV("platformP2PPort", platformP2PPort);
+        obj.pushKV("platformHTTPPort", platformHTTPPort);
+    }
 
     CTxDestination dest;
     if (ExtractDestination(scriptPayout, dest)) {

@@ -268,7 +268,7 @@ static UniValue masternode_status(const JSONRPCRequest& request)
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
         UniValue stateObj;
-        dmn->pdmnState->ToJson(stateObj);
+        dmn->pdmnState->ToJson(stateObj, dmn->nType);
         mnObj.pushKV("dmnState", stateObj);
     }
     mnObj.pushKV("state", activeMasternodeManager->GetStateString());

@@ -48,7 +48,7 @@ void CDeterministicMN::ToJson(UniValue& obj) const
     obj.setObject();
 
     UniValue stateObj;
-    pdmnState->ToJson(stateObj);
+    pdmnState->ToJson(stateObj, nType);
 
     obj.pushKV("type", std::string(GetMnType(nType).description));
     obj.pushKV("proTxHash", proTxHash.ToString());
