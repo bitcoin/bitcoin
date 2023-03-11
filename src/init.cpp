@@ -1647,7 +1647,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
     // SYSCOIN
-    // by default win won't run or validate NEVM (if not a masternode)
     fNEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     fNEVMConnection = !fNEVMSub.empty();
 #if ENABLE_ZMQ
@@ -1829,8 +1828,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if(fNEVMConnection) {
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
-        uint64_t nHeightFromGeth;
-        std::string stateStr;
+        uint64_t nHeightFromGeth{0};
+        std::string stateStr{""};
         BlockValidationState state;
         GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
         if(!stateStr.empty()) {

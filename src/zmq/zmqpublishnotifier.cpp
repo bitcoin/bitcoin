@@ -306,7 +306,11 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
         return false;
     return true;
 }
-bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessage, bool &bResponse)
+bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessage, bool &bResponse) {
+    return NotifyNEVMCommsCommon(commMessage, bResponse);
+
+}
+bool CZMQAbstractPublishNotifier::NotifyNEVMCommsCommon(const std::string &commMessage, bool &bResponse)
 {
     LOCK(cs_nevm);
     bResponse = false;
@@ -358,7 +362,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        NotifyNEVMComms("status", bResponse);
+        NotifyNEVMCommsCommon("status", bResponse);
         if(!bResponse) {
             state = "nevm-not-connected";
             return false;
@@ -410,7 +414,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::stri
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        NotifyNEVMComms("status", bResponse);
+        NotifyNEVMCommsCommon("status", bResponse);
         if(!bResponse) {
             state = "nevm-not-connected";
             return false;
@@ -460,7 +464,7 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        NotifyNEVMComms("status", bResponse);
+        NotifyNEVMCommsCommon("status", bResponse);
         if(!bResponse) {
             state = "nevm-not-connected";
             return false;
@@ -499,7 +503,7 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std:
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        NotifyNEVMComms("status", bResponse);
+        NotifyNEVMCommsCommon("status", bResponse);
         if(!bResponse) {
             state = "nevm-not-connected";
             return false;

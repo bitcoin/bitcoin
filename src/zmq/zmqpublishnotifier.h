@@ -34,6 +34,7 @@ public:
     bool SendZmqMessage(const char *command, const void* data, size_t size);
     // SYSCOIN
     bool SendZmqMessageNEVM(const char *command, const void* data, size_t size);
+    bool NotifyNEVMCommsCommon(const std::string& commMessage, bool &bResponse);
     /* receive zmq message
        parts:
           * command
