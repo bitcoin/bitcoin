@@ -100,6 +100,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "masternode_status",
     "masternode_current",
     "masternode_sign",
+    "masternode_verify",
     "getgovernanceinfo",
     "getsuperblockbudget",
     "gobject_count",
@@ -237,7 +238,20 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "protx_register_prepare",
     "protx_update_registrar",
     "protx_list_wallet",
-    "convertaddresswallet"
+    "convertaddresswallet",
+    "settestparams",
+    "signmessagebech32",
+    "getauxblock",
+    "protx_info_wallet",
+    "protx_register_fund",
+    "protx_register_submit",
+    "protx_revoke",
+    "gobject_vote_alias",
+    "gobject_vote_many",
+    "gobject_prepare",
+    "gobject_list_prepared",
+    "masternode_outputs"
+
 };
 
 std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
