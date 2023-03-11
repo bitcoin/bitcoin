@@ -375,6 +375,8 @@ public:
     [[nodiscard]] CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to, bool extended) const;
     [[nodiscard]] CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
+    void RepopulateUniquePropertyMap();
+
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
     void UpdateMN(const CDeterministicMN& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
     void UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
