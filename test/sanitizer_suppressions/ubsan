@@ -54,6 +54,8 @@ unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
+# SYSCOIN
+unsigned-integer-overflow:primitives/transaction.cpp
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:xoroshiro128plusplus.h
 implicit-integer-sign-change:compat/stdin.cpp
