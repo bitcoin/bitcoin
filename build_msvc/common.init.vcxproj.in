@@ -5,7 +5,6 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <UseNativeEnvironment>true</UseNativeEnvironment>
-    <MaxiumumProcesses>2</MaxiumumProcesses>
    </PropertyGroup>
 
    <PropertyGroup Label="Vcpkg">
