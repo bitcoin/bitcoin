@@ -144,7 +144,7 @@ task:
     - cd %CIRRUS_WORKING_DIR%
     - ccache --zero-stats --max-size=%CCACHE_SIZE%
     - python build_msvc\msvc-autogen.py
-    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release /m:2 -verbosity:minimal -noLogo
+    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -verbosity:minimal -noLogo
     - ccache --show-stats
   check_script:
     - build_msvc\x64\Release\test_navcoin.exe -l test_suite
