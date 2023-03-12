@@ -247,7 +247,7 @@ task:
   container:
     image: ubuntu:jammy
     cpu: 4  # Increase CPU and memory to avoid timeout
-    memory: 16G
+    memory: 32G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
