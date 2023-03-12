@@ -48,6 +48,10 @@ class DIP3V19Test(DashTestFramework):
         for i in range(0, len(self.nodes)):
             self.extra_args[i].append("-dip19params=200")
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+        self.skip_if_no_bdb()
+
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
