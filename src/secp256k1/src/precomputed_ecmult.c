@@ -2,9 +2,6 @@
 /* This file contains an array secp256k1_pre_g with odd multiples of the base point G and
  * an array secp256k1_pre_g_128 with odd multiples of 2^128*G for accelerating the computation of a*P + b*G.
  */
-#if defined HAVE_CONFIG_H
-#    include "libsecp256k1-config.h"
-#endif
 #include "../include/secp256k1.h"
 #include "group.h"
 #include "ecmult.h"

@@ -21,7 +21,7 @@ typedef struct {
     const unsigned char **msgs;
 } bench_schnorrsig_data;
 
-void bench_schnorrsig_sign(void* arg, int iters) {
+static void bench_schnorrsig_sign(void* arg, int iters) {
     bench_schnorrsig_data *data = (bench_schnorrsig_data *)arg;
     int i;
     unsigned char msg[MSGLEN] = {0};
@@ -34,7 +34,7 @@ void bench_schnorrsig_sign(void* arg, int iters) {
     }
 }
 
-void bench_schnorrsig_verify(void* arg, int iters) {
+static void bench_schnorrsig_verify(void* arg, int iters) {
     bench_schnorrsig_data *data = (bench_schnorrsig_data *)arg;
     int i;
 
@@ -45,7 +45,7 @@ void bench_schnorrsig_verify(void* arg, int iters) {
     }
 }
 
-void run_schnorrsig_bench(int iters, int argc, char** argv) {
+static void run_schnorrsig_bench(int iters, int argc, char** argv) {
     int i;
     bench_schnorrsig_data data;
     int d = argc == 1;

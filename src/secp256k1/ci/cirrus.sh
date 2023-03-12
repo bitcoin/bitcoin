@@ -1,7 +1,6 @@
 #!/bin/sh
 
-set -e
-set -x
+set -eux
 
 export LC_ALL=C
 
@@ -11,14 +10,20 @@ print_environment() {
     set +x
     # There are many ways to print variable names and their content. This one
     # does not rely on bash.
-    for i in WERROR_CFLAGS MAKEFLAGS BUILD \
+    for var in WERROR_CFLAGS MAKEFLAGS BUILD \
             ECMULTWINDOW ECMULTGENPRECISION ASM WIDEMUL WITH_VALGRIND EXTRAFLAGS \
             EXPERIMENTAL ECDH RECOVERY SCHNORRSIG \
-            SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETEST\
+            SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS\
             EXAMPLES \
-            WRAPPER_CMD CC AR NM HOST
+            HOST WRAPPER_CMD \
+            CC CFLAGS CPPFLAGS AR NM
     do
-        eval 'printf "%s %s " "$i=\"${'"$i"'}\""'
+        eval "isset=\${$var+x}"
+        if [ -n "$isset" ]; then
+            eval "val=\${$var}"
+            # shellcheck disable=SC2154
+            printf '%s="%s" ' "$var" "$val"
+        fi
     done
     echo "$0"
     set -x
@@ -29,6 +34,8 @@ print_environment
 # This speeds up jobs with many invocations of wine (e.g., ./configure with MSVC) tremendously.
 case "$WRAPPER_CMD" in
     *wine*)
+        # Make sure to shutdown wineserver whenever we exit.
+        trap "wineserver -k || true" EXIT INT HUP
         # This is apparently only reliable when we run a dummy command such as "hh.exe" afterwards.
         wineserver -p && wine hh.exe
         ;;
@@ -36,7 +43,7 @@ esac
 
 env >> test_env.log
 
-if [ -n "$CC" ]; then
+if [ -n "${CC+x}" ]; then
     # The MSVC compiler "cl" doesn't understand "-v"
     $CC -v || true
 fi
@@ -57,6 +64,7 @@ fi
     --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" \
     --enable-module-schnorrsig="$SCHNORRSIG" \
     --enable-examples="$EXAMPLES" \
+    --enable-ctime-tests="$CTIMETESTS" \
     --with-valgrind="$WITH_VALGRIND" \
     --host="$HOST" $EXTRAFLAGS
 
@@ -73,14 +81,15 @@ export LOG_COMPILER="$WRAPPER_CMD"
 
 make "$BUILD"
 
+# Using the local `libtool` because on macOS the system's libtool has nothing to do with GNU libtool
+EXEC='./libtool --mode=execute'
+if [ -n "$WRAPPER_CMD" ]
+then
+    EXEC="$EXEC $WRAPPER_CMD"
+fi
+
 if [ "$BENCH" = "yes" ]
 then
-    # Using the local `libtool` because on macOS the system's libtool has nothing to do with GNU libtool
-    EXEC='./libtool --mode=execute'
-    if [ -n "$WRAPPER_CMD" ]
-    then
-        EXEC="$EXEC $WRAPPER_CMD"
-    fi
     {
         $EXEC ./bench_ecmult
         $EXEC ./bench_internal
@@ -88,9 +97,13 @@ then
     } >> bench.log 2>&1
 fi
 
-if [ "$CTIMETEST" = "yes" ]
+if [ "$CTIMETESTS" = "yes" ]
 then
-    ./libtool --mode=execute valgrind --error-exitcode=42 ./valgrind_ctime_test > valgrind_ctime_test.log 2>&1
+    if [ "$WITH_VALGRIND" = "yes" ]; then
+        ./libtool --mode=execute valgrind --error-exitcode=42 ./ctime_tests > ctime_tests.log 2>&1
+    else
+        $EXEC ./ctime_tests > ctime_tests.log 2>&1
+    fi
 fi
 
 # Rebuild precomputed files (if not cross-compiling).
@@ -99,9 +112,6 @@ then
     make clean-precomp
     make precomp
 fi
-
-# Shutdown wineserver again
-wineserver -k || true
 
 # Check that no repo files have been modified by the build.
 # (This fails for example if the precomp files need to be updated in the repo.)

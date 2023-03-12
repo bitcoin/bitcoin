@@ -13,7 +13,9 @@ extern "C" {
 
 #include "group.h"
 #if defined(EXHAUSTIVE_TEST_ORDER)
-#if EXHAUSTIVE_TEST_ORDER == 13
+#    if EXHAUSTIVE_TEST_ORDER == 7
+#        define WINDOW_G 3
+#    elif EXHAUSTIVE_TEST_ORDER == 13
 #        define WINDOW_G 4
 #    elif EXHAUSTIVE_TEST_ORDER == 199
 #        define WINDOW_G 8

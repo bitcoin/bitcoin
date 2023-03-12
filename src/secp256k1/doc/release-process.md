@@ -23,7 +23,7 @@ This process also assumes that there will be no minor releases for old major rel
    git tag -s v$MAJOR.$MINOR.$PATCH -m "libsecp256k1 $MAJOR.$MINOR.$PATCH" $RELEASE_COMMIT
    git push git@github.com:bitcoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
    ```
-3. Open a PR to the master branch with a commit (using message `"release: bump version after $MAJOR.$MINOR.$PATCH"`, for example) that sets `_PKG_VERSION_IS_RELEASE` to `false` and `_PKG_VERSION_PATCH` to `$PATCH + 1` and increases `_LIB_VERSION_REVISION`. If other maintainers are not present to approve the PR, it can be merged without ACKs.
+3. Open a PR to the master branch with a commit (using message `"release cleanup: bump version after $MAJOR.$MINOR.$PATCH"`, for example) that sets `_PKG_VERSION_IS_RELEASE` to `false` and `_PKG_VERSION_PATCH` to `$PATCH + 1` and increases `_LIB_VERSION_REVISION`. If other maintainers are not present to approve the PR, it can be merged without ACKs.
 4. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Maintenance release

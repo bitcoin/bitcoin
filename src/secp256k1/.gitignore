@@ -1,11 +1,12 @@
 bench
 bench_ecmult
 bench_internal
+noverify_tests
 tests
 exhaustive_tests
 precompute_ecmult_gen
 precompute_ecmult
-valgrind_ctime_test
+ctime_tests
 ecdh_example
 ecdsa_example
 schnorr_example
@@ -42,8 +43,6 @@ coverage.*.html
 *.gcno
 *.gcov
 
-src/libsecp256k1-config.h
-src/libsecp256k1-config.h.in
 build-aux/ar-lib
 build-aux/config.guess
 build-aux/config.sub
@@ -58,5 +57,7 @@ build-aux/m4/ltversion.m4
 build-aux/missing
 build-aux/compile
 build-aux/test-driver
-src/stamp-h1
 libsecp256k1.pc
+
+# Default CMake build directory.
+/build

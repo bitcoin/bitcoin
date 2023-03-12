@@ -7,12 +7,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-/* Autotools creates libsecp256k1-config.h, of which ECMULT_WINDOW_SIZE is needed.
-   ifndef guard so downstream users can define their own if they do not use autotools. */
-#if !defined(ECMULT_WINDOW_SIZE)
-#include "libsecp256k1-config.h"
-#endif
-
 #include "../include/secp256k1.h"
 
 #include "assumptions.h"
@@ -74,9 +68,6 @@ int main(void) {
     fprintf(fp, "/* This file contains an array secp256k1_pre_g with odd multiples of the base point G and\n");
     fprintf(fp, " * an array secp256k1_pre_g_128 with odd multiples of 2^128*G for accelerating the computation of a*P + b*G.\n");
     fprintf(fp, " */\n");
-    fprintf(fp, "#if defined HAVE_CONFIG_H\n");
-    fprintf(fp, "#    include \"libsecp256k1-config.h\"\n");
-    fprintf(fp, "#endif\n");
     fprintf(fp, "#include \"../include/secp256k1.h\"\n");
     fprintf(fp, "#include \"group.h\"\n");
     fprintf(fp, "#include \"ecmult.h\"\n");

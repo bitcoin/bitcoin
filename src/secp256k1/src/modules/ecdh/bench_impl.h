@@ -42,7 +42,7 @@ static void bench_ecdh(void* arg, int iters) {
     }
 }
 
-void run_ecdh_bench(int iters, int argc, char** argv) {
+static void run_ecdh_bench(int iters, int argc, char** argv) {
     bench_ecdh_data data;
     int d = argc == 1;
 

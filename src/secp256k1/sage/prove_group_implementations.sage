@@ -148,7 +148,7 @@ def formula_secp256k1_gej_add_ge(branch, a, b):
   zeroes = {}
   nonzeroes = {}
   a_infinity = False
-  if (branch & 4) != 0:
+  if (branch & 2) != 0:
     nonzeroes.update({a.Infinity : 'a_infinite'})
     a_infinity = True
   else:
@@ -167,15 +167,11 @@ def formula_secp256k1_gej_add_ge(branch, a, b):
   m_alt = -u2
   tt = u1 * m_alt
   rr = rr + tt
-  degenerate = (branch & 3) == 3
-  if (branch & 1) != 0:
+  degenerate = (branch & 1) != 0
+  if degenerate:
     zeroes.update({m : 'm_zero'})
   else:
     nonzeroes.update({m : 'm_nonzero'})
-  if (branch & 2) != 0:
-    zeroes.update({rr : 'rr_zero'})
-  else:
-    nonzeroes.update({rr : 'rr_nonzero'})
   rr_alt = s1
   rr_alt = rr_alt * 2
   m_alt = m_alt + u1
@@ -190,13 +186,6 @@ def formula_secp256k1_gej_add_ge(branch, a, b):
     n = m
   t = rr_alt^2
   rz = a.Z * m_alt
-  infinity = False
-  if (branch & 8) != 0:
-    if not a_infinity:
-      infinity = True
-    zeroes.update({rz : 'r.z=0'})
-  else:
-    nonzeroes.update({rz : 'r.z!=0'})
   t = t + q
   rx = t
   t = t * 2
@@ -209,8 +198,11 @@ def formula_secp256k1_gej_add_ge(branch, a, b):
     rx = b.X
     ry = b.Y
     rz = 1
-  if infinity:
+  if (branch & 4) != 0:
+    zeroes.update({rz : 'r.z = 0'})
     return (constraints(zero={b.Z - 1 : 'b.z=1', b.Infinity : 'b_finite'}), constraints(zero=zeroes, nonzero=nonzeroes), point_at_infinity())
+  else:
+    nonzeroes.update({rz : 'r.z != 0'})
   return (constraints(zero={b.Z - 1 : 'b.z=1', b.Infinity : 'b_finite'}), constraints(zero=zeroes, nonzero=nonzeroes), jacobianpoint(rx, ry, rz))
 
 def formula_secp256k1_gej_add_ge_old(branch, a, b):
@@ -280,14 +272,14 @@ if __name__ == "__main__":
   success = success & check_symbolic_jacobian_weierstrass("secp256k1_gej_add_var", 0, 7, 5, formula_secp256k1_gej_add_var)
   success = success & check_symbolic_jacobian_weierstrass("secp256k1_gej_add_ge_var", 0, 7, 5, formula_secp256k1_gej_add_ge_var)
   success = success & check_symbolic_jacobian_weierstrass("secp256k1_gej_add_zinv_var", 0, 7, 5, formula_secp256k1_gej_add_zinv_var)
-  success = success & check_symbolic_jacobian_weierstrass("secp256k1_gej_add_ge", 0, 7, 16, formula_secp256k1_gej_add_ge)
+  success = success & check_symbolic_jacobian_weierstrass("secp256k1_gej_add_ge", 0, 7, 8, formula_secp256k1_gej_add_ge)
   success = success & (not check_symbolic_jacobian_weierstrass("secp256k1_gej_add_ge_old [should fail]", 0, 7, 4, formula_secp256k1_gej_add_ge_old))
 
   if len(sys.argv) >= 2 and sys.argv[1] == "--exhaustive":
     success = success & check_exhaustive_jacobian_weierstrass("secp256k1_gej_add_var", 0, 7, 5, formula_secp256k1_gej_add_var, 43)
     success = success & check_exhaustive_jacobian_weierstrass("secp256k1_gej_add_ge_var", 0, 7, 5, formula_secp256k1_gej_add_ge_var, 43)
     success = success & check_exhaustive_jacobian_weierstrass("secp256k1_gej_add_zinv_var", 0, 7, 5, formula_secp256k1_gej_add_zinv_var, 43)
-    success = success & check_exhaustive_jacobian_weierstrass("secp256k1_gej_add_ge", 0, 7, 16, formula_secp256k1_gej_add_ge, 43)
+    success = success & check_exhaustive_jacobian_weierstrass("secp256k1_gej_add_ge", 0, 7, 8, formula_secp256k1_gej_add_ge, 43)
     success = success & (not check_exhaustive_jacobian_weierstrass("secp256k1_gej_add_ge_old [should fail]", 0, 7, 4, formula_secp256k1_gej_add_ge_old, 43))
 
   sys.exit(int(not success))

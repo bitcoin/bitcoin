@@ -18,7 +18,7 @@
 
 #define POINTS 32768
 
-void help(char **argv) {
+static void help(char **argv) {
     printf("Benchmark EC multiplication algorithms\n");
     printf("\n");
     printf("Usage: %s <help|pippenger_wnaf|strauss_wnaf|simple>\n", argv[0]);
