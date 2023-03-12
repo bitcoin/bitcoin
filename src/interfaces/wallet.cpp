@@ -16,6 +16,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <validation.h>
 #include <wallet/context.h>
@@ -77,7 +78,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    result.block_height = wallet.chain().getBlockHeight(wtx.m_confirm.hashBlock).value_or(std::numeric_limits<int>::max());
+    result.block_height = wtx.m_confirm.block_height > 0 ? wtx.m_confirm.block_height : std::numeric_limits<int>::max();
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
     result.time_received = wtx.nTimeReceived;
@@ -367,11 +368,8 @@ public:
         if (mi == m_wallet->mapWallet.end()) {
             return false;
         }
-        if (std::optional<int> height = m_wallet->chain().getHeight()) {
-            block_time = m_wallet->chain().getBlockTime(*height);
-        } else {
-            block_time = -1;
-        }
+        block_time = -1;
+        CHECK_NONFATAL(m_wallet->chain().findBlock(m_wallet->GetLastBlockHash(), FoundBlock().time(block_time)));
         tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
         return true;
     }
@@ -425,8 +423,8 @@ public:
         if (!locked_wallet) {
             return false;
         }
+        num_blocks = m_wallet->GetLastBlockHeight();
         balances = getBalances();
-        num_blocks = m_wallet->chain().getHeight().value_or(-1);
         return true;
     }
     CAmount getBalance() override

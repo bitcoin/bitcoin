@@ -143,7 +143,7 @@ public:
             wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
             WalletRescanReserver reserver(wallet.get());
             reserver.reserve();
-            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
+            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(),  0 /* start_height */, {} /* max_height */, reserver, true /* fUpdate */);
             BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         }
     }
