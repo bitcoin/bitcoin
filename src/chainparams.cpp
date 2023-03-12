@@ -85,7 +85,10 @@ void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementH
     consensus.DIP0003Height = nActivationHeight;
     consensus.DIP0003EnforcementHeight = nEnforcementHeight;
 }
-
+void CChainParams::UpdateDIP19Parameters(int nActivationHeight)
+{
+    consensus.nV19StartBlock = nActivationHeight;
+}
 void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
     auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
     params.size = size;
@@ -671,7 +674,7 @@ public:
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = 205;
         consensus.nPODAStartBlock = 0;
-        consensus.nV19StartBlock = 200;
+        consensus.nV19StartBlock = 0;
         consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = 1000;
         consensus.DIP0003Height = 432;
@@ -810,6 +813,14 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
             throw std::runtime_error(strprintf("Invalid nDIP3EnforcementHeight (%s)", vDIP3Params[1]));
         }
         UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
+    }
+    else if (args.IsArgSet("-dip19params")) {
+        std::string strDIP19Params = args.GetArg("-dip19params", "");
+        int nDIP19ActivationHeight;
+        if (!ParseInt32(strDIP19Params, &nDIP19ActivationHeight)) {
+            throw std::runtime_error(strprintf("Invalid nDIP19ActivationHeight (%s)", strDIP19Params));
+        }
+        UpdateDIP19Parameters(nDIP19ActivationHeight);
     }
     MaybeUpdateHeights(args, consensus);
 

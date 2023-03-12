@@ -549,6 +549,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-dip19params=<n:m>", "DIP19 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);

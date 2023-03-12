@@ -16,7 +16,8 @@ from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, f
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
-    assert_equal
+    assert_equal,
+    p2p_port
 )
 
 
@@ -44,6 +45,8 @@ class TestP2PConn(P2PInterface):
 class DIP3V19Test(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
+        for i in range(0, len(self.nodes)):
+            self.extra_args[i].append("-dip19params=200")
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -74,8 +77,16 @@ class DIP3V19Test(DashTestFramework):
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
         self.mine_quorum()
 
-        revoke_protx = self.mninfo[-1].proTxHash
-        revoke_keyoperator = self.mninfo[-1].keyOperator
+        for mn in self.mninfo:
+            self.log.info(f"Trying to update MN payee")
+            self.update_mn_payee(mn, self.nodes[0].getnewaddress())
+
+            self.log.info(f"Trying to update MN service")
+            self.test_protx_update_service(mn)
+
+        mn = self.mninfo[-1]
+        revoke_protx = mn.proTxHash
+        revoke_keyoperator = mn.keyOperator
         self.log.info(f"Trying to revoke proTx:{revoke_protx}")
         self.test_revoke_protx(revoke_protx, revoke_keyoperator)
 
@@ -96,6 +107,25 @@ class DIP3V19Test(DashTestFramework):
             if mn.proTxHash == revoke_protx:
                 self.mninfo.remove(mn)
                 return
+
+    def update_mn_payee(self, mn, payee):
+        self.nodes[0].sendtoaddress(mn.collateral_address, 0.001)
+        self.nodes[0].protx_update_registrar(mn.proTxHash, '', '', payee, mn.collateral_address)
+        self.generate(self.nodes[0], 1)
+        info = self.nodes[0].protx_info(mn.proTxHash)
+        assert info['state']['payoutAddress'] == payee
+
+    def test_protx_update_service(self, mn):
+        self.nodes[0].sendtoaddress(mn.collateral_address, 0.001)
+        self.nodes[0].protx_update_service( mn.proTxHash, '127.0.0.2:%d' % p2p_port(mn.nodeIdx), mn.keyOperator, "", mn.collateral_address)
+        self.generate(self.nodes[0], 1)
+        for node in self.nodes:
+            protx_info = node.protx_info( mn.proTxHash)
+            assert_equal(protx_info['state']['service'], '127.0.0.2:%d' % p2p_port(mn.nodeIdx))
+
+        # undo
+        self.nodes[0].protx_update_service(mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.nodeIdx), mn.keyOperator, "", mn.collateral_address)
+        self.generate(self.nodes[0], 1)
 
     def test_getmnlistdiff(self, baseBlockHash, blockHash, baseMNList, expectedDeleted, expectedUpdated):
         d = self.test_getmnlistdiff_base(baseBlockHash, blockHash)

@@ -132,6 +132,7 @@ public:
     /** How long to wait until we allow retrying of a LLMQ connection  */
     int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
+    void UpdateDIP19Parameters(int nActivationHeight);
     virtual ~CChainParams() {}
 protected:
     CChainParams() {}
