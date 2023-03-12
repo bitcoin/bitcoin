@@ -671,7 +671,7 @@ public:
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = 205;
         consensus.nPODAStartBlock = 0;
-        consensus.nV19StartBlock = 0;
+        consensus.nV19StartBlock = 200;
         consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = 1000;
         consensus.DIP0003Height = 432;

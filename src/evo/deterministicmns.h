@@ -510,10 +510,10 @@ private:
 
         auto oldHash = ::SerializeHash(oldValue);
         auto p = mnUniquePropertyMap.find(oldHash);
-        if (p == nullptr || p->first != dmn.proTxHash) {
+        if (p != nullptr && p->first != dmn.proTxHash) {
             return false;
         }
-        if (p->second == 1) {
+        if (p == nullptr || p->second == 1) {
             mnUniquePropertyMap = mnUniquePropertyMap.erase(oldHash);
         } else {
             mnUniquePropertyMap = mnUniquePropertyMap.set(oldHash, std::make_pair(dmn.proTxHash, p->second - 1));
