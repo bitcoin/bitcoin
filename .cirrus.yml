@@ -91,8 +91,8 @@ task:
 task:
   name: "Win64 native [vs2022]"
   windows_container:
-    cpu: 4
-    memory: 12G
+    cpu: 2
+    memory: 8G
     image: cirrusci/windowsservercore:visualstudio2022
   timeout_in: 120m
   env:
