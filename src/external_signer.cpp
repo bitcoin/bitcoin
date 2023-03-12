@@ -62,12 +62,12 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
 
 UniValue ExternalSigner::DisplayAddress(const std::string& descriptor) const
 {
-    return RunCommandParseJSON(m_command + " --fingerprint \"" + m_fingerprint + "\"" + NetworkArg() + " displayaddress --desc \"" + descriptor + "\"");
+    return RunCommandParseJSON(m_command + " --fingerprint " + m_fingerprint + NetworkArg() + " displayaddress --desc " + descriptor);
 }
 
 UniValue ExternalSigner::GetDescriptors(const int account)
 {
-    return RunCommandParseJSON(m_command + " --fingerprint \"" + m_fingerprint + "\"" + NetworkArg() + " getdescriptors --account " + strprintf("%d", account));
+    return RunCommandParseJSON(m_command + " --fingerprint " + m_fingerprint + NetworkArg() + " getdescriptors --account " + strprintf("%d", account));
 }
 
 bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::string& error)
@@ -93,8 +93,8 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
-    const std::string command = m_command + " --stdin --fingerprint \"" + m_fingerprint + "\"" + NetworkArg();
-    const std::string stdinStr = "signtx \"" + EncodeBase64(ssTx.str()) + "\"";
+    const std::string command = m_command + " --stdin --fingerprint " + m_fingerprint + NetworkArg();
+    const std::string stdinStr = "signtx " + EncodeBase64(ssTx.str());
 
     const UniValue signer_result = RunCommandParseJSON(command, stdinStr);
 
