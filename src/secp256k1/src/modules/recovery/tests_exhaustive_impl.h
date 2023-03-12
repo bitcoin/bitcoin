@@ -10,7 +10,7 @@
 #include "main_impl.h"
 #include "../../../include/secp256k1_recovery.h"
 
-void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1_ge *group) {
+static void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1_ge *group) {
     int i, j, k;
     uint64_t iter = 0;
 
@@ -43,8 +43,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                       (k * (EXHAUSTIVE_TEST_ORDER - s)) % EXHAUSTIVE_TEST_ORDER == (i + r * j) % EXHAUSTIVE_TEST_ORDER);
                 /* The recid's second bit is for conveying overflow (R.x value >= group order).
                  * In the actual secp256k1 this is an astronomically unlikely event, but in the
-                 * small group used here, it will be the case for all points except the ones where
-                 * R.x=1 (which the group is specifically selected to have).
+                 * small group used here, it will almost certainly be the case for all points.
                  * Note that this isn't actually useful; full recovery would need to convey
                  * floor(R.x / group_order), but only one bit is used as that is sufficient
                  * in the real group. */
@@ -79,7 +78,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
     }
 }
 
-void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256k1_ge *group) {
+static void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256k1_ge *group) {
     /* This is essentially a copy of test_exhaustive_verify, with recovery added */
     int s, r, msg, key;
     uint64_t iter = 0;
