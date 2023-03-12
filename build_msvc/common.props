@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\src\bls\mcl\../cybozulib/include;$(SolutionDir)\..\src\bls\mcl\../cybozulib_ext/include;$(SolutionDir)\..\src\bls\mcl\include;$(SolutionDir)\..\src\bls\mcl\../xbyak;$(SolutionDir)..\src\bls\include;$(SolutionDir)..\src;$(SolutionDir)..\src\univalue\include;$(SolutionDir)..\src\leveldb\include;$(SolutionDir)..\src\minisketch\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\src\bls\mcl\../cybozulib/include;$(SolutionDir)\..\src\bls\mcl\../cybozulib_ext/include;$(SolutionDir)\..\src\bls\mcl\include;$(SolutionDir)\..\src\bls\mcl\../xbyak;$(SolutionDir)..\src\bls\include;$(SolutionDir)..\src;$(SolutionDir)..\src\univalue\include;$(SolutionDir)..\src\leveldb\include;$(SolutionDir)..\src\minisketch\include;..\..\src\secp256k1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
