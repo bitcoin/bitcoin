@@ -20,7 +20,7 @@ if test x"$has_valgrind" != x"yes"; then
     #if defined(NVALGRIND)
     #  error "Valgrind does not support this platform."
     #endif
-  ]])], [has_valgrind=yes; AC_DEFINE(HAVE_VALGRIND,1,[Define this symbol if valgrind is installed, and it supports the host platform])])
+  ]])], [has_valgrind=yes])
 fi
 AC_MSG_RESULT($has_valgrind)
 ])

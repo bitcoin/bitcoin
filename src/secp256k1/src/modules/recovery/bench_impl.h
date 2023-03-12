@@ -15,7 +15,7 @@ typedef struct {
     unsigned char sig[64];
 } bench_recover_data;
 
-void bench_recover(void* arg, int iters) {
+static void bench_recover(void* arg, int iters) {
     int i;
     bench_recover_data *data = (bench_recover_data*)arg;
     secp256k1_pubkey pubkey;
@@ -36,7 +36,7 @@ void bench_recover(void* arg, int iters) {
     }
 }
 
-void bench_recover_setup(void* arg) {
+static void bench_recover_setup(void* arg) {
     int i;
     bench_recover_data *data = (bench_recover_data*)arg;
 
@@ -48,7 +48,7 @@ void bench_recover_setup(void* arg) {
     }
 }
 
-void run_recovery_bench(int iters, int argc, char** argv) {
+static void run_recovery_bench(int iters, int argc, char** argv) {
     bench_recover_data data;
     int d = argc == 1;
 
