@@ -109,7 +109,7 @@ private:
     mutable CCriticalSection cs;
     std::atomic<bool> stopRequested{false};
 
-    const Consensus::LLMQParams& params;
+    const Consensus::LLMQParams params;
     CConnman& connman;
     const int quorumIndex;
     CBLSWorker& blsWorker;

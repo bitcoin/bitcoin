@@ -25,7 +25,9 @@ bool MNHFTx::Verify(const CBlockIndex* pQuorumIndex) const
     }
 
     Consensus::LLMQType llmqType = Params().GetConsensus().llmqTypeMnhf;
-    int signOffset{llmq::GetLLMQParams(llmqType).dkgInterval};
+    const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    int signOffset{llmq_params_opt->dkgInterval};
 
     const uint256 requestId = ::SerializeHash(std::make_pair(CBLSIG_REQUESTID_PREFIX, pQuorumIndex->nHeight));
     return llmq::CSigningManager::VerifyRecoveredSig(llmqType, *llmq::quorumManager, pQuorumIndex->nHeight, requestId, pQuorumIndex->GetBlockHash(), sig, 0) ||
@@ -53,7 +55,7 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidat
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-quorum-hash");
     }
 
-    if (!Params().HasLLMQ(Params().GetConsensus().llmqTypeMnhf)) {
+    if (!llmq::GetLLMQParams(Params().GetConsensus().llmqTypeMnhf).has_value()) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-type");
     }
 

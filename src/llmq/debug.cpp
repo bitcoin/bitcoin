@@ -19,7 +19,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int quorumIndex, int detailLevel) const
 {
     UniValue ret(UniValue::VOBJ);
 
-    if (!Params().HasLLMQ(llmqType) || quorumHash.IsNull()) {
+    if (!GetLLMQParams(llmqType).has_value() || quorumHash.IsNull()) {
         return ret;
     }
 
@@ -118,11 +118,12 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
     // TODO Support array of sessions
     UniValue sessionsArrJson(UniValue::VARR);
     for (const auto& p : sessions) {
-        if (!Params().HasLLMQ(p.first.first)) {
+        const auto& llmq_params_opt = GetLLMQParams(p.first.first);
+        if (!llmq_params_opt.has_value()) {
             continue;
         }
         UniValue s(UniValue::VOBJ);
-        s.pushKV("llmqType", std::string(GetLLMQParams(p.first.first).name));
+        s.pushKV("llmqType", std::string(llmq_params_opt->name));
         s.pushKV("quorumIndex", p.first.second);
         s.pushKV("status", p.second.ToJson(p.first.second, detailLevel));
 
