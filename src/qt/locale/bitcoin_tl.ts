@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Tanggalin</translation>
+        <translation type="unfinished">&amp;Burahin</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -662,8 +662,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktibo na mga ♦connection(s)♦ sa ♦Bitcoin network♦.</numerusform>
+            <numerusform>%n na aktibong mga koneksyon sa ♦Bitcoin network♦</numerusform>
         </translation>
     </message>
     <message>

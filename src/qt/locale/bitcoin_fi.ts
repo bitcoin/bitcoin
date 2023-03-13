@@ -336,36 +336,36 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n sekunti</numerusform>
+            <numerusform>%n sekuntia</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuutti</numerusform>
+            <numerusform>%n minuuttia</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n tunti</numerusform>
+            <numerusform>%n tuntia</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n päivä</numerusform>
+            <numerusform>%n päivää</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n viikko</numerusform>
+            <numerusform>%n viikkoa</numerusform>
         </translation>
     </message>
     <message>
@@ -375,8 +375,8 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n vuosi</numerusform>
+            <numerusform>%n vuotta</numerusform>
         </translation>
     </message>
     </context>
@@ -1227,8 +1227,8 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktiivinen yhteys Bitcoin-verkkoon.</numerusform>
+            <numerusform>%n aktiivista yhteyttä Bitcoin-verkkoon.</numerusform>
         </translation>
     </message>
     <message>
@@ -1420,6 +1420,10 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">Kopioi &amp;määrä</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Avaa käyttämättömien lukitus</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1718,15 +1722,15 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(tarvitaan %n GB)</numerusform>
+            <numerusform>(tarvitaan %n GB)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(tarvitaan %n GB koko ketjua varten)</numerusform>
+            <numerusform>(tarvitaan %n GB koko ketjua varten)</numerusform>
         </translation>
     </message>
     <message>
@@ -1983,6 +1987,11 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <translation type="unfinished">Näin sinä tai kolmannen osapuolen työkalu voi kommunikoida solmun kanssa komentorivi- ja JSON-RPC-komentojen avulla.</translation>
     </message>
     <message>
+        <source>Enable R&amp;PC server</source>
+        <extracomment>An Options window setting to enable the RPC server.</extracomment>
+        <translation type="unfinished">Aktivoi R&amp;PC serveri</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">&amp;Lompakko</translation>
     </message>
@@ -2001,6 +2010,11 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Käytä varmistamattomia vaihtorahoja</translation>
+    </message>
+    <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation type="unfinished">Aktivoi &amp;PSBT kontrollit</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -2640,6 +2654,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">Synkronoidut lohkot</translation>
     </message>
     <message>
+        <source>Last Transaction</source>
+        <translation type="unfinished">Viimeisin transaktio</translation>
+    </message>
+    <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
         <translation type="unfinished">Kartoitettu autonominen järjestelmä, jota käytetään monipuolistamaan solmuvalikoimaa</translation>
     </message>
@@ -3224,6 +3242,11 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">%1 (%2 lohkoa)</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation type="unfinished">Allekirjoita laitteella</translation>
+    </message>
+    <message>
         <source>Connect your hardware wallet first.</source>
         <translation type="unfinished">Yhdistä lompakkolaitteesi ensin.</translation>
     </message>
@@ -3243,6 +3266,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
     <message>
         <source> from wallet '%1'</source>
         <translation type="unfinished"> lompakosta '%1'</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details…"</source>
+        <translation type="unfinished">Tarkastellaksesi vastaanottajalistaa klikkaa "Näytä Lisätiedot..."</translation>
     </message>
     <message>
         <source>Sign failed</source>
@@ -3588,7 +3615,11 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <source>(press q to shutdown and continue later)</source>
         <translation type="unfinished">(paina q lopettaaksesi ja jatkaaksesi myöhemmin)</translation>
     </message>
-    </context>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">paina q sammuttaaksesi</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
     <message>
@@ -3926,6 +3957,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
     <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">Kopioi &amp;määrä</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Kopio transaktio &amp;ID</translation>
     </message>
     <message>
         <source>Export Transaction History</source>

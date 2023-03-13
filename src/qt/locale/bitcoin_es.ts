@@ -3,15 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Haz clic con el botón derecho del ratón para editar la dirección o la etiqueta</translation>
+        <translation type="unfinished">Haga clic con el botón derecho para editar la dirección o la etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Crea una nueva dirección</translation>
+        <translation type="unfinished">Crear una nueva dirección</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Nuevo</translation>
+        <translation type="unfinished">Es Nuevo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>

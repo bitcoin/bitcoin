@@ -546,8 +546,8 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Amallar geçmişinden %n blok(lar) işlendi.</numerusform>
+            <numerusform>Amallar geçmişinden %n blok(lar) işlendi.</numerusform>
         </translation>
     </message>
     <message>
@@ -683,8 +683,8 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Bitkoin toruna %n işjeň arabaglanyşyk.</numerusform>
+            <numerusform>Bitkoin ulgamyna %n işjeň arabaglanyşyk.</numerusform>
         </translation>
     </message>
     <message>
@@ -1208,8 +1208,8 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n gün geçen ätiýaçlyk nusgalaryny dikeltmek üçin ýeterlik)</numerusform>
+            <numerusform>(%n gün geçen ätiýaçlyk nusgalaryny dikeltmek üçin ýeterlik)</numerusform>
         </translation>
     </message>
     <message>

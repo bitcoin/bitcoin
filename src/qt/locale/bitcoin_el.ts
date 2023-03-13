@@ -1789,15 +1789,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(από το %n GB που απαιτείται)</numerusform>
+            <numerusform>(από τα %n GB που απαιτούνται)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB απαιτούνται για την πλήρη αλυσίδα)</numerusform>
+            <numerusform>(%n GB απαιτούνται για την πλήρη αλυσίδα)</numerusform>
         </translation>
     </message>
     <message>
@@ -1981,6 +1981,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Έναρξη %1 στο σύστημα σύνδεσης</translation>
     </message>
     <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished">Η ενεργοποίηση του κλαδέματος μειώνει τον απαιτούμενο χώρο για την αποθήκευση συναλλαγών. Όλα τα μπλόκ είναι πλήρως επαληθευμένα. Η επαναφορά αυτής της ρύθμισης απαιτεί επανεγκατάσταση ολόκληρου του blockchain.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">Μέγεθος κρυφής μνήμης βάσης δεδομένων.</translation>
     </message>
@@ -2048,6 +2052,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">Π&amp;ορτοφόλι</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Να τεθεί ο φόρος αφαίρεσης από το ποσό στην προκαθορισμένη τιμή ή οχι. </translation>
     </message>
     <message>
         <source>Expert</source>
@@ -2376,6 +2385,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Failed to sign transaction: %1</source>
         <translation type="unfinished">Αποτυχία εκπλήρωσης συναλλαγής: %1</translation>
+    </message>
+    <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Αδύνατη η υπογραφή εισδοχών ενώ το πορτοφόλι είναι κλειδωμένο</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>

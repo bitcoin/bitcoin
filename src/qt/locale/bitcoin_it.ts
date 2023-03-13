@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Crea un nuovo indirizzo</translation>
+        <translation type="unfinished">Crea un indirizzo nuovo</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copia negli appunti del sistema l'indirizzo attualmente selezionato</translation>
+        <translation type="unfinished">Copia l'indirizzo attualmente selezionato negli appunti di sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,11 +27,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Rimuovi dalla lista l'indirizzo attualmente selezionato</translation>
+        <translation type="unfinished">Rimuovi l'indirizzo attualmente selezionato dall'elenco</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Inserisci indirizzo o nominativo da cercare</translation>
+        <translation type="unfinished">IInserisci l'indirizzo o l'etichetta per la ricerca</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -403,7 +403,7 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>Settings file could not be written</source>
-        <translation type="unfinished">Impossibile scrviere il file delle impostazioni</translation>
+        <translation type="unfinished">Impossibile scrivere il file delle impostazioni</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -502,6 +502,10 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation type="unfinished">La modalità epurazione è configurata al di sotto del minimo di %d MB. Si prega di utilizzare un valore più elevato.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
+        <translation type="unfinished">La modalità prune è incompatibile con -reindex-chainstate. Utilizzare invece -reindex completo.</translation>
+    </message>
+    <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
         <translation type="unfinished">Epurazione: l'ultima sincronizzazione del portafoglio risulta essere precedente alla eliminazione dei dati per via della modalità epurazione. È necessario eseguire un -reindex (scaricare nuovamente la catena di blocchi in caso di nodo epurato).</translation>
     </message>
@@ -552,6 +556,14 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     <message>
         <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
         <translation type="unfinished">Il formato “%s” del file portafoglio fornito non è riconosciuto. si prega di fornire uno che sia “bdb” o “sqlite”. </translation>
+    </message>
+    <message>
+        <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
+        <translation type="unfinished">Formato del database chainstate non supportato. Riavviare con -reindex-chainstate. In questo modo si ricostruisce il database dello stato della catena.</translation>
+    </message>
+    <message>
+        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
+        <translation type="unfinished">Portafoglio creato con successo. Il tipo di portafoglio legacy è stato deprecato e il supporto per la creazione e l'apertura di portafogli legacy sarà rimosso in futuro.</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
@@ -610,6 +622,22 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation type="unfinished">%s richiede di ascoltare sulla porta %u.  Questa porta è considerata "cattiva" e quindi è improbabile che qualsiasi peer Bitcoin Core si colleghi ad essa. Guardare doc/p2p-bad-ports.md per i dettagli ed un elenco completo.</translation>
     </message>
     <message>
+        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">L'opzione -reindex-chainstate non è compatibile con -blockfilterindex. Disattivare temporaneamente blockfilterindex mentre si usa -reindex-chainstate, oppure sostituire -reindex-chainstate con -reindex per ricostruire completamente tutti gli indici.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">L'opzione -reindex-chainstate non è compatibile con -coinstatsindex. Si prega di disabilitare temporaneamente coinstatsindex mentre si usa -reindex-chainstate, oppure di sostituire -reindex-chainstate con -reindex per ricostruire completamente tutti gli indici.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">L'opzione -reindex-chainstate non è compatibile con -txindex. Si prega di disabilitare temporaneamente txindex mentre si usa -reindex-chainstate, oppure di sostituire -reindex-chainstate con -reindex per ricostruire completamente tutti gli indici.</translation>
+    </message>
+    <message>
+        <source>Assumed-valid: last wallet synchronisation goes beyond available block data. You need to wait for the background validation chain to download more blocks.</source>
+        <translation type="unfinished">Presunto-valido: l'ultima sincronizzazione del portafoglio va oltre i dati dei blocchi disponibili. È necessario attendere che la catena di convalida in background scarichi altri blocchi.</translation>
+    </message>
+    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
         <translation type="unfinished">Non e' possibile fornire connessioni specifiche e contemporaneamente usare addrman per trovare connessioni uscenti.  </translation>
     </message>
@@ -618,8 +646,52 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation type="unfinished">Errore caricando %s: il wallet del dispositivo esterno di firma é stato caricato senza che il supporto del dispositivo esterno di firma sia stato compilato.</translation>
     </message>
     <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Errore: I dati della rubrica nel portafoglio non possono essere identificati come appartenenti a portafogli migrati</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Errore: Descrittori duplicati creati durante la migrazione. Il portafoglio potrebbe essere danneggiato.</translation>
+    </message>
+    <message>
+        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Errore: La transazione %s nel portafoglio non può essere identificata come appartenente ai portafogli migrati.</translation>
+    </message>
+    <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first</source>
+        <translation type="unfinished">Errore: Impossibile produrre descrittori per questo portafoglio legacy. Assicurarsi che il portafoglio sia prima sbloccato</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Mancata rinominazione del file peers.dat non valido. Per favore spostarlo o eliminarlo e provare di nuovo.</translation>
+    </message>
+    <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation type="unfinished">Opzioni incompatibili: -dnsseed=1 è stato specificato esplicitamente, ma -onlynet vieta le connessioni a IPv4/IPv6</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
+        <translation type="unfinished">Connessioni in uscita limitate a Tor (-onlynet=onion) ma il proxy per raggiungere la rete Tor è esplicitamente vietato: -onion=0</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
+        <translation type="unfinished">Connessioni in uscita limitate a Tor (-onlynet=onion) ma il proxy per raggiungere la rete Tor non è stato dato: nessuna tra le opzioni -proxy, -onion o -listenonion è fornita</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might had been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">Trovato descrittore non riconosciuto. Caricamento del portafoglio %s
+
+Il portafoglio potrebbe essere stato creato con una versione più recente.
+Provare a eseguire l'ultima versione del software.
+</translation>
+    </message>
+    <message>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation type="unfinished">Livello di log specifico della categoria non supportato -loglevel=%s. Atteso -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Categorie valide: %s. Livelli di log validi: %s.</translation>
     </message>
     <message>
         <source>
@@ -714,6 +786,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Si è verificato un errore leggendo la voce successiva dal database del portafogli elettronico</translation>
     </message>
     <message>
+        <source>Error: Could not add watchonly tx to watchonly wallet</source>
+        <translation type="unfinished">Errore: Impossibile aggiungere la transazione in sola consultazione al wallet in sola consultazione</translation>
+    </message>
+    <message>
         <source>Error: Could not delete watchonly transactions</source>
         <translation type="unfinished">Errore: Non in grado di rimuovere le transazioni di sola lettura</translation>
     </message>
@@ -754,8 +830,20 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Errore:  Nessun %s indirizzo disponibile</translation>
     </message>
     <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Errore: Non è stato possibile cancellare tutte le transazioni in sola consultazione</translation>
+    </message>
+    <message>
         <source>Error: This wallet already uses SQLite</source>
         <translation type="unfinished">Errore: Questo portafoglio utilizza già SQLite</translation>
+    </message>
+    <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Errore: Questo portafoglio è già un portafoglio descrittore</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Errore: Impossibile iniziare la lettura di tutti i record del database</translation>
     </message>
     <message>
         <source>Error: Unable to make a backup of your wallet</source>
@@ -768,6 +856,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Error: Unable to read all records in the database</source>
         <translation type="unfinished">Errore: Non in grado di leggere tutti i record nel database</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Errore: Impossibile rimuovere i dati della rubrica degli indirizzi in sola consultazione</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -846,6 +938,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Netmask non valida specificata in -whitelist: '%s'</translation>
     </message>
     <message>
+        <source>Listening for incoming connections failed (listen returned error %s)</source>
+        <translation type="unfinished">L'ascolto delle connessioni in entrata non è riuscito (l'ascolto ha restituito errore %s)</translation>
+    </message>
+    <message>
         <source>Loading P2P addresses…</source>
         <translation type="unfinished">Caricamento degli indirizzi P2P...</translation>
     </message>
@@ -883,7 +979,7 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">La modalità epurazione non può essere configurata con un valore negativo.</translation>
+        <translation type="unfinished">Prune non può essere configurato con un valore negativo.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -1006,6 +1102,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Transazione troppo grande</translation>
     </message>
     <message>
+        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
+        <translation type="unfinished">Impossibile allocare memoria per -maxsigcachesize: '%s' MiB</translation>
+    </message>
+    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation type="unfinished">Impossibile associarsi a %s su questo computer (l'associazione ha restituito l'errore %s)</translation>
     </message>
@@ -1016,6 +1116,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
         <translation type="unfinished">Impossibile creare il PID file '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">Impossibile trovare UTXO per l'ingresso esterno</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
@@ -1038,12 +1142,16 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Impossibile avviare il server HTTP. Dettagli nel log di debug.</translation>
     </message>
     <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Impossibile scaricare il portafoglio prima della migrazione</translation>
+    </message>
+    <message>
         <source>Unknown -blockfilterindex value %s.</source>
         <translation type="unfinished">Valore -blockfilterindex %s sconosciuto.</translation>
     </message>
     <message>
         <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Il tipo di indirizzo '%s' è sconosciuto&lt;br data-mce-bogus="1"&gt;</translation>
+        <translation type="unfinished">Il tipo di indirizzo '%s' è sconosciuto</translation>
     </message>
     <message>
         <source>Unknown change type '%s'</source>
@@ -1056,6 +1164,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">Nuove regole non riconosciute sono state attivate (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">Livello di registrazione globale non supportato -loglevel=1%s. Valore valido: 1%s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -1456,7 +1568,7 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     </message>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
-        <translation type="unfinished">Pre-sincronizzazione Headers (%1%)…</translation>
+        <translation type="unfinished">Pre-sincronizzazione intestazioni  (%1%)…</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1711,7 +1823,7 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
-        <translation type="unfinished">Creazione portafoglio attenzione</translation>
+        <translation type="unfinished">Crea un avviso di portafoglio</translation>
     </message>
     <message>
         <source>Can't list signers</source>
@@ -1973,15 +2085,15 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(di %n GB richiesto)</numerusform>
+            <numerusform>(di %n GB richiesti)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB richiesti per la catena completa)</numerusform>
+            <numerusform>(%n GB richiesti per la catena completa)</numerusform>
         </translation>
     </message>
     <message>
@@ -1996,8 +2108,8 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(sufficiente per ripristinare i backup di %n giorno fa)</numerusform>
+            <numerusform>(sufficiente per ripristinare i backup di %n giorni fa)</numerusform>
         </translation>
     </message>
     <message>
@@ -2039,6 +2151,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">La sincronizzazione iniziale è molto dispendiosa e potrebbe mettere in luce problemi harware del tuo computer che passavano prima inosservati. Ogni volta che lanci %1 continuerà a scaricare da dove si era interrotto.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Facendo clic su OK, %1 inizierà a scaricare ed elaborare l'intera catena di blocchi di %4 (%2 GB) partendo dalle prime transazioni del %3quando %4 è stato inizialmente lanciato.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -2137,7 +2253,11 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Sconosciuto. Sincronizzazione Intestazioni in corso (%1,%2%)…</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Sconosciuto. Pre-sincronizzazione delle intestazioni (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2191,6 +2311,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">Riduci ad icona invece di uscire dall'applicazione quando la finestra viene chiusa. Attivando questa opzione l'applicazione terminerà solo dopo aver selezionato Esci dal menu File.</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">Le azioni da riga di comando hanno precedenza su quelle impostate da questo pannello:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -2444,6 +2568,11 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">È necessario un riavvio del client per applicare le modifiche.</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">Le impostazioni attuali saranno copiate al "%1".</translation>
+    </message>
+    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">Il client sarà arrestato. Si desidera procedere?</translation>
@@ -2481,6 +2610,13 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation type="unfinished">L'indirizzo proxy che hai fornito non è valido.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation type="unfinished">Non posso leggere l'impostazione "%1", %2,</translation>
     </message>
 </context>
 <context>
@@ -2737,6 +2873,11 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <translation type="unfinished">Nodo</translation>
     </message>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">Età</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
         <translation type="unfinished">Direzione</translation>
@@ -2932,6 +3073,16 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <source>Address Relay</source>
         <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished">Trasmissione dell'Indirizzo</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">Totale di indirizzi ricevuti ed elaborati da questo peer (Sono esclusi gli indirizzi che sono stati eliminati a causa della limitazione di velocità).</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation type="unfinished">Il numero totale di indirizzi ricevuti da questo peer che sono stati abbandonati (non elaborati) a causa della limitazione della velocità.</translation>
     </message>
     <message>
         <source>Addresses Processed</source>
@@ -3977,6 +4128,16 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <source>conflicted with a transaction with %1 confirmations</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished">in conflitto con una transazione con %1 conferme</translation>
+    </message>
+    <message>
+        <source>0/unconfirmed, in memory pool</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is in the memory pool.</extracomment>
+        <translation type="unfinished">0/non confermata, nel pool di memoria</translation>
+    </message>
+    <message>
+        <source>0/unconfirmed, not in memory pool</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is not in the memory pool.</extracomment>
+        <translation type="unfinished">0/non confermata, non nel pool di memoria</translation>
     </message>
     <message>
         <source>abandoned</source>

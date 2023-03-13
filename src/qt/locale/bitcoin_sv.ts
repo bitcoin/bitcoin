@@ -1044,8 +1044,8 @@ Försök igen.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Bearbetade %n block av transaktionshistoriken.</numerusform>
+            <numerusform>Bearbetade %n block av transaktionshistoriken.</numerusform>
         </translation>
     </message>
     <message>
@@ -1193,8 +1193,8 @@ Försök igen.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktiva anslutningar till Bitcoin-nätverket.</numerusform>
+            <numerusform>%n aktiva anslutningar till Bitcoin-nätverket.</numerusform>
         </translation>
     </message>
     <message>
@@ -1680,15 +1680,15 @@ Försök igen.</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(av %n GB behövs)</numerusform>
+            <numerusform>(av de %n GB som behövs)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB behövs för hela kedjan)</numerusform>
+            <numerusform>(%n GB behövs för hela kedjan)</numerusform>
         </translation>
     </message>
     <message>
@@ -1993,6 +1993,10 @@ Försök igen.</translation>
     <message>
         <source>Show the icon in the system tray.</source>
         <translation type="unfinished">Visa ikonen i systemfältet.</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">&amp;Visa ikon i systemfältet</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>

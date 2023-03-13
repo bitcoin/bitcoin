@@ -2579,7 +2579,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>embedded "%1"</source>
-        <translation type="unfinished">嵌入了 “%1”</translation>
+        <translation type="unfinished">嵌入的 "%1"</translation>
     </message>
     <message>
         <source>closest matching "%1"</source>

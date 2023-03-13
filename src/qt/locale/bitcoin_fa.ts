@@ -375,31 +375,31 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n second(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n minute(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n hour(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n day(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n week(s)</numerusform>
         </translation>
     </message>
     <message>
@@ -409,7 +409,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n year(s)</numerusform>
         </translation>
     </message>
     <message>
@@ -3284,7 +3284,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
         </translation>
     </message>
     <message>
@@ -3573,7 +3573,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>matures in %n more block(s)</numerusform>
         </translation>
     </message>
     <message>

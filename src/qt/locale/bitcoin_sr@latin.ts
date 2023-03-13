@@ -221,7 +221,18 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Interna greška</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Greška: %1</translation>
+    </message>
     <message>
         <source>unknown</source>
         <translation type="unfinished">nepoznato</translation>
@@ -282,6 +293,10 @@
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Datoteka sa podešavanjima nije mogla biti iščitana</translation>
+    </message>
+    <message>
         <source>Done loading</source>
         <translation type="unfinished">Zavrseno ucitavanje</translation>
     </message>
@@ -337,6 +352,14 @@
         <translation type="unfinished">Izmeni podešavanja za %1</translation>
     </message>
     <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Napravi novi novčanik</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Minimiziraj</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Novčanik:</translation>
     </message>
@@ -366,16 +389,44 @@
         <translation type="unfinished">&amp;Primi</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Opcije…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;Šifruj novčanik…</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished">Enkriptuj privatne ključeve novčanika</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;Promeni lozinku…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">Potpišite poruke sa svojim Bitcoin adresama da biste dokazali njihovo vlasništvo</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Verifikuj poruku…</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">Proverite poruke da biste utvrdili sa kojim Bitcoin adresama su potpisane</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Zatvori novčanik…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Napravi novčanik…</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Zatvori sve novčanike…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -433,6 +484,10 @@
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Greška: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -509,6 +564,10 @@
     <message>
         <source>Wallet</source>
         <translation type="unfinished">Novčanik</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation type="unfinished">Šifrujte novčanik. Novčanik će biti šifrovan koristeći lozinku po Vašem izboru.</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -875,6 +934,10 @@
     </context>
 <context>
     <name>WalletFrame</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Napravi novi novčanik</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation type="unfinished">Greska</translation>

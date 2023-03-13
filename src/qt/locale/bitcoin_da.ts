@@ -359,36 +359,36 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n sekund(er)</numerusform>
+            <numerusform>%n sekund(er)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minut(er)</numerusform>
+            <numerusform>%n minut(er)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n time(r)</numerusform>
+            <numerusform>%n time(r)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dag(e)</numerusform>
+            <numerusform>%n dag(e)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n uge(r)</numerusform>
+            <numerusform>%n uge(r)</numerusform>
         </translation>
     </message>
     <message>
@@ -398,8 +398,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n år</numerusform>
+            <numerusform>%n år</numerusform>
         </translation>
     </message>
     </context>
@@ -612,6 +612,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
         <translation type="unfinished">Opgraderingen af -txindex som er startet af en tidligere version kan ikke fuldføres. Genstart med den tidligere version eller kør en fuld -reindex.</translation>
+    </message>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%sanmodning om st lytte på havn%uDenne port betragtes som „dårlig“, og det er derfor usandsynligt, at nogen Bitcoin Core-jævnaldrende opretter forbindelse til den. Se doc/p2p-bad-ports.md for detaljer og en komplet liste.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -1252,8 +1256,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Behandlede %n blok(e) af transaktionshistorik.</numerusform>
+            <numerusform>Behandlede %n blok(e) af transaktionshistorik.</numerusform>
         </translation>
     </message>
     <message>
@@ -1396,8 +1400,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktiv(e) forbindelse(r) til Bitcoin-netværket.</numerusform>
+            <numerusform>%n aktiv(e) forbindelse(r) til Bitcoin-netværket.</numerusform>
         </translation>
     </message>
     <message>
@@ -1901,15 +1905,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(ud af %n GB nødvendig)</numerusform>
+            <numerusform>(ud af %n GB nødvendig)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB nødvendig for komplet kæde)</numerusform>
+            <numerusform>(%n GB nødvendig for komplet kæde)</numerusform>
         </translation>
     </message>
     <message>
@@ -1924,8 +1928,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(tilstrækkelig for at gendanne backups %n dag(e) gammel)</numerusform>
+            <numerusform>(tilstrækkelig for at gendanne backups %n dag(e) gammel)</numerusform>
         </translation>
     </message>
     <message>
@@ -3658,8 +3662,8 @@ Bemærk: Da gebyret beregnes på per-byte-basis, ville en gebyrsats på "100 sat
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Anslået at begynde bekræftelse inden for %n blok(e).</numerusform>
+            <numerusform>Anslået at begynde bekræftelse inden for %n blok(e).</numerusform>
         </translation>
     </message>
     <message>
@@ -3972,8 +3976,8 @@ Bemærk: Da gebyret beregnes på per-byte-basis, ville en gebyrsats på "100 sat
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>modnes i yderligere %n blok(e)</numerusform>
+            <numerusform>modnes i yderligere %n blok(e)</numerusform>
         </translation>
     </message>
     <message>

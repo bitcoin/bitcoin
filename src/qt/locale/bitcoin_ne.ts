@@ -166,6 +166,13 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">रनअवे अपवाद</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>Amount</source>

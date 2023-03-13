@@ -54,8 +54,25 @@
         <translation type="unfinished">ਸਿੱਕੇ ਪ੍ਰਾਪਤ ਕਰਨ ਲਈ ਪਤਾ ਚੁਣੋ</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">ਚੁਣੋ </translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation type="unfinished">bhejan wale pate</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation type="unfinished">ਆਉਣ ਵਾਲੇ ਪਤੇ </translation>
+    </message>
+    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">ਇਹ ਭੁਗਤਾਨ ਭੇਜਣ ਲਈ ਤੁਹਾਡੇ ਬਿਟਕੋਇਨ ਪਤੇ ਹਨ। ਸਿੱਕੇ ਭੇਜਣ ਤੋਂ ਪਹਿਲਾਂ ਹਮੇਸ਼ਾਂ ਰਕਮ ਅਤੇ ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਲੇ ਪਤੇ ਦੀ ਜਾਂਚ ਕਰੋ।</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">ਏਹ ਤੁਹਾਡੇ ਰਕਮ ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਲੇ ਬਿਟਕਾਅਨ ਪਤੇ ਹਨ। ਪ੍ਰਾਪਤੀ ਟੈਬ ਤੇ ਨਵੇਂ ਪਤੇ ਦਰਜ ਕਰਨ ਲਈ "ਨਵਾਂ ਪ੍ਰਾਪਤੀ ਪਤਾ ਦਰਜ ਕਰੋ" ਬਟਨ ਤੇ ਟੈਪ ਕਰੋ। ਜੁੜਨ ਲਈ "ਲੈਗਸੀ" ਪ੍ਰਕਾਰ ਦੇ ਹੀ ਪਤੇ ਦਰਜ ਕੀਤੇ ਜਾਂ ਸਕਦੇ ਹਨ। </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -93,7 +110,11 @@
         <source>Address</source>
         <translation type="unfinished">ਪਤਾ</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">ਕੋਈ ਲੇਬਲ ਨਹੀਂ </translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -119,6 +140,10 @@
     <message>
         <source>Encrypt wallet</source>
         <translation type="unfinished">ਵਾਲਿਟ ਐਨਕ੍ਰਿਪਟ ਕਰੋ</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">ਏਸ ਕਾਰੇ ਲਈ ਤੁਹਾਡਾ ਵੱਲੇਟ ਖੋਲਣ ਵਾਸਤੇ ਵੱਲੇਟ ਪਾਸ ਲੱਗੇਗਾ </translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -327,6 +352,13 @@
     </message>
     </context>
 <context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">ਕੋਈ ਲੇਬਲ ਨਹੀਂ </translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message numerus="yes">
         <source>%n GB of space available</source>
@@ -379,6 +411,10 @@
         <source>Label</source>
         <translation type="unfinished">ਲੇਬਲ</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">ਕੋਈ ਲੇਬਲ ਨਹੀਂ </translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -389,7 +425,11 @@
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">ਕੋਈ ਲੇਬਲ ਨਹੀਂ </translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -405,6 +445,10 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">ਲੇਬਲ</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">ਕੋਈ ਲੇਬਲ ਨਹੀਂ </translation>
     </message>
     </context>
 <context>

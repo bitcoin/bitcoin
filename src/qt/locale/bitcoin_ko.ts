@@ -372,31 +372,31 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n초</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n분</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n시간</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n일</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n주</numerusform>
         </translation>
     </message>
     <message>
@@ -406,7 +406,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n년</numerusform>
         </translation>
     </message>
     <message>
@@ -513,6 +513,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">덤프파일이 입력되지 않았습니다. 덤프를 사용하기 위해서는 -dumpfile=&lt;filename&gt;이 반드시 입력되어야 합니다.</translation>
     </message>
     <message>
+        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
+        <translation type="unfinished">shshhdchb bdfjj fb  rciivfjb doffbfbdjdj</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation type="unfinished">컴퓨터의 날짜와 시간이 올바른지 확인하십시오! 시간이 잘못되면 %s은 제대로 동작하지 않습니다.</translation>
     </message>
@@ -535,6 +539,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">블록 데이터베이스에 미래의 블록이 포함되어 있습니다. 이것은 사용자의 컴퓨터의 날짜와 시간이 올바르게 설정되어 있지 않을때 나타날 수 있습니다. 블록 데이터 베이스의 재구성은 사용자의 컴퓨터의 날짜와 시간이 올바르다고 확신할 때에만 하십시오.</translation>
+    </message>
+    <message>
+        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
+        <translation type="unfinished">udhdbfjfjdnbdjfjf hdhdbjcn2owkd. jjwbdbdof dkdbdnck wdkdj </translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -595,6 +603,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">%s 주소를 확인할 수 없습니다: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation type="unfinished">naravfbj. dufb jdncnlfs. jx dhcji djc d jcbc jdnbfbicb </translation>
     </message>
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
@@ -1316,7 +1328,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>비트코인 네트워크에 활성화된 %n연결</numerusform>
         </translation>
     </message>
     <message>
@@ -1829,13 +1841,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(%n GB가 필요합니다.)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(Full 체인이 되려면 %n GB 가 필요합니다.)</numerusform>
         </translation>
     </message>
     <message>
@@ -1850,7 +1862,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n일차 백업을 복구하기에 충분합니다.</numerusform>
         </translation>
     </message>
     <message>
@@ -3619,7 +3631,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n블록내로 컨펌이 시작될 것으로 예상됩니다.</numerusform>
         </translation>
     </message>
     <message>
@@ -3936,7 +3948,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n개 이상 블록 이내에 완료됩니다.</numerusform>
         </translation>
     </message>
     <message>

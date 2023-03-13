@@ -1072,8 +1072,8 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(de %n GB requerido)</numerusform>
+            <numerusform>(de %n GB requeridos)</numerusform>
         </translation>
     </message>
     <message numerus="yes">

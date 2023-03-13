@@ -46,60 +46,18 @@
         <translation type="unfinished">&amp;Usuń</translation>
     </message>
     <message>
-        <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Wybierz adres, na który chcesz wysyłać monety</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Wybierz adres, na który chcesz otrzymywać monety</translation>
-    </message>
-    <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">Wybierz</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">&amp;Adresy wysyłania8f0451c0-ec7d-4357-a370-eff72fb0685f</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
         <translation type="unfinished">Odbierające adresy</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Tutaj znajdują się adresy Bitcoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet. </translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">To są twoje adresy Bitcoin do otrzymywania płatności. Użyj przycisku 'Utwórz nowy adres odbioru' na karcie odbioru, aby utworzyć nowe adresy.
 Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation type="unfinished">Kopiuj adres</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation type="unfinished">Kopiuj etykietę</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;Edytuj</translation>
-    </message>
-    <message>
-        <source>Export Address List</source>
-        <translation type="unfinished">Eksportuj listę adresów </translation>
-    </message>
-    <message>
-        <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">Plik *.CSV rozdzielany pzrecinkami</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Wystąpił błąd podczas próby zapisu listy adresów do %1. Proszę spróbować ponownie.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -146,14 +104,6 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Encrypt wallet</source>
         <translation type="unfinished">Zaszyfruj portfel </translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Ta operacja wymaga hasła do portfela aby odblokować portfel. </translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation type="unfinished">Odblokuj portfel</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -356,41 +306,41 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n sekunda</numerusform>
+            <numerusform>%n sekund</numerusform>
+            <numerusform>%n sekund</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuta</numerusform>
+            <numerusform>%n minut</numerusform>
+            <numerusform>%n minut</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n godzina</numerusform>
+            <numerusform>%n godzin</numerusform>
+            <numerusform>%n godzin</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dzień</numerusform>
+            <numerusform>%n dni</numerusform>
+            <numerusform>%n dni</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n tydzień</numerusform>
+            <numerusform>%n tygodnie</numerusform>
+            <numerusform>%n tygodnie</numerusform>
         </translation>
     </message>
     <message>
@@ -400,9 +350,9 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n rok</numerusform>
+            <numerusform>%n lata</numerusform>
+            <numerusform>%n lata</numerusform>
         </translation>
     </message>
     </context>
@@ -930,6 +880,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Nie można otworzyć %s w celu zapisu</translation>
     </message>
     <message>
+        <source>Unable to parse -maxuploadtarget: '%s'</source>
+        <translation type="unfinished">Nie można przeanalizować -maxuploadtarget: „%s”</translation>
+    </message>
+    <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Uruchomienie serwera HTTP nie powiodło się. Zobacz dziennik debugowania, aby uzyskać więcej szczegółów.</translation>
     </message>
@@ -948,6 +902,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation type="unfinished">Nieznana sieć w -onlynet: '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">Aktywowano nieznane nowe reguły (versionbit %i)</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -1331,9 +1289,9 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktywne połączenie z siecią Bitcoin.</numerusform>
+            <numerusform>%n aktywnych połączeń z siecią Bitcoin.</numerusform>
+            <numerusform>%n aktywnych połączeń z siecią Bitcoin.</numerusform>
         </translation>
     </message>
     <message>
@@ -1852,17 +1810,17 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(z %n GB potrzebnych)</numerusform>
+            <numerusform>(z %n GB potrzebnych)</numerusform>
+            <numerusform>(z %n GB potrzebnych)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB potrzebny na pełny łańcuch)</numerusform>
+            <numerusform>(%n GB potrzebne na pełny łańcuch)</numerusform>
+            <numerusform>(%n GB potrzebnych na pełny łańcuch)</numerusform>
         </translation>
     </message>
     <message>
@@ -1877,9 +1835,9 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dnia)</numerusform>
+            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dni)</numerusform>
+            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dni)</numerusform>
         </translation>
     </message>
     <message>
@@ -3600,9 +3558,9 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Szacuje się, że potwierdzenie rozpocznie się w %n bloku.</numerusform>
+            <numerusform>Szacuje się, że potwierdzenie rozpocznie się w %n bloków.</numerusform>
+            <numerusform>Szacuje się, że potwierdzenie rozpocznie się w %n bloków.</numerusform>
         </translation>
     </message>
     <message>

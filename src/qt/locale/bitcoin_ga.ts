@@ -1455,17 +1455,17 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(de %n GB teastáil)</numerusform>
+            <numerusform>(de %n GB teastáil)</numerusform>
+            <numerusform>(de %n GB teastáil)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB teastáil do slabhra iomlán)</numerusform>
+            <numerusform>(%n GB teastáil do slabhra iomlán)</numerusform>
+            <numerusform>(%n GB teastáil do slabhra iomlán)</numerusform>
         </translation>
     </message>
     <message>

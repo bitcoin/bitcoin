@@ -260,6 +260,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Želite li resetirati postavke na zadane vrijednosti ili prekinuti bez unošenja promjena?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">Došlo je do fatalne greške. Provjerite da li se u datoteku postavki može pisati ili pokušajte pokrenuti s -nosettings.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">Greška: Navedeni direktorij podataka "%1" ne postoji.</translation>
     </message>
@@ -334,6 +344,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Nije moguće pročitati fajl postavki</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Nije moguće upisati datoteku postavki</translation>
+    </message>
     <message>
         <source>Replaying blocks…</source>
         <translation type="unfinished">Reprodukcija blokova…</translation>
@@ -554,6 +572,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kreirajte novi novčanik</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Minimiziraj</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Novčanik:</translation>
     </message>
@@ -595,12 +617,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Šifrirajte privatne ključeve koji pripadaju vašem novčaniku</translation>
     </message>
     <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">Potpiši &amp;poruku…</translation>
+    </message>
+    <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">Potpišite poruke sa svojim Bitcoin adresama da biste dokazali da ste njihov vlasnik</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">Potvrdite poruke kako biste bili sigurni da su potpisane navedenim Bitcoin adresama</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Otvori &amp;URI…</translation>
     </message>
     <message>
         <source>Close Wallet…</source>

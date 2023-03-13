@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
+        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -747,12 +747,20 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">İşlem çok büyük</translation>
     </message>
     <message>
+        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
+        <translation type="unfinished">-maxsigcachesize: ' %s' MiB için bellek konumlandırılamıyor.</translation>
+    </message>
+    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation type="unfinished">Bu bilgisayarda %s ögesine bağlanılamadı (bağlanma %s hatasını verdi)</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation type="unfinished">Bu bilgisayarda %s unsuruna bağlanılamadı. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
+    </message>
+    <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">Harici giriş için UTXO bulunamıyor.</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
@@ -1142,7 +1150,7 @@ Cüzdan kilidini aç.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>Bitcoin ağına %n etkin bağlantı.</numerusform>
         </translation>
     </message>
     <message>
@@ -1159,6 +1167,10 @@ Cüzdan kilidini aç.</translation>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Ağ etkinliğini etkinleştir</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Üstbilgiler senkronize ediliyor (%1%)...</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1458,6 +1470,11 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Cüzdanı Geri Yükle</translation>
     </message>
     <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Cüzdan Onarılıyor&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Restore wallet failed</source>
         <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
         <translation type="unfinished">Cüzdan geri yüklenemedi</translation>
@@ -1467,7 +1484,12 @@ Cüzdan kilidini aç.</translation>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
         <translation type="unfinished">Cüzdan uyarısını geri yükle</translation>
     </message>
-    </context>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Cüzdan onarım mesajı</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1621,19 +1643,19 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n GB alan kullanılabilir</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(gereken %n GB alandan)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(%n GB tam zincir için gerekli)</numerusform>
         </translation>
     </message>
     <message>
@@ -1648,7 +1670,7 @@ Cüzdan kilidini aç.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(%n günlük yedekleri geri yüklemek için yeterli)</numerusform>
         </translation>
     </message>
     <message>
@@ -3062,7 +3084,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>Tahmini %n blok içinde doğrulamaya başlanacaktır.</numerusform>
         </translation>
     </message>
     <message>
@@ -3371,7 +3393,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n ek blok sonrasında olgunlaşacak</numerusform>
         </translation>
     </message>
     <message>

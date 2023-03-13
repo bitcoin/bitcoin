@@ -92,6 +92,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">સરનામાં ની સૂચિ નો નિકાસ કરો</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">નિકાસ ની પ્ર્રાક્રિયા નિષ્ફળ ગયેલ છે</translation>
     </message>
@@ -324,6 +329,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">ચિઠ્ઠી</translation>

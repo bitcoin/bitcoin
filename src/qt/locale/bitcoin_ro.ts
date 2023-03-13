@@ -1432,9 +1432,9 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(din %n GB necesar)</numerusform>
+            <numerusform>(din %n GB necesari)</numerusform>
+            <numerusform>(din %n GB necesari)</numerusform>
         </translation>
     </message>
     <message numerus="yes">

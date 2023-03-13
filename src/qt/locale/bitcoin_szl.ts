@@ -811,7 +811,7 @@
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(z %n GB przidajnego)</numerusform>
         </translation>
     </message>
     <message numerus="yes">

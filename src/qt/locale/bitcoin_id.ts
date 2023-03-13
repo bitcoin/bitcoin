@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Klik kanan untuk mengubah alamat atau label</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation type="unfinished">Buat alamat baru</translation>
     </message>
@@ -23,7 +19,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">T&amp;utup</translation>
+        <translation type="unfinished">&amp;Tutup</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -248,19 +244,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Internal error</source>
         <translation type="unfinished">Kesalahan internal</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Terjadi kesalahan. %1 akan mencoba melanjutkan secara aman. Ini adalah bug yang tidak terduga yang dapat dilaporkan seperti penjelasan di bawah ini.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation type="unfinished">Apakah Anda ingin mereset pengaturan ke nilai default, atau membatalkan tanpa membuat perubahan?</translation>
-    </message>
-    <message>
-        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
-        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
-        <translation type="unfinished">Kesalahan telah terjadi. Cek apakah file setting dapat ditulis, atau coba jalankan tanpa setting
-</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
@@ -1561,10 +1555,6 @@ Tidak dapat memulihkan cadangan dompet..</translation>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation type="unfinished">Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terbuka&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished">Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terkunci&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Original message:</source>
