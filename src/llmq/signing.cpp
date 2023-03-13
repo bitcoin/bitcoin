@@ -606,7 +606,7 @@ bool CSigningManager::PreVerifyRecoveredSig(const CQuorumManager& quorum_manager
     retBan = false;
 
     auto llmqType = recoveredSig.getLlmqType();
-    if (!Params().HasLLMQ(llmqType)) {
+    if (!GetLLMQParams(llmqType).has_value()) {
         retBan = true;
         return false;
     }
@@ -881,7 +881,9 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
         // This gives a slight risk of not getting enough shares to recover a signature
         // But at least it shouldn't be possible to get conflicting recovered signatures
         // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-        quorum = SelectQuorumForSigning(llmqType, qman, id);
+        const auto& llmq_params_opt = GetLLMQParams(llmqType);
+        assert(llmq_params_opt.has_value());
+        quorum = SelectQuorumForSigning(llmq_params_opt.value(), qman, id);
     } else {
         quorum = qman.GetQuorum(llmqType, quorumHash);
     }
@@ -978,9 +980,9 @@ bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& 
     return db.GetVoteForId(llmqType, id, msgHashRet);
 }
 
-CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight, int signOffset)
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight, int signOffset)
 {
-    size_t poolSize = GetLLMQParams(llmqType).signingActiveQuorumCount;
+    size_t poolSize = llmq_params.signingActiveQuorumCount;
 
     CBlockIndex* pindexStart;
     {
@@ -995,13 +997,13 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         pindexStart = ::ChainActive()[startBlockHeight];
     }
 
-    if (utils::IsQuorumRotationEnabled(llmqType, pindexStart)) {
-        auto quorums = quorum_manager.ScanQuorums(llmqType, pindexStart, poolSize);
+    if (utils::IsQuorumRotationEnabled(llmq_params, pindexStart)) {
+        auto quorums = quorum_manager.ScanQuorums(llmq_params.type, pindexStart, poolSize);
         if (quorums.empty()) {
             return nullptr;
         }
         //log2 int
-        int n = std::log2(GetLLMQParams(llmqType).signingActiveQuorumCount);
+        int n = std::log2(llmq_params.signingActiveQuorumCount);
         //Extract last 64 bits of selectionHash
         uint64_t b = selectionHash.GetUint64(3);
         //Take last n bits of b
@@ -1020,7 +1022,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         }
         return *itQuorum;
     } else {
-        auto quorums = quorum_manager.ScanQuorums(llmqType, pindexStart, poolSize);
+        auto quorums = quorum_manager.ScanQuorums(llmq_params.type, pindexStart, poolSize);
         if (quorums.empty()) {
             return nullptr;
         }
@@ -1029,7 +1031,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         scores.reserve(quorums.size());
         for (const auto i : irange::range(quorums.size())) {
             CHashWriter h(SER_NETWORK, 0);
-            h << llmqType;
+            h << llmq_params.type;
             h << quorums[i]->qc->quorumHash;
             h << selectionHash;
             scores.emplace_back(h.GetHash(), i);
@@ -1041,7 +1043,9 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
 
 bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
 {
-    auto quorum = SelectQuorumForSigning(llmqType, quorum_manager, id, signedAtHeight, signOffset);
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    auto quorum = SelectQuorumForSigning(llmq_params_opt.value(), quorum_manager, id, signedAtHeight, signOffset);
     if (!quorum) {
         return false;
     }

@@ -112,8 +112,7 @@ public:
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckMasternodesUpgraded() const { return fBIP9CheckMasternodesUpgraded; }
-    const Consensus::LLMQParams& GetLLMQ(Consensus::LLMQType llmqType) const;
-    bool HasLLMQ(Consensus::LLMQType llmqType) const;
+    std::optional<Consensus::LLMQParams> GetLLMQ(Consensus::LLMQType llmqType) const;
 
 protected:
     CChainParams() {}

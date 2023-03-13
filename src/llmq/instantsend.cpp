@@ -706,8 +706,10 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
 
     // compute and set cycle hash if islock is deterministic
     if (islock.IsDeterministic()) {
+        const auto& llmq_params_opt = GetLLMQParams(llmqType);
+        assert(llmq_params_opt);
         LOCK(cs_main);
-        const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+        const auto dkgInterval = llmq_params_opt->dkgInterval;
         const auto quorumHeight = ::ChainActive().Height() - (::ChainActive().Height() % dkgInterval);
         islock.cycleHash = ::ChainActive()[quorumHeight]->GetBlockHash();
     }
@@ -803,7 +805,9 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
 
         // Deterministic islocks MUST use rotation based llmq
         auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
-        if (blockIndex->nHeight % GetLLMQParams(llmqType).dkgInterval != 0) {
+        const auto& llmq_params_opt = GetLLMQParams(llmqType);
+        assert(llmq_params_opt);
+        if (blockIndex->nHeight % llmq_params_opt->dkgInterval != 0) {
             Misbehaving(pfrom.GetId(), 100);
             return;
         }
@@ -905,10 +909,13 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks(bool deterministic)
 
     //TODO Investigate if leaving this is ok
     auto llmqType = utils::GetInstantSendLLMQType(deterministic);
-    auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt);
+    const auto& llmq_params = llmq_params_opt.value();
+    auto dkgInterval = llmq_params.dkgInterval;
 
     // First check against the current active set and don't ban
-    auto badISLocks = ProcessPendingInstantSendLocks(llmqType, 0, pend, false);
+    auto badISLocks = ProcessPendingInstantSendLocks(llmq_params, 0, pend, false);
     if (!badISLocks.empty()) {
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- doing verification on old active set\n", __func__);
 
@@ -921,13 +928,13 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks(bool deterministic)
             }
         }
         // Now check against the previous active set and perform banning if this fails
-        ProcessPendingInstantSendLocks(llmqType, dkgInterval, pend, true);
+        ProcessPendingInstantSendLocks(llmq_params, dkgInterval, pend, true);
     }
 
     return fMoreWork;
 }
 
-std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPendingInstantSendLocks(const Consensus::LLMQType llmqType, int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
+std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params, int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
 {
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
     std::unordered_map<uint256, CRecoveredSig, StaticSaltedHasher> recSigs;
@@ -951,7 +958,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         auto id = islock->GetRequestId();
 
         // no need to verify an ISLOCK if we already have verified the recovered sig that belongs to it
-        if (sigman.HasRecoveredSig(llmqType, id, islock->txid)) {
+        if (sigman.HasRecoveredSig(llmq_params.type, id, islock->txid)) {
             alreadyVerified++;
             continue;
         }
@@ -966,26 +973,26 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
                 continue;
             }
 
-            const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+            const auto dkgInterval = llmq_params.dkgInterval;
             if (blockIndex->nHeight + dkgInterval < ::ChainActive().Height()) {
                 nSignHeight = blockIndex->nHeight + dkgInterval - 1;
             }
         }
 
-        auto quorum = llmq::CSigningManager::SelectQuorumForSigning(llmqType, qman, id, nSignHeight, signOffset);
+        auto quorum = llmq::CSigningManager::SelectQuorumForSigning(llmq_params, qman, id, nSignHeight, signOffset);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
             return {};
         }
-        uint256 signHash = utils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, islock->txid);
+        uint256 signHash = utils::BuildSignHash(llmq_params.type, quorum->qc->quorumHash, id, islock->txid);
         batchVerifier.PushMessage(nodeId, hash, signHash, islock->sig.Get(), quorum->qc->quorumPublicKey);
         verifyCount++;
 
         // We can reconstruct the CRecoveredSig objects from the islock and pass it to the signing manager, which
         // avoids unnecessary double-verification of the signature. We however only do this when verification here
         // turns out to be good (which is checked further down)
-        if (!sigman.HasRecoveredSigForId(llmqType, id)) {
-            recSigs.try_emplace(hash, CRecoveredSig(llmqType, quorum->qc->quorumHash, id, islock->txid, islock->sig));
+        if (!sigman.HasRecoveredSigForId(llmq_params.type, id)) {
+            recSigs.try_emplace(hash, CRecoveredSig(llmq_params.type, quorum->qc->quorumHash, id, islock->txid, islock->sig));
         }
     }
 
@@ -1025,7 +1032,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         auto it = recSigs.find(hash);
         if (it != recSigs.end()) {
             auto recSig = std::make_shared<CRecoveredSig>(std::move(it->second));
-            if (!sigman.HasRecoveredSigForId(llmqType, recSig->getId())) {
+            if (!sigman.HasRecoveredSigForId(llmq_params.type, recSig->getId())) {
                 LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: passing reconstructed recSig to signing mgr, peer=%d\n", __func__,
                          islock->txid.ToString(), hash.ToString(), nodeId);
                 sigman.PushReconstructedRecoveredSig(recSig);

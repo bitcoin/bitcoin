@@ -196,11 +196,13 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     vRecv.Rewind(sizeof(uint256));
     vRecv.Rewind(sizeof(uint8_t));
 
-    if (!Params().HasLLMQ(llmqType)) {
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    if (!llmq_params_opt.has_value()) {
         LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", ToUnderlying(llmqType));
         Misbehaving(pfrom.GetId(), 100);
         return;
     }
+    const auto& llmq_params = llmq_params_opt.value();
 
     int quorumIndex{-1};
 
@@ -229,10 +231,9 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
             return;
         }
 
-        const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
-        quorumIndex = pQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval;
-        int quorumIndexMax = utils::IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex) ?
-                llmqParams.signingActiveQuorumCount - 1 : 0;
+        quorumIndex = pQuorumBaseBlockIndex->nHeight % llmq_params.dkgInterval;
+        int quorumIndexMax = utils::IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex) ?
+                llmq_params.signingActiveQuorumCount - 1 : 0;
 
         if (quorumIndex > quorumIndexMax) {
             LogPrintf("CDKGSessionManager -- invalid quorumHash %s\n", quorumHash.ToString());

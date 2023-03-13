@@ -52,7 +52,7 @@ static bool IsInstantSendLLMQTypeShared();
 void PreComputeQuorumMembers(const CBlockIndex* pQuorumBaseBlockIndex, bool reset_cache)
 {
     for (const Consensus::LLMQParams& params : GetEnabledQuorumParams(pQuorumBaseBlockIndex->pprev)) {
-        if (IsQuorumRotationEnabled(params.type, pQuorumBaseBlockIndex) && (pQuorumBaseBlockIndex->nHeight % params.dkgInterval == 0)) {
+        if (IsQuorumRotationEnabled(params, pQuorumBaseBlockIndex) && (pQuorumBaseBlockIndex->nHeight % params.dkgInterval == 0)) {
             GetAllQuorumMembers(params.type, pQuorumBaseBlockIndex, reset_cache);
         }
     }
@@ -80,7 +80,11 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
         }
     }
 
-    if (IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex)) {
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    const auto& llmq_params = llmq_params_opt.value();
+
+    if (IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex)) {
         if (LOCK(cs_indexed_members); mapIndexedQuorumMembers.empty()) {
             InitQuorumsCache(mapIndexedQuorumMembers);
         }
@@ -93,9 +97,8 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
          * Quorum Q with quorumIndex is created at height CycleQuorumBaseBlock + quorumIndex
          */
 
-        const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
-        int quorumIndex = pQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval;
-        if (quorumIndex >= llmqParams.signingActiveQuorumCount) {
+        int quorumIndex = pQuorumBaseBlockIndex->nHeight % llmq_params.dkgInterval;
+        if (quorumIndex >= llmq_params.signingActiveQuorumCount) {
             return {};
         }
         int cycleQuorumBaseHeight = pQuorumBaseBlockIndex->nHeight - quorumIndex;
@@ -114,7 +117,7 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
             return quorumMembers;
         }
 
-        auto q = ComputeQuorumMembersByQuarterRotation(llmqParams, pCycleQuorumBaseBlockIndex);
+        auto q = ComputeQuorumMembersByQuarterRotation(llmq_params, pCycleQuorumBaseBlockIndex);
         LOCK(cs_indexed_members);
         for (const size_t i : irange::range(q.size())) {
             mapIndexedQuorumMembers[llmqType].insert(std::make_pair(pCycleQuorumBaseBlockIndex->GetBlockHash(), i), q[i]);
@@ -135,7 +138,9 @@ std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqT
     auto allMns = deterministicMNManager->GetListForBlock(pQuorumBaseBlockIndex);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pQuorumBaseBlockIndex->GetBlockHash()));
     bool HPMNOnly = (Params().GetConsensus().llmqTypePlatform == llmqType) && IsV19Active(pQuorumBaseBlockIndex);
-    return allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier, HPMNOnly);
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    return allMns.CalculateQuorum(llmq_params_opt->size, modifier, HPMNOnly);
 }
 
 std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex)
@@ -608,11 +613,9 @@ bool IsQuorumPoseEnabled(Consensus::LLMQType llmqType)
     return EvalSpork(llmqType, sporkManager->GetSporkValue(SPORK_23_QUORUM_POSE));
 }
 
-bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
+bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindex)
 {
     assert(pindex);
-
-    const auto& llmqParams = GetLLMQParams(llmqType);
 
     if (!llmqParams.useRotation) {
         return false;
@@ -902,7 +905,9 @@ bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, co
     // sig shares and recovered sigs are only accepted from recent/active quorums
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
-    auto quorums = qman.ScanQuorums(llmqType, GetLLMQParams(llmqType).keepOldConnections);
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    auto quorums = qman.ScanQuorums(llmqType, llmq_params_opt->keepOldConnections);
     return ranges::any_of(quorums, [&quorumHash](const auto& q){ return q->qc->quorumHash == quorumHash; });
 }
 
@@ -1064,7 +1069,7 @@ template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache
 
 } // namespace utils
 
-const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
+const std::optional<Consensus::LLMQParams> GetLLMQParams(Consensus::LLMQType llmqType)
 {
     return Params().GetLLMQ(llmqType);
 }

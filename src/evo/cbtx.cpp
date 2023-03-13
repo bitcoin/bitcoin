@@ -189,7 +189,9 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
     qcIndexedHashes_cached.clear();
 
     for (const auto& [llmqType, vecBlockIndexes] : quorums) {
-        bool rotation_enabled = llmq::utils::IsQuorumRotationEnabled(llmqType, pindexPrev);
+        const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+        assert(llmq_params_opt.has_value());
+        bool rotation_enabled = llmq::utils::IsQuorumRotationEnabled(llmq_params_opt.value(), pindexPrev);
         auto& vec_hashes = qcHashes_cached[llmqType];
         vec_hashes.reserve(vecBlockIndexes.size());
         auto& map_indexed_hashes = qcIndexedHashes_cached[llmqType];
@@ -253,12 +255,16 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                 // having null commitments is ok but we don't use them here, move to the next tx
                 continue;
             }
+            const auto& llmq_params_opt = llmq::GetLLMQParams(qc.commitment.llmqType);
+            if (!llmq_params_opt.has_value()) {
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-commitment-type-calc-cbtx-quorummerkleroot");
+            }
+            const auto& llmq_params = llmq_params_opt.value();
             auto qcHash = ::SerializeHash(qc.commitment);
-            if (llmq::utils::IsQuorumRotationEnabled(qc.commitment.llmqType, pindexPrev)) {
+            if (llmq::utils::IsQuorumRotationEnabled(llmq_params, pindexPrev)) {
                 auto& map_indexed_hashes = qcIndexedHashes[qc.commitment.llmqType];
                 map_indexed_hashes[qc.commitment.quorumIndex] = qcHash;
             } else {
-                const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
                 auto& vec_hashes = qcHashes[llmq_params.type];
                 if (vec_hashes.size() == size_t(llmq_params.signingActiveQuorumCount)) {
                     // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
@@ -282,8 +288,9 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     vec_hashes_final.reserve(CalcHashCountFromQCHashes(qcHashes));
 
     for (const auto& [llmqType, vec_hashes] : qcHashes) {
-        const auto& llmq_params = llmq::GetLLMQParams(llmqType);
-        if (vec_hashes.size() > size_t(llmq_params.signingActiveQuorumCount)) {
+        const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+        assert(llmq_params_opt.has_value());
+        if (vec_hashes.size() > size_t(llmq_params_opt->signingActiveQuorumCount)) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "excess-quorums-calc-cbtx-quorummerkleroot");
         }
         // Copy vec_hashes into vec_hashes_final

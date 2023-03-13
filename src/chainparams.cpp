@@ -107,7 +107,7 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
 
 void CChainParams::AddLLMQ(Consensus::LLMQType llmqType)
 {
-    assert(!HasLLMQ(llmqType));
+    assert(!GetLLMQ(llmqType).has_value());
     for (const auto& llmq_param : Consensus::available_llmqs) {
         if (llmq_param.type == llmqType) {
             consensus.llmqs.push_back(llmq_param);
@@ -118,25 +118,14 @@ void CChainParams::AddLLMQ(Consensus::LLMQType llmqType)
     assert(false);
 }
 
-const Consensus::LLMQParams& CChainParams::GetLLMQ(Consensus::LLMQType llmqType) const
+std::optional<Consensus::LLMQParams> CChainParams::GetLLMQ(Consensus::LLMQType llmqType) const
 {
     for (const auto& llmq_param : consensus.llmqs) {
         if (llmq_param.type == llmqType) {
-            return llmq_param;
+            return std::make_optional(llmq_param);
         }
     }
-    error("CChainParams::%s: unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType));
-    assert(false);
-}
-
-bool CChainParams::HasLLMQ(Consensus::LLMQType llmqType) const
-{
-    for (const auto& llmq_param : consensus.llmqs) {
-        if (llmq_param.type == llmqType) {
-            return true;
-        }
-    }
-    return false;
+    return std::nullopt;
 }
 
 /**
@@ -1279,7 +1268,10 @@ void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqchainlocks")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(GetLLMQ(consensus.llmqTypeChainLocks).name));
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypeChainLocks);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(llmq_params_opt->name));
 
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
@@ -1301,7 +1293,10 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqinstantsend")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(GetLLMQ(consensus.llmqTypeInstantSend).name));
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypeInstantSend);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(llmq_params_opt->name));
 
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
@@ -1323,7 +1318,10 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendDIP0024FromArgs(const ArgsManager
 {
     if (!args.IsArgSet("-llmqinstantsenddip0024")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqinstantsenddip0024", std::string(GetLLMQ(consensus.llmqTypeDIP0024InstantSend).name));
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypeDIP0024InstantSend);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsenddip0024", std::string(llmq_params_opt->name));
 
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
@@ -1345,7 +1343,10 @@ void CDevNetParams::UpdateDevnetLLMQPlatformFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqplatform")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqplatform", std::string(GetLLMQ(consensus.llmqTypePlatform).name));
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypePlatform);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqplatform", std::string(llmq_params_opt->name));
 
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {

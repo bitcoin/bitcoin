@@ -301,7 +301,7 @@ void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqPar
     auto connmanQuorumsToDelete = connman.GetMasternodeQuorums(llmqParams.type);
 
     // don't remove connections for the currently in-progress DKG round
-    if (utils::IsQuorumRotationEnabled(llmqParams.type, pindexNew)) {
+    if (utils::IsQuorumRotationEnabled(llmqParams, pindexNew)) {
         int cycleIndexTipHeight = pindexNew->nHeight % llmqParams.dkgInterval;
         int cycleQuorumBaseHeight = pindexNew->nHeight - cycleIndexTipHeight;
         std::stringstream ss;
@@ -373,7 +373,9 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     }
     assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
-    auto quorum = std::make_shared<CQuorum>(llmq::GetLLMQParams(llmqType), blsWorker);
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    auto quorum = std::make_shared<CQuorum>(llmq_params_opt.value(), blsWorker);
     auto members = utils::GetAllQuorumMembers(qc->llmqType, pQuorumBaseBlockIndex);
 
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
@@ -452,7 +454,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is neither a verified masternode nor a qwatch connection\n", __func__);
         return false;
     }
-    if (!Params().HasLLMQ(llmqType)) {
+    if (!GetLLMQParams(llmqType).has_value()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid llmqType: %d\n", __func__, ToUnderlying(llmqType));
         return false;
     }
@@ -525,7 +527,9 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     }
 
     // Get the block indexes of the mined commitments to build the required quorums from
-    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes{ GetLLMQParams(llmqType).useRotation ?
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes{ llmq_params_opt->useRotation ?
             quorumBlockProcessor.GetMinedCommitmentsIndexedUntilBlock(llmqType, pIndexScanCommitments, nScanCommitments) :
             quorumBlockProcessor.GetMinedCommitmentsUntilBlock(llmqType, pIndexScanCommitments, nScanCommitments)
     };
@@ -649,7 +653,7 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
             }
         }
 
-        if (!Params().HasLLMQ(request.GetLLMQType())) {
+        if (!GetLLMQParams(request.GetLLMQType()).has_value()) {
             sendQDATA(CQuorumDataRequest::Errors::QUORUM_TYPE_INVALID);
             return;
         }
