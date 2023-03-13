@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Criar um novo endereço</translation>
+        <translation type="unfinished">Criar um novo endereço.</translation>
     </message>
     <message>
         <source>&amp;New</source>

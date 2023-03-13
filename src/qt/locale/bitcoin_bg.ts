@@ -691,8 +691,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Обработени %n сектори от историята с трансакции.</numerusform>
+            <numerusform>Обработени %n сектори от историята с трансакции.</numerusform>
         </translation>
     </message>
     <message>
@@ -861,8 +861,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n свързани активно към Bitcoin мрежата.</numerusform>
+            <numerusform>%n активно свързани към Биткойн мрежата. </numerusform>
         </translation>
     </message>
     <message>
@@ -1398,8 +1398,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>фе</numerusform>
+            <numerusform>(от %n гигабайта са нужни)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1421,8 +1421,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(достатъчно за възстановяване на резервните копия %n от преди дни)</numerusform>
+            <numerusform>(достатъчно за възстановяване на резервните копия %n от преди дни)</numerusform>
         </translation>
     </message>
     <message>

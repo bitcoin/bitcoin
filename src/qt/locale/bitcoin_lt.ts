@@ -1176,9 +1176,9 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(reikalinga %n GB)</numerusform>
+            <numerusform>(reikalinga %n GB)</numerusform>
+            <numerusform>(reikalinga %n GB)</numerusform>
         </translation>
     </message>
     <message numerus="yes">

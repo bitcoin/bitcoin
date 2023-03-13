@@ -1455,7 +1455,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 позади</translation>
+        <translation type="unfinished">Отстаём на %1</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -2757,7 +2757,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Balances</source>
-        <translation type="unfinished">Балансы</translation>
+        <translation type="unfinished">Баланс</translation>
     </message>
     <message>
         <source>Total:</source>

@@ -207,6 +207,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Skedari i cilësimeve %1 mund të jetë i korruptuar ose i pavlefshëm.</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Ndodhi një gabim fatal. %1 nuk mund të vazhdojë më i sigurt dhe do të heqë dorë.</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Ndodhi një gabim i brendshëm. %1 do të përpiqet të vazhdojë në mënyrë të sigurt. Ky është një gabim i papritur që mund të raportohet siç përshkruhet më poshtë.</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>unknown</source>

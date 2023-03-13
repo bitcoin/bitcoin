@@ -182,6 +182,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">একটি নতুন ওয়ালেট তৈরি করুন</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">ছোট করুন</translation>
+    </message>
+    <message>
         <source>&amp;Options…</source>
         <translation type="unfinished">&amp;বিকল্প...</translation>
     </message>
@@ -260,7 +264,34 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">আরো কর্মের জন্য চাপ দিন</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">নেটওয়ার্ক কার্যকলাপ বন্ধ করুন</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">নেটওয়ার্ক কার্যকলাপ চালু করুন</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation type="unfinished">লেনদেন পাঠানো হয়েছে</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation type="unfinished">লেনদেন আসছে</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">আসল বার্তা:</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -271,12 +302,44 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation type="unfinished">মুদ্রা নির্বাচন</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">পরিমাণ</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">পারিশ্রমিক</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">পরিবর্তন</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation type="unfinished">তারিখ</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">নিশ্চিত করা হয়েছে</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">ঠিকানা কপি করুন</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">কপি লেবেল</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">কপি পরিমাণ</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">লেনদেন আইডি এবং আউটপুট সূচক কপি করুন</translation>
     </message>
     </context>
 <context>
@@ -330,15 +393,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(of %n GB needed)</numerusform>
+            <numerusform>(of %n GB needed)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB needed for full chain)</numerusform>
+            <numerusform>(%n GB needed for full chain)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -371,6 +434,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">ঠিকানা কপি করুন</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation type="unfinished">অজানা</translation>
     </message>
@@ -388,6 +456,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Message:</source>
         <translation type="unfinished">&amp;বার্তাঃ</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">ঠিকানা কপি করুন</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">কপি লেবেল</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">কপি পরিমাণ</translation>
     </message>
     </context>
 <context>
@@ -441,6 +521,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">ঠিকানা কপি করুন</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">কপি লেবেল</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">কপি পরিমাণ</translation>
+    </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>

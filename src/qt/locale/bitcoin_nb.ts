@@ -1272,8 +1272,8 @@ Kunne ikke gjenopprette sikkerhetskopi av lommebok.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform> %n aktiv tilkobling til Bitcoin-nettverket.</numerusform>
+            <numerusform>%n aktive tilkoblinger til Bitcoin-nettverket.</numerusform>
         </translation>
     </message>
     <message>
@@ -1800,8 +1800,8 @@ Kunne ikke gjenopprette sikkerhetskopi av lommebok.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(Tilstrekkelig å gjenopprette backuper som er %n dag gammel) </numerusform>
+            <numerusform>(Tilstrekkelig å gjenopprette backuper som er %n dager gamle) </numerusform>
         </translation>
     </message>
     <message>

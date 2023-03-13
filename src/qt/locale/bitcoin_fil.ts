@@ -2,6 +2,14 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">Right-click para ma-edit ang address o label</translation>
+    </message>
+    <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">Gumawa ng bagong address</translation>
+    </message>
+    <message>
         <source>&amp;New</source>
         <translation type="unfinished">Bago</translation>
     </message>
@@ -867,8 +875,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktibong konekyson sa network ng Bitcoin</numerusform>
+            <numerusform>%n mga aktibong koneksyon sa network ng Bitcoin</numerusform>
         </translation>
     </message>
     <message>
@@ -1242,15 +1250,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(of %n GB needed)</numerusform>
+            <numerusform>(of %n GB needed)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB needed for full chain)</numerusform>
+            <numerusform>(%n GB needed for full chain)</numerusform>
         </translation>
     </message>
     <message>

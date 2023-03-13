@@ -333,46 +333,46 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n sekunda</numerusform>
+            <numerusform>%n sekundi</numerusform>
+            <numerusform>%n sekunde</numerusform>
+            <numerusform>%n sekund</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuta</numerusform>
+            <numerusform>%n minuti</numerusform>
+            <numerusform>%n minute</numerusform>
+            <numerusform>%n minut </numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n ura</numerusform>
+            <numerusform>%n uri</numerusform>
+            <numerusform>%n ure</numerusform>
+            <numerusform>%n ur</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dan</numerusform>
+            <numerusform>%n dni</numerusform>
+            <numerusform>%n dni</numerusform>
+            <numerusform>%n dni</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n teden</numerusform>
+            <numerusform>%n tedna</numerusform>
+            <numerusform>%n tedni</numerusform>
+            <numerusform>%n tednov</numerusform>
         </translation>
     </message>
     <message>
@@ -382,10 +382,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n leto</numerusform>
+            <numerusform>%n leti</numerusform>
+            <numerusform>%n leta</numerusform>
+            <numerusform>%n let</numerusform>
         </translation>
     </message>
     </context>
@@ -632,8 +632,28 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Napaka pri nalaganu %s: Denarnica za zunanje podpisovanje naložena, podpora za zunanje podpisovanje pa ni prevedena</translation>
     </message>
     <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Napaka: podatki iz imenika naslovov v denarnici niso prepoznavni kot del migriranih denarnic</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Napak: med migracijo so bili ustvarjeni podvojeni deskriptorji. Denarnica je morda okvarjena.</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Preimenovanje neveljavne datoteke peers.dat je spodletelo. Prosimo, premaknite ali izbrišite jo in poskusite znova.</translation>
+    </message>
+    <message>
+        <source>
+Unable to cleanup failed migration</source>
+        <translation type="unfinished">
+Čiščenje po spodleteli migraciji je spodletelo.</translation>
+    </message>
+    <message>
+        <source>
+Unable to restore backup of wallet.</source>
+        <translation type="unfinished">
+Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -712,6 +732,14 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Napaka pri branju naslednjega zapisa v podatkovni bazi denarnice.</translation>
     </message>
     <message>
+        <source>Error: Could not add watchonly tx to watchonly wallet</source>
+        <translation type="unfinished">Napaka: dodajanje opazovane transakcije v opazovano denarnico je spodletelo</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions</source>
+        <translation type="unfinished">Napaka: brisanje opazovanih transakcij je spodletelo</translation>
+    </message>
+    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">Napaka: ne morem ustvariti kurzorja v bazo</translation>
     </message>
@@ -722,6 +750,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
         <translation type="unfinished">Napaka: kontrolna vsota izvozne (dump) datoteke se ne ujema. Izračunano %s, pričakovano %s</translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished">Napaka: ustvarjanje nove opazovane denarnice je spodletelo</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
@@ -744,8 +776,36 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Napaka: na voljo ni nobenega naslova '%s'</translation>
     </message>
     <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Napaka: nekaterih opazovanih transakcij ni bilo mogoče izbrisati</translation>
+    </message>
+    <message>
+        <source>Error: This wallet already uses SQLite</source>
+        <translation type="unfinished">Napaka: ta denarnica že uporablja SQLite</translation>
+    </message>
+    <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Napaka: ta denarnica je že deskriptorska denarnica</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Napaka: ne morem pričeti branja vseh podatkov v podatkovni bazi</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">Napaka: ne morem ustvariti varnostne kopije vaše denarnice</translation>
+    </message>
+    <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
         <translation type="unfinished">Napaka: verzije %u ne morem prebrati kot uint32_t</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Napaka: ne morem prebrati vseh zapisov v podatkovni bazi</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Napaka: brisanje opazovanih vnosov v imeniku je spodletelo</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -1002,6 +1062,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
         <translation type="unfinished">Ne morem ustvariti PID-datoteke '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">Ne najdem UTXO-ja za zunanji vhod</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
@@ -1860,28 +1924,28 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n GB prostora na voljo</numerusform>
+            <numerusform>%n GB prostora na voljo</numerusform>
+            <numerusform>%n GB prostora na voljo</numerusform>
+            <numerusform>%n GB prostora na voljo</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(od potrebnih %n GiB)</numerusform>
+            <numerusform>(od potrebnih %n GiB)</numerusform>
+            <numerusform>(od potrebnih %n GiB)</numerusform>
+            <numerusform>(od potrebnih %n GB)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB potreben za celotno verigo blokov)</numerusform>
+            <numerusform>(%n GB potrebna za celotno verigo blokov)</numerusform>
+            <numerusform>(%n GB potrebni za celotno verigo blokov)</numerusform>
+            <numerusform>(%n GB potrebnih za celotno verigo blokov)</numerusform>
         </translation>
     </message>
     <message>
@@ -1896,10 +1960,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dan)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dni)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dni)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dni)</numerusform>
         </translation>
     </message>
     <message>
@@ -3684,10 +3748,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Predviden pričetek potrjevanja v naslednjem %n bloku.</numerusform>
+            <numerusform>Predviden pričetek potrjevanja v naslednjih %n blokih.</numerusform>
+            <numerusform>Predviden pričetek potrjevanja v naslednjih %n blokih.</numerusform>
+            <numerusform>Predviden pričetek potrjevanja v naslednjih %n blokih.</numerusform>
         </translation>
     </message>
     <message>
@@ -4010,10 +4074,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Dozori v %n bloku</numerusform>
+            <numerusform>Dozori v naslednjih %n blokih</numerusform>
+            <numerusform>Dozori v naslednjih %n blokih</numerusform>
+            <numerusform>Dozori v naslednjih %n blokih</numerusform>
         </translation>
     </message>
     <message>

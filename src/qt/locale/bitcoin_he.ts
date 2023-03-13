@@ -914,6 +914,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">אמת הודעות כדי להבטיח שהן נחתמו עם כתובת ביטקוין מסוימות</translation>
     </message>
     <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">פתיחת הקישור</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">סגירת ארנק</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">יצירת ארנק</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">סגירת כל הארנקים</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation type="unfinished">&amp;קובץ</translation>
     </message>
@@ -928,6 +944,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">סרגל כלים לשוניות</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">בסנכרון עם הרשת</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">מתחבר לעמיתים</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -955,6 +979,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>%1 behind</source>
         <translation type="unfinished">%1 מאחור</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">משלים פערים</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -1021,6 +1049,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">סגירת ארנק</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">שחזור ארנק</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">שחזור ארנק מקובץ גיבוי</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">סגירת כל הארנקים</translation>
     </message>
@@ -1044,6 +1082,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">אין ארנקים זמינים</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">טעינת גיבוי הארנק</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1502,15 +1545,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(מתוך %n ג׳יגה-בייט נדרשים)</numerusform>
+            <numerusform>(מתוך %n ג׳יגה-בייט נדרשים)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(ג׳יגה-בייט %n נדרש לשרשרת המלאה)</numerusform>
+            <numerusform>(%n ג׳יגה-בייט נדרשים לשרשרת המלאה)</numerusform>
         </translation>
     </message>
     <message>

@@ -194,37 +194,37 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%ngiây</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nphút</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%ngiờ</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nngày</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%ntuần</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nnăm</numerusform>
         </translation>
     </message>
     </context>
@@ -698,20 +698,20 @@
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(of %n GB cần thiết)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(%n GB cần cho toàn blockchain)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(đủ để khôi phục các bản sao lưu trong %n ngày)</numerusform>
         </translation>
     </message>
     <message>
@@ -1008,7 +1008,7 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>Ước tính sẽ bắt đầu xác nhận trong %n khối.</numerusform>
         </translation>
     </message>
     <message>
@@ -1059,7 +1059,7 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>sẽ trưởng thành sau%n khối nữa </numerusform>
         </translation>
     </message>
     </context>

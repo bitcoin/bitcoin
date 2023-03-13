@@ -66,6 +66,10 @@
         <translation type="unfinished">လိပ်စာလက်ခံရရှိသည်</translation>
     </message>
     <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;ပြင်ဆင်</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">တင်ပို့မှုမအောင်မြင်ပါ</translation>
     </message>
@@ -83,6 +87,10 @@
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">အမှား-%1</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -154,6 +162,10 @@
         <translation type="unfinished">
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">အမှား-%1</translation>
     </message>
     </context>
 <context>

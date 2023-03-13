@@ -34,12 +34,28 @@
         <translation type="unfinished">&amp;Futa</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">Chagua anwani ya mpokeaji sarafu</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Chagua anwani ya kupokea sarafu</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation type="unfinished">Kutuma anuani</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
         <translation type="unfinished">Kupokea anuani</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Hizi ndizo anwani zako za kutuma malipo ya sarafu ya Bitcoin. Hakikisha kila wakati kiwango na anwani ya kupokea kabla ya kutuma sarafu.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">Nakili &amp;anwani</translation>
     </message>
     </context>
 <context>

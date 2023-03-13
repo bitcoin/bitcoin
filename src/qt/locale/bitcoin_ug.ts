@@ -76,6 +76,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 پەقەت «ئەنئەنىۋى(legacy)» تىپتىكى ئادرېسلا ئىمزانى قوللايدۇ.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">ئادرېس كۆچۈر(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">بەلگىنى كۆچۈر(&amp;L)</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">تەھرىر(&amp;E)</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation type="unfinished">ئادرېس تىزىمىنى چىقار</translation>
     </message>
@@ -109,6 +121,33 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
 </context>
+<context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation type="unfinished">ئىم ئىبارە سۆزلەشكۈسى</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation type="unfinished">ئىم ئىبارە كىرگۈزۈڭ</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation type="unfinished">يېڭى ئىم ئىبارە</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation type="unfinished">يېڭى ئىم ئىبارەنى تەكرارلاڭ</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">ئىم ئىبارە كۆرسەت</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">ھەمياننى شىفىرلا</translation>
+    </message>
+    </context>
 <context>
     <name>QObject</name>
     <message numerus="yes">

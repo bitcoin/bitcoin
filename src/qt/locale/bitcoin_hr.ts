@@ -39,11 +39,11 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Izvozi</translation>
+        <translation type="unfinished">&amp;Izvezite</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">Iz&amp;brišite</translation>
+        <translation type="unfinished">&amp;Izbrišite</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -352,41 +352,41 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n second(s)</numerusform>
+            <numerusform>%n second(s)</numerusform>
+            <numerusform>%n sekundi</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minute(s)</numerusform>
+            <numerusform>%n minute(s)</numerusform>
+            <numerusform>%n minuta</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hour(s)</numerusform>
+            <numerusform>%n hour(s)</numerusform>
+            <numerusform>%n sati</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n day(s)</numerusform>
+            <numerusform>%n day(s)</numerusform>
+            <numerusform>%n dana</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n week(s)</numerusform>
+            <numerusform>%n week(s)</numerusform>
+            <numerusform>%n tjedana</numerusform>
         </translation>
     </message>
     <message>
@@ -396,9 +396,9 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n year(s)</numerusform>
+            <numerusform>%n year(s)</numerusform>
+            <numerusform>%n godina</numerusform>
         </translation>
     </message>
     </context>
@@ -1255,9 +1255,9 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Obrađeno %n blokova povijesti transakcije.</numerusform>
         </translation>
     </message>
     <message>
@@ -1398,9 +1398,9 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n aktivnih veza s Bitcoin mrežom.</numerusform>
         </translation>
     </message>
     <message>
@@ -1911,17 +1911,17 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(od potrebnog prostora od %n GB)</numerusform>
+            <numerusform>(od potrebnog prostora od %n GB)</numerusform>
+            <numerusform>(od potrebnog %n GB)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(potreban je %n GB za cijeli lanac)</numerusform>
+            <numerusform>(potrebna su %n GB-a za cijeli lanac)</numerusform>
+            <numerusform>(potrebno je %n GB-a za cijeli lanac)</numerusform>
         </translation>
     </message>
     <message>
@@ -1936,9 +1936,9 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(dovoljno za vraćanje sigurnosne kopije stare %n dan(a))</numerusform>
         </translation>
     </message>
     <message>
@@ -3700,9 +3700,9 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Procijenjeno je da će potvrđivanje početi unutar %n blokova.</numerusform>
         </translation>
     </message>
     <message>
@@ -4015,9 +4015,9 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>matures in %n more block(s)</numerusform>
+            <numerusform>matures in %n more block(s)</numerusform>
+            <numerusform>dozrijeva za još %n blokova</numerusform>
         </translation>
     </message>
     <message>

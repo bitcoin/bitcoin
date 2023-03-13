@@ -350,41 +350,41 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n sekunda</numerusform>
+            <numerusform>%n sekundy</numerusform>
+            <numerusform>%n sekúnd</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minúta</numerusform>
+            <numerusform>%n minúty</numerusform>
+            <numerusform>%n minút</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hodina</numerusform>
+            <numerusform>%n hodiny</numerusform>
+            <numerusform>%n hodín</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n deň</numerusform>
+            <numerusform>%n dni</numerusform>
+            <numerusform>%n dní</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n týždeň</numerusform>
+            <numerusform>%n týždne</numerusform>
+            <numerusform>%n týždňov</numerusform>
         </translation>
     </message>
     <message>
@@ -394,9 +394,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n rok</numerusform>
+            <numerusform>%n roky</numerusform>
+            <numerusform>%n rokov</numerusform>
         </translation>
     </message>
     </context>
@@ -1253,9 +1253,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Spracovaný %n blok transakčnej histórie.</numerusform>
+            <numerusform>Spracované %n bloky transakčnej histórie.</numerusform>
+            <numerusform>Spracovaných %n blokov transakčnej histórie.</numerusform>
         </translation>
     </message>
     <message>
@@ -1396,9 +1396,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktívne pripojenie do siete Bitcoin</numerusform>
+            <numerusform>%n aktívne pripojenia do siete Bitcoin</numerusform>
+            <numerusform>%n aktívnych pripojení do siete Bitcoin</numerusform>
         </translation>
     </message>
     <message>
@@ -1909,17 +1909,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(z %n GB potrebného)</numerusform>
+            <numerusform>(z %n GB potrebných)</numerusform>
+            <numerusform>(z %n GB potrebných)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB potrebný pre plný reťazec)</numerusform>
+            <numerusform>(%n GB potrebné pre plný reťazec)</numerusform>
+            <numerusform>(%n GB potrebných pre plný reťazec)</numerusform>
         </translation>
     </message>
     <message>
@@ -1934,9 +1934,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>(dostatočné pre obnovenie záloh %n deň starých)</numerusform>
+            <numerusform>(dostatočné pre obnovenie záloh %n dni starých)</numerusform>
+            <numerusform>(dostatočné pre obnovenie záloh %n dní starých)</numerusform>
         </translation>
     </message>
     <message>
@@ -2676,6 +2676,11 @@ Ak ste dostali túto chybu mali by ste požiadať obchodníka o URI kompatibiln�
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
         <translation type="unfinished">Partneri</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">Vek</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -3703,9 +3708,9 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Odhadované potvrdenie o %n blok.</numerusform>
+            <numerusform>Odhadované potvrdenie o %n bloky.</numerusform>
+            <numerusform>Odhadované potvrdenie o %n blokov.</numerusform>
         </translation>
     </message>
     <message>
@@ -4022,9 +4027,9 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>dozrie o ďalší %n blok</numerusform>
+            <numerusform>dozrie o ďalšie %n bloky</numerusform>
+            <numerusform>dozrie o ďalších %n blokov</numerusform>
         </translation>
     </message>
     <message>
