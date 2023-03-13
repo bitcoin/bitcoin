@@ -44,7 +44,7 @@ class TestP2PConn(P2PInterface):
 
 class DIP3V19Test(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, [["-whitelist=noban@127.0.0.1"]] * 6, fast_dip3_enforcement=True)
         self.extra_args += [['-dip19params=200'],['-dip19params=200'],['-dip19params=200'],['-dip19params=200'],['-dip19params=200'],['-dip19params=200']]
 
     def skip_test_if_missing_module(self):
@@ -100,19 +100,17 @@ class DIP3V19Test(DashTestFramework):
     def test_revoke_protx(self, revoke_protx, revoke_keyoperator):
         funds_address = self.nodes[0].getnewaddress()
         self.nodes[0].sendtoaddress(funds_address, 1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all(self.nodes)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].protx_revoke(revoke_protx, revoke_keyoperator, 1, funds_address)
-        for i in range(len(self.nodes)):
-            if i != 0:
-                self.connect_nodes(i, 0)
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all(self.nodes)
         self.log.info(f"Succesfully revoked={revoke_protx}")
         for mn in self.mninfo:
             if mn.proTxHash == revoke_protx:
                 self.mninfo.remove(mn)
                 return
+        for i in range(len(self.nodes)):
+            if i != 0:
+                self.connect_nodes(i, 0)
 
     def update_mn_payee(self, mn, payee):
         self.nodes[0].sendtoaddress(mn.collateral_address, 0.001)
