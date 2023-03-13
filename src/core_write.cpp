@@ -168,7 +168,7 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
     out.pushKV("type", GetTxnOutputType(type));
 }
 
-void RangeProofToUniv(const RangeProof<Mcl>& rp, UniValue& entry)
+void RangeProofToUniv(const RangeProof<Mcl>& rp, UniValue& entry, const bool& extended)
 {
     UniValue Vs{UniValue::VARR};
     for (size_t i = 0; i < rp.Vs.Size(); i++) {
@@ -176,29 +176,31 @@ void RangeProofToUniv(const RangeProof<Mcl>& rp, UniValue& entry)
     }
     entry.pushKV("Vs", Vs);
 
-    UniValue Ls{UniValue::VARR};
-    for (size_t i = 0; i < rp.Ls.Size(); i++) {
-        Ls.push_back(HexStr(rp.Ls[i].GetVch()));
-    }
-    entry.pushKV("Ls", Ls);
+    if (extended) {
+        UniValue Ls{UniValue::VARR};
+        for (size_t i = 0; i < rp.Ls.Size(); i++) {
+            Ls.push_back(HexStr(rp.Ls[i].GetVch()));
+        }
+        entry.pushKV("Ls", Ls);
 
-    UniValue Rs{UniValue::VARR};
-    for (size_t i = 0; i < rp.Rs.Size(); i++) {
-        Rs.push_back(HexStr(rp.Rs[i].GetVch()));
+        UniValue Rs{UniValue::VARR};
+        for (size_t i = 0; i < rp.Rs.Size(); i++) {
+            Rs.push_back(HexStr(rp.Rs[i].GetVch()));
+        }
+        entry.pushKV("Rs", Rs);
+        entry.pushKV("A", HexStr(rp.A.GetVch()));
+        entry.pushKV("S", HexStr(rp.S.GetVch()));
+        entry.pushKV("T1", HexStr(rp.T1.GetVch()));
+        entry.pushKV("T2", HexStr(rp.T2.GetVch()));
+        entry.pushKV("tau_x", HexStr(rp.tau_x.GetVch()));
+        entry.pushKV("mu", HexStr(rp.mu.GetVch()));
+        entry.pushKV("a", HexStr(rp.a.GetVch()));
+        entry.pushKV("b", HexStr(rp.b.GetVch()));
+        entry.pushKV("t_hat", HexStr(rp.t_hat.GetVch()));
     }
-    entry.pushKV("Rs", Rs);
-    entry.pushKV("A", HexStr(rp.A.GetVch()));
-    entry.pushKV("S", HexStr(rp.S.GetVch()));
-    entry.pushKV("T1", HexStr(rp.T1.GetVch()));
-    entry.pushKV("T2", HexStr(rp.T2.GetVch()));
-    entry.pushKV("tau_x", HexStr(rp.tau_x.GetVch()));
-    entry.pushKV("mu", HexStr(rp.mu.GetVch()));
-    entry.pushKV("a", HexStr(rp.a.GetVch()));
-    entry.pushKV("b", HexStr(rp.b.GetVch()));
-    entry.pushKV("t_hat", HexStr(rp.t_hat.GetVch()));
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
+void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity, bool extendedRangeProof)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -278,7 +280,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             out.pushKV("spendingKey", HexStr(txout.blsctData.spendingKey.GetVch()));
             out.pushKV("blindingKey", HexStr(txout.blsctData.blindingKey.GetVch()));
             UniValue rp(UniValue::VOBJ);
-            RangeProofToUniv(txout.blsctData.rangeProof, rp);
+            RangeProofToUniv(txout.blsctData.rangeProof, rp, extendedRangeProof);
             out.pushKV("rangeProof", rp);
             out.pushKV("viewTag", txout.blsctData.viewTag);
             out.pushKV("tokenId", txout.tokenId.ToString());
