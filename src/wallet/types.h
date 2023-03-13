@@ -48,6 +48,20 @@ enum isminetype : unsigned int {
 };
 /** used for bitflags of isminetype */
 using isminefilter = std::underlying_type<isminetype>::type;
+
+/**
+ * Address purpose field that has been been stored with wallet sending and
+ * receiving addresses since BIP70 payment protocol support was added in
+ * https://github.com/bitcoin/bitcoin/pull/2539. This field is not currently
+ * used for any logic inside the wallet, but it is still shown in RPC and GUI
+ * interfaces and saved for new addresses. It is basically redundant with an
+ * address's IsMine() result.
+ */
+enum class AddressPurpose {
+    RECEIVE,
+    SEND,
+    REFUND, //!< Never set in current code may be present in older wallet databases
+};
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_TYPES_H
