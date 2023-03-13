@@ -9,10 +9,8 @@ feature_dip3_v19.py
 Checks DIP3 for v19
 
 '''
-from io import BytesIO
-
 from test_framework.p2p import P2PInterface
-from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, from_hex, hash256, msg_getmnlistd, \
+from test_framework.messages import CBlock, CBlockHeader, CMerkleBlock, from_hex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
@@ -71,7 +69,7 @@ class DIP3V19Test(DashTestFramework):
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expected_updated)
 
-    
+
         self.move_to_next_cycle()
         self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
         self.move_to_next_cycle()
@@ -103,7 +101,7 @@ class DIP3V19Test(DashTestFramework):
         self.generate(self.nodes[0], 1)
         self.nodes[0].protx_revoke(revoke_protx, revoke_keyoperator, 1, funds_address)
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.log.info(f"Succesfully revoked={revoke_protx}")
+        self.log.info(f"Successfully revoked={revoke_protx}")
         for mn in self.mninfo:
             if mn.proTxHash == revoke_protx:
                 self.mninfo.remove(mn)

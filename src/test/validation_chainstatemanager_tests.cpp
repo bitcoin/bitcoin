@@ -590,7 +590,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     // chainstate_snapshot should still exist.
     BOOST_CHECK(fs::exists(snapshot_chainstate_dir));
 
-    // Test that simulating a shutdown (reseting ChainstateManager) and then performing
+    // Test that simulating a shutdown (resetting ChainstateManager) and then performing
     // chainstate reinitializing successfully cleans up the background-validation
     // chainstate data, and we end up with a single chainstate that is at tip.
     ChainstateManager& chainman_restarted = this->SimulateNodeRestart();
@@ -662,7 +662,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     fs::path snapshot_invalid_dir = gArgs.GetDataDirNet() / "chainstate_snapshot_INVALID";
     BOOST_CHECK(fs::exists(snapshot_invalid_dir));
 
-    // Test that simulating a shutdown (reseting ChainstateManager) and then performing
+    // Test that simulating a shutdown (resetting ChainstateManager) and then performing
     // chainstate reinitializing successfully loads only the fully-validated
     // chainstate data, and we end up with a single chainstate that is at tip.
     ChainstateManager& chainman_restarted = this->SimulateNodeRestart();
