@@ -69,6 +69,7 @@ class BlockchainTest(SyscoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
+        self._test_prune_disk_space()
         self.mine_chain()
         self._test_max_future_block_time()
         self.restart_node(
@@ -99,6 +100,13 @@ class BlockchainTest(SyscoinTestFramework):
             self.nodes[0].setmocktime(t)
             self.generate(self.wallet, 1)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], HEIGHT)
+
+    def _test_prune_disk_space(self):
+        self.log.info("Test that a manually pruned node does not run into "
+                      "integer overflow on first start up")
+        self.restart_node(0, extra_args=["-prune=1"])
+        self.log.info("Avoid warning when assumed chain size is enough")
+        self.restart_node(0, extra_args=["-prune=123456789"])
 
     def _test_max_future_block_time(self):
         self.stop_node(0)
