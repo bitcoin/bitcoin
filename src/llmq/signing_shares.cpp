@@ -97,7 +97,9 @@ std::string CBatchedSigShares::ToInvString() const
 
 static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, CSigBase from)
 {
-    const auto& llmq_params = GetLLMQParams(from.getLlmqType());
+    const auto& llmq_params_opt = GetLLMQParams(from.getLlmqType());
+    assert(llmq_params_opt.has_value());
+    const auto& llmq_params = llmq_params_opt.value();
 
     s.llmqType = from.getLlmqType();
     s.quorumHash = from.getQuorumHash();
@@ -297,7 +299,7 @@ void CSigSharesManager::ProcessMessage(const CNode& pfrom, const CSporkManager& 
 bool CSigSharesManager::ProcessMessageSigSesAnn(const CNode& pfrom, const CSigSesAnn& ann)
 {
     auto llmqType = ann.getLlmqType();
-    if (!Params().HasLLMQ(llmqType)) {
+    if (!GetLLMQParams(llmqType).has_value()) {
         return false;
     }
     if (ann.getSessionId() == UNINITIALIZED_SESSION_ID || ann.getQuorumHash().IsNull() || ann.getId().IsNull() || ann.getMsgHash().IsNull()) {
@@ -328,7 +330,8 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(const CNode& pfrom, const CSigSe
 
 bool CSigSharesManager::VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv& inv)
 {
-    return inv.inv.size() == size_t(GetLLMQParams(llmqType).size);
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    return llmq_params_opt.has_value() && (inv.inv.size() == size_t(llmq_params_opt->size));
 }
 
 bool CSigSharesManager::ProcessMessageSigSharesInv(const CNode& pfrom, const CSigSharesInv& inv)
@@ -900,7 +903,9 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
                 }
                 auto& inv = (*invMap)[signHash];
                 if (inv.inv.empty()) {
-                    inv.Init(GetLLMQParams(session.llmqType).size);
+                    const auto& llmq_params_opt = GetLLMQParams(session.llmqType);
+                    assert(llmq_params_opt.has_value());
+                    inv.Init(llmq_params_opt->size);
                 }
                 inv.inv[k.second] = true;
 
@@ -1047,7 +1052,9 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 
             auto& inv = sigSharesToAnnounce[nodeId][signHash];
             if (inv.inv.empty()) {
-                inv.Init(GetLLMQParams(sigShare->getLlmqType()).size);
+                const auto& llmq_params_opt = GetLLMQParams(sigShare->getLlmqType());
+                assert(llmq_params_opt.has_value());
+                inv.Init(llmq_params_opt->size);
             }
             inv.inv[quorumMember] = true;
             session.knows.inv[quorumMember] = true;

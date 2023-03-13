@@ -79,7 +79,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
 std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex);
 std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(const CBlockIndex* pindex);
 
-bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
+bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindex);
 Consensus::LLMQType GetInstantSendLLMQType(const CQuorumManager& qman, const CBlockIndex* pindex);
 Consensus::LLMQType GetInstantSendLLMQType(bool deterministic);
 bool IsDIP0024Active(const CBlockIndex* pindex);
@@ -130,7 +130,7 @@ void InitQuorumsCache(CacheType& cache);
 
 } // namespace utils
 
-const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType);
+[[ nodiscard ]] const std::optional<Consensus::LLMQParams> GetLLMQParams(Consensus::LLMQType llmqType);
 
 } // namespace llmq
 

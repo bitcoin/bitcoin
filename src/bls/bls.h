@@ -190,7 +190,17 @@ public:
         SetByteVector(vecBytes, specificLegacyScheme);
 
         if (checkMalleable && !CheckMalleable(vecBytes, specificLegacyScheme)) {
-            throw std::ios_base::failure("malleable BLS object");
+            // If CheckMalleable failed with specificLegacyScheme, we need to try again with the opposite scheme.
+            // Probably we received the BLS object sent with legacy scheme, but in the meanwhile the fork activated.
+            SetByteVector(vecBytes, !specificLegacyScheme);
+            if (!CheckMalleable(vecBytes, !specificLegacyScheme)) {
+                // Both attempts failed
+                throw std::ios_base::failure("malleable BLS object");
+            } else {
+                // Indeed the received vecBytes was in opposite scheme. But we can't keep it (mixing with the new scheme will lead to undefined behavior)
+                // Therefore, resetting current object (basically marking it as invalid).
+                Reset();
+            }
         }
     }
 
@@ -358,7 +368,7 @@ public:
     static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash);
 
     void SubInsecure(const CBLSSignature& o);
-
+    [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash, const bool specificLegacyScheme) const;
     [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
     [[nodiscard]] bool VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const;
 

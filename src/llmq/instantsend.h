@@ -287,7 +287,7 @@ private:
     bool ProcessPendingInstantSendLocks();
     bool ProcessPendingInstantSendLocks(bool deterministic) LOCKS_EXCLUDED(cs_pendingLocks);
 
-    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(const Consensus::LLMQType llmqType,
+    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params,
                                                                                    int signOffset,
                                                                                    const std::unordered_map<uint256,
                                                                                    std::pair<NodeId, CInstantSendLockPtr>,

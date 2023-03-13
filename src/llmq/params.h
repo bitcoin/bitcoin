@@ -108,6 +108,11 @@ struct LLMQParams {
     int recoveryMembers;
 };
 
+//static_assert(std::is_trivial_v<Consensus::LLMQParams>, "LLMQParams is not a trivial type");
+static_assert(std::is_trivially_copyable_v<Consensus::LLMQParams>, "LLMQParams is not trivially copyable");
+//static_assert(std::is_trivially_default_constructible_v<Consensus::LLMQParams>, "LLMQParams is not trivially default constructible");
+static_assert(std::is_trivially_assignable_v<Consensus::LLMQParams, Consensus::LLMQParams>, "LLMQParams is not trivially assignable");
+
 
 static constexpr std::array<LLMQParams, 14> available_llmqs = {
 

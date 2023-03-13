@@ -200,7 +200,7 @@ public:
 
 public:
     std::string ToString() const;
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue& obj, MnType nType) const;
 };
 
 class CDeterministicMNStateDiff
