@@ -100,10 +100,13 @@ class DIP3V19Test(DashTestFramework):
     def test_revoke_protx(self, revoke_protx, revoke_keyoperator):
         funds_address = self.nodes[0].getnewaddress()
         self.nodes[0].sendtoaddress(funds_address, 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all(self.nodes)
         self.nodes[0].protx_revoke(revoke_protx, revoke_keyoperator, 1, funds_address)
-        self.generate(self.nodes[0], 1)
+        for i in range(len(self.nodes)):
+            if i != 0:
+                self.connect_nodes(i, 0)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all(self.nodes)
         self.log.info(f"Succesfully revoked={revoke_protx}")
         for mn in self.mninfo:
