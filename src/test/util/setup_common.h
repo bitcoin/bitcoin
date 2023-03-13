@@ -115,8 +115,10 @@ struct TestChainSetup : public RegTestingSetup
     TestChainSetup(int blockCount);
     ~TestChainSetup();
 
-    // Create a new block with just given transactions, coinbase paying to
-    // scriptPubKey, and try to add it to the current chain.
+    /**
+     * Create a new block with just given transactions, coinbase paying to
+     * scriptPubKey, and try to add it to the current chain.
+     */
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
@@ -130,10 +132,9 @@ struct TestChainSetup : public RegTestingSetup
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
 
-//
-// Testing fixture that pre-creates a
-// 100-block REGTEST-mode block chain
-//
+/**
+ * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
+ */
 struct TestChain100Setup : public TestChainSetup {
     TestChain100Setup() : TestChainSetup(100) {}
 };
