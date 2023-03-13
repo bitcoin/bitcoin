@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     } // unlock cs_main while calling InvalidateBlock
 
     CValidationState state;
-    InvalidateBlock(state, chainparams, WITH_LOCK(cs_main, return ::ChainActive().Tip()));
+    ::ChainstateActive().InvalidateBlock(state, chainparams, WITH_LOCK(cs_main, return ::ChainActive().Tip()));
 
     SetMockTime(0);
     m_node.mempool->clear();

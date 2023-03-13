@@ -2303,7 +2303,7 @@ void static ProcessOrphanTx(CConnman& connman, CTxMemPool& mempool, std::set<uin
             EraseOrphanTx(orphanHash);
             done = true;
         }
-        mempool.check(&::ChainstateActive().CoinsTip());
+        mempool.check(g_chainman.ActiveChainstate());
     }
 }
 
@@ -3377,7 +3377,7 @@ void PeerLogicValidation::ProcessMessage(
                 CCoinJoin::AddDSTX(dstx);
             }
 
-            m_mempool.check(&::ChainstateActive().CoinsTip());
+            m_mempool.check(m_chainman.ActiveChainstate());
             RelayTransaction(tx.GetHash(), m_connman);
 
             for (unsigned int i = 0; i < tx.vout.size(); i++) {

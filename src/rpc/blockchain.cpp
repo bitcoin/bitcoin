@@ -1238,7 +1238,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(height);
+    PruneBlockFilesManual(::ChainstateActive(), height);
     const CBlockIndex* block = ::ChainActive().Tip();
     CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
@@ -1420,7 +1420,7 @@ static UniValue verifychain(const JSONRPCRequest& request)
     const NodeContext& node_context = EnsureNodeContext(request.context);
 
     return CVerifyDB().VerifyDB(
-        Params(), &::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
+        Params(), ::ChainstateActive(), &::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
 }
 
 /** Implementation of IsSuperMajority with better feedback */
@@ -1456,7 +1456,7 @@ static UniValue SoftForkDesc(const std::string &name, int version, const CBlockI
 static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     UniValue rv(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
+    const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     switch (thresholdState) {
     case ThresholdState::DEFINED: rv.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: rv.pushKV("status", "started"); break;
@@ -1470,11 +1470,11 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     }
     rv.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
+    rv.pushKV("since", VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache));
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
+        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id, versionbitscache);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
@@ -1818,7 +1818,7 @@ static UniValue preciousblock(const JSONRPCRequest& request)
     }
 
     CValidationState state;
-    PreciousBlock(state, Params(), pblockindex);
+    ::ChainstateActive().PreciousBlock(state, Params(), pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, FormatStateMessage(state));
@@ -1853,7 +1853,7 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    InvalidateBlock(state, Params(), pblockindex);
+    ::ChainstateActive().InvalidateBlock(state, Params(), pblockindex);
 
     if (state.IsValid()) {
         ::ChainstateActive().ActivateBestChain(state, Params());
@@ -1891,7 +1891,7 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        ResetBlockFailureFlags(pblockindex);
+        ::ChainstateActive().ResetBlockFailureFlags(pblockindex);
     }
 
     CValidationState state;

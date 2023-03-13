@@ -904,7 +904,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
         fReindex = false;
         LogPrintf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        LoadGenesisBlock(chainparams);
+        ::ChainstateActive().LoadGenesisBlock(chainparams);
     }
 
     // -loadblock=
@@ -2094,7 +2094,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 // If we're not mid-reindex (based on disk + args), add a genesis block on disk
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
-                if (!fReindex && !LoadGenesisBlock(chainparams)) {
+                if (!fReindex && !::ChainstateActive().LoadGenesisBlock(chainparams)) {
                     strLoadError = _("Error initializing block database");
                     break;
                 }
@@ -2194,7 +2194,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                         // work when we allow VerifyDB to be parameterized by chainstate.
                         if (&::ChainstateActive() == chainstate &&
                             !CVerifyDB().VerifyDB(
-                                chainparams, &chainstate->CoinsDB(),
+                                chainparams, *chainstate, &chainstate->CoinsDB(),
                                 *node.evodb,
                                 args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
                                 args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
@@ -2215,7 +2215,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     }
 
                     if (args.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
-                        ResetBlockFailureFlags(nullptr);
+                        ::ChainstateActive().ResetBlockFailureFlags(nullptr);
                     }
                 }
             } catch (const std::exception& e) {

@@ -182,9 +182,9 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         }
         LOCK(cs_main);
         if (expected_lockin) {
-            BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::LOCKED_IN);
+            BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::LOCKED_IN);
         } else {
-            BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
+            BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
         }
     };
 
@@ -205,7 +205,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
 
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 498);
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::DEFINED);
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::DEFINED);
     }
 
     CreateAndProcessBlock({}, coinbaseKey);
@@ -216,8 +216,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 499);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
-        BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(0));
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
+        BOOST_CHECK_EQUAL(VersionBitsStatistics(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache).threshold, threshold(0));
         // Next block should be signaling by default
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor, *m_node.llmq_ctx->clhandler,  *m_node.llmq_ctx->isman, *m_node.evodb, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         const uint32_t bitmask = ((uint32_t)1) << consensus_params.vDeployments[deployment_id].bit;
@@ -233,8 +233,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 999);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
-        BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(1));
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
+        BOOST_CHECK_EQUAL(VersionBitsStatistics(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache).threshold, threshold(1));
     }
 
     signal(threshold(1) - 1, false); // 1 block short again
@@ -245,8 +245,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 1499);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
-        BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(2));
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
+        BOOST_CHECK_EQUAL(VersionBitsStatistics(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache).threshold, threshold(2));
     }
 
     signal(threshold(2), true); // just enough to lock in
@@ -257,14 +257,14 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 1999);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::LOCKED_IN);
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::LOCKED_IN);
     }
 
     for ([[maybe_unused]] auto _ : irange::range(499)) {
         // Still LOCKED_IN at height = 2498
         CreateAndProcessBlock({}, coinbaseKey);
         LOCK(cs_main);
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::LOCKED_IN);
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::LOCKED_IN);
     }
     CreateAndProcessBlock({}, coinbaseKey);
 
@@ -274,8 +274,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 2499);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::ACTIVE);
-        BOOST_CHECK_EQUAL(VersionBitsTipStateSinceHeight(consensus_params, deployment_id), 2500);
+        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::ACTIVE);
+        BOOST_CHECK_EQUAL(VersionBitsStateSinceHeight(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), 2500);
     }
 
     {

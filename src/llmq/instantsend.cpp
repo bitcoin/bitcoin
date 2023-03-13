@@ -1480,7 +1480,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         CValidationState state;
         // need non-const pointer
         auto pindex2 = WITH_LOCK(::cs_main, return g_chainman.m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
-        if (!InvalidateBlock(state, Params(), pindex2)) {
+        if (!::ChainstateActive().InvalidateBlock(state, Params(), pindex2)) {
             LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);
@@ -1490,7 +1490,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         } else {
             LogPrintf("CInstantSendManager::%s -- resetting block %s\n", __func__, pindex2->GetBlockHash().ToString());
             LOCK(cs_main);
-            ResetBlockFailureFlags(pindex2);
+            ::ChainstateActive().ResetBlockFailureFlags(pindex2);
         }
     }
 
