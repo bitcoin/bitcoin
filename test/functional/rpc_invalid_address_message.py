@@ -63,20 +63,20 @@ class InvalidAddressErrorMessageTest(SyscoinTestFramework):
 
     def test_validateaddress(self):
         # SYSCOIN Invalid Bech32
-        self.check_invalid(BECH32_INVALID_SIZE, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_PREFIX, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_BECH32, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_BECH32M, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_VERSION, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_V0_SIZE, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_TOO_LONG, 'Not a valid Bech32 or Base58 encoding', list(range(90, 108)))
-        self.check_invalid(BECH32_ONE_ERROR, 'Not a valid Bech32 or Base58 encoding', [9])
-        self.check_invalid(BECH32_TWO_ERRORS, 'Not a valid Bech32 or Base58 encoding', [22, 43])
-        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid checksum or length of Base58 address', [38])
-        self.check_invalid(BECH32_NO_SEPARATOR, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_CHAR, 'Not a valid Bech32 or Base58 encoding', [8])
-        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Not a valid Bech32 or Base58 encoding', [19, 30])
-        self.check_invalid(BECH32_WRONG_VERSION, 'Not a valid Bech32 or Base58 encoding', [5])
+        self.check_invalid(BECH32_INVALID_SIZE, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_BECH32, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_BECH32M, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_VERSION, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_V0_SIZE, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_TOO_LONG, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.', list(range(90, 108)))
+        self.check_invalid(BECH32_ONE_ERROR, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.', [9])
+        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.', [22, 43])
+        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)', [38])
+        self.check_invalid(BECH32_NO_SEPARATOR, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_CHAR, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.', [8])
+        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.', [19, 30])
+        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.', [5])
 
         # Valid Bech32
         self.check_valid(BECH32_VALID)
@@ -84,16 +84,16 @@ class InvalidAddressErrorMessageTest(SyscoinTestFramework):
         self.check_valid(BECH32_VALID_MULTISIG)
 
         # Invalid Base58
-        self.check_invalid(BASE58_INVALID_PREFIX, 'Invalid prefix for Base58-encoded address')
-        self.check_invalid(BASE58_INVALID_CHECKSUM, 'Invalid checksum or length of Base58 address')
-        self.check_invalid(BASE58_INVALID_LENGTH, 'Invalid checksum or length of Base58 address')
+        self.check_invalid(BASE58_INVALID_PREFIX, 'Invalid or unsupported Base58-encoded address.')
+        self.check_invalid(BASE58_INVALID_CHECKSUM, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
+        self.check_invalid(BASE58_INVALID_LENGTH, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
 
         # Valid Base58
         self.check_valid(BASE58_VALID)
 
         # Invalid address format
-        self.check_invalid(INVALID_ADDRESS, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(INVALID_ADDRESS_2, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(INVALID_ADDRESS, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(INVALID_ADDRESS_2, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
 
         node = self.nodes[0]
 
@@ -106,9 +106,9 @@ class InvalidAddressErrorMessageTest(SyscoinTestFramework):
         node = self.nodes[0]
 
         assert_raises_rpc_error(-5, "Invalid Bech32 address data size", node.getaddressinfo, BECH32_INVALID_SIZE)
-        assert_raises_rpc_error(-5, "Not a valid Bech32 or Base58 encoding", node.getaddressinfo, BECH32_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid prefix for Base58-encoded address", node.getaddressinfo, BASE58_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Not a valid Bech32 or Base58 encoding", node.getaddressinfo, INVALID_ADDRESS)
+        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, BECH32_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", node.getaddressinfo, BASE58_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, INVALID_ADDRESS)
 
     def run_test(self):
         self.test_validateaddress()
