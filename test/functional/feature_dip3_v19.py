@@ -45,8 +45,7 @@ class TestP2PConn(P2PInterface):
 class DIP3V19Test(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
-        for i in range(0, len(self.nodes)):
-            self.extra_args[i].append("-dip19params=200")
+        self.extra_args += [['-dip19params=200'],['-dip19params=200'],['-dip19params=200'],['-dip19params=200'],['-dip19params=200'],['-dip19params=200']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
