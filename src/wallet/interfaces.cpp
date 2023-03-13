@@ -22,7 +22,7 @@
 #include <wallet/context.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
-#include <wallet/ismine.h>
+#include <wallet/types.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
