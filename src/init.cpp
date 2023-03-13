@@ -1830,7 +1830,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
         uint64_t nHeightFromGeth{0};
-        std::string stateStr{""};
+        std::string stateStr;
         BlockValidationState state;
         GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
         if(!stateStr.empty()) {
