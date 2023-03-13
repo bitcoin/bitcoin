@@ -59,6 +59,10 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --name $CONTAINER_NAME \
                   $CONTAINER_NAME)
   export CI_CONTAINER_ID
+  export CI_EXEC_CMD_PREFIX_ROOT="docker exec -u 0 $CI_CONTAINER_ID"
+  export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
+  $CI_EXEC_CMD_PREFIX_ROOT rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}"
+  $CI_EXEC_CMD_PREFIX_ROOT rsync --archive --stats --human-readable /ro_base/ "$BASE_ROOT_DIR"
 
   # Create a non-root user inside the container which matches the local user.
   #
@@ -67,8 +71,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker exec "$CI_CONTAINER_ID" useradd -u "$LOCAL_UID" -o -m "$LOCAL_USER"
   docker exec "$CI_CONTAINER_ID" groupmod -o -g "$LOCAL_GID" "$LOCAL_USER"
   docker exec "$CI_CONTAINER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
-  export CI_EXEC_CMD_PREFIX_ROOT="docker exec -u 0 $CI_CONTAINER_ID"
-  export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
 else
   echo "Running on host system without docker wrapper"
   "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
@@ -84,17 +86,6 @@ export -f CI_EXEC
 export -f CI_EXEC_ROOT
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
-
-if [ -n "$PIP_PACKAGES" ]; then
-  if [ "$CI_OS_NAME" == "macos" ]; then
-    sudo -H pip3 install --upgrade pip
-    # shellcheck disable=SC2086
-    IN_GETOPT_BIN="$(brew --prefix gnu-getopt)/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-  else
-    # shellcheck disable=SC2086
-    ${CI_RETRY_EXE} CI_EXEC pip3 install --user $PIP_PACKAGES
-  fi
-fi
 
 if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
@@ -121,30 +112,6 @@ elif [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]
 fi
 
 CI_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
-
-if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  CI_EXEC_ROOT "update-alternatives --install /usr/bin/clang++ clang++ \$(which clang++-12) 100"
-  CI_EXEC_ROOT "update-alternatives --install /usr/bin/clang clang \$(which clang-12) 100"
-  CI_EXEC "mkdir -p ${BASE_SCRATCH_DIR}/msan/build/"
-  CI_EXEC "git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-12.0.0 ${BASE_SCRATCH_DIR}/msan/llvm-project"
-  CI_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && cmake -DLLVM_ENABLE_PROJECTS='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 ../llvm-project/llvm/"
-  CI_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && make $MAKEJOBS cxx"
-fi
-
-if [[ "${RUN_TIDY}" == "true" ]]; then
-  export DIR_IWYU="${BASE_SCRATCH_DIR}/iwyu"
-  if [ ! -d "${DIR_IWYU}" ]; then
-    CI_EXEC "mkdir -p ${DIR_IWYU}/build/"
-    CI_EXEC "git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 ${DIR_IWYU}/include-what-you-use"
-    CI_EXEC "cd ${DIR_IWYU}/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 ../include-what-you-use"
-    CI_EXEC_ROOT "cd ${DIR_IWYU}/build && make install $MAKEJOBS"
-  fi
-fi
-
-if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  echo "Create $BASE_ROOT_DIR"
-  CI_EXEC rsync -a /ro_base/ "$BASE_ROOT_DIR"
-fi
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
   echo "Setup to use BusyBox utils"
