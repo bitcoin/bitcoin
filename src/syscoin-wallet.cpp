@@ -16,6 +16,7 @@
 #include <logging.h>
 #include <pubkey.h>
 #include <tinyformat.h>
+#include <util/exception.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallettool.h>

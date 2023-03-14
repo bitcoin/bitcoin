@@ -8,6 +8,7 @@
 #include <coins.h>
 #include <crypto/muhash.h>
 #include <hash.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -19,7 +20,6 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/overflow.h>
-#include <util/system.h>
 #include <validation.h>
 #include <version.h>
 

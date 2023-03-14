@@ -267,4 +267,11 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
         }                                                 \
     } while (0)
 
+template <typename... Args>
+bool error(const char* fmt, const Args&... args)
+{
+    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
+    return false;
+}
+
 #endif // SYSCOIN_LOGGING_H
