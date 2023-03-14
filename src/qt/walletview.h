@@ -107,6 +107,9 @@ public Q_SLOTS:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
+private Q_SLOTS:
+    void disableTransactionView(bool disable);
+
 Q_SIGNALS:
     void setPrivacy(bool privacy);
     void transactionClicked();
