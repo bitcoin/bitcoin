@@ -8,6 +8,12 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
+    </ProjectReference>
     <ClCompile Include="..\..\src\arith_uint256.cpp" />
     <ClCompile Include="..\..\src\consensus\merkle.cpp" />
     <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
@@ -30,8 +36,14 @@
     <ClCompile Include="..\..\src\script\script_error.cpp" />
     <ClCompile Include="..\..\src\uint256.cpp" />
     <ClCompile Include="..\..\src\util\strencodings.cpp" />
+    <ClCompile Include="..\..\src\blsct\arith\elements.cpp" />
+    <ClCompile Include="..\..\src\blsct\arith\mcl\mcl_g1point.cpp" />
+    <ClCompile Include="..\..\src\blsct\arith\mcl\mcl_scalar.cpp" />
+    <ClCompile Include="..\..\src\blsct\range_proof\range_proof.cpp" />
+    <ClCompile Include="..\..\src\blsct\signature.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(SolutionDir)common.props" />
   <Import Project="..\common.vcxproj" />
 </Project>

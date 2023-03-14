@@ -7,9 +7,9 @@
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
+#include <iostream>
+#include <mutex>
 #include <stdexcept>
-#include <boost/thread/lock_guard.hpp>
-#include <boost/thread/mutex.hpp>
 
 /**
  * Create an instance of this class somewhere at the beginning
@@ -22,15 +22,15 @@
  *     volatile MclInit for_side_effect_only;
  * }
  * ```
-*/
+ */
 class MclInit
 {
 public:
     MclInit()
     {
-        boost::lock_guard<boost::mutex> lock(m_init_mutex);
-        static bool is_initialized = false;
+        std::lock_guard<std::mutex> lock(m_init_mutex);
 
+        static bool is_initialized = false;
         if (is_initialized) return;
 
         if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
@@ -40,8 +40,9 @@ public:
 
         is_initialized = true;
     }
+
 private:
-    inline static boost::mutex m_init_mutex;
+    inline static std::mutex m_init_mutex;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_INIT_H

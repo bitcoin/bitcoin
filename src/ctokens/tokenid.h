@@ -6,8 +6,9 @@
 #ifndef BITCOIN_CTOKENS_TOKENID_H
 #define BITCOIN_CTOKENS_TOKENID_H
 
-#include <uint256.h>
 #include <streams.h>
+#include <tinyformat.h>
+#include <uint256.h>
 
 class TokenId
 {
@@ -15,17 +16,23 @@ public:
     uint256 token;
     uint64_t subid;
 
-    TokenId(const uint256& t = uint256(), const uint64_t& i = std::numeric_limits<uint64_t>::max()) : token(t), subid(i){}
+    TokenId(const uint256& t = uint256(), const uint64_t& i = std::numeric_limits<uint64_t>::max()) : token(t), subid(i) {}
 
-    void SetNull() { token = uint256(); subid = -1; }
+    void SetNull()
+    {
+        token = uint256();
+        subid = std::numeric_limits<uint64_t>::max();
+    }
 
     bool IsNull() const { return token == uint256() && subid == std::numeric_limits<uint64_t>::max(); }
 
+    std::string ToString() const { return strprintf("%s%s", token.ToString(), subid == std::numeric_limits<uint64_t>::max() ? "" : strprintf("#%d", subid)); }
+
     friend bool operator==(const TokenId& a, const TokenId& b) { return a.token == b.token && a.subid == b.subid; }
 
-    friend bool operator<(const TokenId& a, const TokenId& b) {
-        if (a.token == b.token)
-        {
+    friend bool operator<(const TokenId& a, const TokenId& b)
+    {
+        if (a.token == b.token) {
             return a.subid < b.subid;
         }
         return a.token < b.token;
@@ -33,14 +40,7 @@ public:
 
     friend bool operator!=(const TokenId& a, const TokenId& b) { return !(a == b); }
 
-    // TODO add definition of this and uncomment
-    // ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(token);
-        READWRITE(subid);
-    }
+    SERIALIZE_METHODS(TokenId, obj) { READWRITE(obj.token, obj.subid); }
 };
 
 #endif // BITCOIN_CTOKENS_TOKENID_H

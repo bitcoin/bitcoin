@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/range_proof/config.h>
 #include <blsct/range_proof/generators.h>
 #include <ctokens/tokenid.h>
 #include <hash.h>
-#include <util/strencodings.h>
 #include <tinyformat.h>
+#include <util/strencodings.h>
 
 template <typename T>
 Elements<typename T::Point> Generators<T>::GetGiSubset(const size_t& size) const
@@ -31,7 +31,7 @@ GeneratorsFactory<T>::GeneratorsFactory()
     using Point = typename T::Point;
     using Points = Elements<Point>;
 
-    boost::lock_guard<boost::mutex> lock(GeneratorsFactory<T>::m_init_mutex);
+    std::lock_guard<std::mutex> lock(GeneratorsFactory<T>::m_init_mutex);
     if (GeneratorsFactory<T>::m_is_initialized) return;
 
     m_H = Point::GetBasePoint();

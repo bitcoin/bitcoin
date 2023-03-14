@@ -5,11 +5,11 @@
 #define BOOST_UNIT_TEST
 #define BLS_ETH 1
 
+#include <blsct/common.h>
+#include <blsct/private_key.h>
 #include <boost/test/unit_test.hpp>
 #include <streams.h>
 #include <test/util/setup_common.h>
-#include <blsct/common.h>
-#include <blsct/private_key.h>
 
 namespace blsct {
 
@@ -39,6 +39,16 @@ BOOST_AUTO_TEST_CASE(test_serialization_with_operators)
     BOOST_CHECK(mclBnG2_isEqual(&sig.m_data.v, &recovered_sig.m_data.v) == 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_constructor)
+{
+    Signature s;
+    BOOST_CHECK(mclBnG2_isZero(&s.m_data.v));
+
+    Signature s2;
+    BOOST_CHECK(s.GetVch() == s2.GetVch());
+    BOOST_CHECK(s == s2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}
+} // namespace blsct

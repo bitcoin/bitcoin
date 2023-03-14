@@ -23,19 +23,27 @@ public:
 
     static Signature Aggregate(const std::vector<blsct::Signature>& sigs);
 
+    bool operator==(const Signature& b) const;
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& b);
-    size_t GetSerializeSize(int nVersion = PROTOCOL_VERSION) const;
 
     template <typename Stream>
-    void Serialize(Stream& s) const;
+    void Serialize(Stream& s) const
+    {
+        s << GetVch();
+    }
 
     template <typename Stream>
-    void Unserialize(Stream& s);
+    void Unserialize(Stream& s)
+    {
+        std::vector<uint8_t> vch;
+        s >> vch;
+        SetVch(vch);
+    }
 
     blsSignature m_data;
 };
 
-}  // namespace blsct
+} // namespace blsct
 
-#endif  // NAVCOIN_BLSCT_SIGNATURE_H
+#endif // NAVCOIN_BLSCT_SIGNATURE_H
