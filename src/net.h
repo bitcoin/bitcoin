@@ -430,6 +430,13 @@ public:
     std::optional<std::pair<CNetMessage, bool>> PollMessage(size_t recv_flood_size)
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
+    /** Account for the total size of a sent message in the per msg type connection stats. */
+    void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
+    {
+        mapSendBytesPerMsgType[msg_type] += sent_bytes;
+    }
+
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:

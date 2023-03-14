@@ -2860,7 +2860,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         bool optimisticSend(pnode->vSendMsg.empty());
 
         //log total amount of bytes per message type
-        pnode->mapSendBytesPerMsgType[msg.m_type] += nTotalSize;
+        pnode->AccountForSentBytes(msg.m_type, nTotalSize);
         pnode->nSendSize += nTotalSize;
 
         if (pnode->nSendSize > nSendBufferMaxSize) pnode->fPauseSend = true;
