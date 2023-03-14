@@ -38,31 +38,6 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test1'
         cc = determine_wellknown_cmd('CC', 'gcc')
 
-        # there's no way to do this test for RISC-V at the moment; we build for
-        # RISC-V in a glibc 2.27 environment and we allow all symbols from 2.27.
-        if 'riscv' in get_machine(cc):
-            self.skipTest("test not available for RISC-V")
-
-        # nextup was introduced in GLIBC 2.24, so is newer than our supported
-        # glibc (2.18), and available in our release build environment (2.24).
-        with open(source, 'w', encoding="utf8") as f:
-            f.write('''
-                #define _GNU_SOURCE
-                #include <math.h>
-
-                double nextup(double x);
-
-                int main()
-                {
-                    nextup(3.14);
-                    return 0;
-                }
-        ''')
-
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lm']),
-                (1, executable + ': symbol nextup from unsupported version GLIBC_2.24(3)\n' +
-                    executable + ': failed IMPORTED_SYMBOLS'))
-
         # -lutil is part of the libc6 package so a safe bet that it's installed
         # it's also out of context enough that it's unlikely to ever become a real dependency
         source = 'test2.c'

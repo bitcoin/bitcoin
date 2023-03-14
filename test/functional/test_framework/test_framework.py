@@ -279,10 +279,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if seed is None:
             seed = random.randrange(sys.maxsize)
         else:
-            self.log.debug("User supplied random seed {}".format(seed))
+            self.log.info("User supplied random seed {}".format(seed))
 
         random.seed(seed)
-        self.log.debug("PRNG seed is: {}".format(seed))
+        self.log.info("PRNG seed is: {}".format(seed))
 
         self.log.debug('Setting up network thread')
         self.network_thread = NetworkThread()
@@ -533,11 +533,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
                 # adjust conf for pre 17
-                conf_file = test_node_i.bitcoinconf
-                with open(conf_file, 'r', encoding='utf8') as conf:
-                    conf_data = conf.read()
-                with open(conf_file, 'w', encoding='utf8') as conf:
-                    conf.write(conf_data.replace('[regtest]', ''))
+                test_node_i.replace_in_config([('[regtest]', '')])
 
     def start_node(self, i, *args, **kwargs):
         """Start a navcoind"""
@@ -561,7 +557,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 node.start(extra_args[i], *args, **kwargs)
             for node in self.nodes:
                 node.wait_for_rpc_connection()
-        except:
+        except Exception:
             # If one node failed to start, stop the others
             self.stop_nodes()
             raise
@@ -883,6 +879,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if we are not on a Linux platform"""
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
+
+    def skip_if_platform_not_posix(self):
+        """Skip the running test if we are not on a POSIX platform"""
+        if os.name != 'posix':
+            raise SkipTest("not on a POSIX system")
 
     def skip_if_no_navcoind_zmq(self):
         """Skip the running test if navcoind has not been compiled with zmq support."""

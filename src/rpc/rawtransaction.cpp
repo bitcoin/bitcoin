@@ -54,8 +54,11 @@ using node::PSBTAnalysis;
 using node::ReadBlockFromDisk;
 using node::UndoReadFromDisk;
 
-static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, Chainstate& active_chainstate, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_TXID)
+static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry,
+                     Chainstate& active_chainstate, const CTxUndo* txundo = nullptr,
+                     TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS)
 {
+    CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
     // Blockchain contextual information (confirmations and blocktime) is not
@@ -213,10 +216,10 @@ static RPCHelpMan getrawtransaction()
                             {RPCResult::Type::NUM, "fee", /*optional=*/true, "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                             {RPCResult::Type::ARR, "vin", "",
                             {
-                                {RPCResult::Type::OBJ, "", "utxo being spent, omitted if block undo data is not available",
+                                {RPCResult::Type::OBJ, "", "utxo being spent",
                                 {
                                     {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                                    {RPCResult::Type::OBJ, "prevout", /*optional=*/true, "Only if undo information is available)",
+                                    {RPCResult::Type::OBJ, "prevout", /*optional=*/true, "The previous output, omitted if block undo data is not available",
                                     {
                                         {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
                                         {RPCResult::Type::NUM, "height", "The height of the prevout"},
@@ -519,15 +522,17 @@ static RPCHelpMan decodescript()
         if (can_wrap_P2WSH) {
             UniValue sr(UniValue::VOBJ);
             CScript segwitScr;
+            FlatSigningProvider provider;
             if (which_type == TxoutType::PUBKEY) {
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0])));
             } else if (which_type == TxoutType::PUBKEYHASH) {
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(uint160{solutions_data[0]}));
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
+                provider.scripts[CScriptID(script)] = script;
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
-            ScriptToUniv(segwitScr, /*out=*/sr, /*include_hex=*/true, /*include_address=*/true);
+            ScriptToUniv(segwitScr, /*out=*/sr, /*include_hex=*/true, /*include_address=*/true, /*provider=*/&provider);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }

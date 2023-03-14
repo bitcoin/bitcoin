@@ -385,7 +385,7 @@ class P2PInterface(P2PConnection):
                 self.message_count[msgtype] += 1
                 self.last_message[msgtype] = message
                 getattr(self, 'on_' + msgtype)(message)
-            except:
+            except Exception:
                 print("ERROR delivering %s (%s)" % (repr(message), sys.exc_info()[0]))
                 raise
 

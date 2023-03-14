@@ -9,12 +9,14 @@ export LC_ALL=C.UTF-8
 if [[ $HOST = *-mingw32 ]]; then
   # Generate all binaries, so that they can be wrapped
   CI_EXEC make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
+  CI_EXEC make "$MAKEJOBS" -C src minisketch/test.exe VERBOSE=1
   CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
 fi
 
 if [ -n "$QEMU_USER_CMD" ]; then
   # Generate all binaries, so that they can be wrapped
   CI_EXEC make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
+  CI_EXEC make "$MAKEJOBS" -C src minisketch/test VERBOSE=1
   CI_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
 fi
 
@@ -40,6 +42,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
   ( CI_EXEC run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
   export P_CI_DIR="${BASE_BUILD_DIR}/navcoin-$HOST/"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
+          " src/common/init.cpp"\
           " src/common/url.cpp"\
           " src/compat"\
           " src/dbwrapper.cpp"\
@@ -48,15 +51,20 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/node/chainstate.cpp"\
           " src/node/chainstatemanager_args.cpp"\
           " src/node/mempool_args.cpp"\
+          " src/node/minisketchwrapper.cpp"\
+          " src/node/utxo_snapshot.cpp"\
           " src/node/validation_cache_args.cpp"\
           " src/policy/feerate.cpp"\
           " src/policy/packages.cpp"\
           " src/policy/settings.cpp"\
           " src/primitives/transaction.cpp"\
+          " src/random.cpp"\
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
           " src/test/fuzz/txorphan.cpp"\
           " src/test/fuzz/util/"\
+          " src/test/util/coins.cpp"\
+          " src/uint256.cpp"\
           " src/util/bip32.cpp"\
           " src/util/bytevectorhash.cpp"\
           " src/util/check.cpp"\
@@ -72,7 +80,12 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/util/syserror.cpp"\
           " src/util/threadinterrupt.cpp"\
           " src/zmq"\
-          " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/navcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
+          " -p . ${MAKEJOBS}"\
+          " -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/navcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"\
+          " |& tee /tmp/iwyu_ci.out"
+  export P_CI_DIR="${BASE_ROOT_DIR}/src"
+  CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/fix_includes.py --nosafe_headers < /tmp/iwyu_ci.out"
+  CI_EXEC "git --no-pager diff"
 fi
 
 if [ "$RUN_SECURITY_TESTS" = "true" ]; then

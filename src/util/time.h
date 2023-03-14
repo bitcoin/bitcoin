@@ -8,7 +8,7 @@
 
 #include <compat/compat.h>
 
-#include <chrono>
+#include <chrono> // IWYU pragma: export
 #include <cstdint>
 #include <string>
 

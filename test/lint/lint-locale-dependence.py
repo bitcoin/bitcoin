@@ -34,8 +34,6 @@
 #
 # See https://doc.qt.io/qt-5/qcoreapplication.html#locale-settings and
 # https://stackoverflow.com/a/34878283 for more details.
-#
-# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 
 import re
 import sys
@@ -45,7 +43,6 @@ from subprocess import check_output, CalledProcessError
 
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
-    "src/test/dbwrapper_tests.cpp:.*snprintf",
     "src/test/fuzz/locale.cpp:.*setlocale",
     "src/test/fuzz/string.cpp:.*strtol",
     "src/test/fuzz/string.cpp:.*strtoul",

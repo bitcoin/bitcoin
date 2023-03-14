@@ -750,7 +750,7 @@ def spenders_taproot_active():
     # Reusing the scripts above, test that various features affect the sighash.
     add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=False, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/script", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, script_taproot=tap.leaves["codesep_pk"].script)}, **ERR_SIG_SCHNORR)
-    add_spender(spenders, "sighash/leafver", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leafversion=random.choice([x & 0xFE for x in range(0x100) if x & 0xFE != 0xC0]))}, **ERR_SIG_SCHNORR)
+    add_spender(spenders, "sighash/leafver", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leafversion=random.choice([x & 0xFE for x in range(0x100) if x & 0xFE != LEAF_VERSION_TAPSCRIPT]))}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/scriptpath", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leaf=None)}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/keypath", tap=tap, key=secs[0], **common, failure={"sighash": override(default_sighash, leaf="pk_codesep")}, **ERR_SIG_SCHNORR)
 
@@ -1555,12 +1555,16 @@ class TaprootTest(BitcoinTestFramework):
 
         script_lists = [
             None,
-            [("0", CScript([pubs[50], OP_CHECKSIG]), 0xc0)],
-            [("0", CScript([pubs[51], OP_CHECKSIG]), 0xc0)],
-            [("0", CScript([pubs[52], OP_CHECKSIG]), 0xc0), ("1", CScript([b"BIP341"]), VALID_LEAF_VERS[pubs[99][0] % 41])],
-            [("0", CScript([pubs[53], OP_CHECKSIG]), 0xc0), ("1", CScript([b"Taproot"]), VALID_LEAF_VERS[pubs[99][1] % 41])],
-            [("0", CScript([pubs[54], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[55], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[56], OP_CHECKSIG]), 0xc0)]],
-            [("0", CScript([pubs[57], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[58], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[59], OP_CHECKSIG]), 0xc0)]],
+            [("0", CScript([pubs[50], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)],
+            [("0", CScript([pubs[51], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)],
+            [("0", CScript([pubs[52], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("1", CScript([b"BIP341"]), VALID_LEAF_VERS[pubs[99][0] % 41])],
+            [("0", CScript([pubs[53], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("1", CScript([b"Taproot"]), VALID_LEAF_VERS[pubs[99][1] % 41])],
+            [("0", CScript([pubs[54], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT),
+                [("1", CScript([pubs[55], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("2", CScript([pubs[56], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)]
+            ],
+            [("0", CScript([pubs[57], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT),
+                [("1", CScript([pubs[58], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("2", CScript([pubs[59], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)]
+            ],
         ]
         taps = [taproot_construct(inner_keys[i], script_lists[i]) for i in range(len(inner_keys))]
 

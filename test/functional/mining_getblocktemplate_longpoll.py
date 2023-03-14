@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
 
-from decimal import Decimal
 import random
 import threading
 
@@ -47,9 +46,9 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         thr.join(5)  # wait 5 seconds or until thread exits
         assert thr.is_alive()
 
-        miniwallets = [MiniWallet(node) for node in self.nodes]
+        self.miniwallet = MiniWallet(self.nodes[0])
         self.log.info("Test that longpoll will terminate if another node generates a block")
-        self.generate(miniwallets[1], 1)  # generate a block on another node
+        self.generate(self.nodes[1], 1)  # generate a block on another node
         # check that thread will exit now that new transaction entered mempool
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
@@ -57,18 +56,15 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.log.info("Test that longpoll will terminate if we generate a block ourselves")
         thr = LongpollThread(self.nodes[0])
         thr.start()
-        self.generate(miniwallets[0], 1)  # generate a block on own node
+        self.generate(self.nodes[0], 1)  # generate a block on own node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
         thr = LongpollThread(self.nodes[0])
         thr.start()
-        # generate a random transaction and submit it
-        min_relay_fee = self.nodes[0].getnetworkinfo()["relayfee"]
-        fee_rate = min_relay_fee + Decimal('0.00000010') * random.randint(0,20)
-        miniwallets[0].send_self_transfer(from_node=random.choice(self.nodes),
-                                          fee_rate=fee_rate)
+        # generate a transaction and submit it
+        self.miniwallet.send_self_transfer(from_node=random.choice(self.nodes))
         # after one minute, every 10 seconds the mempool is probed, so in 80 seconds it should have returned
         thr.join(60 + 20)
         assert not thr.is_alive()

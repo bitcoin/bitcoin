@@ -9,6 +9,7 @@
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
+#include <test/util/random.h>
 #include <test/util/txmempool.h>
 #include <timedata.h>
 #include <txmempool.h>
@@ -36,7 +37,9 @@ struct MinerTestingSetup : public TestingSetup {
     bool TestSequenceLocks(const CTransaction& tx, CTxMemPool& tx_mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
-        return CheckSequenceLocksAtTip(m_node.chainman->ActiveChain().Tip(), view_mempool, tx);
+        CBlockIndex* tip{m_node.chainman->ActiveChain().Tip()};
+        const std::optional<LockPoints> lock_points{CalculateLockPointsAtTip(tip, view_mempool, tx)};
+        return lock_points.has_value() && CheckSequenceLocksAtTip(tip, *lock_points);
     }
     CTxMemPool& MakeMempool()
     {

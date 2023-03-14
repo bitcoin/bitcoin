@@ -1439,7 +1439,7 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
         hashOutputs = SHA256Uint256(m_outputs_single_hash);
         m_bip143_segwit_ready = true;
     }
-    if (uses_bip341_taproot) {
+    if (uses_bip341_taproot && m_spent_outputs_ready) {
         m_spent_amounts_single_hash = GetSpentAmountsSHA256(m_spent_outputs);
         m_spent_scripts_single_hash = GetSpentScriptsSHA256(m_spent_outputs);
         m_bip341_taproot_ready = true;

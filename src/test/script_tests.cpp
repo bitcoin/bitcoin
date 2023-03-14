@@ -15,6 +15,8 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <streams.h>
+#include <test/util/json.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
@@ -40,18 +42,6 @@ static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(std::string strFlags);
 std::string FormatScriptFlags(unsigned int flags);
-
-UniValue read_json(const std::string& jsondata)
-{
-    UniValue v;
-
-    if (!v.read(jsondata) || !v.isArray())
-    {
-        BOOST_ERROR("Parse error.");
-        return UniValue(UniValue::VARR);
-    }
-    return v.get_array();
-}
 
 struct ScriptErrorDesc
 {
@@ -1191,7 +1181,8 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined.scriptSig.empty());
 
     // Single signature case:
-    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL)); // changes scriptSig
+    SignatureData dummy;
+    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy)); // changes scriptSig
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSig, empty);
     BOOST_CHECK(combined.scriptSig == scriptSig.scriptSig);
@@ -1199,7 +1190,8 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined.scriptSig == scriptSig.scriptSig);
     SignatureData scriptSigCopy = scriptSig;
     // Signing again will give a different, valid signature:
-    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL));
+    SignatureData dummy_b;
+    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_b));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined.scriptSig == scriptSigCopy.scriptSig || combined.scriptSig == scriptSig.scriptSig);
@@ -1208,14 +1200,16 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript pkSingle; pkSingle << ToByteVector(keys[0].GetPubKey()) << OP_CHECKSIG;
     BOOST_CHECK(keystore.AddCScript(pkSingle));
     scriptPubKey = GetScriptForDestination(ScriptHash(pkSingle));
-    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL));
+    SignatureData dummy_c;
+    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_c));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSig, empty);
     BOOST_CHECK(combined.scriptSig == scriptSig.scriptSig);
     combined = CombineSignatures(txFrom.vout[0], txTo, empty, scriptSig);
     BOOST_CHECK(combined.scriptSig == scriptSig.scriptSig);
     scriptSigCopy = scriptSig;
-    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL));
+    SignatureData dummy_d;
+    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_d));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined.scriptSig == scriptSigCopy.scriptSig || combined.scriptSig == scriptSig.scriptSig);
@@ -1223,7 +1217,8 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     // Hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
     BOOST_CHECK(keystore.AddCScript(scriptPubKey));
-    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL));
+    SignatureData dummy_e;
+    BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_e));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSig, empty);
     BOOST_CHECK(combined.scriptSig == scriptSig.scriptSig);

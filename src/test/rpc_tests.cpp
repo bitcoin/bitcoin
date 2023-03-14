@@ -289,6 +289,10 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
 {
     // Valid
     BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0").get_real(), 1.0);
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("true").get_bool(), true);
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("[false]")[0].get_bool(), false);
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("{\"a\": true}")["a"].get_bool(), true);
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("{\"1\": \"true\"}")["1"].get_str(), "true");
     // Valid, with leading or trailing whitespace
     BOOST_CHECK_EQUAL(ParseNonRFCJSONValue(" 1.0").get_real(), 1.0);
     BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0 ").get_real(), 1.0);
@@ -301,6 +305,11 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
     // Invalid, trailing garbage
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
+    // Invalid, keys have to be names
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{1: \"true\"}"), std::runtime_error);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{true: 1}"), std::runtime_error);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{[1]: 1}"), std::runtime_error);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("{{\"a\": \"a\"}: 1}"), std::runtime_error);
     // BTC addresses should fail parsing
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);

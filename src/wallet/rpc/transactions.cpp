@@ -397,7 +397,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
 }
 
 
-static const std::vector<RPCResult> TransactionDescriptionString()
+static std::vector<RPCResult> TransactionDescriptionString()
 {
     return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},
@@ -872,15 +872,18 @@ RPCHelpMan rescanblockchain()
     wallet.BlockUntilSyncedToCurrentChain();
 
     WalletRescanReserver reserver(*pwallet);
-    if (!reserver.reserve()) {
+    if (!reserver.reserve(/*with_passphrase=*/true)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
 
     int start_height = 0;
     std::optional<int> stop_height;
     uint256 start_block;
+
+    LOCK(pwallet->m_relock_mutex);
     {
         LOCK(pwallet->cs_wallet);
+        EnsureWalletIsUnlocked(*pwallet);
         int tip_height = pwallet->GetLastBlockHeight();
 
         if (!request.params[0].isNull()) {

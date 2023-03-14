@@ -26,6 +26,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <support/cleanse.h>
 #include <txmempool.h>
 #include <util/bip32.h>
 #include <util/check.h>
@@ -34,6 +35,7 @@
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
@@ -550,7 +552,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
     bool fWasLocked = IsLocked();
 
     {
-        LOCK(cs_wallet);
+        LOCK2(m_relock_mutex, cs_wallet);
         Lock();
 
         CCrypter crypter;
@@ -785,7 +787,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         return false;
 
     {
-        LOCK(cs_wallet);
+        LOCK2(m_relock_mutex, cs_wallet);
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         WalletBatch* encrypted_batch = new WalletBatch(GetDatabase());
         if (!encrypted_batch->TxnBegin()) {
@@ -1065,6 +1067,33 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         }
     }
 
+    // Mark inactive coinbase transactions and their descendants as abandoned
+    if (wtx.IsCoinBase() && wtx.isInactive()) {
+        std::vector<CWalletTx*> txs{&wtx};
+
+        TxStateInactive inactive_state = TxStateInactive{/*abandoned=*/true};
+
+        while (!txs.empty()) {
+            CWalletTx* desc_tx = txs.back();
+            txs.pop_back();
+            desc_tx->m_state = inactive_state;
+            // Break caches since we have changed the state
+            desc_tx->MarkDirty();
+            batch.WriteTx(*desc_tx);
+            MarkInputsDirty(desc_tx->tx);
+            for (unsigned int i = 0; i < desc_tx->tx->vout.size(); ++i) {
+                COutPoint outpoint(desc_tx->GetHash(), i);
+                std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(outpoint);
+                for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
+                    const auto wit = mapWallet.find(it->second);
+                    if (wit != mapWallet.end()) {
+                        txs.push_back(&wit->second);
+                    }
+                }
+            }
+        }
+    }
+
     //// debug print
     WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
@@ -1081,7 +1110,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string strCmd = m_args.GetArg("-walletnotify", "");
+    std::string strCmd = m_notify_tx_changed_script;
 
     if (!strCmd.empty())
     {
@@ -1274,7 +1303,11 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
             wtx.MarkDirty();
             batch.WriteTx(wtx);
             NotifyTransactionChanged(wtx.GetHash(), CT_UPDATED);
-            // Iterate over all its outputs, and mark transactions in the wallet that spend them abandoned too
+            // Iterate over all its outputs, and mark transactions in the wallet that spend them abandoned too.
+            // States are not permanent, so these transactions can become unabandoned if they are re-added to the
+            // mempool, or confirmed in a block, or conflicted.
+            // Note: If the reorged coinbase is re-added to the main chain, the descendants that have not had their
+            // states change will remain abandoned and will require manual broadcast if the user wants them.
             for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
                 for (TxSpends::const_iterator iter = range.first; iter != range.second; ++iter) {
@@ -1609,15 +1642,15 @@ void CWallet::InitWalletFlags(uint64_t flags)
 
 // Helper for producing a max-sized low-S low-R signature (eg 71 bytes)
 // or a max-sized low-S signature (e.g. 72 bytes) depending on coin_control
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, const CCoinControl* coin_control)
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool can_grind_r, const CCoinControl* coin_control)
 {
     // Fill in dummy signatures for fee calculation.
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    // Use max sig if watch only inputs were used or if this particular input is an external input
-    // to ensure a sufficient fee is attained for the requested feerate.
-    const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(tx_in.prevout));
+    // Use max sig if watch only inputs were used, if this particular input is an external input,
+    // or if this wallet uses an external signer, to ensure a sufficient fee is attained for the requested feerate.
+    const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(tx_in.prevout) || !can_grind_r);
     if (!ProduceSignature(provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
         return false;
     }
@@ -1673,6 +1706,7 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
 {
     // Fill in dummy signatures for fee calculation.
     int nIn = 0;
+    const bool can_grind_r = CanGrindR();
     for (const auto& txout : txouts)
     {
         CTxIn& txin = txNew.vin[nIn];
@@ -1685,8 +1719,8 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
             continue;
         }
         const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(txout.scriptPubKey);
-        if (!provider || !DummySignInput(*provider, txin, txout, coin_control)) {
-            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, coin_control)) {
+        if (!provider || !DummySignInput(*provider, txin, txout, can_grind_r, coin_control)) {
+            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, can_grind_r, coin_control)) {
                 return false;
             }
         }
@@ -2882,7 +2916,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     const auto start{SteadyClock::now()};
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, args, std::move(database)), ReleaseWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), ReleaseWallet);
+    walletInstance->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
+    walletInstance->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
+
+    // Load wallet
     bool rescan_required = false;
     DBErrors nLoadWalletRet = walletInstance->LoadWallet();
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
@@ -3375,8 +3413,11 @@ bool CWallet::Lock()
         return false;
 
     {
-        LOCK(cs_wallet);
-        vMasterKey.clear();
+        LOCK2(m_relock_mutex, cs_wallet);
+        if (!vMasterKey.empty()) {
+            memory_cleanse(vMasterKey.data(), vMasterKey.size() * sizeof(decltype(vMasterKey)::value_type));
+            vMasterKey.clear();
+        }
     }
 
     NotifyStatusChanged(this);
@@ -3503,7 +3544,7 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         return;
     }
 
-    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this));
+    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this, m_keypool_size));
     for (const auto& type : LEGACY_OUTPUT_TYPES) {
         m_internal_spk_managers[type] = spk_manager.get();
         m_external_spk_managers[type] = spk_manager.get();
@@ -3532,10 +3573,10 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
 void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
 {
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc));
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc, m_keypool_size));
         m_spk_managers[id] = std::move(spk_manager);
     } else {
-        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
         m_spk_managers[id] = std::move(spk_manager);
     }
 }
@@ -3546,7 +3587,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
-            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
+            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
             if (IsCrypted()) {
                 if (IsLocked()) {
                     throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
@@ -3602,7 +3643,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                     continue;
                 }
                 OutputType t =  *desc->GetOutputType();
-                auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this));
+                auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, m_keypool_size));
                 spk_manager->SetupDescriptor(std::move(desc));
                 uint256 id = spk_manager->GetID();
                 m_spk_managers[id] = std::move(spk_manager);
@@ -3718,7 +3759,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
         spk_man->UpdateWalletDescriptor(desc);
     } else {
-        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory
@@ -3840,14 +3881,11 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
     AssertLockHeld(cs_wallet);
 
     LegacyScriptPubKeyMan* legacy_spkm = GetLegacyScriptPubKeyMan();
-    if (!legacy_spkm) {
-        error = _("Error: This wallet is already a descriptor wallet");
-        return std::nullopt;
-    }
+    assert(legacy_spkm);
 
     std::optional<MigrationData> res = legacy_spkm->MigrateToDescriptor();
     if (res == std::nullopt) {
-        error = _("Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first");
+        error = _("Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.");
         return std::nullopt;
     }
     return res;
@@ -4044,6 +4082,11 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     return true;
 }
 
+bool CWallet::CanGrindR() const
+{
+    return !IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER);
+}
+
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -4137,27 +4180,19 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
     return true;
 }
 
-util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>&& wallet, WalletContext& context)
+util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context)
 {
     MigrationResult res;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
 
-    // Make a backup of the DB
-    std::string wallet_name = wallet->GetName();
-    fs::path this_wallet_dir = fs::absolute(fs::PathFromString(wallet->GetDatabase().Filename())).parent_path();
-    fs::path backup_filename = fs::PathFromString(strprintf("%s-%d.legacy.bak", wallet_name, GetTime()));
-    fs::path backup_path = this_wallet_dir / backup_filename;
-    if (!wallet->BackupWallet(fs::PathToString(backup_path))) {
-        return util::Error{_("Error: Unable to make a backup of your wallet")};
+    // If the wallet is still loaded, unload it so that nothing else tries to use it while we're changing it
+    if (auto wallet = GetWallet(context, wallet_name)) {
+        if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
+            return util::Error{_("Unable to unload the wallet before migrating")};
+        }
+        UnloadWallet(std::move(wallet));
     }
-    res.backup_path = backup_path;
-
-    // Unload the wallet so that nothing else tries to use it while we're changing it
-    if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
-        return util::Error{_("Unable to unload the wallet before migrating")};
-    }
-    UnloadWallet(std::move(wallet));
 
     // Load the wallet but only in the context of this function.
     // No signals should be connected nor should anything else be aware of this wallet
@@ -4171,14 +4206,42 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         return util::Error{Untranslated("Wallet file verification failed.") + Untranslated(" ") + error};
     }
 
+    // Make the local wallet
     std::shared_ptr<CWallet> local_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
     if (!local_wallet) {
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
 
+    // Before anything else, check if there is something to migrate.
+    if (!local_wallet->GetLegacyScriptPubKeyMan()) {
+        return util::Error{_("Error: This wallet is already a descriptor wallet")};
+    }
+
+    // Make a backup of the DB
+    fs::path this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
+    fs::path backup_filename = fs::PathFromString(strprintf("%s-%d.legacy.bak", wallet_name, GetTime()));
+    fs::path backup_path = this_wallet_dir / backup_filename;
+    if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
+        return util::Error{_("Error: Unable to make a backup of your wallet")};
+    }
+    res.backup_path = backup_path;
+
     bool success = false;
     {
         LOCK(local_wallet->cs_wallet);
+
+        // Unlock the wallet if needed
+        if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
+            if (passphrase.find('\0') == std::string::npos) {
+                return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
+            } else {
+                return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "
+                                                "The passphrase contains a null character (ie - a zero byte). "
+                                                "If this passphrase was set with a version of this software prior to 25.0, "
+                                                "please try again with only the characters up to — but not including — "
+                                                "the first null character.")};
+            }
+        }
 
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};

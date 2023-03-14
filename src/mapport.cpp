@@ -27,9 +27,9 @@
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
-// The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
-// with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
-static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed");
+// The minimum supported miniUPnPc API version is set to 17. This excludes
+// versions with known vulnerabilities.
+static_assert(MINIUPNPC_API_VERSION >= 17, "miniUPnPc API version >= 17 assumed");
 #endif // USE_UPNP
 
 #include <atomic>
@@ -104,7 +104,7 @@ static bool NatpmpMapping(natpmp_t* natpmp, const struct in_addr& external_ipv4_
                     AddLocal(external, LOCAL_MAPPED);
                     external_ip_discovered = true;
                 }
-                LogPrintf("natpmp: Port mapping successful. External address = %s\n", external.ToString());
+                LogPrintf("natpmp: Port mapping successful. External address = %s\n", external.ToStringAddrPort());
                 return true;
             } else {
                 LogPrintf("natpmp: Port mapping failed.\n");
@@ -159,11 +159,7 @@ static bool ProcessUpnp()
     char lanaddr[64];
 
     int error = 0;
-#if MINIUPNPC_API_VERSION < 14
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
-#else
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
-#endif
 
     struct UPNPUrls urls;
     struct IGDdatas data;
@@ -181,7 +177,7 @@ static bool ProcessUpnp()
                 if (externalIPAddress[0]) {
                     CNetAddr resolved;
                     if (LookupHost(externalIPAddress, resolved, false)) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString());
+                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToStringAddr());
                         AddLocal(resolved, LOCAL_MAPPED);
                     }
                 } else {

@@ -206,7 +206,7 @@ bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
         }
 
         const Reply& lookup_reply =
-            SendRequestAndGetReply(*sock, strprintf("NAMING LOOKUP NAME=%s", to.ToStringIP()));
+            SendRequestAndGetReply(*sock, strprintf("NAMING LOOKUP NAME=%s", to.ToStringAddr()));
 
         const std::string& dest = lookup_reply.Get("VALUE");
 
@@ -233,7 +233,7 @@ bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
 
         throw std::runtime_error(strprintf("\"%s\"", connect_reply.full));
     } catch (const std::runtime_error& e) {
-        Log("Error connecting to %s: %s", to.ToString(), e.what());
+        Log("Error connecting to %s: %s", to.ToStringAddrPort(), e.what());
         CheckControlSock();
         return false;
     }
@@ -302,7 +302,7 @@ std::unique_ptr<Sock> Session::Hello() const
     }
 
     if (!ConnectSocketDirectly(m_control_host, *sock, nConnectTimeout, true)) {
-        throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToString()));
+        throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToStringAddrPort()));
     }
 
     SendRequestAndGetReply(*sock, "HELLO VERSION MIN=3.1 MAX=3.1");
@@ -336,7 +336,7 @@ void Session::GenerateAndSavePrivateKey(const Sock& sock)
 {
     DestGenerate(sock);
 
-    // umask is set to 077 in init.cpp, which is ok (unless -sysperms is given)
+    // umask is set to 0077 in util/system.cpp, which is ok.
     if (!WriteBinaryFile(m_private_key_file,
                          std::string(m_private_key.begin(), m_private_key.end()))) {
         throw std::runtime_error(
@@ -371,7 +371,7 @@ void Session::CreateIfNotCreatedAlready()
     const auto session_type = m_transient ? "transient" : "persistent";
     const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
 
-    Log("Creating %s SAM session %s with %s", session_type, session_id, m_control_host.ToString());
+    Log("Creating %s SAM session %s with %s", session_type, session_id, m_control_host.ToStringAddrPort());
 
     auto sock = Hello();
 
@@ -380,7 +380,9 @@ void Session::CreateIfNotCreatedAlready()
         // in the reply in DESTINATION=.
         const Reply& reply = SendRequestAndGetReply(
             *sock,
-            strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=TRANSIENT SIGNATURE_TYPE=7", session_id));
+            strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=TRANSIENT SIGNATURE_TYPE=7 "
+                      "inbound.quantity=1 outbound.quantity=1",
+                      session_id));
 
         m_private_key = DecodeI2PBase64(reply.Get("DESTINATION"));
     } else {
@@ -396,7 +398,8 @@ void Session::CreateIfNotCreatedAlready()
         const std::string& private_key_b64 = SwapBase64(EncodeBase64(m_private_key));
 
         SendRequestAndGetReply(*sock,
-                               strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s",
+                               strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s "
+                                         "inbound.quantity=3 outbound.quantity=3",
                                          session_id,
                                          private_key_b64));
     }
@@ -408,7 +411,7 @@ void Session::CreateIfNotCreatedAlready()
     Log("%s SAM session %s created, my address=%s",
         Capitalize(session_type),
         m_session_id,
-        m_my_addr.ToString());
+        m_my_addr.ToStringAddrPort());
 }
 
 std::unique_ptr<Sock> Session::StreamAccept()

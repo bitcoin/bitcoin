@@ -48,10 +48,7 @@ static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = CMessageHeader::MESSAG
 
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
-/** Pruning-related variables and constants */
-/** True if we're running in -prune mode. */
 extern bool fPruneMode;
-/** Number of bytes of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
@@ -157,6 +154,13 @@ public:
     bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB(const Consensus::Params& consensus_params) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    /**
+     * Remove any pruned block & undo files that are still on disk.
+     * This could happen on some systems if the file was still being read while unlinked,
+     * or if we crash before unlinking.
+     */
+    void ScanAndUnlinkAlreadyPrunedFiles() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Create a new block index entry for a given block hash */
     CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -175,6 +179,17 @@ public:
 
     /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
+
+    /** Whether running in -prune mode. */
+    [[nodiscard]] bool IsPruneMode() const { return fPruneMode; }
+
+    /** Attempt to stay below this number of bytes of block files. */
+    [[nodiscard]] uint64_t GetPruneTarget() const { return nPruneTarget; }
+
+    [[nodiscard]] bool LoadingBlocks() const
+    {
+        return fImporting || fReindex;
+    }
 
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();

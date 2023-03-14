@@ -164,6 +164,9 @@ class MaxUploadTest(BitcoinTestFramework):
         assert_equal(len(peer_info), 1)  # node is still connected
         assert_equal(peer_info[0]['permissions'], ['download'])
 
+        self.log.info("Test passing an unparsable value to -maxuploadtarget throws an error")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(extra_args=["-maxuploadtarget=abc"], expected_msg="Error: Unable to parse -maxuploadtarget: 'abc'")
 
 if __name__ == '__main__':
     MaxUploadTest().main()

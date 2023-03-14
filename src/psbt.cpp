@@ -132,6 +132,18 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     for (const auto& [pubkey, leaf_origin] : m_tap_bip32_paths) {
         sigdata.taproot_misc_pubkeys.emplace(pubkey, leaf_origin);
     }
+    for (const auto& [hash, preimage] : ripemd160_preimages) {
+        sigdata.ripemd160_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
+    for (const auto& [hash, preimage] : sha256_preimages) {
+        sigdata.sha256_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
+    for (const auto& [hash, preimage] : hash160_preimages) {
+        sigdata.hash160_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
+    for (const auto& [hash, preimage] : hash256_preimages) {
+        sigdata.hash256_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
 }
 
 void PSBTInput::FromSignatureData(const SignatureData& sigdata)

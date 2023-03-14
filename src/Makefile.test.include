@@ -162,6 +162,7 @@ BITCOIN_TESTS =\
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
+  test/translation_tests.cpp \
   test/txindex_tests.cpp \
   test/txpackage_tests.cpp \
   test/txreconciliation_tests.cpp \
@@ -177,7 +178,8 @@ BITCOIN_TESTS =\
   test/validation_flush_tests.cpp \
   test/validation_tests.cpp \
   test/validationinterface_tests.cpp \
-  test/versionbits_tests.cpp
+  test/versionbits_tests.cpp \
+  test/xoroshiro128plusplus_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
@@ -193,7 +195,8 @@ BITCOIN_TESTS += \
   wallet/test/ismine_tests.cpp \
   wallet/test/rpc_util_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp \
-  wallet/test/walletload_tests.cpp
+  wallet/test/walletload_tests.cpp \
+  wallet/test/group_outputs_tests.cpp
 
 FUZZ_SUITE_LD_COMMON +=\
  $(SQLITE_LIBS) \
@@ -263,6 +266,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/chain.cpp \
  test/fuzz/checkqueue.cpp \
  test/fuzz/coins_view.cpp \
+ test/fuzz/coinscache_sim.cpp \
  test/fuzz/connman.cpp \
  test/fuzz/crypto.cpp \
  test/fuzz/crypto_aes256.cpp \
