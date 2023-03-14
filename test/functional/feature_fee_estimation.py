@@ -132,11 +132,12 @@ def make_tx(wallet, utxo, feerate):
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
-        # Force fSendTrickle to true (via whitelist.noban)
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [
-            ["-whitelist=noban@127.0.0.1"],
-            ["-whitelist=noban@127.0.0.1", "-blockmaxweight=68000"],
-            ["-whitelist=noban@127.0.0.1", "-blockmaxweight=32000"],
+            [],
+            ["-blockmaxweight=68000"],
+            ["-blockmaxweight=32000"],
         ]
 
     def setup_network(self):
