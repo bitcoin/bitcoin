@@ -2797,7 +2797,7 @@ CNode::CNode(NodeId idIn,
 
 void CNode::MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
 {
-    AssertLockNotHeld(cs_vProcessMsg);
+    AssertLockNotHeld(m_msg_process_queue_mutex);
 
     size_t nSizeAdded = 0;
     for (const auto& msg : vRecvMsg) {
@@ -2806,24 +2806,24 @@ void CNode::MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
         nSizeAdded += msg.m_raw_message_size;
     }
 
-    LOCK(cs_vProcessMsg);
-    vProcessMsg.splice(vProcessMsg.end(), vRecvMsg);
-    nProcessQueueSize += nSizeAdded;
-    fPauseRecv = nProcessQueueSize > recv_flood_size;
+    LOCK(m_msg_process_queue_mutex);
+    m_msg_process_queue.splice(m_msg_process_queue.end(), vRecvMsg);
+    m_msg_process_queue_size += nSizeAdded;
+    fPauseRecv = m_msg_process_queue_size > recv_flood_size;
 }
 
 std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage(size_t recv_flood_size)
 {
-    LOCK(cs_vProcessMsg);
-    if (vProcessMsg.empty()) return std::nullopt;
+    LOCK(m_msg_process_queue_mutex);
+    if (m_msg_process_queue.empty()) return std::nullopt;
 
     std::list<CNetMessage> msgs;
     // Just take one message
-    msgs.splice(msgs.begin(), vProcessMsg, vProcessMsg.begin());
-    nProcessQueueSize -= msgs.front().m_raw_message_size;
-    fPauseRecv = nProcessQueueSize > recv_flood_size;
+    msgs.splice(msgs.begin(), m_msg_process_queue, m_msg_process_queue.begin());
+    m_msg_process_queue_size -= msgs.front().m_raw_message_size;
+    fPauseRecv = m_msg_process_queue_size > recv_flood_size;
 
-    return std::make_pair(std::move(msgs.front()), !vProcessMsg.empty());
+    return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)

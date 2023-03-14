@@ -420,7 +420,7 @@ public:
 
     /** Move all messages from the received queue to the processing queue. */
     void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_vProcessMsg);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     /** Poll the next message from the processing queue of this connection.
      *
@@ -428,7 +428,7 @@ public:
      * consisting of the message and a bool that indicates if the processing
      * queue has more entries. */
     std::optional<std::pair<CNetMessage, bool>> PollMessage(size_t recv_flood_size)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_vProcessMsg);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
@@ -615,9 +615,9 @@ private:
 
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
-    Mutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
+    Mutex m_msg_process_queue_mutex;
+    std::list<CNetMessage> m_msg_process_queue GUARDED_BY(m_msg_process_queue_mutex);
+    size_t m_msg_process_queue_size GUARDED_BY(m_msg_process_queue_mutex){0};
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
