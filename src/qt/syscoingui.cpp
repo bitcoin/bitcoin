@@ -475,6 +475,7 @@ void SyscoinGUI::createActions()
             m_wallet_controller->closeAllWallets(this);
         });
         connect(m_mask_values_action, &QAction::toggled, this, &SyscoinGUI::setPrivacy);
+        connect(m_mask_values_action, &QAction::toggled, this, &SyscoinGUI::enableHistoryAction);
     }
 #endif // ENABLE_WALLET
 
@@ -694,6 +695,12 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 }
 
 #ifdef ENABLE_WALLET
+void SyscoinGUI::enableHistoryAction(bool privacy)
+{
+    historyAction->setEnabled(!privacy);
+    if (historyAction->isChecked()) gotoOverviewPage();
+}
+
 void SyscoinGUI::setWalletController(WalletController* wallet_controller)
 {
     assert(!m_wallet_controller);
@@ -742,7 +749,9 @@ void SyscoinGUI::addWallet(WalletModel* walletModel)
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &SyscoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &SyscoinGUI::incomingTransaction);
     connect(this, &SyscoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
-    wallet_view->setPrivacy(isPrivacyModeActivated());
+    const bool privacy = isPrivacyModeActivated();
+    wallet_view->setPrivacy(privacy);
+    enableHistoryAction(privacy);
     const QString display_name = walletModel->getDisplayName();
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
 }
