@@ -531,7 +531,7 @@ void HTTPEvent::trigger(struct timeval* tv)
     else
         evtimer_add(ev, tv); // trigger after timeval passed
 }
-HTTPRequest::HTTPRequest(struct evhttp_request* _req, bool _replySent) : req(_req), replySent(_replySent)
+HTTPRequest::HTTPRequest(struct evhttp_request* _req) : req(_req)
 {
 }
 
@@ -597,23 +597,25 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     // Send event to main http thread to send reply message
     struct evbuffer* evb = evhttp_request_get_output_buffer(req);
     assert(evb);
-    evbuffer_add(evb, strReply.data(), strReply.size());
     auto req_copy = req;
-    HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus]{
-        evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
-        // Re-enable reading from the socket. This is the second part of the libevent
-        // workaround above.
-        if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
-            evhttp_connection* conn = evhttp_request_get_connection(req_copy);
-            if (conn) {
+    evhttp_connection* conn = evhttp_request_get_connection(req_copy);
+    if (conn) {
+        // We add to the buffer if the connection from the request is valid
+        // otherwise it produces a segfault
+        evbuffer_add(evb, strReply.data(), strReply.size());
+        HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus, conn]{
+            evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
+            // Re-enable reading from the socket. This is the second part of the libevent
+            // workaround above.
+            if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
                 bufferevent* bev = evhttp_connection_get_bufferevent(conn);
                 if (bev) {
                     bufferevent_enable(bev, EV_READ | EV_WRITE);
                 }
             }
-        }
-    });
-    ev->trigger(nullptr);
+        });
+        ev->trigger(nullptr);
+    }
     replySent = true;
     req = nullptr; // transferred back to main thread
 }

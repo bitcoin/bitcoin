@@ -57,10 +57,10 @@ class HTTPRequest
 {
 private:
     struct evhttp_request* req;
-    bool replySent;
+    bool replySent{false};
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req, bool replySent = false);
+    explicit HTTPRequest(struct evhttp_request* req);
     ~HTTPRequest();
 
     enum RequestMethod {

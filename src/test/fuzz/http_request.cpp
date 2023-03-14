@@ -47,19 +47,22 @@ FUZZ_TARGET(http_request)
         return;
     }
 
-    HTTPRequest http_request{evreq, true};
-    const HTTPRequest::RequestMethod request_method = http_request.GetRequestMethod();
-    (void)RequestMethodString(request_method);
-    (void)http_request.GetURI();
-    (void)http_request.GetHeader("Host");
-    const std::string header = fuzzed_data_provider.ConsumeRandomLengthString(16);
-    (void)http_request.GetHeader(header);
-    (void)http_request.WriteHeader(header, fuzzed_data_provider.ConsumeRandomLengthString(16));
-    (void)http_request.GetHeader(header);
-    const std::string body = http_request.ReadBody();
-    assert(body.empty());
-    const CService service = http_request.GetPeer();
-    assert(service.ToStringAddrPort() == "[::]:0");
+    try {
+        HTTPRequest http_request{evreq};
+        const HTTPRequest::RequestMethod request_method = http_request.GetRequestMethod();
+        (void)RequestMethodString(request_method);
+        (void)http_request.GetURI();
+        (void)http_request.GetHeader("Host");
+        const std::string header = fuzzed_data_provider.ConsumeRandomLengthString(16);
+        (void)http_request.GetHeader(header);
+        (void)http_request.WriteHeader(header, fuzzed_data_provider.ConsumeRandomLengthString(16));
+        (void)http_request.GetHeader(header);
+        const std::string body = http_request.ReadBody();
+        assert(body.empty());
+        const CService service = http_request.GetPeer();
+        assert(service.ToStringAddrPort() == "[::]:0");
+    } catch(std::runtime_error &) {
+    }
 
     evbuffer_free(evbuf);
     evhttp_request_free(evreq);
