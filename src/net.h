@@ -347,9 +347,6 @@ struct CNodeOptions
 /** Information about a peer */
 class CNode
 {
-    friend class CConnman;
-    friend struct ConnmanTestMsg;
-
 public:
     const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
     const std::unique_ptr<const TransportSerializer> m_serializer;
