@@ -324,6 +324,10 @@ class ConfArgsTest(BitcoinTestFramework):
         self.start_node(0, [f'-conf={conf_file}'])
         self.stop_node(0)
         assert os.path.exists(os.path.join(new_data_dir, self.chain, 'blocks'))
+        # Can not use assert_debug_log() with the custom datadir
+        with open(os.path.join(new_data_dir, "regtest", "debug.log"), encoding='utf-8') as dl:
+            log = dl.read()
+            assert f'Config file: {conf_file}' in log
 
         # Ensure command line argument overrides datadir in conf
         os.mkdir(new_data_dir_2)

@@ -445,6 +445,7 @@ void ArgsManager::ClearPathCache()
     m_cached_datadir_path = fs::path();
     m_cached_network_datadir_path = fs::path();
     m_cached_blocks_path = fs::path();
+    m_cached_config_file_path = fs::path();
 }
 
 std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
@@ -918,6 +919,10 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
 
 fs::path ArgsManager::GetConfigFilePath() const
 {
+    LOCK(cs_args);
+    if (!m_cached_config_file_path.empty())
+        return m_cached_config_file_path;
+
     return GetConfigFile(*this, GetPathArg("-conf", BITCOIN_CONF_FILENAME));
 }
 
@@ -1006,6 +1011,14 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
     // If datadir is changed in .conf file:
     ClearPathCache();
+    // If successful, cache the path. This is the actual file we read,
+    // even if datadir is changed by the conf file itself.
+    // Note that ClearPathCache() clears this too, so clear first.
+    // Otherwise, ClearPathCache() is used in tests where this value can be cleared as well.
+    {
+        LOCK(cs_args);
+        m_cached_config_file_path = conf_path;
+    }
     if (!CheckDataDirOption(*this)) {
         error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
         return false;
