@@ -16,12 +16,13 @@
 #include <compat/compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
-#include <node/eviction.h>
 #include <fs.h>
 #include <i2p.h>
+#include <logging.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/eviction.h>
 #include <node/interface_ui.h>
 #include <protocol.h>
 #include <random.h>

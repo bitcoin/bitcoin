@@ -6,6 +6,7 @@
 #include <index/base.h>
 #include <interfaces/chain.h>
 #include <kernel/chain.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/database_args.h>
