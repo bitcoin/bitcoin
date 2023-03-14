@@ -376,10 +376,6 @@ public:
     Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
-    RecursiveMutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
-
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
     std::atomic<std::chrono::seconds> m_last_send{0s};
@@ -618,6 +614,10 @@ private:
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
+
+    RecursiveMutex cs_vProcessMsg;
+    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
