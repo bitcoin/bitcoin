@@ -426,6 +426,14 @@ public:
     void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_vProcessMsg);
 
+    /** Poll the next message from the processing queue of this connection.
+     *
+     * Returns std::nullopt if the processing queue is empty, or a pair
+     * consisting of the message and a bool that indicates if the processing
+     * queue has more entries. */
+    std::optional<std::pair<CNetMessage, bool>> PollMessage(size_t recv_flood_size)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_vProcessMsg);
+
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:

@@ -2812,6 +2812,20 @@ void CNode::MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
     fPauseRecv = nProcessQueueSize > recv_flood_size;
 }
 
+std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage(size_t recv_flood_size)
+{
+    LOCK(cs_vProcessMsg);
+    if (vProcessMsg.empty()) return std::nullopt;
+
+    std::list<CNetMessage> msgs;
+    // Just take one message
+    msgs.splice(msgs.begin(), vProcessMsg, vProcessMsg.begin());
+    nProcessQueueSize -= msgs.front().m_raw_message_size;
+    fPauseRecv = nProcessQueueSize > recv_flood_size;
+
+    return std::make_pair(std::move(msgs.front()), !vProcessMsg.empty());
+}
+
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
