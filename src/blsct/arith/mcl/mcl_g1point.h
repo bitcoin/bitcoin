@@ -56,10 +56,18 @@ public:
     size_t GetSerializeSize() const;
 
     template <typename Stream>
-    void Serialize(Stream& s) const;
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, GetVch());
+    };
 
     template <typename Stream>
-    void Unserialize(Stream& s);
+    void Unserialize(Stream& s)
+    {
+        std::vector<uint8_t> vch;
+        ::Unserialize(s, vch);
+        SetVch(vch);
+    };
 
     using UnderlyingType = mclBnG1;
     UnderlyingType m_p;

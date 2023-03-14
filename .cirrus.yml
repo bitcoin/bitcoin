@@ -89,8 +89,8 @@ task:
 task:
   name: "Win64 native [vs2022]"
   windows_container:
-    cpu: 6
-    memory: 12G
+    cpu: 8
+    memory: 16G
     image: cirrusci/windowsservercore:visualstudio2022
   timeout_in: 120m
   env:
@@ -142,7 +142,7 @@ task:
     - cd %CIRRUS_WORKING_DIR%
     - ccache --zero-stats --max-size=%CCACHE_SIZE%
     - python build_msvc\msvc-autogen.py
-    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -verbosity:minimal -noLogo
     - ccache --show-stats
   check_script:
     - build_msvc\x64\Release\test_navcoin.exe -l test_suite
@@ -244,8 +244,8 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
-    cpu: 4  # Increase CPU and memory to avoid timeout
-    memory: 16G
+    cpu: 8  # Increase CPU and memory to avoid timeout
+    memory: 32G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
@@ -316,4 +316,3 @@ task:
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_android.sh"
-

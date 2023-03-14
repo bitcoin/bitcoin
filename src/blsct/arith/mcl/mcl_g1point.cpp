@@ -76,8 +76,8 @@ std::vector<MclG1Point> MclG1Point::operator*(const std::vector<MclScalar>& ss) 
     std::vector<MclG1Point> ret;
 
     MclG1Point p = *this;
-    for(size_t i = 0; i < ss.size(); ++i) {
-       MclG1Point q = p * ss[i];
+    for (size_t i = 0; i < ss.size(); ++i) {
+        MclG1Point q = p * ss[i];
         ret.push_back(q);
     }
     return ret;
@@ -172,7 +172,8 @@ std::vector<uint8_t> MclG1Point::GetVch() const
 {
     std::vector<uint8_t> b(SERIALIZATION_SIZE);
     if (mclBnG1_serialize(&b[0], SERIALIZATION_SIZE, &m_p) == 0) {
-        throw std::runtime_error("MclG1Point::GetVch(): mclBnG1_serialize failed");
+        MclG1Point ret;
+        return ret.GetVch();
     }
     return b;
 }
@@ -180,7 +181,9 @@ std::vector<uint8_t> MclG1Point::GetVch() const
 void MclG1Point::SetVch(const std::vector<uint8_t>& b)
 {
     if (mclBnG1_deserialize(&m_p, &b[0], b.size()) == 0) {
-        throw std::runtime_error("MclG1Point::SetVch(): mclBnG1_deserialize failed");
+        mclBnG1 x;
+        mclBnG1_clear(&x);
+        m_p = x;
     }
 }
 
@@ -200,26 +203,9 @@ size_t MclG1Point::GetSerializeSize() const
 
 MclScalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
-    CHashWriter hasher(0,0);
+    CHashWriter hasher(0, 0);
     hasher << *this;
     hasher << salt;
     MclScalar hash(hasher.GetHash());
     return hash;
 }
-
-template <typename Stream>
-void MclG1Point::Serialize(Stream& s) const
-{
-    ::Serialize(s, GetVch());
-}
-template void MclG1Point::Serialize(CDataStream& s) const;
-template void MclG1Point::Serialize(CHashWriter& s) const;
-
-template <typename Stream>
-void MclG1Point::Unserialize(Stream& s)
-{
-    std::vector<uint8_t> vch;
-    ::Unserialize(s, vch);
-    SetVch(vch);
-}
-template void MclG1Point::Unserialize(CDataStream& s);

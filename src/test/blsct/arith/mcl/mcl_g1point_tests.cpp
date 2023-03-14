@@ -20,6 +20,10 @@ BOOST_AUTO_TEST_CASE(test_constructors)
     {
         MclG1Point p;
         BOOST_CHECK(p.IsUnity() == true);
+
+        MclG1Point p2;
+        BOOST_CHECK(p.GetVch() == p2.GetVch());
+        BOOST_CHECK(p == p2);
     }
 
     // std::vector<uint8_t>
@@ -78,9 +82,7 @@ BOOST_AUTO_TEST_CASE(test_point_mul)
 
 BOOST_AUTO_TEST_CASE(test_points_mul)
 {
-    auto scalars = std::vector<MclScalar>({
-        MclScalar(1), MclScalar(2)
-    });
+    auto scalars = std::vector<MclScalar>({MclScalar(1), MclScalar(2)});
     auto g = MclG1Point::GetBasePoint();
     auto p1 = g;
     auto p2 = g + g;
@@ -203,7 +205,7 @@ BOOST_AUTO_TEST_CASE(test_rand)
         auto y = MclG1Point::Rand();
         if (x == y) ++num_dups;
     }
-    auto dupRatio = num_dups / (float) num_tries;
+    auto dupRatio = num_dups / (float)num_tries;
     BOOST_CHECK(dupRatio < 0.001);
 }
 
@@ -269,11 +271,11 @@ BOOST_AUTO_TEST_CASE(test_operator_mul_g1point_by_scalars)
 {
     MclScalar one(1);
     MclScalar two(2);
-    std::vector<MclScalar> one_two { one, two };
+    std::vector<MclScalar> one_two{one, two};
     auto g = MclG1Point::GetBasePoint();
 
     auto act = g * one_two;
-    std::vector<MclG1Point> exp { g, g + g };
+    std::vector<MclG1Point> exp{g, g + g};
 
     BOOST_CHECK(act == exp);
 }

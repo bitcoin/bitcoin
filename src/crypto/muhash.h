@@ -22,7 +22,7 @@ private:
     Num3072 GetInverse() const;
 
 public:
-    static constexpr size_t BYTE_SIZE = 384;
+    static constexpr size_t SIZE_BYTE = 384;
 
 #ifdef __SIZEOF_INT128__
     typedef unsigned __int128 double_limb_t;
@@ -49,10 +49,10 @@ public:
     void Divide(const Num3072& a);
     void SetToOne();
     void Square();
-    void ToBytes(unsigned char (&out)[BYTE_SIZE]);
+    void ToBytes(unsigned char (&out)[SIZE_BYTE]);
 
     Num3072() { this->SetToOne(); };
-    Num3072(const unsigned char (&data)[BYTE_SIZE]);
+    Num3072(const unsigned char (&data)[SIZE_BYTE]);
 
     SERIALIZE_METHODS(Num3072, obj)
     {

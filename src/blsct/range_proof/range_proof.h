@@ -6,10 +6,14 @@
 #define NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_H
 
 #include <blsct/arith/elements.h>
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/arith/mcl/mcl_g1point.h>
+#include <blsct/arith/mcl/mcl_scalar.h>
+#include <span.h>
+#include <streams.h>
 
 template <typename T>
-struct RangeProof
-{
+struct RangeProof {
     using Point = typename T::Point;
     using Scalar = typename T::Scalar;
     using Points = Elements<Point>;
@@ -26,9 +30,15 @@ struct RangeProof
     Points Rs;
 
     // proof results
-    Scalar t_hat;   // inner product of l and r
-    Scalar a;       // result of inner product argument
-    Scalar b;       // result of inner product argument
+    Scalar t_hat; // inner product of l and r
+    Scalar a;     // result of inner product argument
+    Scalar b;     // result of inner product argument
 };
+
+template <typename T>
+std::vector<uint8_t> SerializeRangeProof(const RangeProof<T>& proof);
+
+template <typename T>
+RangeProof<T> UnserializeRangeProof(const std::vector<unsigned char>& vecIn);
 
 #endif // NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_H

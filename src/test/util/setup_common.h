@@ -86,6 +86,7 @@ struct BasicTestingSetup {
 
     const fs::path m_path_root;
     ArgsManager m_args;
+
 private:
     volatile MclInit m_for_side_effect_only;
 };
@@ -190,7 +191,7 @@ struct TestChain100Setup : public TestingSetup {
     std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
-    CKey coinbaseKey; // private/public key needed to spend coinbase transactions
+    CKey coinbaseKey;                             // private/public key needed to spend coinbase transactions
 };
 
 /**

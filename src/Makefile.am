@@ -424,6 +424,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/lazy_g1point.cpp \
   blsct/range_proof/range_proof_logic.cpp \
+  blsct/range_proof/range_proof.cpp \
   blsct/range_proof/range_proof_with_transcript.cpp \
   blsct/signature.cpp \
   chain.cpp \
@@ -666,6 +667,11 @@ libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
   arith_uint256.h \
+  blsct/arith/elements.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/range_proof/range_proof.cpp \
+  blsct/signature.cpp \
   consensus/amount.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
@@ -690,6 +696,7 @@ libbitcoin_consensus_a_SOURCES = \
   script/script_error.h \
   serialize.h \
   span.h \
+  streams.h \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
@@ -704,6 +711,7 @@ libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  blsct/arith/elements.cpp \
   chainparams.cpp \
   coins.cpp \
   common/bloom.cpp \
@@ -751,6 +759,7 @@ endif
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
+  blsct/arith/elements.cpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -861,7 +870,7 @@ navcoin_cli_LDADD += $(EVENT_LIBS)
 
 # navcoin-tx binary #
 navcoin_tx_SOURCES = bitcoin-tx.cpp
-navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 navcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 navcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
@@ -907,7 +916,7 @@ endif
 
 # navcoin-util binary #
 navcoin_util_SOURCES = bitcoin-util.cpp
-navcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 navcoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 navcoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
@@ -969,6 +978,7 @@ libbitcoinkernel_la_SOURCES = \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
+  blsct/range_proof/range_proof.cpp \
   blsct/signature.cpp \
   chain.cpp \
   chainparamsbase.cpp \
@@ -1064,7 +1074,7 @@ libbitcoinconsensus_la_LIBADD = \
   $(LIBBLS) \
   $(LIBMCL) \
   $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL
 libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif

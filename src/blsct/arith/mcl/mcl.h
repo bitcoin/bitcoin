@@ -13,13 +13,12 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 
 /**
- * Define a variable of type `AtomicMclInit` at the beginning
+ * Define a variable of type `MclInit` at the beginning
  * of an execution path in order to use this set of arith classes
  */
-struct Mcl
-{
-  using Scalar = MclScalar;
-  using Point = MclG1Point;
+struct Mcl {
+    using Scalar = MclScalar;
+    using Point = MclG1Point;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_H

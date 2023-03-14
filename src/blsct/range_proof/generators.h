@@ -5,12 +5,11 @@
 #ifndef NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H
 #define NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H
 
-#include <boost/thread/lock_guard.hpp>
-#include <boost/thread/mutex.hpp>
-
 #include <blsct/arith/elements.h>
 #include <blsct/range_proof/config.h>
 #include <ctokens/tokenid.h>
+
+#include <mutex>
 
 template <typename T>
 struct Generators {
@@ -18,8 +17,7 @@ struct Generators {
     using Points = Elements<Point>;
 
 public:
-    Generators(Point& H, Point& G, Points& Gi, Points& Hi):
-        H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
+    Generators(Point& H, Point& G, Points& Gi, Points& Hi) : H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
     Points GetGiSubset(const size_t& size) const;
     Points GetHiSubset(const size_t& size) const;
 
@@ -70,8 +68,7 @@ private:
     Point DeriveGenerator(
         const Point& p,
         const size_t index,
-        const TokenId& token_id
-    );
+        const TokenId& token_id);
 
     // G generators are cached
     inline static std::map<const TokenId, const Point> m_G_cache;
@@ -81,7 +78,7 @@ private:
     inline static std::optional<Points> m_Gi;
     inline static std::optional<Points> m_Hi;
 
-    inline static boost::mutex m_init_mutex;
+    inline static std::mutex m_init_mutex;
     inline static bool m_is_initialized = false;
 };
 

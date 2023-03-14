@@ -32,9 +32,7 @@ EXPECTED_BOOST_INCLUDES = ["boost/date_time/posix_time/posix_time.hpp",
                            "boost/signals2/optional_last_value.hpp",
                            "boost/signals2/signal.hpp",
                            "boost/test/included/unit_test.hpp",
-                           "boost/test/unit_test.hpp",
-                           "boost/thread/lock_guard.hpp",
-                           "boost/thread/mutex.hpp"]
+                           "boost/test/unit_test.hpp"]
 
 
 def get_toplevel():

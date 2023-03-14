@@ -10,6 +10,7 @@
 #include <streams.h>
 #include <tinyformat.h>
 
+
 namespace blsct {
 
 Signature::Signature()
@@ -29,35 +30,15 @@ Signature Signature::Aggregate(const std::vector<blsct::Signature>& sigs)
     return aggr_sig;
 }
 
-size_t Signature::GetSerializeSize(int nVersion) const
-{
-    return ::GetSerializeSize(GetVch(), nVersion);
-}
-
-template <typename Stream>
-void Signature::Serialize(Stream& s) const
-{
-    ::Serialize(s, GetVch());
-}
-template void Signature::Serialize(CDataStream& s) const;
-
-template <typename Stream>
-void Signature::Unserialize(Stream& s)
-{
-    std::vector<uint8_t> vch;
-    ::Unserialize(s, vch);
-    SetVch(vch);
-}
-template void Signature::Unserialize(CDataStream& s);
-
 std::vector<uint8_t> Signature::GetVch() const
 {
     size_t ser_size = mclBn_getFpByteSize() * 2;
     std::vector<uint8_t> buf(ser_size);
     size_t n = mclBnG2_serialize(&buf[0], ser_size, &m_data.v);
     if (n != ser_size) {
-        throw std::runtime_error(strprintf(
-            "%s: Expected serialization size to be %ld, but got %ld", __func__, ser_size, n));
+        blsct::Signature ret;
+        mclBnG2_clear(&ret.m_data.v);
+        return ret.GetVch();
     }
     return buf;
 }
@@ -66,11 +47,16 @@ void Signature::SetVch(const std::vector<uint8_t>& buf)
 {
     size_t ser_size = mclBn_getFpByteSize() * 2;
     if (buf.size() != ser_size) {
-        throw std::runtime_error(strprintf("%s: Deserialization failed", __func__));
+        return;
     }
     if (mclBnG2_deserialize(&m_data.v, &buf[0], ser_size) == 0) {
-        throw std::runtime_error(strprintf("%s: Deserialization failed", __func__));
+        mclBnG2_clear(&m_data.v);
     }
 }
 
-}  // namespace blsct
+bool Signature::operator==(const Signature& b) const
+{
+    return mclBnG2_isEqual(&m_data.v, &b.m_data.v);
+}
+
+} // namespace blsct

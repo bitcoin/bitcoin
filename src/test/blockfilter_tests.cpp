@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
     BOOST_CHECK_EQUAL(params.m_M, 1U);
 }
 
-BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
+BOOST_FIXTURE_TEST_CASE(blockfilter_basic_test, BasicTestingSetup)
 {
     CScript included_scripts[5], excluded_scripts[4];
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     BOOST_CHECK(default_ctor_block_filter_1.GetEncodedFilter() == default_ctor_block_filter_2.GetEncodedFilter());
 }
 
-BOOST_AUTO_TEST_CASE(blockfilters_json_test)
+BOOST_FIXTURE_TEST_CASE(blockfilters_json_test, BasicTestingSetup)
 {
     UniValue json;
     std::string json_data(json_tests::blockfilters,
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         }
 
         unsigned int pos = 0;
-        /*int block_height =*/ test[pos++].getInt<int>();
+        /*int block_height =*/test[pos++].getInt<int>();
         uint256 block_hash;
         BOOST_CHECK(ParseHashStr(test[pos++].get_str(), block_hash));
 

@@ -40,9 +40,9 @@ Below is one way of developing a new implementation of `Generic Arith Classes`:
 
 3. Obtain `Scalar` and `Point` classes from the type parameter in the user class. If `Scalars` and/or `Points` class(es) are needed, use `Elements` class which is a helper class to generate a vector class of `Scalar` or `Point` with commonly used functions.
 
-   Below is an example taken from [range_proof_logic.h](../range_proof/range_proof_logic.h):
+Below is an example taken from [range_proof_logic.h](../range_proof/range_proof_logic.h):
 
-    ```c++
+```c++
     template <typename T>
     RangeProofLogic<T>::RangeProofLogic()
     {
@@ -51,13 +51,13 @@ Below is one way of developing a new implementation of `Generic Arith Classes`:
         using Point = typename T::Point;
         using Scalars = Elements<Scalar>;
         ...
-    ```
+```
 
 4. Implement logic in the user class using the `Generic Arith Classes` implementation classes adding functions to them as needed.
 
 ## Example implementation and user class
 ### Implementation
-- [Mcl](../arith/mcl/mcl.h) -- the top-level class of `Generic Arith Classes` implementation 
+- [Mcl](../arith/mcl/mcl.h) -- the top-level class of `Generic Arith Classes` implementation
 - [MclScalar](../arith/mcl/mcl_scalar.h) -- `Scalar` implementation of `Mcl`
 - [MclG1Point](../arith/mcl/mcl_g1point.h) -- `Point` implementation of `Mcl`
 

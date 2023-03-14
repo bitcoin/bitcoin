@@ -9,6 +9,8 @@
 #ifndef NAVCOIN_BLSCT_ARITH_ELEMENTS_H
 #define NAVCOIN_BLSCT_ARITH_ELEMENTS_H
 
+#include <serialize.h>
+
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
@@ -27,6 +29,7 @@ public:
     T operator[](const size_t& index) const;
     size_t Size() const;
     void Add(const T& x);
+    void Clear();
     bool Empty() const;
 
     void ConfirmIndexInsideRange(const uint32_t& index) const;
@@ -85,6 +88,31 @@ public:
      * Negate each contained elements
      */
     Elements<T> Negate() const;
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::WriteCompactSize(s, m_vec.size());
+        for (auto& it : m_vec) {
+            ::Serialize(s, it.GetVch());
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        size_t v_size;
+        v_size = ::ReadCompactSize(s);
+        m_vec.resize(v_size);
+        Clear();
+        for (size_t i = 0; i < v_size; i++) {
+            T n;
+            std::vector<uint8_t> v;
+            ::Unserialize(s, v);
+            n.SetVch(v);
+            Add(n);
+        }
+    }
 
     std::vector<T> m_vec;
 };

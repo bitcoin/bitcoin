@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CORE_IO_H
 #define BITCOIN_CORE_IO_H
 
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/range_proof/range_proof.h>
 #include <consensus/amount.h>
 
 #include <string>
@@ -24,9 +26,9 @@ class CTxUndo;
  * Verbose level for block's transaction
  */
 enum class TxVerbosity {
-    SHOW_TXID,                //!< Only TXID for each block's transaction
-    SHOW_DETAILS,             //!< Include TXID, inputs, outputs, and other common block's transaction information
-    SHOW_DETAILS_AND_PREVOUT  //!< The same as previous option with information about prevouts if available
+    SHOW_TXID,               //!< Only TXID for each block's transaction
+    SHOW_DETAILS,            //!< Include TXID, inputs, outputs, and other common block's transaction information
+    SHOW_DETAILS_AND_PREVOUT //!< The same as previous option with information about prevouts if available
 };
 
 // core_read.cpp
@@ -53,6 +55,7 @@ UniValue ValueFromAmount(const CAmount amount);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 std::string SighashToStr(unsigned char sighash_type);
+void RangeProofToUniv(const RangeProof<Mcl>& rp, UniValue& entry, const bool& extended = false);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex = true, bool include_address = false, const SigningProvider* provider = nullptr);
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS);
 
