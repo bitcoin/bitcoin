@@ -615,7 +615,7 @@ private:
 
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
-    RecursiveMutex cs_vProcessMsg;
+    Mutex cs_vProcessMsg;
     std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
 
