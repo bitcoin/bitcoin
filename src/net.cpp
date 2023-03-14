@@ -1328,18 +1328,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                 }
                 RecordBytesRecv(nBytes);
                 if (notify) {
-                    size_t nSizeAdded = 0;
-                    for (const auto& msg : pnode->vRecvMsg) {
-                        // vRecvMsg contains only completed CNetMessage
-                        // the single possible partially deserialized message are held by TransportDeserializer
-                        nSizeAdded += msg.m_raw_message_size;
-                    }
-                    {
-                        LOCK(pnode->cs_vProcessMsg);
-                        pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg);
-                        pnode->nProcessQueueSize += nSizeAdded;
-                        pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
-                    }
+                    pnode->MarkReceivedMsgsForProcessing(nReceiveFloodSize);
                     WakeMessageHandler();
                 }
             }
@@ -2804,6 +2793,23 @@ CNode::CNode(NodeId idIn,
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
+}
+
+void CNode::MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
+{
+    AssertLockNotHeld(cs_vProcessMsg);
+
+    size_t nSizeAdded = 0;
+    for (const auto& msg : vRecvMsg) {
+        // vRecvMsg contains only completed CNetMessage
+        // the single possible partially deserialized message are held by TransportDeserializer
+        nSizeAdded += msg.m_raw_message_size;
+    }
+
+    LOCK(cs_vProcessMsg);
+    vProcessMsg.splice(vProcessMsg.end(), vRecvMsg);
+    nProcessQueueSize += nSizeAdded;
+    fPauseRecv = nProcessQueueSize > recv_flood_size;
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)

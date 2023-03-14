@@ -422,6 +422,10 @@ public:
         return m_conn_type;
     }
 
+    /** Move all messages from the received queue to the processing queue. */
+    void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_vProcessMsg);
+
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
