@@ -37,6 +37,8 @@ static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{1000};
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 /** Default for -permitbaremultisig */
 static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{true};
+/** Default for -ephemeralanchors */
+static constexpr bool DEFAULT_PERMIT_EA{true};
 /** The maximum number of witness stack items in a standard P2WSH script */
 static constexpr unsigned int MAX_STANDARD_P2WSH_STACK_ITEMS{100};
 /** The maximum size in bytes of each witness stack item in a standard P2WSH script */
@@ -117,7 +119,7 @@ static constexpr decltype(CTransaction::nVersion) TX_MAX_STANDARD_VERSION{3};
 * Check for standard transaction types
 * @return True if all outputs (scriptPubKeys) use only standard transaction forms
 */
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, bool permit_ephemeral_anchors, std::string& reason);
 /**
 * Check for standard transaction types
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending

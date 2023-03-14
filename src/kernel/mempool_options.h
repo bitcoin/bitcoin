@@ -53,6 +53,7 @@ struct MemPoolOptions {
      */
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
+    bool permit_ephemeral_anchors{DEFAULT_PERMIT_EA};
     bool require_standard{true};
     bool full_rbf{DEFAULT_MEMPOOL_FULL_RBF};
     MemPoolLimits limits{};

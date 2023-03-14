@@ -20,7 +20,7 @@
 // Helpers:
 static bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
-    return IsStandardTx(tx, std::nullopt, DEFAULT_PERMIT_BAREMULTISIG, CFeeRate{DUST_RELAY_TX_FEE}, reason);
+    return IsStandardTx(tx, std::nullopt, DEFAULT_PERMIT_BAREMULTISIG, CFeeRate{DUST_RELAY_TX_FEE}, DEFAULT_PERMIT_EA, reason);
 }
 
 static std::vector<unsigned char> Serialize(const CScript& s)
