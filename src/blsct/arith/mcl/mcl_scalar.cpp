@@ -287,9 +287,7 @@ std::vector<uint8_t> MclScalar::GetVch(const bool trim_preceeding_zeros) const
     if (mclBnFr_serialize(&vec[0], seri_size, &m_fr) == 0) {
         // We avoid throwing an exception as the fuzzer would crash when injecting random data
         // through a transaction in one of the mcl fields.
-        
         // The default value is the same of the constructor (0)
-        
         MclScalar ret;
         return ret.GetVch();
     }
