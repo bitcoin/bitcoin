@@ -168,8 +168,10 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
     Consensus::LLMQType llmqType = utils::GetInstantSendLLMQType(qman, blockIndex);
 
     // Since the returned quorums are in reversed order, the most recent one is at index 0
-    const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
-    const int cycleLength = llmqParams.dkgInterval;
+    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    assert(llmq_params_opt.has_value());
+
+    const int cycleLength = llmq_params_opt->dkgInterval;
     constexpr int workDiff = 8;
 
     const CBlockIndex* hBlockIndex = blockIndex->GetAncestor(blockIndex->nHeight - (blockIndex->nHeight % cycleLength));
@@ -307,7 +309,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         }
         response.lastCommitmentPerIndex.push_back(*qc);
 
-        int quorumCycleStartHeight = obj.second->nHeight - (obj.second->nHeight % llmqParams.dkgInterval);
+        int quorumCycleStartHeight = obj.second->nHeight - (obj.second->nHeight % llmq_params_opt->dkgInterval);
         snapshotHeightsNeeded.insert(quorumCycleStartHeight - cycleLength);
         snapshotHeightsNeeded.insert(quorumCycleStartHeight - 2 * cycleLength);
         snapshotHeightsNeeded.insert(quorumCycleStartHeight - 3 * cycleLength);
