@@ -211,39 +211,39 @@ static std::vector<RPCArg> CreateTxDoc()
 static RPCHelpMan getrawtransaction()
 {
     return RPCHelpMan{
-        "getrawtransaction",
+                "getrawtransaction",
 
-        "By default, this call only returns a transaction if it is in the mempool. If -txindex is enabled\n"
-        "and no blockhash argument is passed, it will return the transaction if it is in the mempool or any block.\n"
-        "If a blockhash argument is passed, it will return the transaction if\n"
-        "the specified block is available and the transaction is in that block.\n\n"
-        "Hint: Use gettransaction for wallet transactions.\n\n"
+                "By default, this call only returns a transaction if it is in the mempool. If -txindex is enabled\n"
+                "and no blockhash argument is passed, it will return the transaction if it is in the mempool or any block.\n"
+                "If a blockhash argument is passed, it will return the transaction if\n"
+                "the specified block is available and the transaction is in that block.\n\n"
+                "Hint: Use gettransaction for wallet transactions.\n\n"
 
-        "If verbosity is 0 or omitted, returns the serialized transaction as a hex-encoded string.\n"
-        "If verbosity is 1, returns a JSON Object with information about the transaction.\n"
-        "If verbosity is 2, returns a JSON Object with information about the transaction, including fee and prevout information.",
-        {
-            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
-            {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for hex-encoded data, 1 for a JSON object, and 2 for JSON object with fee and prevout",
-             RPCArgOptions{.skip_type_check = true}},
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The block in which to look for the transaction"},
-        },
-        {
-            RPCResult{"if verbosity is not set or set to 0",
-                      RPCResult::Type::STR, "data", "The serialized transaction as a hex-encoded string for 'txid'"},
-            RPCResult{
-                "if verbosity is set to 1",
-                RPCResult::Type::OBJ,
-                "",
-                "",
-                Cat<std::vector<RPCResult>>(
-                    {
-                        {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
-                        {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
-                        {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
-                        {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
-                        {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
-                        {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
+                "If verbosity is 0 or omitted, returns the serialized transaction as a hex-encoded string.\n"
+                "If verbosity is 1, returns a JSON Object with information about the transaction.\n"
+                "If verbosity is 2, returns a JSON Object with information about the transaction, including fee and prevout information.",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for hex-encoded data, 1 for a JSON object, and 2 for JSON object with fee and prevout",
+                     RPCArgOptions{.skip_type_check = true}},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The block in which to look for the transaction"},
+                },
+                {
+                    RPCResult{"if verbosity is not set or set to 0",
+                         RPCResult::Type::STR, "data", "The serialized transaction as a hex-encoded string for 'txid'"
+                     },
+                     RPCResult{"if verbosity is set to 1",
+                         RPCResult::Type::OBJ, "", "",
+                         Cat<std::vector<RPCResult>>(
+                         {
+                             {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
+                             {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
+                             {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
+                             {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
+                             {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
+                             {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
+                         },
+                         DecodeTxDoc(/*txid_field_doc=*/"The transaction id (same as provided)")),
                     },
                     RPCResult{"for verbosity = 2",
                         RPCResult::Type::OBJ, "", "",
@@ -279,98 +279,98 @@ static RPCHelpMan getrawtransaction()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
 
-            uint256 hash = ParseHashV(request.params[0], "parameter 1");
-            const CBlockIndex* blockindex = nullptr;
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    const CBlockIndex* blockindex = nullptr;
 
-            if (hash == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
-                // Special exception for the genesis block coinbase transaction
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
-            }
+    if (hash == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
+        // Special exception for the genesis block coinbase transaction
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
+    }
 
-            // Accept either a bool (true) or a num (>=0) to indicate verbosity.
-            int verbosity{0};
-            if (!request.params[1].isNull()) {
-                if (request.params[1].isBool()) {
-                    verbosity = request.params[1].get_bool();
-                } else {
-                    verbosity = request.params[1].getInt<int>();
-                }
-            }
+    // Accept either a bool (true) or a num (>=0) to indicate verbosity.
+    int verbosity{0};
+    if (!request.params[1].isNull()) {
+        if (request.params[1].isBool()) {
+            verbosity = request.params[1].get_bool();
+        } else {
+            verbosity = request.params[1].getInt<int>();
+        }
+    }
 
-            if (!request.params[2].isNull()) {
-                LOCK(cs_main);
+    if (!request.params[2].isNull()) {
+        LOCK(cs_main);
 
-                uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
-                blockindex = chainman.m_blockman.LookupBlockIndex(blockhash);
-                if (!blockindex) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
-                }
-            }
+        uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
+        blockindex = chainman.m_blockman.LookupBlockIndex(blockhash);
+        if (!blockindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+        }
+    }
 
-            bool f_txindex_ready = false;
-            if (g_txindex && !blockindex) {
-                f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
-            }
+    bool f_txindex_ready = false;
+    if (g_txindex && !blockindex) {
+        f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
+    }
 
-            uint256 hash_block;
-            const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), hash, chainman.GetConsensus(), hash_block);
-            if (!tx) {
-                std::string errmsg;
-                if (blockindex) {
-                    const bool block_has_data = WITH_LOCK(::cs_main, return blockindex->nStatus & BLOCK_HAVE_DATA);
-                    if (!block_has_data) {
-                        throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
-                    }
-                    errmsg = "No such transaction found in the provided block";
-                } else if (!g_txindex) {
-                    errmsg = "No such mempool transaction. Use -txindex or provide a block hash to enable blockchain transaction queries";
-                } else if (!f_txindex_ready) {
-                    errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
-                } else {
-                    errmsg = "No such mempool or blockchain transaction";
-                }
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+    uint256 hash_block;
+    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), hash, chainman.GetConsensus(), hash_block);
+    if (!tx) {
+        std::string errmsg;
+        if (blockindex) {
+            const bool block_has_data = WITH_LOCK(::cs_main, return blockindex->nStatus & BLOCK_HAVE_DATA);
+            if (!block_has_data) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
             }
+            errmsg = "No such transaction found in the provided block";
+        } else if (!g_txindex) {
+            errmsg = "No such mempool transaction. Use -txindex or provide a block hash to enable blockchain transaction queries";
+        } else if (!f_txindex_ready) {
+            errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
+        } else {
+            errmsg = "No such mempool or blockchain transaction";
+        }
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+    }
 
-            if (verbosity <= 0) {
-                return EncodeHexTx(*tx, RPCSerializationFlags());
-            }
+    if (verbosity <= 0) {
+        return EncodeHexTx(*tx, RPCSerializationFlags());
+    }
 
-            UniValue result(UniValue::VOBJ);
-            if (blockindex) {
-                LOCK(cs_main);
-                result.pushKV("in_active_chain", chainman.ActiveChain().Contains(blockindex));
-            }
-            // If request is verbosity >= 1 but no blockhash was given, then look up the blockindex
-            if (request.params[2].isNull()) {
-                LOCK(cs_main);
-                blockindex = chainman.m_blockman.LookupBlockIndex(hash_block);
-            }
-            if (verbosity == 1) {
-                TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
-                return result;
-            }
+    UniValue result(UniValue::VOBJ);
+    if (blockindex) {
+        LOCK(cs_main);
+        result.pushKV("in_active_chain", chainman.ActiveChain().Contains(blockindex));
+    }
+    // If request is verbosity >= 1 but no blockhash was given, then look up the blockindex
+    if (request.params[2].isNull()) {
+        LOCK(cs_main);
+        blockindex = chainman.m_blockman.LookupBlockIndex(hash_block);
+    }
+    if (verbosity == 1) {
+        TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
+        return result;
+    }
 
-            CBlockUndo blockUndo;
-            CBlock block;
-            const bool is_block_pruned{WITH_LOCK(cs_main, return chainman.m_blockman.IsBlockPruned(blockindex))};
+    CBlockUndo blockUndo;
+    CBlock block;
+    const bool is_block_pruned{WITH_LOCK(cs_main, return chainman.m_blockman.IsBlockPruned(blockindex))};
 
-            if (tx->IsCoinBase() ||
-                !blockindex || is_block_pruned ||
-                !(UndoReadFromDisk(blockUndo, blockindex) && ReadBlockFromDisk(block, blockindex, Params().GetConsensus()))) {
-                TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
-                return result;
-            }
+    if (tx->IsCoinBase() ||
+        !blockindex || is_block_pruned ||
+        !(UndoReadFromDisk(blockUndo, blockindex) && ReadBlockFromDisk(block, blockindex, Params().GetConsensus()))) {
+        TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
+        return result;
+    }
 
-            CTxUndo* undoTX{nullptr};
-            auto it = std::find_if(block.vtx.begin(), block.vtx.end(), [tx](CTransactionRef t) { return *t == *tx; });
-            if (it != block.vtx.end()) {
-                // -1 as blockundo does not have coinbase tx
-                undoTX = &blockUndo.vtxundo.at(it - block.vtx.begin() - 1);
-            }
-            TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate(), undoTX, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
-            return result;
-        },
+    CTxUndo* undoTX {nullptr};
+    auto it = std::find_if(block.vtx.begin(), block.vtx.end(), [tx](CTransactionRef t){ return *t == *tx; });
+    if (it != block.vtx.end()) {
+        // -1 as blockundo does not have coinbase tx
+        undoTX = &blockUndo.vtxundo.at(it - block.vtx.begin() - 1);
+    }
+    TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate(), undoTX, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+    return result;
+},
     };
 }
 
