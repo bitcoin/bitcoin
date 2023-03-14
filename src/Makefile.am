@@ -329,6 +329,7 @@ BITCOIN_CORE_H = \
   util/check.h \
   util/epochguard.h \
   util/error.h \
+  util/exception.h \
   util/fastrange.h \
   util/fees.h \
   util/getuniquepath.h \
@@ -774,6 +775,7 @@ libbitcoin_util_a_SOURCES = \
   util/bytevectorhash.cpp \
   util/check.cpp \
   util/error.cpp \
+  util/exception.cpp \
   util/fees.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \
@@ -1036,6 +1038,7 @@ libbitcoinkernel_la_SOURCES = \
   uint256.cpp \
   util/bytevectorhash.cpp \
   util/check.cpp \
+  util/exception.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \
   util/moneystr.cpp \

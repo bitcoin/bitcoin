@@ -6,11 +6,11 @@
 #include <txdb.h>
 
 #include <chain.h>
+#include <logging.h>
 #include <pow.h>
 #include <random.h>
 #include <shutdown.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <util/vector.h>
 

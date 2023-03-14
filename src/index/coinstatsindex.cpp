@@ -7,6 +7,7 @@
 #include <crypto/muhash.h>
 #include <index/coinstatsindex.h>
 #include <kernel/coinstats.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <serialize.h>
 #include <txdb.h>

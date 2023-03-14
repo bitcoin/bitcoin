@@ -86,14 +86,14 @@ class NodeImpl : public Node
 {
 public:
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
-    void initLogging() override { InitLogging(*Assert(m_context->args)); }
-    void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
+    void initLogging() override { InitLogging(args()); }
+    void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        if (!AppInitBasicSetup(gArgs)) return false;
-        if (!AppInitParameterInteraction(gArgs, /*use_syscall_sandbox=*/false)) return false;
+        if (!AppInitBasicSetup(args())) return false;
+        if (!AppInitParameterInteraction(args(), /*use_syscall_sandbox=*/false)) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
@@ -116,7 +116,7 @@ public:
     {
         StartShutdown();
         // Stop RPC for clean shutdown if any of waitfor* commands is executed.
-        if (gArgs.GetBoolArg("-server", false)) {
+        if (args().GetBoolArg("-server", false)) {
             InterruptRPC();
             StopRPC();
         }
@@ -125,28 +125,28 @@ public:
     bool isSettingIgnored(const std::string& name) override
     {
         bool ignored = false;
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (auto* options = util::FindKey(settings.command_line_options, name)) {
                 ignored = !options->empty();
             }
         });
         return ignored;
     }
-    util::SettingsValue getPersistentSetting(const std::string& name) override { return gArgs.GetPersistentSetting(name); }
+    util::SettingsValue getPersistentSetting(const std::string& name) override { return args().GetPersistentSetting(name); }
     void updateRwSetting(const std::string& name, const util::SettingsValue& value) override
     {
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
                 settings.rw_settings[name] = value;
             }
         });
-        gArgs.WriteSettingsFile();
+        args().WriteSettingsFile();
     }
     void forceSetting(const std::string& name, const util::SettingsValue& value) override
     {
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
                 settings.forced_settings.erase(name);
             } else {
@@ -156,11 +156,11 @@ public:
     }
     void resetSettings() override
     {
-        gArgs.WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
+        args().LockSettings([&](util::Settings& settings) {
             settings.rw_settings.clear();
         });
-        gArgs.WriteSettingsFile();
+        args().WriteSettingsFile();
     }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
     bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
@@ -237,7 +237,7 @@ public:
     {
 #ifdef ENABLE_EXTERNAL_SIGNER
         std::vector<ExternalSigner> signers = {};
-        const std::string command = gArgs.GetArg("-signer", "");
+        const std::string command = args().GetArg("-signer", "");
         if (command == "") return {};
         ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
         std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
@@ -388,6 +388,7 @@ public:
     {
         m_context = context;
     }
+    ArgsManager& args() { return *Assert(Assert(m_context)->args); }
     ChainstateManager& chainman() { return *Assert(m_context->chainman); }
     NodeContext* m_context{nullptr};
 };
@@ -744,16 +745,16 @@ public:
     int rpcSerializationFlags() override { return RPCSerializationFlags(); }
     util::SettingsValue getSetting(const std::string& name) override
     {
-        return gArgs.GetSetting(name);
+        return args().GetSetting(name);
     }
     std::vector<util::SettingsValue> getSettingsList(const std::string& name) override
     {
-        return gArgs.GetSettingsList(name);
+        return args().GetSettingsList(name);
     }
     util::SettingsValue getRwSetting(const std::string& name) override
     {
         util::SettingsValue result;
-        gArgs.LockSettings([&](const util::Settings& settings) {
+        args().LockSettings([&](const util::Settings& settings) {
             if (const util::SettingsValue* value = util::FindKey(settings.rw_settings, name)) {
                 result = *value;
             }
@@ -762,14 +763,14 @@ public:
     }
     bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write) override
     {
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
                 settings.rw_settings[name] = value;
             }
         });
-        return !write || gArgs.WriteSettingsFile();
+        return !write || args().WriteSettingsFile();
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {
@@ -785,6 +786,7 @@ public:
     }
 
     NodeContext* context() override { return &m_node; }
+    ArgsManager& args() { return *Assert(m_node.args); }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     NodeContext& m_node;
 };

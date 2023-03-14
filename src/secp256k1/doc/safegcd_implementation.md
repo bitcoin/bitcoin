@@ -1,7 +1,7 @@
 # The safegcd implementation in libsecp256k1 explained
 
-This document explains the modular inverse implementation in the `src/modinv*.h` files. It is based
-on the paper
+This document explains the modular inverse and Jacobi symbol implementations in the `src/modinv*.h` files.
+It is based on the paper
 ["Fast constant-time gcd computation and modular inversion"](https://gcd.cr.yp.to/papers.html#safegcd)
 by Daniel J. Bernstein and Bo-Yin Yang. The references below are for the Date: 2019.04.13 version.
 
@@ -410,7 +410,7 @@ sufficient even. Given that every loop iteration performs *N* divsteps, it will 
 
 To deal with the branches in `divsteps_n_matrix` we will replace them with constant-time bitwise
 operations (and hope the C compiler isn't smart enough to turn them back into branches; see
-`valgrind_ctime_test.c` for automated tests that this isn't the case). To do so, observe that a
+`ctime_tests.c` for automated tests that this isn't the case). To do so, observe that a
 divstep can be written instead as (compare to the inner loop of `gcd` in section 1).
 
 ```python
@@ -769,3 +769,51 @@ def modinv_var(M, Mi, x):
         d, e = update_de(d, e, t, M, Mi)
     return normalize(f, d, Mi)
 ```
+
+## 8. From GCDs to Jacobi symbol
+
+We can also use a similar approach to calculate Jacobi symbol *(x | M)* by keeping track of an
+extra variable *j*, for which at every step *(x | M) = j (g | f)*. As we update *f* and *g*, we
+make corresponding updates to *j* using
+[properties of the Jacobi symbol](https://en.wikipedia.org/wiki/Jacobi_symbol#Properties):
+* *((g/2) | f)* is either *(g | f)* or *-(g | f)*, depending on the value of *f mod 8* (negating if it's *3* or *5*).
+* *(f | g)* is either *(g | f)* or *-(g | f)*, depending on *f mod 4* and *g mod 4* (negating if both are *3*).
+
+These updates depend only on the values of *f* and *g* modulo *4* or *8*, and can thus be applied
+very quickly, as long as we keep track of a few additional bits of *f* and *g*. Overall, this
+calculation is slightly simpler than the one for the modular inverse because we no longer need to
+keep track of *d* and *e*.
+
+However, one difficulty of this approach is that the Jacobi symbol *(a | n)* is only defined for
+positive odd integers *n*, whereas in the original safegcd algorithm, *f, g* can take negative
+values. We resolve this by using the following modified steps:
+
+```python
+        # Before
+        if delta > 0 and g & 1:
+            delta, f, g = 1 - delta, g, (g - f) // 2
+
+        # After
+        if delta > 0 and g & 1:
+            delta, f, g = 1 - delta, g, (g + f) // 2
+```
+
+The algorithm is still correct, since the changed divstep, called a "posdivstep" (see section 8.4
+and E.5 in the paper) preserves *gcd(f, g)*. However, there's no proof that the modified algorithm
+will converge. The justification for posdivsteps is completely empirical: in practice, it appears
+that the vast majority of nonzero inputs converge to *f=g=gcd(f<sub>0</sub>, g<sub>0</sub>)* in a
+number of steps proportional to their logarithm.
+
+Note that:
+- We require inputs to satisfy *gcd(x, M) = 1*, as otherwise *f=1* is not reached.
+- We require inputs *x &neq; 0*, because applying posdivstep with *g=0* has no effect.
+- We need to update the termination condition from *g=0* to *f=1*.
+
+We account for the possibility of nonconvergence by only performing a bounded number of
+posdivsteps, and then falling back to square-root based Jacobi calculation if a solution has not
+yet been found.
+
+The optimizations in sections 3-7 above are described in the context of the original divsteps, but
+in the C implementation we also adapt most of them (not including "avoiding modulus operations",
+since it's not necessary to track *d, e*, and "constant-time operation", since we never calculate
+Jacobi symbols for secret data) to the posdivsteps version.

@@ -464,7 +464,7 @@ class P2PInterface(P2PConnection):
 
     def wait_for_connect(self, timeout=60):
         test_function = lambda: self.is_connected
-        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock)
+        self.wait_until(test_function, timeout=timeout, check_connected=False)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected

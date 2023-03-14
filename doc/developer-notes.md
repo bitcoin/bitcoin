@@ -217,10 +217,13 @@ apt install clang-tidy bear clang
 Then, pass clang as compiler to configure, and use bear to produce the `compile_commands.json`:
 
 ```sh
-./autogen.sh && ./configure CC=clang CXX=clang++
-make clean && bear make -j $(nproc)     # For bear 2.x
-make clean && bear -- make -j $(nproc)  # For bear 3.x
+./autogen.sh && ./configure CC=clang CXX=clang++ --enable-suppress-external-warnings
+make clean && bear --config src/.bear-tidy-config -- make -j $(nproc)
 ```
+
+The output is denoised of errors from external dependencies and includes with
+`--enable-suppress-external-warnings` and `--config src/.bear-tidy-config`. Both
+options may be omitted to view the full list of errors.
 
 To run clang-tidy on all source files:
 
@@ -857,12 +860,12 @@ Strings and formatting
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
-- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing.
+- Use `ToIntegral` from [`strencodings.h`](/src/util/strencodings.h) for number parsing. In legacy code you might also find `ParseInt*` family of functions, `ParseDouble` or `LocaleIndependentAtoi`.
 
   - *Rationale*: These functions do overflow checking and avoid pesky locale issues.
 
 - Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.sh`](/test/lint/lint-locale-dependence.sh)
+  [`lint-locale-dependence.py`](/test/lint/lint-locale-dependence.py)
   to check for accidental use of locale dependent functions.
 
   - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.
