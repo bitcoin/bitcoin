@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
         .datadir = gArgs.GetDataDirNet(),
         .adjusted_time_callback = NodeClock::now,
     };
-    ChainstateManager chainman{chainman_opts};
+    ChainstateManager chainman{chainman_opts, {}};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
