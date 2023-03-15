@@ -149,8 +149,6 @@ struct CLogCategoryDesc {
 
 const CLogCategoryDesc LogCategories[] =
 {
-    {BCLog::NONE, "0"},
-    {BCLog::NONE, ""},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
     {BCLog::MEMPOOL, "mempool"},
@@ -224,8 +222,6 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
 {
     // Each log category string representation should sync with LogCategories
     switch (category) {
-    case BCLog::LogFlags::NONE:
-        return "";
     case BCLog::LogFlags::NET:
         return "net";
     case BCLog::LogFlags::TOR:
@@ -288,7 +284,9 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "scan";
     case BCLog::LogFlags::ALL:
         return "all";
-    }
+    case BCLog::LogFlags::NONE:
+        assert(false);
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
@@ -320,7 +318,7 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
 
     std::vector<LogCategory> ret;
     for (const CLogCategoryDesc& category_desc : categories) {
-        if (category_desc.flag == BCLog::NONE || category_desc.flag == BCLog::ALL) continue;
+        if (category_desc.flag == BCLog::ALL) continue;
         LogCategory catActive;
         catActive.category = category_desc.category;
         catActive.active = WillLogCategory(category_desc.flag);
