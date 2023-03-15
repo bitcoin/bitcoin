@@ -72,6 +72,18 @@ class RpcMiscTest(BitcoinTestFramework):
         logging_help = self.nodes[0].help('logging')
         assert f"valid logging categories are: {categories}" in logging_help
 
+        # Test aliases for logging all or none
+        def check_all(include, exclude, expected):
+            res = node.logging([include], [exclude])
+            for key in res:
+                assert_equal(res[key], expected)
+        check_all("1", "0", True)
+        check_all("0", "1", False)
+        check_all("all", "none", True)
+        check_all("none", "all", False)
+        check_all("all", "none", True) # repeated case to reset for next line
+        check_all("", "all", False)
+
         self.log.info("test echoipc (testing spawned process in multiprocess build)")
         assert_equal(node.echoipc("hello"), "hello")
 
