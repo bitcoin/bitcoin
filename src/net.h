@@ -373,13 +373,6 @@ public:
      */
     std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
 
-    /** Total size of all vSendMsg entries */
-    size_t nSendSize GUARDED_BY(cs_vSend){0};
-    /** Offset inside the first vSendMsg already sent */
-    size_t nSendOffset GUARDED_BY(cs_vSend){0};
-    uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
-    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
-    mutable Mutex cs_vSend;
     Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
@@ -649,6 +642,14 @@ private:
     Mutex m_msg_process_queue_mutex;
     std::list<CNetMessage> m_msg_process_queue GUARDED_BY(m_msg_process_queue_mutex);
     size_t m_msg_process_queue_size GUARDED_BY(m_msg_process_queue_mutex){0};
+
+    /** Total size of all vSendMsg entries */
+    size_t nSendSize GUARDED_BY(cs_vSend){0};
+    /** Offset inside the first vSendMsg already sent */
+    size_t nSendOffset GUARDED_BY(cs_vSend){0};
+    uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
+    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    mutable Mutex cs_vSend;
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
