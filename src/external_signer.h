@@ -24,7 +24,7 @@ private:
     //! Bitcoin mainnet, testnet, etc
     std::string m_chain;
 
-    const std::string NetworkArg() const;
+    std::string NetworkArg() const;
 
 public:
     //! @param[in] command      the command which handles interaction with the external signer

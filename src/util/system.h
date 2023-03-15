@@ -19,12 +19,10 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <util/settings.h>
 #include <util/time.h>
 
 #include <any>
-#include <exception>
 #include <map>
 #include <optional>
 #include <set>
@@ -33,6 +31,7 @@
 #include <utility>
 #include <vector>
 
+class ArgsManager;
 class UniValue;
 
 // Application startup time (used for uptime calculation)
@@ -43,15 +42,6 @@ extern const char * const BITCOIN_SETTINGS_FILENAME;
 
 void SetupEnvironment();
 bool SetupNetworking();
-
-template<typename... Args>
-bool error(const char* fmt, const Args&... args)
-{
-    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
-    return false;
-}
-
-void PrintExceptionContinue(const std::exception* pex, std::string_view thread_name);
 
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
@@ -96,8 +86,8 @@ void ReleaseDirectoryLocks();
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 // Return true if -datadir option points to a valid directory or is not specified.
-bool CheckDataDirOption();
-fs::path GetConfigFile(const fs::path& configuration_file_path);
+bool CheckDataDirOption(const ArgsManager& args);
+fs::path GetConfigFile(const ArgsManager& args, const fs::path& configuration_file_path);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -112,11 +102,12 @@ void runCommand(const std::string& strCommand);
  * Most paths passed as configuration arguments are treated as relative to
  * the datadir if they are not absolute.
  *
+ * @param args Parsed arguments and settings.
  * @param path The path to be conditionally prefixed with datadir.
  * @param net_specific Use network specific datadir variant
  * @return The normalized path.
  */
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
+fs::path AbsPathForConfigVal(const ArgsManager& args, const fs::path& path, bool net_specific = true);
 
 inline bool IsSwitchChar(char c)
 {
@@ -242,6 +233,11 @@ protected:
     void SelectConfigNetwork(const std::string& network);
 
     [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error);
+
+    /**
+     * Return config file path (read-only)
+     */
+    fs::path GetConfigFilePath() const;
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
@@ -250,12 +246,12 @@ protected:
      * on the command line or in a network-specific section in the
      * config file.
      */
-    const std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
+    std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
 
     /**
      * Log warnings for unrecognized section names in the config file.
      */
-    const std::list<SectionInfo> GetUnrecognizedSections() const;
+    std::list<SectionInfo> GetUnrecognizedSections() const;
 
     struct Command {
         /** The command (if one has been registered with AddCommand), or empty */
@@ -282,7 +278,6 @@ protected:
      * Get data directory path
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
-     * @post Returned directory path is created unless it is empty
      */
     const fs::path& GetDataDirBase() const { return GetDataDir(false); }
 
@@ -290,7 +285,6 @@ protected:
      * Get data directory path with appended network identifier
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
-     * @post Returned directory path is created unless it is empty
      */
     const fs::path& GetDataDirNet() const { return GetDataDir(true); }
 
@@ -430,13 +424,6 @@ protected:
     std::optional<unsigned int> GetArgFlags(const std::string& name) const;
 
     /**
-     * Read and update settings file with saved settings. This needs to be
-     * called after SelectParams() because the settings file location is
-     * network-specific.
-     */
-    bool InitSettings(std::string& error);
-
-    /**
      * Get settings file path, or return false if read-write settings were
      * disabled with -nosettings.
      */
@@ -481,7 +468,6 @@ private:
      *
      * @param net_specific Append network identifier to the returned path
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
-     * @post Returned directory path is created unless it is empty
      */
     const fs::path& GetDataDir(bool net_specific) const;
 

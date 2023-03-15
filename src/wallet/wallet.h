@@ -10,6 +10,7 @@
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <psbt.h>
@@ -19,7 +20,6 @@
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
 #include <validationinterface.h>
@@ -243,6 +243,7 @@ private:
     std::atomic<bool> fAbortRescan{false};
     std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
     std::atomic<bool> m_attaching_chain{false};
+    std::atomic<bool> m_scanning_with_passphrase{false};
     std::atomic<int64_t> m_scanning_start{0};
     std::atomic<double> m_scanning_progress{0};
     friend class WalletRescanReserver;
@@ -307,9 +308,6 @@ private:
     //! Unset the blank wallet flag and saves it to disk
     void UnsetBlankWalletFlag(WalletBatch& batch) override;
 
-    /** Provider of aplication-wide arguments. */
-    const ArgsManager& m_args;
-
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -373,9 +371,8 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const std::string& name, const ArgsManager& args, std::unique_ptr<WalletDatabase> database)
-        : m_args(args),
-          m_chain(chain),
+    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
+        : m_chain(chain),
           m_name(name),
           m_database(std::move(database))
     {
@@ -467,6 +464,7 @@ public:
     void AbortRescan() { fAbortRescan = true; }
     bool IsAbortingRescan() const { return fAbortRescan; }
     bool IsScanning() const { return fScanningWallet; }
+    bool IsScanningWithPassphrase() const { return m_scanning_with_passphrase; }
     int64_t ScanningDuration() const { return fScanningWallet ? GetTimeMillis() - m_scanning_start : 0; }
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
 
@@ -486,6 +484,9 @@ public:
 
     // Used to prevent concurrent calls to walletpassphrase RPC.
     Mutex m_unlock_mutex;
+    // Used to prevent deleting the passphrase from memory when it is still in use.
+    RecursiveMutex m_relock_mutex;
+
     bool Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys = false);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
@@ -641,6 +642,12 @@ public:
     std::optional<OutputType> m_default_change_type{};
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
+
+    /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
+    int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
+
+    /** Notify external script when a wallet transaction comes in or is updated (handled by -walletnotify) */
+    std::string m_notify_tx_changed_script;
 
     size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
@@ -821,7 +828,8 @@ public:
     bool IsLegacy() const;
 
     /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
-    const std::string GetDisplayName() const override {
+    std::string GetDisplayName() const override
+    {
         std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
         return strprintf("[%s]", wallet_name);
     };
@@ -939,6 +947,9 @@ public:
     //! Adds the ScriptPubKeyMans given in MigrationData to this wallet, removes LegacyScriptPubKeyMan,
     //! and where needed, moves tx and address book entries to watchonly_wallet or solvable_wallet
     bool ApplyMigrationData(MigrationData& data, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Whether the (external) signer performs R-value signature grinding
+    bool CanGrindR() const;
 };
 
 /**
@@ -954,17 +965,18 @@ private:
     using Clock = std::chrono::steady_clock;
     using NowFn = std::function<Clock::time_point()>;
     CWallet& m_wallet;
-    bool m_could_reserve;
+    bool m_could_reserve{false};
     NowFn m_now;
 public:
-    explicit WalletRescanReserver(CWallet& w) : m_wallet(w), m_could_reserve(false) {}
+    explicit WalletRescanReserver(CWallet& w) : m_wallet(w) {}
 
-    bool reserve()
+    bool reserve(bool with_passphrase = false)
     {
         assert(!m_could_reserve);
         if (m_wallet.fScanningWallet.exchange(true)) {
             return false;
         }
+        m_wallet.m_scanning_with_passphrase.exchange(with_passphrase);
         m_wallet.m_scanning_start = GetTimeMillis();
         m_wallet.m_scanning_progress = 0;
         m_could_reserve = true;
@@ -984,6 +996,7 @@ public:
     {
         if (m_could_reserve) {
             m_wallet.fScanningWallet = false;
+            m_wallet.m_scanning_with_passphrase = false;
         }
     }
 };
@@ -994,7 +1007,7 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, const CCoinControl* coin_control = nullptr);
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool can_grind_r, const CCoinControl* coin_control);
 
 bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 
@@ -1006,7 +1019,7 @@ struct MigrationResult {
 };
 
 //! Do all steps to migrate a legacy wallet to a descriptor wallet
-util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>&& wallet, WalletContext& context);
+util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLET_H

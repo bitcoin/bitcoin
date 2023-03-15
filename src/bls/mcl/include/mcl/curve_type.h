@@ -112,7 +112,7 @@ inline const CurveParam* getCurveParam(int type)
 	case MCL_BLS12_381: return &mcl::BLS12_381;
 	case MCL_BN160: return &mcl::BN160;
 	default:
-		return 0;
+		return nullptr;
 	}
 }
 #ifdef __clang__

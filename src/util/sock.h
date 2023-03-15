@@ -181,9 +181,9 @@ public:
      * Auxiliary requested/occurred events to wait for in `WaitMany()`.
      */
     struct Events {
-        explicit Events(Event req) : requested{req}, occurred{0} {}
+        explicit Events(Event req) : requested{req} {}
         Event requested;
-        Event occurred;
+        Event occurred{0};
     };
 
     struct HashSharedPtrSock {

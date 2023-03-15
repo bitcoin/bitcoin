@@ -5,6 +5,7 @@
 #include <index/txindex.h>
 
 #include <index/disktxpos.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <util/system.h>
 #include <validation.h>

@@ -8,7 +8,7 @@
 #
 # DESCRIPTION
 #
-#   Test for the Boost C++ libraries of a particular version (or newer)
+#   Test for the Boost C++ headers of a particular version (or newer)
 #
 #   If no path to the installed boost library is given the macro searchs
 #   under /usr, /usr/local, /opt, /opt/local and /opt/homebrew and evaluates
@@ -17,11 +17,13 @@
 #
 #   This macro calls:
 #
-#     AC_SUBST(BOOST_CPPFLAGS) / AC_SUBST(BOOST_LDFLAGS)
+#     AC_SUBST(BOOST_CPPFLAGS)
 #
 #   And sets:
 #
 #     HAVE_BOOST
+#
+#   Note that this macro has been modified compared to upstream.
 #
 # LICENSE
 #
@@ -59,26 +61,10 @@ AC_ARG_WITH([boost],
     ],
     [want_boost="yes"])
 
-
-AC_ARG_WITH([boost-libdir],
-  [AS_HELP_STRING([--with-boost-libdir=LIB_DIR],
-    [Force given directory for boost libraries.
-     Note that this will override library path detection,
-     so use this parameter only if default library detection fails
-     and you know exactly where your boost libraries are located.])],
-  [
-   AS_IF([test -d "$withval"],
-         [_AX_BOOST_BASE_boost_lib_path="$withval"],
-    [AC_MSG_ERROR([--with-boost-libdir expected directory name])])
-  ],
-  [_AX_BOOST_BASE_boost_lib_path=""])
-
-BOOST_LDFLAGS=""
 BOOST_CPPFLAGS=""
 AS_IF([test "x$want_boost" = "xyes"],
       [_AX_BOOST_BASE_RUNDETECT([$1],[$2],[$3])])
 AC_SUBST(BOOST_CPPFLAGS)
-AC_SUBST(BOOST_LDFLAGS)
 ])
 
 
@@ -139,7 +125,6 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
                 AC_MSG_CHECKING([for boostlib >= $1 ($WANT_BOOST_VERSION) lib path in "$_AX_BOOST_BASE_boost_path/$_AX_BOOST_BASE_boost_path_tmp"])
                 AS_IF([test -d "$_AX_BOOST_BASE_boost_path/$_AX_BOOST_BASE_boost_path_tmp" && test -r "$_AX_BOOST_BASE_boost_path/$_AX_BOOST_BASE_boost_path_tmp" ],[
                         AC_MSG_RESULT([yes])
-                        BOOST_LDFLAGS="-L$_AX_BOOST_BASE_boost_path/$_AX_BOOST_BASE_boost_path_tmp";
                         break;
                 ],
       [AC_MSG_RESULT([no])])
@@ -156,26 +141,16 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
                 for libsubdir in $search_libsubdirs ; do
                     if ls "$_AX_BOOST_BASE_boost_path_tmp/$libsubdir/libboost_"* >/dev/null 2>&1 ; then break; fi
                 done
-                BOOST_LDFLAGS="-L$_AX_BOOST_BASE_boost_path_tmp/$libsubdir"
                 BOOST_CPPFLAGS="-I$_AX_BOOST_BASE_boost_path_tmp/include"
                 break;
             fi
         done
     ])
 
-    dnl overwrite ld flags if we have required special directory with
-    dnl --with-boost-libdir parameter
-    AS_IF([test "x$_AX_BOOST_BASE_boost_lib_path" != "x"],
-          [BOOST_LDFLAGS="-L$_AX_BOOST_BASE_boost_lib_path"])
-
-    AC_MSG_CHECKING([for boostlib >= $1 ($WANT_BOOST_VERSION)])
+    AC_MSG_CHECKING([for Boost headers >= $1 ($WANT_BOOST_VERSION)])
     CPPFLAGS_SAVED="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
     export CPPFLAGS
-
-    LDFLAGS_SAVED="$LDFLAGS"
-    LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
-    export LDFLAGS
 
     AC_REQUIRE([AC_PROG_CXX])
     AC_LANG_PUSH(C++)
@@ -193,11 +168,8 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
     dnl built and installed without the --layout=system option or for a staged(not installed) version
     if test "x$succeeded" != "xyes" ; then
         CPPFLAGS="$CPPFLAGS_SAVED"
-        LDFLAGS="$LDFLAGS_SAVED"
         BOOST_CPPFLAGS=
-        if test -z "$_AX_BOOST_BASE_boost_lib_path" ; then
-            BOOST_LDFLAGS=
-        fi
+
         _version=0
         if test -n "$_AX_BOOST_BASE_boost_path" ; then
             if test -d "$_AX_BOOST_BASE_boost_path" && test -r "$_AX_BOOST_BASE_boost_path"; then
@@ -215,14 +187,6 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
                     if test -d "$_AX_BOOST_BASE_boost_path/boost" && test -r "$_AX_BOOST_BASE_boost_path/boost"; then
                         BOOST_CPPFLAGS="-I$_AX_BOOST_BASE_boost_path"
                     fi
-                fi
-                dnl if we found something and BOOST_LDFLAGS was unset before
-                dnl (because "$_AX_BOOST_BASE_boost_lib_path" = ""), set it here.
-                if test -n "$BOOST_CPPFLAGS" && test -z "$BOOST_LDFLAGS"; then
-                    for libsubdir in $libsubdirs ; do
-                        if ls "$_AX_BOOST_BASE_boost_path/$libsubdir/libboost_"* >/dev/null 2>&1 ; then break; fi
-                    done
-                    BOOST_LDFLAGS="-L$_AX_BOOST_BASE_boost_path/$libsubdir"
                 fi
             fi
         else
@@ -242,12 +206,6 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
 
                 VERSION_UNDERSCORE=`echo $_version | sed 's/\./_/'`
                 BOOST_CPPFLAGS="-I$best_path/include/boost-$VERSION_UNDERSCORE"
-                if test -z "$_AX_BOOST_BASE_boost_lib_path" ; then
-                    for libsubdir in $libsubdirs ; do
-                        if ls "$best_path/$libsubdir/libboost_"* >/dev/null 2>&1 ; then break; fi
-                    done
-                    BOOST_LDFLAGS="-L$best_path/$libsubdir"
-                fi
             fi
 
             if test -n "$BOOST_ROOT" ; then
@@ -259,10 +217,9 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
                     stage_version=`echo $version_dir | sed 's/boost_//' | sed 's/_/./g'`
                         stage_version_shorten=`expr $stage_version : '\([[0-9]]*\.[[0-9]]*\)'`
                     V_CHECK=`expr $stage_version_shorten \>\= $_version`
-                    if test "x$V_CHECK" = "x1" && test -z "$_AX_BOOST_BASE_boost_lib_path" ; then
+                    if test "x$V_CHECK" = "x1" ; then
                         AC_MSG_NOTICE(We will use a staged boost library from $BOOST_ROOT)
                         BOOST_CPPFLAGS="-I$BOOST_ROOT"
-                        BOOST_LDFLAGS="-L$BOOST_ROOT/stage/$libsubdir"
                     fi
                 fi
             fi
@@ -270,8 +227,6 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
 
         CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
         export CPPFLAGS
-        LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
-        export LDFLAGS
 
         AC_LANG_PUSH(C++)
             AC_COMPILE_IFELSE([_AX_BOOST_BASE_PROGRAM($WANT_BOOST_VERSION)],[
@@ -298,6 +253,4 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
     fi
 
     CPPFLAGS="$CPPFLAGS_SAVED"
-    LDFLAGS="$LDFLAGS_SAVED"
-
 ])

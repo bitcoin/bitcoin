@@ -7,7 +7,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
-#include <util/system.h>
+#include <logging.h>
 
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 

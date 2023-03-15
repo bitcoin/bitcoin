@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -60,7 +61,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                 }
             }
             mutated |= (inner[level] == h);
-            CHash256().Write(inner[level]).Write(h).Finalize(h);
+            h = Hash(inner[level], h);
         }
         // Store the resulting hash at inner position level.
         inner[level] = h;
@@ -86,7 +87,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         if (pbranch && matchh) {
             pbranch->push_back(h);
         }
-        CHash256().Write(h).Write(h).Finalize(h);
+        h = Hash(h, h);
         // Increment count to the value it would have if two entries at this
         // level had existed.
         count += ((uint32_t{1}) << level);
@@ -101,7 +102,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                     matchh = true;
                 }
             }
-            CHash256().Write(inner[level]).Write(h).Finalize(h);
+            h = Hash(inner[level], h);
             level++;
         }
     }

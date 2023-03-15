@@ -116,7 +116,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("disconnectnode: successfully disconnect node by address")
         address1 = self.nodes[0].getpeerinfo()[0]['addr']
         self.nodes[0].disconnectnode(address=address1)
-        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
+        self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 1, timeout=10)
         assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
         self.log.info("disconnectnode: successfully reconnect node")
@@ -127,7 +127,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("disconnectnode: successfully disconnect node by node id")
         id1 = self.nodes[0].getpeerinfo()[0]['id']
         self.nodes[0].disconnectnode(nodeid=id1)
-        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
+        self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 1, timeout=10)
         assert not [node for node in self.nodes[0].getpeerinfo() if node['id'] == id1]
 
 if __name__ == '__main__':

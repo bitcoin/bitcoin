@@ -70,7 +70,7 @@ NOTE: When using the systemd .service file, the creation of the aforementioned
 directories and the setting of their permissions is automatically handled by
 systemd. Directories are given a permission of 710, giving the bitcoin group
 access to files under it _if_ the files themselves give permission to the
-bitcoin group to do so (e.g. when `-sysperms` is specified). This does not allow
+bitcoin group to do so. This does not allow
 for the listing of files under the directory.
 
 NOTE: It is not currently possible to override `datadir` in

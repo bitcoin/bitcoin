@@ -10,6 +10,7 @@
 #include <blsct/arith/mcl/mcl_init.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/init.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <init.h>
@@ -20,6 +21,7 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <util/check.h>
+#include <util/exception.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>
 #include <util/syserror.h>
@@ -122,7 +124,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     SetupServerArgs(args);
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
-        return InitError(Untranslated(strprintf("Error parsing command line arguments: %s\n", error)));
+        return InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
     }
 
     // Process help and version before taking care about datadir
@@ -150,30 +152,17 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     TokenPipeEnd daemon_ep;
 #endif
     std::any context{&node};
-    try {
-        if (!CheckDataDirOption()) {
-            return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""))));
-        }
-        if (!args.ReadConfigFiles(error, true)) {
-            return InitError(Untranslated(strprintf("Error reading configuration file: %s\n", error)));
-        }
-        // Check for chain settings (Params() calls are only valid after this clause)
-        try {
-            SelectParams(args.GetChainName());
-        } catch (const std::exception& e) {
-            return InitError(Untranslated(strprintf("%s\n", e.what())));
+    try
+    {
+        if (auto error = common::InitConfig(args)) {
+            return InitError(error->message, error->details);
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i])));
+                return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.", argv[i])));
             }
-        }
-
-        if (!args.InitSettings(error)) {
-            InitError(Untranslated(error));
-            return false;
         }
 
         // -server defaults to true for bitcoind but not for the GUI so do this here
@@ -191,7 +180,8 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         }
 
         node.kernel = std::make_unique<kernel::Context>();
-        if (!AppInitSanityChecks(*node.kernel)) {
+        if (!AppInitSanityChecks(*node.kernel))
+        {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
@@ -202,7 +192,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
 
             // Daemonize
             switch (fork_daemon(1, 0, daemon_ep)) { // don't chdir (1), do close FDs (0)
-            case 0:                                 // Child: continue.
+            case 0: // Child: continue.
                 // If -daemonwait is not enabled, immediately send a success token the parent.
                 if (!args.GetBoolArg("-daemonwait", DEFAULT_DAEMONWAIT)) {
                     daemon_ep.TokenWrite(1);
@@ -210,7 +200,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
                 }
                 break;
             case -1: // Error happened.
-                return InitError(Untranslated(strprintf("fork_daemon() failed: %s\n", SysErrorString(errno))));
+                return InitError(Untranslated(strprintf("fork_daemon() failed: %s", SysErrorString(errno))));
             default: { // Parent: wait and exit.
                 int token = daemon_ep.TokenRead();
                 if (token) { // Success
@@ -222,16 +212,18 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
             }
             }
 #else
-            return InitError(Untranslated("-daemon is not supported on this operating system\n"));
+            return InitError(Untranslated("-daemon is not supported on this operating system"));
 #endif // HAVE_DECL_FORK
         }
         // Lock data directory after daemonization
-        if (!AppInitLockDataDirectory()) {
+        if (!AppInitLockDataDirectory())
+        {
             // If locking the data directory failed, exit immediately
             return false;
         }
         fRet = AppInitInterfaces(node) && AppInitMain(node);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
     } catch (...) {
         PrintExceptionContinue(nullptr, "AppInit()");

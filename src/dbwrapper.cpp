@@ -127,40 +127,40 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name{fs::PathToString(path.stem())}, m_path{path}, m_is_memory{fMemory}
+CDBWrapper::CDBWrapper(const DBParams& params)
+    : m_name{fs::PathToString(params.path.stem())}, m_path{params.path}, m_is_memory{params.memory_only}
 {
     penv = nullptr;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
     syncoptions.sync = true;
-    options = GetOptions(nCacheSize);
+    options = GetOptions(params.cache_bytes);
     options.create_if_missing = true;
-    if (fMemory) {
+    if (params.memory_only) {
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
         options.env = penv;
     } else {
-        if (fWipe) {
-            LogPrintf("Wiping LevelDB in %s\n", fs::PathToString(path));
-            leveldb::Status result = leveldb::DestroyDB(fs::PathToString(path), options);
+        if (params.wipe_data) {
+            LogPrintf("Wiping LevelDB in %s\n", fs::PathToString(params.path));
+            leveldb::Status result = leveldb::DestroyDB(fs::PathToString(params.path), options);
             dbwrapper_private::HandleError(result);
         }
-        TryCreateDirectories(path);
-        LogPrintf("Opening LevelDB in %s\n", fs::PathToString(path));
+        TryCreateDirectories(params.path);
+        LogPrintf("Opening LevelDB in %s\n", fs::PathToString(params.path));
     }
     // PathToString() return value is safe to pass to leveldb open function,
     // because on POSIX leveldb passes the byte string directly to ::open(), and
     // on Windows it converts from UTF-8 to UTF-16 before calling ::CreateFileW
     // (see env_posix.cc and env_windows.cc).
-    leveldb::Status status = leveldb::DB::Open(options, fs::PathToString(path), &pdb);
+    leveldb::Status status = leveldb::DB::Open(options, fs::PathToString(params.path), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
 
-    if (gArgs.GetBoolArg("-forcecompactdb", false)) {
-        LogPrintf("Starting database compaction of %s\n", fs::PathToString(path));
+    if (params.options.force_compact) {
+        LogPrintf("Starting database compaction of %s\n", fs::PathToString(params.path));
         pdb->CompactRange(nullptr, nullptr);
-        LogPrintf("Finished database compaction of %s\n", fs::PathToString(path));
+        LogPrintf("Finished database compaction of %s\n", fs::PathToString(params.path));
     }
 
     // The base-case obfuscation key, which is a noop.
@@ -168,7 +168,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
 
     bool key_exists = Read(OBFUSCATE_KEY_KEY, obfuscate_key);
 
-    if (!key_exists && obfuscate && IsEmpty()) {
+    if (!key_exists && params.obfuscate && IsEmpty()) {
         // Initialize non-degenerate obfuscation if it won't upset
         // existing, non-obfuscated data.
         std::vector<unsigned char> new_key = CreateObfuscateKey();
@@ -177,10 +177,10 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
-        LogPrintf("Wrote new obfuscate key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
+        LogPrintf("Wrote new obfuscate key for %s: %s\n", fs::PathToString(params.path), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
+    LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(params.path), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()

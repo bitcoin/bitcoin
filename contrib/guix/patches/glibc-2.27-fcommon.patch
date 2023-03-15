@@ -18,15 +18,15 @@ Date:   Fri May 6 11:03:04 2022 +0100
     https://sourceware.org/git/?p=glibc.git;a=commit;h=7650321ce037302bfc2f026aa19e0213b8d02fe6
 
 diff --git a/Makeconfig b/Makeconfig
-index ee379f5852..63c4a2f234 100644
+index 86a71e5802..aa2166be60 100644
 --- a/Makeconfig
 +++ b/Makeconfig
-@@ -824,7 +824,7 @@ ifeq	"$(strip $(+cflags))" ""
- +cflags	:= $(default_cflags)
+@@ -896,7 +896,7 @@ ifeq	"$(strip $(+cflags))" ""
  endif	# $(+cflags) == ""
  
--+cflags += $(cflags-cpu) $(+gccwarn) $(+merge-constants) $(+math-flags)
-++cflags += $(cflags-cpu) $(+gccwarn) $(+merge-constants) $(+math-flags) -fcommon
+ +cflags += $(cflags-cpu) $(+gccwarn) $(+merge-constants) $(+math-flags) \
+-	   $(+stack-protector)
++	   $(+stack-protector) -fcommon
  +gcc-nowarn := -w
  
  # Don't duplicate options if we inherited variables from the parent.

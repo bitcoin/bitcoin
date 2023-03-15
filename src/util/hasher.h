@@ -36,7 +36,7 @@ private:
     const uint64_t k0, k1;
 
 public:
-    SaltedOutpointHasher();
+    SaltedOutpointHasher(bool deterministic = false);
 
     /**
      * Having the hash noexcept allows libstdc++'s unordered_map to recalculate

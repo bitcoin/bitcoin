@@ -385,7 +385,7 @@ class P2PInterface(P2PConnection):
                 self.message_count[msgtype] += 1
                 self.last_message[msgtype] = message
                 getattr(self, 'on_' + msgtype)(message)
-            except:
+            except Exception:
                 print("ERROR delivering %s (%s)" % (repr(message), sys.exc_info()[0]))
                 raise
 
@@ -464,7 +464,7 @@ class P2PInterface(P2PConnection):
 
     def wait_for_connect(self, timeout=60):
         test_function = lambda: self.is_connected
-        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock)
+        self.wait_until(test_function, timeout=timeout, check_connected=False)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected

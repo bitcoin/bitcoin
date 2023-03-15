@@ -7,12 +7,17 @@
 #include <fs.h>
 #include <logging.h>
 #include <streams.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <txdb.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <validation.h>
 
+#include <cassert>
 #include <cstdio>
 #include <optional>
+#include <string>
 
 namespace node {
 

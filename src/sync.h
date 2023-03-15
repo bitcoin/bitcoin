@@ -11,7 +11,7 @@
 #include <logging/timer.h>
 #endif
 
-#include <threadsafety.h>
+#include <threadsafety.h> // IWYU pragma: export
 #include <util/macros.h>
 
 #include <condition_variable>

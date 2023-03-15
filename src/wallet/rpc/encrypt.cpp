@@ -49,9 +49,7 @@ RPCHelpMan walletpassphrase()
         // Note that the walletpassphrase is stored in request.params[0] which is not mlock()ed
         SecureString strWalletPass;
         strWalletPass.reserve(100);
-        // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-        // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-        strWalletPass = request.params[0].get_str().c_str();
+        strWalletPass = std::string_view{request.params[0].get_str()};
 
         // Get the timeout
         nSleepTime = request.params[1].getInt<int64_t>();
@@ -70,7 +68,17 @@ RPCHelpMan walletpassphrase()
         }
 
         if (!pwallet->Unlock(strWalletPass)) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+            // Check if the passphrase has a null character (see #27067 for details)
+            if (strWalletPass.find('\0') == std::string::npos) {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+            } else {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered is incorrect. "
+                                                                    "It contains a null character (ie - a zero byte). "
+                                                                    "If the passphrase was set with a version of this software prior to 25.0, "
+                                                                    "please try again with only the characters up to — but not including — "
+                                                                    "the first null character. If this is successful, please set a new "
+                                                                    "passphrase to avoid this issue in the future.");
+            }
         }
 
         pwallet->TopUpKeyPool();
@@ -90,7 +98,7 @@ RPCHelpMan walletpassphrase()
     std::weak_ptr<CWallet> weak_wallet = wallet;
     pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet, relock_time] {
         if (auto shared_wallet = weak_wallet.lock()) {
-            LOCK(shared_wallet->cs_wallet);
+            LOCK2(shared_wallet->m_relock_mutex, shared_wallet->cs_wallet);
             // Skip if this is not the most recent rpcRunLater callback.
             if (shared_wallet->nRelockTime != relock_time) return;
             shared_wallet->Lock();
@@ -122,28 +130,39 @@ RPCHelpMan walletpassphrasechange()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     if (!pwallet->IsCrypted()) {
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
     }
 
-    // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+    if (pwallet->IsScanningWithPassphrase()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase.");
+    }
+
+    LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
+
     SecureString strOldWalletPass;
     strOldWalletPass.reserve(100);
-    strOldWalletPass = request.params[0].get_str().c_str();
+    strOldWalletPass = std::string_view{request.params[0].get_str()};
 
     SecureString strNewWalletPass;
     strNewWalletPass.reserve(100);
-    strNewWalletPass = request.params[1].get_str().c_str();
+    strNewWalletPass = std::string_view{request.params[1].get_str()};
 
     if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
-        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        // Check if the old passphrase had a null character (see #27067 for details)
+        if (strOldWalletPass.find('\0') == std::string::npos) {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        } else {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The old wallet passphrase entered is incorrect. "
+                                                                "It contains a null character (ie - a zero byte). "
+                                                                "If the old passphrase was set with a version of this software prior to 25.0, "
+                                                                "please try again with only the characters up to — but not including — "
+                                                                "the first null character.");
+        }
     }
 
     return UniValue::VNULL;
@@ -175,11 +194,15 @@ RPCHelpMan walletlock()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     if (!pwallet->IsCrypted()) {
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
     }
+
+    if (pwallet->IsScanningWithPassphrase()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet.");
+    }
+
+    LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
 
     pwallet->Lock();
     pwallet->nRelockTime = 0;
@@ -219,8 +242,6 @@ RPCHelpMan encryptwallet()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet does not contain private keys, nothing to encrypt.");
     }
@@ -229,11 +250,15 @@ RPCHelpMan encryptwallet()
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
     }
 
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+    if (pwallet->IsScanningWithPassphrase()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before encrypting the wallet.");
+    }
+
+    LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
+
     SecureString strWalletPass;
     strWalletPass.reserve(100);
-    strWalletPass = request.params[0].get_str().c_str();
+    strWalletPass = std::string_view{request.params[0].get_str()};
 
     if (strWalletPass.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
