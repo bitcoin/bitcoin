@@ -139,9 +139,11 @@ chain for " target " development."))
 ;; https://gcc.gnu.org/install/configure.html
 (define (hardened-gcc gcc)
   (package-with-extra-configure-variable (
-    package-with-extra-configure-variable gcc
-    "--enable-default-ssp" "yes")
-    "--enable-default-pie" "yes"))
+    package-with-extra-configure-variable (
+      package-with-extra-configure-variable gcc
+      "--enable-initfini-array" "yes")
+      "--enable-default-ssp" "yes")
+      "--enable-default-pie" "yes"))
 
 (define* (make-syscoin-cross-toolchain target
                                        #:key
