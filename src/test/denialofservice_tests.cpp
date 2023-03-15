@@ -86,8 +86,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 
     {
         BOOST_CHECK(!dummyNode1.IsSendQueueEmpty());
-        LOCK(dummyNode1.cs_vSend);
-        dummyNode1.vSendMsg.clear();
+        dummyNode1.TestOnlyClearSendQueue();
     }
 
     int64_t nStartTime = GetTime();

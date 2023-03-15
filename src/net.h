@@ -447,6 +447,11 @@ public:
         return WITH_LOCK(cs_vSend, return vSendMsg.empty());
     }
 
+    void TestOnlyClearSendQueue() EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend)
+    {
+        WITH_LOCK(cs_vSend, vSendMsg.clear());
+    }
+
     /** Account for the total size of a sent message in the per msg type connection stats. */
     void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
         EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
