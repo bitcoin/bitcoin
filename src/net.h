@@ -379,7 +379,7 @@ public:
     size_t nSendOffset GUARDED_BY(cs_vSend){0};
     uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
     std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
-    Mutex cs_vSend;
+    mutable Mutex cs_vSend;
     Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
@@ -438,6 +438,11 @@ public:
 
     size_t PushMessage(CSerializedNetMsg&& msg)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !m_sock_mutex);
+
+    bool IsSendQueueEmpty() const EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend)
+    {
+        return WITH_LOCK(cs_vSend, return vSendMsg.empty());
+    }
 
     /** Account for the total size of a sent message in the per msg type connection stats. */
     void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)

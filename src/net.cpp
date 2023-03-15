@@ -1177,11 +1177,7 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
         //   blocking here.
 
         bool select_recv = !pnode->fPauseRecv;
-        bool select_send;
-        {
-            LOCK(pnode->cs_vSend);
-            select_send = !pnode->vSendMsg.empty();
-        }
+        bool select_send{!pnode->IsSendQueueEmpty()};
 
         LOCK(pnode->m_sock_mutex);
         if (!pnode->m_sock) {

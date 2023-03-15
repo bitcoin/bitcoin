@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
 
     {
+        BOOST_CHECK(!dummyNode1.IsSendQueueEmpty());
         LOCK(dummyNode1.cs_vSend);
-        BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
         dummyNode1.vSendMsg.clear();
     }
 
@@ -94,10 +94,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // Wait 21 minutes
     SetMockTime(nStartTime+21*60);
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
-    {
-        LOCK(dummyNode1.cs_vSend);
-        BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
-    }
+    BOOST_CHECK(!dummyNode1.IsSendQueueEmpty());
     // Wait 3 more minutes
     SetMockTime(nStartTime+24*60);
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in disconnect
