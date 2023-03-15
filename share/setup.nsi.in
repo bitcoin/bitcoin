@@ -84,8 +84,8 @@ Section -Main SEC0000
     File @abs_top_builddir@/release/@SYSCOIN_TX_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_WALLET_TOOL_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_TEST_NAME@@EXEEXT@
-    File @abs_top_builddir@/release/@SYSCOIN_GETH@@EXEEXT@
     SetOutPath $INSTDIR
+    File @abs_top_builddir@/release/@SYSCOIN_GETH@@EXEEXT@
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
 
