@@ -11,7 +11,6 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <external_signer.h>
-#include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
 #include <key.h>
@@ -32,6 +31,7 @@
 #include <util/check.h>
 #include <util/error.h>
 #include <util/fees.h>
+#include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>

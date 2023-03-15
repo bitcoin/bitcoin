@@ -4,11 +4,11 @@
 
 #include <test/fuzz/fuzz.h>
 
-#include <fs.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/time.h>
 

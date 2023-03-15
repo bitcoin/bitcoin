@@ -16,7 +16,6 @@
 #include <compat/compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
-#include <fs.h>
 #include <i2p.h>
 #include <logging.h>
 #include <net_permissions.h>
@@ -27,6 +26,7 @@
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>

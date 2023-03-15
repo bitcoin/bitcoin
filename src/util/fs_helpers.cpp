@@ -9,10 +9,10 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <fs.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/fs.h>
 #include <util/getuniquepath.h>
 
 #include <cerrno>

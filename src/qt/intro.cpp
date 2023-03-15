@@ -7,9 +7,9 @@
 #endif
 
 #include <chainparams.h>
-#include <fs.h>
 #include <qt/intro.h>
 #include <qt/forms/ui_intro.h>
+#include <util/fs.h>
 
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>

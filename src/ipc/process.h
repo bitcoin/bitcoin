@@ -5,7 +5,7 @@
 #ifndef BITCOIN_IPC_PROCESS_H
 #define BITCOIN_IPC_PROCESS_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <memory>
 #include <string>

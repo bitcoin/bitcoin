@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/compat.h>
-#include <fs.h>
+#include <util/fs.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 

@@ -16,7 +16,7 @@
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
-#include <fs.h>
+#include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>

@@ -6,7 +6,7 @@
 
 #include <clientversion.h>
 #include <crypto/sha256.h>
-#include <fs.h>
+#include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 

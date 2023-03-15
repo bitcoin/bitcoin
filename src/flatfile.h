@@ -8,8 +8,8 @@
 
 #include <string>
 
-#include <fs.h>
 #include <serialize.h>
+#include <util/fs.h>
 
 struct FlatFilePos
 {

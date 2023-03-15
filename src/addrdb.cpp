@@ -9,7 +9,6 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <cstdint>
-#include <fs.h>
 #include <hash.h>
 #include <logging.h>
 #include <logging/timer.h>
@@ -19,6 +18,7 @@
 #include <streams.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/settings.h>
 #include <util/system.h>

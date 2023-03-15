@@ -7,9 +7,9 @@
 #define BITCOIN_WALLET_BDB_H
 
 #include <clientversion.h>
-#include <fs.h>
 #include <serialize.h>
 #include <streams.h>
+#include <util/fs.h>
 #include <util/system.h>
 #include <wallet/db.h>
 

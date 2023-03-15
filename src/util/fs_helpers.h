@@ -6,7 +6,7 @@
 #ifndef BITCOIN_UTIL_FS_HELPERS_H
 #define BITCOIN_UTIL_FS_HELPERS_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <cstdint>
 #include <cstdio>

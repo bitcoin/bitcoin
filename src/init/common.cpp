@@ -7,10 +7,10 @@
 #endif
 
 #include <clientversion.h>
-#include <fs.h>
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/string.h>
 #include <util/system.h>

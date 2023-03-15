@@ -6,11 +6,11 @@
 #define BITCOIN_DBWRAPPER_H
 
 #include <clientversion.h>
-#include <fs.h>
 #include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <util/fs.h>
 
 #include <cstddef>
 #include <cstdint>
