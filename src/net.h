@@ -434,6 +434,8 @@ public:
     std::optional<std::pair<CNetMessage, bool>> PollMessage()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
+    size_t SocketSendData() EXCLUSIVE_LOCKS_REQUIRED(cs_vSend, !m_sock_mutex);
+
     /** Account for the total size of a sent message in the per msg type connection stats. */
     void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
         EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
@@ -992,7 +994,6 @@ private:
 
     NodeId GetNewNodeId();
 
-    size_t SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
     void DumpAddresses();
 
     // Network stats
