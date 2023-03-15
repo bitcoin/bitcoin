@@ -1518,7 +1518,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </message>
     <message>
         <location line="+19"/>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Caution: Transactions using bitcoin from unseen transactions (due to ongoing synchronization) will be rejected by the network.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

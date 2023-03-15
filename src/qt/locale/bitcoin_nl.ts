@@ -1974,11 +1974,11 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <translation type="unfinished">Vorm</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <source>Wallet balance may be inaccurate during synchronization, as recent transactions may still be loading (details below).</source>
         <translation type="unfinished">Recente transacties zijn mogelijk nog niet zichtbaar. De balans van de portemonnee is daarom mogelijk niet correct. Deze informatie is correct zodra de portemonnee gelijk loopt met het Bitcoin netwerk, zoals onderaan beschreven.</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Caution: Transactions using bitcoin from unseen transactions (due to ongoing synchronization) will be rejected by the network.</source>
         <translation type="unfinished">Poging om bitcoins te besteden die door "nog niet weergegeven" transacties worden beïnvloed, worden niet door het netwerk geaccepteerd.</translation>
     </message>
     <message>

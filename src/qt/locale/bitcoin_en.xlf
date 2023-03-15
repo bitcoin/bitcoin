@@ -1406,7 +1406,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">133</context></context-group>
       </trans-unit>
       <trans-unit id="_msg310">
-        <source xml:space="preserve">Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source xml:space="preserve">Caution: Transactions using bitcoin from unseen transactions (due to ongoing synchronization) will be rejected by the network.</source>
         <context-group purpose="location"><context context-type="linenumber">152</context></context-group>
       </trans-unit>
       <trans-unit id="_msg311">

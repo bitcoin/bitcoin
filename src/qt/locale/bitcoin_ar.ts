@@ -2011,11 +2011,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫نموذج‬</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <source>Wallet balance may be inaccurate during synchronization, as recent transactions may still be loading (details below).</source>
         <translation type="unfinished">‫قد لا تكون العمليات الأخيرة مرئية بعد، وبالتالي قد يكون رصيد محفظتك غير دقيق. ستكون هذه المعلومات دقيقة بمجرد انتهاء مزامنة محفظتك مع شبكة البيتكوين، كما هو موضح أدناه.‬</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Caution: Transactions using bitcoin from unseen transactions (due to ongoing synchronization) will be rejected by the network.</source>
         <translation type="unfinished">‫لن تقبل الشبكة محاولة انفاق وحدات البتكوين في الطوابق لم يتم مزامنتها بعد.‬</translation>
     </message>
     <message>
