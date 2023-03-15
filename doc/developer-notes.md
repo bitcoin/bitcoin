@@ -16,6 +16,7 @@ Developer Notes
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
         - [`debug.log`](#debuglog)
         - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
+        - [DEBUG_ADDRMAN](#debug_addrman)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [DEBUG_LOCKCONTENTION](#debug_lockcontention)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
@@ -410,6 +411,21 @@ with "play bitcoins" on a test network.
 If you are testing something that can run on one machine, run with the
 `-regtest` option.  In regression test mode, blocks can be created on demand;
 see [test/functional/](/test/functional) for tests that run in `-regtest` mode.
+
+### DEBUG_ADDRMAN
+
+The `--enable-debug` configure option adds `-DDEBUG_ADDRMAN` to the compiler
+flags. You may also enable it manually for a non-debug build by running
+configure with `-DDEBUG_ADDRMAN` added to your CPPFLAGS, i.e.
+`CPPFLAGS="-DDEBUG_ADDRMAN"`, then build and run bitcoind.
+
+When set, the `DEBUG_ADDRMAN` flag will automatically enable addrman
+consistency checks after every <n> operations, the same as using runtime option
+`-checkaddrman=<n>` where `n=1000`.
+
+To opt out of addrman consistency checks when running a debug build, or to
+re-configure the number of operations it runs after, use the
+`-checkaddrman=<n>` runtime option for `bitcoind`.
 
 ### DEBUG_LOCKORDER
 
