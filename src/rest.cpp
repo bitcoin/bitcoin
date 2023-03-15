@@ -655,7 +655,20 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
     case RESTResponseFormat::JSON: {
         std::string str_json;
         if (param == "contents") {
-            str_json = MempoolToJSON(*mempool, true).write() + "\n";
+            const std::string raw_verbose{req->GetQueryParameter("verbose").value_or("true")};
+            if (raw_verbose != "true" && raw_verbose != "false") {
+                return RESTERR(req, HTTP_BAD_REQUEST, "The \"verbose\" query parameter must be either \"true\" or \"false\".");
+            }
+            const std::string raw_mempool_sequence{req->GetQueryParameter("mempool_sequence").value_or("false")};
+            if (raw_mempool_sequence != "true" && raw_mempool_sequence != "false") {
+                return RESTERR(req, HTTP_BAD_REQUEST, "The \"mempool_sequence\" query parameter must be either \"true\" or \"false\".");
+            }
+            const bool verbose{raw_verbose == "true"};
+            const bool mempool_sequence{raw_mempool_sequence == "true"};
+            if (verbose && mempool_sequence) {
+                return RESTERR(req, HTTP_BAD_REQUEST, "Verbose results cannot contain mempool sequence values. (hint: set \"verbose=false\")");
+            }
+            str_json = MempoolToJSON(*mempool, verbose, mempool_sequence).write() + "\n";
         } else {
             str_json = MempoolInfoToJSON(*mempool).write() + "\n";
         }

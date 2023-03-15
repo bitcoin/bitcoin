@@ -132,11 +132,15 @@ Returns various information about the transaction mempool.
 Only supports JSON as output format.
 Refer to the `getmempoolinfo` RPC help for details.
 
-`GET /rest/mempool/contents.json`
+`GET /rest/mempool/contents.json?verbose=<true|false>&mempool_sequence=<false|true>`
 
 Returns the transactions in the mempool.
 Only supports JSON as output format.
-Refer to the `getrawmempool` RPC help for details.
+Refer to the `getrawmempool` RPC help for details. Defaults to setting
+`verbose=true` and `mempool_sequence=false`.
+
+*Query parameters for `verbose` and `mempool_sequence` available in 25.0 and up.*
+
 
 Risks
 -------------
