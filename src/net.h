@@ -434,7 +434,10 @@ public:
     std::optional<std::pair<CNetMessage, bool>> PollMessage()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
-    size_t SocketSendData() EXCLUSIVE_LOCKS_REQUIRED(cs_vSend, !m_sock_mutex);
+    size_t SocketSendData() EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !m_sock_mutex)
+    {
+        return WITH_LOCK(cs_vSend, return SocketSendDataInternal());
+    }
 
     size_t PushMessage(CSerializedNetMsg&& msg)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !m_sock_mutex);
@@ -660,6 +663,8 @@ private:
      * Otherwise this unique_ptr is empty.
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
+
+    size_t SocketSendDataInternal() EXCLUSIVE_LOCKS_REQUIRED(cs_vSend, !m_sock_mutex);
 };
 
 /**
