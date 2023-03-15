@@ -436,6 +436,9 @@ public:
 
     size_t SocketSendData() EXCLUSIVE_LOCKS_REQUIRED(cs_vSend, !m_sock_mutex);
 
+    size_t PushMessage(CSerializedNetMsg&& msg)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !m_sock_mutex);
+
     /** Account for the total size of a sent message in the per msg type connection stats. */
     void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
         EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
