@@ -213,7 +213,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
         obj.pushKV("last_block", count_seconds(stats.m_last_block_time));
-        obj.pushKV("bytessent", stats.nSendBytes);
+        obj.pushKV("bytessent", stats.m_send_bytes);
         obj.pushKV("bytesrecv", stats.nRecvBytes);
         obj.pushKV("conntime", count_seconds(stats.m_connected));
         obj.pushKV("timeoffset", stats.nTimeOffset);

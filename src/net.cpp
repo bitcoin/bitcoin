@@ -649,9 +649,9 @@ void CNode::CopyStats(CNodeStats& stats)
     X(m_bip152_highbandwidth_to);
     X(m_bip152_highbandwidth_from);
     {
-        LOCK(cs_vSend);
+        LOCK(m_send_queue_mutex);
         X(mapSendBytesPerMsgType);
-        X(nSendBytes);
+        X(m_send_bytes);
     }
     {
         LOCK(cs_vRecv);
@@ -2772,12 +2772,12 @@ std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage()
 
 size_t CNode::SocketSendDataInternal()
 {
-    auto it = vSendMsg.begin();
+    auto it = m_send_queue.begin();
     size_t nSentSize = 0;
 
-    while (it != vSendMsg.end()) {
+    while (it != m_send_queue.end()) {
         const auto& data = *it;
-        assert(data.size() > nSendOffset);
+        assert(data.size() > m_send_offset);
         int nBytes = 0;
         {
             LOCK(m_sock_mutex);
@@ -2786,21 +2786,21 @@ size_t CNode::SocketSendDataInternal()
             }
             int flags = MSG_NOSIGNAL | MSG_DONTWAIT;
 #ifdef MSG_MORE
-            if (it + 1 != vSendMsg.end()) {
+            if (it + 1 != m_send_queue.end()) {
                 flags |= MSG_MORE;
             }
 #endif
-            nBytes = m_sock->Send(reinterpret_cast<const char*>(data.data()) + nSendOffset, data.size() - nSendOffset, flags);
+            nBytes = m_sock->Send(reinterpret_cast<const char*>(data.data()) + m_send_offset, data.size() - m_send_offset, flags);
         }
         if (nBytes > 0) {
             m_last_send = GetTime<std::chrono::seconds>();
-            nSendBytes += nBytes;
-            nSendOffset += nBytes;
+            m_send_bytes += nBytes;
+            m_send_offset += nBytes;
             nSentSize += nBytes;
-            if (nSendOffset == data.size()) {
-                nSendOffset = 0;
-                nSendSize -= data.size();
-                fPauseSend = nSendSize > m_max_send_buf_size;
+            if (m_send_offset == data.size()) {
+                m_send_offset = 0;
+                m_total_send_size -= data.size();
+                fPauseSend = m_total_send_size > m_max_send_buf_size;
                 it++;
             } else {
                 // could not send full message; stop sending more
@@ -2820,11 +2820,11 @@ size_t CNode::SocketSendDataInternal()
         }
     }
 
-    if (it == vSendMsg.end()) {
-        assert(nSendOffset == 0);
-        assert(nSendSize == 0);
+    if (it == m_send_queue.end()) {
+        assert(m_send_offset == 0);
+        assert(m_total_send_size == 0);
     }
-    vSendMsg.erase(vSendMsg.begin(), it);
+    m_send_queue.erase(m_send_queue.begin(), it);
     return nSentSize;
 }
 
@@ -2837,16 +2837,16 @@ size_t CNode::PushMessage(CSerializedNetMsg&& msg)
 
     size_t nBytesSent = 0;
     {
-        LOCK(cs_vSend);
-        bool optimisticSend(vSendMsg.empty());
+        LOCK(m_send_queue_mutex);
+        bool optimisticSend(m_send_queue.empty());
 
         // log total amount of bytes per message type
         AccountForSentBytes(msg.m_type, nTotalSize);
-        nSendSize += nTotalSize;
+        m_total_send_size += nTotalSize;
 
-        if (nSendSize > m_max_send_buf_size) fPauseSend = true;
-        vSendMsg.push_back(std::move(serializedHeader));
-        if (msg.data.size()) vSendMsg.push_back(std::move(msg.data));
+        if (m_total_send_size > m_max_send_buf_size) fPauseSend = true;
+        m_send_queue.push_back(std::move(serializedHeader));
+        if (msg.data.size()) m_send_queue.push_back(std::move(msg.data));
 
         // If write queue empty, attempt "optimistic write"
         if (optimisticSend) nBytesSent = SocketSendDataInternal();

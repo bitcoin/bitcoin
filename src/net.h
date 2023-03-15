@@ -203,7 +203,7 @@ public:
     bool m_bip152_highbandwidth_to;
     bool m_bip152_highbandwidth_from;
     int m_starting_height;
-    uint64_t nSendBytes;
+    uint64_t m_send_bytes;
     mapMsgTypeSize mapSendBytesPerMsgType;
     uint64_t nRecvBytes;
     mapMsgTypeSize mapRecvBytesPerMsgType;
@@ -427,27 +427,27 @@ public:
     std::optional<std::pair<CNetMessage, bool>> PollMessage()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
-    size_t SocketSendData() EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !m_sock_mutex)
+    size_t SocketSendData() EXCLUSIVE_LOCKS_REQUIRED(!m_send_queue_mutex, !m_sock_mutex)
     {
-        return WITH_LOCK(cs_vSend, return SocketSendDataInternal());
+        return WITH_LOCK(m_send_queue_mutex, return SocketSendDataInternal());
     }
 
     size_t PushMessage(CSerializedNetMsg&& msg)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !m_sock_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_send_queue_mutex, !m_sock_mutex);
 
-    bool IsSendQueueEmpty() const EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend)
+    bool IsSendQueueEmpty() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_queue_mutex)
     {
-        return WITH_LOCK(cs_vSend, return vSendMsg.empty());
+        return WITH_LOCK(m_send_queue_mutex, return m_send_queue.empty());
     }
 
-    void TestOnlyClearSendQueue() EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend)
+    void TestOnlyClearSendQueue() EXCLUSIVE_LOCKS_REQUIRED(!m_send_queue_mutex)
     {
-        WITH_LOCK(cs_vSend, vSendMsg.clear());
+        WITH_LOCK(m_send_queue_mutex, m_send_queue.clear());
     }
 
     /** Account for the total size of a sent message in the per msg type connection stats. */
     void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
+        EXCLUSIVE_LOCKS_REQUIRED(m_send_queue_mutex)
     {
         mapSendBytesPerMsgType[msg_type] += sent_bytes;
     }
@@ -619,7 +619,7 @@ public:
 
     void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
-    void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
+    void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !m_send_queue_mutex, !cs_vRecv);
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
@@ -643,19 +643,19 @@ private:
     std::list<CNetMessage> m_msg_process_queue GUARDED_BY(m_msg_process_queue_mutex);
     size_t m_msg_process_queue_size GUARDED_BY(m_msg_process_queue_mutex){0};
 
-    /** Total size of all vSendMsg entries */
-    size_t nSendSize GUARDED_BY(cs_vSend){0};
-    /** Offset inside the first vSendMsg already sent */
-    size_t nSendOffset GUARDED_BY(cs_vSend){0};
-    uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
-    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
-    mutable Mutex cs_vSend;
+    /** Total size of all m_send_queue entries */
+    size_t m_total_send_size GUARDED_BY(m_send_queue_mutex){0};
+    /** Offset inside the first m_send_queue already sent */
+    size_t m_send_offset GUARDED_BY(m_send_queue_mutex){0};
+    uint64_t m_send_bytes GUARDED_BY(m_send_queue_mutex){0};
+    std::deque<std::vector<unsigned char>> m_send_queue GUARDED_BY(m_send_queue_mutex);
+    mutable Mutex m_send_queue_mutex;
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
     mutable Mutex m_addr_local_mutex;
 
-    mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
+    mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(m_send_queue_mutex);
     mapMsgTypeSize mapRecvBytesPerMsgType GUARDED_BY(cs_vRecv);
 
     /**
@@ -670,7 +670,7 @@ private:
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
 
-    size_t SocketSendDataInternal() EXCLUSIVE_LOCKS_REQUIRED(cs_vSend, !m_sock_mutex);
+    size_t SocketSendDataInternal() EXCLUSIVE_LOCKS_REQUIRED(m_send_queue_mutex, !m_sock_mutex);
 };
 
 /**

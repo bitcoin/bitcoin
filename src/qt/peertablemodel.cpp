@@ -84,7 +84,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         case Ping:
             return GUIUtil::formatPingTime(rec->nodeStats.m_min_ping_time);
         case Sent:
-            return GUIUtil::formatBytes(rec->nodeStats.nSendBytes);
+            return GUIUtil::formatBytes(rec->nodeStats.m_send_bytes);
         case Received:
             return GUIUtil::formatBytes(rec->nodeStats.nRecvBytes);
         case Subversion:
