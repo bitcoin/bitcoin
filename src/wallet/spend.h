@@ -191,7 +191,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
  *                                                or (2) an specific error message if there was something particularly wrong (e.g. a selection
  *                                                result that surpassed the tx max weight size).
  */
-util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
