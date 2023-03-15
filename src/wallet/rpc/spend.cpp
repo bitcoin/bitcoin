@@ -973,6 +973,11 @@ static std::vector<RPCArg> OutputsDoc()
                 {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
             },
         },
+        {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+            {
+                {"anchor", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Creates an ephemeral anchor. A key-value pair. The key must be \"anchor\", the value is the amount in " + CURRENCY_UNIT},
+            },
+        },
     };
 }
 
