@@ -470,41 +470,33 @@ public:
         };
     }
 };
-
-/**
- * Signet: test network with an additional consensus parameter (see BIP325).
- */
 class SigNetParams : public CChainParams {
 public:
-    explicit SigNetParams(const ArgsManager& args) {
+    explicit SigNetParams(const SigNetOptions& options)
+    {
         std::vector<uint8_t> bin;
         vSeeds.clear();
 
-        if (!args.IsArgSet("-signetchallenge")) {
+        if (!options.challenge) {
             bin = ParseHex("512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae");
-            vSeeds.emplace_back("seed.signet.bitcoin.sprovoost.nl");
+            vSeeds.emplace_back("seed.signet.bitcoin.sprovoost.nl.");
 
             // Hardcoded nodes can be removed once there are more DNS seeds
             vSeeds.emplace_back("178.128.221.177");
             vSeeds.emplace_back("v7ajjeirttkbnt32wpy3c6w3emwnfr3fkla7hpxcfokr3ysd3kqtzmqd.onion:38333");
 
-            consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000d145533ce");
-            consensus.defaultAssumeValid = uint256S("0x00000128807d9175c494e24d805fc7854f7d79aa965cbb128342ad8b70cecfa5"); // 5348
+            consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000001291fc22898");
+            consensus.defaultAssumeValid = uint256S("0x000000d1a0e224fa4679d2fb2187ba55431c284fa1b74cbc8cfda866fd4d2c09"); // 105495
             m_assumed_blockchain_size = 1;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
-                // Data from RPC: getchaintxstats 4096 00000128807d9175c494e24d805fc7854f7d79aa965cbb128342ad8b70cecfa5
-                /* nTime    */ 1601382000,
-                /* nTxCount */ 5435,
-                /* dTxRate  */ 0.001898346323372538,
+                // Data from RPC: getchaintxstats 4096 000000d1a0e224fa4679d2fb2187ba55431c284fa1b74cbc8cfda866fd4d2c09
+                .nTime    = 1661702566,
+                .nTxCount = 1903567,
+                .dTxRate  = 0.02336701143027275,
             };
         } else {
-            const auto signet_challenge = args.GetArgs("-signetchallenge");
-            if (signet_challenge.size() != 1) {
-                throw std::runtime_error(strprintf("%s: -signetchallenge cannot be multiple values.", __func__));
-            }
-            bin = ParseHex(signet_challenge[0]);
-
+            bin = *options.challenge;
             consensus.nMinimumChainWork = uint256{};
             consensus.defaultAssumeValid = uint256{};
             m_assumed_blockchain_size = 0;
@@ -514,53 +506,25 @@ public:
                 0,
                 0,
             };
-            LogPrintf("Signet with challenge %s\n", signet_challenge[0]);
+            LogPrintf("Signet with challenge %s\n", HexStr(bin));
         }
 
-        if (args.IsArgSet("-signetseednode")) {
-            vSeeds = args.GetArgs("-signetseednode");
+        if (options.seeds) {
+            vSeeds = *options.seeds;
         }
 
         strNetworkID = CBaseChainParams::SIGNET;
         consensus.signet_blocks = true;
-        consensus.nSeniorityHeight1 = 60;
-        consensus.nSeniorityLevel1 = 0.35;
-        consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5;
-        consensus.nSeniorityLevel2 = 1.0;
-        consensus.nSuperblockStartBlock = 1;
-        consensus.nSuperblockCycle = 60;
-        consensus.nGovernanceMinQuorum = 1;
-        consensus.nGovernanceFilterElements = 500;
-        consensus.nMasternodeMinimumConfirmations = 1;
-        consensus.nMinMNSubsidySats = 527500000;
-
-        consensus.nSYSXAsset = 123456;
-        consensus.nNEVMChainID = 5700;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
-        consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
-        consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
-        consensus.nBridgeStartBlock = 1000;
-        consensus.nNEVMStartBlock = 1348000;
-        consensus.nPODAStartBlock = 1450000;
-        consensus.nV19StartBlock = 1450000;
-        consensus.nUTXOAssetsBlock = 0;
-        consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
-        consensus.DIP0003Height = 200;
-        consensus.DIP0003EnforcementHeight = 400;
-        consensus.nAuxpowStartHeight = 1;
-        consensus.nAuxpowChainId = 16;
-        consensus.nAuxpowOldChainId = 4096;
-        consensus.fStrictChainId = false;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 500;
+        consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256{};
-        consensus.BIP65Height = 1351;
-        consensus.BIP66Height = 1251;
+        consensus.BIP65Height = 1;
+        consensus.BIP66Height = 1;
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
+        consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1815; // 90% of 2016
@@ -584,7 +548,7 @@ public:
         uint256 hash = h.GetHash();
         memcpy(pchMessageStart, hash.begin(), 4);
 
-        nDefaultPort = 38369;
+        nDefaultPort = 38333;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1598918400, 52613770, 0x1e0377ae, 1, 50 * COIN);
@@ -600,17 +564,8 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tsys";
-        // privey cTQmhexENtxiSVzaR1Rhx5uwX4V9H9Ajkc2CLa64LUX8BqcHohqr
-        vSporkAddresses = {"tsys1qc28aan6qkuhuj30cpx3jet3l0mrr9sfp8a9typ"};
-        nMinSporkKeys = 1;
-        // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
-        nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
-        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        bech32_hrp = "tb";
+
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         m_is_test_chain = true;
@@ -622,12 +577,15 @@ public:
  * Regression test: intended for private networks only. Has minimal difficulty to ensure that
  * blocks can be found instantly.
  */
-class CRegTestParams : public CChainParams {
+class CRegTestParams : public CChainParams
+{
 public:
-    explicit CRegTestParams(const ArgsManager& args) {
+    explicit CRegTestParams(const RegTestOptions& opts)
+    {
         strNetworkID =  CBaseChainParams::REGTEST;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
+        consensus.nSubsidyHalvingInterval = 150;
         consensus.BIP34Height = 1; // Always active unless overridden
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1;  // Always active unless overridden
@@ -646,7 +604,6 @@ public:
         consensus.nGovernanceFilterElements = 100;
         consensus.nMasternodeMinimumConfirmations = 1;
         consensus.nMinMNSubsidySats = 527500000;
-
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 6 * 60 * 60;
         consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
@@ -654,6 +611,7 @@ public:
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
@@ -664,10 +622,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256{};
-
-        // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256{};
         consensus.nAuxpowStartHeight = 0;
         consensus.nAuxpowChainId = 16;
@@ -687,22 +642,46 @@ public:
         consensus.nUTXOAssetsBlockProvisioning = 1000;
         consensus.DIP0003Height = 432;
         consensus.DIP0003EnforcementHeight = 432;
+
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
         nDefaultPort = 18444;
-        nPruneAfterHeight = args.GetBoolArg("-fastprune", false) ? 100 : 1000;
+        nPruneAfterHeight = opts.fastprune ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
-        UpdateActivationParametersFromArgs(args);
+        for (const auto& [dep, height] : opts.activation_heights) {
+            switch (dep) {
+            case Consensus::BuriedDeployment::DEPLOYMENT_SEGWIT:
+                consensus.SegwitHeight = int{height};
+                break;
+            case Consensus::BuriedDeployment::DEPLOYMENT_HEIGHTINCB:
+                consensus.BIP34Height = int{height};
+                break;
+            case Consensus::BuriedDeployment::DEPLOYMENT_DERSIG:
+                consensus.BIP66Height = int{height};
+                break;
+            case Consensus::BuriedDeployment::DEPLOYMENT_CLTV:
+                consensus.BIP65Height = int{height};
+                break;
+            case Consensus::BuriedDeployment::DEPLOYMENT_CSV:
+                consensus.CSVHeight = int{height};
+                break;
+            }
+        }
 
-        genesis = CreateGenesisBlock(1553040331, 3, 0x207fffff, 1, 50 * COIN);
+        for (const auto& [deployment_pos, version_bits_params] : opts.version_bits_parameters) {
+            consensus.vDeployments[deployment_pos].nStartTime = version_bits_params.start_time;
+            consensus.vDeployments[deployment_pos].nTimeout = version_bits_params.timeout;
+            consensus.vDeployments[deployment_pos].min_activation_height = version_bits_params.min_activation_height;
+        }
 
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
+        genesis = CreateGenesisBlock(1553040331, 3, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
@@ -724,15 +703,13 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-       /*
-
-
+        
         checkpointData = {
             {
-                {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
+                {0, uint256S("0x28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194")},
             }
-        };*/
-        // SYSCOIN
+        };
+
         m_assumeutxo_data = MapAssumeutxo{
             {
                 110,
@@ -758,17 +735,6 @@ public:
 
         bech32_hrp = "bcrt";
     }
-
-    /**
-     * Allows modifying the Version Bits regtest parameters.
-     */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int min_activation_height)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-        consensus.vDeployments[d].min_activation_height = min_activation_height;
-    }
-    void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
 std::unique_ptr<const CChainParams> CChainParams::SigNet(const SigNetOptions& options)

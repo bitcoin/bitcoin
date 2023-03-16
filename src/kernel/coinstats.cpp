@@ -30,7 +30,8 @@
 #include <memory>
 #include <string>
 #include <utility>
-
+// SYSCOIN
+#include <chainparams.h>
 namespace kernel {
 
 CCoinsStats::CCoinsStats(int block_height, const uint256& block_hash)

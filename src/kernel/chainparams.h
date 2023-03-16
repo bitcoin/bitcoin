@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KERNEL_CHAINPARAMS_H
-#define BITCOIN_KERNEL_CHAINPARAMS_H
+#ifndef SYSCOIN_KERNEL_CHAINPARAMS_H
+#define SYSCOIN_KERNEL_CHAINPARAMS_H
 
 #include <consensus/params.h>
 #include <netaddress.h>
@@ -70,7 +70,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system.
+ * Syscoin system.
  */
 class CChainParams
 {
@@ -159,7 +159,18 @@ public:
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();
-
+    // SYSCOIN
+    int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
+    const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
+    int MinSporkKeys() const { return nMinSporkKeys; }
+    void UpdateLLMQTestParams(int size, int threshold);
+    /** Require addresses specified with "-externalip" parameter to be routable */
+    bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
+    /** How long to wait until we allow retrying of a LLMQ connection  */
+    int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
+    void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
+    void UpdateDIP19Parameters(int nActivationHeight);
+    virtual ~CChainParams() {}
 protected:
     CChainParams() {}
 
@@ -182,6 +193,12 @@ protected:
     CCheckpointData checkpointData;
     MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
+    // SYSCOIN
+    int nLLMQConnectionRetryTimeout;
+    bool fRequireRoutableExternalIP;
+    int nFulfilledRequestExpireTime;
+    std::vector<std::string> vSporkAddresses;
+    int nMinSporkKeys;
 };
 
-#endif // BITCOIN_KERNEL_CHAINPARAMS_H
+#endif // SYSCOIN_KERNEL_CHAINPARAMS_H

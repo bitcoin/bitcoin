@@ -11,6 +11,7 @@
 //
 // It is part of the libsyscoinkernel project.
 
+#include <kernel/chainparams.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
 #include <kernel/validation_cache_sizes.h>
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
 
     // SETUP: Misc Globals
     SelectParams(CBaseChainParams::MAIN);
-    const CChainParams& chainparams = Params();
+    auto chainparams = CChainParams::Main();
 
     kernel::Context kernel_context{};
     // We can't use a goto here, but we can use an assert since none of the
@@ -85,7 +86,7 @@ int main(int argc, char* argv[])
 
     // SETUP: Chainstate
     const ChainstateManager::Options chainman_opts{
-        .chainparams = chainparams,
+        .chainparams = *chainparams,
         .datadir = gArgs.GetDataDirNet(),
         .adjusted_time_callback = NodeClock::now,
     };
