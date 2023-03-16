@@ -17,7 +17,6 @@ FUZZ_TARGET(script_bitcoin_consensus)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::vector<uint8_t> random_bytes_1 = ConsumeRandomLengthByteVector(fuzzed_data_provider);
     const std::vector<uint8_t> random_bytes_2 = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-    const CAmount money = ConsumeMoney(fuzzed_data_provider);
     dashconsensus_error err;
     dashconsensus_error* err_p = fuzzed_data_provider.ConsumeBool() ? &err : nullptr;
     const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
