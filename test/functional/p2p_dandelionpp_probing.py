@@ -35,7 +35,8 @@ INBOUND_PEER_TX_DELAY = 2  # seconds
 TXID_RELAY_DELAY = 2 # seconds
 
 # Python test constants
-MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY + 1000
+#MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY
+MAX_GETDATA_INBOUND_WAIT = 120 #
 
 class DandelionProbingTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -47,7 +48,6 @@ class DandelionProbingTest(BitcoinTestFramework):
 
         self.log.info("Adding P2PInterface")
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
-
 
         # There is a low probability that these tests will fail even if the
         # implementation is correct. Thus, these tests are repeated upon
@@ -70,12 +70,7 @@ class DandelionProbingTest(BitcoinTestFramework):
             msg.inv.append(CInv(t=MSG_TX, h=txid))
             peer.send_and_ping(msg)
 
-            if peer.last_message.get("notfound"):
-                assert peer.message_count["notfound"] > 1
-            else:
-                self.log.info(txid)
-                self.log.info(peer.last_message.get("tx").tx.calc_sha256(True))
-                assert peer.last_message.get("tx").tx.rehash() != tx['txid']
+            assert peer.last_message.get("notfound")
 
 if __name__ == "__main__":
     DandelionProbingTest().main()
