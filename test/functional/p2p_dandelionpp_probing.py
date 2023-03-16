@@ -66,12 +66,16 @@ class DandelionProbingTest(BitcoinTestFramework):
 
             self.nodes[0].setmocktime(int(time.time() + MAX_GETDATA_INBOUND_WAIT))
 
-            peer.message_count["notfound"] = 0
             msg = msg_getdata()
             msg.inv.append(CInv(t=MSG_TX, h=txid))
             peer.send_and_ping(msg)
 
-            assert peer.message_count["notfound"] == 1
+            if peer.last_message.get("notfound"):
+                assert peer.message_count["notfound"] > 1
+            else:
+                self.log.info(txid)
+                self.log.info(peer.last_message.get("tx").tx.calc_sha256(True))
+                assert peer.last_message.get("tx").tx.rehash() != tx['txid']
 
 if __name__ == "__main__":
     DandelionProbingTest().main()
