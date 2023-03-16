@@ -18,7 +18,6 @@ Loop behavior:
 
 import time
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
         CInv,
         msg_getdata,
