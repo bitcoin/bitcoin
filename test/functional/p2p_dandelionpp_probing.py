@@ -10,9 +10,8 @@ NOTE: check link for basis of this test:
 https://github.com/digibyte/digibyte/blob/master/test/functional/p2p_dandelion.py
 
 Resistance to active probing:
-   Stem:  0 --> 1 --> 2 --> 0 where each node supports dandelion
    Probe: TestNode --> 0
-   Node 0 generates a Dandelion transaction "tx": 1.0 BTC from Node 0 to Node 2
+   Node 0 generates a Dandelion++ transaction "tx"
    TestNode immediately sends getdata for tx to Node 0
    Assert that Node 0 does not reply with tx
 """
