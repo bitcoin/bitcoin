@@ -115,11 +115,6 @@ bool WalletInit::ParameterInteraction() const
 
         return true;
     }
-    if (gArgs.GetIntArg("-prune", 0) > 0) {
-        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -prune=0 -> setting -disablegovernance=true\n", __func__);
-        }
-    }
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
