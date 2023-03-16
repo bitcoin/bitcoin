@@ -21,73 +21,58 @@ import time
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
-        CTransaction,
         CInv,
-
-        from_hex,
         msg_getdata,
-
         MSG_TX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.wallet import MiniWallet
 
-class DandelionP2PInterface(P2PInterface):
-    def send_dandeliontx_getdata(self, tx_hash):
-        msg = msg_getdata()
-        msg.inv.append(CInv(MSG_TX, tx_hash))
-        self.send_message(msg)
+# Constants from net_processing
+GETDATA_TX_INTERVAL = 60  # seconds
+INBOUND_PEER_TX_DELAY = 2  # seconds
+TXID_RELAY_DELAY = 2 # seconds
+
+# Python test constants
+MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY + 1000
 
 class DandelionProbingTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
-        self.setup_clean_chain = True
-        self.num_nodes = 3
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
-    def setup_network(self):
-        self.setup_nodes()
-        # Tests 1,2,3: 0 --> 1 --> 2 --> 0
-        self.connect_nodes(0, 1)
-        self.connect_nodes(1, 2)
-        self.connect_nodes(2, 0)
+        self.num_nodes = 1
 
     def run_test(self):
         self.log.info("Setting up")
-
-        self.log.info("Mining COINBASE_MATURITY + 1 blocks")
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        wallet = MiniWallet(self.nodes[0])
 
         self.log.info("Adding P2PInterface")
-        peer_txer = self.nodes[0].add_p2p_connection(DandelionP2PInterface())
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+
 
         # There is a low probability that these tests will fail even if the
         # implementation is correct. Thus, these tests are repeated upon
         # failure. A true bug will result in repeated failures.
         self.log.info("Starting dandelion tests")
 
-        # Attempts: 5
-        for i in range(5):
-            node2_address = self.nodes[2].getnewaddress()
-            txid = self.nodes[0].sendtoaddress(node2_address, 1.0)
-            tx = from_hex(CTransaction(), self.nodes[0].gettransaction(txid)["hex"])
 
-            # Test 1: Resistance to active probing
-            self.log.info("Testing resistance to active probing")
-            peer_txer.message_count["notfound"] = 0
-            peer_txer.send_dandeliontx_getdata(tx.calc_sha256(True))
+        MAX_REPEATS = 10
+        self.log.info("Running test up to {} times.".format(MAX_REPEATS))
+        for i in range(MAX_REPEATS):
+            self.log.info('Run repeat {}'.format(i + 1))
 
-            # Give the msg some time to work
-            time.sleep(10)
+            self.log.info("Create the tx")
+            tx = wallet.send_self_transfer(from_node=self.nodes[0])
+            txid = int(tx['txid'], 16)
+            self.log.info("Sent tx with txid {}".format(txid))
 
-            # Check that our test passed
-            assert(peer_txer.message_count["notfound"] == 1)
-            self.log.info("Success: resistance to active probing")
+            self.nodes[0].setmocktime(int(time.time() + MAX_GETDATA_INBOUND_WAIT))
+
+            peer.message_count["notfound"] = 0
+            msg = msg_getdata()
+            msg.inv.append(CInv(t=MSG_TX, h=txid))
+            peer.send_and_ping(msg)
+
+            assert peer.message_count["notfound"] == 1
 
 if __name__ == "__main__":
     DandelionProbingTest().main()
