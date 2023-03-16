@@ -25,6 +25,7 @@
 #include <cstring>
 #include <type_traits>
 // SYSCOIN includes for gen block
+#include <chainparams.h>
 /*#include <uint256.h>
 #include <arith_uint256.h>
 #include <hash.h>
@@ -87,15 +88,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
-}
-void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-{
-    consensus.DIP0003Height = nActivationHeight;
-    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
-}
-void CChainParams::UpdateDIP19Parameters(int nActivationHeight)
-{
-    consensus.nV19StartBlock = nActivationHeight;
 }
 void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
     auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
@@ -637,11 +629,11 @@ public:
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = 205;
         consensus.nPODAStartBlock = 0;
-        consensus.nV19StartBlock = 0;
+        consensus.nV19StartBlock = opts.v19startblock;
         consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = 1000;
-        consensus.DIP0003Height = 432;
-        consensus.DIP0003EnforcementHeight = 432;
+        consensus.DIP0003Height = opts.dip3startblock;
+        consensus.DIP0003EnforcementHeight = opts.dip3enforcement;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -677,7 +669,6 @@ public:
             consensus.vDeployments[deployment_pos].nTimeout = version_bits_params.timeout;
             consensus.vDeployments[deployment_pos].min_activation_height = version_bits_params.min_activation_height;
         }
-
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/

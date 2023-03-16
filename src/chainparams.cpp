@@ -28,7 +28,6 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
         options.challenge.emplace(ParseHex(signet_challenge[0]));
     }
 }
-
 void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
 {
     if (auto value = args.GetBoolArg("-fastprune")) options.fastprune = *value;
@@ -52,7 +51,30 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
             throw std::runtime_error(strprintf("Invalid name (%s) for -testactivationheight=name@height.", arg));
         }
     }
-
+    // SYSCOIN
+    if (args.IsArgSet("-mncollateral")) {
+        uint32_t collateral = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED);
+        nMNCollateralRequired = collateral*COIN;
+    }
+    if (args.IsArgSet("-dip3params")) {
+        std::string strDIP3Params = args.GetArg("-dip3params", "");
+        std::vector<std::string> vDIP3Params = SplitString(strDIP3Params, ':');
+        if (vDIP3Params.size() != 2) {
+            throw std::runtime_error("DIP3 parameters malformed, expecting DIP3ActivationHeight:DIP3EnforcementHeight");
+        }
+        if (!ParseInt32(vDIP3Params[0], &options.dip3startblock)) {
+            throw std::runtime_error(strprintf("Invalid nDIP3ActivationHeight (%s)", vDIP3Params[0]));
+        }
+        if (!ParseInt32(vDIP3Params[1], &options.dip3enforcement)) {
+            throw std::runtime_error(strprintf("Invalid nDIP3EnforcementHeight (%s)", vDIP3Params[1]));
+        }
+    }
+    else if (args.IsArgSet("-dip19params")) {
+        std::string strDIP19Params = args.GetArg("-dip19params", "");
+        if (!ParseInt32(strDIP19Params, &options.v19startblock)) {
+            throw std::runtime_error(strprintf("Invalid nDIP19ActivationHeight (%s)", strDIP19Params));
+        }
+    }
     if (!args.IsArgSet("-vbparams")) return;
 
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
