@@ -1080,7 +1080,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     // SYSCOIN
     fDisableGovernance = args.GetBoolArg("-disablegovernance", false);
     if (fDisableGovernance) {
-        LogPrintf("You are starting with governance validation disabled. %s\n" , fPruneMode ? "This is expected because you are running a pruned node." : "");
+        LogPrintf("You are starting with governance validation disabled.\n");
     }
     nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {
