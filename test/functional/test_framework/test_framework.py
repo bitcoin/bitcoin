@@ -1076,13 +1076,21 @@ class DashTestFramework(BitcoinTestFramework):
         for i in range(0, idx):
             self.connect_nodes(i, idx)
 
-    def dynamically_add_masternode(self, hpmn=False):
+    def dynamically_add_masternode(self, hpmn=False, rnd=None, should_be_rejected=False):
         mn_idx = len(self.nodes)
 
         node_p2p_port = p2p_port(mn_idx)
         node_rpc_port = rpc_port(mn_idx)
 
-        created_mn_info = self.dynamically_prepare_masternode(mn_idx, node_p2p_port, hpmn)
+        protx_success = False
+        try:
+            created_mn_info = self.dynamically_prepare_masternode(mn_idx, node_p2p_port, hpmn, rnd)
+            protx_success = True
+        except:
+            self.log.info("protx_hpmn rejected")
+        if should_be_rejected:
+            assert_equal(protx_success, False)
+            return
 
         self.dynamically_initialize_datadir(self.nodes[0].chain,node_p2p_port, node_rpc_port)
         node_info = self.add_dynamically_node(self.extra_args[1])
@@ -1104,7 +1112,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Successfully started and synced proTx:"+str(created_mn_info.proTxHash))
         return created_mn_info
 
-    def dynamically_prepare_masternode(self, idx, node_p2p_port, hpmn=False):
+    def dynamically_prepare_masternode(self, idx, node_p2p_port, hpmn=False, rnd=None):
         bls = self.nodes[0].bls('generate')
         collateral_address = self.nodes[0].getnewaddress()
         funds_address = self.nodes[0].getnewaddress()
@@ -1112,7 +1120,7 @@ class DashTestFramework(BitcoinTestFramework):
         voting_address = self.nodes[0].getnewaddress()
         reward_address = self.nodes[0].getnewaddress()
 
-        platform_node_id = hash160(b'%d' % node_p2p_port).hex()
+        platform_node_id = hash160(b'%d' % rnd).hex() if rnd is not None else hash160(b'%d' % node_p2p_port).hex()
         platform_p2p_port = '%d' % (node_p2p_port + 101) if hpmn else ''
         platform_http_port = '%d' % (node_p2p_port + 102) if hpmn else ''
 
@@ -1145,6 +1153,32 @@ class DashTestFramework(BitcoinTestFramework):
         mn_type_str = "HPMN" if hpmn else "MN"
         self.log.info("Prepared %s %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (mn_type_str, idx, collateral_txid, collateral_vout, protx_result))
         return mn_info
+
+    def dynamically_hpmn_update_service(self, hpmn_info, rnd=None, should_be_rejected=False):
+        funds_address = self.nodes[0].getnewaddress()
+        operator_reward_address = self.nodes[0].getnewaddress()
+
+        # For the sake of the test, generate random nodeid, p2p and http platform values
+        r = rnd if rnd is not None else random.randint(1000, 65000)
+        platform_node_id = hash160(b'%d' % r).hex()
+        platform_p2p_port = '%d' % (r + 1)
+        platform_http_port = '%d' % (r + 2)
+
+        self.nodes[0].sendtoaddress(funds_address, 1)
+        self.nodes[0].generate(1)
+        self.sync_all(self.nodes)
+
+        protx_success = False
+        try:
+            self.nodes[0].protx('update_service_hpmn', hpmn_info.proTxHash, hpmn_info.addr, hpmn_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes)
+            self.log.info("Updated HPMN %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (hpmn_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
+            protx_success = True
+        except:
+            self.log.info("protx_hpmn rejected")
+        if should_be_rejected:
+            assert_equal(protx_success, False)
 
     def prepare_masternodes(self):
         self.log.info("Preparing %d masternodes" % self.mn_count)
