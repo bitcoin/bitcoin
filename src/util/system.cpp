@@ -67,7 +67,6 @@
 #include <typeinfo>
 // SYSCOIN only features
 bool fMasternodeMode = false;
-bool fDisableGovernance = false;
 bool fRegTest = false;
 bool fSigNet = false;
 bool fAssetIndex = false;

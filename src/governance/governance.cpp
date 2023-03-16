@@ -90,7 +90,6 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
 
 void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
-    if (fDisableGovernance) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
@@ -534,7 +533,7 @@ struct sortProposalsByVotes {
 
 void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
-    if (fDisableGovernance || !masternodeSync.IsSynced() || ShutdownRequested()) return;
+    if (!masternodeSync.IsSynced() || ShutdownRequested()) return;
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 

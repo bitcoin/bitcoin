@@ -35,7 +35,6 @@
 // SYSCOIN
 #include <consensus/amount.h>
 extern bool fMasternodeMode;
-extern bool fDisableGovernance;
 extern bool fRegTest;
 extern bool fSigNet;
 extern uint32_t fGethCurrentHeight;

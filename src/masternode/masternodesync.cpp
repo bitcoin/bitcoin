@@ -225,11 +225,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
             // GOVOBJ : SYNC GOVERNANCE ITEMS FROM OUR PEERS
 
             if(nMode == MASTERNODE_SYNC_GOVERNANCE) {
-                if (fDisableGovernance) {
-                    SwitchToNextAsset(connman);
-                    connman.ReleaseNodeVector(vNodesCopy);
-                    return;
-                }
                 LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nMode %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nMode, GetTimeLastBumped(), GetTime(), GetTime() - GetTimeLastBumped());
 
                 // check for timeout first

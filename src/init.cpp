@@ -308,11 +308,9 @@ void Shutdown(NodeContext& node)
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
         CSporkManager tmpSporkMan;
         flatdb6.Dump(sporkManager, tmpSporkMan);
-        if (!fDisableGovernance) {
-            CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-            CGovernanceManager govMan(*node.chainman);
-            flatdb3.Dump(*governance, govMan);
-        }
+        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+        CGovernanceManager govMan(*node.chainman);
+        flatdb3.Dump(*governance, govMan);
     }
 
     if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
@@ -1077,11 +1075,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     init::SetLoggingCategories(args);
     init::SetLoggingLevel(args);
 
-    // SYSCOIN
-    fDisableGovernance = args.GetBoolArg("-disablegovernance", false);
-    if (fDisableGovernance) {
-        LogPrintf("You are starting with governance validation disabled.\n");
-    }
+
     nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -1993,16 +1987,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
     // if regtest then make sure geth is shown as synced as well
     fGethSynced = fRegTest;
-    if(fDisableGovernance) {
-        LogPrintf("You are starting with governance validation disabled.\n");
-    }
-
-
-    if(fDisableGovernance && fMasternodeMode) {
-        return InitError(Untranslated("You can not disable governance validation on a masternode."));
-    }
-    
-    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must have an NEVM connection on a masternode."));
     }
@@ -2034,7 +2018,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     strDBName = "governance.dat";
     uiInterface.InitMessage(_("Loading governance cache...").translated);
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-    if (fLoadCacheFiles && !fDisableGovernance) {
+    if (fLoadCacheFiles) {
         if(!flatdb3.Load(*governance)) {
             return InitError(strprintf(_("Failed to load governance cache from %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
         }
@@ -2067,9 +2051,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
-    if (!fDisableGovernance) {
-        node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
-    }
+    node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 
