@@ -38,13 +38,13 @@ describe('Signature', () => {
             const seed2 = makehash(Uint8Array.from([3, 4, 5, 6, 7]));
             const seed3 = makehash(Uint8Array.from([4, 5, 6, 7, 8]));
 
-            const privateKey1 = BasicSchemeMPL.key_gen(seed1);
-            const privateKey2 = BasicSchemeMPL.key_gen(seed2);
-            const privateKey3 = BasicSchemeMPL.key_gen(seed3);
+            const privateKey1 = BasicSchemeMPL.keyGen(seed1);
+            const privateKey2 = BasicSchemeMPL.keyGen(seed2);
+            const privateKey3 = BasicSchemeMPL.keyGen(seed3);
 
-            const publicKey1 = BasicSchemeMPL.sk_to_g1(privateKey1);
-            const publicKey2 = BasicSchemeMPL.sk_to_g1(privateKey2);
-            const publicKey3 = BasicSchemeMPL.sk_to_g1(privateKey3);
+            const publicKey1 = BasicSchemeMPL.skToG1(privateKey1);
+            const publicKey2 = BasicSchemeMPL.skToG1(privateKey2);
+            const publicKey3 = BasicSchemeMPL.skToG1(privateKey3);
 
             const sig1 = BasicSchemeMPL.sign(privateKey1, message);
             const sig2 = BasicSchemeMPL.sign(privateKey2, message);
@@ -89,14 +89,14 @@ describe('Signature', () => {
         it('Should aggregate signature', () => {
             const {AugSchemeMPL, G2Element, PrivateKey} = blsSignatures;
 
-            const sk = AugSchemeMPL.key_gen(makehash(Uint8Array.from([1, 2, 3])));
-            const pk = AugSchemeMPL.sk_to_g1(sk);
+            const sk = AugSchemeMPL.keyGen(makehash(Uint8Array.from([1, 2, 3])));
+            const pk = AugSchemeMPL.skToG1(sk);
             const msg1 = Uint8Array.from([3, 4, 5]);
             const msg2 = Uint8Array.from([6, 7, 8]);
             const sig1 = AugSchemeMPL.sign(sk, msg1);
             const sig2 = AugSchemeMPL.sign(sk, msg2);
-            const aggregatedSig = G2Element.aggregate_sigs([sig1, sig2]);
-            assert.strictEqual(AugSchemeMPL.aggregate_verify([pk, pk], [msg1, msg2], aggregatedSig), true);
+            const aggregatedSig = G2Element.aggregateSigs([sig1, sig2]);
+            assert.strictEqual(AugSchemeMPL.aggregateVerify([pk, pk], [msg1, msg2], aggregatedSig), true);
 
             sk.delete();
             pk.delete();
@@ -109,7 +109,7 @@ describe('Signature', () => {
         it('Should serialize signature to Buffer', () => {
             const {AugSchemeMPL, G2Element, PrivateKey} = blsSignatures;
 
-            const sk = AugSchemeMPL.key_gen(makehash(Uint8Array.from([1, 2, 3, 4, 5])));
+            const sk = AugSchemeMPL.keyGen(makehash(Uint8Array.from([1, 2, 3, 4, 5])));
             const sig = AugSchemeMPL.sign(sk, Uint8Array.from([100, 2, 254, 88, 90, 45, 23]));
             assert(sig instanceof G2Element);
             assert.deepStrictEqual(Buffer.from(sig.serialize()).toString('hex'), getSignatureHex());
@@ -125,15 +125,15 @@ describe('Signature', () => {
             const message = Uint8Array.from(Buffer.from('Message'));
             const seed1 = makehash(Buffer.from([1, 2, 3, 4, 5]));
             const seed2 = makehash(Buffer.from([1, 2, 3, 4, 6]));
-            const sk1 = AugSchemeMPL.key_gen(seed1);
-            const sk2 = AugSchemeMPL.key_gen(seed2);
-            const pk1 = AugSchemeMPL.sk_to_g1(sk1);
-            const pk2 = AugSchemeMPL.sk_to_g1(sk2);
+            const sk1 = AugSchemeMPL.keyGen(seed1);
+            const sk2 = AugSchemeMPL.keyGen(seed2);
+            const pk1 = AugSchemeMPL.skToG1(sk1);
+            const pk2 = AugSchemeMPL.skToG1(sk2);
             const sig1 = AugSchemeMPL.sign(sk1, message);
             const sig2 = AugSchemeMPL.sign(sk2, message);
             const sig = AugSchemeMPL.aggregate([sig1, sig2]);
 
-            assert(AugSchemeMPL.aggregate_verify([pk1, pk2], [message, message], sig));
+            assert(AugSchemeMPL.aggregateVerify([pk1, pk2], [message, message], sig));
 
             sk1.delete();
             sk2.delete();
@@ -149,8 +149,8 @@ describe('Signature', () => {
             const message1 = Uint8Array.from(Buffer.from('Message'));
             const message2 = Uint8Array.from(Buffer.from('Nessage'));
             const seed = makehash(Buffer.from([1, 2, 3, 4, 5]));
-            const sk = AugSchemeMPL.key_gen(seed);
-            const pk = AugSchemeMPL.sk_to_g1(sk);
+            const sk = AugSchemeMPL.keyGen(seed);
+            const pk = AugSchemeMPL.skToG1(sk);
             const sig = AugSchemeMPL.sign(sk, message1);
             assert.strictEqual(AugSchemeMPL.verify(pk, message2, sig), false);
 
