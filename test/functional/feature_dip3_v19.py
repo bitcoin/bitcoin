@@ -43,7 +43,7 @@ class TestP2PConn(P2PInterface):
 
 class DIP3V19Test(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True, hpmn_count=2)
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -77,6 +77,23 @@ class DIP3V19Test(DashTestFramework):
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
 
         self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+
+        hpmn_info_0 = self.dynamically_add_masternode(hpmn=True, rnd=7)
+        assert hpmn_info_0 is not None
+        self.nodes[0].generate(8)
+        self.sync_blocks(self.nodes)
+
+        self.log.info("Checking that protxs with duplicate HPMN fields are rejected")
+        hpmn_info_1 = self.dynamically_add_masternode(hpmn=True, rnd=7, should_be_rejected=True)
+        assert hpmn_info_1 is None
+        self.dynamically_hpmn_update_service(hpmn_info_0, 8)
+        hpmn_info_2 = self.dynamically_add_masternode(hpmn=True, rnd=8, should_be_rejected=True)
+        assert hpmn_info_2 is None
+        hpmn_info_3 = self.dynamically_add_masternode(hpmn=True, rnd=9)
+        assert hpmn_info_3 is not None
+        self.nodes[0].generate(8)
+        self.sync_blocks(self.nodes)
+        self.dynamically_hpmn_update_service(hpmn_info_0, 9, should_be_rejected=True)
 
         revoke_protx = self.mninfo[-1].proTxHash
         revoke_keyoperator = self.mninfo[-1].keyOperator
