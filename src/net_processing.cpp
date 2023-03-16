@@ -3672,11 +3672,13 @@ void PeerManagerImpl::ProcessMessage(
         if (greatest_common_version >= INCREASE_MAX_HEADERS2_VERSION && m_txreconciliation) {
             // Per BIP-330, we announce txreconciliation support if:
             // - protocol version per the peer's VERSION message supports INCREASE_MAX_HEADERS2_VERSION;
-            // - transaction relay is supported per the peer's VERSION message (see m_relays_txs);
-            // - this is not a block-relay-only connection and not a feeler (see m_relays_txs);
+            // - transaction relay is supported per the peer's VERSION message
+            // - this is not a block-relay-only connection and not a feeler
             // - this is not an addr fetch connection;
             // - we are not in -blocksonly mode.
-            if (pfrom.m_relays_txs && !pfrom.IsAddrFetchConn() && !m_ignore_incoming_txs) {
+            const auto* tx_relay = peer->GetTxRelay();
+            if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
+                !pfrom.IsAddrFetchConn() && !m_ignore_incoming_txs) {
                 const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
                 m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDTXRCNCL,
                                                              TXRECONCILIATION_VERSION, recon_salt));
@@ -3895,7 +3897,8 @@ void PeerManagerImpl::ProcessMessage(
         // Peer must not offer us reconciliations if they specified no tx relay support in VERSION.
         // This flag might also be false in other cases, but the RejectIncomingTxs check above
         // eliminates them, so that this flag fully represents what we are looking for.
-        if (!pfrom.m_relays_txs) {
+        const auto* tx_relay = peer->GetTxRelay();
+        if (!tx_relay || !WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs)) {
             LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "sendtxrcncl received from peer=%d which indicated no tx relay to us; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
