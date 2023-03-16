@@ -355,6 +355,9 @@ BASE_SCRIPTS = [
     'feature_shutdown.py',
     'wallet_migration.py',
     'p2p_ibd_txrelay.py',
+    'p2p_dandelionpp_probing.py',
+    'p2p_dandelionpp_loop.py',
+    'p2p_dandelionpp_blackhole.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
