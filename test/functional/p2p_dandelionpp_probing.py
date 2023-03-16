@@ -54,7 +54,6 @@ class DandelionProbingTest(BitcoinTestFramework):
         # failure. A true bug will result in repeated failures.
         self.log.info("Starting dandelion tests")
 
-
         MAX_REPEATS = 10
         self.log.info("Running test up to {} times.".format(MAX_REPEATS))
         for i in range(MAX_REPEATS):
