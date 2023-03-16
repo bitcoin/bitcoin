@@ -1002,14 +1002,14 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         if (dmn->nType == MnType::HighPerformance) {
             ++newState->nConsecutivePayments;
             if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s is a HPMN, bumping nConsecutivePayments to %d\n",
+                LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s is a HPMN, bumping nConsecutivePayments to %d\n",
                           __func__, dmn->proTxHash.ToString(), newState->nConsecutivePayments);
             }
         }
         newList.UpdateMN(payee->proTxHash, newState);
         if (debugLogs) {
             dmn = newList.GetMN(payee->proTxHash);
-            LogPrintf("CDeterministicMNManager::%s -- MN %s, nConsecutivePayments=%d\n",
+            LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s, nConsecutivePayments=%d\n",
                       __func__, dmn->proTxHash.ToString(), dmn->pdmnState->nConsecutivePayments);
         }
     }
@@ -1021,7 +1021,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         if (dmn.nType != MnType::HighPerformance) return;
         if (dmn.pdmnState->nConsecutivePayments == 0) return;
         if (debugLogs) {
-            LogPrintf("CDeterministicMNManager::%s -- MN %s, reset nConsecutivePayments %d->0\n",
+            LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s, reset nConsecutivePayments %d->0\n",
                       __func__, dmn.proTxHash.ToString(), dmn.pdmnState->nConsecutivePayments);
         }
         auto newState = std::make_shared<CDeterministicMNState>(*dmn.pdmnState);
