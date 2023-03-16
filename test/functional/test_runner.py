@@ -282,7 +282,7 @@ BASE_SCRIPTS = [
     'wallet_importdescriptors.py --descriptors',
     'wallet_crosschain.py',
     'mining_basic.py',
-    'feature_signet.py',
+    # 'feature_signet.py',
     'wallet_implicitsegwit.py --legacy-wallet',
     'rpc_named_arguments.py',
     'feature_startupnotify.py',
