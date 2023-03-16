@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the Partially Signed Transaction RPCs.
 """
-
 from decimal import Decimal
 from itertools import product
 
@@ -27,6 +26,7 @@ from test_framework.psbt import (
     PSBT_IN_SHA256,
     PSBT_IN_HASH160,
     PSBT_IN_HASH256,
+    PSBT_IN_NON_WITNESS_UTXO,
     PSBT_IN_WITNESS_UTXO,
     PSBT_OUT_TAP_TREE,
 )
@@ -59,13 +59,16 @@ class PSBTTest(SyscoinTestFramework):
             ["-walletrbf=0", "-changetype=legacy"],
             []
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    # TODO: Re-enable this test with segwit v1
     def test_utxo_conversion(self):
+        self.log.info("Check that non-witness UTXOs are removed for segwit v1+ inputs")
         mining_node = self.nodes[2]
         offline_node = self.nodes[0]
         online_node = self.nodes[1]
@@ -77,34 +80,41 @@ class PSBTTest(SyscoinTestFramework):
         # Create watchonly on online_node
         online_node.createwallet(wallet_name='wonline', disable_private_keys=True)
         wonline = online_node.get_wallet_rpc('wonline')
-        w2 = online_node.get_wallet_rpc('')
+        w2 = online_node.get_wallet_rpc(self.default_wallet_name)
 
         # Mine a transaction that credits the offline address
-        offline_addr = offline_node.getnewaddress(address_type="p2sh-segwit")
-        online_addr = w2.getnewaddress(address_type="p2sh-segwit")
+        offline_addr = offline_node.getnewaddress(address_type="bech32m")
+        online_addr = w2.getnewaddress(address_type="bech32m")
         wonline.importaddress(offline_addr, "", False)
-        mining_node.sendtoaddress(address=offline_addr, amount=1.0)
-        self.generate(mining_node, nblocks=1)
+        mining_wallet = mining_node.get_wallet_rpc(self.default_wallet_name)
+        mining_wallet.sendtoaddress(address=offline_addr, amount=1.0)
+        self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))
 
-        # Construct an unsigned PSBT on the online node (who doesn't know the output is Segwit, so will include a non-witness UTXO)
+        # Construct an unsigned PSBT on the online node
         utxos = wonline.listunspent(addresses=[offline_addr])
         raw = wonline.createrawtransaction([{"txid":utxos[0]["txid"], "vout":utxos[0]["vout"]}],[{online_addr:0.9999}])
         psbt = wonline.walletprocesspsbt(online_node.converttopsbt(raw))["psbt"]
-        assert "non_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0]
+        assert not "not_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0]
 
-        # Have the offline node sign the PSBT (which will update the UTXO to segwit)
-        signed_psbt = offline_node.walletprocesspsbt(psbt)["psbt"]
-        assert "witness_utxo" in mining_node.decodepsbt(signed_psbt)["inputs"][0]
+        # add non-witness UTXO manually
+        psbt_new = PSBT.from_base64(psbt)
+        prev_tx = wonline.gettransaction(utxos[0]["txid"])["hex"]
+        psbt_new.i[0].map[PSBT_IN_NON_WITNESS_UTXO] = bytes.fromhex(prev_tx)
+        assert "non_witness_utxo" in mining_node.decodepsbt(psbt_new.to_base64())["inputs"][0]
+
+        # Have the offline node sign the PSBT (which will remove the non-witness UTXO)
+        signed_psbt = offline_node.walletprocesspsbt(psbt_new.to_base64())["psbt"]
+        assert not "non_witness_utxo" in mining_node.decodepsbt(signed_psbt)["inputs"][0]
 
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(mining_node.finalizepsbt(signed_psbt)["hex"])
-        self.generate(mining_node, 1)
+        self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))
         assert_equal(online_node.gettxout(txid,0)["confirmations"], 1)
 
         wonline.unloadwallet()
 
         # Reconnect
-        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 0)
         self.connect_nodes(0, 2)
 
     def test_input_confs_control(self):
@@ -571,8 +581,8 @@ class PSBTTest(SyscoinTestFramework):
         for i, signer in enumerate(signers):
             self.nodes[2].unloadwallet("wallet{}".format(i))
 
-        # TODO: Re-enable this for segwit v1
-        # self.test_utxo_conversion()
+        if self.options.descriptors:
+            self.test_utxo_conversion()
 
         self.test_input_confs_control()
 
