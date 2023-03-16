@@ -1672,7 +1672,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
     fReindexGeth = fReindex || fReindexChainState;
     if(fNEVMConnection) {
-        DoGethMaintenance();
+        if(!DoGethMaintenance()) {
+            fNEVMConnection = false;
+            LogPrintf("NEVM not detected, setting fNEVMConnection to false...\n");
+        }
     }
     // ********************************************************* Step 7: load block chain
     if(fRegTest) {
@@ -2010,7 +2013,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
-        return InitError(Untranslated("You must define -zmqpubnevm on a masternode."));
+        return InitError(Untranslated("You must have an NEVM connection on a masternode."));
     }
     #if ENABLE_ZMQ
         if(!g_zmq_notification_interface && fNEVMConnection) {

@@ -1217,7 +1217,7 @@ public:
     bool FlushCacheToDisk(const uint32_t &nHeight);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-void DoGethMaintenance();
+bool DoGethMaintenance();
 bool StartGethNode();
 bool StopGethNode(bool bOnStart = false);
 // SYSCOIN

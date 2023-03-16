@@ -6907,9 +6907,9 @@ bool StopGethNode(bool bOnStart)
     
     return true;
 }
-void DoGethMaintenance() {
+bool DoGethMaintenance() {
     if(ShutdownRequested()) {
-        return;
+        return false;
     }
     // hasn't started yet so start
     if(!fReindexGeth ) {
@@ -6918,6 +6918,7 @@ void DoGethMaintenance() {
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
         if(!StartGethNode()) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
+            return false;
         }
     } else {
         fReindexGeth = false;
@@ -6938,7 +6939,7 @@ void DoGethMaintenance() {
                 recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
             } catch(const  std::runtime_error& e) {
                 LogPrintf("Failed copying keystore geth directory to keystoretmp %s\n", e.what());
-                return;
+                return false;
             }
         }
         bool existedNodekey = fs::exists(gethNodeKeyPath);
@@ -6949,7 +6950,7 @@ void DoGethMaintenance() {
                 recursive_copy(gethNodeKeyPath, nodeKeyTmpDir);
             } catch(const  std::runtime_error& e) {
                 LogPrintf("Failed copying nodekey %s\n", e.what());
-                return;
+                return false;
             }
         }
         LogPrintf("%s: Removing Geth data directory\n", __func__);
@@ -6964,7 +6965,7 @@ void DoGethMaintenance() {
                 recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
             } catch(const  std::runtime_error& e) {
                 LogPrintf("Failed copying keystore geth keystoretmp directory to keystore %s\n", e.what());
-                return;
+                return false;
             }
             fs::remove_all(keyStoreTmpDir);
         }
@@ -6976,17 +6977,20 @@ void DoGethMaintenance() {
                 recursive_copy(nodeKeyTmpDir, gethNodeKeyPath);
             } catch(const  std::runtime_error& e) {
                 LogPrintf("Failed copying temporary nodekey %s\n", e.what());
-                return;
+                return false;
             }
             fs::remove_all(nodeKeyTmpDir);
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
-        if(!StartGethNode())
+        if(!StartGethNode()) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
+            return false;
+        }
         // set flag that geth is resyncing
         fGethSynced = false;
         LogPrintf("%s: Done, waiting for resync...\n", __func__);
     }
+    return true;
 }
 
 void ChainstateManager::MaybeRebalanceCaches()
