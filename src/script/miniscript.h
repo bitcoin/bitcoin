@@ -506,9 +506,22 @@ struct Node {
     //! The data bytes in this expression (only for HASH160/HASH256/SHA256/RIPEMD10).
     const std::vector<unsigned char> data;
     //! Subexpressions (for WRAP_*/AND_*/OR_*/ANDOR/THRESH)
-    const std::vector<NodeRef<Key>> subs;
+    mutable std::vector<NodeRef<Key>> subs;
     //! The Script context for this node. Either P2WSH or Tapscript.
     const MiniscriptContext m_script_ctx;
+
+    /* Destroy the shared pointers iteratively to avoid a stack-overflow due to recursive calls
+     * to the subs' destructors. */
+    ~Node() {
+        while (!subs.empty()) {
+            auto node = std::move(subs.back());
+            subs.pop_back();
+            while (!node->subs.empty()) {
+                subs.push_back(std::move(node->subs.back()));
+                node->subs.pop_back();
+            }
+        }
+    }
 
 private:
     //! Cached ops counts.
