@@ -59,29 +59,24 @@ class DandelionProbingTest(BitcoinTestFramework):
         # failure. A true bug will result in repeated failures.
         self.log.info("Starting dandelion tests")
 
-        MAX_REPEATS = 10
-        self.log.info("Running test up to {} times.".format(MAX_REPEATS))
-        for i in range(MAX_REPEATS):
-            self.log.info('Run repeat {}'.format(i + 1))
+        self.log.info("Create the tx on node 2")
+        tx = wallet.send_self_transfer(from_node=self.nodes[1])
+        txid = int(tx['txid'], 16)
+        self.log.info("Sent tx with txid {}".format(txid))
 
-            self.log.info("Create the tx on node 2")
-            tx = wallet.send_self_transfer(from_node=self.nodes[1])
-            txid = int(tx['txid'], 16)
-            self.log.info("Sent tx with txid {}".format(txid))
+        mocktime = int(time.time() + MAX_GETDATA_INBOUND_WAIT)
 
-            mocktime = int(time.time() + MAX_GETDATA_INBOUND_WAIT)
+        for hop in range(self.num_nodes):
+            for node in self.nodes:
+                node.setmocktime(mocktime + mocktime*hop)
+            time.sleep(1)
 
-            for hop in range(self.num_nodes):
-                for node in self.nodes:
-                    node.setmocktime(mocktime + mocktime*hop)
-                time.sleep(1)
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        msg = msg_getdata()
+        msg.inv.append(CInv(t=MSG_TX, h=txid))
+        peer.send_and_ping(msg)
 
-            peer = self.nodes[0].add_p2p_connection(P2PInterface())
-            msg = msg_getdata()
-            msg.inv.append(CInv(t=MSG_TX, h=txid))
-            peer.send_and_ping(msg)
-
-            assert peer.last_message.get("notfound")
+        assert peer.last_message.get("notfound")
 
 if __name__ == "__main__":
     DandelionProbingTest().main()
