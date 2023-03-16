@@ -15,6 +15,9 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
+import threading
+
+from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.descriptors import descsum_create
@@ -687,11 +690,26 @@ class ImportDescriptorsTest(SyscoinTestFramework):
         descriptor["timestamp"] = 0
         descriptor["next_index"] = 0
 
-        batch = []
-        batch.append(encrypted_wallet.walletpassphrase.get_request("passphrase", 3))
-        batch.append(encrypted_wallet.importdescriptors.get_request([descriptor]))
+        encrypted_wallet.walletpassphrase("passphrase", 99999)
+        t = threading.Thread(target=encrypted_wallet.importdescriptors, args=([descriptor],))
 
-        encrypted_wallet.batch(batch)
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'Rescan started from block 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206... (slow variant inspecting all blocks)'], timeout=5):
+            t.start()
+
+        # Set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
+        self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrase("passphrase", 1)
+
+        try:
+            self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletlock()
+        except JSONRPCException as e:
+            assert e.error['code'] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error['message']
+
+        try:
+            self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
+        except JSONRPCException as e:
+            assert e.error['code'] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error['message']
+
+        t.join()
 
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
