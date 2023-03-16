@@ -260,8 +260,8 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
      * override -datadir in the bitcoin.conf file in the default data directory
      * (to be consistent with bitcoind behavior)
      */
-    if(dataDir != GUIUtil::getDefaultDataDirectory()) {
-        gArgs.SoftSetArg("-datadir", fs::PathToString(GUIUtil::QStringToPath(dataDir))); // use OS locale for path setting
+    if (dataDir != GUIUtil::getDefaultDataDirectory()) {
+        gArgs.InitDefaultDataDir(GUIUtil::QStringToPath(dataDir));
     }
     return true;
 }

@@ -199,6 +199,7 @@ protected:
     mutable fs::path m_cached_blocks_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
+    mutable fs::path m_init_default_datadir_path GUARDED_BY(cs_args);
 
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
@@ -287,6 +288,13 @@ protected:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
     const fs::path& GetDataDirNet() const { return GetDataDir(true); }
+
+    /**
+     * Sets the initial default data dir path, unless it has already been set.
+     * Intended for use only by the GUI before config file is parsed.
+     *
+     */
+    void InitDefaultDataDir(const fs::path path);
 
     /**
      * Clear cached directory paths

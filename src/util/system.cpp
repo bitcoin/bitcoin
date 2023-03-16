@@ -428,7 +428,7 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
             return path;
         }
     } else {
-        path = GetDefaultDataDir();
+        path = m_init_default_datadir_path.empty() ? GetDefaultDataDir() : m_init_default_datadir_path;
     }
 
     if (net_specific && !BaseParams().DataDir().empty()) {
@@ -436,6 +436,13 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
     }
 
     return path;
+}
+
+void ArgsManager::InitDefaultDataDir(const fs::path path)
+{
+    LOCK(cs_args);
+    if (m_init_default_datadir_path.empty())
+        m_init_default_datadir_path = path;
 }
 
 void ArgsManager::ClearPathCache()

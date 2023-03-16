@@ -2,9 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/init.h>
 #include <init.h>
 #include <qt/bitcoin.h>
 #include <qt/guiutil.h>
+#include <qt/intro.h>
 #include <qt/test/optiontests.h>
 #include <test/util/setup_common.h>
 #include <util/system.h>
@@ -131,4 +133,55 @@ void OptionTests::extractFilter()
 
     filter = QString("Image (*.png *.jpg)");
     QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "png");
+}
+
+void OptionTests::initDataDir()
+{
+    // Derive paths and create directories
+    fs::path basedir = gArgs.GetDataDirNet();
+    fs::path confdir = basedir / "conf-path";
+    fs::path datadir = basedir / "data-path";
+    fs::path blksdir = basedir / "blocks-path";
+    fs::create_directories(confdir);
+    fs::create_directories(datadir);
+    fs::create_directories(blksdir);
+
+    // Create conf file
+    std::string conf = "datadir=";
+    conf += fs::PathToString(datadir);
+    conf += "\nblocksdir=";
+    conf += fs::PathToString(blksdir);
+    FILE* file = fsbridge::fopen(confdir / "bitcoin.conf", "w");
+    fwrite(conf.c_str(), 1, conf.size(), file);
+    fclose(file);
+
+    // Enter custom datadir path in intro wizard,
+    // but the only thing there is a bitcoin.conf
+    // with blocksdir and datadir settings
+    QSettings settings;
+    settings.setValue("strDataDir", QString::fromStdString(fs::PathToString(confdir)));
+    // Prevent the test from trying to open a GUI window to ask the user for a new datadir
+    settings.setValue("fReset", false);
+    settings.sync();
+
+    // Reset for test
+    gArgs.LockSettings([&](util::Settings& settings) {
+        settings.forced_settings.erase("datadir");
+    });
+    gArgs.AddArg("-datadir", "", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-blocksdir", "", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+
+    // Run
+    bool did_show_intro = false;
+    int64_t prune_MiB = 0;
+    // Read QSettings
+    QVERIFY(Intro::showIfNeeded(did_show_intro, prune_MiB));
+    // Read bitcoin.conf from custom location
+    common::InitConfig(gArgs, nullptr);
+
+    QCOMPARE(gArgs.GetDataDirNet(), datadir);
+    QCOMPARE(gArgs.GetBlocksDirPath(), blksdir / "blocks");
+
+    // Clean up
+    gArgs.ClearArgs();
 }

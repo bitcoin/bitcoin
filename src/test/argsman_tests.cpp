@@ -1040,4 +1040,25 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
     }
 }
 
+BOOST_AUTO_TEST_CASE(util_InitDefaultDataDir)
+{
+    TestArgsManager args;
+    fs::path config_location = m_path_root / "config-file-only";
+    fs::path datadir_location = m_path_root / "preferred-location";
+    fs::create_directory(config_location);
+    fs::create_directory(datadir_location);
+
+    args.AddArg("-datadir", "", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    // GUI loads user preferences from QSettings
+    args.InitDefaultDataDir(config_location);
+    // InitConfig reads config file at the QSettings strDataDir location
+    std::string conf = "datadir=";
+    conf += fs::PathToString(datadir_location);
+    args.ReadConfigString(conf.c_str());
+
+    fs::path actual_datadir = args.GetDataDirNet();
+    BOOST_CHECK(actual_datadir == datadir_location);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
