@@ -5,7 +5,13 @@
 #include <node/blockmanager_args.h>
 
 #include <common/args.h>
+#include <node/blockstorage.h>
+#include <tinyformat.h>
+#include <util/translation.h>
 #include <validation.h>
+
+#include <cstdint>
+#include <optional>
 
 namespace node {
 std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts)
