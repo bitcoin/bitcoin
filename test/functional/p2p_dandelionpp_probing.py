@@ -21,10 +21,14 @@ from test_framework.messages import (
         msg_getdata,
         msg_mempool,
         MSG_DTX,
+        MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
+
+# TX_TYPES are MSG_DTX and MSG_DWTX
+TX_TYPES = [MSG_DTX, MSG_DWTX]
 
 class DandelionProbingTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -55,20 +59,25 @@ class DandelionProbingTest(BitcoinTestFramework):
         self.log.info("Adding P2PInterface")
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
-        self.log.info("Create the tx")
+        self.log.info("Create the tx on node 1")
         tx = wallet.send_self_transfer(from_node=self.nodes[0])
-        txid = int(tx['txid'], 16)
-        self.log.info("Sent tx with txid {}".format(txid))
 
-        # Request for the mempool update
-        peer.send_and_ping(msg_mempool())
+        # Test both MSG_DTX and MSG_DWTX cases
+        for tx_type in TX_TYPES:
+            # Get a wtxid or txid depending on tx_type
+            tx_type_str = "wtxid" if tx_type == MSG_DWTX else "txid"
+            txid = int(tx[tx_type_str], 16)
+            self.log.info("Sent tx with {} {}".format(tx_type_str, txid))
 
-        # Create and send msg_getdata for the tx
-        msg = msg_getdata()
-        msg.inv.append(CInv(t=MSG_DTX, h=txid))
-        peer.send_and_ping(msg)
+            # Request for the mempool update
+            peer.send_and_ping(msg_mempool())
 
-        assert peer.last_message.get("notfound")
+            # Create and send msg_getdata for the tx
+            msg = msg_getdata()
+            msg.inv.append(CInv(t=tx_type, h=txid))
+            peer.send_and_ping(msg)
+
+            assert peer.last_message.get("notfound")
 
 if __name__ == "__main__":
     DandelionProbingTest().main()

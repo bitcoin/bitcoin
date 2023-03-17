@@ -25,6 +25,7 @@ from test_framework.messages import (
         msg_getdata,
         msg_mempool,
         MSG_DTX,
+        MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -32,6 +33,9 @@ from test_framework.wallet import MiniWallet
 
 # Max time a tx should spend in stem phase
 MAX_STEM_TIME = 60
+
+# TX_TYPES are MSG_DTX and MSG_DWTX
+TX_TYPES = [MSG_DTX, MSG_DWTX]
 
 class DandelionBlackholeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -63,27 +67,32 @@ class DandelionBlackholeTest(BitcoinTestFramework):
 
         self.log.info("Create the tx on node 2")
         tx = wallet.send_self_transfer(from_node=self.nodes[1])
-        txid = int(tx['txid'], 16)
-        self.log.info("Sent tx with txid {}".format(txid))
 
-        # Time travel MAX_STEM_TIME seconds into the future for all nodes
-        mocktime = int(time.time() + MAX_STEM_TIME)
-        for hop in range(self.num_nodes):
-            for node in self.nodes:
-                node.setmocktime(mocktime)
+        # Test both MSG_DTX and MSG_DWTX cases
+        for tx_type in TX_TYPES:
+            # Get a wtxid or txid depending on tx_type
+            tx_type_str = "wtxid" if tx_type == MSG_DWTX else "txid"
+            txid = int(tx[tx_type_str], 16)
+            self.log.info("Sent tx with {} {}".format(tx_type_str, txid))
 
-        # Wait for the nodes to sync mempools
-        time.sleep(1)
+            # Time travel MAX_STEM_TIME seconds into the future for all nodes
+            mocktime = int(time.time() + MAX_STEM_TIME)
+            for hop in range(self.num_nodes):
+                for node in self.nodes:
+                    node.setmocktime(mocktime)
 
-        # Request for the mempool update
-        peer.send_and_ping(msg_mempool())
+            # Wait for the nodes to sync mempools
+            time.sleep(1)
 
-        # Create and send msg_getdata for the tx
-        msg = msg_getdata()
-        msg.inv.append(CInv(t=MSG_DTX, h=txid))
-        peer.send_and_ping(msg)
+            # Request for the mempool update
+            peer.send_and_ping(msg_mempool())
 
-        assert not peer.last_message.get("notfound")
+            # Create and send msg_getdata for the tx
+            msg = msg_getdata()
+            msg.inv.append(CInv(t=tx_type, h=txid))
+            peer.send_and_ping(msg)
+
+            assert not peer.last_message.get("notfound")
 
 if __name__ == "__main__":
     DandelionBlackholeTest().main()
