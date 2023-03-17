@@ -12,7 +12,7 @@ https://github.com/digibyte/digibyte/blob/master/test/functional/p2p_dandelion.p
 Loop behavior:
     Stem:  0 --> 1 --> 2 --> 0 where each node supports Dandelion++
     Probe: TestNode --> 0
-    Wait ~1 second after creating the tx (this should be enought time for the
+    Wait ~1 second after creating the tx (this should be enough time for the
     tx to propogate through the network with a regular mempool tx), then
     Assert that Node 0 does not reply with tx
 """
