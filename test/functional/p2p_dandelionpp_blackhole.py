@@ -12,9 +12,10 @@ https://github.com/digibyte/digibyte/blob/master/test/functional/p2p_dandelion.p
 Resistance to black holes:
     Stem:  0 --> 1 --> 2 --> 0 where each node supports Dandelion++
     Probe: TestNode --> 0
-    Wait ~45 seconds after Test 2, then TestNode sends getdata for tx to Node 0
-    Assert that Node 0 replies with tx
-
+    Wait ~1 second after creating the tx (this should be enought time for the
+    tx to propogate through the network with a regular mempool tx), then
+    TestNode sends getdata for tx to Node 0
+    Assert that Node 0 replies with tx (meaning the tx has fluffed)
 """
 
 import time

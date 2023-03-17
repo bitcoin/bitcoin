@@ -11,12 +11,10 @@ https://github.com/digibyte/digibyte/blob/master/test/functional/p2p_dandelion.p
 
 Resistance to active probing:
    Probe: TestNode --> 0
-   Node 0 generates a Dandelion++ transaction "tx"
-   TestNode immediately sends getdata for tx to Node 0
+   Node0 generates a Dandelion++ transaction "tx"
+   TestNode immediately sends getdata for tx to Node0
    Assert that Node 0 does not reply with tx
 """
-
-import time
 
 from test_framework.messages import (
         CInv,
