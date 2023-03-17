@@ -95,8 +95,10 @@ Makefile
 src/qt/bitcoin-qt
 Bitcoin-Qt.app
 
-# Qt Creator
+# Editors
 Makefile.am.user
+.vscode
+.idea
 
 # Unit-tests
 Makefile.test
