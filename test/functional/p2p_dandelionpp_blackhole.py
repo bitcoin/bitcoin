@@ -24,7 +24,7 @@ from test_framework.messages import (
         CInv,
         msg_getdata,
         msg_mempool,
-        MSG_TX,
+        MSG_DTX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -80,7 +80,7 @@ class DandelionBlackholeTest(BitcoinTestFramework):
 
         # Create and send msg_getdata for the tx
         msg = msg_getdata()
-        msg.inv.append(CInv(t=MSG_TX, h=txid))
+        msg.inv.append(CInv(t=MSG_DTX, h=txid))
         peer.send_and_ping(msg)
 
         assert not peer.last_message.get("notfound")
