@@ -50,16 +50,16 @@ class DandelionBlackholeTest(BitcoinTestFramework):
         self.connect_nodes(2, 0)
 
     def run_test(self):
-        self.log.info("Setting up")
-        wallet = MiniWallet(self.nodes[0])
-
-        self.log.info("Adding P2PInterface")
-        peer = self.nodes[0].add_p2p_connection(P2PInterface())
-
         # There is a low probability that these tests will fail even if the
         # implementation is correct. Thus, these tests are repeated upon
         # failure. A true bug will result in repeated failures.
         self.log.info("Starting dandelion tests")
+
+        self.log.info("Setting up wallet")
+        wallet = MiniWallet(self.nodes[0])
+
+        self.log.info("Adding P2PInterface")
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.log.info("Create the tx on node 2")
         tx = wallet.send_self_transfer(from_node=self.nodes[1])
