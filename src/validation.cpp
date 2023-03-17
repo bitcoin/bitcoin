@@ -305,10 +305,11 @@ void Chainstate::MaybeUpdateMempoolForReorg(
     // been previously seen in a block.
     auto it = disconnectpool.queuedTx.get<insertion_order>().rbegin();
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
+        auto now = GetTime();
         // ignore validation errors in resurrected transactions
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            AcceptToMemoryPool(*this, *it, GetTime(),
-                /*bypass_limits=*/true, /*test_accept=*/false, /*is_stem=*/ false).m_result_type !=
+            AcceptToMemoryPool(*this, *it, /*accept_time=*/ now, /*embargo_time=*/ now,
+                /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
                     MempoolAcceptResult::ResultType::VALID) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
@@ -4035,16 +4036,16 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     }
 
     // By default embargo_time is just the same as accept_time
-    int64_t accept_time = GetTime();
-    int64_t embargo_time = accept_time;
+    auto accept_time = GetTime<std::chrono::seconds>();
+    auto embargo_time = accept_time;
 
     // If this tx is marked to be in stem phase we just add the minimum time
-    // and a poison value based on DANDELION_EMBARGO_AVG_ADD
+    // and a poison value based on DANDELION_EMBARGO_AVG
     if (is_stem) {
-        embargo_time += GetExponentialRand(DANDELION_EMBARGO_MINIMUM, DANDELION_EMBARGO_AVG_ADD).count();
+        embargo_time = std::chrono::duration_cast<std::chrono::seconds>(GetExponentialRand(embargo_time + DANDELION_EMBARGO_MIN, DANDELION_EMBARGO_AVG));
     }
 
-    auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time, embargo_time, /*bypass_limits=*/ false, test_accept);
+    auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time.count(), embargo_time.count(), /*bypass_limits=*/ false, test_accept);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
 }
