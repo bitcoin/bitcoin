@@ -73,7 +73,7 @@ class DandelionLoopTest(BitcoinTestFramework):
             self.log.info("Sent tx with {} {}".format(tx_type_str, txid))
 
             # Wait for the nodes to sync mempools
-            time.sleep(1)
+            self.sync_all()
 
             # Request for the mempool update
             peer.send_and_ping(msg_mempool())
