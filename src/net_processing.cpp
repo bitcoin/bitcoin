@@ -2252,21 +2252,10 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTx
 {
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
-        // If txinfo.embargo is set then it's a Dandelion++ tx in the mempool
-        // In this case we need to check if it's embargo has passed, if it has
-        // then we remove the embargo time and return it.
-        if (txinfo.m_embargo > std::chrono::seconds::zero()) {
-            // Check if it's embargo is over
-            if (GetTime<std::chrono::seconds>() <= txinfo.m_embargo) {
-                // Embargo is not over, don't relay the tx
-                return {};
-            }
-
-            // Removed the embargo
-            txinfo.m_embargo = std::chrono::seconds::zero();
-
-            // Give it back
-            return std::move(txinfo.tx);
+        // Check if tx is under embargo. If it is, then we don't return the
+        // tx info no matter what...
+        if (now < txinfo.m_embargo) {
+            return {};
         }
 
         // If a TX could have been INVed in reply to a MEMPOOL request,
