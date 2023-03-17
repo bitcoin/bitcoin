@@ -41,11 +41,11 @@ before((done) => {
 });
 
 describe('G1Element', () => {
-    describe('.from_bytes', () => {
+    describe('.fromBytes', () => {
         it('Should create a public key from bytes', () => {
             const {G1Element, Util} = blsSignatures;
 
-            const pk = G1Element.from_bytes(getPublicKeyFixture().buffer);
+            const pk = G1Element.fromBytes(getPublicKeyFixture().buffer);
             assert(pk instanceof G1Element);
         });
     });
@@ -54,12 +54,12 @@ describe('G1Element', () => {
         it('Should aggregate keys if keys array contains more than one key', () => {
             const {G1Element} = blsSignatures;
 
-            const pks = getPublicKeysArray().map(buf => G1Element.from_bytes(buf));
-            let first_pk = pks[0];
+            const pks = getPublicKeysArray().map(buf => G1Element.fromBytes(buf));
+            let firstPk = pks[0];
             for (var i = 1; i < pks.length; i++) {
-                first_pk = first_pk.add(pks[i]);
+                firstPk = firstPk.add(pks[i]);
             }
-            assert(first_pk instanceof G1Element);
+            assert(firstPk instanceof G1Element);
         });
     });
 
@@ -67,7 +67,7 @@ describe('G1Element', () => {
         it('Should serialize key to the same buffer', () => {
             const {G1Element} = blsSignatures;
 
-            const pk = G1Element.from_bytes(getPublicKeyFixture().buffer);
+            const pk = G1Element.fromBytes(getPublicKeyFixture().buffer);
             const serialized = pk.serialize();
             assert.deepStrictEqual(Buffer.from(serialized).toString('hex'), getPublicKeyFixtureHex());
         });
@@ -77,8 +77,8 @@ describe('G1Element', () => {
         it('Should get correct fingerprint', () => {
             const {G1Element} = blsSignatures;
 
-            const pk = G1Element.from_bytes(getPublicKeyFixture().buffer);
-            const fingerprint = pk.get_fingerprint();
+            const pk = G1Element.fromBytes(getPublicKeyFixture().buffer);
+            const fingerprint = pk.getFingerprint();
             assert.strictEqual(fingerprint, getPublicKeyFixture().fingerprint);
         });
     });

@@ -24,14 +24,13 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
         golang: [ '1.17' ]
-        python: ['3.7', '3.8', '3.9', '3.10']
+        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2
-      name: Install Python
+    - uses: chia-network/actions/setup-python@main
       with:
         python-version: ${{ matrix.python }}
 
@@ -60,9 +59,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install -qq --yes snap libgmp-dev
-        sudo apt-get remove --purge cmake -y
-        sudo snap install cmake --classic
+        sudo apt-get install -qq --yes valgrind libgmp-dev cmake
         hash -r
         cmake --version
 

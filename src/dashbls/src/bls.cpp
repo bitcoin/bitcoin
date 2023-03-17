@@ -78,14 +78,16 @@ void BLS::SetSecureAllocator(
 }
 
 
-void BLS::CheckRelicErrors()
+void BLS::CheckRelicErrors(bool should_throw)
 {
     if (!core_get()) {
         throw std::runtime_error("Library not initialized properly. Call BLS::Init()");
     }
     if (core_get()->code != RLC_OK) {
         core_get()->code = RLC_OK;
-        throw std::invalid_argument("Relic library error");
+        if (should_throw) {
+            throw std::invalid_argument("Relic library error");
+        }
     }
 }
 
