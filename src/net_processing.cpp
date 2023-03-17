@@ -5368,7 +5368,7 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
     // Update Dandelion++ stem peers if needed
     auto now = GetTime<std::chrono::microseconds>();
     if (m_next_stem_peer_shuffle < now) {
-        LogPrint(BCLog::DANDELION, "DANDELION_SHUFFLE_INTERVAL=%d\n", DANDELION_SHUFFLE_INTERVAL);
+        LogPrint(BCLog::DANDELION, "DANDELION_SHUFFLE_INTERVAL=%d\n", DANDELION_SHUFFLE_INTERVAL.count());
         m_next_stem_peer_shuffle = GetExponentialRand(now, DANDELION_SHUFFLE_INTERVAL);
         std::vector<PeerRef> peers;
         for (CNode* pnode : nodes) {
