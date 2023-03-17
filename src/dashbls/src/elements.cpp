@@ -82,9 +82,7 @@ G1Element G1Element::FromBytesUnchecked(Bytes const bytes, bool fLegacy)
         }
     }
     g1_read_bin(ele.p, buffer, G1Element::SIZE + 1);
-    if (!fLegacy) {
-        BLS::CheckRelicErrors();
-    }
+    BLS::CheckRelicErrors(!fLegacy);
     return ele;
 }
 
@@ -293,9 +291,7 @@ G2Element G2Element::FromBytesUnchecked(Bytes const bytes, const bool fLegacy)
     }
 
     g2_read_bin(ele.q, buffer, G2Element::SIZE + 1);
-    if (!fLegacy) {
-        BLS::CheckRelicErrors();
-    }
+    BLS::CheckRelicErrors(!fLegacy);
     return ele;
 }
 
