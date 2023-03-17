@@ -78,6 +78,7 @@ private:
     const size_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
+    const int64_t nEmbargo;         //!< Local time when expiring from stem phase (Dandelion++)
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
@@ -99,7 +100,7 @@ private:
 
 public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
-                    int64_t time, unsigned int entry_height,
+                    int64_t time, int64_t embargo, unsigned int entry_height,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
@@ -107,6 +108,7 @@ public:
           nTxWeight(GetTransactionWeight(*tx)),
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
+          nEmbargo{embargo},
           entryHeight{entry_height},
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
@@ -127,6 +129,7 @@ public:
     }
     size_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
+    std::chrono::seconds GetEmbargo() const { return std::chrono::seconds{nEmbargo}; }
     unsigned int GetHeight() const { return entryHeight; }
     int64_t GetSigOpCost() const { return sigOpCost; }
     CAmount GetModifiedFee() const { return m_modified_fee; }

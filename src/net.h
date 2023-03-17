@@ -89,11 +89,7 @@ static const int DANDELION_FLUFF_CHANCE = 10;
 /** Maximum number of outbound peers designated as Dandelion++ destinations */
 static const int DANDELION_MAX_DESTINATIONS = 2;
 /** Expected time between Dandelion++ routing shuffles (in seconds). */
-static const int DANDELION_SHUFFLE_INTERVAL = 600;
-/** The minimum amount of time a Dandelion++ transaction is embargoed (seconds) */
-static const int DANDELION_EMBARGO_MINIMUM = 10;
-/** The average additional embargo time beyond the minimum amount (seconds) */
-static const int DANDELION_EMBARGO_AVG_ADD = 20;
+static constexpr auto DANDELION_SHUFFLE_INTERVAL = 600s;
 
 static constexpr bool DEFAULT_FORCEDNSSEED{false};
 static constexpr bool DEFAULT_DNSSEED{true};

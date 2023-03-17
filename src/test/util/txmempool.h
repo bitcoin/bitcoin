@@ -18,6 +18,7 @@ struct TestMemPoolEntryHelper {
     // Default values
     CAmount nFee{0};
     NodeSeconds time{};
+    NodeSeconds nEmbargo{};
     unsigned int nHeight{1};
     bool spendsCoinbase{false};
     unsigned int sigOpCost{4};
@@ -29,6 +30,7 @@ struct TestMemPoolEntryHelper {
     // Change the default value
     TestMemPoolEntryHelper& Fee(CAmount _fee) { nFee = _fee; return *this; }
     TestMemPoolEntryHelper& Time(NodeSeconds tp) { time = tp; return *this; }
+    TestMemPoolEntryHelper& Embargo(NodeSeconds _embargo) { nEmbargo = _embargo; return *this; }
     TestMemPoolEntryHelper& Height(unsigned int _height) { nHeight = _height; return *this; }
     TestMemPoolEntryHelper& SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
     TestMemPoolEntryHelper& SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
