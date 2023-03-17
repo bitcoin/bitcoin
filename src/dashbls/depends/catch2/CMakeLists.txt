@@ -8,7 +8,6 @@ project(
     LANGUAGES CXX
 )
 
-
 set(
     ${PROJECT_NAME}_HEADERS
     catch2/catch.hpp
@@ -20,6 +19,11 @@ list(
 )
 
 add_library(
+    ${PROJECT_NAME}
+    INTERFACE
+)
+
+target_sources(
     ${PROJECT_NAME}
     INTERFACE
     "${${PROJECT_NAME}_HEADERS}"

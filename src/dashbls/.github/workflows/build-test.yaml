@@ -38,9 +38,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install -qq --yes valgrind snap libgmp-dev libsodium-dev
-        sudo apt-get remove --purge cmake -y
-        sudo snap install cmake --classic
+        sudo apt-get install -qq --yes valgrind libgmp-dev cmake
         hash -r
         cmake --version
 
@@ -49,7 +47,7 @@ jobs:
       run: |
         ls -l
         export MACOSX_DEPLOYMENT_TARGET=10.14
-        brew install autoconf automake gmp
+        brew install autoconf automake gmp pkg-config
 
     - name: Build library using CMake
       if: startsWith(matrix.builder, 'cmake')
