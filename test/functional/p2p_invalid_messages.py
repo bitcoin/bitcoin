@@ -80,6 +80,11 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_buffer(self):
         self.log.info("Test message with header split across two buffers is received")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        # After add_p2p_connection both sides have the verack processed.
+        # However the pong from conn in reply to the ping from the node has not
+        # been processed and recorded in totalbytesrecv.
+        # Flush the pong from conn by sending a ping from conn.
+        conn.sync_with_ping(timeout=1)
         # Create valid message
         msg = conn.build_message(msg_ping(nonce=12345))
         cut_pos = 12  # Chosen at an arbitrary position within the header
@@ -89,8 +94,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # Wait until node has processed the first half of the message
         self.wait_until(lambda: self.nodes[0].getnettotals()['totalbytesrecv'] != before)
         middle = self.nodes[0].getnettotals()['totalbytesrecv']
-        # If this assert fails, we've hit an unlikely race
-        # where the test framework sent a message in between the two halves
         assert_equal(middle, before + cut_pos)
         conn.send_raw_message(msg[cut_pos:])
         conn.sync_with_ping(timeout=1)
