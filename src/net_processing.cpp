@@ -2055,6 +2055,7 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         // Check if tx embargoed and that this peer is selected for stem phase
         // tx handling by Dandelion++ as one of it's relay nodes
         if (!tx_relay->m_send_stem && has_embargo) continue;
+        LogPrint(BCLog::NET, "tx_relay->m_send_stem=%f has_embargo=%f\n", tx_relay->m_send_stem, has_embargo);
 
         const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
         if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
@@ -2263,6 +2264,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 
 CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
 {
+    LogPrint(BCLog::NET, "txid=%s\n", gtxid.GetHash().ToString());
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
         // If a TX could have been INVed in reply to a MEMPOOL request after
