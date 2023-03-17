@@ -1512,12 +1512,12 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     const CChainParams& chainparams = active_chainstate.m_chainman.GetParams();
     auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
         AssertLockHeld(cs_main);
-        int64_t accept_time, embargo_time = GetTime();
+        int64_t accept_time = GetTime();
         if (test_accept) {
-            auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, accept_time, embargo_time, coins_to_uncache);
+            auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, accept_time, /*embargo_time=*/ 0, coins_to_uncache);
             return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
         } else {
-            auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(chainparams, accept_time, embargo_time, coins_to_uncache);
+            auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(chainparams, accept_time, /*embargo_time=*/ 0, coins_to_uncache);
             return MemPoolAccept(pool, active_chainstate).AcceptPackage(package, args);
         }
     }();
@@ -4035,7 +4035,8 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     }
 
     // By default embargo_time is just the same as accept_time
-    int64_t accept_time, embargo_time = GetTime();
+    int64_t accept_time = GetTime();
+    int64_t embargo_time = accept_time;
 
     // If this tx is marked to be in stem phase we just add the minimum time
     // and a poison value based on DANDELION_EMBARGO_AVG_ADD
