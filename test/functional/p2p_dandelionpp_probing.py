@@ -36,6 +36,13 @@ class DandelionProbingTest(BitcoinTestFramework):
             ["-whitelist=all@127.0.0.1"],
         ]
 
+    def setup_network(self):
+        self.setup_nodes()
+        # Tests 1,2,3: 0 --> 1 --> 2 --> 0
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(2, 0)
+
     def run_test(self):
         self.log.info("Setting up")
         wallet = MiniWallet(self.nodes[0])
