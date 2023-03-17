@@ -161,6 +161,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         for (const auto& i : vinfo) {
             file << *(i.tx);
             file << int64_t{count_seconds(i.m_time)};
+            file << int64_t{count_seconds(i.m_embargo)};
             file << int64_t{i.nFeeDelta};
             mapDeltas.erase(i.tx->GetHash());
         }
