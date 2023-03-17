@@ -496,8 +496,10 @@ public:
 
     // Single-message helper methods
     bool IsMsgTx() const { return type == MSG_TX; }
+    bool IsMsgDtx() const { return type == MSG_DTX; }
     bool IsMsgBlk() const { return type == MSG_BLOCK; }
     bool IsMsgWtx() const { return type == MSG_WTX; }
+    bool IsMsgDwtx() const { return type == MSG_DWTX; }
     bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
@@ -505,18 +507,27 @@ public:
     // Combined-message helper methods
     bool IsGenTxMsg() const
     {
-        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+        return (
+                type == MSG_TX ||
+                type == MSG_DTX ||
+                type == MSG_WTX ||
+                type == MSG_DWTX ||
+                type == MSG_WITNESS_TX);
     }
     bool IsGenBlkMsg() const
     {
-        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+        return (
+                type == MSG_BLOCK ||
+                type == MSG_FILTERED_BLOCK ||
+                type == MSG_CMPCT_BLOCK ||
+                type == MSG_WITNESS_BLOCK);
     }
 
     uint32_t type;
     uint256 hash;
 };
 
-/** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */
+/** Convert a TX/DTX/WITNESS_TX/DWTX/WTX CInv to a GenTxid. */
 GenTxid ToGenTxid(const CInv& inv);
 
 #endif // BITCOIN_PROTOCOL_H
