@@ -24,6 +24,7 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_fee_amount,
     assert_greater_than,
     assert_raises_rpc_error,
     get_fee,
@@ -111,6 +112,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_no_more_inputs_fails(self, rbf_node, dest_address)
         self.test_bump_back_to_yourself()
         self.test_provided_change_pos(rbf_node)
+        self.test_single_output()
 
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
@@ -262,6 +264,43 @@ class BumpFeeTest(BitcoinTestFramework):
 
         assert_greater_than(change_value, new_change_value)
 
+
+    def test_single_output(self):
+        self.log.info("Test that single output txs can be bumped")
+        node = self.nodes[1]
+
+        node.createwallet("single_out_rbf")
+        wallet = node.get_wallet_rpc("single_out_rbf")
+
+        addr = wallet.getnewaddress()
+        amount = Decimal("0.001")
+        # Make 2 UTXOs
+        self.nodes[0].sendtoaddress(addr, amount)
+        self.nodes[0].sendtoaddress(addr, amount)
+        self.generate(self.nodes[0], 1)
+        utxos = wallet.listunspent()
+
+        tx = wallet.sendall(recipients=[wallet.getnewaddress()], fee_rate=2, options={"inputs": [utxos[0]]})
+
+        # Reduce the only output with a crazy high feerate, should fail as the output would be dust
+        assert_raises_rpc_error(-4, "The transaction amount is too small to pay the fee", wallet.bumpfee, txid=tx["txid"], options={"fee_rate": 1100, "reduce_output": 0})
+
+        # Reduce the only output successfully
+        bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate": 10, "reduce_output": 0})
+        bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
+        assert_equal(len(bumped_tx["decoded"]["vout"]), 1)
+        assert_equal(len(bumped_tx["decoded"]["vin"]), 1)
+        assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped["fee"], amount)
+        assert_fee_amount(bumped["fee"], bumped_tx["decoded"]["vsize"], Decimal(10) / Decimal(1e8) * 1000)
+
+        # Bumping without reducing adds a new input and output
+        bumped = wallet.bumpfee(txid=bumped["txid"], options={"fee_rate": 20})
+        bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
+        assert_equal(len(bumped_tx["decoded"]["vout"]), 2)
+        assert_equal(len(bumped_tx["decoded"]["vin"]), 2)
+        assert_fee_amount(bumped["fee"], bumped_tx["decoded"]["vsize"], Decimal(20) / Decimal(1e8) * 1000)
+
+        wallet.unloadwallet()
 
 def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     self.log.info('Test simple bumpfee: {}'.format(mode))
