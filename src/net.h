@@ -87,7 +87,7 @@ static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 /** Probability (percentage) that a Dandelion++ transaction enters fluff phase */
 static const int DANDELION_FLUFF_CHANCE = 10;
 /** Maximum number of outbound peers designated as Dandelion++ destinations */
-static const int DANDELION_MAX_DESTINATIONS = 2;
+static const int DANDELION_MAX_ROUTES = 2;
 /** Expected time between Dandelion++ routing shuffles (in seconds). */
 static constexpr auto DANDELION_SHUFFLE_INTERVAL = 600s;
 
@@ -659,6 +659,13 @@ public:
     * @return                      True if there is more work to be done
     */
     virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+
+    /**
+     * Select new stem routes for Dandelion++
+     *
+     * @param[in]  nodes           List of nodes that we can select our stem routes from
+     */
+    virtual void ShuffleStemRoutes(const std::vector<CNode*>& nodes) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
 
 protected:

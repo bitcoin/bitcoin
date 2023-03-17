@@ -2063,6 +2063,12 @@ void CConnman::ThreadMessageHandler()
                 if (flagInterruptMsgProc)
                     return;
             }
+
+            // ShuffleStemRoutes
+            m_msgproc->ShuffleStemRoutes(snap.Nodes());
+
+            if (flagInterruptMsgProc)
+                return;
         }
 
         WAIT_LOCK(mutexMsgProc, lock);

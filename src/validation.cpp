@@ -4042,6 +4042,8 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     // If this tx is marked to be in stem phase we just add the minimum time
     // and a poison value based on DANDELION_EMBARGO_AVG
     if (is_stem) {
+        LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_MIN=%d\n", DANDELION_EMBARGO_MIN);
+        LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_AVG=%d\n", DANDELION_EMBARGO_AVG);
         embargo_time = std::chrono::duration_cast<std::chrono::seconds>(GetExponentialRand(embargo_time + DANDELION_EMBARGO_MIN, DANDELION_EMBARGO_AVG));
     }
 

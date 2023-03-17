@@ -291,6 +291,8 @@ struct Peer {
         /** Whether the peer has requested us to send our complete mempool. Only
          *  permitted if the peer has NetPermissionFlags::Mempool. See BIP35. */
         bool m_send_mempool GUARDED_BY(m_tx_inventory_mutex){false};
+        /** Whether the peer has been selected as a Dandelion++ stem peer */
+        bool m_send_stem GUARDED_BY(m_tx_inventory_mutex){false};
         /** The last time a BIP35 `mempool` request was serviced. */
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
         /** The next time after which we will send an `inv` message containing
@@ -510,6 +512,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     bool SendMessages(CNode* pto) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, g_msgproc_mutex);
+    void ShuffleStemRoutes(const std::vector<CNode*>& nodes) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
 
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
@@ -519,7 +523,7 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayTransaction(const uint256& txid, const uint256& wtxid, const bool has_embargo) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestHeight(int height) override { m_best_height = height; };
     void UnitTestMisbehaving(NodeId peer_id, int howmuch) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), howmuch, ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
@@ -718,6 +722,9 @@ private:
 
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
+
+    /** Next time to shuffle stem routes */
+    std::chrono::microseconds m_next_stem_peer_shuffle = GUARDED_BY(m_peer_mutex){0s};
 
     /** Whether this node is running in -blocksonly mode */
     const bool m_ignore_incoming_txs;
@@ -1458,12 +1465,14 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
 void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 {
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+    auto now = GetTime<std::chrono::seconds>();
 
     for (const auto& txid : unbroadcast_txids) {
-        CTransactionRef tx = m_mempool.get(txid);
+        auto txinfo = m_mempool.info(GenTxid::Txid(txid));
 
-        if (tx != nullptr) {
-            RelayTransaction(txid, tx->GetWitnessHash());
+        if (txinfo.tx) {
+            auto has_embargo = txinfo.m_embargo > now;
+            RelayTransaction(txid, txinfo.tx->GetWitnessHash(), has_embargo);
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -2027,7 +2036,7 @@ void PeerManagerImpl::SendPings()
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
-void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid)
+void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid, const bool has_embargo)
 {
     LOCK(m_peer_mutex);
     for(auto& it : m_peer_map) {
@@ -2042,6 +2051,10 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         // distinguish transactions received during the handshake from the rest
         // in the announcement.
         if (tx_relay->m_next_inv_send_time == 0s) continue;
+
+        // Check if tx embargoed and that this peer is selected for stem phase
+        // tx handling by Dandelion++ as one of it's relay nodes
+        if (!tx_relay->m_send_stem && has_embargo) continue;
 
         const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
         if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
@@ -2252,16 +2265,10 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTx
 {
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
-        // Check if tx is under embargo. If it is, then we don't return the
-        // tx info no matter what...
-        if (now < txinfo.m_embargo) {
-            return {};
-        }
-
-        // If a TX could have been INVed in reply to a MEMPOOL request,
-        // or is older than UNCONDITIONAL_RELAY_DELAY, permit the request
-        // unconditionally.
-        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
+        // If a TX could have been INVed in reply to a MEMPOOL request after
+        // embargo for Dandelion++ tx is over, or is older than
+        // UNCONDITIONAL_RELAY_DELAY, permit the request unconditionally.
+        if ((mempool_req.count() && txinfo.m_embargo < mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
             return std::move(txinfo.tx);
         }
     }
@@ -2930,7 +2937,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-            RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
+            RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), /*has_embargo=*/ false);
             m_orphanage.AddChildrenToWorkSet(*porphanTx);
             m_orphanage.EraseTx(orphanHash);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
@@ -3981,7 +3988,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
-    if (msg_type == NetMsgType::TX) {
+    if (msg_type == NetMsgType::TX || msg_type == NetMsgType::DTX) {
         if (RejectIncomingTxs(pfrom)) {
             LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
@@ -3999,6 +4006,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const uint256& txid = ptx->GetHash();
         const uint256& wtxid = ptx->GetWitnessHash();
+
+        // When receiving a MSG_DTX we need to check if we need to randomly fluff.
+        const bool has_embargo = msg_type == NetMsgType::DTX && GetRandInternal(100) < DANDELION_FLUFF_CHANCE;
+        LogPrint(BCLog::DANDELION, "DANDELION_FLUFF_CHANCE=%d\n", DANDELION_FLUFF_CHANCE);
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
         AddKnownTx(*peer, hash);
@@ -4037,7 +4048,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), has_embargo);
                 }
             }
             return;
@@ -4051,7 +4062,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // requests for it.
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-            RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+            RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), has_embargo);
             m_orphanage.AddChildrenToWorkSet(tx);
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
@@ -5350,6 +5361,42 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
     return true;
 }
 
+void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
+{
+    AssertLockHeld(g_msgproc_mutex);
+
+    // Update Dandelion++ stem peers if needed
+    auto now = GetTime<std::chrono::microseconds>();
+    if (m_next_stem_peer_shuffle < now) {
+        LogPrint(BCLog::DANDELION, "DANDELION_SHUFFLE_INTERVAL=%d\n", DANDELION_SHUFFLE_INTERVAL);
+        m_next_stem_peer_shuffle = GetExponentialRand(now, DANDELION_SHUFFLE_INTERVAL);
+        std::vector<PeerRef> peers;
+        for (CNode* pnode : nodes) {
+            auto peer = GetPeerRef(pnode->GetId());
+            if (peer) {
+                if (auto txrelay = peer->GetTxRelay(); txrelay != nullptr) {
+                    txrelay->m_send_stem = true;
+                    peers.push_back(peer);
+                }
+            }
+        }
+
+        LogPrint(BCLog::DANDELION, "peers.size()=%d DANDELION_MAX_ROUTES=%d\n", peers.size(), DANDELION_MAX_ROUTES);
+        auto found = 0;
+        while (found < peers.size() && found < DANDELION_MAX_ROUTES) {
+            auto peer = peers[GetRandInternal(peers.size())];
+            if (auto txrelay = peer->GetTxRelay(); txrelay != nullptr) {
+                txrelay->m_send_stem = true;
+                found++;
+            }
+        }
+
+        if (found == 0) {
+            m_next_stem_peer_shuffle = now + 1s;
+        }
+    }
+}
+
 bool PeerManagerImpl::SendMessages(CNode* pto)
 {
     AssertLockHeld(g_msgproc_mutex);
@@ -5627,7 +5674,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                     for (const auto& txinfo : vtxinfo) {
                         const uint256& hash = peer->m_wtxid_relay ? txinfo.tx->GetWitnessHash() : txinfo.tx->GetHash();
-                        CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
+                        CInv inv;
+                        if (txinfo.m_embargo < current_time) {
+                            inv = CInv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
+                        } else {
+                            inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
+                        }
                         tx_relay->m_tx_inventory_to_send.erase(hash);
                         // Don't send transactions that peers will not put into their mempool
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
@@ -5681,6 +5733,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         auto txinfo = m_mempool.info(ToGenTxid(inv));
                         if (!txinfo.tx) {
                             continue;
+                        }
+                        // Check if entry is embargoed. If so, we need to change
+                        // the message type to either MSG_DWTX for witness relay
+                        // or MSG_DTX for non witness relay
+                        if (txinfo.m_embargo < current_time) {
+                            inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
                         }
                         auto txid = txinfo.tx->GetHash();
                         auto wtxid = txinfo.tx->GetWitnessHash();
