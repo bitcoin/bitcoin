@@ -22,24 +22,24 @@ import time
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        msg_mempool,
         MSG_TX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
-# Constants from net_processing
-GETDATA_TX_INTERVAL = 60  # seconds
-INBOUND_PEER_TX_DELAY = 2  # seconds
-TXID_RELAY_DELAY = 2 # seconds
+# Max time a tx should spend in stem phase
+MAX_STEM_TIME = 60
 
-# Python test constants
-#MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY
-MAX_GETDATA_INBOUND_WAIT = 120 #
-
-class DandelionProbingTest(BitcoinTestFramework):
+class DandelionBlackholeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        self.extra_args = [
+            ["-whitelist=all@127.0.0.1"],
+            ["-whitelist=all@127.0.0.1"],
+            ["-whitelist=all@127.0.0.1"],
+        ]
 
     def setup_network(self):
         self.setup_nodes()
@@ -53,6 +53,7 @@ class DandelionProbingTest(BitcoinTestFramework):
         wallet = MiniWallet(self.nodes[0])
 
         self.log.info("Adding P2PInterface")
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         # There is a low probability that these tests will fail even if the
         # implementation is correct. Thus, these tests are repeated upon
@@ -64,14 +65,19 @@ class DandelionProbingTest(BitcoinTestFramework):
         txid = int(tx['txid'], 16)
         self.log.info("Sent tx with txid {}".format(txid))
 
-        mocktime = int(time.time() + MAX_GETDATA_INBOUND_WAIT)
-
+        # Time travel MAX_STEM_TIME seconds into the future for all nodes
+        mocktime = int(time.time() + MAX_STEM_TIME)
         for hop in range(self.num_nodes):
             for node in self.nodes:
-                node.setmocktime(mocktime + mocktime*hop)
-            time.sleep(1)
+                node.setmocktime(mocktime)
 
-        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        # Wait for the nodes to sync mempools
+        time.sleep(1)
+
+        # Request for the mempool update
+        peer.send_and_ping(msg_mempool())
+
+        # Create and send msg_getdata for the tx
         msg = msg_getdata()
         msg.inv.append(CInv(t=MSG_TX, h=txid))
         peer.send_and_ping(msg)
@@ -79,4 +85,4 @@ class DandelionProbingTest(BitcoinTestFramework):
         assert not peer.last_message.get("notfound")
 
 if __name__ == "__main__":
-    DandelionProbingTest().main()
+    DandelionBlackholeTest().main()

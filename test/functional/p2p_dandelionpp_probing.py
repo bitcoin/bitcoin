@@ -21,24 +21,18 @@ import time
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        msg_mempool,
         MSG_TX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
-# Constants from net_processing
-GETDATA_TX_INTERVAL = 60  # seconds
-INBOUND_PEER_TX_DELAY = 2  # seconds
-TXID_RELAY_DELAY = 2 # seconds
-
-# Python test constants
-#MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY
-MAX_GETDATA_INBOUND_WAIT = 120 #
-
 class DandelionProbingTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # Make sure we are whitelisted
+        self.extra_args = ["-whitelist=all@127.0.0.1"]
 
     def run_test(self):
         self.log.info("Setting up")
@@ -57,8 +51,10 @@ class DandelionProbingTest(BitcoinTestFramework):
         txid = int(tx['txid'], 16)
         self.log.info("Sent tx with txid {}".format(txid))
 
-        self.nodes[0].setmocktime(int(time.time() + MAX_GETDATA_INBOUND_WAIT))
+        # Request for the mempool update
+        peer.send_and_ping(msg_mempool())
 
+        # Create and send msg_getdata for the tx
         msg = msg_getdata()
         msg.inv.append(CInv(t=MSG_TX, h=txid))
         peer.send_and_ping(msg)
