@@ -116,6 +116,11 @@ extern const char* GETHEADERS;
  * The tx message transmits a single transaction.
  */
 extern const char* TX;
+
+/**
+ * The tx message transmits a single dandelion++ transaction.
+ */
+extern const char* DTX;
 /**
  * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
@@ -463,7 +468,9 @@ enum GetDataMsg : uint32_t {
     MSG_TX = 1,
     MSG_BLOCK = 2,
     MSG_WTX = 5,                                      //!< Defined in BIP 339
-    // The following can only occur in getdata. Invs always use TX/WTX or BLOCK.
+    MSG_DTX = 6,                                      //!< Used for Dandelion++
+    MSG_DWTX = 7,                                     //!< Used for Dandelion++
+    // The following can only occur in getdata. Invs always use TX/WTX/DTX/DWTX or BLOCK.
     MSG_FILTERED_BLOCK = 3,                           //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144

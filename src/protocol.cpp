@@ -21,6 +21,7 @@ const char *MERKLEBLOCK="merkleblock";
 const char *GETBLOCKS="getblocks";
 const char *GETHEADERS="getheaders";
 const char *TX="tx";
+const char *DTX="dtx";
 const char *HEADERS="headers";
 const char *BLOCK="block";
 const char *GETADDR="getaddr";
@@ -62,6 +63,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETBLOCKS,
     NetMsgType::GETHEADERS,
     NetMsgType::TX,
+    NetMsgType::DTX,
     NetMsgType::HEADERS,
     NetMsgType::BLOCK,
     NetMsgType::GETADDR,
@@ -159,8 +161,11 @@ std::string CInv::GetCommand() const
     switch (masked)
     {
     case MSG_TX:             return cmd.append(NetMsgType::TX);
+    case MSG_DTX:            return cmd.append(NetMsgType::DTX);
     // WTX is not a message type, just an inv type
     case MSG_WTX:            return cmd.append("wtx");
+    // DWTX is not a message type, just an inv type
+    case MSG_DWTX:           return cmd.append("dwtx");
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
