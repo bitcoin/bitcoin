@@ -25,7 +25,7 @@ from test_framework.messages import (
     msg_verack,
     msg_tx,
     CInv,
-    MSG_WTX,
+    MSG_DWTX,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -71,7 +71,7 @@ class TxPrivacyTest(BitcoinTestFramework):
 
         # Spy should only get an inv for the second transaction as the first
         # one was received pre-verack with the spy
-        spy.wait_for_inv_match(CInv(MSG_WTX, tx2.calc_sha256(True)))
+        spy.wait_for_inv_match(CInv(MSG_DWTX, tx2.calc_sha256(True)))
 
 if __name__ == '__main__':
     TxPrivacyTest().main()
