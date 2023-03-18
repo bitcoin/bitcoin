@@ -847,6 +847,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, nEmbargoTime, m_active_chainstate.m_chain.Height(),
                                     fSpendsCoinbase, nSigOpsCost, lock_points.value()));
+    LogPrint(BCLog::DANDELION, "nEmbargoTime=%d\n", nEmbargoTime);
     ws.m_vsize = entry->GetTxSize();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
@@ -4042,11 +4043,13 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     // If this tx is marked to be in stem phase we just add the minimum time
     // and a poison value based on DANDELION_EMBARGO_AVG
     if (is_stem) {
+        embargo_time = std::chrono::duration_cast<std::chrono::seconds>(GetExponentialRand(embargo_time + DANDELION_EMBARGO_MIN, DANDELION_EMBARGO_AVG));
         LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_MIN=%d\n", DANDELION_EMBARGO_MIN.count());
         LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_AVG=%d\n", DANDELION_EMBARGO_AVG.count());
-        embargo_time = std::chrono::duration_cast<std::chrono::seconds>(GetExponentialRand(embargo_time + DANDELION_EMBARGO_MIN, DANDELION_EMBARGO_AVG));
+        LogPrint(BCLog::DANDELION, "embargo_time=%d\n", (embargo_time - accept_time).count());
     }
 
+    //auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time.count(), embargo_time.count(), /*bypass_limits=*/ false, test_accept);
     auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time.count(), embargo_time.count(), /*bypass_limits=*/ false, test_accept);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;

@@ -1472,8 +1472,10 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 
         if (txinfo.tx) {
             auto has_embargo = txinfo.m_embargo > now;
+            LogPrint(BCLog::DANDELION, "has_embargo=%f\n", has_embargo);
             RelayTransaction(txid, txinfo.tx->GetWitnessHash(), has_embargo);
         } else {
+            LogPrint(BCLog::DANDELION, "could not find txinfo for tx: %s\n", txid.ToString());
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
     }
@@ -2052,11 +2054,6 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         // in the announcement.
         if (tx_relay->m_next_inv_send_time == 0s) continue;
 
-        // Check if tx embargoed and that this peer is selected for stem phase
-        // tx handling by Dandelion++ as one of it's relay nodes
-        if (!tx_relay->m_send_stem && has_embargo) continue;
-        LogPrint(BCLog::NET, "tx_relay->m_send_stem=%f has_embargo=%f\n", tx_relay->m_send_stem, has_embargo);
-
         const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
         if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
             tx_relay->m_tx_inventory_to_send.insert(hash);
@@ -2270,7 +2267,7 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTx
         // If a TX could have been INVed in reply to a MEMPOOL request after
         // embargo for Dandelion++ tx is over, or is older than
         // UNCONDITIONAL_RELAY_DELAY, permit the request unconditionally.
-        if ((mempool_req.count() && txinfo.m_embargo < mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
+        if ((mempool_req.count() && txinfo.m_embargo <= mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
             return std::move(txinfo.tx);
         }
     }
@@ -5676,10 +5673,16 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                     for (const auto& txinfo : vtxinfo) {
                         const uint256& hash = peer->m_wtxid_relay ? txinfo.tx->GetWitnessHash() : txinfo.tx->GetHash();
-                        CInv inv;
-                        if (txinfo.m_embargo < current_time) {
-                            inv = CInv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
-                        } else {
+                        CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
+
+                        if (txinfo.m_embargo > current_time) {
+                            // Check if peer is embargoed and select as stem peer
+                            if (!tx_relay->m_send_stem) {
+                                LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
+                                // Don't send embargoed Inv to non stem peers
+                                continue;
+                            }
+
                             inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
                         }
                         tx_relay->m_tx_inventory_to_send.erase(hash);
@@ -5725,8 +5728,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         vInvTx.pop_back();
                         uint256 hash = *it;
                         CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
-                        // Remove it from the to-be-sent set
-                        tx_relay->m_tx_inventory_to_send.erase(it);
                         // Check if not in the filter already
                         if (tx_relay->m_tx_inventory_known_filter.contains(hash)) {
                             continue;
@@ -5736,6 +5737,20 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         if (!txinfo.tx) {
                             continue;
                         }
+
+                        if (txinfo.m_embargo > current_time) {
+                            inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
+
+                            // Check if peer is embargoed and select as stem peer
+                            if (!tx_relay->m_send_stem) {
+                                LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
+                                // Don't send embargoed Inv to non stem peers
+                                continue;
+                            }
+                        }
+                        // Remove it from the to-be-sent set
+                        tx_relay->m_tx_inventory_to_send.erase(it);
+
                         // Check if entry is embargoed. If so, we need to change
                         // the message type to either MSG_DWTX for witness relay
                         // or MSG_DTX for non witness relay

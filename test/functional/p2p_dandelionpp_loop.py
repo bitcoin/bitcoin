@@ -54,9 +54,6 @@ class DandelionLoopTest(BitcoinTestFramework):
         self.log.info("Setting up wallet")
         wallet = MiniWallet(self.nodes[0])
 
-        self.log.info("Adding P2PInterface")
-        peer = self.nodes[0].add_p2p_connection(P2PInterface())
-
         self.log.info("Create the tx on node 2")
         tx = wallet.send_self_transfer(from_node=self.nodes[1])
         txid = int(tx["wtxid"], 16)
@@ -65,8 +62,8 @@ class DandelionLoopTest(BitcoinTestFramework):
         # Wait for the nodes to sync mempools
         self.sync_all()
 
-        # Request for the mempool update
-        peer.send_and_ping(msg_mempool())
+        self.log.info("Adding P2PInterface")
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         # Create and send msg_getdata for the tx
         msg = msg_getdata()
