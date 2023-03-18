@@ -2257,7 +2257,6 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 
 CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
 {
-    LogPrint(BCLog::NET, "txid=%s\n", gtxid.GetHash().ToString());
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
         // If a TX could have been INVed in reply to a MEMPOOL request,
