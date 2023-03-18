@@ -20,7 +20,6 @@ Loop behavior:
 from test_framework.messages import (
         CInv,
         msg_getdata,
-        msg_mempool,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface

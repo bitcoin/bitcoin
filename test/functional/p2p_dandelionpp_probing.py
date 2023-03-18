@@ -19,7 +19,6 @@ Resistance to active probing:
 from test_framework.messages import (
         CInv,
         msg_getdata,
-        msg_mempool,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
@@ -63,9 +62,6 @@ class DandelionProbingTest(BitcoinTestFramework):
 
         self.log.info("Adding P2PInterface")
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
-
-        # Request for the mempool update
-        peer.send_and_ping(msg_mempool())
 
         # Create and send msg_getdata for the tx
         msg = msg_getdata()

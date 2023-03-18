@@ -23,7 +23,6 @@ import time
 from test_framework.messages import (
         CInv,
         msg_getdata,
-        msg_mempool,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
@@ -76,13 +75,7 @@ class DandelionBlackholeTest(BitcoinTestFramework):
         # Wait for the nodes to sync mempools
         self.sync_all()
 
-        # Request for the mempool update
-        peer.send_and_ping(msg_mempool())
-
         # Create and send msg_getdata for the tx
-        # We don't need to test for MSG_DTX as
-        # msg_mempool will never respond with a
-        # non withnessed tx response
         msg = msg_getdata()
         msg.inv.append(CInv(t=MSG_DWTX, h=txid))
         peer.send_and_ping(msg)
