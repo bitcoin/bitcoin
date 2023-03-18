@@ -5368,7 +5368,6 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
     // Update Dandelion++ stem peers if needed
     auto now = GetTime<std::chrono::microseconds>();
     if (m_next_stem_peer_shuffle < now) {
-        LogPrint(BCLog::DANDELION, "DANDELION_SHUFFLE_INTERVAL=%d\n", DANDELION_SHUFFLE_INTERVAL.count());
         m_next_stem_peer_shuffle = GetExponentialRand(now, DANDELION_SHUFFLE_INTERVAL);
         std::vector<PeerRef> peers;
         for (CNode* pnode : nodes) {
@@ -5382,7 +5381,6 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
             }
         }
 
-        LogPrint(BCLog::DANDELION, "peers.size()=%d DANDELION_MAX_ROUTES=%d\n", peers.size(), DANDELION_MAX_ROUTES);
         int found = 0;
         int peer_count = peers.size();
         while (found < peer_count && found < DANDELION_MAX_ROUTES) {
@@ -5399,6 +5397,8 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
         if (found == 0) {
             m_next_stem_peer_shuffle = now;
         }
+
+        LogPrint(BCLog::DANDELION, "Shuffled stem peers (found=%d, peers=%d, next_shuffle=%s)\n", found, peer_count, FormatISO8601DateTime(m_next_stem_peer_shuffle.count()));
     }
 }
 

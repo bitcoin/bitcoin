@@ -4044,9 +4044,7 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     // and a poison value based on DANDELION_EMBARGO_AVG
     if (is_stem && m_options.dandelion_enabled) {
         embargo_time = std::chrono::duration_cast<std::chrono::seconds>(GetExponentialRand(embargo_time + DANDELION_EMBARGO_MIN, DANDELION_EMBARGO_AVG));
-        LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_MIN=%d\n", DANDELION_EMBARGO_MIN.count());
-        LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_AVG=%d\n", DANDELION_EMBARGO_AVG.count());
-        LogPrint(BCLog::DANDELION, "embargo_time=%d\n", (embargo_time - accept_time).count());
+        LogPrint(BCLog::DANDELION, "embargo_min=%d embargo_avg=%d embargo_time=%d\n", DANDELION_EMBARGO_MIN.count(), DANDELION_EMBARGO_AVG.count(), (embargo_time - accept_time).count());
     }
 
     auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time.count(), embargo_time.count(), /*bypass_limits=*/ false, test_accept);
