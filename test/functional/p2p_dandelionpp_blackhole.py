@@ -23,6 +23,7 @@ import time
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        MSG_WTX,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
@@ -42,13 +43,6 @@ class DandelionBlackholeTest(BitcoinTestFramework):
             ["-dandelion", "-whitelist=all@127.0.0.1"],
         ]
 
-    def setup_network(self):
-        self.setup_nodes()
-        # Tests 1,2,3: 0 --> 1 --> 2 --> 0
-        self.connect_nodes(0, 1)
-        self.connect_nodes(1, 2)
-        self.connect_nodes(2, 0)
-
     def run_test(self):
         # There is a low probability that these tests will fail even if the
         # implementation is correct. Thus, these tests are repeated upon
@@ -61,26 +55,30 @@ class DandelionBlackholeTest(BitcoinTestFramework):
         self.log.info("Adding P2PInterface")
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
-        self.log.info("Create the tx on node 2")
-        tx = wallet.send_self_transfer(from_node=self.nodes[1])
+        self.log.info("Create the tx on node 1")
+        tx = wallet.send_self_transfer(from_node=self.nodes[0])
         txid = int(tx['wtxid'], 16)
         self.log.info("Sent tx {}".format(txid))
 
-        # Time travel MAX_STEM_TIME seconds into the future for all nodes
+        # Time travel MAX_STEM_TIME seconds into the future
+        # to force embargo to expire and get our tx returned
         mocktime = int(time.time() + MAX_STEM_TIME)
         for hop in range(self.num_nodes):
             for node in self.nodes:
                 node.setmocktime(mocktime)
 
         # Wait for the nodes to sync mempools
+        self.log.info("Sync nodes")
         self.sync_all()
 
-        # Create and send msg_getdata for the tx
-        msg = msg_getdata()
-        msg.inv.append(CInv(t=MSG_DWTX, h=txid))
-        peer.send_and_ping(msg)
+        for tx_type in [MSG_WTX, MSG_DWTX]:
+            # Create and send msg_getdata for the tx
+            msg = msg_getdata()
+            msg.inv.append(CInv(t=tx_type, h=txid))
+            peer.send_and_ping(msg)
+            self.log.info("Sending msg_getdata: CInv({}, {})".format(tx_type, txid))
 
-        assert not peer.last_message.get("notfound")
+            assert not peer.last_message.get("notfound")
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ Loop behavior:
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        MSG_WTX,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
@@ -30,7 +31,6 @@ from test_framework.wallet import MiniWallet
 class DandelionLoopTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
-        # Make sure we are whitelisted
         self.extra_args = [
             ["-dandelion", "-whitelist=all@127.0.0.1"],
             ["-dandelion", "-whitelist=all@127.0.0.1"],
@@ -39,7 +39,6 @@ class DandelionLoopTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-        # Tests 1,2,3: 0 --> 1 --> 2 --> 0
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 2)
         self.connect_nodes(2, 0)
@@ -59,17 +58,20 @@ class DandelionLoopTest(BitcoinTestFramework):
         self.log.info("Sent tx with {}".format(txid))
 
         # Wait for the nodes to sync mempools
+        self.log.info("Sync nodes")
         self.sync_all()
 
         self.log.info("Adding P2PInterface")
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
-        # Create and send msg_getdata for the tx
-        msg = msg_getdata()
-        msg.inv.append(CInv(t=MSG_DWTX, h=txid))
-        peer.send_and_ping(msg)
+        for tx_type in [MSG_WTX, MSG_DWTX]:
+            # Create and send msg_getdata for the tx
+            msg = msg_getdata()
+            msg.inv.append(CInv(t=tx_type, h=txid))
+            peer.send_and_ping(msg)
+            self.log.info("Sending msg_getdata: CInv({}, {})".format(tx_type, txid))
 
-        assert peer.last_message.get("notfound")
+            assert peer.last_message.get("notfound")
 
 
 if __name__ == "__main__":
