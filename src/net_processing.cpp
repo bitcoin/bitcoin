@@ -2264,10 +2264,10 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTx
     LogPrint(BCLog::NET, "txid=%s\n", gtxid.GetHash().ToString());
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
-        // If a TX could have been INVed in reply to a MEMPOOL request after
-        // embargo for Dandelion++ tx is over, or is older than
-        // UNCONDITIONAL_RELAY_DELAY, permit the request unconditionally.
-        if ((mempool_req.count() && txinfo.m_embargo <= mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
+        // If a TX could have been INVed in reply to a MEMPOOL request,
+        // or is older than UNCONDITIONAL_RELAY_DELAY, permit the request
+        // unconditionally.
+        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
             return std::move(txinfo.tx);
         }
     }
