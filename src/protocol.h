@@ -495,11 +495,9 @@ public:
     std::string ToString() const;
 
     // Single-message helper methods
-    bool IsMsgTx() const { return type == MSG_TX; }
-    bool IsMsgDtx() const { return type == MSG_DTX; }
+    bool IsMsgTx() const { return type == MSG_TX || type == MSG_DTX; }
     bool IsMsgBlk() const { return type == MSG_BLOCK; }
-    bool IsMsgWtx() const { return type == MSG_WTX; }
-    bool IsMsgDwtx() const { return type == MSG_DWTX; }
+    bool IsMsgWtx() const { return type == MSG_WTX || type == MSG_DWTX; }
     bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
