@@ -513,7 +513,7 @@ public:
     bool SendMessages(CNode* pto) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, g_msgproc_mutex);
     void ShuffleStemRoutes(const std::vector<CNode*>& nodes) override
-        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
 
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
