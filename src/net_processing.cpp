@@ -5391,8 +5391,10 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
             }
         }
 
+        // We couldn't get stem peers, this means we need to attempt again
+        // on the next run of ShuffleStemRoutes
         if (found == 0) {
-            m_next_stem_peer_shuffle = now + 1s;
+            m_next_stem_peer_shuffle = now;
         }
     }
 }
