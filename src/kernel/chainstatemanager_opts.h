@@ -20,9 +20,6 @@ class CChainParams;
 static constexpr bool DEFAULT_CHECKPOINTS_ENABLED{true};
 static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
 
-//! Default value for -dandelion option
-static constexpr bool DEFAULT_DANDELION_ENABLED{true};
-
 namespace kernel {
 
 /**

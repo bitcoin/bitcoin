@@ -12,6 +12,11 @@
 #include <cstdint>
 #include <string>
 
+// TODO: find a better header to place DEFAULT_DANDELION_ENABLED value...
+// Could not find a header that would make sense other than here...
+//! Default value for -dandelion option
+static constexpr bool DEFAULT_DANDELION_ENABLED{true};
+
 using namespace std::chrono_literals;
 
 /** Mockable clock in the context of tests, otherwise the system clock */
