@@ -513,7 +513,7 @@ public:
     bool SendMessages(CNode* pto) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, g_msgproc_mutex);
     void ShuffleStemRoutes(const std::vector<CNode*>& nodes) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
@@ -724,7 +724,7 @@ private:
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
 
     /** Next time to shuffle stem routes */
-    std::chrono::microseconds m_next_stem_peer_shuffle = GUARDED_BY(g_msgproc_mutex){0s};
+    std::chrono::microseconds m_next_stem_peer_shuffle = 0s;
 
     /** Whether this node is running in -blocksonly mode */
     const bool m_ignore_incoming_txs;
