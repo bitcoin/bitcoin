@@ -65,10 +65,12 @@ from test_framework.messages import (
     msg_sendtxrcncl,
     msg_tx,
     MSG_TX,
+    MSG_DTX,
     MSG_TYPE_MASK,
     msg_verack,
     msg_version,
     MSG_WTX,
+    MSG_DWTX,
     msg_wtxidrelay,
     NODE_NETWORK,
     NODE_WITNESS,
@@ -787,7 +789,7 @@ class P2PTxInvStore(P2PInterface):
         super().on_inv(message) # Send getdata in response.
         # Store how many times invs have been received for each tx.
         for i in message.inv:
-            if (i.type == MSG_TX) or (i.type == MSG_WTX):
+            if i.type == MSG_TX or i.type == MSG_WTX or i.type == MSG_DTX or i.type == MSG_DWTX:
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 
