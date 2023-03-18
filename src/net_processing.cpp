@@ -491,7 +491,7 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                     BanMan* banman, ChainstateManager& chainman,
-                    CTxMemPool& pool, bool ignore_incoming_txs, bool dandelion_enabled);
+                    CTxMemPool& pool, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override
@@ -728,9 +728,6 @@ private:
 
     /** Whether this node is running in -blocksonly mode */
     const bool m_ignore_incoming_txs;
-
-    /** Whether this node is running Dandelion++ for propagation */
-    const bool m_dandelion_enabled;
 
     bool RejectIncomingTxs(const CNode& peer) const;
 
@@ -1468,17 +1465,13 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
 void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 {
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
-    auto now = GetTime<std::chrono::seconds>();
 
     for (const auto& txid : unbroadcast_txids) {
-        auto txinfo = m_mempool.info(GenTxid::Txid(txid));
+        CTransactionRef tx = m_mempool.get(txid);
 
-        if (txinfo.tx) {
-            auto has_embargo = txinfo.m_embargo > now;
-            LogPrint(BCLog::DANDELION, "has_embargo=%f\n", has_embargo);
-            RelayTransaction(txid, txinfo.tx->GetWitnessHash());
+        if (tx != nullptr) {
+            RelayTransaction(txid, tx->GetWitnessHash());
         } else {
-            LogPrint(BCLog::DANDELION, "could not find txinfo for tx: %s\n", txid.ToString());
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
     }
@@ -1788,22 +1781,21 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
 
 std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrman,
                                                BanMan* banman, ChainstateManager& chainman,
-                                               CTxMemPool& pool, bool ignore_incoming_txs, bool dandelion_enabled)
+                                               CTxMemPool& pool, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, pool, ignore_incoming_txs, dandelion_enabled);
+    return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, pool, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
-                                 CTxMemPool& pool, bool ignore_incoming_txs, bool dandelion_enabled)
+                                 CTxMemPool& pool, bool ignore_incoming_txs)
     : m_chainparams(chainman.GetParams()),
       m_connman(connman),
       m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
-      m_ignore_incoming_txs(ignore_incoming_txs),
-      m_dandelion_enabled(dandelion_enabled)
+      m_ignore_incoming_txs(ignore_incoming_txs)
 {
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
@@ -5687,14 +5679,18 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         if (txinfo.m_embargo > current_time) {
                             // Check if peer is embargoed and select as stem peer
                             if (!tx_relay->m_send_stem) {
-                                LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
                                 // Don't send embargoed Inv to non stem peers
                                 continue;
                             }
 
                             inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
                         }
+
+                        LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
+
+                        // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(hash);
+
                         // Don't send transactions that peers will not put into their mempool
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
@@ -5748,24 +5744,20 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
 
                         if (txinfo.m_embargo > current_time) {
-                            inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
-
                             // Check if peer is embargoed and select as stem peer
                             if (!tx_relay->m_send_stem) {
-                                LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
                                 // Don't send embargoed Inv to non stem peers
                                 continue;
                             }
+
+                            inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
                         }
+
+                        LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
+
                         // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(it);
 
-                        // Check if entry is embargoed. If so, we need to change
-                        // the message type to either MSG_DWTX for witness relay
-                        // or MSG_DTX for non witness relay
-                        if (txinfo.m_embargo < current_time) {
-                            inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
-                        }
                         auto txid = txinfo.tx->GetHash();
                         auto wtxid = txinfo.tx->GetWitnessHash();
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.

@@ -4042,14 +4042,13 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
 
     // If this tx is marked to be in stem phase we just add the minimum time
     // and a poison value based on DANDELION_EMBARGO_AVG
-    if (is_stem) {
+    if (is_stem && m_options.dandelion_enabled) {
         embargo_time = std::chrono::duration_cast<std::chrono::seconds>(GetExponentialRand(embargo_time + DANDELION_EMBARGO_MIN, DANDELION_EMBARGO_AVG));
         LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_MIN=%d\n", DANDELION_EMBARGO_MIN.count());
         LogPrint(BCLog::DANDELION, "DANDELION_EMBARGO_AVG=%d\n", DANDELION_EMBARGO_AVG.count());
         LogPrint(BCLog::DANDELION, "embargo_time=%d\n", (embargo_time - accept_time).count());
     }
 
-    //auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time.count(), embargo_time.count(), /*bypass_limits=*/ false, test_accept);
     auto result = AcceptToMemoryPool(active_chainstate, tx, accept_time.count(), embargo_time.count(), /*bypass_limits=*/ false, test_accept);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;

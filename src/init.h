@@ -14,8 +14,6 @@
 static constexpr bool DEFAULT_DAEMON = false;
 //! Default value for -daemonwait option
 static constexpr bool DEFAULT_DAEMONWAIT = false;
-//! Default value for -dandelion option
-static constexpr bool DEFAULT_DANDELION = true;
 
 class ArgsManager;
 namespace interfaces {
