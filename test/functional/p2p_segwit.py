@@ -28,6 +28,7 @@ from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
     MSG_BLOCK,
     MSG_TX,
+    MSG_DTX,
     MSG_WITNESS_FLAG,
     MSG_WITNESS_TX,
     MSG_WTX,
@@ -1290,9 +1291,9 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_script]
         # Also check that old_node gets a tx announcement, even though this is
         # a witness transaction.
-        self.old_node.wait_for_inv([CInv(MSG_TX, tx2.sha256)])  # wait until tx2 was inv'ed
+        self.old_node.wait_for_inv([CInv(MSG_DTX, tx2.sha256)])  # wait until tx2 was inv'ed
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
-        self.old_node.wait_for_inv([CInv(MSG_TX, tx3.sha256)])
+        self.old_node.wait_for_inv([CInv(MSG_DTX, tx3.sha256)])
 
         # Test that getrawtransaction returns correct witness information
         # hash, size, vsize
