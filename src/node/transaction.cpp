@@ -57,7 +57,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
         }
 
-        if (auto txinfo = node.mempool->info(GenTxid::Txid(txid)); txinfo.tx) {
+        if (auto mempool_tx = node.mempool->get(txid); mempool_tx) {
             // There's already a transaction in the mempool with this txid. Don't
             // try to submit this transaction to the mempool (since it'll be
             // rejected as a TX_CONFLICT), but do attempt to reannounce the mempool
@@ -65,7 +65,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             //
             // The mempool transaction may have the same or different witness (and
             // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
-            wtxid = txinfo.tx->GetWitnessHash();
+            wtxid = mempool_tx->GetWitnessHash();
         } else {
             // Transaction is not already in the mempool.
             if (max_tx_fee > 0) {
