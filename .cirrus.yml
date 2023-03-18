@@ -285,7 +285,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 13 native arm64 [gui, sqlite only] [no depends]'
+  name: 'macOS 13 native arm64 [sqlite only] [no depends]'
   macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: ghcr.io/cirruslabs/macos-ventura-xcode:14.1  # https://cirrus-ci.org/guide/macOS
