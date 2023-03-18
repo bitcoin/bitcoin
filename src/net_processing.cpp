@@ -4008,7 +4008,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         bool fluffed = GetRandInternal(100) < DANDELION_FLUFF_CHANCE;
         if (!is_stem && fluffed) {
             is_stem = fluffed;
-            LogPrint(BCLog::DANDELION, "tx=%s was fluffed\n", txid.GetHash().ToString());
+            LogPrint(BCLog::DANDELION, "tx=%s was fluffed\n", txid.ToString());
         }
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
