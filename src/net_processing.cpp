@@ -5381,8 +5381,9 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
         }
 
         LogPrint(BCLog::DANDELION, "peers.size()=%d DANDELION_MAX_ROUTES=%d\n", peers.size(), DANDELION_MAX_ROUTES);
-        auto found = 0;
-        while (found < peers.size() && found < DANDELION_MAX_ROUTES) {
+        int found = 0;
+        int peer_count = peers.size();
+        while (found < peer_count && found < DANDELION_MAX_ROUTES) {
             auto peer = peers[GetRandInternal(peers.size())];
             if (auto txrelay = peer->GetTxRelay(); txrelay != nullptr) {
                 txrelay->m_send_stem = true;
