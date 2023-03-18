@@ -37,9 +37,9 @@ class DandelionBlackholeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
-            ["-whitelist=all@127.0.0.1"],
-            ["-whitelist=all@127.0.0.1"],
-            ["-whitelist=all@127.0.0.1"],
+            ["-dandelion", "-whitelist=all@127.0.0.1"],
+            ["-dandelion", "-whitelist=all@127.0.0.1"],
+            ["-dandelion", "-whitelist=all@127.0.0.1"],
         ]
 
     def setup_network(self):

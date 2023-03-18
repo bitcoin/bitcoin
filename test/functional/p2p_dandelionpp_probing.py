@@ -31,9 +31,9 @@ class DandelionProbingTest(BitcoinTestFramework):
         self.num_nodes = 3
         # Make sure we are whitelisted
         self.extra_args = [
-            ["-whitelist=all@127.0.0.1"],
-            ["-whitelist=all@127.0.0.1"],
-            ["-whitelist=all@127.0.0.1"],
+            ["-dandelion", "-whitelist=all@127.0.0.1"],
+            ["-dandelion", "-whitelist=all@127.0.0.1"],
+            ["-dandelion", "-whitelist=all@127.0.0.1"],
         ]
 
     def setup_network(self):
