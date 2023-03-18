@@ -44,10 +44,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     uint256 wtxid = tx->GetWitnessHash();
     bool callback_set = false;
 
-    // By default we are is_stem = true, unless the tx is already in the mempool
-    // and embargo is expired...
-    bool is_stem = true;
-
     {
         LOCK(cs_main);
 
@@ -70,15 +66,12 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // The mempool transaction may have the same or different witness (and
             // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
             wtxid = txinfo.tx->GetWitnessHash();
-
-            // Check if the embargo has expired yet
-            is_stem = txinfo.m_embargo > GetTime<std::chrono::seconds>();
         } else {
             // Transaction is not already in the mempool.
             if (max_tx_fee > 0) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
-                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true, is_stem);
+                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true, /*is_stem=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
                 } else if (result.m_base_fees.value() > max_tx_fee) {
@@ -86,7 +79,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 }
             }
             // Try to submit the transaction to the mempool.
-            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ false, is_stem);
+            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ false, /*is_stem=*/ true);
             if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                 return HandleATMPError(result.m_state, err_string);
             }
@@ -123,7 +116,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        node.peerman->RelayTransaction(txid, wtxid, /*has_embargo=*/ is_stem);
+        node.peerman->RelayTransaction(txid, wtxid);
     }
 
     return TransactionError::OK;

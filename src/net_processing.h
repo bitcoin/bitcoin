@@ -43,7 +43,7 @@ class PeerManager : public CValidationInterface, public NetEventsInterface
 public:
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
                                              BanMan* banman, ChainstateManager& chainman,
-                                             CTxMemPool& pool, bool ignore_incoming_txs);
+                                             CTxMemPool& pool, bool ignore_incoming_txs, bool dandelion_enabled);
     virtual ~PeerManager() { }
 
     /**
@@ -65,7 +65,7 @@ public:
     virtual bool IgnoresIncomingTxs() = 0;
 
     /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid, const bool has_embargo) = 0;
+    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
