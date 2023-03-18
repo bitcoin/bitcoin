@@ -16,7 +16,7 @@ Fluffing behavior:
 from test_framework.messages import (
         CInv,
         msg_getdata,
-        MSG_WTX,
+        msg_mempool,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
@@ -75,23 +75,30 @@ class DandelionFluffingTest(BitcoinTestFramework):
         self.log.info("Sync nodes")
         self.sync_all()
 
-        found = False
+        found = 0
+        missing = 0
 
         for i in range(self.num_nodes):
             self.log.info("Adding P2PInterface")
             peer = self.nodes[i].add_p2p_connection(P2PInterface())
 
+            # Create and send msg_mempool to node to bypass mempool request
+            # security
+            peer.send_and_ping(msg_mempool())
+
             # Create and send msg_getdata for the tx
             msg = msg_getdata()
-            msg.inv.append(CInv(t=MSG_WTX, h=txid))
+            msg.inv.append(CInv(t=MSG_DWTX, h=txid))
             peer.send_and_ping(msg)
             self.log.info("Sending msg_getdata: CInv(MSG_WTX,{})".format(txid))
 
             if not peer.last_message.get("notfound"):
-                found = True
-                break
+                found += 1
+            else:
+                missing += 1
 
-        assert found
+        assert found > 0
+        assert missing > 0
 
 
 if __name__ == "__main__":
