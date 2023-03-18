@@ -5373,8 +5373,9 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
         for (CNode* pnode : nodes) {
             auto peer = GetPeerRef(pnode->GetId());
             if (peer) {
-                if (auto txrelay = peer->GetTxRelay(); txrelay != nullptr) {
-                    txrelay->m_send_stem = true;
+                if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+                    LOCK(tx_relay->m_tx_inventory_mutex);
+                    tx_relay->m_send_stem = true;
                     peers.push_back(peer);
                 }
             }
@@ -5385,8 +5386,9 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
         int peer_count = peers.size();
         while (found < peer_count && found < DANDELION_MAX_ROUTES) {
             auto peer = peers[GetRandInternal(peers.size())];
-            if (auto txrelay = peer->GetTxRelay(); txrelay != nullptr) {
-                txrelay->m_send_stem = true;
+            if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+                LOCK(tx_relay->m_tx_inventory_mutex);
+                tx_relay->m_send_stem = true;
                 found++;
             }
         }
