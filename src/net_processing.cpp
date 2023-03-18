@@ -2925,6 +2925,8 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     CTransactionRef porphanTx = nullptr;
 
     while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id)) {
+        // TODO: Decide if we need to check for embargo values for orphaned tx
+        // data, if needed we should implement it here or somewhere more relevant
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
@@ -4002,8 +4004,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& wtxid = ptx->GetWitnessHash();
 
         // When receiving a MSG_DTX we need to check if we need to randomly fluff.
-        const bool has_embargo = msg_type == NetMsgType::DTX && GetRandInternal(100) < DANDELION_FLUFF_CHANCE;
-        LogPrint(BCLog::DANDELION, "DANDELION_FLUFF_CHANCE=%d\n", DANDELION_FLUFF_CHANCE);
+        bool is_stem = msg_type == NetMsgType::DTX;
+        bool fluffed = GetRandInternal(100) < DANDELION_FLUFF_CHANCE;
+        if (!is_stem && fluffed) {
+            is_stem = fluffed;
+            LogPrint(BCLog::DANDELION, "tx=%s was fluffed\n", txid.GetHash().ToString());
+        }
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
         AddKnownTx(*peer, hash);
@@ -4048,7 +4054,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx);
+        const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx, /*test_accept=*/ false, is_stem);
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
