@@ -33,6 +33,7 @@ from test_framework.wallet import MiniWallet
 # Max time a tx should spend in stem phase
 MAX_STEM_TIME = 60
 
+
 class DandelionBlackholeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
@@ -87,6 +88,7 @@ class DandelionBlackholeTest(BitcoinTestFramework):
         peer.send_and_ping(msg)
 
         assert not peer.last_message.get("notfound")
+
 
 if __name__ == "__main__":
     DandelionBlackholeTest().main()
