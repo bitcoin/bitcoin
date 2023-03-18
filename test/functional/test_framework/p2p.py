@@ -789,7 +789,7 @@ class P2PTxInvStore(P2PInterface):
         super().on_inv(message) # Send getdata in response.
         # Store how many times invs have been received for each tx.
         for i in message.inv:
-            if i.type == MSG_TX or i.type == MSG_WTX or i.type == MSG_DTX or i.type == MSG_DWTX:
+            if i.type in [MSG_TX, MSG_WTX, MSG_DTX, MSG_DWTX]:
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 
