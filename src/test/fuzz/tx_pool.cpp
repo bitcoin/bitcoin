@@ -253,7 +253,8 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
                    it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
         }
 
-        int64_t accept_time, embargo_time = GetTime();
+        int64_t accept_time = GetTime();
+        int64_t embargo_time = GetTime();
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, accept_time, embargo_time, bypass_limits, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         SyncWithValidationInterfaceQueue();
@@ -352,7 +353,8 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 
         const auto tx = MakeTransactionRef(mut_tx);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
-        int64_t accept_time, embargo_time = GetTime();
+        int64_t accept_time = GetTime();
+        int64_t embargo_time = GetTime();
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, accept_time, embargo_time, bypass_limits, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
