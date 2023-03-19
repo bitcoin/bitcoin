@@ -3828,6 +3828,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         return state.Invalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
     }
     CBlockIndex* pindex{m_blockman.AddToBlockIndex(block, m_best_header)};
+    LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Info, "added new block header %s\n", hash.ToString());
 
     if (ppindex)
         *ppindex = pindex;
