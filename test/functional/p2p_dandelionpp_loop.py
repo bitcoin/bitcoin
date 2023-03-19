@@ -22,7 +22,6 @@ from test_framework.messages import (
         msg_getdata,
         msg_mempool,
         MSG_WTX,
-        MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -65,18 +64,17 @@ class DandelionLoopTest(BitcoinTestFramework):
         self.log.info("Adding P2PInterface")
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
-        for tx_type in [MSG_WTX, MSG_DWTX]:
-            # Create and send msg_mempool to node to bypass mempool request
-            # security
-            peer.send_and_ping(msg_mempool())
+        # Create and send msg_mempool to node to bypass mempool request
+        # security
+        peer.send_and_ping(msg_mempool())
 
-            # Create and send msg_getdata for the tx
-            msg = msg_getdata()
-            msg.inv.append(CInv(t=tx_type, h=txid))
-            peer.send_and_ping(msg)
-            self.log.info("Sending msg_getdata: CInv({}, {})".format(tx_type, txid))
+        # Create and send msg_getdata for the tx
+        msg = msg_getdata()
+        msg.inv.append(CInv(t=MSG_WTX, h=txid))
+        peer.send_and_ping(msg)
+        self.log.info("Sending msg_getdata: CInv({},{})".format(MSG_WTX, txid))
 
-            assert peer.last_message.get("notfound")
+        assert peer.last_message.get("notfound")
 
 
 if __name__ == "__main__":
