@@ -16,7 +16,6 @@ Loop behavior:
 import time
 
 from test_framework.messages import (
-        CInv,
         msg_mempool,
         MSG_WTX,
         MSG_DWTX,
