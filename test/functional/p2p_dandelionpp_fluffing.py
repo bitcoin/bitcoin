@@ -19,7 +19,6 @@ from test_framework.messages import (
         msg_getdata,
         msg_mempool,
         MSG_WTX,
-        MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
