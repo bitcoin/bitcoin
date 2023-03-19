@@ -33,8 +33,8 @@ class DandelionLoopTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [
             ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
+            ["-dandelion=false", "-whitelist=all@127.0.0.1"],
+            ["-dandelion=false", "-whitelist=all@127.0.0.1"],
         ]
 
     def setup_network(self):
