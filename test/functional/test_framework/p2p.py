@@ -429,6 +429,7 @@ class P2PInterface(P2PConnection):
     def on_sendheaders(self, message): pass
     def on_sendtxrcncl(self, message): pass
     def on_tx(self, message): pass
+    def on_dtx(self, message): pass
     def on_wtxidrelay(self, message): pass
 
     def on_inv(self, message):

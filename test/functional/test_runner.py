@@ -358,6 +358,7 @@ BASE_SCRIPTS = [
     'p2p_dandelionpp_blackhole.py',
     'p2p_dandelionpp_fluffing.py',
     'p2p_dandelionpp_loop.py',
+    'p2p_dandelionpp_mempool_leak.py',
     'p2p_dandelionpp_probing.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
