@@ -2313,11 +2313,30 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(pfrom, ToGenTxid(inv), mempool_req, now);
+        const auto gtxid = ToGenTxid(inv);
+        auto replyMsgType = NetMsgType::TX;
+        auto txinfo = m_mempool.info(gtxid);
+        bool has_embargo = txinfo.tx && txinfo.m_embargo > now;
+
+        LogPrint(BCLog::DANDELION, "getdata tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), has_embargo, pfrom.GetId(), tx_relay->m_send_stem);
+
+        // Check if tx is embargoed
+        if (has_embargo) {
+            // Set the reply message type to DTX for embargoed TX data
+            replyMsgType = NetMsgType::DTX;
+            // Check if peer selected as stem peer
+            if (!tx_relay->m_send_stem) {
+                // Don't send embargoed Inv to non stem peers
+                vNotFound.push_back(inv);
+                continue;
+            }
+        }
+
+        CTransactionRef tx = FindTxForGetData(pfrom, gtxid, mempool_req, now);
         if (tx) {
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-            m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, replyMsgType, *tx));
             m_mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
             std::vector<uint256> parent_ids_to_add;
@@ -4005,10 +4024,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // When receiving a MSG_DTX we need to check if we need to randomly fluff.
         bool is_stem = msg_type == NetMsgType::DTX;
-        bool fluffed = GetRandInternal(100) < DANDELION_FLUFF_CHANCE;
-        if (!is_stem && fluffed) {
-            is_stem = fluffed;
-            LogPrint(BCLog::DANDELION, "tx=%s was fluffed\n", txid.ToString());
+        if (is_stem) {
+            auto fluff_rand = GetRandInternal(100);
+            auto fluffed = fluff_rand < DANDELION_FLUFF_CHANCE;
+            is_stem = !fluffed;
+            LogPrint(BCLog::DANDELION, "fluff tx=%s fluff_rand=%d fluffed=%f\n", txid.ToString(), fluff_rand, fluffed);
         }
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
@@ -5375,7 +5395,7 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
             if (peer) {
                 if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
                     LOCK(tx_relay->m_tx_inventory_mutex);
-                    tx_relay->m_send_stem = true;
+                    tx_relay->m_send_stem = false; // Reset the values
                     peers.push_back(peer);
                 }
             }
@@ -5387,7 +5407,7 @@ void PeerManagerImpl::ShuffleStemRoutes(const std::vector<CNode*>& nodes)
             auto peer = peers[GetRandInternal(peers.size())];
             if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
                 LOCK(tx_relay->m_tx_inventory_mutex);
-                tx_relay->m_send_stem = true;
+                tx_relay->m_send_stem = true; // Mark as stem peer
                 found++;
             }
         }
@@ -5681,7 +5701,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         const uint256& hash = peer->m_wtxid_relay ? txinfo.tx->GetWitnessHash() : txinfo.tx->GetHash();
                         CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
 
-                        if (txinfo.m_embargo > current_time) {
+                        bool has_embargo = txinfo.m_embargo > current_time;
+                        LogPrint(BCLog::DANDELION, "mempool tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), has_embargo, pto->GetId(), tx_relay->m_send_stem);
+
+                        // Check if tx is embargoed
+                        if (has_embargo) {
                             // Check if peer is embargoed and select as stem peer
                             if (!tx_relay->m_send_stem) {
                                 // Don't send embargoed Inv to non stem peers
@@ -5690,8 +5714,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                             inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
                         }
-
-                        LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
 
                         // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(hash);
@@ -5748,8 +5770,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
 
-                        if (txinfo.m_embargo > current_time) {
-                            // Check if peer is embargoed and select as stem peer
+                        bool has_embargo = txinfo.m_embargo > current_time;
+                        LogPrint(BCLog::DANDELION, "trickle tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), has_embargo, pto->GetId(), tx_relay->m_send_stem);
+
+                        // Check if tx is embargoed
+                        if (has_embargo) {
+                            // Check if peer selected as stem peer
                             if (!tx_relay->m_send_stem) {
                                 // Don't send embargoed Inv to non stem peers
                                 continue;
@@ -5757,8 +5783,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                             inv = CInv(peer->m_wtxid_relay ? MSG_DWTX : MSG_DTX, hash);
                         }
-
-                        LogPrint(BCLog::NET, "tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), txinfo.m_embargo > current_time, pto->GetId(), tx_relay->m_send_stem);
 
                         // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(it);
