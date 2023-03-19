@@ -12,9 +12,9 @@ https://github.com/digibyte/digibyte/blob/master/test/functional/p2p_dandelion.p
 Resistance to black holes:
     Stem:  0 --> 1 --> 2 --> 0 where each node supports Dandelion++
     Probe: TestNode --> 0
-    Wait ~1 second after creating the tx (this should be enough time for the
-    tx to propogate through the network with a regular mempool tx), then
-    TestNode sends getdata for tx to Node 0
+    Wait ~60 seconds after creating the tx (this should be enough time this
+    should expired the embargo on the tx), then TestNode sends getdata for tx
+    to Node 0.
     Assert that Node 0 replies with tx (meaning the tx has fluffed)
 """
 
@@ -23,8 +23,8 @@ import time
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        msg_mempool,
         MSG_WTX,
-        MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -36,9 +36,8 @@ MAX_STEM_TIME = 60
 
 class DandelionBlackholeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 3
+        self.num_nodes = 2
         self.extra_args = [
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
             ["-dandelion", "-whitelist=all@127.0.0.1"],
             ["-dandelion", "-whitelist=all@127.0.0.1"],
         ]
@@ -62,23 +61,23 @@ class DandelionBlackholeTest(BitcoinTestFramework):
 
         # Time travel MAX_STEM_TIME seconds into the future
         # to force embargo to expire and get our tx returned
-        mocktime = int(time.time() + MAX_STEM_TIME)
-        for hop in range(self.num_nodes):
-            for node in self.nodes:
-                node.setmocktime(mocktime)
+        self.nodes[0].setmocktime(int(time.time() + MAX_STEM_TIME))
 
-        # Wait for the nodes to sync mempools
-        self.log.info("Sync nodes")
-        self.sync_all()
+        # Create and send msg_mempool to node to bypass mempool request
+        # security
+        peer.send_and_ping(msg_mempool())
 
-        for tx_type in [MSG_WTX, MSG_DWTX]:
-            # Create and send msg_getdata for the tx
-            msg = msg_getdata()
-            msg.inv.append(CInv(t=tx_type, h=txid))
-            peer.send_and_ping(msg)
-            self.log.info("Sending msg_getdata: CInv({}, {})".format(tx_type, txid))
+        # Create and send msg_getdata for the tx
+        msg = msg_getdata()
+        msg.inv.append(CInv(t=MSG_WTX, h=txid))
+        peer.send_and_ping(msg)
+        self.log.info("Sending msg_getdata: CInv({},{})".format(MSG_WTX, txid))
 
-            assert not peer.last_message.get("notfound")
+        res_tx = peer.last_message.get("tx")
+        assert res_tx and res_tx.tx
+
+        self.log.info("Got the tx {}".format(int(res_tx.tx.getwtxid(), 16)))
+        assert int(res_tx.tx.getwtxid(), 16) == txid
 
 
 if __name__ == "__main__":
