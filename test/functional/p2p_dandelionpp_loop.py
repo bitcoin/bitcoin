@@ -20,6 +20,7 @@ Loop behavior:
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        msg_mempool,
         MSG_WTX,
         MSG_DWTX,
 )
@@ -52,10 +53,10 @@ class DandelionLoopTest(BitcoinTestFramework):
         self.log.info("Setting up wallet")
         wallet = MiniWallet(self.nodes[0])
 
-        self.log.info("Create the tx on node 2")
-        tx = wallet.send_self_transfer(from_node=self.nodes[1])
+        self.log.info("Create the tx on node 1")
+        tx = wallet.send_self_transfer(from_node=self.nodes[0])
         txid = int(tx["wtxid"], 16)
-        self.log.info("Sent tx with {}".format(txid))
+        self.log.info("Sent tx {}".format(txid))
 
         # Wait for the nodes to sync mempools
         self.log.info("Sync nodes")
@@ -65,6 +66,10 @@ class DandelionLoopTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         for tx_type in [MSG_WTX, MSG_DWTX]:
+            # Create and send msg_mempool to node to bypass mempool request
+            # security
+            peer.send_and_ping(msg_mempool())
+
             # Create and send msg_getdata for the tx
             msg = msg_getdata()
             msg.inv.append(CInv(t=tx_type, h=txid))
