@@ -19,6 +19,7 @@ Resistance to active probing:
 from test_framework.messages import (
         CInv,
         msg_getdata,
+        msg_mempool,
         MSG_WTX,
         MSG_DWTX,
 )
@@ -46,14 +47,15 @@ class DandelionProbingTest(BitcoinTestFramework):
         txid = int(tx['wtxid'], 16)
         self.log.info("Sent tx with {}".format(txid))
 
-        # Wait for the nodes to sync mempools
-        self.log.info("Sync nodes")
-        self.sync_all()
-
         self.log.info("Adding P2PInterface")
-        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].add_p2p_connection(P2PInterface())  # Fake dandelion peer
+        peer = self.nodes[0].add_p2p_connection(P2PInterface()) # Probing peer
 
         for tx_type in [MSG_WTX, MSG_DWTX]:
+            # Create and send msg_mempool to node to bypass mempool request
+            # security
+            peer.send_and_ping(msg_mempool())
+
             # Create and send msg_getdata for the tx
             msg = msg_getdata()
             msg.inv.append(CInv(t=tx_type, h=txid))
