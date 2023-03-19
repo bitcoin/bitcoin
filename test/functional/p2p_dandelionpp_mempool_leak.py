@@ -24,8 +24,8 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
-# Max time a tx should spend in stem phase
-MAX_STEM_TIME = 60
+# Time in the future that tx is 100% fluffed
+MAX_STEM_TIME = 999
 
 
 class DandelionLoopTest(BitcoinTestFramework):
@@ -53,7 +53,6 @@ class DandelionLoopTest(BitcoinTestFramework):
 
         # Time travel into the future to make the embargo expire
         self.nodes[0].setmocktime(int(time.time() + MAX_STEM_TIME))
-        time.sleep(1)
 
         # Create and send msg_mempool to node
         self.log.info("Sending msg_mempool from stem_peer")

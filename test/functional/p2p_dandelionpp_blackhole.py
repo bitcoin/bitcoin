@@ -20,18 +20,13 @@ Resistance to black holes:
 
 import time
 
-from test_framework.messages import (
-        CInv,
-        msg_getdata,
-        msg_mempool,
-        MSG_WTX,
-)
+from test_framework.messages import msg_mempool
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
-# Max time a tx should spend in stem phase
-MAX_STEM_TIME = 60
+# Time in the future that tx is 100% fluffed
+MAX_STEM_TIME = 999
 
 
 class DandelionBlackholeTest(BitcoinTestFramework):
@@ -63,22 +58,18 @@ class DandelionBlackholeTest(BitcoinTestFramework):
         # Time travel MAX_STEM_TIME seconds into the future
         # to force embargo to expire and get our tx returned
         self.nodes[0].setmocktime(int(time.time() + MAX_STEM_TIME))
-        time.sleep(1)
-
-        # Create and send msg_mempool to node to bypass mempool request
-        # security
-        peer.send_and_ping(msg_mempool())
-
-        # Create and send msg_getdata for the tx
-        msg = msg_getdata()
-        msg.inv.append(CInv(t=MSG_WTX, h=txid))
-        peer.send_and_ping(msg)
-        self.log.info("Sending msg_getdata: CInv({},{})".format(MSG_WTX, txid))
 
         res_tx = peer.last_message.get("tx")
+        if not res_tx:
+            # Create and send msg_mempool to node to bypass mempool request
+            # security
+            peer.send_and_ping(msg_mempool())
+            res_tx = peer.last_message.get("tx")
+
+        self.log.info(res_tx)
         assert res_tx and res_tx.tx
 
-        self.log.info("Got the tx {}".format(int(res_tx.tx.getwtxid(), 16)))
+        self.log.info("Got tx {}".format(int(res_tx.tx.getwtxid(), 16)))
         assert int(res_tx.tx.getwtxid(), 16) == txid
 
 
