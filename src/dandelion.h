@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_DANDELION_H
-#define NAVCOIN_DANDELION_H
+#ifndef BITCOIN_DANDELION_H
+#define BITCOIN_DANDELION_H
 
 /** Default value for -dandelion option */
 static constexpr bool DEFAULT_DANDELION_ENABLED{true};
@@ -23,4 +23,4 @@ static const int DANDELION_MAX_ROUTES = 2;
 /** Expected time between Dandelion++ routing shuffles (in seconds). */
 static constexpr auto DANDELION_SHUFFLE_INTERVAL = 600s;
 
-#endif // NAVCOIN_DANDELION_H
+#endif // BITCOIN_DANDELION_H
