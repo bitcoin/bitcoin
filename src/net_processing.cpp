@@ -2945,8 +2945,6 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     CTransactionRef porphanTx = nullptr;
 
     while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id)) {
-        // TODO: Decide if we need to check for embargo values for orphaned tx
-        // data, if needed we should implement it here or somewhere more relevant
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
