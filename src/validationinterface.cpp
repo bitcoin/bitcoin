@@ -207,7 +207,7 @@ void CMainSignals::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx
     auto event = [tx, mempool_sequence, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(tx, mempool_sequence); });
     };
-    ENQUEUE_AND_LOG_EVENT(BCLog::VALIDATION, BCLog::Level::Debug, event, "txid=%s wtxid=%s",
+    ENQUEUE_AND_LOG_EVENT(BCLog::MEMPOOL, BCLog::Level::Debug, event, "added txid=%s wtxid=%s",
                           tx.info.m_tx->GetHash().ToString(),
                           tx.info.m_tx->GetWitnessHash().ToString());
 }
@@ -216,7 +216,7 @@ void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemP
     auto event = [tx, reason, mempool_sequence, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(tx, reason, mempool_sequence); });
     };
-    ENQUEUE_AND_LOG_EVENT(BCLog::VALIDATION, BCLog::Level::Debug, event, "removed txid=%s wtxid=%s reason=%s",
+    ENQUEUE_AND_LOG_EVENT(BCLog::MEMPOOL, BCLog::Level::Debug, event, "removed txid=%s wtxid=%s reason=%s",
                           tx->GetHash().ToString(),
                           tx->GetWitnessHash().ToString(),
                           RemovalReasonToString(reason));
@@ -236,7 +236,7 @@ void CMainSignals::MempoolTransactionsRemovedForBlock(const std::vector<RemovedM
     auto event = [txs_removed_for_block, nBlockHeight, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight); });
     };
-    ENQUEUE_AND_LOG_EVENT(BCLog::VALIDATION, BCLog::Level::Debug, event, "block height=%s txs removed=%s",
+    ENQUEUE_AND_LOG_EVENT(BCLog::MEMPOOL, BCLog::Level::Debug, event, "block height=%s txs removed=%s",
                           nBlockHeight,
                           txs_removed_for_block.size());
 }
