@@ -201,6 +201,9 @@
              </property>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl1">
+               <property name="labelAlignment">
+                <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -386,6 +389,9 @@
              </item>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl4">
+               <property name="labelAlignment">
+                <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
