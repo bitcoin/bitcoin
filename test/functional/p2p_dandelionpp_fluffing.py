@@ -7,10 +7,11 @@
 Test transaction behaviors under the Dandelion spreading policy
 
 Fluffing behavior:
-    Stem:  0 --> 1 ... 12 --> 0 where each node supports Dandelion++
-    Probe: TestNode --> 12
+    Stem:  0 --> 1 where each node supports Dandelion++
+    Probe: TestNode --> 1
     Create a Dandelion++ stem phase tx on node 1.
-    Assuming the fluff chance of 10%, we should reliably see tx on node 15.
+    Assuming the fluff chance of 10%, we should reliably see tx on node 1
+    about 10% of the time.
 """
 
 from test_framework.messages import (
