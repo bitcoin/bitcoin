@@ -6,6 +6,7 @@
 #define BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
 #include <arith_uint256.h>
+#include <dandelion.h>
 #include <dbwrapper.h>
 #include <txdb.h>
 #include <uint256.h>

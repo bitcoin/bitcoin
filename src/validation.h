@@ -71,10 +71,6 @@ static const int DEFAULT_STOPATHEIGHT = 0;
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = 6;
 static constexpr int DEFAULT_CHECKLEVEL{3};
-/** The minimum amount of time a Dandelion++ transaction is embargoed (seconds) */
-static constexpr auto DANDELION_EMBARGO_MIN = 10s;
-/** The average additional embargo time beyond the minimum amount (seconds) */
-static constexpr auto DANDELION_EMBARGO_AVG = 20s;
 // Require that user allocate at least 550 MiB for block & undo files (blk???.dat and rev???.dat)
 // At 1MB per block, 288 blocks = 288MB.
 // Add 15% for Undo data = 331MB
