@@ -17,6 +17,7 @@ from test_framework.messages import (
         CInv,
         msg_getdata,
         msg_mempool,
+        MSG_WTX,
         MSG_DWTX,
 )
 from test_framework.p2p import P2PInterface
@@ -26,36 +27,17 @@ from test_framework.wallet import MiniWallet
 
 class DandelionFluffingTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 12
+        self.num_nodes = 2
+        self.max_attempts = 100
+        self.tx_count = 5
         self.extra_args = [
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
             ["-dandelion", "-whitelist=all@127.0.0.1"],
             ["-dandelion", "-whitelist=all@127.0.0.1"],
         ]
 
-    # def setup_network(self):
-    #     self.setup_nodes()
-    #     self.connect_nodes(0, 1)
-    #     self.connect_nodes(1, 2)
-    #     self.connect_nodes(2, 3)
-    #     self.connect_nodes(3, 4)
-    #     self.connect_nodes(4, 5)
-    #     self.connect_nodes(5, 6)
-    #     self.connect_nodes(6, 7)
-    #     self.connect_nodes(7, 8)
-    #     self.connect_nodes(8, 9)
-    #     self.connect_nodes(9, 10)
-    #     self.connect_nodes(10, 11)
-    #     self.connect_nodes(11, 0)
+    def setup_network(self):
+        self.setup_nodes()
+        self.connect_nodes(0, 1)
 
     def run_test(self):
         # There is a low probability that these tests will fail even if the
@@ -66,39 +48,52 @@ class DandelionFluffingTest(BitcoinTestFramework):
         self.log.info("Setting up wallet")
         wallet = MiniWallet(self.nodes[0])
 
-        self.log.info("Create the tx on node 2")
-        tx = wallet.send_self_transfer(from_node=self.nodes[0])
-        txid = int(tx["wtxid"], 16)
-        self.log.info("Sent tx with {}".format(txid))
+        self.log.info("Adding P2PInterface")
+        peer = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # Wait for the nodes to sync mempools
         self.log.info("Sync nodes")
         self.sync_all()
 
-        found = 0
-        missing = 0
+        # Track attempts and fluffs
+        attempt = 0
+        fluffed = 0
 
-        for i in range(self.num_nodes):
-            self.log.info("Adding P2PInterface")
-            peer = self.nodes[i].add_p2p_connection(P2PInterface())
+        while attempt < self.max_attempts:
+            attempt += 1
+            self.log.info("Attempt {}".format(attempt))
 
-            # Create and send msg_mempool to node to bypass mempool request
-            # security
-            peer.send_and_ping(msg_mempool())
+            txids = []
+            for i in range(self.tx_count):
+                tx = wallet.send_self_transfer(from_node=self.nodes[0])
+                txids += [int(tx["wtxid"], 16)]
+                self.log.info("Sent tx {}".format(txids[i]))
 
-            # Create and send msg_getdata for the tx
-            msg = msg_getdata()
-            msg.inv.append(CInv(t=MSG_DWTX, h=txid))
-            peer.send_and_ping(msg)
-            self.log.info("Sending msg_getdata: CInv(MSG_WTX,{})".format(txid))
+            # Wait for the nodes to sync mempools
+            self.log.info("Sync nodes")
+            self.sync_all()
 
-            if not peer.last_message.get("notfound"):
-                found += 1
-            else:
-                missing += 1
+            for i in range(self.tx_count):
+                # Create and send msg_mempool to node to bypass mempool request
+                # security
+                peer.send_and_ping(msg_mempool())
 
-        assert found > 0
-        assert missing > 0
+                # Create and send msg_getdata for the tx
+                msg = msg_getdata()
+                msg.inv.append(CInv(t=MSG_WTX, h=txids[i]))
+                peer.send_and_ping(msg)
+                self.log.info("Sending msg_getdata: CInv(MSG_WTX,{})".format(txids[i]))
+
+                last_tx = peer.last_message.get("tx")
+                if last_tx and int(last_tx.tx.getwtxid(), 16) == txids[i]:
+                    self.log.info("Tx {} fluffed on node 2".format(txids[i]))
+                    fluffed += 1
+
+            if fluffed > 0:
+                break
+
+        self.log.info("Fluffed tx {}%".format((fluffed / (attempt * self.tx_count)) * 100))
+        assert fluffed > 0
 
 
 if __name__ == "__main__":

@@ -1473,7 +1473,8 @@ class msg_tx:
     def __repr__(self):
         return "msg_tx(tx=%s)" % (repr(self.tx))
 
-class msg_tx:
+
+class msg_dtx:
     __slots__ = ("tx",)
     msgtype = b"dtx"
 
@@ -1488,6 +1489,7 @@ class msg_tx:
 
     def __repr__(self):
         return "msg_dtx(tx=%s)" % (repr(self.tx))
+
 
 class msg_wtxidrelay:
     __slots__ = ()

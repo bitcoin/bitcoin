@@ -66,6 +66,7 @@ from test_framework.messages import (
     msg_tx,
     MSG_TX,
     MSG_DTX,
+    msg_dtx,
     MSG_TYPE_MASK,
     msg_verack,
     msg_version,
