@@ -2318,12 +2318,10 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         auto txinfo = m_mempool.info(gtxid);
         bool has_embargo = txinfo.tx && txinfo.m_embargo > now;
 
-        LogPrint(BCLog::DANDELION, "getdata tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), has_embargo, pfrom.GetId(), tx_relay->m_send_stem);
-
         // Check if tx is embargoed
         if (has_embargo) {
             LOCK(tx_relay->m_tx_inventory_mutex);
-
+            LogPrint(BCLog::DANDELION, "getdata tx=%s has_embargo=%f peer=%d m_send_stem=%f\n", txinfo.tx->GetHash().ToString(), has_embargo, pfrom.GetId(), tx_relay->m_send_stem);
             // Set the reply message type to DTX for embargoed TX data
             replyMsgType = NetMsgType::DTX;
 
