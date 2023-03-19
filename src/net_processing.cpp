@@ -2322,8 +2322,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         // Check if tx is embargoed
         if (has_embargo) {
+            LOCK(tx_relay->m_tx_inventory_mutex);
+
             // Set the reply message type to DTX for embargoed TX data
             replyMsgType = NetMsgType::DTX;
+
             // Check if peer selected as stem peer
             if (!tx_relay->m_send_stem) {
                 // Don't send embargoed Inv to non stem peers
@@ -5706,6 +5709,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                         // Check if tx is embargoed
                         if (has_embargo) {
+                            LOCK(tx_relay->m_tx_inventory_mutex);
                             // Check if peer is embargoed and select as stem peer
                             if (!tx_relay->m_send_stem) {
                                 // Don't send embargoed Inv to non stem peers
@@ -5775,6 +5779,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                         // Check if tx is embargoed
                         if (has_embargo) {
+                            LOCK(tx_relay->m_tx_inventory_mutex);
                             // Check if peer selected as stem peer
                             if (!tx_relay->m_send_stem) {
                                 // Don't send embargoed Inv to non stem peers
