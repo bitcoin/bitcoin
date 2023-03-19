@@ -11,9 +11,11 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/feerate.h>
+#include <psbt.h>
 #include <saltedhasher.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
+#include <util/message.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -148,7 +150,7 @@ class ReserveDestination
 {
 protected:
     //! The wallet to reserve from
-    CWallet* const pwallet;
+    const CWallet* const pwallet;
     //! The ScriptPubKeyMan to reserve from. Based on type when GetReservedDestination is called
     ScriptPubKeyMan* m_spk_man{nullptr};
 
@@ -647,7 +649,7 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
 class CWallet final : public WalletStorage, public interfaces::Chain::Notifications
 {
 private:
-    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_wallet);
 
     //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
     bool fOnlyMixingAllowed;
@@ -726,6 +728,12 @@ private:
     //! Unset the blank wallet flag and saves it to disk
     void UnsetBlankWalletFlag(WalletBatch& batch) override;
 
+    // Reset coinjoin and reset key counter
+    void NewKeyPoolCallback() override;
+
+    // Decreases amount of nKeysLeftSinceAutoBackup after KeepDestination
+    void KeepDestinationCallback(bool erased) override;
+
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -764,6 +772,13 @@ private:
      * that the wallet has scanned sequentially all blocks up to this one.
      */
     int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
+
+    ScriptPubKeyMan* m_external_spk_managers{nullptr};
+    ScriptPubKeyMan* m_internal_spk_managers{nullptr};
+
+    // Indexed by a unique identifier produced by each ScriptPubKeyMan using
+    // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
+    std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
 public:
     /*
@@ -905,8 +920,8 @@ public:
      * Rescan abort properties
      */
     void AbortRescan() { fAbortRescan = true; }
-    bool IsAbortingRescan() { return fAbortRescan; }
-    bool IsScanning() { return fScanningWallet; }
+    bool IsAbortingRescan() const { return fAbortRescan; }
+    bool IsScanning() const { return fScanningWallet; }
     int64_t ScanningDuration() const { return fScanningWallet ? GetTimeMillis() - m_scanning_start : 0; }
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
 
@@ -996,7 +1011,30 @@ public:
      * calling CreateTransaction();
      */
     bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
-    bool SignTransaction(CMutableTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // Fetch the inputs and sign with SIGHASH_ALL.
+    bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // Sign the tx given the input coins and sighash.
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const;
+    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
+
+    /**
+     * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
+     * them. Tries to sign if sign=true. Sets `complete` if the PSBT is now complete
+     * (i.e. has all required signatures or signature-parts, and is ready to
+     * finalize.) Sets `error` and returns false if something goes wrong.
+     *
+     * @param[in]  psbtx PartiallySignedTransaction to fill in
+     * @param[out] complete indicates whether the PSBT is now complete
+     * @param[in]  sighash_type the sighash type to use when signing (if PSBT does not specify)
+     * @param[in]  sign whether to sign or not
+     * @param[in]  bip32derivs whether to fill in bip32 derivation information if available
+     * return error
+     */
+    [[nodiscard]] TransactionError FillPSBT(PartiallySignedTransaction& psbtx,
+                  bool& complete,
+                  int sighash_type = 1 /* SIGHASH_ALL */,
+                  bool sign = true,
+                  bool bip32derivs = true) const;
 
     /**
      * Create a new transaction paying the recipients with a set of coins
@@ -1044,14 +1082,14 @@ public:
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
-    size_t KeypoolCountExternalKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    size_t KeypoolCountInternalKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    size_t KeypoolCountInternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
 
-    int64_t GetOldestKeyPoolTime();
+    int64_t GetOldestKeyPoolTime() const;
 
-    std::set<std::set<CTxDestination>> GetAddressGroupings() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    std::map<CTxDestination, CAmount> GetAddressBalances();
+    std::set<std::set<CTxDestination>> GetAddressGroupings() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::map<CTxDestination, CAmount> GetAddressBalances() const;
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
 
@@ -1104,7 +1142,7 @@ public:
     bool SetMaxVersion(int nVersion);
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
+    int GetVersion() const { LOCK(cs_wallet); return nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1185,7 +1223,7 @@ public:
     static bool InitAutoBackup();
     bool AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
 
-    bool BackupWallet(const std::string& strDest);
+    bool BackupWallet(const std::string& strDest) const;
 
     /**
      * HD Wallet Functions
@@ -1194,8 +1232,11 @@ public:
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
 
+    /* Generates a new HD chain */
+    bool GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase);
+
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    bool CanGetAddresses(bool internal = false);
+    bool CanGetAddresses(bool internal = false) const;
 
     void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
     void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override;
@@ -1213,7 +1254,7 @@ public:
      * Obviously holding cs_main/cs_wallet when going into this call may cause
      * deadlock
      */
-    void BlockUntilSyncedToCurrentChain() LOCKS_EXCLUDED(cs_main, cs_wallet);
+    void BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(cs_main, cs_wallet);
 
     /** set a single wallet flag */
     void SetWalletFlag(uint64_t flags);
@@ -1243,6 +1284,42 @@ public:
     /** Upgrade the wallet */
     bool UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
+    //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
+    std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
+
+    //! Returns all unique ScriptPubKeyMans
+    std::set<ScriptPubKeyMan*> GetAllScriptPubKeyMans() const;
+
+    //! Get the ScriptPubKeyMan for the given OutputType and internal/external chain.
+    ScriptPubKeyMan* GetScriptPubKeyMan(bool internal) const;
+
+    //! Get the ScriptPubKeyMan for a script
+    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+    //! Get the ScriptPubKeyMan by id
+    ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
+
+    //! Get all of the ScriptPubKeyMans for a script given additional information in sigdata (populated by e.g. a psbt)
+    std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script, SignatureData& sigdata) const;
+
+    //! Get the SigningProvider for a script
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const;
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script, SignatureData& sigdata) const;
+
+    //! Get the LegacyScriptPubKeyMan which is used for all types, internal, and external.
+    LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
+    LegacyScriptPubKeyMan* GetOrCreateLegacyScriptPubKeyMan();
+
+    //! Make a LegacyScriptPubKeyMan and set it for all types, internal, and external.
+    void SetupLegacyScriptPubKeyMan();
+
+    const CKeyingMaterial& GetEncryptionKey() const override;
+    bool HasEncryptionKeys() const override;
+
+    // Temporary LegacyScriptPubKeyMan accessors and aliases.
+    friend class LegacyScriptPubKeyMan;
+
+    std::unique_ptr<LegacyScriptPubKeyMan> m_spk_man;
+
     /** Get last block processed height */
     int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
@@ -1258,28 +1335,8 @@ public:
         m_last_block_processed = block_hash;
     };
 
-    //! Get the ScriptPubKeyMan for a script
-    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
-
-    //! Get the SigningProvider for a script
-    const SigningProvider* GetSigningProvider(const CScript& script) const;
-    const SigningProvider* GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
-
-    LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
-
-    const CKeyingMaterial& GetEncryptionKey() const override;
-    bool HasEncryptionKeys() const override;
-
-    // Temporary LegacyScriptPubKeyMan accessors and aliases.
-    friend class LegacyScriptPubKeyMan;
-    std::unique_ptr<LegacyScriptPubKeyMan> m_spk_man = std::make_unique<LegacyScriptPubKeyMan>(*this);
-    CCriticalSection& cs_KeyStore = m_spk_man->cs_KeyStore;
-    LegacyScriptPubKeyMan::KeyMap& mapKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapKeys;
-    LegacyScriptPubKeyMan::ScriptMap& mapScripts GUARDED_BY(cs_KeyStore) = m_spk_man->mapScripts;
-    LegacyScriptPubKeyMan::CryptedKeyMap& mapCryptedKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapCryptedKeys;
-    LegacyScriptPubKeyMan::WatchOnlySet& setWatchOnly GUARDED_BY(cs_KeyStore) = m_spk_man->setWatchOnly;
-    LegacyScriptPubKeyMan::WatchKeyMap& mapWatchKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapWatchKeys;
-    LegacyScriptPubKeyMan::HDPubKeyMap& mapHdPubKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapHdPubKeys;
+    //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
+    void ConnectScriptPubKeyManNotifiers();
 };
 
 /**

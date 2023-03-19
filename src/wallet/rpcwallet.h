@@ -35,7 +35,7 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
 
 void EnsureWalletIsUnlocked(const CWallet *);
 WalletContext& EnsureWalletContext(const CoreContext& context);
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet);
+LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue getrawchangeaddress(const JSONRPCRequest& request);

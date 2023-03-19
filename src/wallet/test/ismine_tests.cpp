@@ -36,7 +36,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // P2PK compressed
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForRawPubKey(pubkeys[0]);
 
         // Keystore does not have key
@@ -52,7 +53,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // P2PK uncompressed
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForRawPubKey(uncompressedPubkey);
 
         // Keystore does not have key
@@ -68,7 +70,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // P2PKH compressed
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForDestination(PKHash(pubkeys[0]));
 
         // Keystore does not have key
@@ -84,7 +87,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // P2PKH uncompressed
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForDestination(PKHash(uncompressedPubkey));
 
         // Keystore does not have key
@@ -100,7 +104,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // P2SH
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
         CScript redeemScript = GetScriptForDestination(PKHash(pubkeys[0]));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
@@ -123,7 +128,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     //  (P2PKH inside) P2SH inside P2SH (invalid)
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
         CScript redeemscript_inner = GetScriptForDestination(PKHash(pubkeys[0]));
         CScript redeemscript = GetScriptForDestination(ScriptHash(redeemscript_inner));
@@ -140,7 +146,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // scriptPubKey multisig
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
         scriptPubKey = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
 
@@ -170,7 +177,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // P2SH multisig
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[1]));
 
@@ -190,7 +198,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // OP_RETURN
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
 
         scriptPubKey.clear();
@@ -203,7 +212,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     // Nonstandard
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
-        LOCK(keystore.cs_wallet);
+        keystore.SetupLegacyScriptPubKeyMan();
+        LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
 
         scriptPubKey.clear();

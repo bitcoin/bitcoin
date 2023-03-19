@@ -238,10 +238,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     // -- send the tx to the network
-    {
-        LOCK(cs_main);
-        wallet->CommitTransaction(tx, {}, {});
-    }
+    wallet->CommitTransaction(tx, {}, {});
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());

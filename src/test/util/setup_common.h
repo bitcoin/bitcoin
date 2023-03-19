@@ -17,6 +17,7 @@
 #include <util/check.h>
 #include <util/string.h>
 
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -181,13 +182,20 @@ struct TestMemPoolEntryHelper
 
 CBlock getBlock13b8a();
 
-// BOOST_CHECK_EXCEPTION predicates to check the specific validation error
-class HasReason {
+/**
+ * BOOST_CHECK_EXCEPTION predicates to check the specific validation error.
+ * Use as
+ * BOOST_CHECK_EXCEPTION(code that throws, exception type, HasReason("foo"));
+ */
+class HasReason
+{
 public:
     explicit HasReason(const std::string& reason) : m_reason(reason) {}
-    bool operator() (const std::runtime_error& e) const {
+    bool operator()(const std::exception& e) const
+    {
         return std::string(e.what()).find(m_reason) != std::string::npos;
     };
+
 private:
     const std::string m_reason;
 };

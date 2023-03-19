@@ -134,6 +134,7 @@ bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::v
 
     DbTxn* ptxn = env->TxnBegin();
     CWallet dummyWallet(nullptr, "", CreateDummyWalletDatabase());
+    dummyWallet.SetupLegacyScriptPubKeyMan();
     for (KeyValPair& row : salvagedData)
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */

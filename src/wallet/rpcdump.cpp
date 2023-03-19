@@ -101,14 +101,13 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
 
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     WalletBatch batch(pwallet->GetDBHandle());
     WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
     {
         LOCK(pwallet->cs_wallet);
-        AssertLockHeld(spk_man.cs_wallet);
 
         EnsureWalletIsUnlocked(pwallet);
 
@@ -146,7 +145,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
             }
 
             // Use timestamp of 1 to scan the whole chain
-            if (!spk_man.ImportPrivKeys({{CKeyID(vchAddress), key}}, 1)) {
+            if (!pwallet->ImportPrivKeys({{CKeyID(vchAddress), key}}, 1)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
         }
@@ -212,7 +211,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    EnsureLegacyScriptPubKeyMan(*pwallet);
+    EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -402,7 +401,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -479,7 +478,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     if (pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -488,8 +487,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when blocks are pruned");
     }
 
-    // KNST
-//    WalletBatch batch(pwallet->GetDBHandle());
+    WalletBatch batch(pwallet->GetDBHandle());
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
@@ -567,7 +565,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
             }
         } else {
-            AssertLockHeld(spk_man->cs_wallet);
+            LOCK(spk_man->cs_KeyStore);
             for (const auto& key_tuple : keys) {
                 pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
                 const CKey& key = std::get<0>(key_tuple);
@@ -650,8 +648,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
-    LOCK(pwallet->cs_wallet);
-    AssertLockHeld(spk_man.cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -815,11 +812,11 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = wallet.get();
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -860,7 +857,7 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = wallet.get();
 
     LOCK(pwallet->cs_wallet);
 
@@ -912,12 +909,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = wallet.get();
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
-    LOCK(pwallet->cs_wallet);
-    AssertLockHeld(spk_man.cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1015,7 +1011,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         if (spk_man.GetKey(keyid, key)) {
             file << strprintf("%s %s ", EncodeSecret(key), strTime);
             if (pwallet->mapAddressBook.count(pkhash)) {
-                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook[pkhash].name));
+                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook.at(pkhash).name));
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else {
@@ -1508,7 +1504,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     //Default options
     bool fRescan = true;

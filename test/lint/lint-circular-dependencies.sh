@@ -21,7 +21,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "txmempool -> validation -> txmempool"
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
-    "wallet/scriptpubkeyman -> wallet/wallet -> wallet/scriptpubkeyman"
     # Dash
     "coinjoin/server -> net_processing -> coinjoin/server"
     "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"

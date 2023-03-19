@@ -158,6 +158,16 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].generate(6)
         self.sync_all()
 
+
+        # Regression test for 14473 (mishandling of already-signed witness transaction):
+        unspent = self.nodes[0].listunspent()[0]
+        psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
+        complete_psbt = self.nodes[0].walletprocesspsbt(psbtx_info["psbt"])
+        double_processed_psbt = self.nodes[0].walletprocesspsbt(complete_psbt["psbt"])
+        assert_equal(complete_psbt, double_processed_psbt)
+        # We don't care about the decode result, but decoding must succeed.
+        self.nodes[0].decodepsbt(double_processed_psbt["psbt"])
+
         # BIP 174 Test Vectors
 
         # Check that unknown values are just passed through

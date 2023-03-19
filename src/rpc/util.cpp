@@ -4,6 +4,7 @@
 
 #include <chainparamsbase.h>
 #include <key_io.h>
+#include <outputtype.h>
 #include <pubkey.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
@@ -209,8 +210,8 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
     return vchPubKey;
 }
 
-// Creates a multisig redeemscript from a given list of public keys and number required.
-CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys)
+// Creates a multisig address from a given list of public keys, number of signatures required
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, FillableSigningProvider& keystore, CScript& script_out)
 {
     // Gather public keys
     if (required < 1) {
@@ -223,13 +224,14 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Number of keys involved in the multisignature address creation > 16\nReduce the number");
     }
 
-    CScript result = GetScriptForMultisig(required, pubkeys);
+    script_out = GetScriptForMultisig(required, pubkeys);
 
-    if (result.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, (strprintf("redeemScript exceeds size limit: %d > %d", result.size(), MAX_SCRIPT_ELEMENT_SIZE)));
+    if (script_out.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, (strprintf("redeemScript exceeds size limit: %d > %d", script_out.size(), MAX_SCRIPT_ELEMENT_SIZE)));
     }
 
-    return result;
+    // Make the address (simplier implementation in compare to bitcoin)
+    return AddAndGetDestinationForScript(keystore, script_out);
 }
 
 class DescribeAddressVisitor

@@ -246,6 +246,7 @@ BITCOIN_CORE_H = \
   node/transaction.h \
   node/utxo_snapshot.h \
   noui.h \
+  outputtype.h \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
@@ -334,7 +335,6 @@ BITCOIN_CORE_H = \
   wallet/fees.h \
   wallet/ismine.h \
   wallet/load.h \
-  wallet/psbtwallet.h \
   wallet/rpcwallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
@@ -498,7 +498,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/db.cpp \
   wallet/fees.cpp \
   wallet/load.cpp \
-  wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/scriptpubkeyman.cpp \
@@ -673,6 +672,7 @@ libbitcoin_common_a_SOURCES = \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
+  outputtype.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
   protocol.cpp \

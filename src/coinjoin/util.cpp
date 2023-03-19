@@ -94,6 +94,7 @@ CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBui
 {
     assert(pTxBuilder);
     CTxDestination txdest;
+    LOCK(pwalletIn->cs_wallet);
     dest.GetReservedDestination(txdest, false);
     script = ::GetScriptForDestination(txdest);
 }
