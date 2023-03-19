@@ -43,7 +43,8 @@ class DandelionLoopTest(BitcoinTestFramework):
         wallet = MiniWallet(self.nodes[0])
 
         self.log.info("Adding stem P2PInterface")
-        stem_peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log(["Shuffled stem peers (found=1"]):
+            stem_peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.log.info("Create the tx on node 1")
         tx = wallet.send_self_transfer(from_node=self.nodes[0])
@@ -52,6 +53,7 @@ class DandelionLoopTest(BitcoinTestFramework):
 
         # Time travel into the future to make the embargo expire
         self.nodes[0].setmocktime(int(time.time() + MAX_STEM_TIME))
+        time.sleep(1)
 
         # Create and send msg_mempool to node
         self.log.info("Sending msg_mempool from stem_peer")

@@ -36,11 +36,8 @@ MAX_STEM_TIME = 60
 
 class DandelionBlackholeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
-        self.extra_args = [
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-            ["-dandelion", "-whitelist=all@127.0.0.1"],
-        ]
+        self.num_nodes = 1
+        self.extra_args = [["-dandelion", "-whitelist=all@127.0.0.1"]]
 
     def run_test(self):
         # There is a low probability that these tests will fail even if the
@@ -51,17 +48,22 @@ class DandelionBlackholeTest(BitcoinTestFramework):
         self.log.info("Setting up wallet")
         wallet = MiniWallet(self.nodes[0])
 
-        self.log.info("Adding P2PInterface")
-        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.log.info("Adding P2PInterface stem")
+        with self.nodes[0].assert_debug_log(["Shuffled stem peers (found=1"]):
+            self.nodes[0].add_p2p_connection(P2PInterface())  # Fake stem peer
 
         self.log.info("Create the tx on node 1")
         tx = wallet.send_self_transfer(from_node=self.nodes[0])
         txid = int(tx['wtxid'], 16)
         self.log.info("Sent tx {}".format(txid))
 
+        self.log.info("Adding P2PInterface probe")
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())  # Probing peer
+
         # Time travel MAX_STEM_TIME seconds into the future
         # to force embargo to expire and get our tx returned
         self.nodes[0].setmocktime(int(time.time() + MAX_STEM_TIME))
+        time.sleep(1)
 
         # Create and send msg_mempool to node to bypass mempool request
         # security
