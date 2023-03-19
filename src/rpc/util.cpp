@@ -1174,3 +1174,9 @@ UniValue GetServicesNames(ServiceFlags services)
 
     return servicesNames;
 }
+
+void PushWarnings(const UniValue& warnings, UniValue& obj)
+{
+    if (warnings.empty()) return;
+    obj.pushKV("warnings", warnings);
+}
