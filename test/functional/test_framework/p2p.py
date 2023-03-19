@@ -131,6 +131,7 @@ MESSAGEMAP = {
     b"sendheaders": msg_sendheaders,
     b"sendtxrcncl": msg_sendtxrcncl,
     b"tx": msg_tx,
+    b"dtx": msg_dtx,
     b"verack": msg_verack,
     b"version": msg_version,
     b"wtxidrelay": msg_wtxidrelay,

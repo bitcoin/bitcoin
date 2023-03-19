@@ -1473,6 +1473,22 @@ class msg_tx:
     def __repr__(self):
         return "msg_tx(tx=%s)" % (repr(self.tx))
 
+class msg_tx:
+    __slots__ = ("tx",)
+    msgtype = b"dtx"
+
+    def __init__(self, tx=CTransaction()):
+        self.tx = tx
+
+    def deserialize(self, f):
+        self.tx.deserialize(f)
+
+    def serialize(self):
+        return self.tx.serialize_with_witness()
+
+    def __repr__(self):
+        return "msg_dtx(tx=%s)" % (repr(self.tx))
+
 class msg_wtxidrelay:
     __slots__ = ()
     msgtype = b"wtxidrelay"
