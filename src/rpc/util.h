@@ -388,5 +388,6 @@ private:
  * @param[out] obj      UniValue object to push the warnings array object to.
  */
 void PushWarnings(const UniValue& warnings, UniValue& obj);
+void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
 
 #endif // BITCOIN_RPC_UTIL_H

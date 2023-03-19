@@ -1904,6 +1904,10 @@ RPCHelpMan restorewallet()
             {
                 {RPCResult::Type::STR, "name", "The wallet name if restored successfully."},
                 {RPCResult::Type::STR, "warning", "Warning messages, if any, related to restoring the wallet. Multiple messages will be delimited by newlines."},
+                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to restoring the wallet.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
             }
         },
         RPCExamples{
@@ -1934,6 +1938,7 @@ RPCHelpMan restorewallet()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
     obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    PushWarnings(warnings, obj);
 
     return obj;
 
