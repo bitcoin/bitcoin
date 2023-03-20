@@ -173,6 +173,12 @@ public:
      */
     void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry);
 
+    /** For some already REQUESTED announcement, reset the expiry.
+     *
+     * If no REQUESTED announcement for the provided peer and txhash exists, this call has no effect.
+     */
+    void ResetRequestTimeout(NodeId peer, const uint256& txhash, std::chrono::microseconds new_expiry);
+
     /** Converts a CANDIDATE or REQUESTED announcement to a COMPLETED one. If no such announcement exists for the
      *  provided peer and txhash, nothing happens.
      *
@@ -194,6 +200,9 @@ public:
 
     /** Count how many announcements are being tracked in total across all peers and transaction hashes. */
     size_t Size() const;
+
+    /** For some tx hash (either txid or wtxid), return all peers with non-COMPLETED announcements. */
+    std::vector<NodeId> GetCandidatePeers(const uint256& txhash) const;
 
     /** Access to the internal priority computation (testing only) */
     uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const;
