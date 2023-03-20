@@ -35,7 +35,7 @@ CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorke
 
     const Consensus::Params& consensus_params = Params().GetConsensus();
     for (const auto& params : consensus_params.llmqs) {
-        auto session_count = (params.type == consensus_params.llmqTypeDIP0024InstantSend) ? params.signingActiveQuorumCount : 1;
+        auto session_count = (params.useRotation) ? params.signingActiveQuorumCount : 1;
         for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(params.type, i),

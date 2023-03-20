@@ -12,6 +12,7 @@
 #include <tinyformat.h>
 #include <util/ranges.h>
 #include <util/system.h>
+#include <util/underlying.h>
 #include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
@@ -1045,6 +1046,8 @@ public:
 
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST);
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST_INSTANTSEND);
+        UpdateLLMQInstantSendFromArgs(args);
+        UpdateLLMQInstantSendDIP0024FromArgs(args);
     }
 
     /**
@@ -1111,7 +1114,26 @@ public:
         params->threshold = threshold;
         params->dkgBadVotesThreshold = threshold;
     }
+
+    /**
+     * Allows modifying the LLMQ type for InstantSend.
+     */
+    void UpdateLLMQInstantSend(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeInstantSend = llmqType;
+    }
+
+    /**
+     * Allows modifying the LLMQ type for InstantSend (DIP0024).
+     */
+    void UpdateLLMQDIP0024InstantSend(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeDIP0024InstantSend = llmqType;
+    }
+
     void UpdateLLMQTestParametersFromArgs(const ArgsManager& args, const Consensus::LLMQType llmqType);
+    void UpdateLLMQInstantSendFromArgs(const ArgsManager& args);
+    void UpdateLLMQInstantSendDIP0024FromArgs(const ArgsManager& args);
 };
 
 void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
@@ -1251,6 +1273,50 @@ void CRegTestParams::UpdateLLMQTestParametersFromArgs(const ArgsManager& args, c
     }
     LogPrintf("Setting %s parameters to size=%ld, threshold=%ld\n", llmq_name, size, threshold);
     UpdateLLMQTestParameters(size, threshold, llmqType);
+}
+
+void CRegTestParams::UpdateLLMQInstantSendFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqinstantsend")) return;
+
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypeInstantSend);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(llmq_params_opt->name));
+
+    Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
+    for (const auto& params : consensus.llmqs) {
+        if (params.name == strLLMQType) {
+            llmqType = params.type;
+        }
+    }
+    if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqinstantsend.");
+    }
+    LogPrintf("Setting llmqinstantsend to size=%ld\n", ToUnderlying(llmqType));
+    UpdateLLMQInstantSend(llmqType);
+}
+
+void CRegTestParams::UpdateLLMQInstantSendDIP0024FromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqinstantsenddip0024")) return;
+
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypeDIP0024InstantSend);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsenddip0024", std::string(llmq_params_opt->name));
+
+    Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
+    for (const auto& params : consensus.llmqs) {
+        if (params.name == strLLMQType) {
+            llmqType = params.type;
+        }
+    }
+    if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqinstantsenddip0024.");
+    }
+    LogPrintf("Setting llmqinstantsenddip0024 to size=%ld\n", ToUnderlying(llmqType));
+    UpdateLLMQDIP0024InstantSend(llmqType);
 }
 
 void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args)
