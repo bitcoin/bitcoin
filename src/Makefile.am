@@ -878,7 +878,7 @@ if BUILD_BITCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBBITCOINKERNEL)
 
 libbitcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
+libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
 libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 
 # libbitcoinkernel requires default symbol visibility, explicitly specify that
@@ -896,9 +896,7 @@ libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
   chain.cpp \
-  chainparamsbase.cpp \
   chainparams.cpp \
-  clientversion.cpp \
   coins.cpp \
   compressor.cpp \
   consensus/merkle.cpp \
@@ -909,7 +907,6 @@ libbitcoinkernel_la_SOURCES = \
   deploymentinfo.cpp \
   deploymentstatus.cpp \
   flatfile.cpp \
-  fs.cpp \
   hash.cpp \
   kernel/chain.cpp \
   kernel/checks.cpp \
@@ -919,7 +916,6 @@ libbitcoinkernel_la_SOURCES = \
   kernel/cs_main.cpp \
   kernel/mempool_persist.cpp \
   key.cpp \
-  logging.cpp \
   node/blockstorage.cpp \
   node/chainstate.cpp \
   node/interface_ui.cpp \
@@ -934,8 +930,6 @@ libbitcoinkernel_la_SOURCES = \
   primitives/block.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
-  random.cpp \
-  randomenv.cpp \
   scheduler.cpp \
   script/interpreter.cpp \
   script/script.cpp \
@@ -944,29 +938,9 @@ libbitcoinkernel_la_SOURCES = \
   script/standard.cpp \
   shutdown.cpp \
   signet.cpp \
-  support/cleanse.cpp \
-  support/lockedpool.cpp \
-  sync.cpp \
   txdb.cpp \
   txmempool.cpp \
   uint256.cpp \
-  util/check.cpp \
-  util/exception.cpp \
-  util/getuniquepath.cpp \
-  util/hasher.cpp \
-  util/moneystr.cpp \
-  util/rbf.cpp \
-  util/serfloat.cpp \
-  util/settings.cpp \
-  util/strencodings.cpp \
-  util/string.cpp \
-  util/syscall_sandbox.cpp \
-  util/syserror.cpp \
-  util/system.cpp \
-  util/thread.cpp \
-  util/threadnames.cpp \
-  util/time.cpp \
-  util/tokenpipe.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
