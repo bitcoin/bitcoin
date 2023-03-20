@@ -574,6 +574,17 @@ public:
         }
     }
 
+    std::vector<NodeId> GetCandidatePeers(const uint256& txhash) const
+    {
+        std::vector<NodeId> result_peers;
+        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
+        while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash) {
+            if (it->GetState() != State::COMPLETED) result_peers.push_back(it->m_peer);
+            ++it;
+        }
+        return result_peers;
+    }
+
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
         std::chrono::microseconds reqtime)
     {
@@ -668,6 +679,21 @@ public:
         });
     }
 
+    void ResetRequestTimeout(NodeId peer, const uint256& txhash, std::chrono::microseconds new_expiry)
+    {
+        auto it = m_index.get<ByPeer>().find(ByPeerView{peer, /*best=*/false, txhash});
+        if (it == m_index.get<ByPeer>().end()) {
+            it = m_index.get<ByPeer>().find(ByPeerView{peer, /*best=*/true, txhash});
+        }
+        if (it == m_index.get<ByPeer>().end() || (it->GetState() != State::REQUESTED)) {
+            // There is no REQUESTED announcement tracked for this peer, so we have nothing to do.
+            return;
+        }
+        Modify<ByPeer>(it, [new_expiry](Announcement& ann) {
+            ann.m_time = new_expiry;
+        });
+    }
+
     void ReceivedResponse(NodeId peer, const uint256& txhash)
     {
         // We need to search the ByPeer index for both (peer, false, txhash) and (peer, true, txhash).
@@ -721,6 +747,7 @@ size_t TxRequestTracker::CountInFlight(NodeId peer) const { return m_impl->Count
 size_t TxRequestTracker::CountCandidates(NodeId peer) const { return m_impl->CountCandidates(peer); }
 size_t TxRequestTracker::Count(NodeId peer) const { return m_impl->Count(peer); }
 size_t TxRequestTracker::Size() const { return m_impl->Size(); }
+std::vector<NodeId> TxRequestTracker::GetCandidatePeers(const uint256& txhash) const { return m_impl->GetCandidatePeers(txhash); }
 void TxRequestTracker::SanityCheck() const { m_impl->SanityCheck(); }
 
 void TxRequestTracker::PostGetRequestableSanityCheck(std::chrono::microseconds now) const
@@ -737,6 +764,11 @@ void TxRequestTracker::ReceivedInv(NodeId peer, const GenTxid& gtxid, bool prefe
 void TxRequestTracker::RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry)
 {
     m_impl->RequestedTx(peer, txhash, expiry);
+}
+
+void TxRequestTracker::ResetRequestTimeout(NodeId peer, const uint256& txhash, std::chrono::microseconds new_expiry)
+{
+    m_impl->ResetRequestTimeout(peer, txhash, new_expiry);
 }
 
 void TxRequestTracker::ReceivedResponse(NodeId peer, const uint256& txhash)
