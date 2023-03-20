@@ -20,7 +20,7 @@ import time
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 from collections.abc import Callable
-from typing import Optional
+from typing import Optional, Union
 
 logger = logging.getLogger("TestFramework.utils")
 
@@ -112,7 +112,7 @@ def assert_raises_process_error(returncode: int, output: str, fun: Callable, *ar
         raise AssertionError("No exception raised")
 
 
-def assert_raises_rpc_error(code: Optional[int], message: Optional[str], fun: Callable, *args, **kwds):
+def assert_raises_rpc_error(code: Optional[int], message: Union[None, tuple[str, ...], str], fun: Callable, *args, **kwds):
     """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
 
     Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException
@@ -123,7 +123,8 @@ def assert_raises_rpc_error(code: Optional[int], message: Optional[str], fun: Ca
         code: the error code returned by the RPC call (defined in src/rpc/protocol.h).
             Set to None if checking the error code is not required.
         message: [a substring of] the error string returned by the RPC call.
-            Set to None if checking the error string is not required.
+            Set to None if checking the error string is not required. If multiple
+            values are given, check for the existence of any one of them.
         fun: the function to call. This should be the name of an RPC.
         args*: positional arguments for the function.
         kwds**: named arguments for the function.
@@ -136,13 +137,14 @@ def try_rpc(code, message, fun, *args, **kwds):
 
     Test against error code and message if the rpc fails.
     Returns whether a JSONRPCException was raised."""
+    messages = [message] if isinstance(message, str) else message
     try:
         fun(*args, **kwds)
     except JSONRPCException as e:
         # JSONRPCException was thrown as expected. Check the code and message values are correct.
         if (code is not None) and (code != e.error["code"]):
             raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
-        if (message is not None) and (message not in e.error['message']):
+        if (message is not None) and not any(m in e.error['message'] for m in messages):
             raise AssertionError(
                 "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
                     message, e.error['message']))
