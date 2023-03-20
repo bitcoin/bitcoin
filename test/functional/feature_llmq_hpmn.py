@@ -10,11 +10,9 @@ Checks HPMNs
 
 '''
 from _decimal import Decimal
-import random
 from io import BytesIO
 
 from test_framework.mininode import P2PInterface
-from test_framework.script import hash160
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
@@ -103,7 +101,7 @@ class LLMQHPMNTest(DashTestFramework):
             self.test_getmnlistdiff(null_hash, b_i, {}, [], expectedUpdated)
 
             self.test_masternode_count(expected_mns_count=4, expected_hpmns_count=i+1)
-            self.test_hpmn_update_service(hpmn_info)
+            self.dynamically_hpmn_update_service(hpmn_info)
 
         self.log.info("Test llmq_platform are formed only with HPMNs")
         for i in range(3):
@@ -234,25 +232,6 @@ class LLMQHPMNTest(DashTestFramework):
         detailed_count = mn_count['detailed']
         assert_equal(detailed_count['regular']['total'], expected_mns_count)
         assert_equal(detailed_count['hpmn']['total'], expected_hpmns_count)
-
-    def test_hpmn_update_service(self, hpmn_info):
-        funds_address = self.nodes[0].getnewaddress()
-        operator_reward_address = self.nodes[0].getnewaddress()
-
-        # For the sake of the test, generate random nodeid, p2p and http platform values
-        rnd = random.randint(1000, 65000)
-        platform_node_id = hash160(b'%d' % rnd).hex()
-        platform_p2p_port = '%d' % (rnd + 1)
-        platform_http_port = '%d' % (rnd + 2)
-
-        self.nodes[0].sendtoaddress(funds_address, 1)
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes)
-
-        self.nodes[0].protx('update_service_hpmn', hpmn_info.proTxHash, hpmn_info.addr, hpmn_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes)
-        self.log.info("Updated HPMN %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (hpmn_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
 
     def test_getmnlistdiff(self, baseBlockHash, blockHash, baseMNList, expectedDeleted, expectedUpdated):
         d = self.test_getmnlistdiff_base(baseBlockHash, blockHash)

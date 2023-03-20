@@ -70,9 +70,9 @@ createBlsSignaturesModule().then((blsSignatures) => {
     describe('typings', () => {
         it('PrivateKey', () => {
             strictEqual(PrivateKey.PRIVATE_KEY_SIZE, 32);
-            const sk = AugSchemeMPL.key_gen(getSkSeed());
+            const sk = AugSchemeMPL.keyGen(getSkSeed());
             const aggSk = PrivateKey.aggregate([sk]);
-            const pk = sk.get_g1();
+            const pk = sk.getG1();
             const bytes: Uint8Array = sk.serialize();
             const sig = AugSchemeMPL.sign(sk, getMessageBytes());
             ok(AugSchemeMPL.verify(pk, getMessageBytes(), sig));
@@ -83,9 +83,9 @@ createBlsSignaturesModule().then((blsSignatures) => {
 
         it('G1Element', () => {
             strictEqual(G1Element.SIZE, 48);
-            const pk = G1Element.from_bytes(getPkBytes());
+            const pk = G1Element.fromBytes(getPkBytes());
             const aggPk = pk.add(pk);
-            const fingerprint: number = pk.get_fingerprint();
+            const fingerprint: number = pk.getFingerprint();
             const bytes: Uint8Array = pk.serialize();
             pk.delete();
             aggPk.delete();
@@ -93,10 +93,10 @@ createBlsSignaturesModule().then((blsSignatures) => {
 
         it('G2Element', () => {
             strictEqual(G2Element.SIZE, 96);
-            const pk = G1Element.from_bytes(getPkBytes());
-            const sig = G2Element.from_bytes(getSignatureBytes());
+            const pk = G1Element.fromBytes(getPkBytes());
+            const sig = G2Element.fromBytes(getSignatureBytes());
             const aggSig = AugSchemeMPL.aggregate([sig]);
-            const sig2 = G2Element.from_bytes(getSignatureBytes());
+            const sig2 = G2Element.fromBytes(getSignatureBytes());
             const isValid: boolean =
               AugSchemeMPL.verify(pk, getMessageBytes(), sig);
             const serialized: Uint8Array = sig.serialize();
