@@ -2433,6 +2433,33 @@ CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
+bool Chainstate::MaybeInvalidateFork(CBlockIndex* pindex)
+{
+    AssertLockHeld(cs_main);
+    std::vector<CBlockIndex*> branch;
+    while (!m_chain.Contains(pindex)) {
+        branch.push_back(pindex);
+        CBlockIndex* parent = pindex->pprev;
+        // Cover unlikely case where we reach an orphan header
+        // before finding an invalid or main chain ancestor.
+        if (!parent) return true;
+
+        if (parent->nStatus & BLOCK_FAILED_MASK) {
+            LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Debug, "Found invalid chain branch ancestor hash=%s height=%s\n", parent->phashBlock->ToString(), parent->nHeight);
+            for (CBlockIndex* child : branch) {
+                LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Debug, "Invalidating child hash=%s height=%s\n", child->phashBlock->ToString(), child->nHeight);
+                child->nStatus |= BLOCK_FAILED_CHILD;
+                m_blockman.m_dirty_blockindex.insert(child);
+            }
+            return false;
+        }
+
+        pindex = parent;
+    }
+
+    return true;
+}
+
 bool Chainstate::FlushStateToDisk(
     BlockValidationState &state,
     FlushStateMode mode,

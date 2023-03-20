@@ -1420,18 +1420,18 @@ static RPCHelpMan getchaintips()
      *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
      *  - Add the active chain tip
      */
-    std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
-    std::set<const CBlockIndex*> setOrphans;
-    std::set<const CBlockIndex*> setPrevs;
+    std::set<CBlockIndex*, CompareBlocksByHeight> setTips;
+    std::set<CBlockIndex*> setOrphans;
+    std::set<CBlockIndex*> setPrevs;
 
-    for (const auto& [_, block_index] : chainman.BlockIndex()) {
+    for (auto& [_, block_index] : chainman.BlockIndex()) {
         if (!active_chain.Contains(&block_index)) {
             setOrphans.insert(&block_index);
             setPrevs.insert(block_index.pprev);
         }
     }
 
-    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
+    for (std::set<CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
         if (setPrevs.erase(*it) == 0) {
             setTips.insert(*it);
         }
@@ -1442,7 +1442,7 @@ static RPCHelpMan getchaintips()
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
-    for (const CBlockIndex* block : setTips) {
+    for (CBlockIndex* block : setTips) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->nHeight);
         obj.pushKV("hash", block->phashBlock->GetHex());
@@ -1458,8 +1458,15 @@ static RPCHelpMan getchaintips()
             // This block or one of its ancestors is invalid.
             status = "invalid";
         } else if (!block->HaveTxsDownloaded()) {
-            // This block cannot be connected because full block data for it or one of its parents is missing.
-            status = "headers-only";
+            // Check if this headers-only branch has a valid (as far as we know) path to main chain.
+            if (chainman.ActiveChainstate().MaybeInvalidateFork(block)) {
+                // This block cannot be connected because full block data for it or one of its parents is missing.
+                status = "headers-only";
+            } else {
+                // This block has an invalid ancestor.
+                status = "invalid";
+            }
+
         } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
             // This block is fully validated, but no longer part of the active chain. It was probably the active block once, but was reorganized.
             status = "valid-fork";

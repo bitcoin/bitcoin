@@ -767,6 +767,14 @@ public:
         return m_mempool ? &m_mempool->cs : nullptr;
     }
 
+    /**
+     * Walks up the chain of ancestors of pindex until either:
+     *  - Hitting an orphan header (return true)
+     *  - Hitting the active chain (return true)
+     *  - Hitting a CBlockIndex marked as invalid (mark all descendants as INVALID_CHILD, return false)
+     */
+    bool MaybeInvalidateFork(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 private:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
     bool ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
