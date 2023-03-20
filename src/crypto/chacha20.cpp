@@ -5,8 +5,9 @@
 // Based on the public domain implementation 'merged' by D. J. Bernstein
 // See https://cr.yp.to/chacha.html.
 
-#include <crypto/common.h>
 #include <crypto/chacha20.h>
+
+#include <crypto/common.h>
 
 #include <algorithm>
 #include <string.h>
@@ -57,6 +58,21 @@ void ChaCha20Aligned::Seek64(uint64_t pos)
 {
     input[8] = pos;
     input[9] = pos >> 32;
+}
+
+void ChaCha20Aligned::SeekRFC8439(uint32_t pos)
+{
+    input[8] = pos;
+    is_rfc8439 = true;
+}
+
+void ChaCha20Aligned::SetRFC8439Nonce(const std::array<std::byte, 12>& nonce)
+{
+    auto nonce_ptr = reinterpret_cast<const unsigned char*>(nonce.data());
+    input[9] = ReadLE32(nonce_ptr);
+    input[10] = ReadLE32(nonce_ptr + 4);
+    input[11] = ReadLE32(nonce_ptr + 8);
+    is_rfc8439 = true;
 }
 
 inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
@@ -127,7 +143,7 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
         x15 += j15;
 
         ++j12;
-        if (!j12) ++j13;
+        if (!j12 && !is_rfc8439) ++j13;
 
         WriteLE32(c + 0, x0);
         WriteLE32(c + 4, x1);
@@ -148,7 +164,7 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
 
         if (blocks == 1) {
             input[8] = j12;
-            input[9] = j13;
+            if (!is_rfc8439) input[9] = j13;
             return;
         }
         blocks -= 1;
@@ -241,7 +257,7 @@ inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, s
         x15 ^= ReadLE32(m + 60);
 
         ++j12;
-        if (!j12) ++j13;
+        if (!j12 && !is_rfc8439) ++j13;
 
         WriteLE32(c + 0, x0);
         WriteLE32(c + 4, x1);
@@ -262,7 +278,7 @@ inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, s
 
         if (blocks == 1) {
             input[8] = j12;
-            input[9] = j13;
+            if (!is_rfc8439) input[9] = j13;
             return;
         }
         blocks -= 1;
@@ -320,5 +336,19 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
             c[i] = m[i] ^ m_buffer[i];
         }
         m_bufleft = 64 - bytes;
+    }
+}
+
+void FSChaCha20::Crypt(Span<const std::byte> input, Span<std::byte> output)
+{
+    assert(input.size() == output.size());
+    c20.Crypt(reinterpret_cast<const unsigned char*>(input.data()),
+              reinterpret_cast<unsigned char*>(output.data()), input.size());
+    chunk_counter++;
+
+    if (chunk_counter % rekey_interval == 0) {
+        c20.Keystream(reinterpret_cast<unsigned char*>(key.data()), FSCHACHA20_KEYLEN);
+        c20.SetKey32(reinterpret_cast<unsigned char*>(key.data()));
+        set_nonce();
     }
 }

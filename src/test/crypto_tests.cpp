@@ -3,27 +3,33 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/aes.h>
+#include <crypto/bip324_suite.h>
 #include <crypto/chacha20.h>
-#include <crypto/chacha_poly_aead.h>
 #include <crypto/hkdf_sha256_32.h>
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/muhash.h>
 #include <crypto/poly1305.h>
+#include <crypto/rfc8439.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha3.h>
 #include <crypto/sha512.h>
-#include <crypto/muhash.h>
 #include <random.h>
+#include <span.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
+#include <array>
+#include <cstddef>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+static constexpr size_t CHACHA20_ROUND_OUTPUT = 64; // bytes;
 
 BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
 
@@ -181,6 +187,80 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
             pos += lens[j];
         }
         BOOST_CHECK_EQUAL(hexout, HexStr(outres));
+    }
+}
+
+static void TestFSChaCha20(const std::string& hex_plaintext, const std::string& hexkey, size_t rekey_interval, const std::string& ciphertext_after_rotation)
+{
+    auto key_vec = ParseHex(hexkey);
+    BOOST_CHECK_EQUAL(FSCHACHA20_KEYLEN, key_vec.size());
+    std::array<std::byte, FSCHACHA20_KEYLEN> key;
+    memcpy(key.data(), key_vec.data(), FSCHACHA20_KEYLEN);
+
+    auto plaintext = ParseHex(hex_plaintext);
+
+    auto fsc20 = FSChaCha20{key, rekey_interval};
+    auto c20 = ChaCha20{reinterpret_cast<const unsigned char*>(key.data())};
+
+    std::vector<std::byte> fsc20_output;
+    fsc20_output.resize(plaintext.size());
+
+    std::vector<unsigned char> c20_output;
+    c20_output.resize(plaintext.size());
+
+    for (size_t i = 0; i < rekey_interval; i++) {
+        fsc20.Crypt(MakeByteSpan(plaintext), fsc20_output);
+        c20.Crypt(plaintext.data(), c20_output.data(), plaintext.size());
+        BOOST_CHECK_EQUAL(0, memcmp(c20_output.data(), fsc20_output.data(), plaintext.size()));
+    }
+
+    // At the rotation interval, the outputs will no longer match
+    fsc20.Crypt(MakeByteSpan(plaintext), fsc20_output);
+    auto c20_copy = c20;
+    c20.Crypt(plaintext.data(), c20_output.data(), plaintext.size());
+    BOOST_CHECK(memcmp(c20_output.data(), fsc20_output.data(), plaintext.size()) != 0);
+
+    unsigned char new_key[FSCHACHA20_KEYLEN];
+    c20_copy.Keystream(new_key, FSCHACHA20_KEYLEN);
+    c20.SetKey32(new_key);
+
+    std::array<std::byte, 12> new_nonce;
+    WriteLE32(reinterpret_cast<unsigned char*>(new_nonce.data()), 0);
+    WriteLE64(reinterpret_cast<unsigned char*>(new_nonce.data()) + 4, 1);
+    c20.SetRFC8439Nonce(new_nonce);
+
+    // Outputs should match again after simulating key rotation
+    c20.Crypt(plaintext.data(), c20_output.data(), plaintext.size());
+    BOOST_CHECK_EQUAL(0, memcmp(c20_output.data(), fsc20_output.data(), plaintext.size()));
+
+    BOOST_CHECK_EQUAL(HexStr(fsc20_output), ciphertext_after_rotation);
+}
+
+static void TestChaCha20RFC8439(const std::string& hex_key, const std::array<std::byte, 12>& nonce, uint32_t seek, const std::string& hex_expected_keystream, const std::string& hex_input, const std::string& hex_expected_output)
+{
+    auto key = ParseHex(hex_key);
+
+    if (!hex_expected_keystream.empty()) {
+        ChaCha20 c20(key.data());
+        c20.SetRFC8439Nonce(nonce);
+        c20.SeekRFC8439(seek);
+        std::vector<unsigned char> keystream;
+        keystream.resize(CHACHA20_ROUND_OUTPUT);
+        c20.Keystream(keystream.data(), CHACHA20_ROUND_OUTPUT);
+        BOOST_CHECK_EQUAL(HexStr(keystream).substr(0, hex_expected_keystream.size()), hex_expected_keystream);
+    }
+
+    if (!hex_input.empty()) {
+        assert(hex_input.size() == hex_expected_output.size());
+        ChaCha20 c20(key.data());
+        c20.SetRFC8439Nonce(nonce);
+        c20.SeekRFC8439(seek);
+
+        auto input = ParseHex(hex_input);
+        std::vector<unsigned char> output;
+        output.resize(input.size());
+        c20.Crypt(input.data(), output.data(), input.size());
+        BOOST_CHECK_EQUAL(HexStr(output).substr(0, hex_expected_output.size()), hex_expected_output);
     }
 }
 
@@ -580,6 +660,87 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                  "224f51f3401bd9e12fde276fb8631ded8c131f823d2c06e27e4fcaec9ef3cf788a3b0aa372600a92b57974cded2b9334794cb"
                  "a40c63e34cdea212c4cf07d41b769a6749f3f630f4122cafe28ec4dc47e26d4346d70b98c73f3e9c53ac40c5945398b6eda1a"
                  "832c89c167eacd901d7e2bf363");
+
+    // Test vectors from https://tools.ietf.org/html/draft-agl-tls-chacha20poly1305-04#section-7
+    TestChaCha20("", "0000000000000000000000000000000000000000000000000000000000000000", 0, 0,
+                 "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b"
+                 "8f41518a11cc387b669b2ee6586");
+    TestChaCha20("", "0000000000000000000000000000000000000000000000000000000000000001", 0, 0,
+                 "4540f05a9f1fb296d7736e7b208e3c96eb4fe1834688d2604f450952ed432d41bbe2a0b6ea7566d2a5d1e7e20d42af2c53d79"
+                 "2b1c43fea817e9ad275ae546963");
+    TestChaCha20("", "0000000000000000000000000000000000000000000000000000000000000000", 0x0100000000000000ULL, 0,
+                 "de9cba7bf3d69ef5e786dc63973f653a0b49e015adbff7134fcb7df137821031e85a050278a7084527214f73efc7fa5b52770"
+                 "62eb7a0433e445f41e3");
+    TestChaCha20("", "0000000000000000000000000000000000000000000000000000000000000000", 1, 0,
+                 "ef3fdfd6c61578fbf5cf35bd3dd33b8009631634d21e42ac33960bd138e50d32111e4caf237ee53ca8ad6426194a88545ddc4"
+                 "97a0b466e7d6bbdb0041b2f586b");
+    TestChaCha20("", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", 0x0706050403020100ULL, 0,
+                 "f798a189f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c134a4547b733b46413042c9440049176905d3b"
+                 "e59ea1c53f15916155c2be8241a38008b9a26bc35941e2444177c8ade6689de95264986d95889fb60e84629c9bd9a5acb1cc1"
+                 "18be563eb9b3a4a472f82e09a7e778492b562ef7130e88dfe031c79db9d4f7c7a899151b9a475032b63fc385245fe054e3dd5"
+                 "a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5"
+                 "360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78"
+                 "fab78c9");
+
+    // Test vectors from https://datatracker.ietf.org/doc/html/rfc8439#section-2.4.2
+    const auto rfc8439_nonce0 = std::array<std::byte, 12>{std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00}};
+    const auto rfc8439_nonce1 = std::array<std::byte, 12>{std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x4a}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00}};
+    const auto rfc8439_nonce2 = std::array<std::byte, 12>{std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
+                                                          std::byte{0x00}, std::byte{0x00}, std::byte{0x02}};
+    TestChaCha20RFC8439("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                        rfc8439_nonce1, 1, "224f51f3401bd9e12fde276fb8631ded8c131f823d2c06e27e4fcaec9ef3cf788a3b0aa372600a92b57974cded2b9334794cba40c63e34cdea212c4cf07d41b7", "", "");
+    TestChaCha20RFC8439("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                        rfc8439_nonce1, 2, "69a6749f3f630f4122cafe28ec4dc47e26d4346d70b98c73f3e9c53ac40c5945398b6eda1a832c89c167eacd901d7e2bf363740373201aa188fbbce83991c4ed", "", "");
+
+    // Test vectors from https://datatracker.ietf.org/doc/html/rfc8439#appendix-A.1
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000000",
+                        rfc8439_nonce0, 0, "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586", "", "");
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000000",
+                        rfc8439_nonce0, 1, "9f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32ee7aed29b721769ce64e43d57133b074d839d531ed1f28510afb45ace10a1f4b794d6f", "", "");
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000001",
+                        rfc8439_nonce0, 1, "3aeb5224ecf849929b9d828db1ced4dd832025e8018b8160b82284f3c949aa5a8eca00bbb4a73bdad192b5c42f73f2fd4e273644c8b36125a64addeb006c13a0", "", "");
+    TestChaCha20RFC8439("00ff000000000000000000000000000000000000000000000000000000000000",
+                        rfc8439_nonce0, 2, "72d54dfbf12ec44b362692df94137f328fea8da73990265ec1bbbea1ae9af0ca13b25aa26cb4a648cb9b9d1be65b2c0924a66c54d545ec1b7374f4872e99f096", "", "");
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000000",
+                        rfc8439_nonce2, 0, "c2c64d378cd536374ae204b9ef933fcd1a8b2288b3dfa49672ab765b54ee27c78a970e0e955c14f3a88e741b97c286f75f8fc299e8148362fa198a39531bed6d", "", "");
+
+    // Test vectors from https://datatracker.ietf.org/doc/html/rfc8439#appendix-A.2
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000000",
+                        rfc8439_nonce0, 0, "", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586");
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000001",
+                        rfc8439_nonce2, 1, "", "416e79207375626d697373696f6e20746f20746865204945544620696e74656e6465642062792074686520436f6e7472696275746f7220666f72207075626c69636174696f6e20617320616c6c206f722070617274206f6620616e204945544620496e7465726e65742d4472616674206f722052464320616e6420616e792073746174656d656e74206d6164652077697468696e2074686520636f6e74657874206f6620616e204945544620616374697669747920697320636f6e7369646572656420616e20224945544620436f6e747269627574696f6e222e20537563682073746174656d656e747320696e636c756465206f72616c2073746174656d656e747320696e20494554462073657373696f6e732c2061732077656c6c206173207772697474656e20616e6420656c656374726f6e696320636f6d6d756e69636174696f6e73206d61646520617420616e792074696d65206f7220706c6163652c207768696368206172652061646472657373656420746f", "a3fbf07df3fa2fde4f376ca23e82737041605d9f4f4f57bd8cff2c1d4b7955ec2a97948bd3722915c8f3d337f7d370050e9e96d647b7c39f56e031ca5eb6250d4042e02785ececfa4b4bb5e8ead0440e20b6e8db09d881a7c6132f420e52795042bdfa7773d8a9051447b3291ce1411c680465552aa6c405b7764d5e87bea85ad00f8449ed8f72d0d662ab052691ca66424bc86d2df80ea41f43abf937d3259dc4b2d0dfb48a6c9139ddd7f76966e928e635553ba76c5c879d7b35d49eb2e62b0871cdac638939e25e8a1e0ef9d5280fa8ca328b351c3c765989cbcf3daa8b6ccc3aaf9f3979c92b3720fc88dc95ed84a1be059c6499b9fda236e7e818b04b0bc39c1e876b193bfe5569753f88128cc08aaa9b63d1a16f80ef2554d7189c411f5869ca52c5b83fa36ff216b9c1d30062bebcfd2dc5bce0911934fda79a86f6e698ced759c3ff9b6477338f3da4f9cd8514ea9982ccafb341b2384dd902f3d1ab7ac61dd29c6f21ba5b862f3730e37cfdc4fd806c22f221");
+    TestChaCha20RFC8439("1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cbc207075c0",
+                        rfc8439_nonce2, 42, "", "2754776173206272696c6c69672c20616e642074686520736c6974687920746f7665730a446964206779726520616e642067696d626c6520696e2074686520776162653a0a416c6c206d696d737920776572652074686520626f726f676f7665732c0a416e6420746865206d6f6d65207261746873206f757467726162652e", "62e6347f95ed87a45ffae7426f27a1df5fb69110044c0d73118effa95b01e5cf166d3df2d721caf9b21e5fb14c616871fd84c54f9d65b283196c7fe4f60553ebf39c6402c42234e32a356b3e764312a61a5532055716ead6962568f87d3f3f7704c6a8d1bcd1bf4d50d6154b6da731b187b58dfd728afa36757a797ac188d1");
+
+    // Test vectors from https://datatracker.ietf.org/doc/html/rfc8439#appendix-A.4
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000000",
+                        rfc8439_nonce0, 0, "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7", "", "");
+    TestChaCha20RFC8439("0000000000000000000000000000000000000000000000000000000000000001",
+                        rfc8439_nonce2, 0, "ecfa254f845f647473d3cb140da9e87606cb33066c447b87bc2666dde3fbb739", "", "");
+    TestChaCha20RFC8439("1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cbc207075c0",
+                        rfc8439_nonce2, 0, "965e3bc6f9ec7ed9560808f4d229f94b137ff275ca9b3fcbdd59deaad23310ae", "", "");
+
+    // Forward secure ChaCha20
+    TestFSChaCha20("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                   "0000000000000000000000000000000000000000000000000000000000000000",
+                   256,
+                   "a93df4ef03011f3db95f60d996e1785df5de38fc39bfcb663a47bb5561928349");
+    TestFSChaCha20("01",
+                   "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                   5,
+                   "ea");
+    TestFSChaCha20("e93fdb5c762804b9a706816aca31e35b11d2aa3080108ef46a5b1f1508819c0a",
+                   "8ec4c3ccdaea336bdeb245636970be01266509b33f3d2642504eaf412206207a",
+                   4096,
+                   "8bfaa4eacff308fdb4a94a5ff25bd9d0c1f84b77f81239f67ff39d6e1ac280c9");
 }
 
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
@@ -690,129 +851,100 @@ BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
                 "8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d");
 }
 
-static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aad_length, const std::string& hex_m, const std::string& hex_k1, const std::string& hex_k2, const std::string& hex_aad_keystream, const std::string& hex_encrypted_message, const std::string& hex_encrypted_message_seq_999)
+static void TestBIP324CipherSuite(const std::string& hex_aad, const std::string& hex_contents, const std::string& hex_key_L, const std::string& hex_key_P, const std::string& hex_expected_output_seq_0, const std::string& hex_expected_output_seq_999)
 {
-    // we need two sequence numbers, one for the payload cipher instance...
-    uint32_t seqnr_payload = 0;
-    // ... and one for the AAD (length) cipher instance
-    uint32_t seqnr_aad = 0;
-    // we need to keep track of the position in the AAD cipher instance
-    // keystream since we use the same 64byte output 21 times
-    // (21 times 3 bytes length < 64)
-    int aad_pos = 0;
+    auto key_L_vec = ParseHex(hex_key_L);
+    BIP324Key key_L;
+    memcpy(key_L.data(), key_L_vec.data(), BIP324_KEY_LEN);
 
-    std::vector<unsigned char> aead_K_1 = ParseHex(hex_k1);
-    std::vector<unsigned char> aead_K_2 = ParseHex(hex_k2);
-    std::vector<unsigned char> plaintext_buf = ParseHex(hex_m);
-    std::vector<unsigned char> expected_aad_keystream = ParseHex(hex_aad_keystream);
-    std::vector<unsigned char> expected_ciphertext_and_mac = ParseHex(hex_encrypted_message);
-    std::vector<unsigned char> expected_ciphertext_and_mac_sequence999 = ParseHex(hex_encrypted_message_seq_999);
+    auto key_P_vec = ParseHex(hex_key_P);
+    BIP324Key key_P;
+    memcpy(key_P.data(), key_P_vec.data(), BIP324_KEY_LEN);
 
-    std::vector<unsigned char> ciphertext_buf(plaintext_buf.size() + POLY1305_TAGLEN, 0);
-    std::vector<unsigned char> plaintext_buf_new(plaintext_buf.size(), 0);
-    std::vector<unsigned char> cmp_ctx_buffer(64);
+    auto aad = ParseHex(hex_aad);
+
+    const auto original_contents_bytes = ParseHex(hex_contents);
+    auto contents_buf = original_contents_bytes;
+
+    std::vector<unsigned char> encrypted_pkt(BIP324_LENGTH_FIELD_LEN + BIP324_HEADER_LEN + contents_buf.size() + RFC8439_EXPANSION, 0);
+    std::vector<unsigned char> contents_buf_dec(contents_buf.size(), 0);
     uint32_t out_len = 0;
 
-    // create the AEAD instance
-    ChaCha20Poly1305AEAD aead(aead_K_1.data(), aead_K_1.size(), aead_K_2.data(), aead_K_2.size());
+    BIP324CipherSuite suite_enc(key_L, key_P);
+    BIP324CipherSuite suite_dec(key_L, key_P);
 
-    // create a chacha20 instance to compare against
-    ChaCha20 cmp_ctx(aead_K_1.data());
+    BIP324HeaderFlags flags{BIP324_NONE};
+    std::array<std::byte, BIP324_LENGTH_FIELD_LEN> encrypted_pkt_len;
 
-    // encipher
-    bool res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, ciphertext_buf.data(), ciphertext_buf.size(), plaintext_buf.data(), plaintext_buf.size(), true);
-    // make sure the operation succeeded if expected to succeed
-    BOOST_CHECK_EQUAL(res, must_succeed);
-    if (!res) return;
-
-    // verify ciphertext & mac against the test vector
-    BOOST_CHECK_EQUAL(expected_ciphertext_and_mac.size(), ciphertext_buf.size());
-    BOOST_CHECK(memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac.data(), ciphertext_buf.size()) == 0);
-
-    // manually construct the AAD keystream
-    cmp_ctx.SetIV(seqnr_aad);
-    cmp_ctx.Seek64(0);
-    cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
-    BOOST_CHECK(memcmp(expected_aad_keystream.data(), cmp_ctx_buffer.data(), expected_aad_keystream.size()) == 0);
-    // crypt the 3 length bytes and compare the length
-    uint32_t len_cmp = 0;
-    len_cmp = (ciphertext_buf[0] ^ cmp_ctx_buffer[aad_pos + 0]) |
-              (ciphertext_buf[1] ^ cmp_ctx_buffer[aad_pos + 1]) << 8 |
-              (ciphertext_buf[2] ^ cmp_ctx_buffer[aad_pos + 2]) << 16;
-    BOOST_CHECK_EQUAL(len_cmp, expected_aad_length);
-
-    // encrypt / decrypt 1000 packets
+    // encrypt / decrypt the packet 1000 times
     for (size_t i = 0; i < 1000; ++i) {
-        res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, ciphertext_buf.data(), ciphertext_buf.size(), plaintext_buf.data(), plaintext_buf.size(), true);
+        // encrypt
+        auto res = suite_enc.Crypt(MakeByteSpan(aad), MakeByteSpan(contents_buf), MakeWritableByteSpan(encrypted_pkt), flags, true);
         BOOST_CHECK(res);
-        BOOST_CHECK(aead.GetLength(&out_len, seqnr_aad, aad_pos, ciphertext_buf.data()));
-        BOOST_CHECK_EQUAL(out_len, expected_aad_length);
-        res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, plaintext_buf_new.data(), plaintext_buf_new.size(), ciphertext_buf.data(), ciphertext_buf.size(), false);
-        BOOST_CHECK(res);
-
-        // make sure we repetitive get the same plaintext
-        BOOST_CHECK(memcmp(plaintext_buf.data(), plaintext_buf_new.data(), plaintext_buf.size()) == 0);
-
-        // compare sequence number 999 against the test vector
-        if (seqnr_payload == 999) {
-            BOOST_CHECK(memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac_sequence999.data(), expected_ciphertext_and_mac_sequence999.size()) == 0);
+        // verify ciphertext & mac against the test vector
+        if (i == 0) {
+            BOOST_CHECK_EQUAL(HexStr(encrypted_pkt), hex_expected_output_seq_0);
+        } else if (i == 999) {
+            BOOST_CHECK_EQUAL(HexStr(encrypted_pkt), hex_expected_output_seq_999);
         }
-        // set nonce and block counter, output the keystream
-        cmp_ctx.SetIV(seqnr_aad);
-        cmp_ctx.Seek64(0);
-        cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
 
-        // crypt the 3 length bytes and compare the length
-        len_cmp = 0;
-        len_cmp = (ciphertext_buf[0] ^ cmp_ctx_buffer[aad_pos + 0]) |
-                  (ciphertext_buf[1] ^ cmp_ctx_buffer[aad_pos + 1]) << 8 |
-                  (ciphertext_buf[2] ^ cmp_ctx_buffer[aad_pos + 2]) << 16;
-        BOOST_CHECK_EQUAL(len_cmp, expected_aad_length);
+        memcpy(encrypted_pkt_len.data(), encrypted_pkt.data(), BIP324_LENGTH_FIELD_LEN);
+        out_len = suite_dec.DecryptLength(encrypted_pkt_len);
+        BOOST_CHECK_EQUAL(out_len, contents_buf.size());
 
-        // increment the sequence number(s)
-        // always increment the payload sequence number
-        // increment the AAD keystream position by its size (3)
-        // increment the AAD sequence number if we would hit the 64 byte limit
-        seqnr_payload++;
-        aad_pos += CHACHA20_POLY1305_AEAD_AAD_LEN;
-        if (aad_pos + CHACHA20_POLY1305_AEAD_AAD_LEN > CHACHA20_ROUND_OUTPUT) {
-            aad_pos = 0;
-            seqnr_aad++;
+        res = suite_dec.Crypt(MakeByteSpan(aad), {reinterpret_cast<std::byte*>(encrypted_pkt.data()) + BIP324_LENGTH_FIELD_LEN, encrypted_pkt.size() - BIP324_LENGTH_FIELD_LEN}, MakeWritableByteSpan(contents_buf_dec), flags, false);
+        BOOST_CHECK(res);
+        BOOST_CHECK_EQUAL(flags, BIP324_NONE);
+
+        // make sure we always get the same plaintext
+        BOOST_CHECK_EQUAL(contents_buf_dec.size(), original_contents_bytes.size());
+        if (!original_contents_bytes.empty()) {
+            BOOST_CHECK_EQUAL(0, memcmp(contents_buf_dec.data(), original_contents_bytes.data(), original_contents_bytes.size()));
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(chacha20_poly1305_aead_testvector)
+BOOST_AUTO_TEST_CASE(bip324_cipher_suite_testvectors)
 {
-    /* test chacha20poly1305@bitcoin AEAD */
+    /* test bip324 cipher suite */
 
-    // must fail with no message
-    TestChaCha20Poly1305AEAD(false, 0,
-        "",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000", "", "", "");
+    // encrypting an empty message should result in 20 bytes:
+    // 3 bytes of encrypted length, 1 byte header and 16 bytes MAC
+    TestBIP324CipherSuite(/* aad */ "",
+                          /* plaintext */ "",
+                          /* k_l */ "0000000000000000000000000000000000000000000000000000000000000000",
+                          /* k_p */ "0000000000000000000000000000000000000000000000000000000000000000",
+                          /* ciphertext_and_mac_0 */ "76b8e09fbedcfd1809ff3c10adf8277fcc0581b8",
+                          /* ciphertext_and_mac_999 */ "5dd1ef229ae773099415b4ae56d003d21b4e4a08");
 
-    TestChaCha20Poly1305AEAD(true, 0,
-        /* m  */ "0000000000000000000000000000000000000000000000000000000000000000",
-        /* k1 (AAD) */ "0000000000000000000000000000000000000000000000000000000000000000",
-        /* k2 (payload) */ "0000000000000000000000000000000000000000000000000000000000000000",
-        /* AAD keystream */ "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586",
-        /* encrypted message & MAC */ "76b8e09f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32d2fc11829c1b6c1df1f551cd6131ff08",
-        /* encrypted message & MAC at sequence 999 */ "b0a03d5bd2855d60699e7d3a3133fa47be740fe4e4c1f967555e2d9271f31c3aaa7aa16ec62c5e24f040c08bb20c3598");
-    TestChaCha20Poly1305AEAD(true, 1,
-        "0100000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586",
-        "77b8e09f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32baf0c85b6dff8602b06cf52a6aefc62e",
-        "b1a03d5bd2855d60699e7d3a3133fa47be740fe4e4c1f967555e2d9271f31c3a8bd94d54b5ecabbc41ffbb0c90924080");
-    TestChaCha20Poly1305AEAD(true, 255,
-        "ff0000f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c134a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a38008b9a26bc35941e2444177c8ade6689de95264986d95889fb60e84629c9bd9a5acb1cc118be563eb9b3a4a472f82e09a7e778492b562ef7130e88dfe031c79db9d4f7c7a899151b9a475032b63fc385245fe054e3dd5a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78fab78c9",
-        "ff0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-        "c640c1711e3ee904ac35c57ab9791c8a1c408603a90b77a83b54f6c844cb4b06d94e7fc6c800e165acd66147e80ec45a567f6ce66d05ec0cae679dceeb890017",
-        "3940c1e92da4582ff6f92a776aeb14d014d384eeb30f660dacf70a14a23fd31e91212701334e2ce1acf5199dc84f4d61ddbe6571bca5af874b4c9226c26e650995d157644e1848b96ed6c2102d5489a050e71d29a5a66ece11de5fb5c9558d54da28fe45b0bc4db4e5b88030bfc4a352b4b7068eccf656bae7ad6a35615315fc7c49d4200388d5eca67c2e822e069336c69b40db67e0f3c81209c50f3216a4b89fb3ae1b984b7851a2ec6f68ab12b101ab120e1ea7313bb93b5a0f71185c7fea017ddb92769861c29dba4fbc432280d5dff21b36d1c4c790128b22699950bb18bf74c448cdfe547d8ed4f657d8005fdc0cd7a050c2d46050a44c4376355858981fbe8b184288276e7a93eabc899c4a",
-        "f039c6689eaeef0456685200feaab9d54bbd9acde4410a3b6f4321296f4a8ca2604b49727d8892c57e005d799b2a38e85e809f20146e08eec75169691c8d4f54a0d51a1e1c7b381e0474eb02f994be9415ef3ffcbd2343f0601e1f3b172a1d494f838824e4df570f8e3b0c04e27966e36c82abd352d07054ef7bd36b84c63f9369afe7ed79b94f953873006b920c3fa251a771de1b63da927058ade119aa898b8c97e42a606b2f6df1e2d957c22f7593c1e2002f4252f4c9ae4bf773499e5cfcfe14dfc1ede26508953f88553bf4a76a802f6a0068d59295b01503fd9a600067624203e880fdf53933b96e1f4d9eb3f4e363dd8165a278ff667a41ee42b9892b077cefff92b93441f7be74cf10e6cd");
+    TestBIP324CipherSuite("",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "56b8e09f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32ee7aed29e7e38bb44c94b6a43c525ffca66c79e9",
+                          "7dd1ef2205b549ef8e0dc60b16342f037e415cfcd3d6111532f8f9e7553e422129d9df0d58e083ad538381c1e30a51a5d296cce2");
+
+    TestBIP324CipherSuite("",
+                          "0100000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "56b8e09f06e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32ee7aed2929449b86c1e4e213676824f2c48e5336",
+                          "7dd1ef2204b549ef8e0dc60b16342f037e415cfcd3d6111532f8f9e7553e422129d9df0d04fc5b2ab5cb70895a90edddbe642c00");
+
+    TestBIP324CipherSuite("",
+                          "fc0000f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c134a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a38008b9a26bc35941e2444177c8ade6689de95264986d95889fb60e84629c9bd9a5acb1cc118be563eb9b3a4a472f82e09a7e778492b562ef7130e88dfe031c79db9d4f7c7a899151b9a475032b63fc385245fe054e3dd5a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78fab78c9",
+                          "ff0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                          "3940c1184442315c7340b89171039acb48f95287e66e56f7afa7cf00f95044d26fb69d46ac5c16a2d57a1cadc39160644717559e73480734410a3f543c5f231a7d7ed77af2a64681f6a7417283cef85504ac5de9fdea100e6c67ef7a1bfcd888a92a5f1ef2c9074b44b572aa748f29ff61a850ce40470004dff5cc1d926c5abe25ace47a12c5373094a26bab027e008154fb630aa062490b5421e96691a3f79557f7a79e3cfd9100796671ea241703ddf326f113adf1694bbd6e0ca032e16f936e7bfbf174e7ef4af5b53a6a9102e6fa41a8e589290f39a7bc7a6003088c612a43a36c2e9f2e740797ad3a2a1a80e0f67157fb9abc40487077368e94751a266a0b2dac24f0adabd5c6d7ba54316eee951da560",
+                          "2db339c8500d35db91994138b4ab5e698086b4ec7fb66e75d083b18f84a9da7d696be75c349cb1555a58f65f123d4b68e2be2277fd7b38ba26ad93040a22ac8f7782b00d75c7650dcff0442f7ef91980aaabecb2c8cefec5d5eb9d495b5e1768fe316ec2a0d69d46b7289cd2e2049f27d30a6183605651d48ac40e0d06af9ec7012d477e473f2af7842335c36acf4f5bdef45605ca243b9007b5363f095850a78945508cf3fa191b8fe7fc5359d6e00741e6504f1d50904152622f4c0bdeaa0745f00d28b995543621c96d9d9d30fa1fbf403b19a716411b1700e8401a3e1e01bb1546653fbda19d83ba5e561695baea229880ff33058f85754fe9fdc09db4491f47ae64ec030ec6163d2838d9474d40ef0579");
+
+    // Repeat test with non-empty aad - only mac tags (last 16 bytes) in the expected outputs change
+    TestBIP324CipherSuite("c6d7bc3a5079ae98fec7094bdfb42aac61d3ba64af179d672c7c33fd4a139647",
+                          "fc0000f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c134a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a38008b9a26bc35941e2444177c8ade6689de95264986d95889fb60e84629c9bd9a5acb1cc118be563eb9b3a4a472f82e09a7e778492b562ef7130e88dfe031c79db9d4f7c7a899151b9a475032b63fc385245fe054e3dd5a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78fab78c9",
+                          "ff0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                          "3940c1184442315c7340b89171039acb48f95287e66e56f7afa7cf00f95044d26fb69d46ac5c16a2d57a1cadc39160644717559e73480734410a3f543c5f231a7d7ed77af2a64681f6a7417283cef85504ac5de9fdea100e6c67ef7a1bfcd888a92a5f1ef2c9074b44b572aa748f29ff61a850ce40470004dff5cc1d926c5abe25ace47a12c5373094a26bab027e008154fb630aa062490b5421e96691a3f79557f7a79e3cfd9100796671ea241703ddf326f113adf1694bbd6e0ca032e16f936e7bfbf174e7ef4af5b53a6a9102e6fa41a8e589290f39a7bc7a6003088c612a43a36c2e9f2e740797ad3a2a1a80e0f67157fb9abc40487077368e94751a266a0b2dac4d382097b958da569f3b6fae3faaaaf2",
+                          "2db339c8500d35db91994138b4ab5e698086b4ec7fb66e75d083b18f84a9da7d696be75c349cb1555a58f65f123d4b68e2be2277fd7b38ba26ad93040a22ac8f7782b00d75c7650dcff0442f7ef91980aaabecb2c8cefec5d5eb9d495b5e1768fe316ec2a0d69d46b7289cd2e2049f27d30a6183605651d48ac40e0d06af9ec7012d477e473f2af7842335c36acf4f5bdef45605ca243b9007b5363f095850a78945508cf3fa191b8fe7fc5359d6e00741e6504f1d50904152622f4c0bdeaa0745f00d28b995543621c96d9d9d30fa1fbf403b19a716411b1700e8401a3e1e01bb1546653fbda19d83ba5e561695baea229880ff33058f85754fe9fdc09db4491f47ae0623cf23941a59b7c7dc6cad9bd97cc1");
 }
 
 BOOST_AUTO_TEST_CASE(countbits_tests)
@@ -1047,4 +1179,42 @@ BOOST_AUTO_TEST_CASE(muhash_tests)
     BOOST_CHECK_EQUAL(HexStr(out4), "3a31e6903aff0de9f62f9a9f7f8b861de76ce2cda09822b90014319ae5dc2271");
 }
 
+static void TestRFC8439AEAD(const std::string& hex_aad, const std::string& hex_key, const std::string& hex_nonce, const std::string& hex_plaintext, const std::string& hex_expected_ciphertext, const std::string& hex_expected_auth_tag)
+{
+    auto aad = ParseHex(hex_aad);
+    auto key = ParseHex(hex_key);
+    auto nonce = ParseHex(hex_nonce);
+    std::array<std::byte, 12> nonce_arr;
+    memcpy(nonce_arr.data(), nonce.data(), 12);
+    auto plaintext = ParseHex(hex_plaintext);
+    std::vector<std::byte> output(plaintext.size() + POLY1305_TAGLEN, std::byte{0x00});
+    RFC8439Encrypt(MakeByteSpan(aad), MakeByteSpan(key), nonce_arr, MakeByteSpan(plaintext), output);
+
+    BOOST_CHECK_EQUAL(HexStr({output.data(), output.size() - POLY1305_TAGLEN}), hex_expected_ciphertext);
+    BOOST_CHECK_EQUAL(HexStr({output.data() + output.size() - POLY1305_TAGLEN, POLY1305_TAGLEN}), hex_expected_auth_tag);
+
+    std::vector<std::byte> decrypted_plaintext(plaintext.size(), std::byte{0x00});
+    auto authenticated = RFC8439Decrypt(MakeByteSpan(aad), MakeByteSpan(key), nonce_arr, output, decrypted_plaintext);
+    BOOST_CHECK(authenticated);
+    BOOST_CHECK_EQUAL(0, memcmp(decrypted_plaintext.data(), plaintext.data(), plaintext.size()));
+}
+
+BOOST_AUTO_TEST_CASE(rfc8439_tests)
+{
+    // Test vector from https://datatracker.ietf.org/doc/html/rfc8439#section-2.8.2
+    TestRFC8439AEAD("50515253c0c1c2c3c4c5c6c7",
+                    "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+                    "070000004041424344454647",
+                    "4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66202739393a204966204920636f756c64206f6666657220796f75206f6e6c79206f6e652074697020666f7220746865206675747572652c2073756e73637265656e20776f756c642062652069742e",
+                    "d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116",
+                    "1ae10b594f09e26a7e902ecbd0600691");
+
+    // Test vector from https://datatracker.ietf.org/doc/html/rfc8439#appendix-A.5
+    TestRFC8439AEAD("f33388860000000000004e91",
+                    "1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cbc207075c0",
+                    "000000000102030405060708",
+                    "496e7465726e65742d4472616674732061726520647261667420646f63756d656e74732076616c696420666f722061206d6178696d756d206f6620736978206d6f6e74687320616e64206d617920626520757064617465642c207265706c616365642c206f72206f62736f6c65746564206279206f7468657220646f63756d656e747320617420616e792074696d652e20497420697320696e617070726f70726961746520746f2075736520496e7465726e65742d447261667473206173207265666572656e6365206d6174657269616c206f7220746f2063697465207468656d206f74686572207468616e206173202fe2809c776f726b20696e2070726f67726573732e2fe2809d",
+                    "64a0861575861af460f062c79be643bd5e805cfd345cf389f108670ac76c8cb24c6cfc18755d43eea09ee94e382d26b0bdb7b73c321b0100d4f03b7f355894cf332f830e710b97ce98c8a84abd0b948114ad176e008d33bd60f982b1ff37c8559797a06ef4f0ef61c186324e2b3506383606907b6a7c02b0f9f6157b53c867e4b9166c767b804d46a59b5216cde7a4e99040c5a40433225ee282a1b0a06c523eaf4534d7f83fa1155b0047718cbc546a0d072b04b3564eea1b422273f548271a0bb2316053fa76991955ebd63159434ecebb4e466dae5a1073a6727627097a1049e617d91d361094fa68f0ff77987130305beaba2eda04df997b714d6c6f2c29a6ad5cb4022b02709b",
+                    "eead9d67890cbb22392336fea1851f38");
+}
 BOOST_AUTO_TEST_SUITE_END()
