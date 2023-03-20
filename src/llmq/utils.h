@@ -59,7 +59,7 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
 
 void PreComputeQuorumMembers(const CBlockIndex* pQuorumBaseBlockIndex, bool reset_cache = false);
 static std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex);
-static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(Consensus::LLMQType llmqType, const CBlockIndex* pCycleQuorumBaseBlockIndex);
+static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex);
 
 static std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const PreviousQuorumQuarters& quarters);
 
@@ -89,7 +89,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
 std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex);
 std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(const CBlockIndex* pindex);
 
-bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
+bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindex);
 Consensus::LLMQType GetInstantSendLLMQType(const CQuorumManager& qman, const CBlockIndex* pindex);
 Consensus::LLMQType GetInstantSendLLMQType(bool deterministic);
 bool IsDIP0024Active(const CBlockIndex* pindex);
@@ -139,7 +139,7 @@ void InitQuorumsCache(CacheType& cache);
 
 } // namespace utils
 
-const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType);
+[[ nodiscard ]] const std::optional<Consensus::LLMQParams> GetLLMQParams(Consensus::LLMQType llmqType);
 
 } // namespace llmq
 

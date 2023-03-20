@@ -85,7 +85,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
 
     CDKGLogger logger(*this, __func__);
 
-    if (LogAcceptCategory(BCLog::LLMQ) && utils::IsQuorumRotationEnabled(params.type, m_quorum_base_block_index)) {
+    if (LogAcceptCategory(BCLog::LLMQ) && utils::IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
         int cycleQuorumBaseHeight = m_quorum_base_block_index->nHeight - quorumIndex;
         const CBlockIndex* pCycleQuorumBaseBlockIndex = m_quorum_base_block_index->GetAncestor(cycleQuorumBaseHeight);
         std::stringstream ss;
@@ -1206,7 +1206,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         fqc.quorumPublicKey = first.quorumPublicKey;
         fqc.quorumVvecHash = first.quorumVvecHash;
 
-        if (utils::IsQuorumRotationEnabled(fqc.llmqType, m_quorum_base_block_index)) {
+        if (utils::IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
             fqc.nVersion = CFinalCommitment::INDEXED_QUORUM_VERSION;
             fqc.quorumIndex = quorumIndex;
         } else {
