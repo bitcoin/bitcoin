@@ -3692,7 +3692,7 @@ static void test_ge(void) {
      */
     secp256k1_ge *ge = (secp256k1_ge *)checked_malloc(&CTX->error_callback, sizeof(secp256k1_ge) * (1 + 4 * runs));
     secp256k1_gej *gej = (secp256k1_gej *)checked_malloc(&CTX->error_callback, sizeof(secp256k1_gej) * (1 + 4 * runs));
-    secp256k1_fe zf;
+    secp256k1_fe zf, r;
     secp256k1_fe zfi2, zfi3;
 
     secp256k1_gej_set_infinity(&gej[0]);
@@ -3733,6 +3733,11 @@ static void test_ge(void) {
     secp256k1_fe_inv_var(&zfi3, &zf);
     secp256k1_fe_sqr(&zfi2, &zfi3);
     secp256k1_fe_mul(&zfi3, &zfi3, &zfi2);
+
+    /* Generate random r */
+    do {
+        random_field_element_test(&r);
+    } while(secp256k1_fe_is_zero(&r));
 
     for (i1 = 0; i1 < 1 + 4 * runs; i1++) {
         int i2;
@@ -3844,6 +3849,29 @@ static void test_ge(void) {
             ge_equals_gej(&ge_set_all[i], &gej[i]);
         }
         free(ge_set_all);
+    }
+
+    /* Test all elements have X coordinates on the curve. */
+    for (i = 1; i < 4 * runs + 1; i++) {
+        secp256k1_fe n;
+        CHECK(secp256k1_ge_x_on_curve_var(&ge[i].x));
+        /* And the same holds after random rescaling. */
+        secp256k1_fe_mul(&n, &zf, &ge[i].x);
+        CHECK(secp256k1_ge_x_frac_on_curve_var(&n, &zf));
+    }
+
+    /* Test correspondence secp256k1_ge_x{,_frac}_on_curve_var with ge_set_xo. */
+    {
+        secp256k1_fe n;
+        secp256k1_ge q;
+        int ret_on_curve, ret_frac_on_curve, ret_set_xo;
+        secp256k1_fe_mul(&n, &zf, &r);
+        ret_on_curve = secp256k1_ge_x_on_curve_var(&r);
+        ret_frac_on_curve = secp256k1_ge_x_frac_on_curve_var(&n, &zf);
+        ret_set_xo = secp256k1_ge_set_xo_var(&q, &r, 0);
+        CHECK(ret_on_curve == ret_frac_on_curve);
+        CHECK(ret_on_curve == ret_set_xo);
+        if (ret_set_xo) CHECK(secp256k1_fe_equal_var(&r, &q.x));
     }
 
     /* Test batch gej -> ge conversion with many infinities. */
@@ -4452,6 +4480,68 @@ static void ecmult_const_mult_zero_one(void) {
     ge_equals_ge(&res2, &point);
 }
 
+static void ecmult_const_mult_xonly(void) {
+    int i;
+
+    /* Test correspondence between secp256k1_ecmult_const and secp256k1_ecmult_const_xonly. */
+    for (i = 0; i < 2*COUNT; ++i) {
+        secp256k1_ge base;
+        secp256k1_gej basej, resj;
+        secp256k1_fe n, d, resx, v;
+        secp256k1_scalar q;
+        int res;
+        /* Random base point. */
+        random_group_element_test(&base);
+        /* Random scalar to multiply it with. */
+        random_scalar_order_test(&q);
+        /* If i is odd, n=d*base.x for random non-zero d */
+        if (i & 1) {
+            do {
+                random_field_element_test(&d);
+            } while (secp256k1_fe_normalizes_to_zero_var(&d));
+            secp256k1_fe_mul(&n, &base.x, &d);
+        } else {
+            n = base.x;
+        }
+        /* Perform x-only multiplication. */
+        res = secp256k1_ecmult_const_xonly(&resx, &n, (i & 1) ? &d : NULL, &q, 256, i & 2);
+        CHECK(res);
+        /* Perform normal multiplication. */
+        secp256k1_gej_set_ge(&basej, &base);
+        secp256k1_ecmult(&resj, &basej, &q, NULL);
+        /* Check that resj's X coordinate corresponds with resx. */
+        secp256k1_fe_sqr(&v, &resj.z);
+        secp256k1_fe_mul(&v, &v, &resx);
+        CHECK(check_fe_equal(&v, &resj.x));
+    }
+
+    /* Test that secp256k1_ecmult_const_xonly correctly rejects X coordinates not on curve. */
+    for (i = 0; i < 2*COUNT; ++i) {
+        secp256k1_fe x, n, d, c, r;
+        int res;
+        secp256k1_scalar q;
+        random_scalar_order_test(&q);
+        /* Generate random X coordinate not on the curve. */
+        do {
+            random_field_element_test(&x);
+            secp256k1_fe_sqr(&c, &x);
+            secp256k1_fe_mul(&c, &c, &x);
+            secp256k1_fe_add(&c, &secp256k1_fe_const_b);
+        } while (secp256k1_fe_is_square_var(&c));
+        /* If i is odd, n=d*x for random non-zero d. */
+        if (i & 1) {
+            do {
+                random_field_element_test(&d);
+            } while (secp256k1_fe_normalizes_to_zero_var(&d));
+            secp256k1_fe_mul(&n, &x, &d);
+        } else {
+            n = x;
+        }
+        res = secp256k1_ecmult_const_xonly(&r, &n, (i & 1) ? &d : NULL, &q, 256, 0);
+        CHECK(res == 0);
+    }
+}
+
 static void ecmult_const_chain_multiply(void) {
     /* Check known result (randomly generated test problem from sage) */
     const secp256k1_scalar scalar = SECP256K1_SCALAR_CONST(
@@ -4483,6 +4573,7 @@ static void run_ecmult_const_tests(void) {
     ecmult_const_random_mult();
     ecmult_const_commutativity();
     ecmult_const_chain_multiply();
+    ecmult_const_mult_xonly();
 }
 
 typedef struct {
@@ -7322,6 +7413,10 @@ static void run_ecdsa_edge_cases(void) {
 # include "modules/schnorrsig/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_ELLSWIFT
+# include "modules/ellswift/tests_impl.h"
+#endif
+
 static void run_secp256k1_memczero_test(void) {
     unsigned char buf1[6] = {1, 2, 3, 4, 5, 6};
     unsigned char buf2[sizeof(buf1)];
@@ -7650,6 +7745,10 @@ int main(int argc, char **argv) {
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
     run_schnorrsig_tests();
+#endif
+
+#ifdef ENABLE_MODULE_ELLSWIFT
+    run_ellswift_tests();
 #endif
 
     /* util tests */

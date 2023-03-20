@@ -51,6 +51,12 @@ static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const se
  *  for Y. Return value indicates whether the result is valid. */
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd);
 
+/** Determine whether x is a valid X coordinate on the curve. */
+static int secp256k1_ge_x_on_curve_var(const secp256k1_fe *x);
+
+/** Determine whether fraction xn/xd is a valid X coordinate on the curve. */
+static int secp256k1_ge_x_frac_on_curve_var(const secp256k1_fe *xn, const secp256k1_fe *xd);
+
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_ge_is_infinity(const secp256k1_ge *a);
 
