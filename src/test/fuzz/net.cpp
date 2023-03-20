@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <key.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -17,6 +18,7 @@
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -76,4 +78,23 @@ FUZZ_TARGET_INIT(net, initialize_net)
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);
     (void)node.ConnectedThroughNetwork();
+}
+
+void initialize_chainparams()
+{
+    SelectParams(CBaseChainParams::REGTEST);
+}
+
+FUZZ_TARGET_INIT(bip324_session_derivation, initialize_chainparams)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    ECDHSecret ecdh_secret;
+    auto ecdh_secret_bytes = fuzzed_data_provider.ConsumeBytes<std::byte>(ECDH_SECRET_SIZE);
+    ecdh_secret_bytes.resize(ECDH_SECRET_SIZE);
+
+    memcpy(ecdh_secret.data(), ecdh_secret_bytes.data(), ECDH_SECRET_SIZE);
+
+    BIP324Session session;
+    DeriveBIP324Session(std::move(ecdh_secret), session);
 }

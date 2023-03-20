@@ -727,4 +727,29 @@ static int secp256k1_ge_is_in_correct_subgroup(const secp256k1_ge* ge) {
 #endif
 }
 
+static int secp256k1_ge_x_on_curve_var(const secp256k1_fe* x)
+{
+    secp256k1_fe c;
+    secp256k1_fe_sqr(&c, x);
+    secp256k1_fe_mul(&c, &c, x);
+    secp256k1_fe_add_int(&c, SECP256K1_B);
+    return secp256k1_fe_is_square_var(&c);
+}
+
+static int secp256k1_ge_x_frac_on_curve_var(const secp256k1_fe* xn, const secp256k1_fe* xd) {
+    /* We want to determine whether (xn/xd) is on the curve.
+     *
+     * (xn/xd)^3 + 7 is square <=> xd*xn^3 + 7*xd^4 is square (multiplying by xd^4, a square).
+     */
+     secp256k1_fe r, t;
+     secp256k1_fe_mul(&r, xd, xn); /* r = xd*xn */
+     secp256k1_fe_sqr(&t, xn); /* t = xn^2 */
+     secp256k1_fe_mul(&r, &r, &t); /* r = xd*xn^3 */
+     secp256k1_fe_sqr(&t, xd); /* t = xd^2 */
+     secp256k1_fe_sqr(&t, &t); /* t = xd^4 */
+     secp256k1_fe_mul_int(&t, SECP256K1_B); /* t = 7*xd^4 */
+     secp256k1_fe_add(&r, &t); /* r = xd*xn^3 + 7*xd^4 */
+     return secp256k1_fe_is_square_var(&r);
+}
+
 #endif /* SECP256K1_GROUP_IMPL_H */
