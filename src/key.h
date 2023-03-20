@@ -173,6 +173,7 @@ public:
     std::optional<ECDHSecret> ComputeBIP324ECDHSecret(const Span<const std::byte> their_ellswift,
                                                       const Span<const std::byte> our_ellswift,
                                                       bool initiating) const;
+    EllSwiftPubKey EllSwiftEncode(const std::array<std::byte, 32>& rnd32) const;
 };
 
 struct CExtKey {

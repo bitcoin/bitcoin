@@ -10,6 +10,7 @@
 #include <hash.h>
 #include <random.h>
 #include <support/cleanse.h>
+#include <span.h>
 
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
@@ -365,6 +366,21 @@ std::optional<ECDHSecret> CKey::ComputeBIP324ECDHSecret(const Span<const std::by
     memcpy(secret.data(), &secret_uint256, CSHA256::OUTPUT_SIZE);
     memory_cleanse(xonly_ecdh, ECDH_SECRET_SIZE);
     return secret;
+}
+
+EllSwiftPubKey CKey::EllSwiftEncode(const std::array<std::byte, 32>& rnd32) const
+{
+    assert(fValid);
+    EllSwiftPubKey encoded_pubkey;
+
+    auto success = secp256k1_ellswift_create(secp256k1_context_sign,
+                                             reinterpret_cast<unsigned char*>(encoded_pubkey.data()),
+                                             keydata.data(),
+                                             UCharCast(rnd32.data()));
+
+    // Should always succeed for valid keys (asserted above)
+    assert(success);
+    return encoded_pubkey;
 }
 
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {

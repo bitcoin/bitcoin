@@ -6,6 +6,9 @@
 
 #include <key_io.h>
 #include <span.h>
+#include <random.h>
+#include <secp256k1.h>
+#include <secp256k1_ellswift.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -14,6 +17,7 @@
 #include <util/string.h>
 #include <util/system.h>
 
+#include <array>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -369,6 +373,40 @@ BOOST_AUTO_TEST_CASE(bip324_ecdh)
     responder_secret = responder_key.ComputeBIP324ECDHSecret(MakeByteSpan(initiator_ellswift), MakeByteSpan(responder_ellswift), false);
     BOOST_CHECK(responder_secret.has_value());
     BOOST_CHECK(initiator_secret.value() != responder_secret.value());
+}
+
+CPubKey EllSwiftDecode(const EllSwiftPubKey& encoded_pubkey)
+{
+    secp256k1_pubkey pubkey;
+    secp256k1_ellswift_decode(secp256k1_context_static, &pubkey, reinterpret_cast<const unsigned char*>(encoded_pubkey.data()));
+
+    size_t sz = CPubKey::COMPRESSED_SIZE;
+    std::array<uint8_t, CPubKey::COMPRESSED_SIZE> vch_bytes;
+
+    secp256k1_ec_pubkey_serialize(secp256k1_context_static, vch_bytes.data(), &sz, &pubkey, SECP256K1_EC_COMPRESSED);
+
+    return CPubKey{vch_bytes.begin(), vch_bytes.end()};
+}
+
+BOOST_AUTO_TEST_CASE(key_ellswift)
+{
+    for (const auto& secret : {strSecret1, strSecret2, strSecret1C, strSecret2C}) {
+        CKey key = DecodeSecret(secret);
+        BOOST_CHECK(key.IsValid());
+
+        std::array<std::byte, 32> rnd32;
+        GetRandBytes({reinterpret_cast<unsigned char*>(rnd32.data()), 32});
+        auto ellswift_encoded_pubkey = key.EllSwiftEncode(rnd32);
+
+        CPubKey decoded_pubkey = EllSwiftDecode(ellswift_encoded_pubkey);
+        if (!key.IsCompressed()) {
+            // The decoding constructor returns a compressed pubkey. If the
+            // original was uncompressed, we must decompress the decoded one
+            // to compare.
+            decoded_pubkey.Decompress();
+        }
+        BOOST_CHECK(key.GetPubKey() == decoded_pubkey);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
