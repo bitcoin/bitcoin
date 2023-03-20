@@ -28,6 +28,7 @@
              (gnu packages shells)
              (gnu packages tls)
              (gnu packages version-control)
+             (guix build-system cmake)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
@@ -240,27 +241,20 @@ parse, modify and abstract ELF, PE and MachO formats.")
 (define osslsigncode
   (package
     (name "osslsigncode")
-    (version "2.0")
+    (version "2.5")
     (source (origin
               (method url-fetch)
               (uri (string-append "https://github.com/mtrojnar/"
                                   name "/archive/" version ".tar.gz"))
               (sha256
                (base32
-                "0byri6xny770wwb2nciq44j5071122l14bvv65axdd70nfjf0q2s"))))
-    (build-system gnu-build-system)
-    (native-inputs
-     `(("pkg-config" ,pkg-config)
-       ("autoconf" ,autoconf)
-       ("automake" ,automake)
-       ("libtool" ,libtool)))
+                "03by9706gg0an6dn48pljx38vcb76ziv11bgm8ilwsf293x2k4hv"))))
+    (build-system cmake-build-system)
     (inputs
-     `(("openssl" ,openssl)))
+     `(("openssl", openssl)))
     (arguments
-     `(#:configure-flags
-       `("--without-gsf"
-         "--without-curl"
-         "--disable-dependency-tracking")))
+     '(#:configure-flags
+        (list "-DCMAKE_DISABLE_FIND_PACKAGE_CURL=TRUE")))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
@@ -609,6 +603,7 @@ inspecting signatures in Mach-O binaries.")
            (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-for-gcc-10 nsis-x86_64)
+                 nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
            (list (make-bitcoin-cross-toolchain target)))
