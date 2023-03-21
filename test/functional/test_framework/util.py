@@ -12,14 +12,16 @@ import inspect
 import json
 import logging
 import os
+import pathlib
 import random
 import re
+import sys
 import time
 import unittest
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 logger = logging.getLogger("TestFramework.utils")
 
@@ -418,6 +420,22 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
 
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
+
+
+def get_temp_default_datadir(temp_dir: pathlib.Path) -> Tuple[dict, pathlib.Path]:
+    """Return os-specific environment variables that can be set to make the
+    GetDefaultDataDir() function return a datadir path under the provided
+    temp_dir, as well as the complete path it would return."""
+    if sys.platform == "win32":
+        env = dict(APPDATA=str(temp_dir))
+        datadir = temp_dir / "Bitcoin"
+    else:
+        env = dict(HOME=str(temp_dir))
+        if sys.platform == "darwin":
+            datadir = temp_dir / "Library/Application Support/Bitcoin"
+        else:
+            datadir = temp_dir / ".bitcoin"
+    return env, datadir
 
 
 def append_config(datadir, options):

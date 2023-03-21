@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <common/args.h>
 #include <common/init.h>
+#include <logging.h>
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/translation.h>
@@ -20,6 +21,19 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         if (!CheckDataDirOption(args)) {
             return ConfigError{ConfigStatus::FAILED, strprintf(_("Specified data directory \"%s\" does not exist."), args.GetArg("-datadir", ""))};
         }
+
+        // Record original datadir and config paths before parsing the config
+        // file. It is possible for the config file to contain a datadir= line
+        // that changes the datadir path after it is parsed. This is useful for
+        // CLI tools to let them use a different data storage location without
+        // needing to pass it every time on the command line. (It is not
+        // possible for the config file to cause another configuration to be
+        // used, though. Specifying a conf= option in the config file causes a
+        // parse error, and specifying a datadir= location containing another
+        // bitcoin.conf file just ignores the other file.)
+        const fs::path orig_datadir_path{args.GetDataDirBase()};
+        const fs::path orig_config_path = args.GetConfigFilePath();
+
         std::string error;
         if (!args.ReadConfigFiles(error, true)) {
             return ConfigError{ConfigStatus::FAILED, strprintf(_("Error reading configuration file: %s"), error)};
@@ -46,6 +60,32 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         const auto net_path{args.GetDataDirNet()};
         if (!fs::exists(net_path)) {
             fs::create_directories(net_path / "wallets");
+        }
+
+        // Show an error or warning if there is a bitcoin.conf file in the
+        // datadir that is being ignored.
+        const fs::path base_config_path = base_path / BITCOIN_CONF_FILENAME;
+        if (fs::exists(base_config_path) && !fs::equivalent(orig_config_path, base_config_path)) {
+            const std::string cli_config_path = args.GetArg("-conf", "");
+            const std::string config_source = cli_config_path.empty()
+                ? strprintf("data directory %s", fs::quoted(fs::PathToString(orig_datadir_path)))
+                : strprintf("command line argument %s", fs::quoted("-conf=" + cli_config_path));
+            const std::string error = strprintf(
+                "Data directory %1$s contains a %2$s file which is ignored, because a different configuration file "
+                "%3$s from %4$s is being used instead. Possible ways to address this would be to:\n"
+                "- Delete or rename the %2$s file in data directory %1$s.\n"
+                "- Change datadir= or conf= options to specify one configuration file, not two, and use "
+                "includeconf= to include any other configuration files.\n"
+                "- Set allowignoredconf=1 option to treat this condition as a warning, not an error.",
+                fs::quoted(fs::PathToString(base_path)),
+                fs::quoted(BITCOIN_CONF_FILENAME),
+                fs::quoted(fs::PathToString(orig_config_path)),
+                config_source);
+            if (args.GetBoolArg("-allowignoredconf", false)) {
+                LogPrintf("Warning: %s\n", error);
+            } else {
+                return ConfigError{ConfigStatus::FAILED, Untranslated(error)};
+            }
         }
 
         // Create settings.json if -nosettings was not specified.
