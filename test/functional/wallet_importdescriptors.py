@@ -15,7 +15,7 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
-import threading
+import concurrent.futures
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
@@ -691,25 +691,24 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         descriptor["next_index"] = 0
 
         encrypted_wallet.walletpassphrase("passphrase", 99999)
-        t = threading.Thread(target=encrypted_wallet.importdescriptors, args=([descriptor],))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread:
+            with self.nodes[0].assert_debug_log(expected_msgs=["Rescan started from block 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206... (slow variant inspecting all blocks)"], timeout=5):
+                importing = thread.submit(encrypted_wallet.importdescriptors, requests=[descriptor])
 
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'Rescan started from block 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206... (slow variant inspecting all blocks)'], timeout=5):
-            t.start()
+            # Set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
+            self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrase("passphrase", 1)
 
-        # Set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
-        self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrase("passphrase", 1)
+            try:
+                self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletlock()
+            except JSONRPCException as e:
+                assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
 
-        try:
-            self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletlock()
-        except JSONRPCException as e:
-            assert e.error['code'] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error['message']
+            try:
+                self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
+            except JSONRPCException as e:
+                assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
 
-        try:
-            self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
-        except JSONRPCException as e:
-            assert e.error['code'] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error['message']
-
-        t.join()
+            assert_equal(importing.result(), [{"success": True}])
 
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
