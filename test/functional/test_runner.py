@@ -76,6 +76,7 @@ TEST_FRAMEWORK_MODULES = [
     "blocktools",
     "ellswift",
     "key",
+    "messages",
     "muhash",
     "ripemd160",
     "script",
