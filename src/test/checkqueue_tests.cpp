@@ -184,12 +184,14 @@ static void Correct_Queue_range(std::vector<size_t> range)
     small_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     // Make vChecks here to save on malloc (this test can be slow...)
     std::vector<FakeCheckCheckCompletion> vChecks;
+    vChecks.reserve(9);
     for (const size_t i : range) {
         size_t total = i;
         FakeCheckCheckCompletion::n_calls = 0;
         CCheckQueueControl<FakeCheckCheckCompletion> control(small_queue.get());
         while (total) {
-            vChecks.resize(std::min(total, (size_t) InsecureRandRange(10)));
+            vChecks.clear();
+            vChecks.resize(std::min<size_t>(total, InsecureRandRange(10)));
             total -= vChecks.size();
             control.Add(std::move(vChecks));
         }
