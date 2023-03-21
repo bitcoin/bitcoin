@@ -48,7 +48,7 @@ FUZZ_TARGET(checkqueue)
         checks_2.emplace_back(result);
     }
     if (fuzzed_data_provider.ConsumeBool()) {
-        check_queue_1.Add(checks_1);
+        check_queue_1.Add(std::move(checks_1));
     }
     if (fuzzed_data_provider.ConsumeBool()) {
         (void)check_queue_1.Wait();
@@ -56,7 +56,7 @@ FUZZ_TARGET(checkqueue)
 
     CCheckQueueControl<DumbCheck> check_queue_control{&check_queue_2};
     if (fuzzed_data_provider.ConsumeBool()) {
-        check_queue_control.Add(checks_2);
+        check_queue_control.Add(std::move(checks_2));
     }
     if (fuzzed_data_provider.ConsumeBool()) {
         (void)check_queue_control.Wait();

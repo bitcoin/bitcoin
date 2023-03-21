@@ -60,7 +60,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         // Make insecure_rand here so that each iteration is identical.
         CCheckQueueControl<PrevectorJob> control(&queue);
         for (auto vChecks : vBatches) {
-            control.Add(vChecks);
+            control.Add(std::move(vChecks));
         }
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity

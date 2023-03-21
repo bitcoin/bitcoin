@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         std::vector<CScriptCheck> vChecks;
         vChecks.emplace_back(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
-        control.Add(vChecks);
+        control.Add(std::move(vChecks));
     }
 
     bool controlCheck = control.Wait();

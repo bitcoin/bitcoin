@@ -166,7 +166,7 @@ public:
     }
 
     //! Add a batch of checks to the queue
-    void Add(std::vector<T>& vChecks) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    void Add(std::vector<T>&& vChecks) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         if (vChecks.empty()) {
             return;
@@ -237,10 +237,11 @@ public:
         return fRet;
     }
 
-    void Add(std::vector<T>& vChecks)
+    void Add(std::vector<T>&& vChecks)
     {
-        if (pqueue != nullptr)
-            pqueue->Add(vChecks);
+        if (pqueue != nullptr) {
+            pqueue->Add(std::move(vChecks));
+        }
     }
 
     ~CCheckQueueControl()
