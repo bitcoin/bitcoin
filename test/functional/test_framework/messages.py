@@ -77,6 +77,10 @@ def sha256(s):
     return hashlib.sha256(s).digest()
 
 
+def sha3(s):
+    return hashlib.sha3_256(s).digest()
+
+
 def hash256(s):
     return sha256(sha256(s))
 
@@ -237,16 +241,28 @@ class CAddress:
 
     # see https://github.com/bitcoin/bips/blob/master/bip-0155.mediawiki
     NET_IPV4 = 1
+    NET_IPV6 = 2
+    NET_TORV2 = 3
+    NET_TORV3 = 4
     NET_I2P = 5
+    NET_CJDNS = 6
 
     ADDRV2_NET_NAME = {
         NET_IPV4: "IPv4",
-        NET_I2P: "I2P"
+        NET_IPV6: "IPv6",
+        NET_TORV2: "TorV2",
+        NET_TORV3: "TorV3",
+        NET_I2P: "I2P",
+        NET_CJDNS: "CJDNS"
     }
 
     ADDRV2_ADDRESS_LENGTH = {
         NET_IPV4: 4,
-        NET_I2P: 32
+        NET_IPV6: 16,
+        NET_TORV2: 10,
+        NET_TORV3: 32,
+        NET_I2P: 32,
+        NET_CJDNS: 16
     }
 
     I2P_PAD = "===="
@@ -293,7 +309,9 @@ class CAddress:
         self.nServices = deser_compact_size(f)
 
         self.net = struct.unpack("B", f.read(1))[0]
-        assert self.net in (self.NET_IPV4, self.NET_I2P)
+        assert self.net in (self.NET_IPV4, self.NET_IPV6,
+                            self.NET_I2P, self.NET_CJDNS,
+                            self.NET_TORV2, self.NET_TORV3)
 
         address_length = deser_compact_size(f)
         assert address_length == self.ADDRV2_ADDRESS_LENGTH[self.net]
@@ -301,9 +319,19 @@ class CAddress:
         addr_bytes = f.read(address_length)
         if self.net == self.NET_IPV4:
             self.ip = socket.inet_ntoa(addr_bytes)
-        else:
+        elif self.net == self.NET_IPV6:
+            self.ip = socket.inet_ntop(socket.AF_INET6, addr_bytes)
+        elif self.net == self.NET_I2P:
             self.ip = b32encode(addr_bytes)[0:-len(self.I2P_PAD)].decode("ascii").lower() + ".b32.i2p"
-
+        elif self.net == self.NET_CJDNS:
+           self.ip = ":".join(["{:02x}".format(b) for b in addr_bytes])
+        elif self.net in self.NET_TORV2:
+            self.ip = b32encode(addr_bytes).decode('ascii') + '.onion'
+        elif self.net in self.NET_TORV3:
+            prefix = b".onion checksum"
+            version = bytes([3])
+            checksum = sha3(prefix + addr_bytes + version)[:2]
+            self.ip = b32encode(addr_bytes + checksum + version).decode("ascii").lower() + ".onion"
         self.port = struct.unpack(">H", f.read(2))[0]
 
     def serialize_v2(self):
