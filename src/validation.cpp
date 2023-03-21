@@ -4217,9 +4217,25 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
     if (ppindex)
         *ppindex = pindex;
 
+    // Since this is the earliest point at which we have determined that a
+    // header is both new and valid, log here.
+    //
+    // These messages are valuable for detecting potential selfish mining behavior;
+    // if multiple displacing headers are seen near simultaneously across many
+    // nodes in the network, this might be an indication of selfish mining. Having
+    // this log by default when not in IBD ensures broad availability of this data
+    // in case investigation is merited.
+    const auto msg = strprintf(
+        "Saw new header hash=%s height=%d", hash.ToString(), pindex->nHeight);
+
+    if (ActiveChainstate().IsInitialBlockDownload()) {
+        LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Debug, "%s\n", msg);
+    } else {
+        LogPrintf("%s\n", msg);
+    }
+
     // Notify external listeners about accepted block header
     GetMainSignals().AcceptedBlockHeader(pindex);
-
     return true;
 }
 
