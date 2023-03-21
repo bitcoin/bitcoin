@@ -13,7 +13,7 @@
 
 namespace {
 struct DumbCheck {
-    const bool result = false;
+    bool result = false;
 
     DumbCheck() = default;
 

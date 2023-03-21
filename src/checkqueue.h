@@ -11,6 +11,7 @@
 #include <util/threadnames.h>
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 template <typename T>
@@ -173,10 +174,7 @@ public:
 
         {
             LOCK(m_mutex);
-            for (T& check : vChecks) {
-                queue.emplace_back();
-                check.swap(queue.back());
-            }
+            queue.insert(queue.end(), std::make_move_iterator(vChecks.begin()), std::make_move_iterator(vChecks.end()));
             nTodo += vChecks.size();
         }
 
