@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <util/chainname.h>
 #include <util/fs.h>
 #include <validation.h>
 #include <validationinterface.h>

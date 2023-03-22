@@ -11,6 +11,7 @@
 #include <pubkey.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chainname.h>
 #include <validation.h>
 #include <version.h>
 

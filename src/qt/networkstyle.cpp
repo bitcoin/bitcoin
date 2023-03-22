@@ -8,6 +8,7 @@
 
 #include <chainparamsbase.h>
 #include <tinyformat.h>
+#include <util/chainname.h>
 
 #include <QApplication>
 

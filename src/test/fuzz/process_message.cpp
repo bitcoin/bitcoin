@@ -19,6 +19,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <util/chainname.h>
 #include <validationinterface.h>
 #include <version.h>
 

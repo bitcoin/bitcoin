@@ -9,6 +9,7 @@
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chainname.h>
 
 #include <cassert>
 #include <cstdint>

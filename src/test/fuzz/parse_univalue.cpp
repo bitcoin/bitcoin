@@ -7,6 +7,7 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chainname.h>
 
 #include <limits>
 #include <string>

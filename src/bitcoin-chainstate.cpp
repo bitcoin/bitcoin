@@ -15,6 +15,7 @@
 #include <kernel/checks.h>
 #include <kernel/context.h>
 #include <kernel/validation_cache_sizes.h>
+#include <util/chainname.h>
 
 #include <chainparams.h>
 #include <consensus/validation.h>

@@ -42,6 +42,7 @@
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <util/chainname.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/thread.h>

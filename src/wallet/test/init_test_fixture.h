@@ -9,6 +9,7 @@
 #include <interfaces/wallet.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
+#include <util/chainname.h>
 
 
 namespace wallet {

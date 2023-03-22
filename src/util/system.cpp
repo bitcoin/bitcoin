@@ -7,6 +7,7 @@
 
 #include <chainparamsbase.h>
 #include <sync.h>
+#include <util/chainname.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>

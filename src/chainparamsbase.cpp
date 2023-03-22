@@ -6,6 +6,7 @@
 #include <chainparamsbase.h>
 
 #include <tinyformat.h>
+#include <util/chainname.h>
 #include <util/system.h>
 
 #include <assert.h>

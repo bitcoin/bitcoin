@@ -7,6 +7,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
 #include <univalue.h>
+#include <util/chainname.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/system.h>

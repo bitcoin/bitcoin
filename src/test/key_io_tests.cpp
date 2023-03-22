@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
+#include <util/chainname.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>

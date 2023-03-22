@@ -7,6 +7,7 @@
 #include <net.h>
 #include <signet.h>
 #include <uint256.h>
+#include <util/chainname.h>
 #include <validation.h>
 
 #include <test/util/setup_common.h>

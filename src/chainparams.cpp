@@ -5,11 +5,13 @@
 
 #include <chainparams.h>
 
+#include <chainparamsbase.h>
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
 #include <deploymentinfo.h>
 #include <hash.h> // for signet block challenge hash
 #include <script/interpreter.h>
+#include <util/chainname.h>
 #include <util/string.h>
 #include <util/system.h>
 

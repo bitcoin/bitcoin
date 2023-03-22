@@ -17,6 +17,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chainname.h>
 #include <util/strencodings.h>
 
 #include <cassert>

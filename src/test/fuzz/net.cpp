@@ -16,6 +16,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
+#include <util/chainname.h>
 
 #include <cstdint>
 #include <optional>

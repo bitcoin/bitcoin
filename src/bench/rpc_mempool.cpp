@@ -9,6 +9,7 @@
 #include <rpc/mempool.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <util/chainname.h>
 
 #include <univalue.h>
 

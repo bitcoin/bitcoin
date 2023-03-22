@@ -22,6 +22,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <univalue.h>
+#include <util/chainname.h>
 
 #include <algorithm>
 #include <cassert>

@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <util/chainname.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>

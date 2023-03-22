@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <streams.h>
+#include <util/chainname.h>
 #include <util/system.h>
 #include <validation.h>
 

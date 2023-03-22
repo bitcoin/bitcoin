@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <key_io.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chainname.h>
 
 #include <cassert>
 #include <cstdint>

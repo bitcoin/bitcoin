@@ -21,6 +21,7 @@
 #include <rpc/util.h>
 #include <sync.h>
 #include <timedata.h>
+#include <util/chainname.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>

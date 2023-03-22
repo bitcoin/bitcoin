@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
+#include <util/chainname.h>
 #include <util/system.h>
 #include <versionbits.h>
 

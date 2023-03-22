@@ -8,6 +8,7 @@
 #include <rpc/blockchain.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <util/chainname.h>
 #include <validation.h>
 
 #include <univalue.h>

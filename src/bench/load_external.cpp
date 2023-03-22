@@ -6,6 +6,7 @@
 #include <bench/data.h>
 #include <chainparams.h>
 #include <test/util/setup_common.h>
+#include <util/chainname.h>
 #include <validation.h>
 
 /**

@@ -10,6 +10,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
+#include <util/chainname.h>
 #include <util/check.h>
 #include <wallet/wallet.h>
 

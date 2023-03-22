@@ -7,6 +7,7 @@
 #include <consensus/params.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/chainname.h>
 #include <versionbits.h>
 
 #include <boost/test/unit_test.hpp>

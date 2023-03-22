@@ -9,6 +9,7 @@
 #include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <util/chainname.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>

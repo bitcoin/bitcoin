@@ -13,6 +13,7 @@
 #include <pubkey.h>
 #include <random.h>
 #include <stdexcept>
+#include <util/chainname.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
