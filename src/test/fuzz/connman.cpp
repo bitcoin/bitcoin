@@ -4,7 +4,6 @@
 
 #include <addrman.h>
 #include <chainparams.h>
-#include <chainparamsbase.h>
 #include <net.h>
 #include <netaddress.h>
 #include <protocol.h>
