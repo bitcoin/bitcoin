@@ -4,11 +4,9 @@
 
 #include <util/chainname.h>
 
-#include <chainparamsbase.h>
-
 #include <string>
 
-const std::string chainname::MAIN{CBaseChainParams::MAIN};
-const std::string chainname::TESTNET{CBaseChainParams::TESTNET};
-const std::string chainname::SIGNET{CBaseChainParams::SIGNET};
-const std::string chainname::REGTEST{CBaseChainParams::REGTEST};
+const std::string chainname::MAIN{"main"};
+const std::string chainname::TESTNET{"test"};
+const std::string chainname::SIGNET{"signet"};
+const std::string chainname::REGTEST{"regtest"};

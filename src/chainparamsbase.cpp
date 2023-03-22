@@ -11,11 +11,6 @@
 
 #include <assert.h>
 
-const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
-const std::string CBaseChainParams::SIGNET = "signet";
-const std::string CBaseChainParams::REGTEST = "regtest";
-
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
     argsman.AddArg("-chain=<chain>", "Use the chain <chain> (default: main). Allowed values: main, test, signet, regtest", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
@@ -43,13 +38,13 @@ const CBaseChainParams& BaseParams()
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
-    if (chain == CBaseChainParams::MAIN) {
+    if (chain == chainname::MAIN) {
         return std::make_unique<CBaseChainParams>("", 8332, 8334);
-    } else if (chain == CBaseChainParams::TESTNET) {
+    } else if (chain == chainname::TESTNET) {
         return std::make_unique<CBaseChainParams>("testnet3", 18332, 18334);
-    } else if (chain == CBaseChainParams::SIGNET) {
+    } else if (chain == chainname::SIGNET) {
         return std::make_unique<CBaseChainParams>("signet", 38332, 38334);
-    } else if (chain == CBaseChainParams::REGTEST) {
+    } else if (chain == chainname::REGTEST) {
         return std::make_unique<CBaseChainParams>("regtest", 18443, 18445);
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));

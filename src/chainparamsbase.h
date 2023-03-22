@@ -17,14 +17,6 @@ class ArgsManager;
 class CBaseChainParams
 {
 public:
-    ///@{
-    /** Chain name strings */
-    static const std::string MAIN;
-    static const std::string TESTNET;
-    static const std::string SIGNET;
-    static const std::string REGTEST;
-    ///@}
-
     const std::string& DataDir() const { return strDataDir; }
     uint16_t RPCPort() const { return m_rpc_port; }
     uint16_t OnionServiceTargetPort() const { return m_onion_service_target_port; }
