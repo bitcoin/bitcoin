@@ -2042,8 +2042,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         // Verify signature
         CScriptCheck check(txdata.m_spent_outputs[i], tx, i, flags, cacheSigStore, &txdata);
         if (pvChecks) {
-            pvChecks->push_back(CScriptCheck());
-            check.swap(pvChecks->back());
+            pvChecks->emplace_back(std::move(check));
         } else if (!check()) {
             if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                 // Check whether the failure was caused by a
@@ -2266,11 +2265,6 @@ public:
     bool operator()() noexcept {
         return nevmData->vchVersionHash == dev::sha3(*nevmData->vchNEVMData).asBytes();
     }
-
-    void swap(CBlobCheck& check) noexcept
-    {
-        std::swap(nevmData, check.nevmData);
-    }
 };
 static CCheckQueue<CBlobCheck> blobcheckqueue(MAX_DATA_BLOBS);
 bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
@@ -2304,7 +2298,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
         // process new vector in batch checking the blobs
         BlockValidationState state;
         const auto time_1{SteadyClock::now()};
-        control.Add(vChecks);
+        control.Add(std::move(vChecks));
         if (!control.Wait()){
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob(s)\n");
             return false;
@@ -2871,7 +2865,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 return error("ConnectBlock(): CheckInputScripts on %s failed with %s",
                     tx.GetHash().ToString(), state.ToString());
             }
-            control.Add(vChecks);
+            control.Add(std::move(vChecks));
         }
         CTxUndo undoDummy;
         if (i > 0) {
