@@ -304,6 +304,16 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
+size_t HasPayToAnchor(const CTransaction& tx)
+{
+    for (const CTxOut& txout : tx.vout) {
+        if (txout.scriptPubKey.IsPayToAnchor()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
     return (std::max(nWeight, nSigOpCost * bytes_per_sigop) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;

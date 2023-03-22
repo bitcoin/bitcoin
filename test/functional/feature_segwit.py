@@ -29,7 +29,7 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_0,
-    OP_1,
+    OP_2,
     OP_DROP,
     OP_TRUE,
 )
@@ -451,18 +451,18 @@ class SegWitTest(BitcoinTestFramework):
                     # Witness output types with uncompressed keys are never seen
                     unseen_anytime.extend([p2wpkh, p2sh_p2wpkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
-            op1 = CScript([OP_1])
+            op2 = CScript([OP_2])
             op0 = CScript([OP_0])
             # 2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe is the P2SH(P2PKH) version of mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V
             unsolvable_address_key = bytes.fromhex("02341AEC7587A51CDE5279E0630A531AEA2615A9F80B17E8D9376327BAEAA59E3D")
             unsolvablep2pkh = key_to_p2pkh_script(unsolvable_address_key)
             unsolvablep2wshp2pkh = script_to_p2wsh_script(unsolvablep2pkh)
             p2shop0 = script_to_p2sh_script(op0)
-            p2wshop1 = script_to_p2wsh_script(op1)
+            p2wshop2 = script_to_p2wsh_script(op2)
             unsolvable_after_importaddress.append(unsolvablep2pkh)
             unsolvable_after_importaddress.append(unsolvablep2wshp2pkh)
-            unsolvable_after_importaddress.append(op1)  # OP_1 will be imported as script
-            unsolvable_after_importaddress.append(p2wshop1)
+            unsolvable_after_importaddress.append(op2)  # OP_2 will be imported as script
+            unsolvable_after_importaddress.append(p2wshop2)
             unseen_anytime.append(op0)  # OP_0 will be imported as P2SH address with no script provided
             unsolvable_after_importaddress.append(p2shop0)
 
@@ -491,8 +491,8 @@ class SegWitTest(BitcoinTestFramework):
 
             importlist.append(unsolvablep2pkh.hex())
             importlist.append(unsolvablep2wshp2pkh.hex())
-            importlist.append(op1.hex())
-            importlist.append(p2wshop1.hex())
+            importlist.append(op2.hex())
+            importlist.append(p2wshop2.hex())
 
             for i in importlist:
                 # import all generated addresses. The wallet already has the private keys for some of these, so catch JSON RPC
