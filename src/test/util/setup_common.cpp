@@ -272,7 +272,7 @@ TestChain100Setup::TestChain100Setup(
         const std::vector<const char*>& extra_args,
         const bool coins_db_in_memory,
         const bool block_tree_db_in_memory)
-    : TestingSetup{CBaseChainParams::REGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}
+    : TestingSetup{chainname::REGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}
 {
     SetMockTime(1598887952);
     constexpr std::array<unsigned char, 32> vchKey = {

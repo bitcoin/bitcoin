@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Misc Globals
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(chainname::MAIN);
     auto chainparams = CChainParams::Main();
 
     kernel::Context kernel_context{};

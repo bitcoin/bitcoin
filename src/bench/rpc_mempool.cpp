@@ -22,7 +22,7 @@ static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& poo
 
 static void RpcMempool(benchmark::Bench& bench)
 {
-    const auto testing_setup = MakeNoLogFileContext<const ChainTestingSetup>(CBaseChainParams::MAIN);
+    const auto testing_setup = MakeNoLogFileContext<const ChainTestingSetup>(chainname::MAIN);
     CTxMemPool& pool = *Assert(testing_setup->m_node.mempool);
     LOCK2(cs_main, pool.cs);
 

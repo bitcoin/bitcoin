@@ -28,7 +28,7 @@
 void initialize_script_sign()
 {
     ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(chainname::REGTEST);
 }
 
 FUZZ_TARGET_INIT(script_sign, initialize_script_sign)

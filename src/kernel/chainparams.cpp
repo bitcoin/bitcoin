@@ -71,7 +71,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = CBaseChainParams::MAIN;
+        strNetworkID = chainname::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
@@ -193,7 +193,7 @@ public:
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        strNetworkID = CBaseChainParams::TESTNET;
+        strNetworkID = chainname::TESTNET;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
@@ -329,7 +329,7 @@ public:
             vSeeds = *options.seeds;
         }
 
-        strNetworkID = CBaseChainParams::SIGNET;
+        strNetworkID = chainname::SIGNET;
         consensus.signet_blocks = true;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
@@ -398,7 +398,7 @@ class CRegTestParams : public CChainParams
 public:
     explicit CRegTestParams(const RegTestOptions& opts)
     {
-        strNetworkID =  CBaseChainParams::REGTEST;
+        strNetworkID =  chainname::REGTEST;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 150;

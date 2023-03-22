@@ -170,7 +170,7 @@ std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
     if (m_network.empty()) return std::set<std::string> {};
 
     // if it's okay to use the default section for this network, don't worry
-    if (m_network == CBaseChainParams::MAIN) return std::set<std::string> {};
+    if (m_network == chainname::MAIN) return std::set<std::string> {};
 
     for (const auto& arg : m_network_only_args) {
         if (OnlyHasDefaultSectionSetting(m_settings, m_network, SettingName(arg))) {
@@ -184,10 +184,10 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
 {
     // Section names to be recognized in the config file.
     static const std::set<std::string> available_sections{
-        CBaseChainParams::REGTEST,
-        CBaseChainParams::SIGNET,
-        CBaseChainParams::TESTNET,
-        CBaseChainParams::MAIN
+        chainname::REGTEST,
+        chainname::SIGNET,
+        chainname::TESTNET,
+        chainname::MAIN
     };
 
     LOCK(cs_args);
@@ -951,19 +951,19 @@ std::string ArgsManager::GetChainName() const
         throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one.");
     }
     if (fRegTest)
-        return CBaseChainParams::REGTEST;
+        return chainname::REGTEST;
     if (fSigNet) {
-        return CBaseChainParams::SIGNET;
+        return chainname::SIGNET;
     }
     if (fTestNet)
-        return CBaseChainParams::TESTNET;
+        return chainname::TESTNET;
 
-    return GetArg("-chain", CBaseChainParams::MAIN);
+    return GetArg("-chain", chainname::MAIN);
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {
-    return m_network == CBaseChainParams::MAIN || m_network_only_args.count(arg) == 0;
+    return m_network == chainname::MAIN || m_network_only_args.count(arg) == 0;
 }
 
 util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
