@@ -210,6 +210,7 @@ chain for " target " development."))
 
 ;; Our python-lief package can be removed once we are using
 ;; guix 83bfdb409787cb2737e68b093a319b247b7858e6 or later.
+;; Note we currently use cmake-minimal.
 (define-public python-lief
   (package
     (name "python-lief")
@@ -224,7 +225,7 @@ chain for " target " development."))
                (base32
                 "11i6hqmcjh56y554kqhl61698n9v66j2qk1c1g63mv2w07h2z661"))))
     (build-system python-build-system)
-    (native-inputs (list cmake))
+    (native-inputs (list cmake-minimal))
     (arguments
      (list
       #:tests? #f                  ;needs network
