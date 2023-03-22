@@ -469,7 +469,7 @@ class TestNode():
                 return
 
             if time.time() >= time_end:
-                print_log = " - " + "\n - ".join(log.splitlines())
+                print_log = " - " + "\n - ".join(log.decode("utf8", errors="replace").splitlines())
                 break
 
             # No sleep here because we want to detect the message fragment as fast as
