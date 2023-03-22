@@ -23,6 +23,9 @@ BOOST_AUTO_TEST_CASE(flatfile_filename)
 
     FlatFileSeq seq2(data_dir / "a", "b", 16 * 1024);
     BOOST_CHECK_EQUAL(seq2.FileName(pos), data_dir / "a" / "b00456.dat");
+
+    // Check default constructor IsNull
+    assert(FlatFilePos{}.IsNull());
 }
 
 BOOST_AUTO_TEST_CASE(flatfile_open)
