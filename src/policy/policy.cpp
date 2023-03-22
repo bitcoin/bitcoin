@@ -129,6 +129,7 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     }
 
     unsigned int nDataOut = 0;
+    unsigned int num_anchors = 0;
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType)) {
@@ -147,12 +148,20 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         } else if (whichType == TxoutType::ANCHOR && !permit_ephemeral_anchor) {
             reason = "ephemeral-anchor";
             return false;
+        } else if (whichType == TxoutType::ANCHOR) {
+            num_anchors++;
         }
     }
 
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
         reason = "multi-op-return";
+        return false;
+    }
+
+    // only one ANCHOR is permitted
+    if (num_anchors > 1) {
+        reason = "too-many-ephemeral-anchors";
         return false;
     }
 
