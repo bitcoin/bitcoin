@@ -42,6 +42,10 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
+    // Anchor outputs have no dust limit
+    if (txout.scriptPubKey.IsPayToAnchor())
+        return 0;
+
     size_t nSize = GetSerializeSize(txout);
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
@@ -142,11 +146,11 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
-        } else if (whichType != TxoutType::ANCHOR && IsDust(txout, dust_relay_fee)) {
-            reason = "dust";
-            return false;
         } else if (whichType == TxoutType::ANCHOR && !permit_ephemeral_anchor) {
             reason = "ephemeral-anchor";
+            return false;
+        } else if (IsDust(txout, dust_relay_fee)) {
+            reason = "dust";
             return false;
         } else if (whichType == TxoutType::ANCHOR) {
             num_anchors++;
