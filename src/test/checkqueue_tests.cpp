@@ -57,7 +57,6 @@ struct FakeCheckCheckCompletion {
 struct FailingCheck {
     bool fails;
     FailingCheck(bool _fails) : fails(_fails){};
-    FailingCheck() : fails(true){};
     bool operator()() const
     {
         return !fails;
@@ -69,7 +68,6 @@ struct UniqueCheck {
     static std::unordered_multiset<size_t> results GUARDED_BY(m);
     size_t check_id;
     UniqueCheck(size_t check_id_in) : check_id(check_id_in){};
-    UniqueCheck() : check_id(0){};
     bool operator()()
     {
         LOCK(m);
@@ -86,7 +84,6 @@ struct MemoryCheck {
     {
         return true;
     }
-    MemoryCheck() = default;
     MemoryCheck(const MemoryCheck& x)
     {
         // We have to do this to make sure that destructor calls are paired
@@ -176,9 +173,7 @@ static void Correct_Queue_range(std::vector<size_t> range)
             control.Add(std::move(vChecks));
         }
         BOOST_REQUIRE(control.Wait());
-        if (FakeCheckCheckCompletion::n_calls != i) {
-            BOOST_REQUIRE_EQUAL(FakeCheckCheckCompletion::n_calls, i);
-        }
+        BOOST_REQUIRE_EQUAL(FakeCheckCheckCompletion::n_calls, i);
     }
     small_queue->StopWorkerThreads();
 }
