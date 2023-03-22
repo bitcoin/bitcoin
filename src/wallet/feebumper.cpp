@@ -63,7 +63,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 }
 
 //! Check if the user provided a valid feeRate
-static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
+static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
 {
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -84,15 +84,12 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
 
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
-    // Given old total fee and transaction size, calculate the old feeRate
-    const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
-    CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
-    CAmount minTotalFee = nOldFeeRate.GetFee(maxTxSize) + incrementalRelayFee.GetFee(maxTxSize);
+    CAmount minTotalFee = old_fee + incrementalRelayFee.GetFee(maxTxSize);
 
     if (new_total_fee < minTotalFee) {
         errors.push_back(strprintf(Untranslated("Insufficient total fee %s, must be at least %s (oldFee %s + incrementalFee %s)"),
-            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxTxSize)), FormatMoney(incrementalRelayFee.GetFee(maxTxSize))));
+            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(old_fee), FormatMoney(incrementalRelayFee.GetFee(maxTxSize))));
         return feebumper::Result::INVALID_PARAMETER;
     }
 
@@ -234,7 +231,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // is one). If outputs vector is non-empty, replace original
     // outputs with its contents, otherwise use original outputs.
     std::vector<CRecipient> recipients;
-    for (const auto& output : outputs.empty() ? wtx.tx->vout : outputs) {
+    const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
+    for (const auto& output : txouts) {
         if (!OutputIsChange(wallet, output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
@@ -249,13 +247,14 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
         // We need to make a temporary transaction with no input witnesses as the dummy signer expects them to be empty for external inputs
-        CMutableTransaction mtx{*wtx.tx};
-        for (auto& txin : mtx.vin) {
+        CMutableTransaction temp_mtx{*wtx.tx};
+        for (auto& txin : temp_mtx.vin) {
             txin.scriptSig.clear();
             txin.scriptWitness.SetNull();
         }
-        const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(mtx), &wallet, &new_coin_control).vsize};
-        Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
+        temp_mtx.vout = txouts;
+        const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
+        Result res = CheckFeeRate(wallet, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
         }
