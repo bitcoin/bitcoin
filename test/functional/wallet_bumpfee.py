@@ -26,6 +26,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    get_fee,
 )
 from test_framework.wallet import MiniWallet
 
@@ -100,6 +101,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_change_script_match(self, rbf_node, dest_address)
         test_settxfee(self, rbf_node, dest_address)
         test_maxtxfee_fails(self, rbf_node, dest_address)
+        test_feerate_checks_replaced_outputs(self, rbf_node)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
@@ -666,6 +668,31 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     rbfid = rbf_node.sendall(recipients=[rbf_node.getnewaddress()])['txid']
     assert_raises_rpc_error(-4, "Unable to create transaction. Insufficient funds", rbf_node.bumpfee, rbfid)
     self.clear_mempool()
+
+
+def test_feerate_checks_replaced_outputs(self, rbf_node):
+    self.log.info("Test that feerate checks use replaced outputs")
+    outputs = []
+    for i in range(50):
+        outputs.append({rbf_node.getnewaddress(address_type="bech32"): 1})
+    tx_res = rbf_node.send(outputs=outputs, fee_rate=5)
+    tx_details = rbf_node.gettransaction(txid=tx_res["txid"], verbose=True)
+
+    # Calculate the minimum feerate required for the bump to work.
+    # Since the bumped tx will replace all of the outputs with a single output, we can estimate that its size will 31 * (len(outputs) - 1) bytes smaller
+    tx_size = tx_details["decoded"]["vsize"]
+    est_bumped_size = tx_size - (len(tx_details["decoded"]["vout"]) - 1) * 31
+    inc_fee_rate = max(rbf_node.getmempoolinfo()["incrementalrelayfee"], Decimal(0.00005000)) # Wallet has a fixed incremental relay fee of 5 sat/vb
+    # RPC gives us fee as negative
+    min_fee = (-tx_details["fee"] + get_fee(est_bumped_size, inc_fee_rate)) * Decimal(1e8)
+    min_fee_rate = (min_fee / est_bumped_size).quantize(Decimal("1.000"))
+
+    # Attempt to bumpfee and replace all outputs with a single one using a feerate slightly less than the minimum
+    new_outputs = [{rbf_node.getnewaddress(address_type="bech32"): 49}]
+    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx_res["txid"], {"fee_rate": min_fee_rate - 1, "outputs": new_outputs})
+
+    # Bumpfee and replace all outputs with a single one using the minimum feerate
+    rbf_node.bumpfee(tx_res["txid"], {"fee_rate": min_fee_rate, "outputs": new_outputs})
 
 
 if __name__ == "__main__":
