@@ -4860,8 +4860,6 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
 {
     AssertLockHeld(g_msgproc_mutex);
 
-    bool fMoreWork = false;
-
     PeerRef peer = GetPeerRef(pfrom->GetId());
     if (peer == nullptr) return false;
 
@@ -4889,17 +4887,14 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend) return false;
 
-    std::list<CNetMessage> msgs;
-    {
-        LOCK(pfrom->cs_vProcessMsg);
-        if (pfrom->vProcessMsg.empty()) return false;
-        // Just take one message
-        msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
-        pfrom->nProcessQueueSize -= msgs.front().m_raw_message_size;
-        pfrom->fPauseRecv = pfrom->nProcessQueueSize > m_connman.GetReceiveFloodSize();
-        fMoreWork = !pfrom->vProcessMsg.empty();
+    auto poll_result{pfrom->PollMessage(m_connman.GetReceiveFloodSize())};
+    if (!poll_result) {
+        // No message to process
+        return false;
     }
-    CNetMessage& msg(msgs.front());
+
+    CNetMessage& msg{poll_result->first};
+    bool fMoreWork = poll_result->second;
 
     TRACE6(net, inbound_message,
         pfrom->GetId(),
