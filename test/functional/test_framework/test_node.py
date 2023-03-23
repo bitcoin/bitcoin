@@ -103,6 +103,7 @@ class TestNode():
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
             "-debugexclude=rand",
+            "-dandelion=false",
             "-uacomment=testnode%d" % i,
         ]
         if self.descriptors is None:

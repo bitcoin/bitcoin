@@ -215,6 +215,9 @@ struct TxMempoolInfo
     /** Time the transaction entered the mempool. */
     std::chrono::seconds m_time;
 
+    /** Time the transaction will expire from Dandelion++ stem phase embargo. */
+    std::chrono::seconds m_embargo;
+
     /** Fee of the transaction. */
     CAmount fee;
 

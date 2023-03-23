@@ -12,6 +12,7 @@
 #include <node/connection_types.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
+#include <dandelion.h>
 #include <hash.h>
 #include <i2p.h>
 #include <net_permissions.h>
@@ -653,6 +654,13 @@ public:
     * @return                      True if there is more work to be done
     */
     virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+
+    /**
+     * Select new stem routes for Dandelion++
+     *
+     * @param[in]  nodes           List of nodes that we can select our stem routes from
+     */
+    virtual void ShuffleStemRoutes(const std::vector<CNode*>& nodes) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
 
 protected:

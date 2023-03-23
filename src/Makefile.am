@@ -175,6 +175,7 @@ BITCOIN_CORE_H = \
   blsct/range_proof/range_proof_with_transcript.h \
   blsct/range_proof/range_proof.h \
   blsct/signature.h \
+  dandelion.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \

@@ -65,10 +65,13 @@ from test_framework.messages import (
     msg_sendtxrcncl,
     msg_tx,
     MSG_TX,
+    MSG_DTX,
+    msg_dtx,
     MSG_TYPE_MASK,
     msg_verack,
     msg_version,
     MSG_WTX,
+    MSG_DWTX,
     msg_wtxidrelay,
     NODE_NETWORK,
     NODE_WITNESS,
@@ -129,6 +132,7 @@ MESSAGEMAP = {
     b"sendheaders": msg_sendheaders,
     b"sendtxrcncl": msg_sendtxrcncl,
     b"tx": msg_tx,
+    b"dtx": msg_dtx,
     b"verack": msg_verack,
     b"version": msg_version,
     b"wtxidrelay": msg_wtxidrelay,
@@ -425,6 +429,7 @@ class P2PInterface(P2PConnection):
     def on_sendheaders(self, message): pass
     def on_sendtxrcncl(self, message): pass
     def on_tx(self, message): pass
+    def on_dtx(self, message): pass
     def on_wtxidrelay(self, message): pass
 
     def on_inv(self, message):
@@ -668,6 +673,8 @@ class P2PDataStore(P2PInterface):
             self.getdata_requests.append(inv.hash)
             if (inv.type & MSG_TYPE_MASK) == MSG_TX and inv.hash in self.tx_store.keys():
                 self.send_message(msg_tx(self.tx_store[inv.hash]))
+            elif (inv.type & MSG_TYPE_MASK) == MSG_DTX and inv.hash in self.tx_store.keys():
+                self.send_message(msg_dtx(self.tx_store[inv.hash]))
             elif (inv.type & MSG_TYPE_MASK) == MSG_BLOCK and inv.hash in self.block_store.keys():
                 self.send_message(msg_block(self.block_store[inv.hash]))
             else:
@@ -787,7 +794,7 @@ class P2PTxInvStore(P2PInterface):
         super().on_inv(message) # Send getdata in response.
         # Store how many times invs have been received for each tx.
         for i in message.inv:
-            if (i.type == MSG_TX) or (i.type == MSG_WTX):
+            if i.type in [MSG_TX, MSG_WTX, MSG_DTX, MSG_DWTX]:
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 

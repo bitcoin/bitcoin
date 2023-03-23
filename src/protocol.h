@@ -116,6 +116,11 @@ extern const char* GETHEADERS;
  * The tx message transmits a single transaction.
  */
 extern const char* TX;
+
+/**
+ * The tx message transmits a single dandelion++ transaction.
+ */
+extern const char* DTX;
 /**
  * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
@@ -463,7 +468,9 @@ enum GetDataMsg : uint32_t {
     MSG_TX = 1,
     MSG_BLOCK = 2,
     MSG_WTX = 5,                                      //!< Defined in BIP 339
-    // The following can only occur in getdata. Invs always use TX/WTX or BLOCK.
+    MSG_DTX = 6,                                      //!< Used for Dandelion++
+    MSG_DWTX = 7,                                     //!< Used for Dandelion++
+    // The following can only occur in getdata. Invs always use TX/WTX/DTX/DWTX or BLOCK.
     MSG_FILTERED_BLOCK = 3,                           //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
@@ -488,9 +495,9 @@ public:
     std::string ToString() const;
 
     // Single-message helper methods
-    bool IsMsgTx() const { return type == MSG_TX; }
+    bool IsMsgTx() const { return type == MSG_TX || type == MSG_DTX; }
     bool IsMsgBlk() const { return type == MSG_BLOCK; }
-    bool IsMsgWtx() const { return type == MSG_WTX; }
+    bool IsMsgWtx() const { return type == MSG_WTX || type == MSG_DWTX; }
     bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
@@ -498,18 +505,27 @@ public:
     // Combined-message helper methods
     bool IsGenTxMsg() const
     {
-        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+        return (
+                type == MSG_TX ||
+                type == MSG_DTX ||
+                type == MSG_WTX ||
+                type == MSG_DWTX ||
+                type == MSG_WITNESS_TX);
     }
     bool IsGenBlkMsg() const
     {
-        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+        return (
+                type == MSG_BLOCK ||
+                type == MSG_FILTERED_BLOCK ||
+                type == MSG_CMPCT_BLOCK ||
+                type == MSG_WITNESS_BLOCK);
     }
 
     uint32_t type;
     uint256 hash;
 };
 
-/** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */
+/** Convert a TX/DTX/WITNESS_TX/DWTX/WTX CInv to a GenTxid. */
 GenTxid ToGenTxid(const CInv& inv);
 
 #endif // BITCOIN_PROTOCOL_H

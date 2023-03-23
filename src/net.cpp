@@ -119,6 +119,11 @@ GlobalMutex g_maplocalhost_mutex;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
 static bool vfLimited[NET_MAX] GUARDED_BY(g_maplocalhost_mutex) = {};
 std::string strSubVersion;
+bool IsDandelionEnabled()
+{
+    static bool ret = gArgs.GetBoolArg("-dandelion", DEFAULT_DANDELION_ENABLED);
+    return ret;
+}
 
 void CConnman::AddAddrFetch(const std::string& strDest)
 {
@@ -2059,6 +2064,15 @@ void CConnman::ThreadMessageHandler()
                     return;
                 // Send messages
                 m_msgproc->SendMessages(pnode);
+
+                if (flagInterruptMsgProc)
+                    return;
+            }
+
+            // Don't need to run this function if Dandelion++ is disabled
+            if (IsDandelionEnabled()) {
+                // ShuffleStemRoutes
+                m_msgproc->ShuffleStemRoutes(snap.Nodes());
 
                 if (flagInterruptMsgProc)
                     return;

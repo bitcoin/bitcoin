@@ -57,6 +57,8 @@ MSG_BLOCK = 2
 MSG_FILTERED_BLOCK = 3
 MSG_CMPCT_BLOCK = 4
 MSG_WTX = 5
+MSG_DTX = 6
+MSG_DWTX = 7
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
 MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG
@@ -337,12 +339,14 @@ class CInv:
     typemap = {
         0: "Error",
         MSG_TX: "TX",
+        MSG_DTX: "DTX",
         MSG_BLOCK: "Block",
         MSG_TX | MSG_WITNESS_FLAG: "WitnessTx",
         MSG_BLOCK | MSG_WITNESS_FLAG: "WitnessBlock",
         MSG_FILTERED_BLOCK: "filtered Block",
         MSG_CMPCT_BLOCK: "CompactBlock",
         MSG_WTX: "WTX",
+        MSG_DWTX: "DWTX",
     }
 
     def __init__(self, t=0, h=0):
@@ -1468,6 +1472,24 @@ class msg_tx:
 
     def __repr__(self):
         return "msg_tx(tx=%s)" % (repr(self.tx))
+
+
+class msg_dtx:
+    __slots__ = ("tx",)
+    msgtype = b"dtx"
+
+    def __init__(self, tx=CTransaction()):
+        self.tx = tx
+
+    def deserialize(self, f):
+        self.tx.deserialize(f)
+
+    def serialize(self):
+        return self.tx.serialize_with_witness()
+
+    def __repr__(self):
+        return "msg_dtx(tx=%s)" % (repr(self.tx))
+
 
 class msg_wtxidrelay:
     __slots__ = ()

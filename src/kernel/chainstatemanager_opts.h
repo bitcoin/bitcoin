@@ -6,6 +6,7 @@
 #define BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
 #include <arith_uint256.h>
+#include <dandelion.h>
 #include <dbwrapper.h>
 #include <txdb.h>
 #include <uint256.h>
@@ -33,6 +34,7 @@ struct ChainstateManagerOpts {
     const std::function<NodeClock::time_point()> adjusted_time_callback{nullptr};
     std::optional<bool> check_block_index{};
     bool checkpoints_enabled{DEFAULT_CHECKPOINTS_ENABLED};
+    bool dandelion_enabled{DEFAULT_DANDELION_ENABLED};
     //! If set, it will override the minimum work we will assume exists on some valid chain.
     std::optional<arith_uint256> minimum_chain_work{};
     //! If set, it will override the block hash whose ancestors we will assume to have valid scripts without checking them.
