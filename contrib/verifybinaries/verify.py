@@ -42,7 +42,7 @@ import textwrap
 import urllib.request
 import enum
 from hashlib import sha256
-from pathlib import Path
+from pathlib import PurePath
 
 # The primary host; this will fail if we can't retrieve files from here.
 HOST1 = "https://bitcoincore.org"
@@ -440,11 +440,11 @@ def verify_shasums_signature(
     return (ReturnCode.SUCCESS, good_trusted, good_untrusted, unknown, bad)
 
 
-def parse_sums_file(sums_file_path: Path, filename_filter: str) -> t.List[t.List[str]]:
+def parse_sums_file(sums_file_path: str, filename_filter: t.List[str]) -> t.List[t.List[str]]:
     # extract hashes/filenames of binaries to verify from hash file;
     # each line has the following format: "<hash> <binary_filename>"
     with open(sums_file_path, 'r', encoding='utf8') as hash_file:
-        return [line.split()[:2] for line in hash_file if filename_filter in line]
+        return [line.split()[:2] for line in hash_file if len(filename_filter) == 0 or any(f in line for f in filename_filter)]
 
 
 def verify_binary_hashes(hashes_to_verify: t.List[t.List[str]]) -> t.Tuple[ReturnCode, t.Dict[str, str]]:
@@ -579,6 +579,73 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     return ReturnCode.SUCCESS
 
 
+def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
+    binary_to_basename = {}
+    for file in args.binary:
+        binary_to_basename[PurePath(file).name] = file
+
+    sums_sig_path = None
+    if args.sums_sig_file:
+        sums_sig_path = Path(args.sums_sig_file)
+    else:
+        log.info(f"No signature file specified, assuming it is {args.sums_file}.asc")
+        sums_sig_path = Path(args.sums_file).with_suffix(".asc")
+
+    # Verify the signature on the SHA256SUMS file
+    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(sums_sig_path, args.sums_file, args)
+    if sigs_status != ReturnCode.SUCCESS:
+        return sigs_status
+
+    # Extract hashes and filenames
+    hashes_to_verify = parse_sums_file(args.sums_file, [k for k, n in binary_to_basename.items()])
+    if not hashes_to_verify:
+        log.error(f"No files in {args.sums_file} match the specified binaries")
+        return ReturnCode.NO_BINARIES_MATCH
+
+    # Make sure all files are accounted for
+    sums_file_path = Path(args.sums_file)
+    missing_files = []
+    files_to_hash = []
+    if len(binary_to_basename) > 0:
+        for file_hash, file in hashes_to_verify:
+            files_to_hash.append([file_hash, binary_to_basename[file]])
+            del binary_to_basename[file]
+        if len(binary_to_basename) > 0:
+            log.error(f"Not all specified binaries are in {args.sums_file}")
+            return ReturnCode.NO_BINARIES_MATCH
+    else:
+        log.info(f"No binaries specified, assuming all files specified in {args.sums_file} are located relatively")
+        for file_hash, file in hashes_to_verify:
+            file_path = Path(sums_file_path.parent.joinpath(file))
+            if file_path.exists():
+                files_to_hash.append([file_hash, str(file_path)])
+            else:
+                missing_files.append(file)
+
+    # verify hashes
+    hashes_status, files_to_hashes = verify_binary_hashes(files_to_hash)
+    if hashes_status != ReturnCode.SUCCESS:
+        return hashes_status
+
+    if args.json:
+        output = {
+            'good_trusted_sigs': [str(s) for s in good_trusted],
+            'good_untrusted_sigs': [str(s) for s in good_untrusted],
+            'unknown_sigs': [str(s) for s in unknown],
+            'bad_sigs': [str(s) for s in bad],
+            'verified_binaries': files_to_hashes,
+            "missing_binaries": missing_files,
+        }
+        print(json.dumps(output, indent=2))
+    else:
+        for filename in files_to_hashes:
+            print(f"VERIFIED: {filename}")
+        for filename in missing_files:
+            print(f"MISSING: {filename}")
+
+    return ReturnCode.SUCCESS
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -636,6 +703,15 @@ def main():
         help=(
             f'If set, require all hosts ({HOST1}, {HOST2}) to provide signatures. '
             '(Sometimes bitcoin.org lags behind bitcoincore.org.)')
+    )
+
+    bin_parser = subparsers.add_parser("bin", help="Verify local binaries.")
+    bin_parser.set_defaults(func=verify_binaries_handler)
+    bin_parser.add_argument("--sums-sig-file", "-s", help="Path to the SHA256SUMS.asc file to verify")
+    bin_parser.add_argument("sums_file", help="Path to the SHA256SUMS file to verify")
+    bin_parser.add_argument(
+        "binary", nargs="*",
+        help="Path to a binary distribution file to verify. Can be specified multiple times for multiple files to verify."
     )
 
     args = parser.parse_args()
