@@ -137,12 +137,13 @@ def download_lines_with_urllib(url) -> t.Tuple[bool, t.List[str]]:
 
 
 def verify_with_gpg(
+    filename,
     signature_filename,
     output_filename: t.Optional[str] = None
 ) -> t.Tuple[int, str]:
     args = [
-        'gpg', '--yes', '--decrypt', '--verify-options', 'show-primary-uid-only',
-        '--output', output_filename if output_filename else '', signature_filename]
+        'gpg', '--yes', '--verify', '--verify-options', 'show-primary-uid-only',
+        '--output', output_filename if output_filename else '', signature_filename, filename]
 
     env = dict(os.environ, LANGUAGE='en')
     result = subprocess.run(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
@@ -332,13 +333,13 @@ def get_files_from_hosts_and_compare(
     return ReturnCode.SUCCESS
 
 
-def check_multisig(sigfilename: Path, args: argparse.Namespace) -> t.Tuple[int, str, t.List[SigData], t.List[SigData], t.List[SigData]]:
+def check_multisig(sums_file: str, sigfilename: str, args: argparse.Namespace) -> t.Tuple[int, str, t.List[SigData], t.List[SigData], t.List[SigData]]:
     # check signature
     #
     # We don't write output to a file because this command will almost certainly
     # fail with GPG exit code '2' (and so not writing to --output) because of the
     # likely presence of multiple untrusted signatures.
-    retval, output = verify_with_gpg(sigfilename)
+    retval, output = verify_with_gpg(sums_file, sigfilename)
 
     if args.verbose:
         log.info(f"gpg output:\n{indent(output)}")
@@ -356,7 +357,7 @@ def check_multisig(sigfilename: Path, args: argparse.Namespace) -> t.Tuple[int, 
                     log.warning(f"failed to retrieve key {unsig.key}")
 
         # Reparse the GPG output now that we have more keys
-        retval, output = verify_with_gpg(sigfilename)
+        retval, output = verify_with_gpg(sums_file, sigfilename)
         good, unknown, bad = parse_gpg_result(output.splitlines())
 
     return retval, output, good, unknown, bad
@@ -377,7 +378,7 @@ def verify_shasums_signature(
     min_good_sigs = args.min_good_sigs
     gpg_allowed_codes = [0, 2]  # 2 is returned when untrusted signatures are present.
 
-    gpg_retval, gpg_output, good, unknown, bad = check_multisig(signature_file_path, args)
+    gpg_retval, gpg_output, good, unknown, bad = check_multisig(sums_file_path, signature_file_path, args)
 
     if gpg_retval not in gpg_allowed_codes:
         if gpg_retval == 1:
