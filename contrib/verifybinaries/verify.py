@@ -42,7 +42,7 @@ import textwrap
 import urllib.request
 import enum
 from hashlib import sha256
-from pathlib import PurePath
+from pathlib import PurePath, Path
 
 # The primary host; this will fail if we can't retrieve files from here.
 HOST1 = "https://bitcoincore.org"
@@ -141,14 +141,19 @@ def verify_with_gpg(
     signature_filename,
     output_filename: t.Optional[str] = None
 ) -> t.Tuple[int, str]:
-    args = [
-        'gpg', '--yes', '--verify', '--verify-options', 'show-primary-uid-only',
-        '--output', output_filename if output_filename else '', signature_filename, filename]
+    with tempfile.NamedTemporaryFile() as status_file:
+        args = [
+            'gpg', '--yes', '--verify', '--verify-options', 'show-primary-uid-only', "--status-file", status_file.name,
+            '--output', output_filename if output_filename else '', signature_filename, filename]
 
-    env = dict(os.environ, LANGUAGE='en')
-    result = subprocess.run(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
-    log.debug(f'Result from GPG ({result.returncode}): {result.stdout}')
-    return result.returncode, result.stdout.decode().rstrip()
+        env = dict(os.environ, LANGUAGE='en')
+        result = subprocess.run(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
+
+        gpg_data = status_file.read().decode().rstrip()
+
+    log.debug(f'Result from GPG ({result.returncode}): {result.stdout.decode()}')
+    log.debug(f"{gpg_data}")
+    return result.returncode, gpg_data
 
 
 def remove_files(filenames):
@@ -158,11 +163,14 @@ def remove_files(filenames):
 
 class SigData:
     """GPG signature data as parsed from GPG stdout."""
-    def __init__(self, key: str, name: str, trusted: bool, status: str):
-        self.key = key
-        self.name = name
-        self.trusted = trusted
-        self.status = status
+    def __init__(self):
+        self.key = None
+        self.name = ""
+        self.trusted = False
+        self.status = ""
+
+    def __bool__(self):
+        return self.key is not None
 
     def __repr__(self):
         return (
@@ -174,60 +182,60 @@ def parse_gpg_result(
     output: t.List[str]
 ) -> t.Tuple[t.List[SigData], t.List[SigData], t.List[SigData]]:
     """Returns good, unknown, and bad signatures from GPG stdout."""
-    good_sigs = []
-    unknown_sigs = []
-    bad_sigs = []
+    good_sigs: t.List[SigData] = []
+    unknown_sigs: t.List[SigData] = []
+    bad_sigs: t.List[SigData] = []
     total_resolved_sigs = 0
-    curr_key = None
 
     # Ensure that all lines we match on include a prefix that prevents malicious input
     # from fooling the parser.
     def line_begins_with(patt: str, line: str) -> t.Optional[re.Match]:
-        return re.match(r'^\s*(gpg:)?(\s+)' + patt, line)
+        return re.match(r'^(\[GNUPG:\])\s+' + patt, line)
 
-    detected_name = ''
+    curr_sigs = unknown_sigs
+    curr_sigdata = SigData()
 
-    for i, line in enumerate(output):
-        if line_begins_with(r"using (ECDSA|RSA) key (0x[0-9a-fA-F]{16}|[0-9a-fA-F]{40})$", line):
-            if curr_key:
-                raise RuntimeError(
-                    f"WARNING: encountered a new sig without resolving the last ({curr_key}) - "
-                    "this could mean we have encountered a bad signature! check GPG output!")
-            curr_key = line.split('key ')[-1].strip()
-            assert len(curr_key) == 40 or (len(curr_key) == 18 and curr_key.startswith('0x'))
-
-        if line_begins_with(r"Can't check signature: No public key$", line):
-            if not curr_key:
-                raise RuntimeError("failed to detect signature being resolved")
-            unknown_sigs.append(SigData(curr_key, detected_name, False, ''))
-            detected_name = ''
-            curr_key = None
-
-        if line_begins_with(r'Good signature from (".+")(\s+)(\[.+\])$', line):
-            if not curr_key:
-                raise RuntimeError("failed to detect signature being resolved")
-            name, status = parse_gpg_from_line(line)
-
-            # It's safe to index output[i + 1] because if we saw a good sig, there should
-            # always be another line
-            trusted = (
-                'This key is not certified with a trusted signature' not in output[i + 1])
-            good_sigs.append(SigData(curr_key, name, trusted, status))
-            curr_key = None
-
-        if line_begins_with("issuer ", line):
-            detected_name = line.split("issuer ")[-1].strip('"')
-
-        if 'bad signature from' in line.lower():
-            if not curr_key:
-                raise RuntimeError("failed to detect signature being resolved")
-            name, status = parse_gpg_from_line(line)
-            bad_sigs.append(SigData(curr_key, name, False, status))
-            curr_key = None
-
-        # Track total signatures included
-        if line_begins_with('Signature made ', line):
+    for line in output:
+        if line_begins_with(r"NEWSIG(?:\s|$)", line):
             total_resolved_sigs += 1
+            if curr_sigdata:
+                curr_sigs.append(curr_sigdata)
+                curr_sigdata = SigData()
+            newsig_split = line.split()
+            if len(newsig_split) == 3:
+                curr_sigdata.name = newsig_split[2]
+
+        elif line_begins_with(r"GOODSIG(?:\s|$)", line):
+            curr_sigdata.key, curr_sigdata.name = line.split(maxsplit=3)[2:4]
+            curr_sigs = good_sigs
+
+        elif line_begins_with(r"EXPKEYSIG(?:\s|$)", line):
+            curr_sigdata.key, curr_sigdata.name = line.split(maxsplit=3)[2:4]
+            curr_sigs = good_sigs
+            curr_sigdata.status = "expired"
+
+        elif line_begins_with(r"REVKEYSIG(?:\s|$)", line):
+            curr_sigdata.key, curr_sigdata.name = line.split(maxsplit=3)[2:4]
+            curr_sigs = good_sigs
+            curr_sigdata.status = "revoked"
+
+        elif line_begins_with(r"BADSIG(?:\s|$)", line):
+            curr_sigdata.key, curr_sigdata.name = line.split(maxsplit=3)[2:4]
+            curr_sigs = bad_sigs
+
+        elif line_begins_with(r"ERRSIG(?:\s|$)", line):
+            curr_sigdata.key, _, _, _, _, _ = line.split()[2:8]
+            curr_sigs = unknown_sigs
+
+        elif line_begins_with(r"TRUST_(UNDEFINED|NEVER)(?:\s|$)", line):
+            curr_sigdata.trusted = False
+
+        elif line_begins_with(r"TRUST_(MARGINAL|FULLY|ULTIMATE)(?:\s|$)", line):
+            curr_sigdata.trusted = True
+
+    # The last one won't have been added, so add it now
+    assert curr_sigdata
+    curr_sigs.append(curr_sigdata)
 
     all_found = len(good_sigs + bad_sigs + unknown_sigs)
     if all_found != total_resolved_sigs:
@@ -236,19 +244,6 @@ def parse_gpg_result(
             f"but expected {total_resolved_sigs}")
 
     return (good_sigs, unknown_sigs, bad_sigs)
-
-
-def parse_gpg_from_line(line: str) -> t.Tuple[str, str]:
-    """Returns name and expiration status."""
-    assert 'signature from' in line
-
-    name_end = line.split(' from ')[-1]
-    m = re.search(r'(?P<name>".+") \[(?P<status>\w+)\]', name_end)
-    assert m
-    (name, status) = m.groups()
-    name = name.strip('"\'')
-
-    return (name, status)
 
 
 def files_are_equal(filename1, filename2):
