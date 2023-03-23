@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <i2p.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -10,7 +11,6 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 #include <util/threadinterrupt.h>
 
 void initialize_i2p()

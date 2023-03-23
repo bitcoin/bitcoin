@@ -5,6 +5,7 @@
 
 #include <banman.h>
 
+#include <logging.h>
 #include <netaddress.h>
 #include <node/interface_ui.h>
 #include <sync.h>

@@ -8,6 +8,7 @@
 #include <addrman.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/args.h>
 #include <cstdint>
 #include <hash.h>
 #include <logging.h>
@@ -21,7 +22,6 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/settings.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 namespace {

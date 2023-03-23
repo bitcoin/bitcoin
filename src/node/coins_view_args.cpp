@@ -4,8 +4,8 @@
 
 #include <node/coins_view_args.h>
 
+#include <common/args.h>
 #include <txdb.h>
-#include <util/system.h>
 
 namespace node {
 void ReadCoinsViewArgs(const ArgsManager& args, CoinsViewOptions& options)

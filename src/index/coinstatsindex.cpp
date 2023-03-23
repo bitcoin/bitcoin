@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <coins.h>
+#include <common/args.h>
 #include <crypto/muhash.h>
 #include <index/coinstatsindex.h>
 #include <kernel/coinstats.h>
@@ -12,7 +13,6 @@
 #include <serialize.h>
 #include <txdb.h>
 #include <undo.h>
-#include <util/system.h>
 #include <validation.h>
 
 using kernel::CCoinsStats;
