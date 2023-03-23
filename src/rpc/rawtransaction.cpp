@@ -926,7 +926,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     bool test_accept_res;
     {
         LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx), &missing_inputs,
+        test_accept_res = AcceptToMemoryPool(::ChainstateActive(), mempool, state, std::move(tx), &missing_inputs,
             false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
     }
     result_0.pushKV("allowed", test_accept_res);

@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
         LOCK(cs_main);
 
         CValidationState state;
-        return AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(tx), nullptr /* pfMissingInputs */,
+        return AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool, state, MakeTransactionRef(tx), nullptr /* pfMissingInputs */,
                                 true /* bypass_limits */, 0 /* nAbsurdFee */);
     };
 

@@ -2272,7 +2272,7 @@ void static ProcessOrphanTx(CConnman& connman, CTxMemPool& mempool, std::set<uin
         CValidationState orphan_state;
 
         if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(mempool, orphan_state, porphanTx, &fMissingInputs2 /* pfMissingInputs */,
+        if (AcceptToMemoryPool(::ChainstateActive(), mempool, orphan_state, porphanTx, &fMissingInputs2 /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanTx.GetHash(), connman);
@@ -3368,7 +3368,7 @@ void PeerLogicValidation::ProcessMessage(
         bool fMissingInputs = false;
         CValidationState state;
 
-        if (!AlreadyHave(inv, m_mempool, *m_llmq_ctx) && AcceptToMemoryPool(m_mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
+        if (!AlreadyHave(inv, m_mempool, *m_llmq_ctx) && AcceptToMemoryPool(::ChainstateActive(), m_mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
