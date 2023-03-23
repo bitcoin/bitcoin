@@ -677,17 +677,18 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
 bool CSuperblock::IsExpired(const CGovernanceManager& governanceManager) const
 {
     int nExpirationBlocks;
-    // Executed triggers are kept for another superblock cycle (approximately 1 month),
-    // other valid triggers are kept for ~1 day only, everything else is pruned after ~1h.
+    // Executed triggers are kept for another superblock cycle (approximately 1 month for mainnet).
+    // Other valid triggers are kept for ~1 day only (for mainnet, but no longer than a superblock cycle for other networks).
+    // Everything else is pruned after ~1h (for mainnet, but no longer than a superblock cycle for other networks).
     switch (nStatus) {
     case SEEN_OBJECT_EXECUTED:
         nExpirationBlocks = Params().GetConsensus().nSuperblockCycle;
         break;
     case SEEN_OBJECT_IS_VALID:
-        nExpirationBlocks = 576;
+        nExpirationBlocks = std::min(576, Params().GetConsensus().nSuperblockCycle);
         break;
     default:
-        nExpirationBlocks = 24;
+        nExpirationBlocks = std::min(24, Params().GetConsensus().nSuperblockCycle);
         break;
     }
 
