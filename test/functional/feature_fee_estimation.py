@@ -257,19 +257,22 @@ class EstimateFeeTest(BitcoinTestFramework):
                 tx = make_tx(self.wallet, u, low_feerate)
                 utxos_to_respend.append(u)
                 txids_to_replace.append(tx["txid"])
+                # De-prioritise the transactions on the miner so they aren't accepted to mempool
+                miner.prioritisetransaction(tx["txid"], fee_delta=-COIN)
                 txs.append(tx)
             # Broadcast 5 low fee transaction which don't need to
+            non_rbf_txids = []
             for _ in range(5):
                 tx = make_tx(self.wallet, utxos.pop(0), low_feerate)
                 txs.append(tx)
+                non_rbf_txids.append(tx["txid"])
             batch_send_tx = [node.sendrawtransaction.get_request(tx["hex"]) for tx in txs]
             for n in self.nodes:
                 n.batch(batch_send_tx)
+            # Not all transactions will be accepted by the miner. Wait until the non-RBF transactions arrive.
+            self.wait_until(lambda: all([txid in miner.getrawmempool() for txid in non_rbf_txids]))
             # Mine the transactions on another node
-            self.sync_mempools(wait=0.1, nodes=[node, miner])
-            for txid in txids_to_replace:
-                miner.prioritisetransaction(txid=txid, fee_delta=-COIN)
-            self.generate(miner, 1)
+            self.generate(miner, 1, sync_fun=self.sync_blocks)
             # RBF the low-fee transactions
             while len(utxos_to_respend) > 0:
                 u = utxos_to_respend.pop(0)
@@ -278,6 +281,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 txs.append(tx)
             dec_txs = [res["result"] for res in node.batch([node.decoderawtransaction.get_request(tx["hex"]) for tx in txs])]
             self.wallet.scan_txs(dec_txs)
+            self.sync_mempools(wait=0.1, nodes=[node, miner])
 
 
         # Mine the last replacement txs

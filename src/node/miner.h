@@ -150,8 +150,9 @@ private:
 
 public:
     struct Options {
-        // Configuration parameters for the block size
+        // Configuration parameters for the block size (configurable using -blockmaxweight)
         size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
+        // Minimum feerate of packages added to the block (and, by extension, the block overall)
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
@@ -200,7 +201,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 
-/** Apply -blockmintxfee and -blockmaxweight options from ArgsManager to BlockAssembler options. */
+/** Apply -blockmaxweight option from ArgsManager to BlockAssembler options. */
 void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& options);
 } // namespace node
 

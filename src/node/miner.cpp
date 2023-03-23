@@ -370,7 +370,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
             packageSigOpsCost = modit->nSigOpCostWithAncestors;
         }
 
-        if (packageFees < m_options.blockMinFeeRate.GetFee(packageSize)) {
+        if (packageFees <= 0 || packageFees < m_options.blockMinFeeRate.GetFee(packageSize)) {
             // Everything else we might consider has a lower fee rate
             return;
         }

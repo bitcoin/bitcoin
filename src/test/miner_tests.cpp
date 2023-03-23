@@ -56,7 +56,7 @@ struct MinerTestingSetup : public TestingSetup {
 
 BOOST_FIXTURE_TEST_SUITE(miner_tests, MinerTestingSetup)
 
-static CFeeRate blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
+static CFeeRate blockMinFeeRate = CFeeRate(1000);
 
 BlockAssembler MinerTestingSetup::AssemblerForTest(CTxMemPool& tx_mempool)
 {
