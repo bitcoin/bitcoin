@@ -39,7 +39,7 @@ fi
 if [ "${RUN_TIDY}" = "true" ]; then
   set -eo pipefail
   export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST/src/"
-  ( CI_EXEC run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  ( CI_EXEC run-clang-tidy-15 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
   export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST/"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
           " src/common/init.cpp"\
