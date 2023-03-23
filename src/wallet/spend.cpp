@@ -407,7 +407,8 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                           const CoinsResult& coins,
                           const CoinSelectionParams& coin_sel_params,
-                          const std::vector<SelectionFilter>& filters)
+                          const std::vector<SelectionFilter>& filters,
+                          std::vector<OutputGroup>& ret_discarded_groups)
 {
     FilteredOutputGroups filtered_groups;
 
@@ -424,11 +425,14 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                 group.Insert(std::make_shared<COutput>(output), ancestors, descendants);
 
                 // Each filter maps to a different set of groups
+                bool accepted = false;
                 for (const auto& sel_filter : filters) {
                     const auto& filter = sel_filter.filter;
                     if (!group.EligibleForSpending(filter)) continue;
                     filtered_groups[filter].Push(group, type, /*insert_positive=*/true, /*insert_mixed=*/true);
+                    accepted = true;
                 }
+                if (!accepted) ret_discarded_groups.emplace_back(group);
             }
         }
         return filtered_groups;
@@ -492,6 +496,7 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                 const OutputGroup& group = *group_it;
 
                 // Each filter maps to a different set of groups
+                bool accepted = false;
                 for (const auto& sel_filter : filters) {
                     const auto& filter = sel_filter.filter;
                     if (!group.EligibleForSpending(filter)) continue;
@@ -504,7 +509,9 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                     OutputType type = script.second;
                     // Either insert the group into the positive-only groups or the mixed ones.
                     filtered_groups[filter].Push(group, type, positive_only, /*insert_mixed=*/!positive_only);
+                    accepted = true;
                 }
+                if (!accepted) ret_discarded_groups.emplace_back(group);
             }
         }
     };
@@ -513,6 +520,15 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
     push_output_groups(spk_to_positive_groups_map, /*positive_only=*/ true);
 
     return filtered_groups;
+}
+
+FilteredOutputGroups GroupOutputs(const CWallet& wallet,
+                                  const CoinsResult& coins,
+                                  const CoinSelectionParams& params,
+                                  const std::vector<SelectionFilter>& filters)
+{
+    std::vector<OutputGroup> unused;
+    return GroupOutputs(wallet, coins, params, filters, unused);
 }
 
 // Returns true if the result contains an error and the message is not empty
@@ -685,7 +701,24 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         }
 
         // Group outputs and map them by coin eligibility filter
-        FilteredOutputGroups filtered_groups = GroupOutputs(wallet, available_coins, coin_selection_params, ordered_filters);
+        std::vector<OutputGroup> discarded_groups;
+        FilteredOutputGroups filtered_groups = GroupOutputs(wallet, available_coins, coin_selection_params, ordered_filters, discarded_groups);
+
+        // Check if we still have enough balance after applying filters (some coins might be discarded)
+        CAmount total_discarded = 0;
+        CAmount total_unconf_long_chain = 0;
+        for (const auto& group : discarded_groups) {
+            total_discarded += group.GetSelectionAmount();
+            if (group.m_ancestors >= max_ancestors || group.m_descendants >= max_descendants) total_unconf_long_chain += group.GetSelectionAmount();
+        }
+
+        if (CAmount total_amount = available_coins.GetTotalAmount() - total_discarded < value_to_select) {
+            // Special case, too-long-mempool cluster.
+            if (total_amount + total_unconf_long_chain > value_to_select) {
+                return util::Result<SelectionResult>({_("Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool")});
+            }
+            return util::Result<SelectionResult>(util::Error()); // General "Insufficient Funds"
+        }
 
         // Walk-through the filters until the solution gets found.
         // If no solution is found, return the first detailed error (if any).
@@ -704,8 +737,13 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
                 if (HasErrorMsg(res)) res_detailed_errors.emplace_back(res);
             }
         }
-        // Coin Selection failed.
-        return res_detailed_errors.empty() ? util::Result<SelectionResult>(util::Error()) : res_detailed_errors.front();
+
+        // Return right away if we have a detailed error
+        if (!res_detailed_errors.empty()) return res_detailed_errors.front();
+
+
+        // General "Insufficient Funds"
+        return util::Result<SelectionResult>(util::Error());
     }();
 
     return res;
