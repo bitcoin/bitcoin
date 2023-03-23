@@ -2298,13 +2298,14 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
         // process new vector in batch checking the blobs
         BlockValidationState state;
         const auto time_1{SteadyClock::now()};
+        const auto nSizeChecks = vChecks.size();
         control.Add(std::move(vChecks));
         if (!control.Wait()){
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob(s)\n");
             return false;
         }
         const auto time_2{SteadyClock::now()};
-        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fms (%.2fms/blob)\n", vChecks.size(), Ticks<MillisecondsDouble>(time_2 - time_1), Ticks<MillisecondsDouble>(time_2 - time_1) / vChecks.size());
+        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fms (%.2fms/blob)\n", nSizeChecks, Ticks<MillisecondsDouble>(time_2 - time_1), Ticks<MillisecondsDouble>(time_2 - time_1) / nSizeChecks);
     }
     for (const auto &nevmDataPayload : vecNevmDataPayload) {
         mapPoDA.try_emplace(nevmDataPayload.vchVersionHash, nevmDataPayload.vchNEVMData);
