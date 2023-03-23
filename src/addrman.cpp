@@ -585,11 +585,10 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
             return false;
 
         // stochastic test: previous nRefCount == N: 2^N times harder to increase it
-        int nFactor = 1;
-        for (int n = 0; n < pinfo->nRefCount; n++)
-            nFactor *= 2;
-        if (nFactor > 1 && (insecure_rand.randrange(nFactor) != 0))
-            return false;
+        if (pinfo->nRefCount > 0) {
+            const int nFactor{1 << pinfo->nRefCount};
+            if (insecure_rand.randrange(nFactor) != 0) return false;
+        }
     } else {
         pinfo = Create(addr, source, &nId);
         pinfo->nTime = std::max(NodeSeconds{0s}, pinfo->nTime - time_penalty);
