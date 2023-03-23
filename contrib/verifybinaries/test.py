@@ -8,12 +8,12 @@ from pathlib import Path
 
 def main():
     """Tests ordered roughly from faster to slower."""
-    expect_code(run_verify('0.32'), 4, "Nonexistent version should fail")
-    expect_code(run_verify('0.32.awefa.12f9h'), 11, "Malformed version should fail")
-    expect_code(run_verify('22.0 --min-good-sigs 20'), 9, "--min-good-sigs 20 should fail")
+    expect_code(run_verify("", "pub", '0.32'), 4, "Nonexistent version should fail")
+    expect_code(run_verify("", "pub", '0.32.awefa.12f9h'), 11, "Malformed version should fail")
+    expect_code(run_verify('--min-good-sigs 20', "pub", "22.0"), 9, "--min-good-sigs 20 should fail")
 
     print("- testing multisig verification (22.0)", flush=True)
-    _220 = run_verify('22.0 --json')
+    _220 = run_verify("--json", "pub", "22.0")
     try:
         result = json.loads(_220.stdout.decode())
     except Exception:
@@ -29,12 +29,15 @@ def main():
     assert v['bitcoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
 
 
-def run_verify(extra: str) -> subprocess.CompletedProcess:
+def run_verify(global_args: str, command: str, command_args: str) -> subprocess.CompletedProcess:
     maybe_here = Path.cwd() / 'verify.py'
     path = maybe_here if maybe_here.exists() else Path.cwd() / 'contrib' / 'verifybinaries' / 'verify.py'
 
+    if command == "pub":
+        command += " --cleanup"
+
     return subprocess.run(
-        f"{path} --cleanup {extra}",
+        f"{path} {global_args} {command} {command_args}",
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
 
