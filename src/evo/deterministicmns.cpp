@@ -514,7 +514,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
     }
 
     if (dmn->nType == MnType::HighPerformance) {
-        if (!AddUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
+        if (dmn->pdmnState->platformNodeID != uint160() && !AddUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate platformNodeID=%s", __func__,
                                                dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
@@ -615,7 +615,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     }
 
     if (dmn->nType == MnType::HighPerformance) {
-        if (!DeleteUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
+        if (dmn->pdmnState->platformNodeID != uint160() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a duplicate platformNodeID=%s", __func__,
                                                dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
