@@ -18,8 +18,8 @@ Otherwise, you may choose from one of the following options to install Guix:
    - Works on nearly all Linux distributions
    - Installs any release
    - Binary installation only, requires high level of trust
-3. Using fanquake's **Docker image** [↗︎ external instructions][install-fanquake-docker]
-   - Maintained by fanquake
+3. Using **Docker image** [↗︎ external instructions][install-docker]
+   - Maintained by pastapastapasta
    - Easy (automatically performs *some* setup)
    - Works wherever Docker images work
    - Installs any release
@@ -57,10 +57,10 @@ Regardless of which installation option you chose, the changes to
 `/etc/profile.d` will not take effect until the next shell or desktop session,
 so you should log out and log back in.
 
-## Option 3: Using fanquake's Docker image
+## Option 3: Using Docker image
 
-Please refer to fanquake's instructions
-[here](https://github.com/fanquake/core-review/tree/master/guix).
+Please refer to Docker's image
+[here](https://github.com/dashpay/dash/tree/master/contrib/guix/Dockerfile).
 
 Note that the `Dockerfile` is largely equivalent to running through the binary
 tarball installation steps.
@@ -480,7 +480,7 @@ in the Guix Reference Manual for more details.
 
 ## Optional setup
 
-At this point, you are set up to [use Guix to build Bitcoin
+At this point, you are set up to [use Guix to build Dash
 Core](./README.md#usage). However, if you want to polish your setup a bit and
 make it "what Guix intended", then read the next few subsections.
 
@@ -488,7 +488,7 @@ make it "what Guix intended", then read the next few subsections.
 
 This section definitely does not apply to you if you installed Guix using:
 1. The shell installer script
-2. fanquake's Docker image
+2. Docker image
 3. Debian's `guix` package
 
 #### Background
@@ -801,7 +801,7 @@ Please see the following links for more details:
 
 [install-script]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-bin-tarball]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
-[install-fanquake-docker]: #option-3-using-fanquakes-docker-image
+[install-docker]: #option-3-using-docker-image
 [install-distro-pkg]: #option-4-using-a-distribution-maintained-package
 [install-source]: #option-5-building-from-source
 
