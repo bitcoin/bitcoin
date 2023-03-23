@@ -5,7 +5,7 @@
 """Test transaction time during old block rescanning
 """
 
-import threading
+import concurrent.futures
 import time
 
 from test_framework.authproxy import JSONRPCException
@@ -201,25 +201,24 @@ class TransactionTimeRescanTest(SyscoinTestFramework):
             encrypted_wallet.walletpassphrase("passphrase", 99999)
             encrypted_wallet.sethdseed(seed=hd_seed)
 
-            t = threading.Thread(target=encrypted_wallet.rescanblockchain)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread:
+                with minernode.assert_debug_log(expected_msgs=["Rescan started from block 28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194... (slow variant inspecting all blocks)"], timeout=5):
+                    rescanning = thread.submit(encrypted_wallet.rescanblockchain)
 
-            with minernode.assert_debug_log(expected_msgs=[f'Rescan started from block 28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194... (slow variant inspecting all blocks)'], timeout=5):
-                t.start()
+                # set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
+                minernode.cli("-rpcwallet=encrypted_wallet").walletpassphrase("passphrase", 1)
 
-            # set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
-            minernode.cli("-rpcwallet=encrypted_wallet").walletpassphrase("passphrase", 1)
+                try:
+                    minernode.cli("-rpcwallet=encrypted_wallet").walletlock()
+                except JSONRPCException as e:
+                    assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
 
-            try:
-                minernode.cli("-rpcwallet=encrypted_wallet").walletlock()
-            except JSONRPCException as e:
-                assert e.error['code'] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error['message']
+                try:
+                    minernode.cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
+                except JSONRPCException as e:
+                    assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
 
-            try:
-                minernode.cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
-            except JSONRPCException as e:
-                assert e.error['code'] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error['message']
-
-            t.join()
+                assert_equal(rescanning.result(), {"start_height": 0, "stop_height": 803})
 
             assert_equal(encrypted_wallet.getbalance(), temp_wallet.getbalance())
 
