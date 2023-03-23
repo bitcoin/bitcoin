@@ -83,6 +83,7 @@ BITCOIN_TESTS =\
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
+  test/codex32_tests.cpp \
   test/coins_tests.cpp \
   test/coinstatsindex_tests.cpp \
   test/compilerbug_tests.cpp \
