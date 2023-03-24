@@ -1,5 +1,6 @@
-Bitcoin Core integration/staging tree
-=====================================
+=====================================  
+Bitcoin Core integration/staging tree  
+=====================================  
 Fork Updates:
    - v0.0.2 - Added to build.sh file, HEX with preconfig of bitcoin.conf  
                 with all options on file to improve the user access  
