@@ -4096,8 +4096,6 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
     while (true) {
         if (ShutdownRequested()) break;
 
-        // Make sure the queue of validation callbacks doesn't grow unboundedly.
-        LimitValidationInterfaceQueue();
         // Lock for as long as disconnectpool is in scope to make sure MaybeUpdateMempoolForReorg is
         // called after DisconnectTip without unlocking in between
         LOCK(MempoolMutex());
