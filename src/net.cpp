@@ -917,7 +917,7 @@ bool CConnman::AttemptToEvictConnection()
                 .m_is_local = node->addr.IsLocal(),
                 .m_network = node->ConnectedThroughNetwork(),
                 .m_noban = node->HasPermission(NetPermissionFlags::NoBan),
-                .m_conn_type = node->GetConnectionType(),
+                .m_conn_type = node->m_conn_type,
             };
             vEvictionCandidates.push_back(candidate);
         }
@@ -1092,7 +1092,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
 
     // Count existing connections
     int existing_connections = WITH_LOCK(m_nodes_mutex,
-                                         return std::count_if(m_nodes.begin(), m_nodes.end(), [conn_type](CNode* node) { return node->GetConnectionType() == conn_type; }););
+                                         return std::count_if(m_nodes.begin(), m_nodes.end(), [conn_type](CNode* node) { return node->m_conn_type == conn_type; }););
 
     // Max connections of specified type already exist
     if (max_connections != std::nullopt && existing_connections >= max_connections) return false;
@@ -1711,7 +1711,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
                 // Make sure our persistent outbound slots belong to different netgroups.
-                switch (pnode->GetConnectionType()) {
+                switch (pnode->m_conn_type) {
                     // We currently don't take inbound connections into account. Since they are
                     // free to make, an attacker could make them to prevent us from connecting to
                     // certain peers.
@@ -2777,9 +2777,9 @@ CNode::CNode(NodeId idIn,
       m_inbound_onion{inbound_onion},
       m_prefer_evict{node_opts.prefer_evict},
       nKeyedNetGroup{nKeyedNetGroupIn},
+      m_conn_type{conn_type_in},
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
-      m_conn_type{conn_type_in},
       m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);

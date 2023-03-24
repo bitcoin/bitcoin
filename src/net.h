@@ -418,10 +418,7 @@ public:
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
 
-    const ConnectionType& GetConnectionType() const
-    {
-        return m_conn_type;
-    }
+    const ConnectionType m_conn_type;
 
     /** Move all messages from the received queue to the processing queue. */
     void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
@@ -622,7 +619,6 @@ public:
 private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
-    const ConnectionType m_conn_type;
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
