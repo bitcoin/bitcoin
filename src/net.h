@@ -134,6 +134,18 @@ struct CSerializedNetMsg {
     std::vector<unsigned char> data;
     std::string m_type;
 };
+// SYSCOIN
+struct CAllNodes {
+    bool operator() (const CNode* pNode) const {return pNode != nullptr;}
+};
+static constexpr CAllNodes AllNodes{};
+// Whether the node should be passed out in ForEach* callbacks
+bool NodeFullyConnected(const CNode* pnode);
+struct CFullyConnectedOnly {
+    bool operator() (const CNode* pnode) const {
+        return NodeFullyConnected(pnode);
+    }
+};
 static constexpr CFullyConnectedOnly FullyConnectedOnly{};
 
 /**
@@ -1167,8 +1179,8 @@ private:
      */
     std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
 
-    // Whether the node should be passed out in ForEach* callbacks
-    static bool NodeFullyConnected(const CNode* pnode);
+    // SYSCOIN Whether the node should be passed out in ForEach* callbacks
+    // static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     mutable Mutex m_total_bytes_sent_mutex;
@@ -1388,16 +1400,6 @@ private:
     friend struct ConnmanTestMsg;
 };
 // SYSCOIN
-struct CAllNodes {
-    bool operator() (const CNode* pNode) const {return pNode != nullptr;}
-};
-static constexpr CAllNodes AllNodes{};
-// Whether the node should be passed out in ForEach* callbacks
-struct CFullyConnectedOnly {
-    bool operator() (const CNode* pnode) const {
-        return CConnmann::NodeFullyConnected(pnode);
-    }
-};
 class CExplicitNetCleanup
 {
 public:

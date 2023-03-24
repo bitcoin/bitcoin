@@ -3361,8 +3361,8 @@ std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage(size_t recv_flood
 
     return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
-
-bool CConnman::NodeFullyConnected(const CNode* pnode)
+// SYSCOIN
+bool NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
