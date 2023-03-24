@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction* RPCs."""
@@ -12,8 +12,11 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def get_keys(self):
-        node0,node1,node2 = self.nodes
+        node0, node1, node2 = self.nodes
         self.add = [node1.getnewaddress() for _ in range(self.nkeys)]
         self.pub = [node1.getaddressinfo(a)["pubkey"] for a in self.add]
         self.priv = [node1.dumpprivkey(a) for a in self.add]
