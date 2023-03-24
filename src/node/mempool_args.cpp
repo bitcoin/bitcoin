@@ -7,8 +7,8 @@
 #include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
-#include <chainparams.h>
 #include <consensus/amount.h>
+#include <kernel/chainparams.h>
 #include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>

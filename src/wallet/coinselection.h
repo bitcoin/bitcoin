@@ -153,6 +153,11 @@ struct CoinSelectionParams {
      * associated with the same address. This helps reduce privacy leaks resulting from address
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
+    /**
+     * When true, allow unsafe coins to be selected during Coin Selection. This may spend unconfirmed outputs:
+     * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
+     */
+    bool m_include_unsafe_inputs = false;
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
@@ -222,8 +227,6 @@ struct OutputGroup
     CAmount effective_value{0};
     /** The fee to spend these UTXOs at the effective feerate. */
     CAmount fee{0};
-    /** The target feerate of the transaction we're trying to build. */
-    CFeeRate m_effective_feerate{0};
     /** The fee to spend these UTXOs at the long term feerate. */
     CAmount long_term_fee{0};
     /** The feerate for spending a created change output eventually (i.e. not urgently, and thus at
@@ -238,7 +241,6 @@ struct OutputGroup
 
     OutputGroup() {}
     OutputGroup(const CoinSelectionParams& params) :
-        m_effective_feerate(params.m_effective_feerate),
         m_long_term_feerate(params.m_long_term_feerate),
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
@@ -266,8 +268,6 @@ struct OutputGroupTypeMap
     // Based on the insert flag; appends group to the 'mixed_group' and, if value > 0, to the 'positive_group'.
     // This affects both; the groups filtered by type and the overall groups container.
     void Push(const OutputGroup& group, OutputType type, bool insert_positive, bool insert_mixed);
-    // Retrieves 'Groups' filtered by type
-    std::optional<Groups> Find(OutputType type);
     // Different output types count
     size_t TypesCount() { return groups_by_type.size(); }
 };
