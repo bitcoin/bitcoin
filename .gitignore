@@ -150,3 +150,7 @@ dist/
 /guix-build-*
 
 /ci/scratch/
+
+# clangd
+.cache/
+compile_commands.json
