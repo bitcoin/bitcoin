@@ -1,6 +1,13 @@
 Bitcoin Core integration/staging tree
 =====================================
+Fork Updates:
+   - v0.0.2 - Added to build.sh file, HEX with preconfig of bitcoin.conf
+                with all options on file to improve the user access
+                all describe on: https://bitcoin.org/en/full-node#configuration-file          
 
+   - v0.0.1 - Added build.sh to compile and make the bitcoin-core/node
+
+=====================================
 https://bitcoincore.org
 
 For an immediately usable, binary version of the Bitcoin Core software, see
