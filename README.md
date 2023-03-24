@@ -1,86 +1,46 @@
+=====================================   
+Bitcoin Core integration/staging tree   
+License  
+-------  
+Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more  
+information or see https://opensource.org/licenses/MIT.  
+https://bitcoincore.org/en/download/.  
 =====================================  
-Bitcoin Core integration/staging tree  
-=====================================  
-Fork Updates:
-   - v0.0.2 - Added to build.sh file, HEX with preconfig of bitcoin.conf  
+Fork Updates:  
+   - v0.0.2 - Added to build.sh file, Base16 with preconfig of bitcoin.conf  
                 with all options on file to improve the user access  
                 all describe on: https://bitcoin.org/en/full-node#configuration-file          
   
    - v0.0.1 - Added build.sh to compile and make the bitcoin-core/node  
   
 =====================================  
-https://bitcoincore.org  
-  
-For an immediately usable, binary version of the Bitcoin Core software, see  
-https://bitcoincore.org/en/download/.  
-  
-What is Bitcoin Core?  
----------------------  
-  
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
-validate blocks and transactions. It also includes a wallet and graphical user
-interface, which can be optionally built.
-
-Further information about Bitcoin Core is available in the [doc folder](/doc).
-
-License
--------
-
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
-
-Development Process
--------------------
-
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
-
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
-
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
-
-Testing
--------
-
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
-
-### Automated Testing
-
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
-
-There are also [regression and integration tests](/test), written
-in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
-
-The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
-and that unit/sanity tests are run automatically.
-
-### Manual Quality Assurance (QA) Testing
-
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
-
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+    
+Explaining Bitcoin.conf  
+testnet=0: This setting specifies whether to run on the testnet (1) or the main network (0).  
+server=1: This setting enables the Bitcoin Core node to act as a server and accept incoming connections.  
+rpcbind=127.0.0.1: This setting specifies the IP address that the Bitcoin Core node will listen on for incoming JSON-RPC API requests.  
+rpcallowip=127.0.0.1: This setting specifies which IP addresses are allowed to make JSON-RPC API requests to the Bitcoin Core node. In this case, only the local machine is allowed.  
+rpcuser=<your rpc username>: This setting specifies the username for accessing the JSON-RPC API.  
+rpcpassword=<your rpc password>: This setting specifies the password for accessing the JSON-RPC API.  
+prune=550: This setting specifies the maximum amount of disk space that the Bitcoin Core node will use for storing blockchain data, in megabytes. In this case, pruning is enabled and the node will store at most 550 MB of data.  
+dbcache=1024: This setting specifies the amount of memory that the Bitcoin Core node will use for caching database entries, in megabytes.  
+maxmempool=500: This setting specifies the maximum size of the transaction memory pool, in megabytes.  
+maxconnections=40: This setting specifies the maximum number of peer connections that the Bitcoin Core node will establish.  
+banscore=10000: This setting specifies the score threshold for banning misbehaving peers.  
+bantime=604800: This setting specifies the duration of a ban, in seconds.  
+whitelist=127.0.0.1: This setting specifies a list of IP addresses that the Bitcoin Core node will never ban.  
+disablewallet=1: This setting disables the wallet functionality of the Bitcoin Core node.  
+listenonion=0: This setting specifies whether the Bitcoin Core node should listen for incoming Tor connections.  
+onlynet=ipv4: This setting specifies which network protocols to use.  
+proxy=127.0.0.1:9050: This setting specifies the SOCKS5 proxy address for outgoing connections.  
+dbcrashverify=1: This setting enables verification of database entries after a crash.  
+walletdisableprivkeys=1: This setting disables private key operations on the wallet.  
+maxsigcachesize=1: This setting specifies the maximum signature cache size, in megabytes.  
+maxscriptvalidationthreads=1: This setting specifies the maximum number of script validation threads.  
+maxstackmemoryusageconsensus=1000000: This setting specifies the maximum stack memory usage, in bytes.  
+checkpoints=0: This setting disables checkpoints.  
+maxuploadtarget=5000: This setting specifies the maximum upload bandwidth, in kilobytes per second.  
+debug=0: This setting disables debug logging.  
+logips=1: This setting enables logging of IP addresses.  
+logtimestamps=1: This setting enables logging of timestamps.  
+upnp=0: This setting disables UP  
