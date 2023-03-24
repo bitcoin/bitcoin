@@ -125,7 +125,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     std::vector<CNodeStats> stats;
     connman.GetNodeStats(stats);
     (void)connman.GetOutboundTargetBytesLeft();
-    (void)connman.GetReceiveFloodSize();
     (void)connman.GetTotalBytesRecv();
     (void)connman.GetTotalBytesSent();
     (void)connman.GetTryNewOutboundPeer();

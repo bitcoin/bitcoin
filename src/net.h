@@ -350,6 +350,7 @@ struct CNodeOptions
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
+    size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
 };
 
 /** Information about a peer */
@@ -421,7 +422,7 @@ public:
     const ConnectionType m_conn_type;
 
     /** Move all messages from the received queue to the processing queue. */
-    void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
+    void MarkReceivedMsgsForProcessing()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     /** Poll the next message from the processing queue of this connection.
@@ -429,7 +430,7 @@ public:
      * Returns std::nullopt if the processing queue is empty, or a pair
      * consisting of the message and a bool that indicates if the processing
      * queue has more entries. */
-    std::optional<std::pair<CNetMessage, bool>> PollMessage(size_t recv_flood_size)
+    std::optional<std::pair<CNetMessage, bool>> PollMessage()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     /** Account for the total size of a sent message in the per msg type connection stats. */
@@ -621,6 +622,7 @@ private:
     const uint64_t nLocalHostNonce;
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
+    const size_t m_recv_flood_size;
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     Mutex m_msg_process_queue_mutex;
@@ -882,8 +884,6 @@ public:
 
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
-
-    unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
