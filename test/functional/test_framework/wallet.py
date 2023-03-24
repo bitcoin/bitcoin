@@ -14,6 +14,7 @@ from typing import (
 )
 from test_framework.address import (
     base58_to_byte,
+    bech32_to_bytes,
     create_deterministic_address_bcrt1_p2tr_op_true,
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
@@ -49,6 +50,7 @@ from test_framework.script_util import (
     key_to_p2sh_p2wpkh_script,
     key_to_p2wpkh_script,
     keyhash_to_p2pkh_script,
+    program_to_witness_script,
     scripthash_to_p2sh_script,
 )
 from test_framework.util import (
@@ -414,6 +416,9 @@ def getnewdestination(address_type='bech32m'):
 
 def address_to_scriptpubkey(address):
     """Converts a given address to the corresponding output script (scriptPubKey)."""
+    version, payload = bech32_to_bytes(address)
+    if version is not None:
+        return program_to_witness_script(version, payload) # testnet segwit scriptpubkey
     payload, version = base58_to_byte(address)
     if version == 111:  # testnet pubkey hash
         return keyhash_to_p2pkh_script(payload)
