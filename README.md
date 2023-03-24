@@ -6,6 +6,10 @@ Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYI
 information or see https://opensource.org/licenses/MIT.  
 https://bitcoincore.org/en/download/.  
   
+  Fork Dev Branch Progress:  
+   - v0.0.3 - Adding Consensus of Maturity to transactions of output.
+                the transaction only procced if the units of bitcoin in output
+                 already have reached in your maturity of lasts N blocks
    
 Fork Updates:  
    - v0.0.2 - Added to build.sh file, Base16 with preconfig of bitcoin.conf  
