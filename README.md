@@ -5,7 +5,8 @@ License
 Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more  
 information or see https://opensource.org/licenses/MIT.  
 https://bitcoincore.org/en/download/.  
-=====================================  
+  
+   
 Fork Updates:  
    - v0.0.2 - Added to build.sh file, Base16 with preconfig of bitcoin.conf  
                 with all options on file to improve the user access  
