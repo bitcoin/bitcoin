@@ -59,6 +59,25 @@ DecodeResult Decode(const std::string& str, CharLimit limit = CharLimit::BECH32)
 /** Return the positions of errors in a Bech32 string. */
 std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, CharLimit limit = CharLimit::BECH32);
 
+// The internal namespace is used for things shared between bech32(m) and codex32.
+// These functions should not be used except by other hrpstring-encoded codes.
+namespace internal {
+typedef std::vector<uint8_t> data;
+
+extern const char* CHARSET;
+extern const int8_t CHARSET_REV[128];
+
+/** Expand a HRP for use in checksum computation. */
+std::vector<unsigned char> PreparePolynomialCoefficients(const std::string& hrp, const data& values, size_t extra);
+
+/** Encode a hrpstring without concerning ourselves with checksum validity */
+std::string Encode(const std::string& hrp, const data& values, const data& checksum);
+
+/** Decode a hrpstring without concerning ourselves with checksum validity */
+std::pair<std::string, data> Decode(const std::string& str, size_t max_length, size_t checksum_length);
+
+} // namespace internal
+
 } // namespace bech32
 
 #endif // BITCOIN_BECH32_H
