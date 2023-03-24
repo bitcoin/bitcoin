@@ -46,9 +46,8 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.moved = 0
         for self.nkeys in [3, 5]:
             for self.nsigs in [2, 3]:
-                for self.output_type in ["bech32", "p2sh-segwit", "legacy"]:
-                    self.get_keys()
-                    self.do_multisig()
+                self.get_keys()
+                self.do_multisig()
 
         self.checkbalances()
 
@@ -67,14 +66,8 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         # Check all permutations of keys because order matters apparently
         for keys in itertools.permutations([pk0, pk1, pk2]):
             # Results should be the same as this legacy one
-            legacy_addr = node0.createmultisig(2, keys, 'legacy')['address']
-            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'legacy')['address'])
-
-            # Generate addresses with the segwit types. These should all make legacy addresses
-            assert_equal(legacy_addr, node0.createmultisig(2, keys, 'bech32')['address'])
-            assert_equal(legacy_addr, node0.createmultisig(2, keys, 'p2sh-segwit')['address'])
-            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'bech32')['address'])
-            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
+            legacy_addr = node0.createmultisig(2, keys)['address']
+            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '')['address'])
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
@@ -90,7 +83,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
     def check_addmultisigaddress_errors(self):
         self.log.info('Check that addmultisigaddress fails when the private keys are missing')
-        addresses = [self.nodes[1].getnewaddress(address_type='legacy') for _ in range(2)]
+        addresses = [self.nodes[1].getnewaddress() for _ in range(2)]
         assert_raises_rpc_error(-5, 'no full public key for address', lambda: self.nodes[0].addmultisigaddress(nrequired=1, keys=addresses))
         for a in addresses:
             # Importing all addresses should not change the result
@@ -99,7 +92,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
     def checkbalances(self):
         node0, node1, node2 = self.nodes
-        node0.generate(100)
+        node0.generate(1)
         self.sync_all()
 
         bal0 = node0.getbalance()
@@ -108,9 +101,10 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         height = node0.getblockchaininfo()["blocks"]
         assert 150 < height < 350
-        total = 149 * 50 + (height - 149 - 100) * 25
+        total = (height - 99 - 1) * 500 - decimal.Decimal("0.00001223") * 4
         assert bal1 == 0
         assert bal2 == self.moved
+
         assert bal0 + bal1 + bal2 == total
 
     def do_multisig(self):
@@ -118,23 +112,16 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         # Construct the expected descriptor
         desc = 'multi({},{})'.format(self.nsigs, ','.join(self.pub))
-        if self.output_type == 'legacy':
-            desc = 'sh({})'.format(desc)
-        elif self.output_type == 'p2sh-segwit':
-            desc = 'sh(wsh({}))'.format(desc)
-        elif self.output_type == 'bech32':
-            desc = 'wsh({})'.format(desc)
+        desc = 'sh({})'.format(desc)
         desc = descsum_create(desc)
 
-        msig = node2.createmultisig(self.nsigs, self.pub, self.output_type)
+        msig = node2.createmultisig(self.nsigs, self.pub)
         madd = msig["address"]
         mredeem = msig["redeemScript"]
         assert_equal(desc, msig['descriptor'])
-        if self.output_type == 'bech32':
-            assert madd[0:4] == "bcrt"  # actually a bech32 address
 
         # compare against addmultisigaddress
-        msigw = node1.addmultisigaddress(self.nsigs, self.pub, None, self.output_type)
+        msigw = node1.addmultisigaddress(self.nsigs, self.pub, None)
         maddw = msigw["address"]
         mredeemw = msigw["redeemScript"]
         assert_equal(desc, drop_origins(msigw['descriptor']))
@@ -160,28 +147,15 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         prevtx_err = dict(prevtxs[0])
         del prevtx_err["redeemScript"]
 
-        assert_raises_rpc_error(-8, "Missing redeemScript/witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+        assert_raises_rpc_error(-3, "Missing redeemScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
 
-        # if witnessScript specified, all ok
-        prevtx_err["witnessScript"] = prevtxs[0]["redeemScript"]
-        node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
-
-        # both specified, also ok
+        # if redeemScript specified, all ok
         prevtx_err["redeemScript"] = prevtxs[0]["redeemScript"]
         node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
 
-        # redeemScript mismatch to witnessScript
-        prevtx_err["redeemScript"] = "6a" # OP_RETURN
-        assert_raises_rpc_error(-8, "redeemScript does not correspond to witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
-
         # redeemScript does not match scriptPubKey
-        del prevtx_err["witnessScript"]
-        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
-
-        # witnessScript does not match scriptPubKey
-        prevtx_err["witnessScript"] = prevtx_err["redeemScript"]
-        del prevtx_err["redeemScript"]
-        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+        prevtx_err["redeemScript"] = "6a" # OP_RETURN
+        assert_raises_rpc_error(-8, "redeemScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
 
         rawtx2 = node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs - 1], prevtxs)
         rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [self.priv[-1]], prevtxs)
@@ -192,7 +166,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert tx in node0.getblock(blk)["tx"]
 
         txinfo = node0.getrawtransaction(tx, True, blk)
-        self.log.info("n/m=%d/%d %s size=%d vsize=%d weight=%d" % (self.nsigs, self.nkeys, self.output_type, txinfo["size"], txinfo["vsize"], txinfo["weight"]))
+        self.log.info("n/m=%d/%d size=%d" % (self.nsigs, self.nkeys, txinfo["size"]))
 
 
 if __name__ == '__main__':
