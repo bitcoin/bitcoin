@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
 {
     const auto params {CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN)};
-    BlockManager blockman {};
+    BlockManager blockman{{}};
     CChain chain {};
     // simulate adding a genesis block normally
     BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0, chain, *params, nullptr).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);

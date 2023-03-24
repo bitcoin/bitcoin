@@ -12,6 +12,7 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     WITNESS_SCALE_FACTOR,
+    tx_from_hex,
 )
 from test_framework.script import (
     CScript,
@@ -29,6 +30,7 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_greater_than_or_equal,
 )
 from test_framework.wallet import MiniWallet
@@ -106,6 +108,31 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert_equal(res['allowed'], True)
         assert_equal(res['vsize'], sigop_equivalent_vsize)
 
+        # check that the ancestor and descendant size calculations in the mempool
+        # also use the same max(sigop_equivalent_vsize, serialized_vsize) logic
+        # (to keep it simple, we only test the case here where the sigop vsize
+        # is much larger than the serialized vsize, i.e. we create a small child
+        # tx by getting rid of the large padding output)
+        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'test123'])
+        assert_greater_than(sigop_equivalent_vsize, tx.get_vsize())
+        self.nodes[0].sendrawtransaction(hexstring=tx.serialize().hex(), maxburnamount='1.0')
+
+        # fetch parent tx, which doesn't contain any sigops
+        parent_txid = tx.vin[0].prevout.hash.to_bytes(32, 'big').hex()
+        parent_tx = tx_from_hex(self.nodes[0].getrawtransaction(txid=parent_txid))
+
+        entry_child = self.nodes[0].getmempoolentry(tx.rehash())
+        assert_equal(entry_child['descendantcount'], 1)
+        assert_equal(entry_child['descendantsize'], sigop_equivalent_vsize)
+        assert_equal(entry_child['ancestorcount'], 2)
+        assert_equal(entry_child['ancestorsize'], sigop_equivalent_vsize + parent_tx.get_vsize())
+
+        entry_parent = self.nodes[0].getmempoolentry(parent_tx.rehash())
+        assert_equal(entry_parent['ancestorcount'], 1)
+        assert_equal(entry_parent['ancestorsize'], parent_tx.get_vsize())
+        assert_equal(entry_parent['descendantcount'], 2)
+        assert_equal(entry_parent['descendantsize'], parent_tx.get_vsize() + sigop_equivalent_vsize)
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
@@ -119,6 +146,8 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
             for num_sigops in (69, 101, 142, 183, 222):
                 self.test_sigops_limit(bytes_per_sigop, num_sigops)
+
+            self.generate(self.wallet, 1)
 
 
 if __name__ == '__main__':

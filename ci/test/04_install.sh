@@ -135,8 +135,8 @@ if [[ "${RUN_TIDY}" == "true" ]]; then
   export DIR_IWYU="${BASE_SCRATCH_DIR}/iwyu"
   if [ ! -d "${DIR_IWYU}" ]; then
     CI_EXEC "mkdir -p ${DIR_IWYU}/build/"
-    CI_EXEC "git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_14 ${DIR_IWYU}/include-what-you-use"
-    CI_EXEC "cd ${DIR_IWYU}/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-14 ../include-what-you-use"
+    CI_EXEC "git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 ${DIR_IWYU}/include-what-you-use"
+    CI_EXEC "cd ${DIR_IWYU}/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 ../include-what-you-use"
     CI_EXEC_ROOT "cd ${DIR_IWYU}/build && make install $MAKEJOBS"
   fi
 fi
