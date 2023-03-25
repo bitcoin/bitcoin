@@ -34,6 +34,11 @@ enum Error {
     INVALID_LENGTH,
     INVALID_K,
     INVALID_SHARE_IDX,
+    TOO_FEW_SHARES,
+    DUPLICATE_SHARE,
+    MISMATCH_K,
+    MISMATCH_ID,
+    MISMATCH_LENGTH,
 };
 
 class Result
@@ -47,6 +52,11 @@ public:
      * This constructor requires the hrp to be the lowercase string "ms", but will
      * ignore the case of `id` and `share_idx`. */
     Result(std::string&& hrp, size_t k, const std::string& id, char share_idx, const std::vector<unsigned char>& data);
+
+    /** Construct a codex32 result by interpolating a set of input shares to obtain an output share
+     *
+     * Requires that all input shares have the same k and seed ID */
+    Result(const std::vector<Result>& shares, char output_idx);
 
     /** Boolean indicating whether the data was successfully parsed.
      *
