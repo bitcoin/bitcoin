@@ -33,12 +33,40 @@ struct RangeProof {
     Scalar t_hat; // inner product of l and r
     Scalar a;     // result of inner product argument
     Scalar b;     // result of inner product argument
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, Vs);
+        ::Serialize(s, Ls);
+        ::Serialize(s, Rs);
+        ::Serialize(s, A);
+        ::Serialize(s, S);
+        ::Serialize(s, T1);
+        ::Serialize(s, T2);
+        ::Serialize(s, tau_x);
+        ::Serialize(s, mu);
+        ::Serialize(s, a);
+        ::Serialize(s, b);
+        ::Serialize(s, t_hat);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        ::Unserialize(s, Vs);
+        ::Unserialize(s, Ls);
+        ::Unserialize(s, Rs);
+        ::Unserialize(s, A);
+        ::Unserialize(s, S);
+        ::Unserialize(s, T1);
+        ::Unserialize(s, T2);
+        ::Unserialize(s, tau_x);
+        ::Unserialize(s, mu);
+        ::Unserialize(s, a);
+        ::Unserialize(s, b);
+        ::Unserialize(s, t_hat);
+    }
 };
-
-template <typename T>
-std::vector<uint8_t> SerializeRangeProof(const RangeProof<T>& proof);
-
-template <typename T>
-RangeProof<T> UnserializeRangeProof(const std::vector<unsigned char>& vecIn);
 
 #endif // NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_H

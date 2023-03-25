@@ -787,7 +787,6 @@ BOOST_AUTO_TEST_CASE(test_setpow2)
 BOOST_AUTO_TEST_CASE(test_hash)
 {
     // upon generating the digest, following data is added to the hasher:
-    // - 1 byte storing the size of the following array
     // - 32-byte big-endian array representing the Scalar value
     // - 4-byte little-endian array representing the parameter of Hash function
 
@@ -795,7 +794,7 @@ BOOST_AUTO_TEST_CASE(test_hash)
     const int n = 51;
     uint256 digest = a.GetHashWithSalt(n);
     auto act = digest.GetHex();
-    std::string exp("def41d150b8d183ab49b001838f5c824ceba560e68e3e1a5d43f62cbd30a37f8");
+    std::string exp("ccf3c17eeef9710908b3a66f5103cf97cc7313e0f49cf93429dc92d01f8fd5b2");
     BOOST_CHECK(act == exp);
 }
 

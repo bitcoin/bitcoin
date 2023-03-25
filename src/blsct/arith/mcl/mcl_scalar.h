@@ -94,13 +94,20 @@ public:
      */
     std::vector<bool> ToBinaryVec() const;
 
-    unsigned int GetSerializeSize() const;
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        auto vec = GetVch();
+        s.write(MakeByteSpan(vec));
+    }
 
     template <typename Stream>
-    void Serialize(Stream& s) const;
-
-    template <typename Stream>
-    void Unserialize(Stream& s);
+    void Unserialize(Stream& s)
+    {
+        std::vector<unsigned char> vec(SERIALIZATION_SIZE);
+        s.read(MakeWritableByteSpan(vec));
+        SetVch(vec);
+    }
 
     static constexpr int SERIALIZATION_SIZE = 32;
 

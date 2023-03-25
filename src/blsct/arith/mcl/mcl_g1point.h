@@ -53,21 +53,20 @@ public:
     std::string GetString(const uint8_t& radix = 16) const;
     MclScalar GetHashWithSalt(const uint64_t salt) const;
 
-    size_t GetSerializeSize() const;
-
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        ::Serialize(s, GetVch());
-    };
+        auto vec = GetVch();
+        s.write(MakeByteSpan(vec));
+    }
 
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        std::vector<uint8_t> vch;
-        ::Unserialize(s, vch);
-        SetVch(vch);
-    };
+        std::vector<unsigned char> vec(SERIALIZATION_SIZE);
+        s.read(MakeWritableByteSpan(vec));
+        SetVch(vec);
+    }
 
     using UnderlyingType = mclBnG1;
     UnderlyingType m_p;
