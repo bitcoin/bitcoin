@@ -89,11 +89,12 @@ static RPCHelpMan sendrawtransaction()
                     // clear memory allocated for vchNEVMData
                     nevmData.SetNull();
                 }
-            }
-
-            for (const auto& out : mtx.vout) {
-                if((out.scriptPubKey.IsUnspendable() || !out.scriptPubKey.HasValidOps()) && out.nValue > max_burn_amount) {
-                    throw JSONRPCTransactionError(TransactionError::MAX_BURN_EXCEEDED);
+            // SYSCOIN we actively burn to allocation here so we want to avoid checking for default burn exceeded
+            } else if(nVersion != SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION) {
+                for (const auto& out : mtx.vout) {
+                    if((out.scriptPubKey.IsUnspendable() || !out.scriptPubKey.HasValidOps()) && out.nValue > max_burn_amount) {
+                        throw JSONRPCTransactionError(TransactionError::MAX_BURN_EXCEEDED);
+                    }
                 }
             }
 
