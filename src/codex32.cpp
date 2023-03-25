@@ -78,6 +78,14 @@ uint8_t gf32_mul(uint8_t x, uint8_t y) {
     return GF32_EXP[(GF32_LOG[x] + GF32_LOG[y]) % 31];
 }
 
+uint8_t gf32_div(uint8_t x, uint8_t y) {
+    assert(y != 0);
+    if (x == 0) {
+        return 0;
+    }
+    return GF32_EXP[(GF32_LOG[x] + 31 - GF32_LOG[y]) % 31];
+}
+
 // The bech32 string "secretshare32"
 constexpr const std::array<uint8_t, 13> CODEX32_M = {
     16, 25, 24, 3, 25, 11, 16, 23, 29, 3, 25, 17, 10
@@ -192,6 +200,24 @@ data CreateChecksum(const std::string& hrp, const data& values, const Residue& g
     return ret;
 }
 
+// Given a set of share indices and a target index `idx`, which must be in the set,
+// compute the Lagrange basis polynomial for `idx` evaluated at the point `eval`.
+//
+// All inputs are GF32 elements, rather than array indices or anything else.
+uint8_t lagrange_coefficient(std::vector<uint8_t>& indices, uint8_t idx, uint8_t eval) {
+    uint8_t num = 1;
+    uint8_t den = 1;
+    for (const auto idx_i : indices) {
+        if (idx_i != idx) {
+            num = gf32_mul(num, idx_i ^ eval);
+            den = gf32_mul(den, idx_i ^ idx);
+        }
+    }
+
+    // return num / den
+    return gf32_div(num, den);
+}
+
 } // namespace
 
 /** Encode a codex32 string. */
@@ -298,6 +324,64 @@ Result::Result(std::string&& hrp, size_t k, const std::string& id, char share_id
     m_data.push_back(bech32::internal::CHARSET_REV[(unsigned char) id[3]]);
     m_data.push_back(sidx);
     ConvertBits<8, 5, true>([&](unsigned char c) { m_data.push_back(c); }, data.begin(), data.end());
+}
+
+Result::Result(const std::vector<Result>& shares, char output_idx) {
+    m_valid = OK;
+
+    int8_t oidx = bech32::internal::CHARSET_REV[(unsigned char) output_idx];
+    if (oidx == -1) {
+        m_valid = INVALID_SHARE_IDX;
+    }
+    if (shares.empty()) {
+        m_valid = TOO_FEW_SHARES;
+        return;
+    }
+    size_t k = shares[0].GetK();
+    if (k > shares.size()) {
+        m_valid = TOO_FEW_SHARES;
+    }
+    if (m_valid != OK) {
+        return;
+    }
+
+    std::vector<uint8_t> indices;
+    indices.reserve(shares.size());
+    for (size_t i = 0; i < shares.size(); ++i) {
+        // Currently the only supported hrp is "ms" so it is impossible to violate this
+        assert (shares[0].m_hrp == shares[i].m_hrp);
+        if (shares[0].m_data[0] != shares[i].m_data[0]) {
+            m_valid = MISMATCH_K;
+        }
+        for (size_t j = 1; j < 5; ++j) {
+            if (shares[0].m_data[j] != shares[i].m_data[j]) {
+                m_valid = MISMATCH_ID;
+            }
+        }
+        if (shares[i].m_data.size() != shares[0].m_data.size()) {
+            m_valid = MISMATCH_LENGTH;
+        }
+
+        indices.push_back(shares[i].m_data[5]);
+        for (size_t j = i + 1; j < shares.size(); ++j) {
+            if (shares[i].m_data[5] == shares[j].m_data[5]) {
+                m_valid = DUPLICATE_SHARE;
+            }
+        }
+    }
+
+    m_hrp = shares[0].m_hrp;
+    m_data.reserve(shares[0].m_data.size());
+    for (size_t j = 0; j < shares[0].m_data.size(); ++j) {
+        m_data.push_back(0);
+    }
+
+    for (size_t i = 0; i < shares.size(); ++i) {
+        uint8_t lagrange_coeff = lagrange_coefficient(indices, shares[i].m_data[5], oidx);
+        for (size_t j = 0; j < m_data.size(); ++j) {
+            m_data[j] ^= gf32_mul(lagrange_coeff, shares[i].m_data[j]);
+        }
+    }
 }
 
 std::string Result::GetIdString() const {
