@@ -207,10 +207,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000abb43ed368e60a4eab7d1d9"); // 1576166
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000b1034c953e1f1b011e47799"); // 1586970
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x4b8519c2193265fe269e88361787339504dda66b4efa85613c661a431ad1624c"); // 1576166
+        consensus.defaultAssumeValid = uint256S("0x5c5a43bece78786ee261458dc300323cec0485b61d6b33a65d624aadf9a1d35b"); // 1586970
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 123456;
@@ -301,6 +301,7 @@ public:
                 { 1213640, uint256S("bd9ff6428a7cc472d3813bbee6fb3ae1a9992b8b034deca1249487a4a1b8e51a")},
                 { 1400000, uint256S("ca0067113d48a87eaed88c1410cacfe07441e191487383b79bf7069a678ede4a")},
                 { 1576166, uint256S("4b8519c2193265fe269e88361787339504dda66b4efa85613c661a431ad1624c")},
+                { 1586970, uint256S("5c5a43bece78786ee261458dc300323cec0485b61d6b33a65d624aadf9a1d35b")},
             }
         };
 
@@ -309,10 +310,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats at block 1576166
-            /* nTime    */ 1678128149,
-            /* nTxCount */ 2726013,
-            /* dTxRate  */ 0.02301412557595973
+            // Data from rpc: getchaintxstats at block 1586971
+            /* nTime    */ 1679768715,
+            /* nTxCount */ 2739418,
+            /* dTxRate  */ 0.008392212155367569
         };
     }
 };
