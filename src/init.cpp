@@ -1650,6 +1650,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogPrintf("NEVM not detected, setting fNEVMConnection to false...\n");
         }
     }
+    LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
     // ********************************************************* Step 7: load block chain
     if(fRegTest) {
         nMNCollateralRequired = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
@@ -1814,6 +1815,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
+            fNEVMConnection = false;
+            LogPrintf("Could not call NotifyGetNEVMBlockInfo, setting fNEVMConnection to false...\n");
         }
         if(state.IsValid()) {
             int64_t nHeightLocalGeth;
@@ -1846,6 +1849,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     // otherwise local height is below so catch up to geth without strict enforcement on geth
                     nLastKnownHeightOnStart = nHeightFromGeth;
                 }
+            } else if(nHeightLocalGeth > 0){
+                fNEVMConnection = false;
+                LogPrintf("nHeightFromGeth == 0 and nHeightLocalGeth > 0, setting fNEVMConnection to false...\n");
             }
         }
     }
@@ -1979,7 +1985,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // if regtest then make sure geth is shown as synced as well
     fGethSynced = fRegTest;
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
-        return InitError(Untranslated("You must have an NEVM connection on a masternode."));
+        return InitError(Untranslated("You must have an NEVM connection on a masternode. You may need to reindex to ensure you get an NEVM connection properly."));
     }
     #if ENABLE_ZMQ
         if(!g_zmq_notification_interface && fNEVMConnection) {
