@@ -620,8 +620,8 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         if(!mintSyscoin.IsNull())
             mapMintKeysMempool.erase(mintSyscoin.nTxHash);
     }
-    // completely remove data if not removing for block (if block we should keep data alive for some time)
-    else if(it->GetTx().IsNEVMData() && reason != MemPoolRemovalReason::BLOCK) {
+    // completely remove data if we are expiring due to timeout or trimming mempool, any other and it may be block related where we keep around until chainlock eventually prune them
+    else if(it->GetTx().IsNEVMData() && (reason == MemPoolRemovalReason::EXPIRY || reason == MemPoolRemovalReason::SIZELIMIT)) {
         CNEVMData nevmData(it->GetTx());
         if(!nevmData.IsNull()){
             EraseNEVMData({nevmData.vchVersionHash});
