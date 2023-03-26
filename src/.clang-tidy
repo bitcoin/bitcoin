@@ -10,6 +10,7 @@ performance-for-range-copy,
 performance-inefficient-vector-operation,
 performance-move-const-arg,
 performance-no-automatic-move,
+performance-type-promotion-in-math-fn
 performance-unnecessary-copy-initialization,
 readability-const-return-type,
 readability-redundant-declaration,
