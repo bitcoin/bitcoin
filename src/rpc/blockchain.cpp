@@ -1765,11 +1765,8 @@ static RPCHelpMan reconsiderblock()
 
         chainman.ActiveChainstate().ResetBlockFailureFlags(pblockindex);
     }
-    // SYSCOIN do not re-validate eth txroots
-    fLoaded = false;
     BlockValidationState state;
     chainman.ActiveChainstate().ActivateBestChain(state);
-    fLoaded = true;
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());

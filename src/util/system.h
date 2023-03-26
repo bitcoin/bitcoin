@@ -42,7 +42,6 @@ extern std::string fGethSyncStatus;
 extern bool fNEVMConnection;
 extern std::string fNEVMSub;
 extern bool fGethSynced;
-extern std::atomic_bool fLoaded;
 extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;

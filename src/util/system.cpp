@@ -75,7 +75,6 @@ bool fNEVMConnection = false;
 std::string fNEVMSub;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = true;
-std::atomic_bool fLoaded = false;
 int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 uint32_t nLastKnownHeightOnStart = 0;
