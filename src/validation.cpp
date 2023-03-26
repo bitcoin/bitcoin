@@ -3418,6 +3418,15 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     } else {
         LogPrint(BCLog::BENCHMARK, "  - Using cached block\n");
         pthisBlock = pblock;
+        // SYSCOIN
+        for (auto &tx : pthisBlock->vtx) {
+            if(tx && tx->IsNEVMData()) {
+                if(!FillNEVMData(tx)) {
+                    return error("ConnectTip(): FillNEVMData() failed for %s",
+                    pthisBlock->GetHash().GetHex());
+                }
+            }
+        }
     }
     const CBlock& blockConnecting = *pthisBlock;
     // Apply the block atomically to the chain state.
