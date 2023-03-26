@@ -316,6 +316,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
     MockTime(fuzzed_data_provider, chainstate);
 
     std::vector<uint256> txids;
+    txids.reserve(g_outpoints_coinbase_init_mature.size());
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         txids.push_back(outpoint.hash);
     }

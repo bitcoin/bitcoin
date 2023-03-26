@@ -608,6 +608,7 @@ bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
 std::vector<std::string> RPCHelpMan::GetArgNames() const
 {
     std::vector<std::string> ret;
+    ret.reserve(m_args.size());
     for (const auto& arg : m_args) {
         ret.emplace_back(arg.m_names);
     }
