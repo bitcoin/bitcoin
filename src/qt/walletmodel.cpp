@@ -613,8 +613,8 @@ uint256 WalletModel::getLastBlockProcessed() const
 
 CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
 {
-    // No selected coins, return the cached balance
-    if (!control || !control->HasSelected()) {
+    // SYSCOIN No selected coins, return the cached balance
+    /*if (!control || !control->HasSelected()) {
         const interfaces::WalletBalances& balances = getCachedBalance();
         CAmount available_balance = balances.balance;
         // if wallet private keys are disabled, this is a watch-only wallet
@@ -623,7 +623,7 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
             available_balance += balances.watch_only_balance;
         }
         return available_balance;
-    }
+    }*/
     // Fetch balance from the wallet, taking into account the selected coins
     return wallet().getAvailableBalance(*control);
 }
