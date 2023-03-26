@@ -297,7 +297,6 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
 
     if (tx.IsBLSCT()) {
         entry.pushKV("txSig", HexStr(tx.txSig.GetVch()));
-        entry.pushKV("balanceSig", HexStr(tx.balanceSig.GetVch()));
     }
 
     if (have_undo) {

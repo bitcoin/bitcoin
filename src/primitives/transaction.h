@@ -177,7 +177,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        ::Serialize(s, SerializeRangeProof(rangeProof));
+        ::Serialize(s, rangeProof);
         ::Serialize(s, spendingKey);
         ::Serialize(s, blindingKey);
         ::Serialize(s, ephemeralKey);
@@ -187,9 +187,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        std::vector<uint8_t> rangeProofVec;
-        ::Unserialize(s, rangeProofVec);
-        rangeProof = UnserializeRangeProof<Mcl>(rangeProofVec);
+        ::Unserialize(s, rangeProof);
         ::Unserialize(s, spendingKey);
         ::Unserialize(s, blindingKey);
         ::Unserialize(s, ephemeralKey);
@@ -258,6 +256,7 @@ public:
         ::Unserialize(s, nValue);
         uint64_t nFlags = 0;
         if (nValue == std::numeric_limits<CAmount>::max()) {
+            nValue = 0;
             ::Unserialize(s, nFlags);
         }
         ::Unserialize(s, scriptPubKey);
@@ -354,7 +353,6 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
     }
     s >> tx.nLockTime;
     if (tx.IsBLSCT()) {
-        s >> tx.balanceSig;
         s >> tx.txSig;
     }
 }
@@ -388,7 +386,6 @@ inline void SerializeTransaction(const TxType& tx, Stream& s)
     }
     s << tx.nLockTime;
     if (tx.IsBLSCT()) {
-        s << tx.balanceSig;
         s << tx.txSig;
     }
 }
@@ -419,7 +416,6 @@ public:
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
-    blsct::Signature balanceSig;
     blsct::Signature txSig;
 
 private:
@@ -505,7 +501,6 @@ struct CMutableTransaction {
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
-    blsct::Signature balanceSig;
     blsct::Signature txSig;
 
     explicit CMutableTransaction();

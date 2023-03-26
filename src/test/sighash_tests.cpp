@@ -105,13 +105,12 @@ void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
     for (int out = 0; out < outs; out++) {
         tx.vout.push_back(CTxOut());
         CTxOut &txout = tx.vout.back();
-        txout.nValue = InsecureRandMoneyAmount();
+        txout.nValue = InsecureRandMoneyAmount() / outs;
         RandomScript(txout.scriptPubKey);
     }
 }
 
 BOOST_FIXTURE_TEST_SUITE(sighash_tests, BasicTestingSetup)
-
 BOOST_AUTO_TEST_CASE(sighash_test)
 {
 #if defined(PRINT_SIGHASH_JSON)

@@ -115,6 +115,12 @@ def deser_string(f):
 def ser_string(s):
     return ser_compact_size(len(s)) + s
 
+def deser_bytes(f, count):
+    return f.read(count)
+
+def ser_bytes(s):
+    return s
+
 def deser_uint256(f):
     r = 0
     for i in range(8):
@@ -448,11 +454,11 @@ class MclG1Point:
         self.p = point
 
     def deserialize(self, f):
-        self.p = deser_string(f)
+        self.p = deser_bytes(f, 48)
 
     def serialize(self):
         r = b""
-        r += ser_string(self.p)
+        r += ser_bytes(self.p)
         return r
 
 class MclScalar:
@@ -462,11 +468,11 @@ class MclScalar:
         self.s = scalar
 
     def deserialize(self, f):
-        self.s = deser_string(f)
+        self.s = deser_bytes(f, 32)
 
     def serialize(self):
         r = b""
-        r += ser_string(self.s)
+        r += ser_bytes(self.s)
         return r
 
 class BLSCTSignature:
@@ -476,11 +482,11 @@ class BLSCTSignature:
        self.sig = signature
 
     def deserialize(self, f):
-        self.sig = deser_string(f)
+        self.sig = deser_bytes(f, 96)
 
     def serialize(self):
         r = b""
-        r += ser_string(self.sig)
+        r += ser_bytes(self.sig)
         return r
 
 class RangeProof:
@@ -714,9 +720,9 @@ class CTxWitness:
 
 class CTransaction:
     __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
-                 "wit", "txSig", "balanceSig")
+                 "wit", "txSig")
 
-    def __init__(self, tx=None, txSig = BLSCTSignature(), balanceSig = BLSCTSignature()):
+    def __init__(self, tx=None, txSig = BLSCTSignature()):
         if tx is None:
             self.nVersion = 2
             self.vin = []
@@ -734,7 +740,6 @@ class CTransaction:
             self.hash = tx.hash
             self.wit = copy.deepcopy(tx.wit)
         self.txSig = txSig
-        self.balanceSig = balanceSig
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -756,7 +761,6 @@ class CTransaction:
             self.wit = CTxWitness()
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
         if self.nVersion & TX_VERSION_BLSCT_MARKER:
-            self.balanceSig.deserialize(f)
             self.txSig.deserialize(f)
         self.sha256 = None
         self.hash = None
@@ -768,7 +772,6 @@ class CTransaction:
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
         if self.nVersion & TX_VERSION_BLSCT_MARKER:
-            r += self.balanceSig.serialize()
             r += self.txSig.serialize()
         return r
 
@@ -794,7 +797,6 @@ class CTransaction:
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)
         if self.nVersion & TX_VERSION_BLSCT_MARKER:
-            r += self.balanceSig.serialize()
             r += self.txSig.serialize()
         return r
 

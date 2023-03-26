@@ -282,7 +282,7 @@ uint64_t MclScalar::GetUint64() const
 
 std::vector<uint8_t> MclScalar::GetVch(const bool trim_preceeding_zeros) const
 {
-    auto seri_size = MclScalar::GetSerializeSize();
+    auto seri_size = MclScalar::SERIALIZATION_SIZE;
     std::vector<uint8_t> vec(seri_size);
     if (mclBnFr_serialize(&vec[0], seri_size, &m_fr) == 0) {
         // We avoid throwing an exception as the fuzzer would crash when injecting random data
@@ -373,26 +373,3 @@ bool MclScalar::GetSeriBit(const uint8_t& n) const
 
     return bit;
 }
-
-unsigned int MclScalar::GetSerializeSize() const
-{
-    return SERIALIZATION_SIZE;
-}
-
-template <typename Stream>
-void MclScalar::Serialize(Stream& s) const
-{
-    ::Serialize(s, GetVch());
-}
-
-template void MclScalar::Serialize(CHashWriter& s) const;
-template void MclScalar::Serialize(CDataStream& s) const;
-
-template <typename Stream>
-void MclScalar::Unserialize(Stream& s)
-{
-    std::vector<uint8_t> vch;
-    ::Unserialize(s, vch);
-    SetVch(vch);
-}
-template void MclScalar::Unserialize(CDataStream& s);

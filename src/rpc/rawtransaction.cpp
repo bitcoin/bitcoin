@@ -150,7 +150,6 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                                                                                   {RPCResult::Type::NUM, "viewTag", /*optional=*/true, "output's view tag"},
                                                                               }},
                                            }},
-        {RPCResult::Type::STR_HEX, "balanceSig", /*optional=*/true, "hex-encoded balance signature"},
         {RPCResult::Type::STR_HEX, "txSig", /*optional=*/true, "hex-encoded transaction signature"},
     };
 }

@@ -30,18 +30,21 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        s << GetVch();
+        auto vec = GetVch();
+        s.write(MakeByteSpan(vec));
     }
 
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        std::vector<uint8_t> vch;
-        s >> vch;
-        SetVch(vch);
+        std::vector<unsigned char> vec(SERIALIZATION_SIZE);
+        s.read(MakeWritableByteSpan(vec));
+        SetVch(vec);
     }
 
     blsSignature m_data;
+
+    static constexpr int SERIALIZATION_SIZE = 96;
 };
 
 } // namespace blsct

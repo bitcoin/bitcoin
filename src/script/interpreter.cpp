@@ -1267,7 +1267,6 @@ public:
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
         if (txTo.IsBLSCT()) {
-            ::Serialize(s, txTo.balanceSig);
             ::Serialize(s, txTo.txSig);
         }
     }
@@ -1545,7 +1544,6 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         // Locktime
         ss << txTo.nLockTime;
         if (txTo.IsBLSCT()) {
-            ss << txTo.balanceSig;
             ss << txTo.txSig;
         }
         // Sighash type

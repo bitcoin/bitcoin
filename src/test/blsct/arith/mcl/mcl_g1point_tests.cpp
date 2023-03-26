@@ -238,19 +238,12 @@ BOOST_AUTO_TEST_CASE(test_get_string)
     BOOST_CHECK(g_exp == g_act);
 }
 
-BOOST_AUTO_TEST_CASE(test_get_serialize_size)
-{
-    MclG1Point p(uint256::ONE);
-    auto ser_size = p.GetSerializeSize();
-    BOOST_CHECK_EQUAL(ser_size, 48ul);
-}
-
 BOOST_AUTO_TEST_CASE(test_serialize_unserialize)
 {
     MclG1Point p(uint256::ONE);
     CDataStream st(0, 0);
     p.Serialize(st);
-    BOOST_CHECK_EQUAL(st.size(), 49ul); // TODO check why 49 instead of 48
+    BOOST_CHECK_EQUAL(st.size(), 48ul);
 
     MclG1Point q;
     BOOST_CHECK(p != q);

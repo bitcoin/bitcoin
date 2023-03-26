@@ -196,11 +196,6 @@ std::string MclG1Point::GetString(const uint8_t& radix) const
     return std::string(str);
 }
 
-size_t MclG1Point::GetSerializeSize() const
-{
-    return SERIALIZATION_SIZE;
-}
-
 MclScalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
     CHashWriter hasher(0, 0);
