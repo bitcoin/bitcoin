@@ -264,7 +264,7 @@ public:
         fill(item_ptr(0), other.begin(),  other.end());
     }
 
-    prevector(prevector<N, T, Size, Diff>&& other) {
+    prevector(prevector<N, T, Size, Diff>&& other) noexcept {
         swap(other);
     }
 
@@ -276,7 +276,7 @@ public:
         return *this;
     }
 
-    prevector& operator=(prevector<N, T, Size, Diff>&& other) {
+    prevector& operator=(prevector<N, T, Size, Diff>&& other) noexcept {
         swap(other);
         return *this;
     }
