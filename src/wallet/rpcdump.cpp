@@ -891,7 +891,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
         "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n",
         {
-            {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The filename with path (either absolute or relative to dashd)"},
+            {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The filename with path (absolute path recommended)"},
         },
         RPCResult{
                 RPCResult::Type::OBJ, "", "",

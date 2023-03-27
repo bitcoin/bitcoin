@@ -23,3 +23,4 @@ from test_framework.script import CScript
 # scriptPubKeys are needed, to guarantee that the minimum transaction size is
 # met.
 DUMMY_P2SH_SCRIPT = CScript([b'a' * 22])
+DUMMY_2_P2SH_SCRIPT = CScript([b'b' * 22])
