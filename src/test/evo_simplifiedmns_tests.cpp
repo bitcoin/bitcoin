@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         "a61177eb14450bb8c56e5f0547035e0f3a70fe46f36901351cc568b2e48e29d0",
     };
     std::vector<std::string> calculatedHashes;
-
+    calculatedHashes.reserve(entries.size());
     for (auto& smle : entries) {
         calculatedHashes.emplace_back(smle.CalcHash().ToString());
         //printf("\"%s\",\n", calculatedHashes.back().c_str());

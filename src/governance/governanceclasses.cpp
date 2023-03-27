@@ -56,7 +56,7 @@ CAmount ParsePaymentAmount(const std::string& strAmount)
         throw std::runtime_error(ostr.str());
     }
 
-    pos = strAmount.find(".");
+    pos = strAmount.find('.');
     if (pos == 0) {
         // JSON doesn't allow values to start with a decimal point
         std::ostringstream ostr;
@@ -65,7 +65,7 @@ CAmount ParsePaymentAmount(const std::string& strAmount)
     }
 
     // Make sure there's no more than 1 decimal point
-    if ((pos != std::string::npos) && (strAmount.find(".", pos + 1) != std::string::npos)) {
+    if ((pos != std::string::npos) && (strAmount.find('.', pos + 1) != std::string::npos)) {
         std::ostringstream ostr;
         ostr << "ParsePaymentAmount: Invalid amount string, too many decimal points";
         throw std::runtime_error(ostr.str());

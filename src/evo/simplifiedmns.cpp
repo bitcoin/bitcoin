@@ -250,6 +250,7 @@ bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseB
     
     std::vector<uint256> vHashes;
     std::vector<bool> vMatch(block.vtx.size(), false);
+    vHashes.reserve(block.vtx.size());
     for (const auto& tx : block.vtx) {
         vHashes.emplace_back(tx->GetHash());
     }

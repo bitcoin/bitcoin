@@ -6854,6 +6854,7 @@ bool StartGethNode()
     // https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
     if( gethpid == 0 ) {  
         std::vector<char*> commandVector;
+        commandVector.reserve(vecCmdLineStr.size());
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
         }  

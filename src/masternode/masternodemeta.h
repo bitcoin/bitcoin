@@ -86,6 +86,7 @@ public:
         strVersion = SERIALIZATION_VERSION_STRING;
         s << strVersion;
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
+        tmpMetaInfo.reserve(metaInfos.size());
         for (auto& p : metaInfos) {
             tmpMetaInfo.emplace_back(*p.second);
         }
