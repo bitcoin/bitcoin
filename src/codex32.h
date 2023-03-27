@@ -41,6 +41,8 @@ enum Error {
     MISMATCH_LENGTH,
 };
 
+std::string ErrorString(Error e);
+
 class Result
 {
 public:

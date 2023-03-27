@@ -220,6 +220,26 @@ uint8_t lagrange_coefficient(std::vector<uint8_t>& indices, uint8_t idx, uint8_t
 
 } // namespace
 
+std::string ErrorString(Error e) {
+    switch (e) {
+    case OK: return "ok";
+    case BAD_CHECKSUM: return "bad checksum";
+    case BECH32_DECODE: return "bech32 decode failure (invalid character, no HRP, or inconsistent case)";
+    case INVALID_HRP: return "hrp differed from 'ms'";
+    case INVALID_ID_LEN: return "seed ID was not 4 characters";
+    case INVALID_ID_CHAR: return "seed ID used a non-bech32 character";
+    case INVALID_LENGTH: return "invalid length";
+    case INVALID_K: return "invalid threshold (k) value";
+    case INVALID_SHARE_IDX: return "invalid share index";
+    case TOO_FEW_SHARES: return "tried to derive a share but did not have enough input shares";
+    case DUPLICATE_SHARE: return "tried to derive a share but two input shares had the same index";
+    case MISMATCH_K: return "tried to derive a share but input shares had inconsistent threshold (k) values";
+    case MISMATCH_ID: return "tried to derive a share but input shares had inconsistent seed IDs";
+    case MISMATCH_LENGTH: return "tried to derive a share but input shares had inconsistent lengths";
+    }
+    assert(0);
+}
+
 /** Encode a codex32 string. */
 std::string Result::Encode() const {
     assert(IsValid());
