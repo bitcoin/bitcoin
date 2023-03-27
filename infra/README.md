@@ -82,13 +82,13 @@ Run all tests with:
 
 ```bash
 cd ~/itcoin-core
-LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib make check
-LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/test_runner.py > $HOME/itcoin-draft-notes/`date +%Y%m%d%H%M%S`_test_runner_py_results.log 2>&1
+LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/build/usrlocal/lib make check
+LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/build/usrlocal/lib test/functional/test_runner.py > $HOME/itcoin-draft-notes/`date +%Y%m%d%H%M%S`_test_runner_py_results.log 2>&1
 ```
 
 Or run single tests with:
 
 ```bash
 cd ~/itcoin-core
-LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/feature_itcoin_solution_independent_blockchain_1_of_2.py 
+LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/build/usrlocal/lib test/functional/itcoin_feature_solution_independent_blockchain_1_of_2.py 
 ```
