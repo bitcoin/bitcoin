@@ -563,7 +563,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
 
     AssertLockHeld(cs_main);
-    bool fork_active = VersionBitsState(LookupBlockIndex(nBlockHash), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE;
+    bool fork_active = VersionBitsState(g_chainman.m_blockman.LookupBlockIndex(nBlockHash), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE;
     CAmount nMinFee = GetMinCollateralFee(fork_active);
 
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- txCollateral->vout.size() = %s, findScript = %s, nMinFee = %lld\n",
@@ -594,7 +594,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     AssertLockHeld(cs_main);
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
-        const CBlockIndex* pindex = LookupBlockIndex(nBlockHash);
+        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(nBlockHash);
         if (pindex && ::ChainActive().Contains(pindex)) {
             nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
         }

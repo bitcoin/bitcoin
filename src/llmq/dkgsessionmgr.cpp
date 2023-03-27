@@ -217,7 +217,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
 
     // No luck, try to compute
     if (quorumIndex == -1) {
-        CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
+        CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(quorumHash));
         if (pQuorumBaseBlockIndex == nullptr) {
             LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
             // NOTE: do not insta-ban for this, we might be lagging behind
@@ -476,7 +476,7 @@ void CDKGSessionManager::CleanupOldContributions() const
                     break;
                 }
                 cnt_all++;
-                const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
+                const CBlockIndex* pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(std::get<2>(k));
                 if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > MAX_STORE_DEPTH) {
                     // not found or too old
                     batch.Erase(k);

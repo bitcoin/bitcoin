@@ -383,7 +383,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
         LOCK(cs_main);
 
         CValidationState state;
-        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *node_context.evodb, chainparams, block, LookupBlockIndex(block.hashPrevBlock), false, false)) {
+        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *node_context.evodb, chainparams, ::ChainstateActive(), block, g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.GetRejectReason()));
         }
     }
@@ -657,7 +657,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
             uint256 hash = block.GetHash();
-            const CBlockIndex* pindex = LookupBlockIndex(hash);
+            const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
             if (pindex) {
                 if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
                     return "duplicate";
@@ -673,7 +673,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             CValidationState state;
-            TestBlockValidity(state, *llmq_ctx.clhandler, *node_context.evodb, Params(), block, pindexPrev, false, true);
+            TestBlockValidity(state, *llmq_ctx.clhandler, *node_context.evodb, Params(), ::ChainstateActive(), block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
         }
 
@@ -996,7 +996,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     uint256 hash = block.GetHash();
     {
         LOCK(cs_main);
-        const CBlockIndex* pindex = LookupBlockIndex(hash);
+        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (pindex) {
             if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
                 return "duplicate";
@@ -1043,7 +1043,7 @@ static UniValue submitheader(const JSONRPCRequest& request)
     }
     {
         LOCK(cs_main);
-        if (!LookupBlockIndex(h.hashPrevBlock)) {
+        if (!g_chainman.m_blockman.LookupBlockIndex(h.hashPrevBlock)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, "Must submit previous header (" + h.hashPrevBlock.GetHex() + ") first");
         }
     }

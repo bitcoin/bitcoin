@@ -741,7 +741,7 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
 
     NodeContext& node = EnsureNodeContext(request.context);
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
-    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
+    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(quorumHash));
     return node.connman->ForNode(nodeId, [&](CNode* pNode) {
         return llmq_ctx.qman->RequestQuorumData(pNode, llmqType, pQuorumBaseBlockIndex, nDataMask, proTxHash);
     });
@@ -880,7 +880,7 @@ static UniValue verifychainlock(const JSONRPCRequest& request)
 
     int nBlockHeight;
     if (request.params[2].isNull()) {
-        const CBlockIndex* pIndex = WITH_LOCK(cs_main, return LookupBlockIndex(nBlockHash));
+        const CBlockIndex* pIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(nBlockHash));
         if (pIndex == nullptr) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "blockHash not found");
         }
@@ -933,7 +933,7 @@ static UniValue verifyislock(const JSONRPCRequest& request)
         uint256 hash_block;
         CTransactionRef tx = GetTransaction(/* block_index */ nullptr,  /* mempool */ nullptr, txid, Params().GetConsensus(), hash_block);
         if (tx && !hash_block.IsNull()) {
-            pindexMined = LookupBlockIndex(hash_block);
+            pindexMined = g_chainman.m_blockman.LookupBlockIndex(hash_block);
         }
     }
 

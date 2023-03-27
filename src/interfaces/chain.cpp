@@ -149,7 +149,7 @@ public:
     std::optional<int> getBlockHeight(const uint256& hash) override
     {
         LOCK(::cs_main);
-        CBlockIndex* block = LookupBlockIndex(hash);
+        CBlockIndex* block = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (block && ::ChainActive().Contains(block)) {
             return block->nHeight;
         }
@@ -209,7 +209,7 @@ public:
     std::optional<int> findFork(const uint256& hash, std::optional<int>* height) override
     {
         LOCK(cs_main);
-        const CBlockIndex* block = LookupBlockIndex(hash);
+        const CBlockIndex* block = g_chainman.m_blockman.LookupBlockIndex(hash);
         const CBlockIndex* fork = block ? ::ChainActive().FindFork(block) : nullptr;
         if (height) {
             if (block) {
@@ -231,7 +231,7 @@ public:
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
-        if (CBlockIndex* fork = FindForkInGlobalIndex(::ChainActive(), locator)) {
+        if (CBlockIndex* fork = g_chainman.m_blockman.FindForkInGlobalIndex(::ChainActive(), locator)) {
             return fork->nHeight;
         }
         return std::nullopt;
@@ -246,7 +246,7 @@ public:
         CBlockIndex* index;
         {
             LOCK(cs_main);
-            index = LookupBlockIndex(hash);
+            index = g_chainman.m_blockman.LookupBlockIndex(hash);
             if (!index) {
                 return false;
             }
@@ -266,7 +266,7 @@ public:
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
-        return GuessVerificationProgress(Params().TxData(), LookupBlockIndex(block_hash));
+        return GuessVerificationProgress(Params().TxData(), g_chainman.m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {

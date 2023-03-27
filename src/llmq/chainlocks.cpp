@@ -130,7 +130,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         return;
     }
 
-    CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(clsig.getBlockHash()));
+    CBlockIndex* pindex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
 
     {
         LOCK(cs);
@@ -414,7 +414,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
         uint32_t blockTime;
         {
             LOCK(cs_main);
-            auto* pindex = LookupBlockIndex(blockHash);
+            auto* pindex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
                 return nullptr;
@@ -506,7 +506,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     bool activateNeeded = WITH_LOCK(::cs_main, return ::ChainActive().Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex;
 
     if (activateNeeded) {
-        if(!ActivateBestChain(state, params)) {
+        if (!::ChainstateActive().ActivateBestChain(state, params)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
             return;
         }
@@ -638,7 +638,7 @@ void CChainLocksHandler::Cleanup()
     }
 
     for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
-        auto* pindex = LookupBlockIndex(it->first);
+        auto* pindex = g_chainman.m_blockman.LookupBlockIndex(it->first);
         if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             for (const auto& txid : *it->second) {
                 txFirstSeenTime.erase(txid);
@@ -657,7 +657,7 @@ void CChainLocksHandler::Cleanup()
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {
-            auto* pindex = LookupBlockIndex(hashBlock);
+            auto* pindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
             if (::ChainActive().Tip()->GetAncestor(pindex->nHeight) == pindex && ::ChainActive().Height() - pindex->nHeight >= 6) {
                 // tx got confirmed >= 6 times, so we can stop keeping track of it
                 it = txFirstSeenTime.erase(it);
