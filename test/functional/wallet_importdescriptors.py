@@ -207,15 +207,6 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               error_code=-8,
                               error_message='Ranged descriptors should not have a label')
 
-        self.log.info("Private keys required for private keys enabled wallet")
-        self.test_importdesc({"desc":descsum_create(desc),
-                              "timestamp": "now",
-                              "range": [0, 100]},
-                              success=False,
-                              error_code=-4,
-                              error_message='Cannot import descriptor without private keys to a wallet with private keys enabled',
-                              wallet=wpriv)
-
         self.log.info("Ranged descriptor import should warn without a specified range")
         self.test_importdesc({"desc": descsum_create(desc),
                                "timestamp": "now"},

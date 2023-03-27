@@ -1536,9 +1536,6 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
         // If private keys are enabled, check some things.
         if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-           if (keys.keys.empty()) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
-           }
            if (!have_all_privkeys) {
                warnings.push_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
            }
