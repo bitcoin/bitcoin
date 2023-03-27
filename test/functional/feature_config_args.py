@@ -113,6 +113,41 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
+    def test_config_file_log(self):
+        # Disable this test for windows currently because trying to override
+        # the default datadir through the environment does not seem to work.
+        if sys.platform == "win32":
+            return
+
+        self.log.info('Test that correct configuration path is changed when configuration file changes the datadir')
+
+        # Create a temporary directory that will be treated as the default data
+        # directory by bitcoind.
+        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.options.tmpdir, "test_config_file_log"))
+        default_datadir.mkdir(parents=True)
+
+        # Write a bitcoin.conf file in the default data directory containing a
+        # datadir= line pointing at the node datadir.
+        node = self.nodes[0]
+        conf_text = pathlib.Path(node.bitcoinconf).read_text()
+        conf_path = default_datadir / "bitcoin.conf"
+        conf_path.write_text(f"datadir={node.datadir}\n{conf_text}")
+
+        # Drop the node -datadir= argument during this test, because if it is
+        # specified it would take precedence over the datadir setting in the
+        # config file.
+        node_args = node.args
+        node.args = [arg for arg in node.args if not arg.startswith("-datadir=")]
+
+        # Check that correct configuration file path is actually logged
+        # (conf_path, not node.bitcoinconf)
+        with self.nodes[0].assert_debug_log(expected_msgs=[f"Config file: {conf_path}"]):
+            self.start_node(0, ["-allowignoredconf"], env=env)
+            self.stop_node(0)
+
+        # Restore node arguments after the test
+        node.args = node_args
+
     def test_invalid_command_line_options(self):
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Error parsing command line arguments: Can not set -proxy with no value. Please specify value with -proxy=value.',
@@ -344,6 +379,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_connect_with_seednode()
 
         self.test_config_file_parser()
+        self.test_config_file_log()
         self.test_invalid_command_line_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()

@@ -26,11 +26,6 @@
 #include <utility>
 #include <vector>
 
-fs::path GetConfigFile(const ArgsManager& args, const fs::path& configuration_file_path)
-{
-    return AbsPathForConfigVal(args, configuration_file_path, /*net_specific=*/false);
-}
-
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
 {
     std::string str, prefix;
@@ -125,6 +120,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         LOCK(cs_args);
         m_settings.ro_config.clear();
         m_config_sections.clear();
+        m_config_path = AbsPathForConfigVal(*this, GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false);
     }
 
     const auto conf_path{GetConfigFilePath()};
@@ -175,7 +171,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
-                std::ifstream conf_file_stream{GetConfigFile(*this, fs::PathFromString(conf_file_name))};
+                std::ifstream conf_file_stream{AbsPathForConfigVal(*this, fs::PathFromString(conf_file_name), /*net_specific=*/false)};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
