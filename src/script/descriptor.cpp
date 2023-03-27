@@ -830,6 +830,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript>, FlatSigningProvider&) const override {
         CScript ret;
         std::vector<XOnlyPubKey> xkeys;
+        xkeys.reserve(keys.size());
         for (const auto& key : keys) xkeys.emplace_back(key);
         if (m_sorted) std::sort(xkeys.begin(), xkeys.end());
         ret << ToByteVector(xkeys[0]) << OP_CHECKSIG;

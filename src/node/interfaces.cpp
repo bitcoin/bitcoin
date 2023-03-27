@@ -291,6 +291,7 @@ public:
         if (command == "") return {};
         ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
         std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
+        result.reserve(signers.size());
         for (auto& signer : signers) {
             result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
         }

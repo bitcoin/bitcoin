@@ -1507,6 +1507,7 @@ std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& p
     FlatSigningProvider out;
     InferDescriptor(spk, provider)->Expand(0, DUMMY_SIGNING_PROVIDER, dummy, out);
     std::vector<CKeyID> ret;
+    ret.reserve(out.pubkeys.size());
     for (const auto& entry : out.pubkeys) {
         ret.push_back(entry.first);
     }
@@ -2501,6 +2502,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
         } else {
             // Maybe there are pubkeys listed that we can sign for
             std::vector<CPubKey> pubkeys;
+            pubkeys.reserve(input.hd_keypaths.size() + 2);
 
             // ECDSA Pubkeys
             for (const auto& [pk, _] : input.hd_keypaths) {

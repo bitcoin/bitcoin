@@ -174,6 +174,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     // this will create parallelism and randomness inside validation - the ValidationInterface
     // will subscribe to events generated during block validation and assert on ordering invariance
     std::vector<std::thread> threads;
+    threads.reserve(10);
     for (int i = 0; i < 10; i++) {
         threads.emplace_back([&]() {
             bool ignored;
