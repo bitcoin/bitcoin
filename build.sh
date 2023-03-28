@@ -35,7 +35,7 @@ sudo apt-get autoremove
 sudo apt-get autoclean
 
 # Instalar as dependências necessárias para executar o software
-sudo apt-get install libssl1.1 libevent-2.1-6 libboost-system1.71.0 libboost-filesystem1.71.0 libboost-chrono1.71.0 libboost-program-options1.71.0 libboost-test1.71.0 libboost-thread1.71.0 libzmq5
+sudo apt-get install libssl1.1 libevent-2.1-6 libboost-system1.71.0 libboost-filesystem1.71.0 libboost-chrono1.71.0 libboost-program-options1.71.0 libboost-test1.71.0 libboost-thread1.71.0 libzmq5 libevent-pthreads-2.1-7
 
 # Criar arquivo bitcoin.conf
 read -p "You need create the bitcoin.conf? y/n " q
