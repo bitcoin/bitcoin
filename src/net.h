@@ -236,6 +236,14 @@ public:
     std::string m_type;
 
     CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
+    // Only one CNetMessage object will exist for the same message on either
+    // the receive or processing queue. For performance reasons we therefore
+    // delete the copy constructor and assignment operator to avoid the
+    // possibility of copying CNetMessage objects.
+    CNetMessage(CNetMessage&&) = default;
+    CNetMessage(const CNetMessage&) = delete;
+    CNetMessage& operator=(CNetMessage&&) = default;
+    CNetMessage& operator=(const CNetMessage&) = delete;
 
     void SetVersion(int nVersionIn)
     {
@@ -342,6 +350,7 @@ struct CNodeOptions
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
+    size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
 };
 
 /** Information about a peer */
@@ -410,13 +419,10 @@ public:
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
 
-    const ConnectionType& GetConnectionType() const
-    {
-        return m_conn_type;
-    }
+    const ConnectionType m_conn_type;
 
     /** Move all messages from the received queue to the processing queue. */
-    void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
+    void MarkReceivedMsgsForProcessing()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     /** Poll the next message from the processing queue of this connection.
@@ -424,7 +430,7 @@ public:
      * Returns std::nullopt if the processing queue is empty, or a pair
      * consisting of the message and a bool that indicates if the processing
      * queue has more entries. */
-    std::optional<std::pair<CNetMessage, bool>> PollMessage(size_t recv_flood_size)
+    std::optional<std::pair<CNetMessage, bool>> PollMessage()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     /** Account for the total size of a sent message in the per msg type connection stats. */
@@ -614,9 +620,9 @@ public:
 private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
-    const ConnectionType m_conn_type;
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
+    const size_t m_recv_flood_size;
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     Mutex m_msg_process_queue_mutex;
@@ -878,8 +884,6 @@ public:
 
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
-
-    unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 

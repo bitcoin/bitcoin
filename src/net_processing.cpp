@@ -4887,7 +4887,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend) return false;
 
-    auto poll_result{pfrom->PollMessage(m_connman.GetReceiveFloodSize())};
+    auto poll_result{pfrom->PollMessage()};
     if (!poll_result) {
         // No message to process
         return false;
