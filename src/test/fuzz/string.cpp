@@ -5,8 +5,6 @@
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <common/url.h>
-#include <logging.h>
-#include <netaddress.h>
 #include <netbase.h>
 #include <outputtype.h>
 #include <rpc/client.h>
@@ -22,113 +20,21 @@
 #include <test/fuzz/util.h>
 #include <util/error.h>
 #include <util/fees.h>
-#include <util/message.h>
 #include <util/settings.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
-#include <version.h>
 
+#include <cassert>
 #include <cstdint>
 #include <cstdlib>
+#include <ios>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
-namespace {
-bool LegacyParsePrechecks(const std::string& str)
-{
-    if (str.empty()) // No empty string allowed
-        return false;
-    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size() - 1]))) // No padding allowed
-        return false;
-    if (!ContainsNoNUL(str)) // No embedded NUL characters allowed
-        return false;
-    return true;
-}
-
-bool LegacyParseInt32(const std::string& str, int32_t* out)
-{
-    if (!LegacyParsePrechecks(str))
-        return false;
-    char* endp = nullptr;
-    errno = 0; // strtol will not set errno if valid
-    long int n = strtol(str.c_str(), &endp, 10);
-    if (out) *out = (int32_t)n;
-    // Note that strtol returns a *long int*, so even if strtol doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-           n >= std::numeric_limits<int32_t>::min() &&
-           n <= std::numeric_limits<int32_t>::max();
-}
-
-bool LegacyParseInt64(const std::string& str, int64_t* out)
-{
-    if (!LegacyParsePrechecks(str))
-        return false;
-    char* endp = nullptr;
-    errno = 0; // strtoll will not set errno if valid
-    long long int n = strtoll(str.c_str(), &endp, 10);
-    if (out) *out = (int64_t)n;
-    // Note that strtoll returns a *long long int*, so even if strtol doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *int64_t*.
-    return endp && *endp == 0 && !errno &&
-           n >= std::numeric_limits<int64_t>::min() &&
-           n <= std::numeric_limits<int64_t>::max();
-}
-
-bool LegacyParseUInt32(const std::string& str, uint32_t* out)
-{
-    if (!LegacyParsePrechecks(str))
-        return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
-        return false;
-    char* endp = nullptr;
-    errno = 0; // strtoul will not set errno if valid
-    unsigned long int n = strtoul(str.c_str(), &endp, 10);
-    if (out) *out = (uint32_t)n;
-    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-           n <= std::numeric_limits<uint32_t>::max();
-}
-
-bool LegacyParseUInt8(const std::string& str, uint8_t* out)
-{
-    uint32_t u32;
-    if (!LegacyParseUInt32(str, &u32) || u32 > std::numeric_limits<uint8_t>::max()) {
-        return false;
-    }
-    if (out != nullptr) {
-        *out = static_cast<uint8_t>(u32);
-    }
-    return true;
-}
-
-bool LegacyParseUInt64(const std::string& str, uint64_t* out)
-{
-    if (!LegacyParsePrechecks(str))
-        return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
-        return false;
-    char* endp = nullptr;
-    errno = 0; // strtoull will not set errno if valid
-    unsigned long long int n = strtoull(str.c_str(), &endp, 10);
-    if (out) *out = (uint64_t)n;
-    // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *uint64_t*.
-    return endp && *endp == 0 && !errno &&
-           n <= std::numeric_limits<uint64_t>::max();
-}
-
-// For backwards compatibility checking.
-int64_t atoi64_legacy(const std::string& str)
-{
-    return strtoll(str.c_str(), nullptr, 10);
-}
-}; // namespace
+enum class FeeEstimateMode;
 
 FUZZ_TARGET(string)
 {
@@ -235,62 +141,5 @@ FUZZ_TARGET(string)
         const bilingual_str bs1{random_string_1, random_string_2};
         const bilingual_str bs2{random_string_2, random_string_1};
         (void)(bs1 + bs2);
-    }
-    {
-        int32_t i32;
-        int64_t i64;
-        uint32_t u32;
-        uint64_t u64;
-        uint8_t u8;
-        const bool ok_i32 = ParseInt32(random_string_1, &i32);
-        const bool ok_i64 = ParseInt64(random_string_1, &i64);
-        const bool ok_u32 = ParseUInt32(random_string_1, &u32);
-        const bool ok_u64 = ParseUInt64(random_string_1, &u64);
-        const bool ok_u8 = ParseUInt8(random_string_1, &u8);
-
-        int32_t i32_legacy;
-        int64_t i64_legacy;
-        uint32_t u32_legacy;
-        uint64_t u64_legacy;
-        uint8_t u8_legacy;
-        const bool ok_i32_legacy = LegacyParseInt32(random_string_1, &i32_legacy);
-        const bool ok_i64_legacy = LegacyParseInt64(random_string_1, &i64_legacy);
-        const bool ok_u32_legacy = LegacyParseUInt32(random_string_1, &u32_legacy);
-        const bool ok_u64_legacy = LegacyParseUInt64(random_string_1, &u64_legacy);
-        const bool ok_u8_legacy = LegacyParseUInt8(random_string_1, &u8_legacy);
-
-        assert(ok_i32 == ok_i32_legacy);
-        assert(ok_i64 == ok_i64_legacy);
-        assert(ok_u32 == ok_u32_legacy);
-        assert(ok_u64 == ok_u64_legacy);
-        assert(ok_u8 == ok_u8_legacy);
-
-        if (ok_i32) {
-            assert(i32 == i32_legacy);
-        }
-        if (ok_i64) {
-            assert(i64 == i64_legacy);
-        }
-        if (ok_u32) {
-            assert(u32 == u32_legacy);
-        }
-        if (ok_u64) {
-            assert(u64 == u64_legacy);
-        }
-        if (ok_u8) {
-            assert(u8 == u8_legacy);
-        }
-    }
-
-    {
-        const int locale_independent_atoi_result = LocaleIndependentAtoi<int>(random_string_1);
-        const int64_t atoi64_result = atoi64_legacy(random_string_1);
-        assert(locale_independent_atoi_result == std::clamp<int64_t>(atoi64_result, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
-    }
-
-    {
-        const int64_t atoi64_result = atoi64_legacy(random_string_1);
-        const int64_t locale_independent_atoi_result = LocaleIndependentAtoi<int64_t>(random_string_1);
-        assert(atoi64_result == locale_independent_atoi_result);
     }
 }
