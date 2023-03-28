@@ -966,7 +966,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce Rules #3 and #4.
-    for (CTxMemPool::txiter it : ws.m_all_conflicting) {
+    for (const CTxMemPool::txiter& it : ws.m_all_conflicting) {
         ws.m_conflicting_fees += it->GetModifiedFee();
         ws.m_conflicting_size += it->GetTxSize();
     }
@@ -1068,7 +1068,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
-    for (CTxMemPool::txiter it : ws.m_all_conflicting)
+    for (const CTxMemPool::txiter& it : ws.m_all_conflicting)
     {
         LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s additional fees, %d delta bytes\n",
                 it->GetTx().GetHash().ToString(),

@@ -211,7 +211,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
 {
-    for (CTxMemPool::txiter it : package) {
+    for (const CTxMemPool::txiter& it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
         }
@@ -248,11 +248,11 @@ static int UpdatePackagesForAdded(const CTxMemPool& mempool,
     AssertLockHeld(mempool.cs);
 
     int nDescendantsUpdated = 0;
-    for (CTxMemPool::txiter it : alreadyAdded) {
+    for (const CTxMemPool::txiter& it : alreadyAdded) {
         CTxMemPool::setEntries descendants;
         mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
-        for (CTxMemPool::txiter desc : descendants) {
+        for (const CTxMemPool::txiter& desc : descendants) {
             if (alreadyAdded.count(desc)) {
                 continue;
             }

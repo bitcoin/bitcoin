@@ -39,7 +39,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     auto ancestors{pool.AssumeCalculateMemPoolAncestors(__func__, entry, CTxMemPool::Limits::NoLimits(),
                                                         /*fSearchForParents=*/false)};
 
-    for (CTxMemPool::txiter it : ancestors) {
+    for (const CTxMemPool::txiter& it : ancestors) {
         if (SignalsOptInRBF(it->GetTx())) {
             return RBFTransactionState::REPLACEABLE_BIP125;
         }
@@ -75,7 +75,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         }
     }
     // Calculate the set of all transactions that would have to be evicted.
-    for (CTxMemPool::txiter it : iters_conflicting) {
+    for (const CTxMemPool::txiter& it : iters_conflicting) {
         pool.CalculateDescendants(it, all_conflicts);
     }
     return std::nullopt;
@@ -117,7 +117,7 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
                                                    const std::set<uint256>& direct_conflicts,
                                                    const uint256& txid)
 {
-    for (CTxMemPool::txiter ancestorIt : ancestors) {
+    for (const CTxMemPool::txiter& ancestorIt : ancestors) {
         const uint256& hashAncestor = ancestorIt->GetTx().GetHash();
         if (direct_conflicts.count(hashAncestor)) {
             return strprintf("%s spends conflicting transaction %s",

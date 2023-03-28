@@ -470,13 +470,13 @@ static RPCHelpMan getmempoolancestors()
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
+        for (const CTxMemPool::txiter& ancestorIt : ancestors) {
             o.push_back(ancestorIt->GetTx().GetHash().ToString());
         }
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
+        for (const CTxMemPool::txiter& ancestorIt : ancestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
@@ -534,14 +534,14 @@ static RPCHelpMan getmempooldescendants()
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter descendantIt : setDescendants) {
+        for (const CTxMemPool::txiter& descendantIt : setDescendants) {
             o.push_back(descendantIt->GetTx().GetHash().ToString());
         }
 
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter descendantIt : setDescendants) {
+        for (const CTxMemPool::txiter& descendantIt : setDescendants) {
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
