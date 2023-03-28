@@ -46,8 +46,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         # Add enough mature utxos to the wallet so that all txs spend confirmed coins.
-        self.generate(self.wallet, 35)
-        self.generate(self.nodes[0], COINBASE_MATURITY)
+        self.generate(self.wallet, COINBASE_MATURITY + 35)
 
         self.test_chain_limits()
         self.test_desc_count_limits()
