@@ -61,6 +61,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/random.cpp"\
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
+          " src/test/fuzz/string.cpp"\
           " src/test/fuzz/txorphan.cpp"\
           " src/test/fuzz/util/"\
           " src/test/util/coins.cpp"\
