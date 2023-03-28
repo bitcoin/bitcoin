@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scanblocks RPC call."""
+from test_framework.address import address_to_scriptpubkey
 from test_framework.blockfilter import (
     bip158_basic_element_hash,
     bip158_relevant_scriptpubkeys,
@@ -36,7 +37,7 @@ class ScanblocksTest(BitcoinTestFramework):
         # send 1.0, mempool only
         # childkey 5 of `parent_key`
         wallet.send_to(from_node=node,
-                       scriptPubKey=bytes.fromhex(node.validateaddress("mkS4HXoTYWRTescLGaUTGbtTTYX5EjJyEE")['scriptPubKey']),
+                       scriptPubKey=address_to_scriptpubkey("mkS4HXoTYWRTescLGaUTGbtTTYX5EjJyEE"),
                        amount=1 * COIN)
 
         # mine a block and assure that the mined blockhash is in the filterresult
