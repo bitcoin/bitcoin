@@ -45,6 +45,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   # shellcheck disable=SC2086
   CI_CONTAINER_ID=$(docker run $CI_CONTAINER_CAP --rm --interactive --detach --tty \
+                  --ulimit nofile=1024:4096 \
                   --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
