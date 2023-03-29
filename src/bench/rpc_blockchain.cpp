@@ -1,0 +1,35 @@
+// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <bench/bench.h>
+#include <bench/data.h>
+
+#include <validation.h>
+#include <streams.h>
+#include <consensus/validation.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
+#include <rpc/blockchain.h>
+
+#include <univalue.h>
+
+static void BlockToJsonVerbose(benchmark::Bench& bench) {
+    CDataStream stream(benchmark::data::block813851, SER_NETWORK, PROTOCOL_VERSION);
+    char a = '\0';
+    stream.write(&a, 1); // Prevent compaction
+
+    CBlock block;
+    stream >> block;
+
+    CBlockIndex blockindex;
+    const uint256 blockHash = block.GetHash();
+    blockindex.phashBlock = &blockHash;
+    blockindex.nBits = 403014710;
+
+    bench.run([&] {
+        (void)blockToJSON(block, &blockindex, &blockindex, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, /*verbose*/ true);
+    });
+}
+
+BENCHMARK(BlockToJsonVerbose);
