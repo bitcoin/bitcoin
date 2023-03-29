@@ -91,6 +91,7 @@ void CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, std::string_view ms
     if (!mnauth.sig.IsValid()) {
         LOCK(cs_main);
         Misbehaving(peer.GetId(), 100, "invalid mnauth signature");
+        LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- invalid mnauth for protx=%s with sig=%s\n", mnauth.proRegTxHash.ToString(), mnauth.sig.ToString());
         return;
     }
 
