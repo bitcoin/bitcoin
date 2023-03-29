@@ -13,6 +13,7 @@
 #include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
 
 #include <optional>
 
@@ -20,6 +21,14 @@
 
 
 namespace wallet {
+
+static const std::map<uint64_t, std::string> WALLET_FLAG_CAVEATS{
+    {WALLET_FLAG_AVOID_REUSE,
+     "You need to rescan the blockchain in order to correctly mark used "
+     "destinations in the past. Until this is done, some destinations may "
+     "be considered unused, even if the opposite is the case."},
+};
+
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
 {
