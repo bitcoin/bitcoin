@@ -173,6 +173,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         self.log.info("Ensuring mempool:added event was handled successfully...")
         assert_equal(EXPECTED_ADDED_EVENTS, handled_added_events)
+        self.generate(self.wallet, 1)
 
     def removed_test(self):
         """Expire a transaction from the mempool and make sure the tracepoint returns
@@ -223,6 +224,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         self.log.info("Ensuring mempool:removed event was handled successfully...")
         assert_equal(EXPECTED_REMOVED_EVENTS, handled_removed_events)
+        self.generate(self.wallet, 1)
 
     def replaced_test(self):
         """Replace one and two transactions in the mempool and make sure the tracepoint
@@ -280,6 +282,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         self.log.info("Ensuring mempool:replaced event was handled successfully...")
         assert_equal(EXPECTED_REPLACED_EVENTS, handled_replaced_events)
+        self.generate(self.wallet, 1)
 
     def rejected_test(self):
         """Create an invalid transaction and make sure the tracepoint returns
@@ -321,6 +324,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         self.log.info("Ensuring mempool:rejected event was handled successfully...")
         assert_equal(EXPECTED_REJECTED_EVENTS, handled_rejected_events)
+        self.generate(self.wallet, 1)
 
     def run_test(self):
         """Tests the mempool:added, mempool:removed, mempool:replaced,
