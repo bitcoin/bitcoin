@@ -87,6 +87,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     if (!mnauth.sig.IsValid()) {
         if(peer)
             peerman.Misbehaving(*peer, 100, "invalid mnauth signature");
+        LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- invalid mnauth for protx=%s with sig=%s\n", mnauth.proRegTxHash.ToString(), mnauth.sig.ToString());
         return;
     }
     auto mnList = deterministicMNManager->GetListAtChainTip();
