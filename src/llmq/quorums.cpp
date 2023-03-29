@@ -478,6 +478,8 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Already requested\n", __func__);
         return false;
     }
+    LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- sending QGETDATA quorumHash[%s] llmqType[%d] proRegTx[%s]\n", __func__, key.quorumHash.ToString(),
+             ToUnderlying(key.llmqType), key.proRegTx.ToString());
 
     CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QGETDATA, it.first->second));
