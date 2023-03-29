@@ -21,10 +21,16 @@ from .script import (
     taproot_construct,
 )
 from .util import assert_equal
+from test_framework.script_util import (
+    keyhash_to_p2pkh_script,
+    program_to_witness_script,
+    scripthash_to_p2sh_script,
+)
 from test_framework.segwit_addr import (
     decode_segwit_address,
     encode_segwit_address,
 )
+
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
@@ -170,6 +176,21 @@ def bech32_to_bytes(address):
     if version is None:
         return (None, None)
     return version, bytearray(payload)
+
+
+def address_to_scriptpubkey(address):
+    """Converts a given address to the corresponding output script (scriptPubKey)."""
+    version, payload = bech32_to_bytes(address)
+    if version is not None:
+        return program_to_witness_script(version, payload) # testnet segwit scriptpubkey
+    payload, version = base58_to_byte(address)
+    if version == 111:  # testnet pubkey hash
+        return keyhash_to_p2pkh_script(payload)
+    elif version == 196:  # testnet script hash
+        return scripthash_to_p2sh_script(payload)
+    # TODO: also support other address formats
+    else:
+        assert False
 
 
 class TestFrameworkScript(unittest.TestCase):
