@@ -271,10 +271,10 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use
 
 task:
-  name: '[fuzzer,address,undefined,integer, no depends] [jammy]'
+  name: '[fuzzer,address,undefined,integer, no depends] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:jammy
+    image: ubuntu:lunar
     cpu: 4  # Increase CPU and memory to avoid timeout
     memory: 16G
   env:
