@@ -68,6 +68,16 @@ void BanMan::ClearBanned()
     if (m_client_interface) m_client_interface->BannedListChanged();
 }
 
+void BanMan::ClearDiscouraged()
+{
+    {
+        LOCK(m_cs_banned);
+        m_discouraged.reset();
+        m_is_dirty = true;
+    }
+    if (m_client_interface) m_client_interface->BannedListChanged();
+}
+
 bool BanMan::IsDiscouraged(const CNetAddr& net_addr)
 {
     LOCK(m_cs_banned);

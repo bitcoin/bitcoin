@@ -63,6 +63,7 @@ public:
     void Ban(const CSubNet& sub_net, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void Discourage(const CNetAddr& net_addr);
     void ClearBanned();
+    void ClearDiscouraged();
 
     //! Return whether net_addr is banned
     bool IsBanned(const CNetAddr& net_addr);
