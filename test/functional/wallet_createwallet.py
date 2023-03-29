@@ -194,6 +194,11 @@ class CreateWalletTest(BitcoinTestFramework):
                 "warnings": [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG],
             })
 
+        self.log.info('Test "warning" field deprecation, i.e. not returned without -deprecatedrpc=walletwarningfield')
+        self.restart_node(0, extra_args=[])
+        result = self.nodes[0].createwallet(wallet_name="w7_again", disable_private_keys=False, blank=False, passphrase="")
+        assert "warning" not in result
+
 
 if __name__ == '__main__':
     CreateWalletTest().main()
