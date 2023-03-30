@@ -1000,8 +1000,8 @@ class DashTestFramework(BitcoinTestFramework):
 
         # This is nRequestTimeout in dash-q-recovery thread
         self.quorum_data_thread_request_timeout_seconds = 10
-        # This is EXPIRATION_TIMEOUT in CQuorumDataRequest
-        self.quorum_data_request_expiration_timeout = 300
+        # This is EXPIRATION_TIMEOUT + EXPIRATION_BIAS in CQuorumDataRequest
+        self.quorum_data_request_expiration_timeout = 360
 
     def set_dash_dip8_activation(self, activate_after_block):
         self.dip8_activation_height = activate_after_block
