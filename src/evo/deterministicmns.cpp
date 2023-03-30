@@ -218,15 +218,35 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
     if (nCount < 0 ) {
         return {};
     }
-    nCount = std::min(nCount, int(GetValidMNsCount()));
+    nCount = std::min(nCount, int(GetValidWeightedMNsCount()));
 
     std::vector<CDeterministicMNCPtr> result;
     result.reserve(nCount);
 
+    auto remaining_hpmn_payments = 0;
+    CDeterministicMNCPtr hpmn_to_be_skipped = nullptr;
     ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
-        result.emplace_back(dmn);
+        if (dmn->pdmnState->nLastPaidHeight == nHeight) {
+            // We found the last MN Payee.
+            // If the last payee is a HPMN, we need to check its consecutive payments and pay him again if needed
+            if (dmn->nType == MnType::HighPerformance && dmn->pdmnState->nConsecutivePayments < dmn_types::HighPerformance.voting_weight) {
+                remaining_hpmn_payments = dmn_types::HighPerformance.voting_weight - dmn->pdmnState->nConsecutivePayments;
+                for ([[maybe_unused]] auto _ : irange::range(remaining_hpmn_payments)) {
+                    result.emplace_back(dmn);
+                    hpmn_to_be_skipped = dmn;
+                }
+            }
+        }
+        return;
     });
-    std::sort(result.begin(), result.end(), [&](const CDeterministicMNCPtr& a, const CDeterministicMNCPtr& b) {
+
+    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        if (dmn == hpmn_to_be_skipped) return;
+        for ([[maybe_unused]] auto _ : irange::range(GetMnType(dmn->nType).voting_weight)) {
+            result.emplace_back(dmn);
+        }
+    });
+    std::sort(result.begin() + remaining_hpmn_payments, result.end(), [&](const CDeterministicMNCPtr& a, const CDeterministicMNCPtr& b) {
         return CompareByLastPaid(a.get(), b.get());
     });
 
