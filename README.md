@@ -7,9 +7,7 @@ information or see https://opensource.org/licenses/MIT.
 https://bitcoincore.org/en/download/.  
   
   Fork Dev Branch Progress:  
-   - v0.0.3 - Adding Consensus of Maturity to transactions of output.
-                the transaction only procced if the units of bitcoin in output
-                 already have reached in your maturity of lasts N blocks
+   - v0.0.3 - Improvements to increase the security and performance of node
    
 Fork Updates:  
    - v0.0.2 - Added to build.sh file, Base16 with preconfig of bitcoin.conf  
@@ -17,7 +15,14 @@ Fork Updates:
                 all describe on: https://bitcoin.org/en/full-node#configuration-file          
   
    - v0.0.1 - Added build.sh to compile and make the bitcoin-core/node  
-  
+     
+       Fork Dev canceled Progress:  
+   - v0.0.3 - ~Adding Consensus of Maturity to transactions of output.~
+                ~the transaction only procced if the units of bitcoin in output~
+                 ~already have reached in your maturity of lasts N blocks~
+                 (Already exist without necessity of change de code  
+                 only need that you insert the rule over bitcoin.conf to your node work of accord this)  
+                 
 =====================================  
     
 Explaining Bitcoin.conf  
