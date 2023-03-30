@@ -736,6 +736,27 @@ static UniValue clearbanned(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+static UniValue cleardiscouraged(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"cleardiscouraged",
+               "\nClear all discouraged nodes.\n",
+               {},
+               RPCResult{RPCResult::Type::NONE, "", ""},
+               RPCExamples{
+                       HelpExampleCli("cleardiscouraged", "")
+                       + HelpExampleRpc("cleardiscouraged", "")
+               },
+    }.Check(request);
+    NodeContext& node = EnsureNodeContext(request.context);
+    if (!node.banman) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
+    }
+
+    node.banman->ClearDiscouraged();
+
+    return NullUniValue;
+}
+
 static UniValue setnetworkactive(const JSONRPCRequest& request)
 {
     RPCHelpMan{"setnetworkactive",
@@ -825,6 +846,7 @@ static const CRPCCommand commands[] =
     { "network",            "setban",                 &setban,                 {"subnet", "command", "bantime", "absolute"} },
     { "network",            "listbanned",             &listbanned,             {} },
     { "network",            "clearbanned",            &clearbanned,            {} },
+    { "network",            "cleardiscouraged",       &cleardiscouraged,        {} },
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
 };
