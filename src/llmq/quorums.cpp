@@ -283,7 +283,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         LOCK(cs_data_requests);
         auto it = mapQuorumDataRequests.begin();
         while (it != mapQuorumDataRequests.end()) {
-            if (it->second.IsExpired()) {
+            if (it->second.IsExpired(/*add_bias=*/true)) {
                 it = mapQuorumDataRequests.erase(it);
             } else {
                 ++it;
@@ -474,7 +474,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
     key.quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
     key.llmqType = llmqType;
     auto it = mapQuorumDataRequests.emplace(key, CQuorumDataRequest(llmqType, pQuorumBaseBlockIndex->GetBlockHash(), nDataMask, proTxHash));
-    if (!it.second && !it.first->second.IsExpired()) {
+    if (!it.second && !it.first->second.IsExpired(/*add_bias=*/true)) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Already requested\n", __func__);
         return false;
     }
@@ -664,7 +664,7 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
             auto it = mapQuorumDataRequests.find(key);
             if (it == mapQuorumDataRequests.end()) {
                 it = mapQuorumDataRequests.emplace(key, request).first;
-            } else if (it->second.IsExpired()) {
+            } else if (it->second.IsExpired(/*add_bias=*/false)) {
                 it->second = request;
             } else {
                 request_limit_exceeded = true;
@@ -919,7 +919,7 @@ void CQuorumManager::StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, co
                     key.quorumHash = pQuorum->qc->quorumHash;
                     key.llmqType = pQuorum->qc->llmqType;
                     auto it = mapQuorumDataRequests.find(key);
-                    if (it != mapQuorumDataRequests.end() && !it->second.IsExpired()) {
+                    if (it != mapQuorumDataRequests.end() && !it->second.IsExpired(/*add_bias=*/true)) {
                         printLog("Already asked");
                         continue;
                     }

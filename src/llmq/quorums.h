@@ -83,6 +83,7 @@ private:
     bool fProcessed{false};
 
     static constexpr int64_t EXPIRATION_TIMEOUT{300};
+    static constexpr int64_t EXPIRATION_BIAS{60};
 
 public:
 
@@ -119,7 +120,7 @@ public:
     Errors GetError() const { return nError; }
     std::string GetErrorString() const;
 
-    bool IsExpired() const { return (GetTime() - nTime) >= EXPIRATION_TIMEOUT; }
+    bool IsExpired(bool add_bias) const { return (GetTime() - nTime) >= (EXPIRATION_TIMEOUT + (add_bias ? EXPIRATION_BIAS : 0)); }
     bool IsProcessed() const { return fProcessed; }
     void SetProcessed() { fProcessed = true; }
 
