@@ -44,8 +44,6 @@ from subprocess import check_output, CalledProcessError
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
     "src/test/fuzz/locale.cpp:.*setlocale",
-    "src/test/fuzz/string.cpp:.*strtol",
-    "src/test/fuzz/string.cpp:.*strtoul",
     "src/test/util_tests.cpp:.*strtoll",
     "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
     "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`

@@ -24,6 +24,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CAmount basefee(2000);
     CAmount deltaFee(100);
     std::vector<CAmount> feeV;
+    feeV.reserve(10);
 
     // Populate vectors of increasing fees
     for (int j = 0; j < 10; j++) {

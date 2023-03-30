@@ -212,6 +212,8 @@ void TestGUI(interfaces::Node& node)
     QCOMPARE(transactionTableModel->rowCount({}), 105);
     uint256 txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, /*rbf=*/false);
     uint256 txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN, /*rbf=*/true);
+    // Transaction table model updates on a QueuedConnection, so process events to ensure it's updated.
+    qApp->processEvents();
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());

@@ -608,6 +608,7 @@ bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
 std::vector<std::string> RPCHelpMan::GetArgNames() const
 {
     std::vector<std::string> ret;
+    ret.reserve(m_args.size());
     for (const auto& arg : m_args) {
         ret.emplace_back(arg.m_names);
     }
@@ -732,12 +733,12 @@ UniValue RPCArg::MatchesType(const UniValue& request) const
 
 std::string RPCArg::GetFirstName() const
 {
-    return m_names.substr(0, m_names.find("|"));
+    return m_names.substr(0, m_names.find('|'));
 }
 
 std::string RPCArg::GetName() const
 {
-    CHECK_NONFATAL(std::string::npos == m_names.find("|"));
+    CHECK_NONFATAL(std::string::npos == m_names.find('|'));
     return m_names;
 }
 

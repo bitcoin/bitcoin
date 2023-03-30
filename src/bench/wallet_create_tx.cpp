@@ -146,6 +146,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 
     // Generate destinations
     std::vector<CScript> dest_wallet;
+    dest_wallet.reserve(output_type.size());
     for (auto type : output_type) {
         dest_wallet.emplace_back(GetScriptForDestination(getNewDestination(wallet, type)));
     }

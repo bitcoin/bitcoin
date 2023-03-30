@@ -752,6 +752,7 @@ RPCHelpMan dumpwallet()
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
+    vKeyBirth.reserve(mapKeyBirth.size());
     for (const auto& entry : mapKeyBirth) {
         vKeyBirth.push_back(std::make_pair(entry.second, entry.first));
     }

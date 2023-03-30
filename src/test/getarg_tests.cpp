@@ -29,6 +29,7 @@ void ResetArgs(ArgsManager& local_args, const std::string& strArg)
 
     // Convert to char*:
     std::vector<const char*> vecChar;
+    vecChar.reserve(vecArg.size());
     for (const std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 

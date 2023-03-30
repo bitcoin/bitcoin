@@ -83,6 +83,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     std::string category;
     std::set<intptr_t> setDone;
     std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
+    vCommands.reserve(mapCommands.size());
 
     for (const auto& entry : mapCommands)
         vCommands.push_back(make_pair(entry.second.front()->category + entry.first, entry.second.front()));
@@ -513,6 +514,7 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
 std::vector<std::string> CRPCTable::listCommands() const
 {
     std::vector<std::string> commandList;
+    commandList.reserve(mapCommands.size());
     for (const auto& i : mapCommands) commandList.emplace_back(i.first);
     return commandList;
 }
