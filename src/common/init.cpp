@@ -31,11 +31,10 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         // used, though. Specifying a conf= option in the config file causes a
         // parse error, and specifying a datadir= location containing another
         // bitcoin.conf file just ignores the other file.)
-        const fs::path orig_datadir_path{args.GetDataDirBase()};
-        const fs::path orig_config_path{AbsPathForConfigVal(args, args.GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false)};
-
         std::string error;
-        if (!args.ReadConfigFiles(error, true)) {
+        fs::path orig_config_path;
+        fs::path orig_datadir_path;
+        if (!args.ReadConfigFiles(error, true, &orig_config_path, &orig_datadir_path)) {
             return ConfigError{ConfigStatus::FAILED, strprintf(_("Error reading configuration file: %s"), error)};
         }
 
