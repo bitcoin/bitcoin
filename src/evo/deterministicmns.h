@@ -19,6 +19,7 @@
 
 #include <immer/map.hpp>
 
+#include <numeric>
 #include <unordered_map>
 #include <utility>
 
@@ -239,6 +240,14 @@ public:
     [[nodiscard]] size_t GetValidHPMNsCount() const
     {
         return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance && IsMNValid(*p.second); });
+    }
+
+    [[nodiscard]] size_t GetValidWeightedMNsCount() const
+    {
+        return std::accumulate(mnMap.begin(), mnMap.end(), 0, [](auto res, const auto& p) {
+                                                                if (!IsMNValid(*p.second)) return res;
+                                                                return res + GetMnType(p.second->nType).voting_weight;
+                                                            });
     }
 
     /**
