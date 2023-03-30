@@ -26,6 +26,10 @@ Fork Updates:
 =====================================  
     
 Explaining Bitcoin.conf  
+  
+minrelaytxfee=0.00001@21  | This means that your node will only accept transactions that have a fee of at least 0.00001 BTC per byte  
+                             and that have at least 21 commit blocks.  
+  
 testnet=0: This setting specifies whether to run on the testnet (1) or the main network (0).  
 server=1: This setting enables the Bitcoin Core node to act as a server and accept incoming connections.  
 rpcbind=127.0.0.1: This setting specifies the IP address that the Bitcoin Core node will listen on for incoming JSON-RPC API requests.  
