@@ -19,7 +19,7 @@ Fork Updates:
        Fork Dev canceled Progress:  
    - v0.0.3 - ~Adding Consensus of Maturity to transactions of output.~
                 ~the transaction only procced if the units of bitcoin in output~
-                 ~already have reached in your maturity of lasts N blocks~
+                 ~already have reached in your maturity of lasts N blocks~  
                  (Already exist without necessity of change de code  
                  only need that you insert the rule over bitcoin.conf to your node work of accord this)  
                  
