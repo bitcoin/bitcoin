@@ -647,7 +647,7 @@ parse, modify and abstract ELF, PE and MachO formats.")
         bison
         ;; Scripting
         perl
-        python-3
+        python-minimal ;; (3.9)
         ;; Git
         git
         ;; Tests
