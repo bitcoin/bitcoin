@@ -60,7 +60,7 @@ class CreateWalletTest(BitcoinTestFramework):
         else:
             result = w1.importmulti([{'scriptPubKey': {'address': key_to_p2wpkh(eckey.get_pubkey().get_bytes())}, 'timestamp': 'now', 'keys': [privkey]}])
         assert not result[0]['success']
-        assert 'warning' not in result[0]
+        assert 'warnings' not in result[0]
         assert_equal(result[0]['error']['code'], -4)
         assert_equal(result[0]['error']['message'], 'Cannot import private keys to a wallet with private keys disabled')
 
