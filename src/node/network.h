@@ -48,7 +48,7 @@ enum Network {
 /**
  * BIP155 network ids recognized by this software.
  */
-enum BIP155Network : uint8_t {
+enum class BIP155Network : uint8_t {
     IPV4 = 1,
     IPV6 = 2,
     TORV2 = 3,

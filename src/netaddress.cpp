@@ -24,7 +24,7 @@
 bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t address_size)
 {
     switch (possible_bip155_net) {
-    case BIP155Network::IPV4:
+    case static_cast<uint8_t>(BIP155Network::IPV4):
         if (address_size == ADDR_IPV4_SIZE) {
             m_net = NET_IPV4;
             return true;
@@ -32,7 +32,7 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 IPv4 address with length %u (should be %u)", address_size,
                       ADDR_IPV4_SIZE));
-    case BIP155Network::IPV6:
+    case static_cast<uint8_t>(BIP155Network::IPV6):
         if (address_size == ADDR_IPV6_SIZE) {
             m_net = NET_IPV6;
             return true;
@@ -40,7 +40,7 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 IPv6 address with length %u (should be %u)", address_size,
                       ADDR_IPV6_SIZE));
-    case BIP155Network::TORV3:
+    case static_cast<uint8_t>(BIP155Network::TORV3):
         if (address_size == ADDR_TORV3_SIZE) {
             m_net = NET_ONION;
             return true;
@@ -48,7 +48,7 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 TORv3 address with length %u (should be %u)", address_size,
                       ADDR_TORV3_SIZE));
-    case BIP155Network::I2P:
+    case static_cast<uint8_t>(BIP155Network::I2P):
         if (address_size == ADDR_I2P_SIZE) {
             m_net = NET_I2P;
             return true;
@@ -56,7 +56,7 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 I2P address with length %u (should be %u)", address_size,
                       ADDR_I2P_SIZE));
-    case BIP155Network::CJDNS:
+    case static_cast<uint8_t>(BIP155Network::CJDNS):
         if (address_size == ADDR_CJDNS_SIZE) {
             m_net = NET_CJDNS;
             return true;
