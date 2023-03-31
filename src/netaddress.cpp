@@ -21,28 +21,6 @@
 #include <iterator>
 #include <tuple>
 
-CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
-{
-    switch (m_net) {
-    case NET_IPV4:
-        return BIP155Network::IPV4;
-    case NET_IPV6:
-        return BIP155Network::IPV6;
-    case NET_ONION:
-        return BIP155Network::TORV3;
-    case NET_I2P:
-        return BIP155Network::I2P;
-    case NET_CJDNS:
-        return BIP155Network::CJDNS;
-    case NET_INTERNAL:   // should have been handled before calling this function
-    case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
-    case NET_MAX:        // m_net is never and should not be set to NET_MAX
-        assert(false);
-    } // no default case, so the compiler can warn about missing cases
-
-    assert(false);
-}
-
 bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t address_size)
 {
     switch (possible_bip155_net) {

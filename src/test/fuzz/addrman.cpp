@@ -69,12 +69,13 @@ CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& f
     if (fuzzed_data_provider.remaining_bytes() > 1 && fuzzed_data_provider.ConsumeBool()) {
         addr = ConsumeNetAddr(fuzzed_data_provider);
     } else {
-        // The networks [1..6] correspond to CNetAddr::BIP155Network (private).
-        static const std::map<uint8_t, uint8_t> net_len_map = {{1, ADDR_IPV4_SIZE},
-                                                               {2, ADDR_IPV6_SIZE},
-                                                               {4, ADDR_TORV3_SIZE},
-                                                               {5, ADDR_I2P_SIZE},
-                                                               {6, ADDR_CJDNS_SIZE}};
+        static const std::map<uint8_t, uint8_t> net_len_map = {
+            {static_cast<uint8_t>(BIP155Network::IPV4), ADDR_IPV4_SIZE},
+            {static_cast<uint8_t>(BIP155Network::IPV6), ADDR_IPV6_SIZE},
+            {static_cast<uint8_t>(BIP155Network::TORV3), ADDR_TORV3_SIZE},
+            {static_cast<uint8_t>(BIP155Network::I2P), ADDR_I2P_SIZE},
+            {static_cast<uint8_t>(BIP155Network::CJDNS), ADDR_CJDNS_SIZE},
+        };
         uint8_t net = fast_random_context.randrange(5) + 1; // [1..5]
         if (net == 3) {
             net = 6;

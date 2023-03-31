@@ -233,18 +233,6 @@ private:
     bool SetI2P(const std::string& addr);
 
     /**
-     * BIP155 network ids recognized by this software.
-     */
-    enum BIP155Network : uint8_t {
-        IPV4 = 1,
-        IPV6 = 2,
-        TORV2 = 3,
-        TORV3 = 4,
-        I2P = 5,
-        CJDNS = 6,
-    };
-
-    /**
      * Size of CNetAddr when serialized as ADDRv1 (pre-BIP155) (in bytes).
      */
     static constexpr size_t V1_SERIALIZATION_SIZE = ADDR_IPV6_SIZE;
@@ -255,13 +243,6 @@ private:
      * when serialized.
      */
     static constexpr size_t MAX_ADDRV2_SIZE = 512;
-
-    /**
-     * Get the BIP155 network id of this address.
-     * Must not be called for IsInternal() objects.
-     * @returns BIP155 network id, except TORV2 which is no longer supported.
-     */
-    BIP155Network GetBIP155Network() const;
 
     /**
      * Set `m_net` from the provided BIP155 network id and size after validation.
@@ -337,7 +318,7 @@ private:
             return;
         }
 
-        s << static_cast<uint8_t>(GetBIP155Network());
+        s << static_cast<uint8_t>(GetBIP155Network(m_net));
         s << m_addr;
     }
 

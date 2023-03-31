@@ -12,6 +12,28 @@
 #include <string>
 #include <vector>
 
+BIP155Network GetBIP155Network(Network net)
+{
+    switch (net) {
+    case NET_IPV4:
+        return BIP155Network::IPV4;
+    case NET_IPV6:
+        return BIP155Network::IPV6;
+    case NET_ONION:
+        return BIP155Network::TORV3;
+    case NET_I2P:
+        return BIP155Network::I2P;
+    case NET_CJDNS:
+        return BIP155Network::CJDNS;
+    case NET_INTERNAL:   // should have been handled before calling this function
+    case NET_UNROUTABLE: // should never be NET_UNROUTABLE
+    case NET_MAX:        // should never be NET_MAX
+        assert(false);
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
+}
+
 enum Network ParseNetwork(const std::string& net_in)
 {
     const std::string net{ToLower(net_in)};

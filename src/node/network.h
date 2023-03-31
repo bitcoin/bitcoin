@@ -45,6 +45,25 @@ enum Network {
     NET_MAX,
 };
 
+/**
+ * BIP155 network ids recognized by this software.
+ */
+enum BIP155Network : uint8_t {
+    IPV4 = 1,
+    IPV6 = 2,
+    TORV2 = 3,
+    TORV3 = 4,
+    I2P = 5,
+    CJDNS = 6,
+};
+
+/**
+ * Get the BIP155 network id of a network.
+ * Must not be called for IsInternal() objects.
+ * @returns BIP155 network id, except TORV2 which is no longer supported.
+ */
+BIP155Network GetBIP155Network(Network net);
+
 enum Network ParseNetwork(const std::string& net_in);
 
 std::string GetNetworkName(enum Network net);
