@@ -12,7 +12,8 @@ https://bitcoincore.org/en/download/.
 Fork Updates:  
    - v0.0.2 - Added to build.sh file, Base16 with preconfig of bitcoin.conf  
                 with all options on file to improve the user access  
-                all describe on: https://bitcoin.org/en/full-node#configuration-file          
+                all described on: https://bitcoin.org/en/full-node#configuration-file    
+                 autoshortcut create if the user choose the option of Bitcoin-QT  
   
    - v0.0.1 - Added build.sh to compile and make the bitcoin-core/node  
      
