@@ -7,22 +7,38 @@ git clone https://github.com/defiminds/bitcoin.git
 cd bitcoin
 
 # Instalar as dependências necessárias
-sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
-sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
-sudo apt-get install libzmq3-dev
+sudo apt-get update
+sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libzmq3-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler libqrencode-dev -y
 
 # Configurar o projeto
 ./autogen.sh
-./configure
-
+# Instalar o software (opcional)
+read -p "Você deseja instalar a Bitcoin-Qt? [y/n] " install_qt
+if [ "$install_qt" = "y" ]; then
+./configure --enable-gui
 # Construir o projeto
 make
-
+# Criar um atalho na área de trabalho
+cd ..
+echo "[Desktop Entry]
+Name=Bitcoin Core
+Exec=$PWD/bitcoin/src/qt/bitcoin-qt
+Icon=$PWD/bitcoin/src/qt/res/icons/bitcoin.png
+Terminal=false
+Type=Application
+Categories=Office;Finance;" > bitcoin-qt.desktop
+chmod +x bitcoin-qt.desktop
+mv bitcoin-qt.desktop ~/Desktop/
+echo "Compilation Sucessfully!"
 # Executar os testes
 make check
-
+else
+./configure
+# Construir o projeto
+make
 # Instalar o software (opcional)
 sudo make install
+fi
 
 # Desinstalar as dependências instaladas
 sudo apt-get remove build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
