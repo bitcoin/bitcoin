@@ -62,13 +62,13 @@ enum class BIP155Network : uint8_t {
  * Must not be called for IsInternal() objects.
  * @returns BIP155 network id, except TORV2 which is no longer supported.
  */
-BIP155Network GetBIP155Network(Network net);
+[[nodiscard]] BIP155Network GetBIP155Network(Network net);
 
-enum Network ParseNetwork(const std::string& net_in);
+[[nodiscard]] enum Network ParseNetwork(const std::string& net_in);
 
-std::string GetNetworkName(enum Network net);
+[[nodiscard]] std::string GetNetworkName(enum Network net);
 
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
-std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
+[[nodiscard]] std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
 
 #endif // BITCOIN_NODE_NETWORK_H
