@@ -48,6 +48,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(configure_warnings)
 
+include(cmake/introspection.cmake)
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
   check_pie_supported(OUTPUT_VARIABLE check_pie_output LANGUAGES CXX)
