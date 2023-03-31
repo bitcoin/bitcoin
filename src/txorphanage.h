@@ -61,7 +61,25 @@ public:
         return m_orphans.size();
     }
 
+    /** Return total memory usage of the transactions stored. Does not include overhead of
+     * m_orphans, m_peer_work_set, etc. */
+    unsigned int TotalOrphanBytes() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
+        return m_total_orphan_bytes;
+    }
+    /** Return total amount of orphans stored by this peer, in bytes. */
+    unsigned int BytesFromPeer(NodeId peer) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
+        auto peer_bytes_it = m_peer_bytes_used.find(peer);
+        return peer_bytes_it == m_peer_bytes_used.end() ? 0 : peer_bytes_it->second;
+    }
+
 protected:
+    /** Total bytes of all transactions. */
+    unsigned int m_total_orphan_bytes{0};
+
     /** Guards orphan transactions */
     mutable Mutex m_mutex;
 
@@ -101,8 +119,19 @@ protected:
      *  transactions using their witness ids. */
     std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
 
+    /** Map from nodeid to the amount of orphans provided by this peer, in bytes. */
+    std::map<NodeId, unsigned int> m_peer_bytes_used GUARDED_BY(m_mutex);
+
     /** Erase an orphan by wtxid */
     int EraseTxNoLock(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+
+    /** Add bytes to this peer's entry in m_peer_bytes_used, adding a new entry if it doesn't
+     * already exist. */
+    void AddOrphanBytes(unsigned int size, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+
+    /** Subtract bytes from this peer's entry in m_peer_bytes_used, removing the peer's entry from
+     * the map if its value becomes 0. */
+    void SubtractOrphanBytes(unsigned int size, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 };
 
 #endif // BITCOIN_TXORPHANAGE_H
