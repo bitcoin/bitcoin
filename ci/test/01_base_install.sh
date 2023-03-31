@@ -6,6 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
+CFG_DONE="ci.base-install-done"  # Use a global git setting to remember whether this script ran to avoid running it twice
+
+if [ "$(git config --global ${CFG_DONE})" == "true" ]; then
+  echo "Skip base install"
+  exit 0
+fi
 
 if [ -n "$DPKG_ADD_ARCH" ]; then
   dpkg --add-architecture "$DPKG_ADD_ARCH"
@@ -51,11 +57,9 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  if [ ! -d "${DIR_IWYU}" ]; then
-    git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 "${DIR_IWYU}"/include-what-you-use
-    cmake -B "${DIR_IWYU}"/build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S "${DIR_IWYU}"/include-what-you-use
-    make -C "${DIR_IWYU}"/build/ install "$MAKEJOBS"
-  fi
+  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 "${DIR_IWYU}"/include-what-you-use
+  cmake -B "${DIR_IWYU}"/build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S "${DIR_IWYU}"/include-what-you-use
+  make -C "${DIR_IWYU}"/build/ install "$MAKEJOBS"
 fi
 
 mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
@@ -80,3 +84,5 @@ if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
   unzip -o "$ANDROID_TOOLS_PATH" -d "$ANDROID_HOME"
   yes | "${ANDROID_HOME}"/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_HOME}" --install "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "ndk;${ANDROID_NDK_VERSION}"
 fi
+
+git config --global ${CFG_DONE} "true"

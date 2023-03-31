@@ -55,20 +55,21 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   $CONTAINER_NAME)
   export CI_CONTAINER_ID
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
-  $CI_EXEC_CMD_PREFIX rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}"
-  $CI_EXEC_CMD_PREFIX rsync --archive --stats --human-readable /ro_base/ "$BASE_ROOT_DIR"
-  # Fixes permission issues when there is a container UID/GID mismatch with the owner
-  # of the mounted bitcoin src dir.
-  $CI_EXEC_CMD_PREFIX git config --global --add safe.directory "*"
 else
   echo "Running on host system without docker wrapper"
-  "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 fi
 
 CI_EXEC () {
   $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 export -f CI_EXEC
+
+CI_EXEC rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}" || echo "/ci_base_install/ missing"
+CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
+CI_EXEC rsync --archive --stats --human-readable /ro_base/ "${BASE_ROOT_DIR}" || echo "Nothing to copy from ro_base"
+# Fixes permission issues when there is a container UID/GID mismatch with the owner
+# of the git source code directory.
+CI_EXEC git config --global --add safe.directory \"*\"
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
 
