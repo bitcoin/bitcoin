@@ -334,7 +334,7 @@ private:
     std::map<int64_t, CKeyID> m_index_to_reserved_key;
 
     //! Fetches a key from the keypool
-    bool GetKeyFromPool(CPubKey &key, const OutputType type, bool internal = false);
+    bool GetKeyFromPool(CPubKey &key, const OutputType type);
 
     /**
      * Reserves a key from the keypool and sets nIndex to its index
