@@ -1385,10 +1385,10 @@ void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, co
     WalletLogPrintf("keypool return %d\n", nIndex);
 }
 
-bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, const OutputType type, bool internal)
+bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, const OutputType type)
 {
     assert(type != OutputType::BECH32M);
-    if (!CanGetAddresses(internal)) {
+    if (!CanGetAddresses(/*internal=*/ false)) {
         return false;
     }
 
@@ -1396,10 +1396,10 @@ bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, const OutputType typ
     {
         LOCK(cs_KeyStore);
         int64_t nIndex;
-        if (!ReserveKeyFromKeyPool(nIndex, keypool, internal) && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!ReserveKeyFromKeyPool(nIndex, keypool, /*fRequestedInternal=*/ false) && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             if (m_storage.IsLocked()) return false;
             WalletBatch batch(m_storage.GetDatabase());
-            result = GenerateNewKey(batch, m_hd_chain, internal);
+            result = GenerateNewKey(batch, m_hd_chain, /*internal=*/ false);
             return true;
         }
         KeepDestination(nIndex, type);
