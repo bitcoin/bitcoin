@@ -28,11 +28,6 @@ export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
-  LOCAL_UID=$(id -u)
-  LOCAL_GID=$(id -g)
-
-  # the name isn't important, so long as we use the same UID
-  LOCAL_USER=nonroot
   DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
@@ -59,18 +54,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --name $CONTAINER_NAME \
                   $CONTAINER_NAME)
   export CI_CONTAINER_ID
-  export CI_EXEC_CMD_PREFIX_ROOT="docker exec -u 0 $CI_CONTAINER_ID"
-  export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
-  $CI_EXEC_CMD_PREFIX_ROOT rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}"
-  $CI_EXEC_CMD_PREFIX_ROOT rsync --archive --stats --human-readable /ro_base/ "$BASE_ROOT_DIR"
-
-  # Create a non-root user inside the container which matches the local user.
-  #
-  # This prevents the root user in the container modifying the local file system permissions
-  # on the mounted directories
-  docker exec "$CI_CONTAINER_ID" useradd -u "$LOCAL_UID" -o -m "$LOCAL_USER"
-  docker exec "$CI_CONTAINER_ID" groupmod -o -g "$LOCAL_GID" "$LOCAL_USER"
-  docker exec "$CI_CONTAINER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
+  export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
+  $CI_EXEC_CMD_PREFIX rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}"
+  $CI_EXEC_CMD_PREFIX rsync --archive --stats --human-readable /ro_base/ "$BASE_ROOT_DIR"
 else
   echo "Running on host system without docker wrapper"
   "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
@@ -79,11 +65,7 @@ fi
 CI_EXEC () {
   $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
-CI_EXEC_ROOT () {
-  $CI_EXEC_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
-}
 export -f CI_EXEC
-export -f CI_EXEC_ROOT
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
 
