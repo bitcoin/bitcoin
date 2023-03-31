@@ -194,7 +194,7 @@ enum SOCKS5Reply: uint8_t {
 };
 
 /** Values defined for ATYPE in RFC1928 */
-enum SOCKS5Atyp: uint8_t {
+enum class SOCKS5Atyp : uint8_t {
     IPV4 = 0x01,
     DOMAINNAME = 0x03,
     IPV6 = 0x04,
@@ -343,7 +343,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
     vSocks5.push_back(SOCKSVersion::SOCKS5); // VER protocol version
     vSocks5.push_back(SOCKS5Command::CONNECT); // CMD CONNECT
     vSocks5.push_back(0x00); // RSV Reserved must be 0
-    vSocks5.push_back(SOCKS5Atyp::DOMAINNAME); // ATYP DOMAINNAME
+    vSocks5.push_back(static_cast<uint8_t>(SOCKS5Atyp::DOMAINNAME)); // ATYP DOMAINNAME
     vSocks5.push_back(strDest.size()); // Length<=255 is checked at beginning of function
     vSocks5.insert(vSocks5.end(), strDest.begin(), strDest.end());
     vSocks5.push_back((port >> 8) & 0xFF);
@@ -377,9 +377,9 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
     uint8_t pchRet3[256];
     switch (pchRet2[3])
     {
-        case SOCKS5Atyp::IPV4: recvr = InterruptibleRecv(pchRet3, 4, g_socks5_recv_timeout, sock); break;
-        case SOCKS5Atyp::IPV6: recvr = InterruptibleRecv(pchRet3, 16, g_socks5_recv_timeout, sock); break;
-        case SOCKS5Atyp::DOMAINNAME:
+        case static_cast<uint8_t>(SOCKS5Atyp::IPV4): recvr = InterruptibleRecv(pchRet3, 4, g_socks5_recv_timeout, sock); break;
+        case static_cast<uint8_t>(SOCKS5Atyp::IPV6): recvr = InterruptibleRecv(pchRet3, 16, g_socks5_recv_timeout, sock); break;
+        case static_cast<uint8_t>(SOCKS5Atyp::DOMAINNAME):
         {
             recvr = InterruptibleRecv(pchRet3, 1, g_socks5_recv_timeout, sock);
             if (recvr != IntrRecvError::OK) {
