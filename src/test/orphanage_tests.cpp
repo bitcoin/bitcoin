@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <consensus/validation.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -62,6 +63,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
+    size_t expected_count{0};
+    size_t expected_total_size{0};
+
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
     {
@@ -74,8 +78,14 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-        orphanage.AddTx(MakeTransactionRef(tx), i);
+        auto ptx{MakeTransactionRef(tx)};
+        if (orphanage.AddTx(ptx, i)) {
+            ++expected_count;
+            expected_total_size += ptx->GetTotalSize();
+        }
     }
+    BOOST_CHECK_EQUAL(orphanage.Size(), expected_count);
+    BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
 
     // ... and 50 that depend on other orphans:
     for (int i = 0; i < 50; i++)
@@ -92,8 +102,14 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         SignatureData empty;
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL, empty));
 
-        orphanage.AddTx(MakeTransactionRef(tx), i);
+        auto ptx{MakeTransactionRef(tx)};
+        if (orphanage.AddTx(ptx, i)) {
+            ++expected_count;
+            expected_total_size += ptx->GetTotalSize();
+        }
     }
+    BOOST_CHECK_EQUAL(orphanage.Size(), expected_count);
+    BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
 
     // This really-big orphan should be ignored:
     for (int i = 0; i < 10; i++)
@@ -119,6 +135,8 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
         BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i));
     }
+    BOOST_CHECK_EQUAL(orphanage.Size(), expected_count);
+    BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
 
     // Test EraseOrphansFor:
     for (NodeId i = 0; i < 3; i++)
@@ -135,6 +153,45 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     BOOST_CHECK(orphanage.CountOrphans() <= 10);
     orphanage.LimitOrphans(0);
     BOOST_CHECK(orphanage.CountOrphans() == 0);
+
+    expected_count = 0;
+    expected_total_size = 0;
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), expected_count);
+    BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+
+    // Really large orphans: LimitOrphans() caps both the count and total weight.
+    for (int i = 0; i < 150; ++i) {
+        CMutableTransaction tx;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = CENT;
+        tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+        tx.vin.resize(80);
+        for (unsigned int j = 0; j < tx.vin.size(); j++) {
+            tx.vin[j].prevout.n = j;
+            tx.vin[j].prevout.hash = orphanage.CountOrphans() ? orphanage.RandomOrphan()->GetHash() : GetRandHash();
+            tx.vin[j].scriptWitness.stack.reserve(100);
+            for (int i = 0; i < 100; ++i) {
+                tx.vin[j].scriptWitness.stack.push_back(std::vector<unsigned char>(j));
+            }
+        }
+
+        auto ptx{MakeTransactionRef(tx)};
+        BOOST_CHECK(ptx->GetTotalSize() <= MAX_STANDARD_TX_WEIGHT);
+        BOOST_CHECK(ptx->GetTotalSize() * 150 > MAX_ORPHAN_TOTAL_SIZE);
+        BOOST_CHECK(orphanage.AddTx(ptx, /*peer=*/0));
+        expected_total_size += ptx->GetTotalSize();
+        BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+        if (expected_total_size > MAX_ORPHAN_TOTAL_SIZE) {
+            orphanage.LimitOrphans(150);
+            // Both weight and count limits are enforced
+            BOOST_CHECK(orphanage.CountOrphans() < 150);
+            BOOST_CHECK(orphanage.TotalOrphanBytes() <= 100 * MAX_STANDARD_TX_WEIGHT);
+            break;
+        } else {
+            // The maximum size should be exceeded at some point, otherwise this test is useless.
+            BOOST_CHECK(i < 149);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

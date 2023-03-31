@@ -6,7 +6,6 @@
 
 #include <consensus/validation.h>
 #include <logging.h>
-#include <policy/policy.h>
 
 #include <cassert>
 
@@ -48,6 +47,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
 
+    m_total_orphan_bytes += tx->GetTotalSize();
     LogPrint(BCLog::TXPACKAGES, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
              m_orphans.size(), m_outpoint_to_orphan_it.size());
     return true;
@@ -72,6 +72,7 @@ int TxOrphanage::EraseTxNoLock(const uint256& wtxid)
     const auto wtxid_it = m_wtxid_to_orphan_it.find(wtxid);
     if (wtxid_it == m_wtxid_to_orphan_it.end()) return 0;
     std::map<uint256, OrphanTx>::iterator it = wtxid_it->second;
+    m_total_orphan_bytes -= it->second.tx->GetTotalSize();
     for (const CTxIn& txin : it->second.tx->vin)
     {
         auto itPrev = m_outpoint_to_orphan_it.find(txin.prevout);
@@ -143,7 +144,7 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans)
         if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
     }
     FastRandomContext rng;
-    while (m_orphans.size() > max_orphans)
+    while (m_orphans.size() > max_orphans || m_total_orphan_bytes > MAX_ORPHAN_TOTAL_SIZE)
     {
         // Evict a random orphan:
         size_t randompos = rng.randrange(m_orphan_list.size());
