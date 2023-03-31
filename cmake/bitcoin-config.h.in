@@ -42,4 +42,8 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "@PROJECT_VERSION@"
 
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#cmakedefine WORDS_BIGENDIAN 1
+
 #endif //BITCOIN_CONFIG_H
