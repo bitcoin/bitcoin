@@ -113,10 +113,11 @@ The following can be set when running make: `make FOO=bar`
 - `NO_BDB`: Don't download/build/cache BerkeleyDB
 - `NO_SQLITE`: Don't download/build/cache SQLite
 - `NO_UPNP`: Don't download/build/cache packages needed for enabling UPnP
+- `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP
+- `NO_USDT`: Don't download/build/cache packages needed for enabling USDT tracepoints
 - `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to `NO_*` option or
   build script logic) are searched for among the host system packages using
   `pkg-config`. It allows building with packages of other (newer) versions
-- `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP
 - `MULTIPROCESS`: build libmultiprocess (experimental, requires cmake)
 - `DEBUG`: Disable some optimizations and enable more runtime checking
 - `HOST_ID_SALT`: Optional salt to use when generating host package ids
