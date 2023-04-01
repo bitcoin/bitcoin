@@ -56,6 +56,7 @@ cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ON "ENABLE
 
 cmake_dependent_option(CXX20 "Enable compilation in C++20 mode." OFF "NOT MSVC" ON)
 option(THREADLOCAL "Enable features that depend on the C++ thread_local keyword (currently just thread names in debug logs)." ON)
+option(HARDENING "Attempt to harden the resulting executables." ON)
 
 tristate_option(CCACHE "Use ccache for compiling." "if ccache is found." AUTO)
 tristate_option(WITH_NATPMP "Enable NAT-PMP." "if libnatpmp is found." AUTO)
@@ -220,6 +221,46 @@ else()
 endif()
 
 include(cmake/optional.cmake)
+
+set(hardened_cxx_flags "")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # All versions of gcc that we commonly use for building are subject to bug
+  # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348. To work around that, set
+  # -fstack-reuse=none for all gcc builds.
+  try_append_cxxflag(hardened_cxx_flags "-fstack-reuse=none")
+endif()
+if(HARDENING)
+  if(MSVC)
+    add_link_options(/DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT)
+  else()
+    try_append_cxxflag(hardened_cxx_flags "-Wstack-protector")
+    try_append_cxxflag(hardened_cxx_flags "-fstack-protector-all")
+    try_append_cxxflag(hardened_cxx_flags "-fcf-protection=full")
+    if(MINGW)
+      link_libraries(ssp)
+    else()
+      # stack-clash-protection doesn't currently work, and likely should just be skipped for Windows.
+      # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+      try_append_cxxflag(hardened_cxx_flags "-fstack-clash-protection")
+    endif()
+
+    set(hardened_linker_flags "")
+    try_append_linker_flag(hardened_linker_flags "-Wl,--enable-reloc-section")
+    try_append_linker_flag(hardened_linker_flags "-Wl,--dynamicbase")
+    try_append_linker_flag(hardened_linker_flags "-Wl,--nxcompat")
+    try_append_linker_flag(hardened_linker_flags "-Wl,--high-entropy-va")
+    try_append_linker_flag(hardened_linker_flags "-Wl,-z,relro")
+    try_append_linker_flag(hardened_linker_flags "-Wl,-z,now")
+    try_append_linker_flag(hardened_linker_flags "-Wl,-z,separate-code")
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+      try_append_linker_flag(hardened_linker_flags "-Wl,-bind_at_load")
+    endif()
+    separate_arguments(hardened_linker_flags)
+    add_link_options(${hardened_linker_flags})
+  endif()
+endif()
+separate_arguments(hardened_cxx_flags)
+add_compile_options(${hardened_cxx_flags})
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
