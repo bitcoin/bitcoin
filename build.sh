@@ -1,13 +1,15 @@
 #!/bin/bash
 build() {
 echo "If you already the folder please, exec this inside of folder";
-read -p "You already have the folder of bitcoin? y/n" choose;
+read -p "You already have the folder of bitcoin? y/n " choose;
 if [ $choose == "n" ]; then
-# Clonar o repositório
-git clone https://github.com/defiminds/bitcoin.git
-# Entrar no diretório do projeto
+read -p "1) bitcoin/bitcoin repo | 2) defiminds/bitcoin fork? " choose;
+  if [ $choose == "1" ]; then
+   git clone https://github.com/bitcoin/bitcoin.git
+  else
+   git clone https://github.com/defiminds/bitcoin.git
+  fi
 cd bitcoin
-fi
 
 # Instalar as dependências necessárias
 sudo apt-get update
@@ -15,13 +17,11 @@ sudo apt-get install build-essential libtool autotools-dev automake pkg-config b
 
 # Configurar o projeto
 ./autogen.sh
-# Instalar o software (opcional)
 read -p "Você deseja instalar a Bitcoin-Qt? [y/n] " install_qt
-if [ "$install_qt" = "y" ]; then
+if [ "$install_qt" == "y" ]; then
 ./configure --enable-gui
 # Construir o projeto
 make
-# Criar um atalho na área de trabalho
 cd ..
 echo "[Desktop Entry]
 Name=Bitcoin Core
@@ -60,7 +60,7 @@ sudo apt-get install libssl1.1 libevent-2.1-6 libboost-system1.71.0 libboost-fil
 
 # Criar arquivo bitcoin.conf
 read -p "You need create the bitcoin.conf? y/n " q
-if [ $q == "y" ];then
+if [ $q == "y" ]; then
 if ! command -v basez &> /dev/null; then
     sudo apt-get update && sudo apt-get install basez
     echo "Basez installed, BASE16/HEX Avaible on kernel now!"
