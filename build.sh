@@ -2,7 +2,7 @@
 build() {
 echo "If you already the folder please, exec this inside of folder";
 read -p "You already have the folder of bitcoin? y/n" choose;
-if [ $choose == "y" ]; then
+if [ $choose == "n" ]; then
 # Clonar o repositório
 git clone https://github.com/defiminds/bitcoin.git
 # Entrar no diretório do projeto
