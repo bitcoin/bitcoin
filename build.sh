@@ -1,10 +1,13 @@
 #!/bin/bash
-
+build() {
+echo "If you already the folder please, exec this inside of folder";
+read -p "You already have the folder of bitcoin? y/n" choose;
+if [ $choose == "y" ]; then
 # Clonar o repositório
 git clone https://github.com/defiminds/bitcoin.git
-
 # Entrar no diretório do projeto
 cd bitcoin
+fi
 
 # Instalar as dependências necessárias
 sudo apt-get update
@@ -68,3 +71,5 @@ b=$(base16 -d ~/.bitcoin/bitcoin.conf) && echo -ne -n -e "${b}" > ~/.bitcoin/bit
 else
 exit;
 fi
+}
+build
