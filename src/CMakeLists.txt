@@ -234,3 +234,13 @@ if(BUILD_CLI)
     libevent::libevent
   )
 endif()
+
+
+if(BUILD_TX)
+  add_executable(bitcoin-tx bitcoin-tx.cpp)
+  target_link_libraries(bitcoin-tx
+    bitcoin_common
+    bitcoin_util
+    univalue
+  )
+endif()
