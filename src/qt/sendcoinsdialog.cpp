@@ -355,7 +355,8 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
         question_string.append("</b>");
 
         // append transaction size
-        question_string.append(" (" + QString::number((double)m_current_transaction->getTransactionSize() / 1000) + " kB): ");
+        //: When reviewing a newly created PSBT (via Send flow), the transaction fee is shown, with "virtual size" of the transaction displayed for context
+        question_string.append(" (" + tr("%1 kvB", "PSBT transaction creation").arg((double)m_current_transaction->getTransactionSize() / 1000, 0, 'g', 3) + "): ");
 
         // append transaction fee value
         question_string.append("<span style='color:#aa0000; font-weight:bold;'>");
@@ -403,8 +404,9 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     ssTx << psbtx;
     GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
     QMessageBox msgBox;
-    msgBox.setText("Unsigned Transaction");
-    msgBox.setInformativeText("The PSBT has been copied to the clipboard. You can also save it.");
+    //: Caption of "PSBT has been copied" messagebox
+    msgBox.setText(tr("Unsigned Transaction", "PSBT copied"));
+    msgBox.setInformativeText(tr("The PSBT has been copied to the clipboard. You can also save it."));
     msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
     msgBox.setDefaultButton(QMessageBox::Discard);
     switch (msgBox.exec()) {
@@ -432,7 +434,8 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
         std::ofstream out{filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary};
         out << ssTx.str();
         out.close();
-        Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);
+        //: Popup message when a PSBT has been saved to a file
+        Q_EMIT message(tr("PSBT saved"), tr("PSBT saved to disk"), CClientUIInterface::MSG_INFORMATION);
         break;
     }
     case QMessageBox::Discard:
@@ -452,12 +455,14 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
     }
     if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
         //: "External signer" means using devices such as hardware wallets.
-        QMessageBox::critical(nullptr, tr("External signer not found"), "External signer not found");
+        const QString msg = tr("External signer not found");
+        QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
     if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
         //: "External signer" means using devices such as hardware wallets.
-        QMessageBox::critical(nullptr, tr("External signer failure"), "External signer failure");
+        const QString msg = tr("External signer failure");
+        QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
     if (err != TransactionError::OK) {
@@ -823,7 +828,7 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     if (ui->radioSmartFee->isChecked())
         ui->labelFeeMinimized->setText(ui->labelSmartFee->text());
     else {
-        ui->labelFeeMinimized->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), ui->customFee->value()) + "/kvB");
+        ui->labelFeeMinimized->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), ui->customFee->value())));
     }
 }
 
@@ -858,7 +863,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     FeeReason reason;
     CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
-    ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kvB");
+    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())));
 
     if (reason == FeeReason::FALLBACK) {
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)

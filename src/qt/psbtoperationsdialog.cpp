@@ -31,7 +31,6 @@ PSBTOperationsDialog::PSBTOperationsDialog(
                                                                              m_client_model(client_model)
 {
     m_ui->setupUi(this);
-    setWindowTitle("PSBT Operations");
 
     connect(m_ui->signTransactionButton, &QPushButton::clicked, this, &PSBTOperationsDialog::signTransaction);
     connect(m_ui->broadcastTransactionButton, &QPushButton::clicked, this, &PSBTOperationsDialog::broadcastTransaction);
