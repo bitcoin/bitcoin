@@ -32,6 +32,8 @@ mv bitcoin-qt.desktop ~/Desktop/
 echo "Compilation Sucessfully!"
 # Executar os testes
 make check
+# Instalar o software (opcional)
+sudo make install
 else
 ./configure
 # Construir o projeto
