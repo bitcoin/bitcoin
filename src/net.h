@@ -176,7 +176,7 @@ extern bool fListen;
 extern std::string strSubVersion;
 
 struct LocalServiceInfo {
-    int nScore;
+    int64_t nScore;
     uint16_t nPort;
 };
 
