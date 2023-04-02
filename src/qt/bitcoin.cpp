@@ -206,6 +206,7 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node):
     pollShutdownTimer(nullptr),
     returnValue(0)
 {
+    // Qt runs setlocale(LC_ALL, "") on initialization.
     setQuitOnLastWindowClosed(false);
 }
 
