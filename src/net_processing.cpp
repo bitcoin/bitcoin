@@ -731,8 +731,8 @@ private:
     std::atomic<std::chrono::seconds> m_last_tip_update{0s};
 
     /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
-    CTransactionRef FindTxForGetData(const Peer& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
-        LOCKS_EXCLUDED(cs_main) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
+    CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
+        EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
 
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
@@ -743,9 +743,9 @@ private:
 
     /** Relay map (txid or wtxid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
-    MapRelay mapRelay GUARDED_BY(cs_main);
+    MapRelay mapRelay GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
-    std::deque<std::pair<std::chrono::microseconds, MapRelay::iterator>> g_relay_expiration GUARDED_BY(cs_main);
+    std::deque<std::pair<std::chrono::microseconds, MapRelay::iterator>> g_relay_expiration GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     /**
      * When a peer sends us a valid block, instruct it to announce blocks to us
@@ -2210,7 +2210,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     }
 }
 
-CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
+CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
 {
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
@@ -2222,16 +2222,13 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer& peer, const GenTxi
         }
     }
 
-    {
-        LOCK(cs_main);
-        // Otherwise, the transaction must have been announced recently.
-        if (Assume(peer.GetTxRelay())->m_recently_announced_invs.contains(gtxid.GetHash())) {
-            // If it was, it can be relayed from either the mempool...
-            if (txinfo.tx) return std::move(txinfo.tx);
-            // ... or the relay pool.
-            auto mi = mapRelay.find(gtxid.GetHash());
-            if (mi != mapRelay.end()) return mi->second;
-        }
+    // Otherwise, the transaction must have been announced recently.
+    if (tx_relay.m_recently_announced_invs.contains(gtxid.GetHash())) {
+        // If it was, it can be relayed from either the mempool...
+        if (txinfo.tx) return std::move(txinfo.tx);
+        // ... or the relay pool.
+        auto mi = mapRelay.find(gtxid.GetHash());
+        if (mi != mapRelay.end()) return mi->second;
     }
 
     return {};
@@ -2269,7 +2266,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
         // SYSCOIN
         if(inv.IsGenTxMsg(true)) {
-            CTransactionRef tx = FindTxForGetData(peer, ToGenTxid(inv), mempool_req, now);
+            CTransactionRef tx = FindTxForGetData(*tx_relay, ToGenTxid(inv), mempool_req, now);
             if (tx) {
                 // WTX and WITNESS_TX imply we serialize with witness
                 int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);

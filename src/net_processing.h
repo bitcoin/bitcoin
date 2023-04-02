@@ -163,10 +163,6 @@ struct Peer {
     {
         return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
     };
-    const TxRelay* GetTxRelay() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_relay_mutex)
-    {
-        return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
-    };
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
