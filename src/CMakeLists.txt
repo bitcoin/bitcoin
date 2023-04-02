@@ -234,10 +234,6 @@ if(BUILD_DAEMON)
     PRIVATE
       bitcoin_node
   )
-  target_link_options(bitcoind
-    PRIVATE
-      $<$<BOOL:${MINGW}>:-static>
-  )
   list(APPEND installable_targets bitcoind)
 endif()
 
