@@ -226,6 +226,8 @@ class GE:
 
     def __rmul__(self, a):
         """Multiply an integer with a group element."""
+        if self == G:
+            return FAST_G.mul(a)
         return GE.mul((a, self))
 
     def __neg__(self):
@@ -312,3 +314,33 @@ class GE:
 
 # The secp256k1 generator point
 G = GE.lift_x(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798)
+
+
+class FastGEMul:
+    """Table for fast multiplication with a constant group element.
+
+    Speed up scalar multiplication with a fixed point P by using a precomputed lookup table with
+    its powers of 2:
+
+        table = [P, 2*P, 4*P, (2^3)*P, (2^4)*P, ..., (2^255)*P]
+
+    During multiplication, the points corresponding to each bit set in the scalar are added up,
+    i.e. on average ~128 point additions take place.
+    """
+
+    def __init__(self, p):
+        self.table = [p]  # table[i] = (2^i) * p
+        for _ in range(255):
+            p = p + p
+            self.table.append(p)
+
+    def mul(self, a):
+        result = GE()
+        a = a % GE.ORDER
+        for bit in range(a.bit_length()):
+            if a & (1 << bit):
+                result += self.table[bit]
+        return result
+
+# Precomputed table with multiples of G for fast multiplication
+FAST_G = FastGEMul(G)
