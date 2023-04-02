@@ -20,6 +20,9 @@ set(bitcoinconsensus_src
   ../uint256.cpp
   ../util/strencodings.cpp
 )
+set_property(SOURCE interpreter.cpp APPEND PROPERTY
+  COMPILE_OPTIONS $<$<BOOL:${MINGW}>:-Wno-maybe-uninitialized>
+)
 
 if(BUILD_SHARED)
   add_library(bitcoinconsensus SHARED "")

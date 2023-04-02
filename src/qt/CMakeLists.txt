@@ -65,6 +65,9 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   $<$<PLATFORM_ID:Darwin>:macnotificationhandler.mm>
   $<$<PLATFORM_ID:Darwin>:macos_appnap.mm>
 )
+set_property(SOURCE winshutdownmonitor.cpp APPEND PROPERTY
+  COMPILE_OPTIONS $<$<BOOL:${MINGW}>:-Wno-cast-function-type>
+)
 target_include_directories(bitcoinqt
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>

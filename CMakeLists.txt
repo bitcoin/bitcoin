@@ -211,6 +211,61 @@ include(cmake/leveldb.cmake)
 include(cmake/minisketch.cmake)
 include(cmake/secp256k1.cmake)
 
+set(warn_cxx_flags "")
+if(MSVC)
+  try_append_cxxflag(warn_cxx_flags "/W3")
+  try_append_cxxflag(warn_cxx_flags "/wd4018")
+  try_append_cxxflag(warn_cxx_flags "/wd4244")
+  try_append_cxxflag(warn_cxx_flags "/wd4267")
+  try_append_cxxflag(warn_cxx_flags "/wd4715")
+  try_append_cxxflag(warn_cxx_flags "/wd4805")
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+else()
+  try_append_cxxflag(warn_cxx_flags "-Wall")
+  try_append_cxxflag(warn_cxx_flags "-Wextra")
+  try_append_cxxflag(warn_cxx_flags "-Wgnu")
+  # Some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
+  try_append_cxxflag(warn_cxx_flags "-Wformat -Wformat-security")
+  try_append_cxxflag(warn_cxx_flags "-Wvla")
+  try_append_cxxflag(warn_cxx_flags "-Wshadow-field")
+  try_append_cxxflag(warn_cxx_flags "-Wthread-safety")
+  try_append_cxxflag(warn_cxx_flags "-Wloop-analysis")
+  try_append_cxxflag(warn_cxx_flags "-Wredundant-decls")
+  try_append_cxxflag(warn_cxx_flags "-Wunused-member-function")
+  try_append_cxxflag(warn_cxx_flags "-Wdate-time")
+  try_append_cxxflag(warn_cxx_flags "-Wconditional-uninitialized")
+  try_append_cxxflag(warn_cxx_flags "-Wduplicated-branches")
+  try_append_cxxflag(warn_cxx_flags "-Wduplicated-cond")
+  try_append_cxxflag(warn_cxx_flags "-Wlogical-op")
+  try_append_cxxflag(warn_cxx_flags "-Woverloaded-virtual")
+  try_append_cxxflag(warn_cxx_flags "-Wunreachable-code-loop-increment")
+  try_append_cxxflag(warn_cxx_flags "-Wimplicit-fallthrough")
+  try_append_cxxflag(warn_cxx_flags "-Wdocumentation")
+
+  # -Wsuggest-override is broken with GCC before 9.2
+  # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
+  try_append_cxxflag(warn_cxx_flags "-Wsuggest-override"
+    CHECK_PASSED_FLAG "-Wsuggest-override"
+    CHECK_FAILED_FLAG ""
+    SOURCE "struct A { virtual void f(); }; struct B : A { void f() final; };"
+  )
+
+  # Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
+  # unknown options if any other warning is produced. Test the -Wfoo case, and
+  # set the -Wno-foo case if it works.
+  try_append_cxxflag(warn_cxx_flags "-Wunused-parameter" CHECK_PASSED_FLAG "-Wno-unused-parameter")
+  try_append_cxxflag(warn_cxx_flags "-Wself-assign" CHECK_PASSED_FLAG "-Wno-self-assign")
+  try_append_cxxflag(warn_cxx_flags "-Wgnu-zero-variadic-macro-arguments" CHECK_PASSED_FLAG "-Wno-gnu-zero-variadic-macro-arguments")
+endif()
+separate_arguments(warn_cxx_flags)
+add_compile_options(${warn_cxx_flags})
+
+if(NOT MSVC)
+  # Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
+  try_append_cxxflag(core_cxx_flags "-fno-extended-identifiers")
+  add_compile_options(${core_cxx_flags})
+endif()
+
 # Redefine configuration flags.
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG_LOCKORDER>)

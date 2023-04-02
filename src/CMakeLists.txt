@@ -32,6 +32,9 @@ add_library(bitcoin_consensus OBJECT EXCLUDE_FROM_ALL
   uint256.cpp
   util/strencodings.cpp
 )
+set_property(SOURCE script/interpreter.cpp APPEND PROPERTY
+  COMPILE_OPTIONS $<$<BOOL:${MINGW}>:-Wno-maybe-uninitialized>
+)
 target_link_libraries(bitcoin_consensus PRIVATE secp256k1)
 
 if(WITH_ZMQ)
@@ -86,6 +89,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
 target_compile_definitions(bitcoin_common
   PRIVATE
     ${THREAD_LOCAL_IF_AVAILABLE}
+    $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
 )
 target_link_libraries(bitcoin_common
   PRIVATE
