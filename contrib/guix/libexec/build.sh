@@ -214,7 +214,7 @@ mkdir -p "$OUTDIR"
 ###########################
 
 # CONFIGFLAGS
-CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
+CONFIGFLAGS="-DREDUCE_EXPORTS=ON -DBUILD_BENCH=OFF -DBUILD_FUZZ_BINARY=OFF"
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
@@ -247,21 +247,20 @@ mkdir -p "$DISTSRC"
     # Extract the source tarball
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
-    ./autogen.sh
+    # Setup the directory where our Bitcoin Core build for HOST will be
+    # installed. This directory will also later serve as the input for our
+    # binary tarballs.
+    INSTALLPATH="${DISTSRC}/installed/${DISTNAME}"
+    mkdir -p "${INSTALLPATH}"
 
     # Configure this DISTSRC for $HOST
     # shellcheck disable=SC2086
-    env CONFIG_SITE="${BASEPREFIX}/${HOST}/share/config.site" \
-        ./configure --prefix=/ \
-                    --disable-ccache \
-                    --disable-maintainer-mode \
-                    --disable-dependency-tracking \
-                    ${CONFIGFLAGS} \
-                    ${HOST_CFLAGS:+CFLAGS="${HOST_CFLAGS}"} \
-                    ${HOST_CXXFLAGS:+CXXFLAGS="${HOST_CXXFLAGS}"} \
-                    ${HOST_LDFLAGS:+LDFLAGS="${HOST_LDFLAGS}"}
-
-    sed -i.old 's/-lstdc++ //g' config.status libtool
+    env CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" \
+    cmake --toolchain "${BASEPREFIX}/${HOST}/share/toolchain.cmake" -S . -B build \
+      -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
+      -DCCACHE=OFF \
+      ${CONFIGFLAGS}
+    cd build
 
     # Build Bitcoin Core
     make --jobs="$JOBS" ${V:+V=1}
@@ -269,43 +268,39 @@ mkdir -p "$DISTSRC"
     # Check that symbol/security checks tools are sane.
     make test-security-check ${V:+V=1}
     # Perform basic security checks on a series of executables.
-    make -C src --jobs=1 check-security ${V:+V=1}
+    make --jobs=1 check-security ${V:+V=1}
     # Check that executables only contain allowed version symbols.
-    make -C src --jobs=1 check-symbols  ${V:+V=1}
+    make --jobs=1 check-symbols ${V:+V=1}
 
     mkdir -p "$OUTDIR"
 
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
-            make deploy ${V:+V=1} BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+            make deploy ${V:+V=1}
+            mv share/setup.exe "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             ;;
     esac
 
-    # Setup the directory where our Bitcoin Core build for HOST will be
-    # installed. This directory will also later serve as the input for our
-    # binary tarballs.
-    INSTALLPATH="${PWD}/installed/${DISTNAME}"
-    mkdir -p "${INSTALLPATH}"
     # Install built Bitcoin Core to $INSTALLPATH
     case "$HOST" in
         *darwin*)
-            make install-strip DESTDIR="${INSTALLPATH}" ${V:+V=1}
+            make install/strip ${V:+V=1}
             ;;
         *)
-            make install DESTDIR="${INSTALLPATH}" ${V:+V=1}
+            make install ${V:+V=1}
             ;;
     esac
 
     case "$HOST" in
         *darwin*)
-            make osx_volname ${V:+V=1}
-            make deploydir ${V:+V=1}
+            make deploy ${V:+V=1}
+            mv Bitcoin-Core.dmg "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.dmg"
             mkdir -p "unsigned-app-${HOST}"
-            cp  --target-directory="unsigned-app-${HOST}" \
+            cp  --target-directory="unsigned-app-${HOST}" -r \
+                dist \
                 osx_volname \
-                contrib/macdeploy/detached-sig-create.sh
-            mv --target-directory="unsigned-app-${HOST}" dist
+                "${DISTSRC}/contrib/macdeploy/detached-sig-create.sh"
             (
                 cd "unsigned-app-${HOST}"
                 find . -print0 \
@@ -314,11 +309,10 @@ mkdir -p "$DISTSRC"
                     | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" && exit 1 )
             )
-            make deploy ${V:+V=1} OSX_DMG="${OUTDIR}/${DISTNAME}-${HOST}-unsigned.dmg"
             ;;
     esac
     (
-        cd installed
+        cd "${DISTSRC}/installed"
 
         case "$HOST" in
             *mingw*)
@@ -326,8 +320,7 @@ mkdir -p "$DISTSRC"
                 ;;
         esac
 
-        # Prune libtool and object archives
-        find . -name "lib*.la" -delete
+        # Prune object archives
         find . -name "lib*.a" -delete
 
         # Prune pkg-config files
@@ -336,11 +329,12 @@ mkdir -p "$DISTSRC"
         case "$HOST" in
             *darwin*) ;;
             *)
+                chmod +x ../build/split-debug.sh
                 # Split binaries and libraries from their debug symbols
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
                     find "${DISTNAME}/lib" -type f -print0
-                } | xargs -0 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
+                } | xargs -0 -P"$JOBS" -I{} "../build/split-debug.sh" {} {} {}.dbg
                 ;;
         esac
 
@@ -400,7 +394,7 @@ mkdir -p "$DISTSRC"
 
     case "$HOST" in
         *mingw*)
-            cp -rf --target-directory=. contrib/windeploy
+            cp -rf --target-directory=. "${DISTSRC}/contrib/windeploy"
             (
                 cd ./windeploy
                 mkdir -p unsigned
