@@ -189,6 +189,7 @@ $(package)_config_opts_android = -xplatform android-clang
 $(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
 $(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
 $(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
+$(package)_config_opts_android += -android-arch $(android_abi)
 $(package)_config_opts_android += -egl
 $(package)_config_opts_android += -no-dbus
 $(package)_config_opts_android += -opengl es2
@@ -198,10 +199,6 @@ $(package)_config_opts_android += -L $(host_prefix)/lib
 $(package)_config_opts_android += -I $(host_prefix)/include
 $(package)_config_opts_android += -pch
 $(package)_config_opts_android += -no-feature-vulkan
-
-$(package)_config_opts_aarch64_android += -android-arch arm64-v8a
-$(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
-$(package)_config_opts_x86_64_android += -android-arch x86_64
 endef
 
 define $(package)_fetch_cmds

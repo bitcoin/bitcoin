@@ -18,3 +18,12 @@ android_AR=$(ANDROID_TOOLCHAIN_BIN)/llvm-ar
 android_RANLIB=$(ANDROID_TOOLCHAIN_BIN)/llvm-ranlib
 
 android_cmake_system=Android
+
+# https://developer.android.com/ndk/guides/abis
+ifeq ($(host_arch),armv7a)
+  android_abi = armeabi-v7a
+else ifeq ($(host_arch),aarch64)
+  android_abi = arm64-v8a
+else ifeq ($(host_arch),x86_64)
+  android_abi = x86_64
+endif

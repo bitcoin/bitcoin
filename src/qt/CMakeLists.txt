@@ -15,6 +15,10 @@ set(qt_minimum_required_version 5.11.3)
 set(qt_package ${WITH_GUI})
 
 set(qt_components Core Gui Widgets Network LinguistTools)
+if(ANDROID)
+  list(APPEND qt_components EglSupport EventDispatcherSupport FontDatabaseSupport)
+endif()
+
 find_package(${qt_package} ${qt_minimum_required_version} REQUIRED
   COMPONENTS ${qt_components}
   HINTS ${qt5_brew_prefix}
@@ -126,10 +130,13 @@ endif()
 if(CMAKE_CROSSCOMPILING AND ${qt_package}_DIR STREQUAL "${QT_CROSS_LIBS_PATH}/cmake/${qt_package}")
   target_compile_definitions(bitcoinqt PRIVATE QT_STATICPLUGIN)
   set_property(TARGET Qt5::Core APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-    ${QT_CROSS_LIBS_PATH}/libqtpcre2.a
-    ${QT_CROSS_LIBS_PATH}/libqtlibpng.a
-    ${QT_CROSS_LIBS_PATH}/libqtharfbuzz.a
+    ${QT_CROSS_LIBS_PATH}/libqtpcre2$<$<PLATFORM_ID:Android>:_${CMAKE_ANDROID_ARCH_ABI}>.a
+    ${QT_CROSS_LIBS_PATH}/libqtlibpng$<$<PLATFORM_ID:Android>:_${CMAKE_ANDROID_ARCH_ABI}>.a
+    ${QT_CROSS_LIBS_PATH}/libqtharfbuzz$<$<PLATFORM_ID:Android>:_${CMAKE_ANDROID_ARCH_ABI}>.a
     $<$<PLATFORM_ID:Linux>:dl>
+  )
+  set_property(TARGET Qt5::Gui APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+    $<$<PLATFORM_ID:Android>:GLESv2>
   )
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET Qt5::QXcbIntegrationPlugin)
     target_compile_definitions(bitcoinqt PRIVATE QT_QPA_PLATFORM_XCB)
@@ -166,7 +173,7 @@ if(CMAKE_CROSSCOMPILING AND ${qt_package}_DIR STREQUAL "${QT_CROSS_LIBS_PATH}/cm
       winmm
       wtsapi32
     )
-  elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND TARGET Qt5::QCocoaIntegrationPlugin AND TARGET Qt5::QMacStylePlugin)
+  elseif(APPLE AND TARGET Qt5::QCocoaIntegrationPlugin AND TARGET Qt5::QMacStylePlugin)
     target_compile_definitions(bitcoinqt PRIVATE QT_QPA_PLATFORM_COCOA)
     target_link_libraries(Qt5::Core INTERFACE
       "-framework AppKit"
@@ -177,6 +184,17 @@ if(CMAKE_CROSSCOMPILING AND ${qt_package}_DIR STREQUAL "${QT_CROSS_LIBS_PATH}/cm
       "-framework Metal"
       "-framework QuartzCore"
       "-framework Security"
+    )
+  elseif(ANDROID AND TARGET Qt5::QAndroidIntegrationPlugin)
+    target_compile_definitions(bitcoinqt PRIVATE QT_QPA_PLATFORM_ANDROID)
+    set_property(TARGET Qt5::QAndroidIntegrationPlugin APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+      ${QT_CROSS_LIBS_PATH}/libqtfreetype_${CMAKE_ANDROID_ARCH_ABI}.a
+      ${qt_package}::EglSupport
+      ${qt_package}::EventDispatcherSupport
+      ${qt_package}::FontDatabaseSupport
+      EGL
+      android
+      log
     )
   endif()
 endif()
@@ -202,6 +220,10 @@ if(MULTIPROCESS)
     bitcoin_ipc
   )
   list(APPEND installable_targets bitcoin-gui)
+endif()
+
+if(ANDROID)
+  add_subdirectory(android)
 endif()
 
 install(TARGETS ${installable_targets}

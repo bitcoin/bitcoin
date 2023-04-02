@@ -264,6 +264,9 @@ $(host_prefix)/share/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_
 	@mkdir -p $(@D)
 	sed -e 's|@host_system@|$($(host_os)_cmake_system)|' \
             -e 's|@host_arch@|$(host_arch)|' \
+            -e 's|@ANDROID_ABI@|$(android_abi)|' \
+            -e 's|@ANDROID_PLATFORM@|$(ANDROID_API_LEVEL)|' \
+            -e 's|@ANDROID_NDK@|$(ANDROID_NDK)|' \
             -e 's|@CC@|$(host_CC)|' \
             -e 's|@CXX@|$(host_CXX)|' \
             -e 's|@AR@|$(host_AR)|' \
