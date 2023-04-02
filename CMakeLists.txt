@@ -251,6 +251,8 @@ else()
   endif()
 endif()
 
+include(cmake/optional_qt.cmake)
+
 include(cmake/optional.cmake)
 
 set(hardened_cxx_flags "")
@@ -402,6 +404,7 @@ message("Wallet support:")
 message("  SQLite, descriptor wallets .......... ${WITH_SQLITE}")
 message("  Berkeley DB, legacy wallets ......... ${WITH_BDB}")
 message("Optional packages:")
+message("  GUI ................................. ${WITH_GUI}")
 message("  NAT-PMP ............................. ${WITH_NATPMP}")
 message("  UPnP ................................ ${WITH_MINIUPNPC}")
 message("  ZeroMQ .............................. ${WITH_ZMQ}")
