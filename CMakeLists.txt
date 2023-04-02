@@ -86,6 +86,7 @@ tristate_option(WITH_SECCOMP
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
 option(BUILD_BENCH "Build bench_bitcoin executable." ON)
+option(INSTALL_MAN "Install man pages." ON)
 
 if(CXX20)
   set(CMAKE_CXX_STANDARD 20)

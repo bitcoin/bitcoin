@@ -173,3 +173,7 @@ if(ENABLE_WALLET)
     target_sources(test_bitcoin PRIVATE ../wallet/test/db_tests.cpp)
   endif()
 endif()
+
+install(TARGETS test_bitcoin
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

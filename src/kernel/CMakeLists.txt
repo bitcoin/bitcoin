@@ -110,7 +110,13 @@ if(NOT MSVC)
     OUTPUT_NAME bitcoinkernel
   )
 endif()
-if(NOT BUILD_STATIC)
+if(BUILD_STATIC)
+  install(TARGETS bitcoinkernel_static
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+else()
   set_target_properties(bitcoinkernel_static PROPERTIES
     EXCLUDE_FROM_ALL TRUE
   )
@@ -129,5 +135,10 @@ if(BUILD_SHARED)
   set_target_properties(bitcoinkernel PROPERTIES
     SOVERSION 0
     VERSION 0.0.0
+  )
+  install(TARGETS bitcoinkernel
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 endif()
