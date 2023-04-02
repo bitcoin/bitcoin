@@ -217,3 +217,25 @@ if(BUILD_DAEMON)
       $<$<BOOL:${MINGW}>:-static>
   )
 endif()
+
+
+add_library(bitcoin_cli STATIC EXCLUDE_FROM_ALL
+  compat/stdin.cpp
+  rpc/client.cpp
+)
+target_link_libraries(bitcoin_cli
+  PUBLIC
+    univalue
+)
+
+
+# Bitcoin Core RPC client
+if(BUILD_CLI)
+  add_executable(bitcoin-cli bitcoin-cli.cpp)
+  target_link_libraries(bitcoin-cli
+    bitcoin_cli
+    bitcoin_common
+    bitcoin_util
+    libevent::libevent
+  )
+endif()
