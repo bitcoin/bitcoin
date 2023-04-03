@@ -125,6 +125,7 @@ The following can be set when running make: `make FOO=bar`
   resides in the `depends` directory, and the log file is printed out automatically in case
   of build error. After successful build log files are moved along with package archives
 - `LTO`: Enable options needed for LTO. Does not add `-flto` related options to *FLAGS.
+- `NO_HARDEN=1`: Don't use hardening options when building packages
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to Dash Core's configure. In this case, `--disable-wallet`.
