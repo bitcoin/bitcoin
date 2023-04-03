@@ -4,8 +4,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <fs.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 #include <wallet/bdb.h>
 
 #include <fstream>

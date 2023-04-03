@@ -4,8 +4,8 @@
 
 #include <bench/bench.h>
 
-#include <fs.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 #include <util/string.h>
 
 #include <chrono>

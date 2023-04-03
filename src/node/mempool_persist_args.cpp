@@ -4,7 +4,7 @@
 
 #include <node/mempool_persist_args.h>
 
-#include <fs.h>
+#include <util/fs.h>
 #include <util/system.h>
 #include <validation.h>
 

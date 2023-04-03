@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/system.h>
 
 #include <fstream>

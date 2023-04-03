@@ -5,7 +5,7 @@
 
 #include <util/readwritefile.h>
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <algorithm>
 #include <cstdio>

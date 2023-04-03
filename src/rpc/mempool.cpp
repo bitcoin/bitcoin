@@ -9,7 +9,6 @@
 
 #include <chainparams.h>
 #include <core_io.h>
-#include <fs.h>
 #include <kernel/mempool_entry.h>
 #include <node/mempool_persist_args.h>
 #include <policy/rbf.h>
@@ -21,6 +20,7 @@
 #include <script/standard.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/fs.h>
 #include <util/moneystr.h>
 #include <util/time.h>
 
