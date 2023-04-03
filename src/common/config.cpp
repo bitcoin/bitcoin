@@ -32,7 +32,31 @@
 using util::TrimString;
 using util::TrimStringView;
 
-static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
+bool CreateDataDir(const fs::path& datadir, std::string& error)
+{
+    std::error_code ec;
+    fs::file_status status{fs::status(datadir, ec)};
+    if (!ec && status.type() == fs::file_type::directory && !fs::is_empty(datadir, ec)) return true;
+    // When creating a *new* datadir, also create a "wallets" subdirectory,
+    // whether or not the wallet is enabled now, so if the wallet is enabled
+    // in the future, it will use the "wallets" subdirectory for creating
+    // and listing wallets, rather than the top-level directory where
+    // wallets could be mixed up with other files. For backwards
+    // compatibility, wallet code will use the "wallets" subdirectory only
+    // if it already exists, but never create it itself. There is discussion
+    // in https://github.com/bitcoin/bitcoin/issues/16220 about ways to
+    // change wallet code so it would no longer be necessary to create
+    // "wallets" subdirectories here.
+    std::filesystem::create_directories(fs::path{datadir / "wallets"}, ec);
+    if (!ec) return true;
+    error = strprintf("Failed to create data directory %s", fs::quoted(fs::PathToString(datadir)));
+    if (ec) error = strprintf("%s: %s", error, ec.message());
+    return false;
+}
+
+static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error,
+                             std::vector<std::pair<std::string, std::string>>& options,
+                             std::list<SectionInfo>& sections)
 {
     std::string str, prefix;
     std::string::size_type pos;
@@ -128,22 +152,23 @@ static bool GetExplicitDataDir(const ArgsManager& args, fs::path& datadir, std::
         return false;
     }
 
-    // Keep default datadir if -datadir is not specified, otherwise call
-    // fs::absolute to treat relative datadir arguments and datadir= lines in
-    // configuration files as being relative to the current working directory.
-    // Probably it would make more sense to treat relative datadir lines in
-    // configuration files as relative to the configuration file, not the
-    // working directory, but current behavior is being kept for compatibility.
+    // Return unmodified datadir path if -datadir argument value or config file
+    // value is not specified. If any value is specified, return it as the
+    // datadir path. Call fs::absolute to treat relative datadir arguments and
+    // datadir= lines in configuration files as being relative to the current
+    // working directory. Probably it would make more sense to treat relative
+    // datadir lines in configuration files as relative to the configuration
+    // file, not the working directory, but current behavior is being kept for
+    // compatibility.
     if (!datadir_arg.empty()) datadir = fs::absolute(std::move(datadir_arg));
     return true;
 }
 
-static bool GetDefaultDataDir(fs::path& datadir, std::string& error)
+static bool GetInitialDataDir(fs::path& datadir, std::string& error, bool* aborted)
 {
-    // Keep explicit datadir if it was specified.
-    if (!datadir.empty()) return true;
-
+    assert(datadir.empty());
     datadir = GetDefaultDataDir();
+
     std::error_code ec;
     std::filesystem::file_status status = fs::status(datadir);
     if (ec) {
@@ -181,21 +206,24 @@ static bool GetDefaultDataDir(fs::path& datadir, std::string& error)
     return true;
 }
 
-bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys, fs::path* config_file, fs::path* initial_datadir)
+bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys, InitialDataDirFn initial_datadir_fn,
+                                  fs::path* config_file, fs::path* initial_datadir, bool* aborted)
 {
     // Save initial datadir value in case -conf path or any -includeconf paths
     // are relative paths, and need to be evaluated relative to the
     // datadir. The final datadir can change while parsing the config file if
-    // it contains a datadir= line. Avoid calling GetDefaultDataDir() yet if not
+    // it contains a datadir= line. Avoid calling initial_datadir_fn() yet if not
     // needed because it accesses the default datadir filesystem path, which
     // might be slow or off-limits due to permissions.
     fs::path datadir_path;
     if (!GetExplicitDataDir(*this, datadir_path, error)) return false;
 
     // Determine config file path relative to the initial datadir.
+    if (!initial_datadir_fn) initial_datadir_fn = GetInitialDataDir;
     fs::path conf_path{GetPathArg("-conf", BITCOIN_CONF_FILENAME)};
     if (!conf_path.is_absolute()) {
-        if (!GetDefaultDataDir(datadir_path, error)) return false;
+        if (datadir_path.empty() && !initial_datadir_fn(datadir_path, error, aborted)) return false;
+        assert(datadir_path.is_absolute());
         conf_path = datadir_path / std::move(conf_path);
     }
 
@@ -264,7 +292,8 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys, 
             for (const std::string& conf_file_name : conf_file_names) {
                 fs::path include_path = fs::PathFromString(conf_file_name);
                 if (!include_path.is_absolute()) {
-                    if (!GetDefaultDataDir(datadir_path, error)) return false;
+                    if (datadir_path.empty() && !initial_datadir_fn(datadir_path, error, aborted)) return false;
+                    assert(datadir_path.is_absolute());
                     include_path = datadir_path / std::move(include_path);
                 }
                 if (fs::is_directory(include_path)) {
@@ -299,7 +328,9 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys, 
     }
 
     // Update datadir if case .conf file set a new datadir location.
-    if (!GetExplicitDataDir(*this, datadir_path, error) || !GetDefaultDataDir(datadir_path, error)) return false;
+    if (!GetExplicitDataDir(*this, datadir_path, error) ||
+        (datadir_path.empty() && !initial_datadir_fn(datadir_path, error, aborted)))
+        return false;
 
     WITH_LOCK(cs_args, m_datadir = std::move(datadir_path));
 

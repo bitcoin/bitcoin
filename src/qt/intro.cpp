@@ -25,6 +25,7 @@
 #include <QMessageBox>
 
 #include <cmath>
+#include <fstream>
 
 namespace {
 //! Return pruning size that will be used if automatic pruning is enabled.
@@ -119,69 +120,310 @@ int64_t Intro::getPruneMiB() const
     }
 }
 
-bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
+// TODO move to common/init
+// TODO write new file before renaming old so less fragile
+// TODO choose better unique filename
+bool SetInitialDataDir(const fs::path& default_datadir, const fs::path& datadir, std::string& error)
 {
-    did_show_intro = false;
-
-    QSettings settings;
-    /* If data directory provided on command line, no need to look at settings
-       or show a picking dialog */
-    if(!gArgs.GetArg("-datadir", "").empty())
-        return true;
-    /* 1) Default data directory for operating system */
-    QString dataDir = GUIUtil::getDefaultDataDirectory();
-    /* 2) Allow QSettings to override default dir */
-    dataDir = settings.value("strDataDir", dataDir).toString();
-
-    if(!fs::exists(GUIUtil::QStringToPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
-    {
-        /* Use selectParams here to guarantee Params() can be used by node interface */
-        try {
-            SelectParams(gArgs.GetChainType());
-        } catch (const std::exception&) {
+    assert(default_datadir.is_absolute());
+    assert(datadir.is_absolute());
+    const bool link_datadir{datadir == default_datadir};
+    std::error_code ec;
+    fs::file_status status{fs::symlink_status(default_datadir, ec)};
+    if (ec) {
+        error = strprintf("Could not read %s: %s", fs::quoted(fs::PathToString(default_datadir)), ec.message());
+        return false;
+    }
+    if (status.type() != fs::file_type::not_found && (link_datadir || status.type() != fs::file_type::directory)) {
+        fs::path prev_datadir{default_datadir};
+        prev_datadir += strprintf(".%d.bak", GetTime());
+        fs::rename(default_datadir, prev_datadir, ec);
+        if (ec) {
+            error = strprintf("Could not rename %s to %s: %s", fs::quoted(fs::PathToString(default_datadir)),
+                              fs::quoted(fs::PathToString(prev_datadir)), ec.message());
             return false;
         }
+    }
+    if (link_datadir) {
+        fs::create_directory_symlink(datadir, default_datadir, ec);
+        if (ec) {
+            if (ec != std::errc::operation_not_permitted) {
+                LogPrintf("Could not create symlink to %s at %s: %s", fs::quoted(fs::PathToString(datadir)),
+                          fs::quoted(fs::PathToString(default_datadir)), ec.message());
+            }
+            std::ofstream file;
+            file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+            try {
+                file.open(datadir);
+                file << fs::PathToString(datadir) << std::endl;
+            } catch (std::system_error& e) {
+                ec = e.code();
+            }
+            if (ec) {
+                error = strprintf("Could not write %s to %s: %s", fs::quoted(fs::PathToString(datadir)),
+                                  fs::quoted(fs::PathToString(default_datadir)), ec.message());
+                return false;
+            }
+        }
+    } else {
+        if (!CreateDataDir(datadir, error)) return false;
+    }
+    return true;
+}
+
+// TODO move low level code out of showIfNeeded to this function
+// TODO move common/init, consolidate arguments/return value
+fs::path GetInitialDataDir(const ArgsManager& args, bool& new_datadir, bool& custom_datadir, std::string& error)
+{
+    return {};
+}
+
+bool Intro::showIfNeeded(bool& did_show_intro, fs::path& datadir, int64_t& prune_MiB)
+{
+    assert(datadir.empty());
+
+    // Show intro dialog if requested by settings or command line arguments.
+    // Intro dialog will still be skipped, however, if this function is never
+    // called, which will happen if an explicit -datadir value was passed on the
+    // command line, and also if a -conf value with an absolute path was passed
+    // on the command line and the configuration file contains a datadir= line.
+    QSettings settings;
+    bool show_intro{gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) ||
+                    gArgs.GetBoolArg("-resetguisettings", false) || settings.value("fReset", false).toBool()};
+
+    fs::path default_datadir = GetDefaultDataDir();
+    std::error_code ec;
+    fs::file_status status = fs::symlink_status(default_datadir, ec);
+    if (ec) LogPrintf("Warning: could not read %s: %s", fs::quoted(fs::PathToString(default_datadir)), ec.message());
+    enum DirType { DIR, LINK, NOT_FOUND } datadir_type{NOT_FOUND};
+    if (status.type() == fs::file_type::directory) {
+        datadir = default_datadir;
+        datadir_type = DIR;
+    } else if (status.type() == fs::file_type::symlink) {
+        datadir = fs::read_symlink(default_datadir, ec);
+        datadir_type = LINK;
+        if (ec)
+            LogPrintf("Warning: could not read symlink %s: %s", fs::quoted(fs::PathToString(default_datadir)),
+                      ec.message());
+    } else if (status.type() == fs::file_type::regular) {
+        std::ifstream file;
+        file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        std::string line;
+        try {
+            file.open(default_datadir);
+            std::getline(file, line);
+        } catch (std::system_error& e) {
+            ec = e.code();
+            LogPrintf("Warning: could not read file %s: %s", fs::quoted(fs::PathToString(default_datadir)),
+                      ec.message());
+        }
+        datadir = fs::PathFromString(line);
+        datadir_type = LINK;
+    }
+    if (datadir.empty()) {
+        datadir = default_datadir;
+        datadir_type = NOT_FOUND;
+        if (!ec && status.type() != fs::file_type::not_found) ec = make_error_code(std::errc::not_a_directory);
+    }
+
+    // Check if there is a legacy QSettings "strDataDir" setting that should be
+    // migrated.
+    QVariant legacy_datadir_str{settings.value("strDataDir")};
+    bool remove_legacy_setting{false};
+    if (legacy_datadir_str.isValid()) {
+        fs::path legacy_datadir{fs::PathFromString(legacy_datadir_str.toString().toStdString()).lexically_normal()};
+        if (legacy_datadir.empty() || legacy_datadir == datadir || legacy_datadir == default_datadir) {
+            // If the legacy datadir string is empty, or the same as the current
+            // datadir, just discard the legacy value.
+            remove_legacy_setting = true;
+        } else if (datadir_type == NOT_FOUND) {
+            // If there is no current datadir, use the legacy datadir.
+            datadir = legacy_datadir;
+            // If showing intro dialog, legacy setting will be shown in the
+            // dialog and saved in the dialog is completed. If not showing
+            // intro, try to save legacy datadir as default now. If it fails to
+            // save, just log a warning. It will still be used this session, and
+            // the legacy setting will be kept so there is a chance to retry the
+            // next session.
+            std::string error;
+            if (show_intro) {
+                remove_legacy_setting = true;
+            } else if (SetInitialDataDir(default_datadir, datadir, error)) {
+                remove_legacy_setting = true;
+            } else {
+                LogPrintf("Warning: failed to set %s as default data directory: %s",
+                          fs::quoted(fs::PathToString(datadir)), error);
+            }
+        } else if (show_intro) {
+            // If legacy datadir conflicts with current datadir, but the intro
+            // dialog is going to be shown, just discard the legacy datadir if
+            // the intro dialog is completed. instead of showing an extra dialog
+            // before the intro.
+            remove_legacy_setting = true;
+        } else {
+            // Show a dialog to choose between the legacy and current datadirs.
+            QString gui_datadir{QString::fromStdString(fs::PathToString(legacy_datadir))};
+            QString cli_datadir{QString::fromStdString(fs::PathToString(datadir.empty() ? default_datadir : datadir))};
+
+            QMessageBox messagebox;
+            messagebox.setWindowTitle(CLIENT_NAME);
+            messagebox.setTextFormat(Qt::RichText);
+            /*: Dialog text shown when a previous version of the GUI sets a
+                different datadir path that the default CLI datadir path,
+                letting the user choose which of the two datadirs to use. Newer
+                version fo the GUI set a single shared datadir, so this dialog
+                will only be shown when upgrading a legacy installation. */
+            messagebox.setText(
+                tr("The %1 graphical interface (GUI) is configured to use a different data directory than %1 "
+                   "command line (CLI) tools.")
+                    .arg(CLIENT_NAME));
+            messagebox.setInformativeText(
+                tr("<dl><dt>The GUI data directory is:</dt><dd>%1</dd></dl>"
+                   "<dt>The CLI data directory is:</dt><dd>%2</dd></dl>"
+                   "<p>Previous versions of the %3 GUI used the GUI default directory and ignored the CLI default "
+                   "directory. This version allows choosing which directory to use. It is recommended to set a common "
+                   "default so the GUI and CLI tools such as <code>%4</code>, <code>%5</code>, and <code>%6</code> "
+                   "can "
+                   "interoperate and this prompt can be avoided.</p>")
+                    .arg(gui_datadir.toHtmlEscaped())
+                    .arg(cli_datadir.toHtmlEscaped())
+                    .arg(CLIENT_NAME)
+                    .arg("bitcoind")
+                    .arg("bitcoin-cli")
+                    .arg("bitcoin-wallet"));
+            QPushButton* use_gui =
+                messagebox.addButton(tr("Use GUI data directory (legacy behavior)"), QMessageBox::AcceptRole);
+            QPushButton* set_gui_default =
+                messagebox.addButton(tr("Use GUI data directory and set as default"), QMessageBox::AcceptRole);
+            QPushButton* use_cli = messagebox.addButton(tr("Use CLI data directory"), QMessageBox::AcceptRole);
+            QPushButton* set_cli_default =
+                messagebox.addButton(tr("Use CLI data directory and set as default"), QMessageBox::AcceptRole);
+            QPushButton* choose_datadir = messagebox.addButton(
+                tr("Choose another data directory and set as default..."), QMessageBox::AcceptRole);
+            QPushButton* quit = messagebox.addButton(tr("Quit"), QMessageBox::AcceptRole);
+            messagebox.findChild<QDialogButtonBox*>()->setOrientation(Qt::Vertical);
+            messagebox.findChild<QDialogButtonBox*>()->setCenterButtons(true);
+            messagebox.setStyleSheet("QPushButton { text-align: left; padding: .5em; } "
+                                     "QDialogButtonBox { background-color: red; } ");
+            messagebox.setDefaultButton(use_gui);
+            messagebox.exec();
+            QAbstractButton* clicked = messagebox.clickedButton();
+            if (clicked == use_gui) {
+                datadir = legacy_datadir;
+                datadir_type = LINK;
+            } else if (clicked == use_cli) {
+                // Keep cli datadir.
+            } else if (clicked == set_gui_default) {
+                datadir = legacy_datadir;
+                datadir_type = LINK;
+                std::string error;
+                if (SetInitialDataDir(default_datadir, datadir, error)) {
+                    remove_legacy_setting = true;
+                } else {
+                    LogPrintf("Warning: failed to set %s as default data directory: %s",
+                              fs::quoted(fs::PathToString(datadir)), error);
+                }
+            } else if (clicked == set_cli_default) {
+                remove_legacy_setting = true;
+            } else if (clicked == choose_datadir) {
+                show_intro = true;
+            } else {
+                assert(clicked == quit);
+                return false;
+            }
+        }
+    }
+
+    // If a default or explicit datadir does not exist just show the intro
+    // dialog to confirm it should be created. But if a custom datadir that was
+    // previously selected in the GUI no longer exists, show a dialog to notify
+    // about the problem, since it could happen when an external drive is not
+    // attached, and choosing a new datadirectory would not be desirable.
+    std::string message;
+    if (datadir_type == LINK) {
+        if (datadir.is_absolute()) {
+            fs::file_status status = fs::status(datadir, ec);
+            while (status.type() != fs::file_type::directory) {
+                if (!ec) ec = std::make_error_code(std::errc::not_a_directory);
+                QMessageBox messagebox;
+                messagebox.setIcon(QMessageBox::Critical);
+                messagebox.setWindowTitle(CLIENT_NAME);
+                messagebox.setTextFormat(Qt::RichText);
+                messagebox.setText(tr("%1 data directory path %2 no longer exists or is not a directory")
+                                       .arg(CLIENT_NAME)
+                                       .arg(QString::fromStdString(fs::PathToString(datadir))));
+                messagebox.setInformativeText(
+                    tr("Do you want to retry accessing the same data directory, choose a different data "
+                       "directory, or abort without making changes?"));
+                messagebox.setDetailedText(QString::fromStdString(ec.message()));
+                QPushButton* retry = messagebox.addButton(QMessageBox::Retry);
+                QPushButton* choose_datadir =
+                    messagebox.addButton(tr("Choose a different data directory..."), QMessageBox::AcceptRole);
+                QPushButton* abort = messagebox.addButton(QMessageBox::Abort);
+                messagebox.exec();
+                QAbstractButton* clicked = messagebox.clickedButton();
+                if (clicked == retry) {
+                    status = fs::status(datadir, ec);
+                    // Do nothing and loop
+                } else if (clicked == choose_datadir) {
+                    show_intro = true;
+                    break;
+                } else {
+                    assert(clicked == abort);
+                    return false;
+                }
+            }
+        } else {
+            // Error will be displayed in intro dialog
+            ec = std::make_error_code(std::errc::not_a_directory);
+        }
+    }
+
+    did_show_intro = false;
+
+    if (show_intro) {
+        /* Use selectParams here to guarantee Params() can be used by node interface */
+        SelectParams(gArgs.GetChainType());
 
         /* If current default data directory does not exist, let the user choose one */
         Intro intro(nullptr, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
-        intro.setDataDirectory(dataDir);
+        intro.setDataDirectory(QString::fromStdString(fs::PathToString(datadir)));
         intro.setWindowIcon(QIcon(":icons/bitcoin"));
+        if (ec) intro.setStatus(FreespaceChecker::ST_ERROR, QString::fromStdString(ec.message()), 0);
         did_show_intro = true;
 
-        while(true)
+        while(show_intro)
         {
             if(!intro.exec())
             {
                 /* Cancel clicked */
                 return false;
             }
-            dataDir = intro.getDataDirectory();
-            try {
-                if (TryCreateDirectories(GUIUtil::QStringToPath(dataDir))) {
-                    // If a new data directory has been created, make wallets subdirectory too
-                    TryCreateDirectories(GUIUtil::QStringToPath(dataDir) / "wallets");
-                }
-                break;
-            } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(nullptr, CLIENT_NAME,
-                    tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
-                /* fall through, back to choosing screen */
+            datadir = fs::PathFromString(intro.getDataDirectory().toStdString());
+            std::string error;
+            if (!datadir.is_absolute()) {
+                intro.setStatus(FreespaceChecker::ST_ERROR,
+                                QString::fromStdString("Data directory is not an absolute path."), 0);
+            } else if (!CreateDataDir(datadir, error)) {
+                intro.setStatus(FreespaceChecker::ST_ERROR,
+                                QString::fromStdString(strprintf("Could not create data directory: %s", error)), 0);
+            } else if (!SetInitialDataDir(default_datadir, datadir, error)) {
+                intro.setStatus(FreespaceChecker::ST_ERROR,
+                                QString::fromStdString(strprintf("Could not set default datadirectory: %s", error)),
+                                0);
+            } else {
+                show_intro = false;
             }
         }
 
         // Additional preferences:
         prune_MiB = intro.getPruneMiB();
+    }
 
-        settings.setValue("strDataDir", dataDir);
-        settings.setValue("fReset", false);
-    }
-    /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the bitcoin.conf file in the default data directory
-     * (to be consistent with bitcoind behavior)
-     */
-    if(dataDir != GUIUtil::getDefaultDataDirectory()) {
-        gArgs.SoftSetArg("-datadir", fs::PathToString(GUIUtil::QStringToPath(dataDir))); // use OS locale for path setting
-    }
+    settings.setValue("fReset", false);
+    if (remove_legacy_setting) settings.remove("strDataDir");
+
+    assert(!datadir.empty());
     return true;
 }
 

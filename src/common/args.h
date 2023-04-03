@@ -29,6 +29,19 @@ extern const char * const BITCOIN_SETTINGS_FILENAME;
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption(const ArgsManager& args);
 
+// Create data directory if it does not exist.
+bool CreateDataDir(const fs::path& datadir, std::string& error);
+
+// Callback function to get initial datadir path used to locate the bitcoin.conf
+// file when -conf and -datadir arguments are both absent, and to locate
+// relative inccludeconf= paths when the -datadir option is present. (Probably
+// it would make more sense to locate includeconf= file relatives to the file
+// they are included from, not the initial datadir, but the current behavior is
+// being kept for compatibility.) The initial datadir may be different from the
+// final datadir used to store wallets and data files if the bitcoin.conf file
+// has a datadir= line.
+using InitialDataDirFn = std::function<bool(fs::path& datadir, std::string& error, bool* aborted)>;
+
 /**
  * Most paths passed as configuration arguments are treated as relative to
  * the datadir if they are not absolute.
@@ -185,7 +198,9 @@ protected:
      */
     fs::path GetConfigFilePath() const;
     void SetConfigFilePath(fs::path);
-    [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false, fs::path* config_file = nullptr, fs::path* initial_datadir = nullptr);
+    [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false,
+                                       InitialDataDirFn initial_datadir_fn = nullptr, fs::path* config_file = nullptr,
+                                       fs::path* initial_datadir = nullptr, bool* aborted = nullptr);
 
     /**
      * Log warnings for options in m_section_only_args when

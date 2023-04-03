@@ -15,7 +15,8 @@
 #include <optional>
 
 namespace common {
-std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn settings_abort_fn)
+std::optional<ConfigError> InitConfig(ArgsManager& args, InitialDataDirFn initial_datadir_fn,
+                                      SettingsAbortFn settings_abort_fn)
 {
     try {
         if (!CheckDataDirOption(args)) {
@@ -34,7 +35,9 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         std::string error;
         fs::path orig_config_path;
         fs::path orig_datadir_path;
-        if (!args.ReadConfigFiles(error, true, &orig_config_path, &orig_datadir_path)) {
+        bool aborted{false};
+        if (!args.ReadConfigFiles(error, true, initial_datadir_fn, &orig_config_path, &orig_datadir_path, &aborted)) {
+            if (aborted) return ConfigError{ConfigStatus::ABORTED, Untranslated(error)};
             return ConfigError{ConfigStatus::FAILED, strprintf(_("Error reading configuration file: %s"), error)};
         }
 
@@ -43,23 +46,9 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
 
         // Create datadir if it does not exist.
         const auto base_path{args.GetDataDirBase()};
-        if (!fs::exists(base_path)) {
-            // When creating a *new* datadir, also create a "wallets" subdirectory,
-            // whether or not the wallet is enabled now, so if the wallet is enabled
-            // in the future, it will use the "wallets" subdirectory for creating
-            // and listing wallets, rather than the top-level directory where
-            // wallets could be mixed up with other files. For backwards
-            // compatibility, wallet code will use the "wallets" subdirectory only
-            // if it already exists, but never create it itself. There is discussion
-            // in https://github.com/bitcoin/bitcoin/issues/16220 about ways to
-            // change wallet code so it would no longer be necessary to create
-            // "wallets" subdirectories here.
-            fs::create_directories(base_path / "wallets");
-        }
         const auto net_path{args.GetDataDirNet()};
-        if (!fs::exists(net_path)) {
-            fs::create_directories(net_path / "wallets");
-        }
+        if (!CreateDataDir(base_path, error)) return ConfigError{ConfigStatus::FAILED, Untranslated(error)};
+        if (!CreateDataDir(net_path, error)) return ConfigError{ConfigStatus::FAILED, Untranslated(error)};
 
         // Show an error or warn/log if there is a bitcoin.conf file in the
         // datadir that is being ignored.
