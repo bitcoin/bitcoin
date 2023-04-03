@@ -141,10 +141,10 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     BOOST_REQUIRE(filter_index.Start(::ChainstateActive()));
 
     // Allow filter index to catch up with the block index.
-    constexpr int64_t timeout_ms = 10 * 1000;
-    int64_t time_start = GetTimeMillis();
+    constexpr auto timeout{10s};
+    const auto time_start{SteadyClock::now()};
     while (!filter_index.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(time_start + timeout_ms > GetTimeMillis());
+        BOOST_REQUIRE(time_start + timeout > SteadyClock::now());
         UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 

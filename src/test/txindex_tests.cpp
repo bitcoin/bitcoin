@@ -31,10 +31,10 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     BOOST_REQUIRE(txindex.Start(::ChainstateActive()));
 
     // Allow tx index to catch up with the block index.
-    constexpr int64_t timeout_ms = 10 * 1000;
-    int64_t time_start = GetTimeMillis();
+    constexpr auto timeout{10s};
+    const auto time_start{SteadyClock::now()};
     while (!txindex.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(time_start + timeout_ms > GetTimeMillis());
+        BOOST_REQUIRE(time_start + timeout > SteadyClock::now());
         UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 
