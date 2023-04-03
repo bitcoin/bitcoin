@@ -5,7 +5,6 @@
 #include <chain.h>
 #include <clientversion.h>
 #include <core_io.h>
-#include <fs.h>
 #include <hash.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
@@ -17,6 +16,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/bip32.h>
+#include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/rpc/util.h>

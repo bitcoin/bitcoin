@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_KERNEL_MEMPOOL_PERSIST_H
 #define SYSCOIN_KERNEL_MEMPOOL_PERSIST_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 class Chainstate;
 class CTxMemPool;

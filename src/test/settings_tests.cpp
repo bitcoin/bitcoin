@@ -4,9 +4,9 @@
 
 #include <util/settings.h>
 
-#include <fs.h>
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
+#include <util/fs.h>
 
 
 #include <boost/test/unit_test.hpp>

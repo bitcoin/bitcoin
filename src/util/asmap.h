@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_UTIL_ASMAP_H
 #define SYSCOIN_UTIL_ASMAP_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <cstdint>
 #include <vector>

@@ -7,7 +7,6 @@
 
 #include <clientversion.h>
 #include <consensus/amount.h>
-#include <fs.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <policy/feerate.h>
@@ -18,6 +17,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/fs.h>
 #include <util/serfloat.h>
 #include <util/system.h>
 #include <util/time.h>

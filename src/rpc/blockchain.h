@@ -7,9 +7,9 @@
 
 #include <consensus/amount.h>
 #include <core_io.h>
-#include <fs.h>
 #include <streams.h>
 #include <sync.h>
+#include <util/fs.h>
 #include <validation.h>
 
 #include <any>

@@ -6,9 +6,9 @@
 #define SYSCOIN_I2P_H
 
 #include <compat/compat.h>
-#include <fs.h>
 #include <netaddress.h>
 #include <sync.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 

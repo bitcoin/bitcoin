@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_BENCH_BENCH_H
 #define SYSCOIN_BENCH_BENCH_H
 
-#include <fs.h>
+#include <util/fs.h>
 #include <util/macros.h>
 
 #include <chrono>

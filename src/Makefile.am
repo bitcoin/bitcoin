@@ -197,7 +197,6 @@ SYSCOIN_CORE_H = \
   external_signer.h \
   flatfile.h \
   ctpl_stl.h \
-  fs.h \
   headerssync.h \
   httprpc.h \
   httpserver.h \
@@ -347,6 +346,8 @@ SYSCOIN_CORE_H = \
   util/exception.h \
   util/fastrange.h \
   util/fees.h \
+  util/fs.h \
+  util/fs_helpers.h \
   util/getuniquepath.h \
   util/golombrice.h \
   util/hash_type.h \
@@ -850,7 +851,6 @@ libsyscoin_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
-  fs.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
@@ -863,6 +863,8 @@ libsyscoin_util_a_SOURCES = \
   util/error.cpp \
   util/exception.cpp \
   util/fees.cpp \
+  util/fs.cpp \
+  util/fs_helpers.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \
   util/sock.cpp \
@@ -1063,7 +1065,6 @@ libsyscoinkernel_la_SOURCES = \
   deploymentinfo.cpp \
   deploymentstatus.cpp \
   flatfile.cpp \
-  fs.cpp \
   hash.cpp \
   kernel/chain.cpp \
   kernel/checks.cpp \
@@ -1106,6 +1107,8 @@ libsyscoinkernel_la_SOURCES = \
   uint256.cpp \
   util/check.cpp \
   util/exception.cpp \
+  util/fs.cpp \
+  util/fs_helpers.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \
   util/moneystr.cpp \

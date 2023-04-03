@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 
 #include <boost/test/unit_test.hpp>
 

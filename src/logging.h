@@ -6,9 +6,9 @@
 #ifndef SYSCOIN_LOGGING_H
 #define SYSCOIN_LOGGING_H
 
-#include <fs.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
+#include <util/fs.h>
 #include <util/string.h>
 
 #include <atomic>

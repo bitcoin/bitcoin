@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_UTIL_READWRITEFILE_H
 #define SYSCOIN_UTIL_READWRITEFILE_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <limits>
 #include <string>

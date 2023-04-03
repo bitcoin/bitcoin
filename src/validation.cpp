@@ -20,7 +20,6 @@
 #include <consensus/validation.h>
 #include <cuckoocache.h>
 #include <flatfile.h>
-#include <fs.h>
 #include <hash.h>
 #include <kernel/chainparams.h>
 #include <kernel/mempool_entry.h>
@@ -47,6 +46,8 @@
 #include <uint256.h>
 #include <undo.h>
 #include <util/check.h> // For NDEBUG compile time check
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/hasher.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>

@@ -7,15 +7,16 @@
 #endif
 
 #include <chainparams.h>
-#include <fs.h>
 #include <qt/intro.h>
 #include <qt/forms/ui_intro.h>
+#include <util/fs.h>
 
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
 #include <interfaces/node.h>
+#include <util/fs_helpers.h>
 #include <util/system.h>
 #include <validation.h>
 

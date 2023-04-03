@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_UTIL_GETUNIQUEPATH_H
 #define SYSCOIN_UTIL_GETUNIQUEPATH_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 /**
  * Helper function for getting a unique path

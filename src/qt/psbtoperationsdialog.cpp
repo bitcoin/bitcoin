@@ -5,7 +5,6 @@
 #include <qt/psbtoperationsdialog.h>
 
 #include <core_io.h>
-#include <fs.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/psbt.h>
@@ -14,6 +13,7 @@
 #include <qt/forms/ui_psbtoperationsdialog.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
+#include <util/fs.h>
 #include <util/strencodings.h>
 
 #include <fstream>

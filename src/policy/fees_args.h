@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_POLICY_FEES_ARGS_H
 #define SYSCOIN_POLICY_FEES_ARGS_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 class ArgsManager;
 
