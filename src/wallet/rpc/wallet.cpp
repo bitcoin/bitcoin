@@ -112,7 +112,7 @@ static RPCHelpMan getwalletinfo()
     obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
     if (pwallet->IsScanning()) {
         UniValue scanning(UniValue::VOBJ);
-        scanning.pushKV("duration", pwallet->ScanningDuration() / 1000);
+        scanning.pushKV("duration", Ticks<std::chrono::seconds>(pwallet->ScanningDuration()));
         scanning.pushKV("progress", pwallet->ScanningProgress());
         obj.pushKV("scanning", scanning);
     } else {
