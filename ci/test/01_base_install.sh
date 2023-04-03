@@ -52,10 +52,9 @@ fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
   if [ ! -d "${DIR_IWYU}" ]; then
-    mkdir -p "${DIR_IWYU}"/build/
-    git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 "${DIR_IWYU}"/include-what-you-use
-    cd "${DIR_IWYU}"/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 ../include-what-you-use
-    cd "${DIR_IWYU}"/build && make install "$MAKEJOBS"
+    git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 "${DIR_IWYU}"/include-what-you-use
+    cmake -B "${DIR_IWYU}"/build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S "${DIR_IWYU}"/include-what-you-use
+    make -C "${DIR_IWYU}"/build/ install "$MAKEJOBS"
   fi
 fi
 
