@@ -351,6 +351,7 @@ struct CNodeOptions
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
+    size_t max_send_buf_size{DEFAULT_MAXSENDBUFFER * 1000};
 };
 
 /** Information about a peer */
@@ -623,6 +624,8 @@ private:
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     const size_t m_recv_flood_size;
+    const size_t m_max_send_buf_size;
+
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     Mutex m_msg_process_queue_mutex;

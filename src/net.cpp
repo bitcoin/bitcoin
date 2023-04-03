@@ -576,6 +576,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              CNodeOptions{
                                  .i2p_sam_session = std::move(i2p_transient_session),
                                  .recv_flood_size = nReceiveFloodSize,
+                                 .max_send_buf_size = nSendBufferMaxSize,
                              });
     pnode->AddRef();
 
@@ -1057,6 +1058,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                  .permission_flags = permission_flags,
                                  .prefer_evict = discouraged,
                                  .recv_flood_size = nReceiveFloodSize,
+                                 .max_send_buf_size = nSendBufferMaxSize,
                              });
     pnode->AddRef();
     m_msgproc->InitializeNode(*pnode, nodeServices);
@@ -2783,6 +2785,7 @@ CNode::CNode(NodeId idIn,
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
       m_recv_flood_size{node_opts.recv_flood_size},
+      m_max_send_buf_size{node_opts.max_send_buf_size},
       m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
