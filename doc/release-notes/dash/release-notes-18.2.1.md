@@ -1,15 +1,17 @@
-Dash Core version v18.2.2
+Dash Core version v18.2.1
 =========================
 
 Release is now available from:
 
   <https://www.dash.org/downloads/#wallets>
 
-This is a new hotfix version release.
+This is a new hotfix version release, bringing various bugfixes.
 
-This release is optional for all nodes; however, v18.2.2 or higher is required
-to be able to use testnet right until v19 hard fork activation. Earlier
-versions will not be able to sync past block 847000 on testnet.
+Please note that v18.2.0 was revoked due to a bug; this version fixes that bug.
+
+This release is optional for all nodes; however, v18.2.1 is required to be
+able to use both mainnet and testnet. Currently, v18.2.0 is not working on mainnet,
+and v18.1.1 is not working on testnet; v18.2.1 will work on both networks.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -39,9 +41,9 @@ downgrade to an older version is only possible with a reindex
 Downgrade warning
 -----------------
 
-### Downgrade to a version < v18.2.2
+### Downgrade to a version < v18.2.1
 
-Downgrading to a version older than v18.2.2 is supported.
+Downgrading to a version older than v18.2.1 is supported.
 
 ### Downgrade to a version < v18.0.1
 
@@ -49,19 +51,35 @@ Downgrading to a version older than v18.0.1 is not supported due to changes in
 the indexes database folder. If you need to use an older version, you must
 either reindex or re-sync the whole chain.
 
+### Downgrade of masternodes to < 18.2.1
+
+It is highly recommended not to downgrade masternodes below 18.2.1, as 18.2.1 (and 18.1.1)
+fix important bugs which may result in your masternode being PoSe banned.
+
+### Downgrade of masternodes to < v18.0.1
+
+Starting with the 0.16 release, masternodes verify the protocol version of other
+masternodes. This results in PoSe punishment/banning for outdated masternodes,
+so downgrading even prior to the activation of the introduced hard-fork changes
+is not recommended.
+
+Versioning
+----------
+
+Dash Core imperfectly follows semantic versioning. Breaking changes should be
+expected in a major release. The number and severity of breaking changes in minor
+releases are minimized, however we do not guarantee there are no breaking changes.
+Bitcoin backports often introduce breaking changes, and are a likely source of
+breaking changes in minor releases. Patch releases should never contain breaking changes.
+
 Notable changes
 ===============
+See #5145 and #5142; these 2 PR fix important bugs in previous versions. Specifically,
+#5145 fixes an issue where qfcommit messages can be replayed from the past, then are
+validated and propagated to other nodes. This patch prevents old qfcommits
+from being relayed. #5142 is a fix which enables this version to function both on testnet
+and mainnet.
 
-Testnet Breaking Changes
-------------------------
-
-A new testnet only LLMQ has been added. This LLMQ is of the type LLMQ_25_67; this LLMQ is only active on testnet.
-This LLMQ will not remove the LLMQ_100_67 from testnet; however that quorum (likely) will not form and will perform no role.
-See the [diff](https://github.com/dashpay/dash/pull/5225/files#diff-e70a38a3e8c2a63ca0494627301a5c7042141ad301193f78338d97cb1b300ff9R451-R469) for specific parameters of the LLMQ.
-
-This LLMQ will become active at the height of 847000. **This will be a breaking change and a hard fork for testnet**
-This LLMQ is not activated with the v19 hardfork; as such testnet will experience two hardforks. One at height 847000,
-and the other to be determined by the BIP9 hard fork process.
 
 Remote Procedure Call (RPC) Changes
 -----------------------------------
@@ -91,21 +109,20 @@ Backports from Bitcoin Core
 ---------------------------
 None
 
-Other changes
--------------
-#5247 is backported to improve debugging experience.
-
-v18.2.2 Change log
+v18.2.1 Change log
 ==================
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v18.2.1...dashpay:v18.2.2).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v18.2.0...dashpay:v18.2.1).
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Kittywhiskers Van Gogh
+- Konstantin Akimov
 - Odysseas Gabrielides
+- PastaPastaPasta
 - UdjinM6
 
 As well as everyone that submitted issues, reviewed pull requests, helped debug the release candidates, and write DIPs that were implemented in this release.
@@ -133,7 +150,6 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v18.2.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.2.2.md) released Jan/17/2023
 - [v18.2.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.2.0.md) released Jan/01/2023
 - [v18.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.1.1.md) released January/08/2023
 - [v18.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.1.0.md) released October/09/2022
