@@ -3367,10 +3367,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (fLogIPs)
             remoteAddr = ", peeraddr=" + pfrom.addr.ToStringAddrPort();
 
-        LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s\n",
+        const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
+        LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
                   cleanSubVer, pfrom.nVersion,
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
-                  remoteAddr);
+                  remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
         int64_t nTimeOffset = nTime - GetTime();
         pfrom.nTimeOffset = nTimeOffset;
@@ -3410,9 +3411,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         if (!pfrom.IsInboundConn()) {
-            LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
+            const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
+            LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s%s (%s)\n",
                       pfrom.nVersion.load(), peer->m_starting_height,
                       pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : ""),
+                      (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""),
                       pfrom.ConnectionTypeAsString());
         }
 
