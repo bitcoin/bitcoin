@@ -17,7 +17,7 @@ must obtain that key for your local GPG installation.
 You can obtain these keys by
   - through a browser using a key server (e.g. keyserver.ubuntu.com),
   - manually using the `gpg --keyserver <url> --recv-keys <key>` command, or
-  - you can run the packaged `verifybinaries.py ... --import-keys` script to
+  - you can run the packaged `verify.py ... --import-keys` script to
     have it automatically retrieve unrecognized keys.
 
 #### Usage
@@ -52,13 +52,12 @@ Get JSON output and don't prompt for user input (no auto key import):
 ./contrib/verifybinaries/verify.py --json pub 22.0-x86
 ```
 
-Don't trust builder-keys by default, and rely only on local GPG state and manually
-specified keys, while requiring a threshold of at least 10 trusted signatures:
+Rely only on local GPG state and manually specified keys, while requiring a
+threshold of at least 10 trusted signatures:
 ```sh
 ./contrib/verifybinaries/verify.py \
-    --no-trust-builder-keys \
     --trusted-keys 74E2DEF5D77260B98BC19438099BAD163C70FBFA,9D3CC86A72F8494342EA5FD10A41BDC3F4FAFF1C \
-    --min-trusted-sigs 10 pub 22.0-x86
+    --min-good-sigs 10 pub 22.0-x86
 ```
 
 If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
@@ -68,8 +67,22 @@ If you only want to download the binaries of certain platform, add the correspon
 ./contrib/verifybinaries/verify.py pub 22.0-rc2-win64
 ```
 
-If you do not want to keep the downloaded binaries, specify anything as the second parameter.
+If you do not want to keep the downloaded binaries, specify the cleanup option.
 
 ```sh
-./contrib/verifybinaries/verify.py pub 22.0 delete
+./contrib/verifybinaries/verify.py pub --cleanup 22.0
+```
+
+Use the bin subcommand to verify all files listed in a local checksum file
+
+```sh
+./contrib/verifybinaries/verify.py bin SHA256SUMS
+```
+
+Verify only a subset of the files listed in a local checksum file
+
+```sh
+./contrib/verifybinaries/verify.py bin ~/Downloads/SHA256SUMS \
+    ~/Downloads/bitcoin-24.0.1-x86_64-linux-gnu.tar.gz \
+    ~/Downloads/bitcoin-24.0.1-arm-linux-gnueabihf.tar.gz
 ```
