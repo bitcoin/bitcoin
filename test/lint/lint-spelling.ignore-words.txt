@@ -18,3 +18,5 @@ crypted
 fo
 stoll
 hist
+ser
+unselect

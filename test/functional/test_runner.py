@@ -262,6 +262,7 @@ BASE_SCRIPTS = [
     'wallet_startup.py',
     'feature_config_args.py',
     'feature_settings.py',
+    'rpc_getdescriptorinfo.py',
     'rpc_help.py',
     'feature_help.py',
     # Don't append tests at the end to avoid merge conflicts
