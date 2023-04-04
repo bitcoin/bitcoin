@@ -1767,7 +1767,7 @@ else
     use_upnp=yes
     AC_DEFINE([USE_UPNP], [1], [Define to 1 if UPnP support should be compiled in.])
     if test "$TARGET_OS" = "windows"; then
-      MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"
+      MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DMINIUPNP_STATICLIB"
     fi
   else
     AC_MSG_RESULT([no])
