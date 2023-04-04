@@ -248,7 +248,7 @@ including private key material.
 
 For example, after importing the following 2-of-3 multisig descriptor
 into a wallet, one could use `signrawtransactionwithwallet`
-to sign a transaction with the first signature:
+to sign a transaction with the first key:
 ```
 sh(multi(2,xprv9s21Z.../84'/0'/0'/0/0,0280007cb...,033af7e98...))#lx65wk3z
 ```
