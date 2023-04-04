@@ -19,6 +19,7 @@ from test_framework.messages import (
     MSG_WITNESS_TX,
     MSG_WTX,
     msg_ancpkginfo,
+    msg_feefilter,
     msg_getdata,
     msg_inv,
     msg_notfound,
@@ -595,6 +596,30 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_requester_101.send_message(getpkgtxns_101)
         peer_requester_101.wait_for_disconnect()
 
+    @cleanup
+    def test_announcements(self):
+        node = self.nodes[0]
+        package_hex, package_txns, package_wtxids = self.create_package()
+        # The filter should be applied to base fee.
+        node.prioritisetransaction(package_txns[1].rehash(), 0, COIN)
+        assert_equal(len(package_txns), 3)
+        peer_package_relay = node.add_p2p_connection(PackageRelayer())
+        assert node.getpeerinfo()[0]["relaytxpackages"]
+        peer_non_package_relay = node.add_p2p_connection(PackageRelayer(send_sendpackages=False))
+        assert not node.getpeerinfo()[1]["relaytxpackages"]
+        peer_package_relay.send_and_ping(msg_feefilter(1000))
+        peer_non_package_relay.send_and_ping(msg_feefilter(1000))
+
+        node.submitpackage(package_hex)
+        self.fastforward(UNCONDITIONAL_RELAY_DELAY)
+        self.log.info("Test that node announces transactions above fee filter to package relay peers")
+        peer_package_relay.wait_for_broadcast([package_txns[0].getwtxid(), package_txns[2].getwtxid()])
+        assert int(package_txns[1].getwtxid(), 16) not in peer_package_relay.get_invs()
+        self.log.info("Test that node announces transactions whose parents are above fee filter to non-package relay peers")
+        peer_non_package_relay.wait_for_broadcast([package_txns[0].getwtxid()])
+        assert int(package_txns[1].getwtxid(), 16) not in peer_non_package_relay.get_invs()
+        assert int(package_txns[2].getwtxid(), 16) not in peer_non_package_relay.get_invs()
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         self.generate(self.wallet, 160)
@@ -609,6 +634,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_ancpkginfo_invalid_ancestors()
         self.test_low_fee_caching()
         self.test_pkgtxns()
+        self.test_announcements()
 
 
 if __name__ == '__main__':

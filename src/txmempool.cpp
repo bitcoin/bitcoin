@@ -853,6 +853,20 @@ TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
     return GetInfo(i);
 }
 
+std::optional<CFeeRate> CTxMemPool::MinimumFeerateWithParents(const GenTxid& gtxid) const
+{
+    LOCK(cs);
+    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    if (i == mapTx.end()) return std::nullopt;
+    CFeeRate min_feerate(i->GetFee(), i->GetTxSize());
+    for (const auto& parent : i->GetMemPoolParentsConst()) {
+        auto pit = mapTx.iterator_to(parent);
+        CFeeRate parent_feerate(pit->GetFee(), pit->GetTxSize());
+        if (parent_feerate < min_feerate) min_feerate = parent_feerate;
+    }
+    return min_feerate;
+}
+
 void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
 {
     {

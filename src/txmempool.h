@@ -710,6 +710,11 @@ public:
     TxMempoolInfo info(const GenTxid& gtxid) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
+    /** Get the minimum base feerate between this entry and its parents (ignoring prioritisation).
+     * returns std::nullopt if the entry doesn't exist
+     * returns the tx's own feerate if it doesn't have any parents */
+    std::optional<CFeeRate> MinimumFeerateWithParents(const GenTxid& gtxid) const;
+
     size_t DynamicMemoryUsage() const;
 
     /** Adds a transaction to the unbroadcast set */

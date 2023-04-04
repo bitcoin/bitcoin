@@ -6177,6 +6177,13 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
+                        } else if (!peer->m_package_relay) {
+                            // If any of the parents are below the fee filter and the peer doesn't
+                            // support package relay, they probably won't accept this transaction.
+                            // Save older peers' bandwidth by skipping this transaction.
+                            if (auto min_parent_feerate{m_mempool.MinimumFeerateWithParents(ToGenTxid(inv))}) {
+                                if (min_parent_feerate.value() < filterrate) continue;
+                            }
                         }
                         if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         // Send
