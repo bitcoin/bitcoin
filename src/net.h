@@ -75,7 +75,9 @@ static const int MAX_FEELER_CONNECTIONS = 1;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain. */
-static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
+static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS{200};
+/** Percentage of inbound connection slots that tx-relaying peers can use */
+static const int FULL_RELAY_INBOUND_PCT{50};
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 /** Default for blocks only*/
@@ -1097,6 +1099,7 @@ public:
         m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
         m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler;
         m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
+        m_max_inbound_full_relay = std::max(0, static_cast<int>(FULL_RELAY_INBOUND_PCT / 100.0 * m_max_inbound));
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         m_client_interface = connOptions.uiInterface;
         m_banman = connOptions.m_banman;
@@ -1246,6 +1249,16 @@ public:
     int GetExtraFullOutboundCount() const;
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
+    /**
+     * If we are at capacity for inbound tx-relay peers, attempt to evict one.
+     * @param[in]   protect_peer      NodeId of a peer we want to protect
+     * @return      bool              Returns true if successful (either there is
+     *                                no need for eviction, or a peer was evicted).
+     *                                Returns false, if we are full but couldn't find
+     *                                a peer to evict (all eligible peers are protected)
+     *                                so that the caller can deal with this.
+     */
+    bool EvictTxPeerIfFull(std::optional<NodeId> protect_peer = std::nullopt);
 
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
@@ -1598,6 +1611,7 @@ private:
     int m_max_feeler{MAX_FEELER_CONNECTIONS};
     int m_max_automatic_outbound;
     int m_max_inbound;
+    int m_max_inbound_full_relay;
 
     bool m_use_addrman_outgoing;
     CClientUIInterface* m_client_interface;

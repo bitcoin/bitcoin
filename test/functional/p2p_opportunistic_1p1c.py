@@ -77,7 +77,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-maxmempool=5",
+            "-maxmempool=5","-maxconnections=150"
         ]]
 
     def create_tx_below_mempoolminfee(self, wallet, utxo_to_spend=None):

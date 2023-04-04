@@ -2489,6 +2489,23 @@ int CConnman::GetExtraBlockRelayCount() const
     return std::max(block_relay_peers - m_max_outbound_block_relay, 0);
 }
 
+bool CConnman::EvictTxPeerIfFull(std::optional<NodeId> protect_peer)
+{
+    int tx_inbound_peers{0};
+    {
+        LOCK(m_nodes_mutex);
+        for (const CNode* pnode : m_nodes) {
+            if (pnode->IsInboundConn() && pnode->m_relays_txs) {
+                ++tx_inbound_peers;
+            }
+        }
+    }
+    if (tx_inbound_peers > m_max_inbound_full_relay) {
+        return AttemptToEvictConnection(/*evict_tx_relay_peer=*/true, protect_peer);
+    }
+    return true;
+}
+
 std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
 {
     std::unordered_set<Network> networks{};
