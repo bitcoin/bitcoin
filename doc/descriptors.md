@@ -243,7 +243,18 @@ Often it is useful to communicate a description of scripts along with the
 necessary private keys. For this reason, anywhere a public key or xpub is
 supported, a private key in WIF format or xprv may be provided instead.
 This is useful when private keys are necessary for hardened derivation
-steps, or for dumping wallet descriptors including private key material.
+steps, for signing transactions, or for dumping wallet descriptors
+including private key material.
+
+For example, after importing the following 2-of-3 multisig descriptor
+into a wallet, one could use `signrawtransactionwithwallet`
+to sign a transaction with the first key:
+```
+sh(multi(2,xprv.../84'/0'/0'/0/0,xpub1...,xpub2...))
+```
+Note how the first key is an xprv private key with a specific derivation path,
+while the other two are public keys.
+
 
 ### Compatibility with old wallets
 
