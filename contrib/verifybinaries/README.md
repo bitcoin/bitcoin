@@ -42,36 +42,36 @@ See the `Config` object for various options.
 
 Validate releases with default settings:
 ```sh
-./contrib/verifybinaries/verify.py 22.0
-./contrib/verifybinaries/verify.py 22.0-rc2
-./contrib/verifybinaries/verify.py bitcoin-core-23.0
-./contrib/verifybinaries/verify.py bitcoin-core-23.0-rc1
+./contrib/verifybinaries/verify.py pub 22.0
+./contrib/verifybinaries/verify.py pub 22.0-rc2
+./contrib/verifybinaries/verify.py pub bitcoin-core-23.0
+./contrib/verifybinaries/verify.py pub bitcoin-core-23.0-rc1
 ```
 
 Get JSON output and don't prompt for user input (no auto key import):
 
 ```sh
-./contrib/verifybinaries/verify.py 22.0-x86 --json
+./contrib/verifybinaries/verify.py --json pub 22.0-x86
 ```
 
 Don't trust builder-keys by default, and rely only on local GPG state and manually
 specified keys, while requiring a threshold of at least 10 trusted signatures:
 ```sh
-./contrib/verifybinaries/verify.py 22.0-x86 \
+./contrib/verifybinaries/verify.py \
     --no-trust-builder-keys \
     --trusted-keys 74E2DEF5D77260B98BC19438099BAD163C70FBFA,9D3CC86A72F8494342EA5FD10A41BDC3F4FAFF1C \
-    --min-trusted-sigs 10
+    --min-trusted-sigs 10 pub 22.0-x86
 ```
 
 If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
 
 ```sh
-./contrib/verifybinaries/verify.py bitcoin-core-22.0-osx
-./contrib/verifybinaries/verify.py bitcoin-core-22.0-rc2-win64
+./contrib/verifybinaries/verify.py pub bitcoin-core-22.0-osx
+./contrib/verifybinaries/verify.py pub bitcoin-core-22.0-rc2-win64
 ```
 
 If you do not want to keep the downloaded binaries, specify anything as the second parameter.
 
 ```sh
-./contrib/verifybinaries/verify.py bitcoin-core-22.0 delete
+./contrib/verifybinaries/verify.py pub bitcoin-core-22.0 delete
 ```
