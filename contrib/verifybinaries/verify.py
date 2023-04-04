@@ -99,9 +99,6 @@ VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
 VERSION_EXAMPLE = "22.0-x86_64 or 0.21.0-rc2-osx"
 
 def parse_version_string(version_str):
-    if version_str.startswith(VERSIONPREFIX):  # remove version prefix
-        version_str = version_str[len(VERSIONPREFIX):]
-
     parts = version_str.split('-')
     version_base = parts[0]
     version_rc = ""
@@ -290,8 +287,8 @@ def get_files_from_hosts_and_compare(
         log.error(
             f"couldn't fetch file ({url}). "
             "Have you specified the version number in the following format?\n"
-            f"[{VERSIONPREFIX}]{VERSION_FORMAT} "
-            f"(example: {VERSIONPREFIX}{VERSION_EXAMPLE})\n"
+            f"{VERSION_FORMAT} "
+            f"(example: {VERSION_EXAMPLE})\n"
             f"wget output:\n{indent(output)}")
         return ReturnCode.FILE_GET_FAILED
     else:

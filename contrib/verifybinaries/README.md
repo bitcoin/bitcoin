@@ -44,8 +44,6 @@ Validate releases with default settings:
 ```sh
 ./contrib/verifybinaries/verify.py pub 22.0
 ./contrib/verifybinaries/verify.py pub 22.0-rc2
-./contrib/verifybinaries/verify.py pub bitcoin-core-23.0
-./contrib/verifybinaries/verify.py pub bitcoin-core-23.0-rc1
 ```
 
 Get JSON output and don't prompt for user input (no auto key import):
@@ -66,12 +64,12 @@ specified keys, while requiring a threshold of at least 10 trusted signatures:
 If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
 
 ```sh
-./contrib/verifybinaries/verify.py pub bitcoin-core-22.0-osx
-./contrib/verifybinaries/verify.py pub bitcoin-core-22.0-rc2-win64
+./contrib/verifybinaries/verify.py pub 22.0-osx
+./contrib/verifybinaries/verify.py pub 22.0-rc2-win64
 ```
 
 If you do not want to keep the downloaded binaries, specify anything as the second parameter.
 
 ```sh
-./contrib/verifybinaries/verify.py pub bitcoin-core-22.0 delete
+./contrib/verifybinaries/verify.py pub 22.0 delete
 ```
