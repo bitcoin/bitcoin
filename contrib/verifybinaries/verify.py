@@ -375,10 +375,6 @@ def verify_shasums_signature(
     if gpg_retval not in gpg_allowed_codes:
         if gpg_retval == 1:
             log.critical(f"Bad signature (code: {gpg_retval}).")
-        if gpg_retval == 2:
-            log.critical(
-                "gpg error. Do you have the Bitcoin Core binary release "
-                "signing key installed?")
         else:
             log.critical(f"unexpected GPG exit code ({gpg_retval})")
 
