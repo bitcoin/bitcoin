@@ -619,7 +619,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     int nTxAge;
     {
         LOCK(cs_main);
-        pindexMined = LookupBlockIndex(hashBlock);
+        pindexMined = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
         nTxAge = ::ChainActive().Height() - pindexMined->nHeight + 1;
     }
 
@@ -796,7 +796,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
 
     // Deterministic ISLocks are only produced by rotation quorums, if we don't see DIP24 as active, then we won't be able to validate it anyway
     if (islock->IsDeterministic() && fDIP0024IsActive) {
-        const auto blockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(islock->cycleHash));
+        const auto blockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(islock->cycleHash));
         if (blockIndex == nullptr) {
             // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
             Misbehaving(pfrom.GetId(), 1);
@@ -967,7 +967,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         if (islock->IsDeterministic()) {
             LOCK(cs_main);
 
-            const auto blockIndex = LookupBlockIndex(islock->cycleHash);
+            const auto blockIndex = g_chainman.m_blockman.LookupBlockIndex(islock->cycleHash);
             if (blockIndex == nullptr) {
                 batchVerifier.badSources.emplace(nodeId);
                 continue;
@@ -1061,7 +1061,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (tx && !hashBlock.IsNull()) {
-        pindexMined = WITH_LOCK(cs_main, return LookupBlockIndex(hashBlock));
+        pindexMined = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(hashBlock));
 
         // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
         // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
@@ -1479,8 +1479,8 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
 
         CValidationState state;
         // need non-const pointer
-        auto pindex2 = WITH_LOCK(::cs_main, return LookupBlockIndex(pindex->GetBlockHash()));
-        if (!InvalidateBlock(state, Params(), pindex2)) {
+        auto pindex2 = WITH_LOCK(::cs_main, return g_chainman.m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
+        if (!::ChainstateActive().InvalidateBlock(state, Params(), pindex2)) {
             LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);
@@ -1490,13 +1490,13 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         } else {
             LogPrintf("CInstantSendManager::%s -- resetting block %s\n", __func__, pindex2->GetBlockHash().ToString());
             LOCK(cs_main);
-            ResetBlockFailureFlags(pindex2);
+            ::ChainstateActive().ResetBlockFailureFlags(pindex2);
         }
     }
 
     if (activateBestChain) {
         CValidationState state;
-        if (!ActivateBestChain(state, Params())) {
+        if (!::ChainstateActive().ActivateBestChain(state, Params())) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);

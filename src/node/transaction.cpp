@@ -38,7 +38,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // Transaction is not already in the mempool. Submit it.
         CValidationState state;
         bool fMissingInputs;
-        if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx), &fMissingInputs,
+        if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, std::move(tx), &fMissingInputs,
                                 bypass_limits, max_tx_fee)) {
             if (state.IsInvalid()) {
                 err_string = FormatStateMessage(state);

@@ -216,7 +216,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.addrman.reset();
     m_node.args = nullptr;
     m_node.banman.reset();
-    UnloadBlockIndex(m_node.mempool.get());
+    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
     m_node.mempool.reset();
     m_node.scheduler.reset();
     m_node.llmq_ctx.reset();
@@ -239,7 +239,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     assert(!::ChainstateActive().CanFlushToDisk());
     ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
-    if (!LoadGenesisBlock(chainparams)) {
+    if (!::ChainstateActive().LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
 
@@ -254,7 +254,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 
     CValidationState state;
-    if (!ActivateBestChain(state, chainparams)) {
+    if (!::ChainstateActive().ActivateBestChain(state, chainparams)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
     }
 }
@@ -269,8 +269,7 @@ TestChainSetup::TestChainSetup(int blockCount)
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < blockCount; i++)
-    {
+    for (int i = 0; i < blockCount; i++) {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
         m_coinbase_txns.push_back(b.vtx[0]);
@@ -288,8 +287,6 @@ TestChainSetup::TestChainSetup(int blockCount)
     }
 }
 
-// Create a new block with just given transactions, coinbase paying to
-// scriptPubKey, and try to add it to the current chain.
 CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
@@ -298,8 +295,7 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
-    CBlock result = block;
-    return result;
+    return block;
 }
 
 CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
@@ -311,8 +307,12 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
 CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor, *m_node.llmq_ctx->clhandler, *m_node.llmq_ctx->isman, *m_node.evodb, *m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
-    CBlock& block = pblocktemplate->block;
+    CTxMemPool empty_pool;
+    CBlock block = BlockAssembler(
+            *sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor,
+            *m_node.llmq_ctx->clhandler, *m_node.llmq_ctx->isman, *m_node.evodb,
+            empty_pool, chainparams
+        ).CreateNewBlock(::ChainstateActive(), scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {
@@ -323,10 +323,13 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
     block.vtx.resize(1);
+    Assert(block.vtx.size() == 1);
+
     // Re-add quorum commitments
     block.vtx.insert(block.vtx.end(), llmqCommitments.begin(), llmqCommitments.end());
-    for (const CMutableTransaction& tx : txns)
+    for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
+    }
 
     // Manually update CbTx as we modified the block here
     if (block.vtx[0]->nType == TRANSACTION_COINBASE) {
@@ -373,8 +376,8 @@ TestChainSetup::~TestChainSetup()
     g_txindex.reset();
 }
 
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx) {
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx)
+{
     return FromTx(MakeTransactionRef(tx));
 }
 

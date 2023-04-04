@@ -299,7 +299,7 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     result.pushKV("signature", clsig.getSig().ToString());
 
     LOCK(cs_main);
-    result.pushKV("known_block", LookupBlockIndex(clsig.getBlockHash()) != nullptr);
+    result.pushKV("known_block", g_chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()) != nullptr);
     return result;
 }
 
@@ -873,7 +873,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        pblockindex = LookupBlockIndex(hash);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         tip = ::ChainActive().Tip();
     }
 
@@ -943,7 +943,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        pblockindex = LookupBlockIndex(hash);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         tip = ::ChainActive().Tip();
     }
 
@@ -1051,7 +1051,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
     std::string strHash = request.params[1].get_str();
     uint256 hash(uint256S(strHash));
 
-    const CBlockIndex* pblockindex = LookupBlockIndex(hash);
+    const CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
@@ -1170,7 +1170,7 @@ static UniValue getblock(const JSONRPCRequest& request)
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        pblockindex = LookupBlockIndex(hash);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         tip = ::ChainActive().Tip();
 
         if (!pblockindex) {
@@ -1238,7 +1238,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(height);
+    PruneBlockFilesManual(::ChainstateActive(), height);
     const CBlockIndex* block = ::ChainActive().Tip();
     CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
@@ -1380,7 +1380,7 @@ static UniValue gettxout(const JSONRPCRequest& request)
         }
     }
 
-    const CBlockIndex* pindex = LookupBlockIndex(coins_view->GetBestBlock());
+    const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);
@@ -1420,7 +1420,7 @@ static UniValue verifychain(const JSONRPCRequest& request)
     const NodeContext& node_context = EnsureNodeContext(request.context);
 
     return CVerifyDB().VerifyDB(
-        Params(), &::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
+        Params(), ::ChainstateActive(), &::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
 }
 
 /** Implementation of IsSuperMajority with better feedback */
@@ -1456,7 +1456,7 @@ static UniValue SoftForkDesc(const std::string &name, int version, const CBlockI
 static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     UniValue rv(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
+    const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     switch (thresholdState) {
     case ThresholdState::DEFINED: rv.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: rv.pushKV("status", "started"); break;
@@ -1470,11 +1470,11 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     }
     rv.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
+    rv.pushKV("since", VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache));
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
+        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id, versionbitscache);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
@@ -1811,14 +1811,14 @@ static UniValue preciousblock(const JSONRPCRequest& request)
 
     {
         LOCK(cs_main);
-        pblockindex = LookupBlockIndex(hash);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
 
     CValidationState state;
-    PreciousBlock(state, Params(), pblockindex);
+    ::ChainstateActive().PreciousBlock(state, Params(), pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, FormatStateMessage(state));
@@ -1848,15 +1848,15 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
     CBlockIndex* pblockindex;
     {
         LOCK(cs_main);
-        pblockindex = LookupBlockIndex(hash);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    InvalidateBlock(state, Params(), pblockindex);
+    ::ChainstateActive().InvalidateBlock(state, Params(), pblockindex);
 
     if (state.IsValid()) {
-        ActivateBestChain(state, Params());
+        ::ChainstateActive().ActivateBestChain(state, Params());
     }
 
     if (!state.IsValid()) {
@@ -1886,16 +1886,16 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
 
     {
         LOCK(cs_main);
-        CBlockIndex* pblockindex = LookupBlockIndex(hash);
+        CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        ResetBlockFailureFlags(pblockindex);
+        ::ChainstateActive().ResetBlockFailureFlags(pblockindex);
     }
 
     CValidationState state;
-    ActivateBestChain(state, Params());
+    ::ChainstateActive().ActivateBestChain(state, Params());
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, FormatStateMessage(state));
@@ -1939,7 +1939,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
     } else {
         uint256 hash = uint256S(request.params[1].get_str());
         LOCK(cs_main);
-        pindex = LookupBlockIndex(hash);
+        pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -2116,7 +2116,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
     } else {
         const uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-        pindex = LookupBlockIndex(hash);
+        pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -2336,7 +2336,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbosity must be in range 0..2");
         }
     }
-    const CBlockIndex* pblockindex = LookupBlockIndex(hash);
+    const CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
@@ -2657,7 +2657,7 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
     bool block_was_connected;
     {
         LOCK(cs_main);
-        block_index = LookupBlockIndex(block_hash);
+        block_index = g_chainman.m_blockman.LookupBlockIndex(block_hash);
         if (!block_index) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -2761,7 +2761,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
         }
 
         pcursor = std::unique_ptr<CCoinsViewCursor>(::ChainstateActive().CoinsDB().Cursor());
-        tip = LookupBlockIndex(stats.hashBlock);
+        tip = g_chainman.m_blockman.LookupBlockIndex(stats.hashBlock);
         CHECK_NONFATAL(tip);
     }
 

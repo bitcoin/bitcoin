@@ -61,7 +61,7 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = FindForkInGlobalIndex(::ChainActive(), locator);
+        m_best_block_index = g_chainman.m_blockman.FindForkInGlobalIndex(::ChainActive(), locator);
     }
     m_synced = m_best_block_index.load() == ::ChainActive().Tip();
     return true;
@@ -238,7 +238,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     const CBlockIndex* locator_tip_index;
     {
         LOCK(cs_main);
-        locator_tip_index = LookupBlockIndex(locator_tip_hash);
+        locator_tip_index = g_chainman.m_blockman.LookupBlockIndex(locator_tip_hash);
     }
 
     if (!locator_tip_index) {

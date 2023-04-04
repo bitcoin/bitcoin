@@ -469,7 +469,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
 
     switch (nObjectType) {
     case GOVERNANCE_OBJECT_PROPOSAL: {
-        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
+        bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
         CProposalValidator validator(GetDataAsHexString(), fAllowScript);
         // Note: It's ok to have expired proposals
         // they are going to be cleared by CGovernanceManager::UpdateCachesAndClean()
@@ -563,7 +563,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
 
     AssertLockHeld(cs_main);
-    bool fork_active = VersionBitsState(LookupBlockIndex(nBlockHash), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE;
+    bool fork_active = VersionBitsState(g_chainman.m_blockman.LookupBlockIndex(nBlockHash), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE;
     CAmount nMinFee = GetMinCollateralFee(fork_active);
 
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- txCollateral->vout.size() = %s, findScript = %s, nMinFee = %lld\n",
@@ -594,7 +594,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     AssertLockHeld(cs_main);
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
-        const CBlockIndex* pindex = LookupBlockIndex(nBlockHash);
+        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(nBlockHash);
         if (pindex && ::ChainActive().Contains(pindex)) {
             nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
         }
@@ -692,7 +692,7 @@ void CGovernanceObject::Relay(CConnman& connman) const
         // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
         // because they won't accept it anyway and will simply ban us eventually.
         LOCK(cs_main);
-        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
+        bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
         if (fAllowScript) {
             CProposalValidator validator(GetDataAsHexString(), false /* no script */);
             if (!validator.Validate(false /* ignore expiration */)) {

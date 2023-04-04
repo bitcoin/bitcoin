@@ -50,99 +50,86 @@ FUZZ_TARGET_INIT(net, initialize_net)
                fuzzed_data_provider.ConsumeBool()
            };
     while (fuzzed_data_provider.ConsumeBool()) {
-        switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 12)) {
-        case 0: {
-            CAddrMan addrman;
-            CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
-            node.CloseSocketDisconnect(&connman);
-            break;
-        }
-        case 1: {
-            node.MaybeSetAddrName(fuzzed_data_provider.ConsumeRandomLengthString(32));
-            break;
-        }
-        case 2: {
-            node.SetSendVersion(fuzzed_data_provider.ConsumeIntegral<int>());
-            break;
-        }
-        case 3: {
-            const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-            if (!SanityCheckASMap(asmap)) {
-                break;
-            }
-            CNodeStats stats;
-            node.copyStats(stats, asmap);
-            break;
-        }
-        case 4: {
-            node.SetRecvVersion(fuzzed_data_provider.ConsumeIntegral<int>());
-            break;
-        }
-        case 5: {
-            const CNode* add_ref_node = node.AddRef();
-            assert(add_ref_node == &node);
-            break;
-        }
-        case 6: {
-            if (node.GetRefCount() > 0) {
-                node.Release();
-            }
-            break;
-        }
-        case 7: {
-            // if (node.m_addr_known == nullptr) {
-            //     break;
-            // }
-            const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-            if (!addr_opt) {
-                break;
-            }
-            node.AddAddressKnown(*addr_opt);
-            break;
-        }
-        case 8: {
-            // if (node.m_addr_known == nullptr) {
-            //     break;
-            // }
-            const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-            if (!addr_opt) {
-                break;
-            }
-            FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
-            node.PushAddress(*addr_opt, fast_random_context);
-            break;
-        }
-        case 9: {
-            const std::optional<CInv> inv_opt = ConsumeDeserializable<CInv>(fuzzed_data_provider);
-            if (!inv_opt) {
-                break;
-            }
-            // node.AddKnownTx(inv_opt->hash);
-            break;
-        }
-        case 10: {
-            const std::optional<CInv> inv_opt = ConsumeDeserializable<CInv>(fuzzed_data_provider);
-            if (!inv_opt) {
-                break;
-            }
-            node.PushInventory(*inv_opt);
-            break;
-        }
-        case 11: {
-            const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);
-            if (!service_opt) {
-                break;
-            }
-            node.SetAddrLocal(*service_opt);
-            break;
-        }
-        case 12: {
-            const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-            bool complete;
-            node.ReceiveMsgBytes((const char*)b.data(), b.size(), complete);
-            break;
-        }
-        }
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                CAddrMan addrman;
+                CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
+                node.CloseSocketDisconnect(&connman);
+            },
+            [&] {
+                node.MaybeSetAddrName(fuzzed_data_provider.ConsumeRandomLengthString(32));
+            },
+            [&] {
+                node.SetSendVersion(fuzzed_data_provider.ConsumeIntegral<int>());
+            },
+            [&] {
+                const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+                if (!SanityCheckASMap(asmap)) {
+                    return;
+                }
+                CNodeStats stats;
+                node.copyStats(stats, asmap);
+            },
+            [&] {
+                node.SetRecvVersion(fuzzed_data_provider.ConsumeIntegral<int>());
+            },
+            [&] {
+                const CNode* add_ref_node = node.AddRef();
+                assert(add_ref_node == &node);
+            },
+            [&] {
+                if (node.GetRefCount() > 0) {
+                    node.Release();
+                }
+            },
+            [&] {
+                // if (node.m_addr_known == nullptr) {
+                //     return;
+                // }
+                const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
+                if (!addr_opt) {
+                    return;
+                }
+                node.AddAddressKnown(*addr_opt);
+            },
+            [&] {
+                // if (node.m_addr_known == nullptr) {
+                //     return;
+                // }
+                const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
+                if (!addr_opt) {
+                    return;
+                }
+                FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
+                node.PushAddress(*addr_opt, fast_random_context);
+            },
+            [&] {
+                const std::optional<CInv> inv_opt = ConsumeDeserializable<CInv>(fuzzed_data_provider);
+                if (!inv_opt) {
+                    return;
+                }
+                // node.AddKnownTx(inv_opt->hash);
+            },
+            [&] {
+                const std::optional<CInv> inv_opt = ConsumeDeserializable<CInv>(fuzzed_data_provider);
+                if (!inv_opt) {
+                    return;
+                }
+                node.PushInventory(*inv_opt);
+            },
+            [&] {
+                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);
+                if (!service_opt) {
+                    return;
+                }
+                node.SetAddrLocal(*service_opt);
+            },
+            [&] {
+                const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+                bool complete;
+                node.ReceiveMsgBytes((const char*)b.data(), b.size(), complete);
+            });
     }
 
     (void)node.GetAddrLocal();

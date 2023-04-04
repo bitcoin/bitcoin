@@ -45,7 +45,7 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidat
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-version");
     }
 
-    const CBlockIndex* pindexQuorum = LookupBlockIndex(mnhfTx.signal.quorumHash);
+    const CBlockIndex* pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash);
     if (!pindexQuorum) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-quorum-hash");
     }

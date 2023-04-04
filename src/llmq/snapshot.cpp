@@ -132,7 +132,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         baseBlockIndexes.push_back(blockIndex);
     } else {
         for (const auto& blockHash : request.baseBlockHashes) {
-            const CBlockIndex* blockIndex = LookupBlockIndex(blockHash);
+            const CBlockIndex* blockIndex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
             if (!blockIndex) {
                 errorRet = strprintf("block %s not found", blockHash.ToString());
                 return false;
@@ -158,7 +158,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         return false;
     }
 
-    const CBlockIndex* blockIndex = LookupBlockIndex(request.blockRequestHash);
+    const CBlockIndex* blockIndex = g_chainman.m_blockman.LookupBlockIndex(request.blockRequestHash);
     if (!blockIndex) {
         errorRet = strprintf("block not found");
         return false;

@@ -12,25 +12,12 @@
 
 static Mutex g_warnings_mutex;
 static std::string strMiscWarning GUARDED_BY(g_warnings_mutex);
-static bool fLargeWorkForkFound GUARDED_BY(g_warnings_mutex) = false;
 static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
 
 void SetMiscWarning(const std::string& strWarning)
 {
     LOCK(g_warnings_mutex);
     strMiscWarning = strWarning;
-}
-
-void SetfLargeWorkForkFound(bool flag)
-{
-    LOCK(g_warnings_mutex);
-    fLargeWorkForkFound = flag;
-}
-
-bool GetfLargeWorkForkFound()
-{
-    LOCK(g_warnings_mutex);
-    return fLargeWorkForkFound;
 }
 
 void SetfLargeWorkInvalidChainFound(bool flag)
@@ -59,10 +46,7 @@ std::string GetWarnings(bool verbose)
         warnings_verbose += (warnings_verbose.empty() ? "" : warning_separator) + strMiscWarning;
     }
 
-    if (fLargeWorkForkFound) {
-        warnings_concise = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
-        warnings_verbose += (warnings_verbose.empty() ? "" : warning_separator) + _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.").translated;
-    } else if (fLargeWorkInvalidChainFound) {
+    if (fLargeWorkInvalidChainFound) {
         warnings_concise = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
         warnings_verbose += (warnings_verbose.empty() ? "" : warning_separator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.").translated;
     }
