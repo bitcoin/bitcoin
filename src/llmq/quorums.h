@@ -39,14 +39,20 @@ static constexpr bool DEFAULT_WATCH_QUORUMS{false};
 struct CQuorumDataRequestKey
 {
     uint256 proRegTx;
-    //TODO: Investigate purpose of this flag and rename accordingly
-    bool flag;
+    bool m_we_requested;
     uint256 quorumHash;
     Consensus::LLMQType llmqType;
 
+    CQuorumDataRequestKey(const uint256& proRegTxIn, const bool _m_we_requested, const uint256& quorumHashIn, const Consensus::LLMQType llmqTypeIn) :
+        proRegTx(proRegTxIn),
+        m_we_requested(_m_we_requested),
+        quorumHash(quorumHashIn),
+        llmqType(llmqTypeIn)
+        {}
+
     bool operator ==(const CQuorumDataRequestKey& obj) const
     {
-        return (proRegTx == obj.proRegTx && flag == obj.flag && quorumHash == obj.quorumHash && llmqType == obj.llmqType);
+        return (proRegTx == obj.proRegTx && m_we_requested == obj.m_we_requested && quorumHash == obj.quorumHash && llmqType == obj.llmqType);
     }
 };
 
@@ -275,7 +281,7 @@ struct SaltedHasherImpl<llmq::CQuorumDataRequestKey>
     {
         CSipHasher c(k0, k1);
         c.Write((unsigned char*)&(v.proRegTx), sizeof(v.proRegTx));
-        c.Write((unsigned char*)&(v.flag), sizeof(v.flag));
+        c.Write((unsigned char*)&(v.m_we_requested), sizeof(v.m_we_requested));
         c.Write((unsigned char*)&(v.quorumHash), sizeof(v.quorumHash));
         c.Write((unsigned char*)&(v.llmqType), sizeof(v.llmqType));
         return c.Finalize();
