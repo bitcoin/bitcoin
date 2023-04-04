@@ -8,7 +8,6 @@
 from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
-import hashlib
 from subprocess import CalledProcessError
 import inspect
 import json
@@ -211,12 +210,6 @@ def EncodeDecimal(o):
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def hash256(byte_str):
-    sha256 = hashlib.sha256()
-    sha256.update(byte_str)
-    sha256d = hashlib.sha256()
-    sha256d.update(sha256.digest())
-    return sha256d.digest()[::-1]
 
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))

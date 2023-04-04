@@ -8,18 +8,18 @@
 #include <hash.h> // For Hash()
 #include <key.h> // For CKey
 #include <sync.h>
-#include <test/util/logging.h>
 #include <test/util.h>
+#include <test/util/logging.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/getuniquepath.h>
-#include <util/strencodings.h>
-#include <util/string.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
-#include <util/time.h>
-#include <test/util/setup_common.h>
-#include <util/vector.h>
 #include <util/spanparsing.h>
+#include <util/strencodings.h>
+#include <util/string.h>
+#include <util/time.h>
+#include <util/vector.h>
 
 #include <array>
 #include <stdint.h>
@@ -139,6 +139,12 @@ BOOST_AUTO_TEST_CASE(util_Join)
     BOOST_CHECK_EQUAL(Join({}, ", "), "");
     BOOST_CHECK_EQUAL(Join({"foo"}, ", "), "foo");
     BOOST_CHECK_EQUAL(Join({"foo", "bar"}, ", "), "foo, bar");
+
+    // Version with unary operator
+    const auto op_upper = [](const std::string& s) { return ToUpper(s); };
+    BOOST_CHECK_EQUAL(Join<std::string>({}, ", ", op_upper), "");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo"}, ", ", op_upper), "FOO");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo", "bar"}, ", ", op_upper), "FOO, BAR");
 }
 
 BOOST_AUTO_TEST_CASE(util_TrimString)

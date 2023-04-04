@@ -20,6 +20,8 @@ void CCoinControl::SetNull(bool fResetCoinType)
     m_fee_mode = FeeEstimateMode::UNSET;
     fRequireAllInputs = true;
     m_discard_feerate.reset();
+    m_min_depth = DEFAULT_MIN_DEPTH;
+    m_max_depth = DEFAULT_MAX_DEPTH;
     if (fResetCoinType) {
         nCoinType = CoinType::ALL_COINS;
     }

@@ -349,7 +349,9 @@ class DIP3Test(BitcoinTestFramework):
 
         return dummy_txin
 
-    def mine_block(self, node, vtx=[], miner_address=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
+    def mine_block(self, node, vtx=None, miner_address=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
+        if vtx is None:
+            vtx = []
         bt = node.getblocktemplate()
         height = bt['height']
         tip_hash = bt['previousblockhash']

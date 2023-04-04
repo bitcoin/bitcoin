@@ -276,7 +276,9 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             # Previous tip should be marked as conflicting now
             assert_equal(node.getchaintips(2)[1]["status"], "conflicting")
 
-    def create_block(self, node, vtx=[]):
+    def create_block(self, node, vtx=None):
+        if vtx is None:
+            vtx = []
         bt = node.getblocktemplate()
         height = bt['height']
         tip_hash = bt['previousblockhash']

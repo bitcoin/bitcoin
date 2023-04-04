@@ -324,10 +324,6 @@ static CTransactionRef SendMoney(CWallet* const pwallet, const CTxDestination& a
     if (nValue > curBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
 
-    if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
-
     if (coin_control.IsUsingCoinJoin()) {
         mapValue["DS"] = "1";
     }
@@ -882,10 +878,6 @@ static UniValue sendmany(const JSONRPCRequest& request)
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
-
-    if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
 
     if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"\"");
@@ -3120,9 +3112,11 @@ static UniValue listunspent(const JSONRPCRequest& request)
     std::vector<COutput> vecOutputs;
     {
         coinControl.m_avoid_address_reuse = false;
+        coinControl.m_min_depth = nMinDepth;
+        coinControl.m_max_depth = nMaxDepth;
 
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);
