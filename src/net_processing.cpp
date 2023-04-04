@@ -3741,6 +3741,15 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             }
         }
 
+        // If we have too many tx-relaying inbound peers, attempt to evict an existing one.
+        // Only if this fails, disconnect this peer.
+        if (pfrom.IsInboundConn() && pfrom.m_relays_txs) {
+            if (!m_connman.EvictTxPeerIfFull(/*protect_peer=*/pfrom.GetId())) {
+                LogDebug(BCLog::NET, "failed to find a tx-relaying eviction candidate - connection dropped peer=%i\n", pfrom.GetId());
+                pfrom.fDisconnect = true;
+                return;
+            }
+        }
         MakeAndPushMessage(pfrom, NetMsgType::VERACK);
 
         // Potentially mark this peer as a preferred download peer.
