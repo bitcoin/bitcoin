@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     uncompressedKey.MakeNewKey(false);
     CPubKey uncompressedPubkey = uncompressedKey.GetPubKey();
     NodeContext node;
-    auto chain = interfaces::MakeChain(node);
+    auto& chain = m_node.chain;
 
     CScript scriptPubKey;
     isminetype result;

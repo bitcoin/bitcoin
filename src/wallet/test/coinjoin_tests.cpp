@@ -129,10 +129,7 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
-        node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
-        chain = interfaces::MakeChain(node);
-        wallet = std::make_unique<CWallet>(chain.get(), "", CreateMockWalletDatabase());
+        wallet = std::make_unique<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
         wallet->SetupLegacyScriptPubKeyMan();
         bool firstRun;
         wallet->LoadWallet(firstRun);
@@ -153,8 +150,6 @@ public:
         RemoveWallet(wallet, std::nullopt);
     }
 
-    NodeContext node;
-    std::shared_ptr<interfaces::Chain> chain;
     std::shared_ptr<CWallet> wallet;
 
     CWalletTx& AddTxToChain(uint256 nTxHash)

@@ -957,11 +957,12 @@ void CWallet::LoadToWallet(CWalletTx& wtxIn)
 {
     // If wallet doesn't have a chain (e.g dash-wallet), don't bother to update txn.
     if (HaveChain()) {
-        std::optional<int> block_height = chain().getBlockHeight(wtxIn.m_confirm.hashBlock);
-        if (block_height) {
+        bool active;
+        int height;
+        if (chain().findBlock(wtxIn.m_confirm.hashBlock, FoundBlock().inActiveChain(active).height(height)) && active) {
             // Update cached block height variable since it not stored in the
             // serialized transaction.
-            wtxIn.m_confirm.block_height = *block_height;
+            wtxIn.m_confirm.block_height = height;
         } else if (wtxIn.isConflicted() || wtxIn.isConfirmed()) {
             // If tx block (or conflicting block) was reorged out of chain
             // while the wallet was shutdown, change tx status to UNCONFIRMED
@@ -1930,18 +1931,22 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
         }
 
+        // Read block data
         CBlock block;
-        bool next_block;
+        chain().findBlock(block_hash, FoundBlock().data(block));
+
+        // Find next block separately from reading data above, because reading
+        // is slow and there might be a reorg while it is read.
+        bool block_still_active = false;
+        bool next_block = false;
         uint256 next_block_hash;
-        bool reorg = false;
-        if (chain().findBlock(block_hash, FoundBlock().data(block)) && !block.IsNull()) {
+        chain().findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(next_block).hash(next_block_hash)));
+
+        if (!block.IsNull()) {
             LOCK(cs_wallet);
-            next_block = chain().findNextBlock(block_hash, block_height, FoundBlock().hash(next_block_hash), &reorg);
-            if (reorg) {
+            if (!block_still_active) {
                 // Abort scan if current block is no longer active, to prevent
                 // marking transactions as coming from the wrong block.
-                // TODO: This should return success instead of failure, see
-                // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
                 result.last_failed_block = block_hash;
                 result.status = ScanResult::FAILURE;
                 break;
@@ -1957,13 +1962,12 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             // could not scan block, keep scanning but record this block as the most recent failure
             result.last_failed_block = block_hash;
             result.status = ScanResult::FAILURE;
-            next_block = chain().findNextBlock(block_hash, block_height, FoundBlock().hash(next_block_hash), &reorg);
         }
         if (max_height && block_height >= *max_height) {
             break;
         }
         {
-            if (!next_block || reorg) {
+            if (!next_block) {
                 // break successfully when rescan has reached the tip, or
                 // previous block is no longer on the chain due to a reorg
                 break;
@@ -4739,9 +4743,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
                 if (!time_first_key || time < *time_first_key) time_first_key = time;
             }
             if (time_first_key) {
-                if (std::optional<int> first_block = chain.findFirstBlockWithTimeAndHeight(*time_first_key - TIMESTAMP_WINDOW, rescan_height, nullptr)) {
-                    rescan_height = *first_block;
-                }
+                chain.findFirstBlockWithTimeAndHeight(*time_first_key - TIMESTAMP_WINDOW, rescan_height, FoundBlock().height(rescan_height));
             }
         }
 
@@ -5065,8 +5067,10 @@ bool CWalletTx::IsChainLocked() const
     if (!fIsChainlocked) {
         assert(pwallet != nullptr);
         AssertLockHeld(pwallet->cs_wallet);
-        if (std::optional<int> height = pwallet->chain().getBlockHeight(m_confirm.hashBlock)) {
-            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(*height, m_confirm.hashBlock);
+        bool active;
+        int height;
+        if (pwallet->chain().findBlock(m_confirm.hashBlock, FoundBlock().inActiveChain(active).height(height)) && active) {
+            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(height, m_confirm.hashBlock);
         }
     }
     return fIsChainlocked;
