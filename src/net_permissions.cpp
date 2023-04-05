@@ -13,7 +13,6 @@ const std::vector<std::string> NET_PERMISSIONS_DOC{
     "noban (do not ban for misbehavior; implies download)",
     "forcerelay (relay transactions that are already in the mempool; implies relay)",
     "relay (relay even in -blocksonly mode, and unlimited transaction announcements)",
-    "mempool (allow requesting BIP35 mempool contents)",
     "download (allow getheaders during IBD, no disconnect after maxuploadtarget limit)",
     "addr (responses to GETADDR avoid hitting the cache and contain random records with the most up-to-date info)"
 };
@@ -47,7 +46,6 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
             if (permission == "bloomfilter" || permission == "bloom") NetPermissions::AddFlag(flags, NetPermissionFlags::BloomFilter);
             else if (permission == "noban") NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
             else if (permission == "forcerelay") NetPermissions::AddFlag(flags, NetPermissionFlags::ForceRelay);
-            else if (permission == "mempool") NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
             else if (permission == "download") NetPermissions::AddFlag(flags, NetPermissionFlags::Download);
             else if (permission == "all") NetPermissions::AddFlag(flags, NetPermissionFlags::All);
             else if (permission == "relay") NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
@@ -75,7 +73,6 @@ std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::NoBan)) strings.push_back("noban");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::ForceRelay)) strings.push_back("forcerelay");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Relay)) strings.push_back("relay");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Mempool)) strings.push_back("mempool");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Download)) strings.push_back("download");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Addr)) strings.push_back("addr");
     return strings;

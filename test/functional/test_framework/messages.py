@@ -1395,23 +1395,6 @@ class msg_pong:
         return "msg_pong(nonce=%08x)" % self.nonce
 
 
-class msg_mempool:
-    __slots__ = ()
-    msgtype = b"mempool"
-
-    def __init__(self):
-        pass
-
-    def deserialize(self, f):
-        pass
-
-    def serialize(self):
-        return b""
-
-    def __repr__(self):
-        return "msg_mempool()"
-
-
 class msg_notfound:
     __slots__ = ("vec", )
     msgtype = b"notfound"

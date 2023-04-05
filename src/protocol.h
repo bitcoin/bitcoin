@@ -132,12 +132,6 @@ extern const char* BLOCK;
  */
 extern const char* GETADDR;
 /**
- * The mempool message requests the TXIDs of transactions that the receiving
- * node has verified as valid but which have not yet appeared in a block.
- * @since protocol version 60002.
- */
-extern const char* MEMPOOL;
-/**
  * The ping message is sent periodically to help confirm that the receiving
  * peer is still connected.
  */

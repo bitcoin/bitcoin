@@ -33,7 +33,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
             # default permissions (no specific permissions)
             ["-whitelist=127.0.0.1"],
             # Make sure the default values in the command line documentation match the ones here
-            ["relay", "noban", "mempool", "download"])
+            ["relay", "noban", "download"])
 
         self.checkpermission(
             # no permission (even with forcerelay)
@@ -43,14 +43,14 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             # relay permission removed (no specific permissions)
             ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
-            ["noban", "mempool", "download"])
+            ["noban", "download"])
 
         self.checkpermission(
             # forcerelay and relay permission added
             # Legacy parameter interaction which set whitelistrelay to true
             # if whitelistforcerelay is true
             ["-whitelist=127.0.0.1", "-whitelistforcerelay"],
-            ["forcerelay", "relay", "noban", "mempool", "download"])
+            ["forcerelay", "relay", "noban", "download"])
 
         # Let's make sure permissions are merged correctly
         # For this, we need to use whitebind instead of bind
@@ -65,13 +65,13 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
-            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
-            ["noban", "mempool", "download"])
+            ["-whitelist=noban@127.0.0.1", "-whitelistrelay"],
+            ["noban", "download"])
 
         self.checkpermission(
             # legacy whitelistforcerelay should be ignored
-            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistforcerelay"],
-            ["noban", "mempool", "download"])
+            ["-whitelist=noban@127.0.0.1", "-whitelistforcerelay"],
+            ["noban", "download"])
 
         self.checkpermission(
             # missing mempool permission to be considered legacy whitelisted
@@ -81,7 +81,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             # all permission added
             ["-whitelist=all@127.0.0.1"],
-            ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
+            ["forcerelay", "noban", "bloomfilter", "relay", "download", "addr"])
 
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)

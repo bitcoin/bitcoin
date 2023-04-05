@@ -54,7 +54,6 @@ from test_framework.messages import (
     msg_getheaders,
     msg_headers,
     msg_inv,
-    msg_mempool,
     msg_merkleblock,
     msg_notfound,
     msg_ping,
@@ -119,7 +118,6 @@ MESSAGEMAP = {
     b"getheaders": msg_getheaders,
     b"headers": msg_headers,
     b"inv": msg_inv,
-    b"mempool": msg_mempool,
     b"merkleblock": msg_merkleblock,
     b"notfound": msg_notfound,
     b"ping": msg_ping,
@@ -416,7 +414,6 @@ class P2PInterface(P2PConnection):
     def on_getdata(self, message): pass
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
-    def on_mempool(self, message): pass
     def on_merkleblock(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass

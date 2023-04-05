@@ -5,13 +5,12 @@
 """Test invalid p2p messages for nodes with bloom filters disabled.
 
 Test that, when bloom filters are not enabled, peers are disconnected if:
-1. They send a p2p mempool message
-2. They send a p2p filterload message
-3. They send a p2p filteradd message
-4. They send a p2p filterclear message
+1. They send a p2p filterload message
+2. They send a p2p filteradd message
+3. They send a p2p filterclear message
 """
 
-from test_framework.messages import msg_mempool, msg_filteradd, msg_filterload, msg_filterclear
+from test_framework.messages import msg_filteradd, msg_filterload, msg_filterclear
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -31,9 +30,6 @@ class P2PNoBloomFilterMessages(BitcoinTestFramework):
         assert_equal(self.nodes[0].getconnectioncount(), 0)
 
     def run_test(self):
-        self.log.info("Test that peer is disconnected if it sends mempool message")
-        self.test_message_causes_disconnect(msg_mempool())
-
         self.log.info("Test that peer is disconnected if it sends filterload message")
         self.test_message_causes_disconnect(msg_filterload())
 

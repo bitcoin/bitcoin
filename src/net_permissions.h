@@ -29,8 +29,6 @@ enum class NetPermissionFlags : uint32_t {
     Download = (1U << 6),
     // Can't be banned/disconnected/discouraged for misbehavior
     NoBan = (1U << 4) | Download,
-    // Can query the mempool
-    Mempool = (1U << 5),
     // Can request addrs without hitting a privacy-preserving cache, and send us
     // unlimited amounts of addrs.
     Addr = (1U << 7),
@@ -38,7 +36,7 @@ enum class NetPermissionFlags : uint32_t {
     // True if the user did not specifically set fine-grained permissions with
     // the -whitebind or -whitelist configuration options.
     Implicit = (1U << 31),
-    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr,
+    All = BloomFilter | ForceRelay | Relay | NoBan |  Download | Addr,
 };
 static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
 {
