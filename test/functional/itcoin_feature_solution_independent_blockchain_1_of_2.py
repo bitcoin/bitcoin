@@ -7,6 +7,8 @@ import time
 import sys, os
 
 # Import the test primitives
+from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.test_framework_itcoin import BaseItcoinTest
 from test_framework.util import assert_equal
 
@@ -119,6 +121,47 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         block4_coinbase_1 = self.nodes[1].getblock(self.nodes[1].getblockhash(4))["tx"][0]
         assert(block3_coinbase_0 != block3_coinbase_1)
         assert_equal(block4_coinbase_0, block4_coinbase_1)
+
+        # Try to spend block3_coinbase_0 at node 1
+        #
+        # Since block3_coinbase_0 != block3_coinbase_1:
+        # - Node 0 will accept the spending transaction
+        # - Node 1 will throw missing-inputs on the spending transaction,
+        #   because Node 1 sees a different coinbase, i.e. block3_coinbase_1
+        # This is an issue that will be resolved in a future PR.
+
+        # Create COINBASE_MATURITY blocks, so that block3_coinbase matures.
+        for _ in range(COINBASE_MATURITY):
+            block = miner.do_generate_next_block(args0)[0]
+            signed_block = miner.do_sign_block(args0, block, signet_challenge)
+            miner.do_propagate_block(args0, signed_block)
+        self.sync_all(self.nodes[0:2])
+
+        # Prepare the transaction
+        destination_address_0 = self.nodes[0].getnewaddress()
+        destination_scriptpubkey_0 = bytes.fromhex(self.nodes[0].validateaddress(destination_address_0)['scriptPubKey'])
+        coinbase_spending_tx = CTransaction()
+        coinbase_spending_tx.vin = [CTxIn(COutPoint(int(block3_coinbase_0, 16), 0), nSequence=0)]
+        coinbase_spending_tx.vout = [CTxOut(int(99.99 * COIN), destination_scriptpubkey_0)]
+        coinbase_spending_tx.nLockTime = 0
+        raw_coinbase_spending_tx_signed = self.nodes[0].signrawtransactionwithwallet(coinbase_spending_tx.serialize().hex())["hex"]
+
+        # Node 0 accepts the transaction
+        actual_tx_hash_hex = self.nodes[0].sendrawtransaction(raw_coinbase_spending_tx_signed)
+        assert_equal(actual_tx_hash_hex, coinbase_spending_tx.rehash())
+
+        # Node 1 rejects the transaction
+        node1_mempool_initial_size = self.nodes[1].getmempoolinfo()['size']
+        node1_mempool_result_expected = [{'txid': coinbase_spending_tx.rehash(), 'allowed': False, 'reject-reason': 'missing-inputs'}]
+        node1_mempool_result_actual = self.nodes[1].testmempoolaccept(rawtxs=[raw_coinbase_spending_tx_signed])
+        for r in node1_mempool_result_actual:
+            # we have no easy way of precomputing an expected value for wtxid.
+            # It does not matter, because what we really want to check is that
+            # txid is the one we are expecting. Thus, we can get rid of this
+            # field.
+            r.pop('wtxid')
+        assert_equal(node1_mempool_result_expected, node1_mempool_result_actual)
+        assert_equal(self.nodes[1].getmempoolinfo()['size'], node1_mempool_initial_size)  # Must not change mempool state
 
 
 if __name__ == '__main__':
