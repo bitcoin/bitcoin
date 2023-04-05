@@ -57,6 +57,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
   $CI_EXEC_CMD_PREFIX rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}"
   $CI_EXEC_CMD_PREFIX rsync --archive --stats --human-readable /ro_base/ "$BASE_ROOT_DIR"
+  # Fixes permission issues when there is a container UID/GID mismatch with the owner
+  # of the mounted bitcoin src dir.
+  $CI_EXEC_CMD_PREFIX git config --global --add safe.directory "*"
 else
   echo "Running on host system without docker wrapper"
   "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
