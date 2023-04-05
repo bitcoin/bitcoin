@@ -656,7 +656,7 @@ def main():
     )
     parser.add_argument(
         '--keyserver', action='store', nargs='?',
-        default=os.environ.get('BINVERIFY_KEYSERVER', 'hkp://keyserver.ubuntu.com'),
+        default=os.environ.get('BINVERIFY_KEYSERVER', 'hkps://keys.openpgp.org'),
         help='which keyserver to use',
     )
     parser.add_argument(
