@@ -248,8 +248,6 @@ using Fragment = miniscript::Fragment;
 using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
-// https://github.com/llvm/llvm-project/issues/53444
-// NOLINTNEXTLINE(misc-unused-using-decls)
 using miniscript::operator"" _mst;
 
 //! Construct a miniscript node as a shared_ptr.
