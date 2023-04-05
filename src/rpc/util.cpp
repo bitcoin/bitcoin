@@ -197,7 +197,7 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s does not refer to a key", addr_in));
     }
     CPubKey vchPubKey;
-    if (!keystore.GetPubKey(CKeyID(*pkhash), vchPubKey)) {
+    if (!keystore.GetPubKey(ToKeyID(*pkhash), vchPubKey)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("no full public key for address %s", addr_in));
     }
     if (!vchPubKey.IsFullyValid()) {

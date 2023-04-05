@@ -685,7 +685,7 @@ bool LegacyScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::
 
 SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
 {
-    CKeyID key_id(pkhash);
+    CKeyID key_id(ToKeyID(pkhash));
     CKey key;
     if (!GetKey(key_id, key)) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
@@ -744,8 +744,8 @@ const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& des
     LOCK(cs_KeyStore);
 
     const PKHash *pkhash = std::get_if<PKHash>(&dest);
-    if (pkhash != nullptr && !pkhash->IsNull()) {
-        auto it = mapKeyMetadata.find(CKeyID(*pkhash));
+    if (pkhash != nullptr && !ToKeyID(*pkhash).IsNull()) {
+        auto it = mapKeyMetadata.find(ToKeyID(*pkhash));
         if (it != mapKeyMetadata.end()) {
             return &it->second;
         }

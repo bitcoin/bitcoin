@@ -286,7 +286,7 @@ bool CSporkManager::SetSporkAddress(const std::string& strAddress)
         LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
         return false;
     }
-    setSporkPubKeyIDs.insert(CKeyID(*pkhash));
+    setSporkPubKeyIDs.insert(ToKeyID(*pkhash));
     return true;
 }
 
