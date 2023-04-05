@@ -37,7 +37,7 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         block = miner.do_generate_next_block(args0)[0]
         signed_block = miner.do_sign_block(args0, block, signet_challenge)
         miner.do_propagate_block(args0, signed_block)
-        time.sleep(1)
+        self.sync_all(self.nodes[0:2])
 
         # Check 1st block mined correctly on node 0
         self.assert_blockchaininfo_property(0, "blocks", 1)
@@ -49,7 +49,7 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         block = miner.do_generate_next_block(args0)[0]
         signed_block = miner.do_sign_block(args0, block, signet_challenge)
         miner.do_propagate_block(args0, signed_block)
-        time.sleep(1)
+        self.sync_all(self.nodes[0:2])
 
         # Check 2nd block mined correctly on node 0
         self.assert_blockchaininfo_property(0, "blocks", 2)
@@ -83,7 +83,7 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
 
         # Reconnect the nodes
         self.connect_nodes(0, 1)
-        time.sleep(1)
+        self.sync_all(self.nodes[0:2])
 
         # Check they are at the same height
         self.assert_blockchaininfo_property_forall_nodes("blocks", 3)
@@ -102,7 +102,7 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         block = miner.do_generate_next_block(args0)[0]
         signed_block = miner.do_sign_block(args0, block, signet_challenge)
         miner.do_propagate_block(args0, signed_block)
-        time.sleep(1)
+        self.sync_all(self.nodes[0:2])
 
         # Check 4th block mined correctly on node 0
         self.assert_blockchaininfo_property(0, "blocks", 4)
