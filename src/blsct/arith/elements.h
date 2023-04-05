@@ -94,7 +94,7 @@ public:
     {
         ::WriteCompactSize(s, m_vec.size());
         for (auto& it : m_vec) {
-            ::Serialize(s, it.GetVch());
+            ::Serialize(s, it);
         }
     }
 
@@ -107,9 +107,7 @@ public:
         Clear();
         for (size_t i = 0; i < v_size; i++) {
             T n;
-            std::vector<uint8_t> v;
-            ::Unserialize(s, v);
-            n.SetVch(v);
+            ::Unserialize(s, n);
             Add(n);
         }
     }
