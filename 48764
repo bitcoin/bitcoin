@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "app-coinbase-com",
+  "private_key_id": "03bf7f8908c2a4568a2072c46037639afd229c87",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRVDPa+6RrtGEF\n8i61njdDjFKEU157JToKB0jFg3p9yNgBxR4YTw/YNKdncwAc2kquhDCr/NrKQqRY\nRPUbsigM7qFBB6DnI3KAD9sh2yNvI/X5x/4vtejC65khjntRFbLgqsIe59HNlxkz\n3ipOlM/vTICxLWvwUI/CzTeQszpZ0xjHZ1sadcjWl6iOvmy73t1hujCBLQqD9a2E\nfNYR53AZ2s1QkzZlT8nYQ9bofX3zNQo7kx960wCRkOIySQMeBv4JTiTz2AevE75O\n3HDLpgX53B0YKuhPu2oV2VnPUaghE7qiYc9teboWF5Ihiw3jMqA+IvoGeiuSmdZJ\nYaHyEcZxAgMBAAECggEAJlSNVEVs853pgD27CN2qT++jcoCTlegYqxpvXF95cAv1\nZcmS+6+KfrQRjVNVC3N7Zl5lTTD1XUD7uAAUg9hJFikiFPbRI1Ht1v5QSXBHmkPS\n+ESDSng8YWjjtu3QreXTxejut9sKI2POJR3C0HXWZ4KyM/9VuwD9ehW63X+8KRM2\nFkK9zL+SfdhBJejmgCW66OplifOrt2fN2y4D2zAs06t05cdD7a14s4Rx+CVOxGCY\nbDZGOtHrwBLZbb/pVdStvz3emk6hKXPHo7muJXP1A5seNE8GuQKxFzRDWGGiw1Kl\nWB9+0CxcaWkAm+ZTJMVAaM1bvjAIoSkCLECp9l2QuwKBgQD05InijYTtD1ToDl/e\nvca1TGP4POkoHaqaAsQjnI2x9pgwDc+m2BD7CheeJ3aABuhNGtGwQXYkJYzIXN6E\n7rTyTL0GPqzEVnT9nJBy/qJ27StQtbQSUXJINYhjTSCWvS05xohsJ+8YN14v9frv\nIs4g2yaC7oBsw/zL6VerGQ1nEwKBgQDa0rsU6ub/b/PVLgOw5u7dzPh5r5LVCH57\nV73xsbBPORaCDpITYzDIyjOoBaiWRoHGh2ypG47fmcAq7fOjK44VmAhW8mjURDIP\n3G6ozIKof3IYgBcNdPW7IXf6me9h22rYpY+/4gLkY7OnwjmKnfQdTIcwaxSz6aj4\nC4X0Weg46wKBgQDVVwc8A3eKoXGhW2xvejpSlML+benclcOaudAvCeJy59V6/30n\n51EbsZYTpGNacyoKidOkzdJi+QdlQWpkuiOOdgWyHAWcYYk3qx4339ae7kxu2myO\nDMAXYfN4NqeuSg3NKESOnFdxbEK0W4EItPSHsQMiyy28Exz2c0h5eLCxWwKBgBfV\nT+8NTq+Pn/0eD+TaojWiN4X5a4KsdCo2+kcy1UMrspnjwGFAMnYMH+gzBZOohkX7\nRgh9KeiMtHN4i0rAWa9cabwelvBXpSQ5HAxiifCUQPcOLHSYwpLpKEoxLfN4lICY\nN7nsgegiO9UPwHiqj4YJacgKQaz+zBqIFsTwbeyVAoGATbkrNd5cjMkBBhQzh0W5\nVLT6d6qx1YNmviIvTQoBpoTlYpsDy5XkqvpQuLoeeGacQFs6sUkQ8mQGsMmvDceE\nJ1XgqMdGPc637jg3ejHP+XEddy5BuEwjNF4/9r/aeQH6ziOYDd6LIrriwgupq5C2\nQiOcvEqktG2u5qXPLdoT9m0=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-vfsbl@app-coinbase-com.iam.gserviceaccount.com",
+  "client_id": "106682630872520569507",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-vfsbl%40app-coinbase-com.iam.gserviceaccount.com"
+}
