@@ -24,11 +24,12 @@
 #include <thread>
 #include <vector>
 
+#include <sys/types.h> // must go before a number of other headers
+
 #ifdef WIN32
 #include <windows.h>
 #include <winreg.h>
 #else
-#include <sys/types.h> // must go before a number of other headers
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/resource.h>
