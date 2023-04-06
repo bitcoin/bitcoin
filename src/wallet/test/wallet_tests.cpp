@@ -1326,4 +1326,52 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
+// Explicit calculation which is used to test the wallet constant
+// We get the same virtual size due to rounding(weight/4) for both use_max_sig values
+static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
+{
+    // Generate ephemeral valid pubkey
+    CKey key;
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+
+    // Generate pubkey hash
+    uint160 key_hash(Hash160(pubkey.begin(), pubkey.end()));
+
+    // Create inner-script to enter into keystore. Key hash can't be 0...
+    CScript inner_script = CScript() << OP_0 << std::vector<unsigned char>(key_hash.begin(), key_hash.end());
+
+    // Create outer P2SH script for the output
+    CScript script_pubkey = GetScriptForRawPubKey(pubkey);
+
+    NodeContext node;
+    node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
+    node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
+    auto chain = interfaces::MakeChain(node);
+    CWallet wallet(chain.get(), "", CreateDummyWalletDatabase());
+    AddKey(wallet, key);
+    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
+    spk_man->AddCScript(inner_script);
+
+    // Fill in dummy signatures for fee calculation.
+    SignatureData sig_data;
+
+    if (!ProduceSignature(*spk_man, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, script_pubkey, sig_data)) {
+        // We're hand-feeding it correct arguments; shouldn't happen
+        assert(false);
+    }
+
+    CTxIn tx_in;
+    UpdateInput(tx_in, sig_data);
+    return ::GetSerializeSize(tx_in, PROTOCOL_VERSION);
+}
+
+static constexpr size_t DUMMY_NESTED_P2PKH_INPUT_SIZE = 113;
+BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
+{
+    std::cerr << "CDEF " << CalculateNestedKeyhashInputSize(false) << std::endl;
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2PKH_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2PKH_INPUT_SIZE + 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

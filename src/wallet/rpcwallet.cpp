@@ -1582,7 +1582,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
 
     uint256 blockId;
     if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
-        blockId.SetHex(request.params[0].get_str());
+        blockId = ParseHashV(request.params[0], "blockhash");
         height = pwallet->chain().findFork(blockId, &altheight);
 
         if (!height) {
@@ -1655,6 +1655,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
         {
             {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses in balance calculation and details[]"},
+            {"verbose", RPCArg::Type::BOOL, /* default */ "false", "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
@@ -1688,6 +1689,10 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                             }},
                     }},
                   {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
+                  {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "the decoded transaction (only present when `verbose` is passed), equivalent to the",
+                  {
+                        {RPCResult::Type::ELISION, "", "RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
+                  }},
                 }),
         },
         RPCExamples{
@@ -1707,14 +1712,15 @@ static UniValue gettransaction(const JSONRPCRequest& request)
 
     LOCK(pwallet->cs_wallet);
 
-    uint256 hash;
-    hash.SetHex(request.params[0].get_str());
+    uint256 hash(ParseHashV(request.params[0], "txid"));
 
     isminefilter filter = ISMINE_SPENDABLE;
 
     if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
         filter |= ISMINE_WATCH_ONLY;
     }
+
+    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
@@ -1740,6 +1746,12 @@ static UniValue gettransaction(const JSONRPCRequest& request)
 
     std::string strHex = EncodeHexTx(*wtx.tx);
     entry.pushKV("hex", strHex);
+
+    if (verbose) {
+        UniValue decoded(UniValue::VOBJ);
+        TxToUniv(*wtx.tx, uint256(), decoded, false);
+        entry.pushKV("decoded", decoded);
+    }
 
     return entry;
 }
@@ -1772,8 +1784,7 @@ static UniValue abandontransaction(const JSONRPCRequest& request)
 
     LOCK(pwallet->cs_wallet);
 
-    uint256 hash;
-    hash.SetHex(request.params[0].get_str());
+    uint256 hash(ParseHashV(request.params[0], "txid"));
 
     if (!pwallet->mapWallet.count(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
@@ -2176,17 +2187,13 @@ static UniValue lockunspent(const JSONRPCRequest& request)
                 {"vout", UniValueType(UniValue::VNUM)},
             });
 
-        const std::string& txid = find_value(o, "txid").get_str();
-        if (!IsHex(txid)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
-        }
-
+        const uint256 txid(ParseHashO(o, "txid"));
         const int nOutput = find_value(o, "vout").get_int();
         if (nOutput < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }
 
-        const COutPoint outpt(uint256S(txid), nOutput);
+        const COutPoint outpt(txid, nOutput);
 
         const auto it = pwallet->mapWallet.find(outpt.hash);
         if (it == pwallet->mapWallet.end()) {
@@ -4099,7 +4106,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf","addlocked"} },
     { "wallet",             "getreceivedbylabel",               &getreceivedbylabel,            {"label","minconf","addlocked"} },
-    { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly"} },
+    { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly","verbose"} },
     { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
     { "wallet",             "getbalances",                      &getbalances,                   {} },
     { "wallet",             "getwalletinfo",                    &getwalletinfo,                 {} },

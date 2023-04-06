@@ -121,9 +121,15 @@ class WalletTest(BitcoinTestFramework):
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
-        assert_raises_rpc_error(-8, "Invalid parameter, unknown transaction",
+        assert_raises_rpc_error(-8, "txid must be of length 64 (not 34, for '0000000000000000000000000000000000')",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "0000000000000000000000000000000000", "vout": 0}])
+        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')",
+                                self.nodes[2].lockunspent, False,
+                                [{"txid": "ZZZ0000000000000000000000000000000000000000000000000000000000000", "vout": 0}])
+        assert_raises_rpc_error(-8, "Invalid parameter, unknown transaction",
+                                self.nodes[2].lockunspent, False,
+                                [{"txid": "0000000000000000000000000000000000000000000000000000000000000000", "vout": 0}])
         assert_raises_rpc_error(-8, "Invalid parameter, vout index out of bounds",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
@@ -489,6 +495,38 @@ class WalletTest(BitcoinTestFramework):
                 change = address
         self.nodes[0].setlabel(change, 'foobar')
         assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
+
+        # Test gettransaction response with different arguments.
+        self.log.info("Testing gettransaction response with different arguments...")
+        self.nodes[0].setlabel(change, 'baz')
+        baz = self.nodes[0].listtransactions(label="baz", count=1)[0]
+        expected_receive_vout = {"label":    "baz",
+                                 "address":  baz["address"],
+                                 "amount":   baz["amount"],
+                                 "category": baz["category"],
+                                 "vout":     baz["vout"]}
+        expected_fields = frozenset({'amount', 'chainlock', 'confirmations', 'details', 'fee',
+                                     'instantlock', 'instantlock_internal',
+                                     'hex', 'timereceived', 'time', 'trusted', 'txid', 'walletconflicts'})
+
+        verbose_field = "decoded"
+        expected_verbose_fields = expected_fields | {verbose_field}
+
+        self.log.debug("Testing gettransaction response without verbose")
+        tx = self.nodes[0].gettransaction(txid=txid)
+        assert_equal(set([*tx]), expected_fields)
+        assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
+
+        self.log.debug("Testing gettransaction response with verbose set to False")
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=False)
+        assert_equal(set([*tx]), expected_fields)
+        assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
+
+        self.log.debug("Testing gettransaction response with verbose set to True")
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=True)
+        assert_equal(set([*tx]), expected_verbose_fields)
+        assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
+        assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
 
 
 if __name__ == '__main__':

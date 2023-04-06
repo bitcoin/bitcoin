@@ -1786,8 +1786,6 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, 
     CMutableTransaction txn;
     txn.vin.push_back(CTxIn(COutPoint()));
     if (!wallet->DummySignInput(txn.vin[0], txout, use_max_sig)) {
-        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
-        // implies that we can sign for every input.
         return -1;
     }
     return ::GetSerializeSize(txn.vin[0], PROTOCOL_VERSION);
@@ -3404,7 +3402,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
     FeeCalculation feeCalc;
     CFeeRate discard_rate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
-    unsigned int nBytes{0};
+    int nBytes{0};
     {
         std::vector<CInputCoin> vecCoins;
         LOCK(cs_wallet);

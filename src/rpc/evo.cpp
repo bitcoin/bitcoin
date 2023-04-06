@@ -640,7 +640,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
 
         paramIdx++;
     } else {
-        uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
+        uint256 collateralHash(ParseHashV(request.params[paramIdx], "collateralHash"));
         int32_t collateralIndex = ParseInt32V(request.params[paramIdx + 1], "collateralIndex");
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
@@ -1405,7 +1405,7 @@ static UniValue protx_info(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
+    uint256 proTxHash(ParseHashV(request.params[0], "proTxHash"));
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {

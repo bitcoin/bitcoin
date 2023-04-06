@@ -1586,6 +1586,13 @@ QWidget#RPCConsole QLabel#peerHeading,
 QWidget#RPCConsole QLabel#banHeading {
 }
 
+QWidget#RPCConsole QLabel#label_alerts {
+    background-color: #c79304;
+    color: #222222;
+    border-radius: 5px;
+    padding: 5px;
+}
+
 QWidget#RPCConsole QLabel#labelNetwork,
 QWidget#RPCConsole QLabel#label_10,
 QWidget#RPCConsole QLabel#labelMempoolTitle { /* Margin between Network and Block Chain headers */
