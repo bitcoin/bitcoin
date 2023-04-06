@@ -143,7 +143,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id (same as provided)"},
                             {RPCResult::Type::NUM, "size", "The serialized transaction size"},
                             {RPCResult::Type::NUM, "version", "The version"},
-                            {RPCResult::Type::NUM, "version", "The type"},
+                            {RPCResult::Type::NUM, "type", "The type"},
                             {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
                             {RPCResult::Type::ARR, "vin", "",
                             {
@@ -494,7 +494,7 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
                         {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
                         {RPCResult::Type::NUM, "size", "The transaction size"},
                         {RPCResult::Type::NUM, "version", "The version"},
-                        {RPCResult::Type::NUM, "version", "The type"},
+                        {RPCResult::Type::NUM, "type", "The type"},
                         {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
                         {RPCResult::Type::ARR, "vin", "",
                         {

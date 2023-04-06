@@ -246,6 +246,14 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
             result.emplace_back(dmn);
         }
     });
+
+    if (hpmn_to_be_skipped != nullptr) {
+        // if hpmn is in the middle of payments, add entries for already paid ones to the end of the list
+        for ([[maybe_unused]] auto _ : irange::range(hpmn_to_be_skipped->pdmnState->nConsecutivePayments)) {
+            result.emplace_back(hpmn_to_be_skipped);
+        }
+    }
+
     std::sort(result.begin() + remaining_hpmn_payments, result.end(), [&](const CDeterministicMNCPtr& a, const CDeterministicMNCPtr& b) {
         return CompareByLastPaid(a.get(), b.get());
     });
