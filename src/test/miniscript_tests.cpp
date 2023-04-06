@@ -241,6 +241,8 @@ const KeyConverter CONVERTER{};
 
 using Fragment = miniscript::Fragment;
 using NodeRef = miniscript::NodeRef<CPubKey>;
+// https://github.com/llvm/llvm-project/issues/53444
+// NOLINTNEXTLINE(misc-unused-using-decls)
 using miniscript::operator"" _mst;
 using Node = miniscript::Node<CPubKey>;
 

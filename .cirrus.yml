@@ -80,10 +80,10 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'tidy [lunar]'
+  name: 'tidy [bookworm]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:lunar
+    image: debian:bookworm
     cpu: 2
     memory: 8G
   # For faster CI feedback, immediately schedule the linters
