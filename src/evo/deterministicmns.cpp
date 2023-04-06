@@ -234,8 +234,9 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 
 std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int nCount) const
 {
-    if ((size_t)nCount > GetValidMNsCount()) {
-        nCount = GetValidMNsCount();
+    const size_t & validCount = GetValidMNsCount();
+    if ((size_t)nCount > validCount) {
+        nCount = validCount;
     }
 
     std::vector<CDeterministicMNCPtr> result;
