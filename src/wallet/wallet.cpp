@@ -33,7 +33,6 @@
 #include <util/string.h>
 #include <util/translation.h>
 #include <util/validation.h>
-#include <validation.h>
 #ifdef USE_BDB
 #include <wallet/bdb.h>
 #endif
@@ -3150,6 +3149,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain)
  */
 static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain)
 {
+    uint32_t const height = chain.getHeight().value_or(-1);
     uint32_t locktime;
     // Discourage fee sniping.
     //
@@ -3172,7 +3172,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain)
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
     if (IsCurrentForAntiFeeSniping(chain)) {
-        locktime = chain.getHeight().value_or(-1);
+        locktime = height;
 
         // Secondly occasionally randomly pick a nLockTime even further back, so
         // that transactions that are delayed after signing for whatever reason,
@@ -3187,7 +3187,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain)
         locktime = 0;
     }
 
-    assert(locktime <= (unsigned int)::ChainActive().Height());
+    assert(locktime <= height);
     assert(locktime < LOCKTIME_THRESHOLD);
     return locktime;
 }

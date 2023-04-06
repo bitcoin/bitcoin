@@ -1,5 +1,5 @@
 ---
-name: "dash-linux-19"
+name: "dash-linux-20"
 enable_cache: true
 distro: "ubuntu"
 suites:
