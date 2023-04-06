@@ -511,7 +511,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
         return sigs_status
 
     # Extract hashes and filenames
-    hashes_to_verify = parse_sums_file(SUMS_FILENAME, os_filter)
+    hashes_to_verify = parse_sums_file(SUMS_FILENAME, [os_filter])
     if not hashes_to_verify:
         log.error("no files matched the platform specified")
         return ReturnCode.NO_BINARIES_MATCH
