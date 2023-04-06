@@ -344,11 +344,11 @@ void GovernanceList::setClientModel(ClientModel* model)
 void GovernanceList::updateProposalList()
 {
     if (this->clientModel) {
-        // A proposal is considered passing if (YES votes - NO votes) >= (Total Number of Masternodes / 10),
+        // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
         // count total valid (ENABLED) masternodes to determine passing threshold.
         // Need to query number of masternodes here with access to clientModel.
-        const int nMnCount = clientModel->getMasternodeList().GetValidMNsCount();
-        const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nMnCount / 10);
+        const int nWeightedMnCount = clientModel->getMasternodeList().GetValidWeightedMNsCount();
+        const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
         proposalModel->setVotingParams(nAbsVoteReq);
 
         std::vector<CGovernanceObject> govObjList;
