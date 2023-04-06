@@ -580,7 +580,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
         sums_sig_path = Path(args.sums_file).with_suffix(".asc")
 
     # Verify the signature on the SHA256SUMS file
-    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(sums_sig_path, args.sums_file, args)
+    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(str(sums_sig_path), args.sums_file, args)
     if sigs_status != ReturnCode.SUCCESS:
         return sigs_status
 
