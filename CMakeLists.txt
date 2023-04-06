@@ -47,6 +47,7 @@ option(THREADLOCAL "Enable features that depend on the C++ thread_local keyword 
 #       will become opt-in by default before merging into master.
 include(TristateOption)
 tristate_option(CCACHE "Use ccache for compiling." "if ccache is found." AUTO)
+tristate_option(WITH_NATPMP "Enable NAT-PMP." "if libnatpmp is found." AUTO)
 
 if(CXX20)
   set(CMAKE_CXX_STANDARD 20)
@@ -140,6 +141,8 @@ message("Configure summary")
 message("=================")
 message("Executables:")
 message("  bitcoind ............................ ${BUILD_DAEMON}")
+message("Optional packages:")
+message("  NAT-PMP ............................. ${WITH_NATPMP}")
 message("")
 if(CMAKE_CROSSCOMPILING)
   set(cross_status "TRUE, for ${CMAKE_SYSTEM_NAME}, ${CMAKE_SYSTEM_PROCESSOR}")
