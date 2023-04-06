@@ -40,6 +40,7 @@ import shutil
 import tempfile
 import textwrap
 import urllib.request
+import urllib.error
 import enum
 from hashlib import sha256
 from pathlib import PurePath, Path
@@ -126,7 +127,7 @@ def download_lines_with_urllib(url) -> t.Tuple[bool, t.List[str]]:
     try:
         return (True, [
             line.strip().decode() for line in urllib.request.urlopen(url).readlines()])
-    except urllib.request.HTTPError as e:
+    except urllib.error.HTTPError as e:
         log.warning(f"HTTP request to {url} failed (HTTPError): {e}")
     except Exception as e:
         log.warning(f"HTTP request to {url} failed ({e})")
