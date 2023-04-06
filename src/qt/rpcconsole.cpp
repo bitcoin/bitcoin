@@ -958,10 +958,18 @@ void RPCConsole::updateMasternodeCount()
         return;
     }
     auto mnList = clientModel->getMasternodeList();
+    size_t total_mn_count = mnList.GetAllMNsCount();
+    size_t total_enabled_mn_count = mnList.GetValidMNsCount();
+    size_t total_hpmn_count = mnList.GetAllHPMNsCount();
+    size_t total_enabled_hpmn_count = mnList.GetValidHPMNsCount();
     QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
-        .arg(QString::number(mnList.GetAllMNsCount()))
-        .arg(QString::number(mnList.GetValidMNsCount()));
+        .arg(QString::number(total_mn_count - total_hpmn_count))
+        .arg(QString::number(total_enabled_mn_count - total_enabled_hpmn_count));
     ui->masternodeCount->setText(strMasternodeCount);
+    QString strHPMNCount = tr("Total: %1 (Enabled: %2)")
+            .arg(QString::number(total_hpmn_count))
+            .arg(QString::number(total_enabled_hpmn_count));
+    ui->hpmnCount->setText(strHPMNCount);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
