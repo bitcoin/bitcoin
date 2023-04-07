@@ -81,11 +81,38 @@ EXTENDED_SCRIPTS = [
     'feature_dbcrash.py',
 ]
 
-BASE_SCRIPTS = [
+NONDETERMINISTIC_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_llmq_data_recovery.py',
+    # vv Tests less than 2m vv
+    'feature_dip3_v19.py',
+    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
+    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_rotation.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_hpmn.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_migration.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
+    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
+    # vv Tests less than 60s vv
+    'wallet_listreceivedby.py',
+    # vv Tests less than 30s vv
+    'feature_dip0020_activation.py',
+    'interface_zmq_dash.py',
+    'mempool_unbroadcast.py',
+    'p2p_addrv2_relay.py',
+    'rpc_net.py',
+]
+
+BASE_SCRIPTS = [
+    # Scripts that are run by default.
+    # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
@@ -107,26 +134,12 @@ BASE_SCRIPTS = [
     'wallet_dump.py',
     'wallet_listtransactions.py',
     'feature_multikeysporks.py',
-    'feature_dip3_v19.py',
-    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
-    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_rotation.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_hpmn.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_migration.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
-    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
     'p2p_sendheaders_compressed.py', # NOTE: needs dash_hash to pass
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
-    'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
@@ -136,7 +149,6 @@ BASE_SCRIPTS = [
     'rpc_quorum.py',
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',
-    'interface_zmq_dash.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
@@ -163,7 +175,6 @@ BASE_SCRIPTS = [
     'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
-    'p2p_addrv2_relay.py',
     'wallet_groups.py',
     'p2p_disconnect_ban.py',
     'feature_addressindex.py',
@@ -174,7 +185,6 @@ BASE_SCRIPTS = [
     'rpc_deprecated.py',
     'wallet_disable.py',
     'p2p_getdata.py',
-    'rpc_net.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
     'p2p_mempool.py',
@@ -245,7 +255,6 @@ BASE_SCRIPTS = [
     'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'rpc_platform_filter.py',
-    'feature_dip0020_activation.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
     'feature_filelock.py',
@@ -253,7 +262,6 @@ BASE_SCRIPTS = [
     'p2p_blockfilters.py',
     'feature_asmap.py',
     'feature_includeconf.py',
-    'mempool_unbroadcast.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
@@ -271,8 +279,8 @@ BASE_SCRIPTS = [
     # Put them in a random line within the section that fits their approximate run-time
 ]
 
-# Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
-ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS
+# Place NONDETERMINISTIC_SCRIPTS first since it has the 3 longest running tests
+ALL_SCRIPTS = NONDETERMINISTIC_SCRIPTS + EXTENDED_SCRIPTS + BASE_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -302,6 +310,8 @@ def main():
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
+    parser.add_argument('--retries', '-r', type=int, default=3, help='how many reattempts should be allowed for the non-deterministic test suite. Default=3.')
+    parser.add_argument('--sleep', '-s', type=int, default=15, help='how many seconds should the test sleep before reattempting (in seconds). Default=15.')
 
     args, unknown_args = parser.parse_known_args()
     if not args.ansi:
@@ -407,6 +417,8 @@ def main():
         build_dir=config["environment"]["BUILDDIR"],
         tmpdir=tmpdir,
         jobs=args.jobs,
+        retries=args.retries,
+        retry_sleep=args.sleep,
         enable_coverage=args.coverage,
         args=passon_args,
         combined_logs_len=args.combinedlogslen,
@@ -415,7 +427,7 @@ def main():
         use_term_control=args.ansi,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0,failfast=False, runs_ci=False, use_term_control):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, retries=3, retry_sleep=15, enable_coverage=False, args=None, combined_logs_len=0,failfast=False, runs_ci=False, use_term_control):
     args = args or []
 
     # Warn if dashd is already running
@@ -476,33 +488,51 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
 
     max_len_name = len(max(test_list, key=len))
     test_count = len(test_list)
-    for i in range(test_count):
-        test_result, testdir, stdout, stderr = job_queue.get_next()
-        test_results.append(test_result)
-        done_str = "{}/{} - {}{}{}".format(i + 1, test_count, BOLD[1], test_result.name, BOLD[0])
+
+    def run_test(test_result, testdir, stdout, stderr, attempt, limit):
         if test_result.status == "Passed":
             logging.debug("%s passed, Duration: %s s" % (done_str, test_result.time))
+            return True
         elif test_result.status == "Skipped":
             logging.debug("%s skipped" % (done_str))
+            return True
         else:
-            print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
-            print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
-            print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
-            if combined_logs_len and os.path.isdir(testdir):
-                # Print the final `combinedlogslen` lines of the combined logs
-                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
-                print('\n============')
-                print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
-                print('============\n')
-                combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
-                if BOLD[0]:
-                    combined_logs_args += ['--color']
-                combined_logs, _ = subprocess.Popen(combined_logs_args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
-                print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
+            if limit > 1:
+                logging.debug("%s failed at attempt %s of %s, Duration: %s s\n" % (done_str, attempt, limit, test_result.time))
+            if limit == attempt:
+                print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
+                print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
+                print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
+                if combined_logs_len and os.path.isdir(testdir):
+                    # Print the final `combinedlogslen` lines of the combined logs
+                    print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
+                    print('\n============')
+                    print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
+                    print('============\n')
+                    combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
+                    if BOLD[0]:
+                        combined_logs_args += ['--color']
+                    combined_logs, _ = subprocess.Popen(combined_logs_args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                    print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
+            else:
+                time.sleep(retry_sleep)
+            return False
 
-            if failfast:
-                logging.debug("Early exiting after test failure")
+    for i in range(test_count):
+        test_result, testdir, stdout, stderr = job_queue.get_next()
+        done_str = "{}/{} - {}{}{}".format(i + 1, test_count, BOLD[1], test_result.name, BOLD[0])
+        retry_limit = retries if test_result.name in NONDETERMINISTIC_SCRIPTS else 1
+        test_status = False
+        for itx in range(retry_limit):
+            test_status = run_test(test_result, testdir, stdout, stderr, itx + 1, retry_limit)
+            # Only append result if test either passes or fails till retry_limit, pushing only
+            # the result of the last attempt to test_results.
+            if test_status or retry_limit == itx + 1:
+                test_results.append(test_result)
                 break
+        if failfast and not test_status:
+            logging.debug("Early exiting after test failure")
+            break
 
     print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
