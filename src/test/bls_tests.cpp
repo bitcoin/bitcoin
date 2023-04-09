@@ -367,7 +367,7 @@ void FuncThresholdSignature(const bool legacy_scheme)
 
     std::vector<CBLSSecretKey> v_threshold_sks;
     std::vector<CBLSPublicKey> v_threshold_pks;
-    for (int i = 0; i < m_threshold; i++) {
+    for (size_t i = 0; i < m_threshold; i++) {
         CBLSSecretKey sk;
         sk.MakeNewKey();
         v_threshold_sks.push_back(sk);
@@ -381,7 +381,7 @@ void FuncThresholdSignature(const bool legacy_scheme)
     std::vector<CBLSId> v_size_ids;
     std::vector<CBLSSecretKey> v_size_sk_shares;
     std::vector<CBLSPublicKey> v_size_pk_shares;
-    for (int m_shares = 0; m_shares < m_size; m_shares++) {
+    for (size_t m_shares = 0; m_shares < m_size; m_shares++) {
         v_size_ids.emplace_back(GetRandHash());
         CBLSSecretKey sk;
         BOOST_CHECK(sk.SecretKeyShare(v_threshold_sks, v_size_ids[m_shares]));
@@ -392,7 +392,7 @@ void FuncThresholdSignature(const bool legacy_scheme)
 
         std::vector<CBLSSignature> v_share_sigs;
         std::vector<CBLSId> v_share_ids;
-        for (int j = 0; j < m_shares; j++) {
+        for (size_t j = 0; j < m_shares; j++) {
             v_share_sigs.emplace_back(v_size_sk_shares[j].Sign(hash));
             BOOST_CHECK(v_share_sigs.back().VerifyInsecure(v_size_pk_shares[j], hash));
             v_share_ids.push_back(v_size_ids[j]);
