@@ -155,6 +155,7 @@ BITCOIN_CORE_H = \
   base58.h \
   bech32.h \
   blockencodings.h \
+  blockfilter.h \
   blsct/arith/mcl/mcl.h \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_init.h \
