@@ -73,6 +73,10 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
         g_setup->m_node.peer_logic->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), std::atomic<bool>{false});
     } catch (const std::ios_base::failure& e) {
     }
+    {
+        LOCK(p2p_node.cs_sendProcessing);
+        g_setup->m_node.peer_logic->SendMessages(&p2p_node);
+    }
     SyncWithValidationInterfaceQueue();
 }
 

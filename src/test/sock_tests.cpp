@@ -95,7 +95,7 @@ static void CreateSocketPair(int s[2])
 static void SendAndRecvMessage(const Sock& sender, const Sock& receiver)
 {
     const char* msg = "abcd";
-    constexpr size_t msg_len = 4;
+    constexpr ssize_t msg_len = 4;
     char recv_buf[10];
 
     BOOST_CHECK_EQUAL(sender.Send(msg, msg_len, 0), msg_len);

@@ -6,25 +6,24 @@
 #include <policy/fees.h>
 
 #include <clientversion.h>
+#include <fs.h>
+#include <logging.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>
 
-static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 
 static constexpr double INF_FEERATE = 1e99;
 
-std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
-    static const std::map<FeeEstimateHorizon, std::string> horizon_strings = {
-        {FeeEstimateHorizon::SHORT_HALFLIFE, "short"},
-        {FeeEstimateHorizon::MED_HALFLIFE, "medium"},
-        {FeeEstimateHorizon::LONG_HALFLIFE, "long"},
-    };
-    auto horizon_string = horizon_strings.find(horizon);
-
-    if (horizon_string == horizon_strings.end()) return "unknown";
-
-    return horizon_string->second;
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
+{
+    switch (horizon) {
+    case FeeEstimateHorizon::SHORT_HALFLIFE: return "short";
+    case FeeEstimateHorizon::MED_HALFLIFE: return "medium";
+    case FeeEstimateHorizon::LONG_HALFLIFE: return "long";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 /**
  * We will instantiate an instance of this class to track transactions that were
@@ -640,7 +639,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 
 CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult* result) const
 {
-    TxConfirmStats* stats;
+    TxConfirmStats* stats = nullptr;
     double sufficientTxs = SUFFICIENT_FEETXS;
     switch (horizon) {
     case FeeEstimateHorizon::SHORT_HALFLIFE: {
@@ -656,10 +655,8 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
         stats = longStats.get();
         break;
     }
-    default: {
-        throw std::out_of_range("CBlockPolicyEstimator::estimateRawFee unknown FeeEstimateHorizon");
-    }
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(stats);
 
     LOCK(m_cs_fee_estimator);
     // Return failure if trying to analyze a target we're not tracking
@@ -689,10 +686,8 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
     case FeeEstimateHorizon::LONG_HALFLIFE: {
         return longStats->GetMaxConfirms();
     }
-    default: {
-        throw std::out_of_range("CBlockPolicyEstimator::HighestTargetTracked unknown FeeEstimateHorizon");
-    }
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const
@@ -870,7 +865,7 @@ void CBlockPolicyEstimator::Flush() {
     fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s\n", est_filepath.string());
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
     }
 }
 
@@ -906,8 +901,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         int nVersionRequired, nVersionThatWrote;
         unsigned int nFileBestSeenHeight;
         filein >> nVersionRequired >> nVersionThatWrote;
-        if (nVersionRequired > CLIENT_VERSION)
-            return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
+        if (nVersionRequired > CLIENT_VERSION) {
+            throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
+        }
 
         // Read fee estimates file into temporary variables so existing data
         // structures aren't corrupted if there is an exception.
@@ -924,8 +920,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             std::vector<double> fileBuckets;
             filein >> fileBuckets;
             size_t numBuckets = fileBuckets.size();
-            if (numBuckets <= 1 || numBuckets > 1000)
+            if (numBuckets <= 1 || numBuckets > 1000) {
                 throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
+            }
 
             auto fileFeeStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE)};
             auto fileShortStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE)};
