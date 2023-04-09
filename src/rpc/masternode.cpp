@@ -82,7 +82,6 @@ static UniValue masternode_connect(const JSONRPCRequest& request)
     if (!Lookup(strAddress, addr, 0, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
-    // TODO: Pass CConnman instance somehow and don't use global variable.
     NodeContext& node = EnsureNodeContext(request.context);
     node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
     if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
