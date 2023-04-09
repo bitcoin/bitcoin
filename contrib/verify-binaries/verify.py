@@ -97,7 +97,7 @@ def bool_from_env(key, default=False) -> bool:
 
 
 VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
-VERSION_EXAMPLE = "22.0-x86_64 or 0.21.0-rc2-osx"
+VERSION_EXAMPLE = "22.0-x86_64 or 23.1-rc1-darwin"
 
 def parse_version_string(version_str):
     parts = version_str.split('-')

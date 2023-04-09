@@ -43,7 +43,7 @@ See the `Config` object for various options.
 Validate releases with default settings:
 ```sh
 ./contrib/verify-binaries/verify.py pub 22.0
-./contrib/verify-binaries/verify.py pub 22.0-rc2
+./contrib/verify-binaries/verify.py pub 22.0-rc3
 ```
 
 Get JSON output and don't prompt for user input (no auto key import):
@@ -63,8 +63,8 @@ threshold of at least 10 trusted signatures:
 If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
 
 ```sh
-./contrib/verify-binaries/verify.py pub 22.0-osx
-./contrib/verify-binaries/verify.py pub 22.0-rc2-win64
+./contrib/verify-binaries/verify.py pub 24.0.1-darwin
+./contrib/verify-binaries/verify.py pub 23.1-rc1-win64
 ```
 
 If you do not want to keep the downloaded binaries, specify the cleanup option.
