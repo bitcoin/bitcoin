@@ -60,7 +60,7 @@ threshold of at least 10 trusted signatures:
     --min-good-sigs 10 pub 22.0-x86
 ```
 
-If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
+If you only want to download the binaries for a certain platform, add the corresponding suffix, e.g.:
 
 ```sh
 ./contrib/verify-binaries/verify.py pub 24.0.1-darwin

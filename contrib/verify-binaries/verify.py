@@ -530,7 +530,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
 
     # download binaries
     for _, binary_filename in hashes_to_verify:
-        log.info(f"downloading {binary_filename}")
+        log.info(f"downloading {binary_filename} to {WORKINGDIR}")
         success, output = download_with_wget(
             HOST1 + remote_dir + binary_filename, binary_filename)
 
