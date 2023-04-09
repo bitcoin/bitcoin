@@ -79,8 +79,21 @@ static UniValue mnsync(const JSONRPCRequest& request)
         {
             {"mode", RPCArg::Type::STR, RPCArg::Optional::NO, "[status|next|reset]"},
         },
-        RPCResults{},/*TODO*/
-        RPCExamples{""}
+        {
+            RPCResult{"for mode = status",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "AssetID", "The asset ID"},
+                    {RPCResult::Type::STR, "AssetName", "The asset name"},
+                    {RPCResult::Type::NUM, "AssetStartTime", "The asset start time"},
+                    {RPCResult::Type::NUM, "Attempt", "The attempt"},
+                    {RPCResult::Type::BOOL, "IsBlockchainSynced", "true if the blockchain synced"},
+                    {RPCResult::Type::BOOL, "IsSynced", "true if synced"},
+                }},
+            RPCResult{"for mode = next|reset",
+                RPCResult::Type::STR, "", ""},
+        },
+        RPCExamples{""},
     }.Check(request);
 
     std::string strMode = request.params[0].get_str();
