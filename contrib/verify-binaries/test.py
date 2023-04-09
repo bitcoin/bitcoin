@@ -31,7 +31,7 @@ def main():
 
 def run_verify(global_args: str, command: str, command_args: str) -> subprocess.CompletedProcess:
     maybe_here = Path.cwd() / 'verify.py'
-    path = maybe_here if maybe_here.exists() else Path.cwd() / 'contrib' / 'verifybinaries' / 'verify.py'
+    path = maybe_here if maybe_here.exists() else Path.cwd() / 'contrib' / 'verify-binaries' / 'verify.py'
 
     if command == "pub":
         command += " --cleanup"
