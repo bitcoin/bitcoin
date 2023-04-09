@@ -106,12 +106,16 @@ class DIP3V19Test(DashTestFramework):
 
     def test_revoke_protx(self, revoke_protx, revoke_keyoperator):
         funds_address = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(funds_address, 1)
-        self.nodes[0].generate(1)
+        fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
+        self.wait_for_instantlock(fund_txid, self.nodes[0])
+        tip = self.nodes[0].generate(1)[0]
+        assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
         self.sync_all(self.nodes)
 
-        self.nodes[0].protx('revoke', revoke_protx, revoke_keyoperator, 1, funds_address)
-        self.nodes[0].generate(1)
+        protx_result = self.nodes[0].protx('revoke', revoke_protx, revoke_keyoperator, 1, funds_address)
+        self.wait_for_instantlock(protx_result, self.nodes[0])
+        tip = self.nodes[0].generate(1)[0]
+        assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
         self.sync_all(self.nodes)
         self.log.info(f"Succesfully revoked={revoke_protx}")
         for mn in self.mninfo:

@@ -112,46 +112,48 @@ class LLMQHPMNTest(DashTestFramework):
         self.test_hpmn_protx_are_in_mnlist(hpmn_protxhash_list)
 
         self.log.info("Test that HPMNs are paid 4x blocks in a row")
-        self.test_hpmmn_payements(window_analysis=256)
+        self.test_hpmn_payments(window_analysis=256)
 
         self.log.info(self.nodes[0].masternodelist())
 
         return
 
-    def test_hpmmn_payements(self, window_analysis):
+    def test_hpmn_payments(self, window_analysis):
         current_hpmn = None
-        consecutive_paymments = 0
+        consecutive_payments = 0
         for i in range(0, window_analysis):
             payee = self.get_mn_payee_for_block(self.nodes[0].getbestblockhash())
             if payee is not None and payee.hpmn:
                 if current_hpmn is not None and payee.proTxHash == current_hpmn.proTxHash:
                     # same HPMN
-                    assert consecutive_paymments > 0
-                    consecutive_paymments += 1
-                    consecutive_paymments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
-                    assert_equal(consecutive_paymments, consecutive_paymments_rpc)
+                    assert consecutive_payments > 0
+                    consecutive_payments += 1
+                    consecutive_payments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
+                    assert_equal(consecutive_payments, consecutive_payments_rpc)
                 else:
                     # new HPMN
                     if current_hpmn is not None:
                         # make sure the old one was paid 4 times in a row
-                        assert_equal(consecutive_paymments, 4)
-                        consecutive_paymments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
+                        assert_equal(consecutive_payments, 4)
+                        consecutive_payments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
                         # old HPMN should have its nConsecutivePayments reset to 0
-                        assert_equal(consecutive_paymments_rpc, 0)
+                        assert_equal(consecutive_payments_rpc, 0)
+                    consecutive_payments_rpc = self.nodes[0].protx('info', payee.proTxHash)['state']['consecutivePayments']
+                    # if hpmn is the one we start "for" loop with,
+                    # we have no idea how many times it was paid before - rely on rpc results here
+                    consecutive_payments = consecutive_payments_rpc if i == 0 and current_hpmn is None else 1
                     current_hpmn = payee
-                    consecutive_paymments = 1
-                    consecutive_paymments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
-                    assert_equal(consecutive_paymments, consecutive_paymments_rpc)
+                    assert_equal(consecutive_payments, consecutive_payments_rpc)
             else:
                 # not a HPMN
                 if current_hpmn is not None:
                     # make sure the old one was paid 4 times in a row
-                    assert_equal(consecutive_paymments, 4)
-                    consecutive_paymments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
+                    assert_equal(consecutive_payments, 4)
+                    consecutive_payments_rpc = self.nodes[0].protx('info', current_hpmn.proTxHash)['state']['consecutivePayments']
                     # old HPMN should have its nConsecutivePayments reset to 0
-                    assert_equal(consecutive_paymments_rpc, 0)
+                    assert_equal(consecutive_payments_rpc, 0)
                 current_hpmn = None
-                consecutive_paymments = 0
+                consecutive_payments = 0
 
             self.nodes[0].generate(1)
             if i % 8 == 0:
@@ -199,14 +201,15 @@ class LLMQHPMNTest(DashTestFramework):
         reward_address = self.nodes[0].getnewaddress()
 
         collateral_amount = 4000
-        collateral_txid = self.nodes[0].sendtoaddress(collateral_address, collateral_amount)
-        # send to same address to reserve some funds for fees
-        self.nodes[0].sendtoaddress(funds_address, 1)
-        collateral_vout = 0
-        self.nodes[0].generate(1)
+        outputs = {collateral_address: collateral_amount, funds_address: 1}
+        collateral_txid = self.nodes[0].sendmany("", outputs)
+        self.wait_for_instantlock(collateral_txid, self.nodes[0])
+        tip = self.nodes[0].generate(1)[0]
         self.sync_all(self.nodes)
 
-        rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)
+        rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1, tip)
+        assert_equal(rawtx['confirmations'], 1)
+        collateral_vout = 0
         for txout in rawtx['vout']:
             if txout['value'] == Decimal(collateral_amount):
                 collateral_vout = txout['n']
@@ -216,15 +219,12 @@ class LLMQHPMNTest(DashTestFramework):
         ipAndPort = '127.0.0.1:%d' % p2p_port(len(self.nodes))
         operatorReward = len(self.nodes)
 
-        self.nodes[0].generate(1)
-
-        protx_success = False
         try:
             self.nodes[0].protx('register_hpmn', collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, funds_address, True)
-            protx_success = True
+            # this should never succeed
+            assert False
         except:
             self.log.info("protx_hpmn rejected")
-        assert_equal(protx_success, False)
 
     def test_masternode_count(self, expected_mns_count, expected_hpmns_count):
         mn_count = self.nodes[0].masternode('count')
