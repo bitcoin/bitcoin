@@ -73,6 +73,9 @@ public:
                 obj.keyIDVoting,
                 obj.isValid
                 );
+        if ((s.GetType() & SER_NETWORK) && s.GetVersion() < DMN_TYPE_PROTO_VERSION) {
+            return;
+        }
         if (obj.nVersion == BASIC_BLS_VERSION) {
             READWRITE(obj.nType);
             if (obj.nType == MnType::HighPerformance) {
