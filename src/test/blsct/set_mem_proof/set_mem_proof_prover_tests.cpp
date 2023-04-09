@@ -8,7 +8,6 @@
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
 #include <cstdio>
-#include <chrono>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
@@ -106,18 +105,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_input)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 {
-    std::chrono::steady_clock::time_point setup_beg = std::chrono::steady_clock::now();
     SetMemProofSetup setup;
-    std::chrono::steady_clock::time_point setup_end = std::chrono::steady_clock::now();
-
     const size_t NUM_INPUTS = setup.N;
     Points Ys;
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
     Point sigma = setup.PedersenCommitment(m, f);
-
-    printf("For input size %lu\n", NUM_INPUTS);
-    std::cout << "Setup took " << (std::chrono::duration_cast<std::chrono::milliseconds>(setup_end - setup_beg).count()) << " ms" << std::endl;
 
     for (size_t i=0; i<NUM_INPUTS; ++i) {
         if (i == NUM_INPUTS / 2) {
@@ -132,13 +125,8 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 
     Scalar eta = Scalar::Rand();
     SetMemProofProver prover;
-
-    std::chrono::steady_clock::time_point prove_verify_beg = std::chrono::steady_clock::now();
     auto proof = prover.Prove(Ys, sigma, f, m, eta);
     auto res = prover.Verify(Ys, eta, proof);
-    std::chrono::steady_clock::time_point prove_verify_end = std::chrono::steady_clock::now();
-
-    std::cout << "Prove and verify took " << (std::chrono::duration_cast<std::chrono::milliseconds>(prove_verify_end - prove_verify_beg).count()) << " ms" << std::endl;
 
     BOOST_CHECK_EQUAL(res, true);
 }
