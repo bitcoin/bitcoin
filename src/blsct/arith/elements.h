@@ -31,6 +31,7 @@ public:
     void Add(const T& x);
     void Clear();
     bool Empty() const;
+    std::vector<uint8_t> GetVch() const;
 
     void ConfirmIndexInsideRange(const uint32_t& index) const;
     void ConfirmSizesMatch(const size_t& other_size) const;
@@ -94,7 +95,7 @@ public:
     {
         ::WriteCompactSize(s, m_vec.size());
         for (auto& it : m_vec) {
-            ::Serialize(s, it);
+            ::Serialize(s, it.GetVch());
         }
     }
 
@@ -107,7 +108,9 @@ public:
         Clear();
         for (size_t i = 0; i < v_size; i++) {
             T n;
-            ::Unserialize(s, n);
+            std::vector<uint8_t> v;
+            ::Unserialize(s, v);
+            n.SetVch(v);
             Add(n);
         }
     }

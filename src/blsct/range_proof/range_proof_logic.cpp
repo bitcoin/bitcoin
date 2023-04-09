@@ -5,7 +5,10 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <blsct/range_proof/lazy_g1point.h>
+#include <blsct/building_block/imp_inner_prod_arg.h>
+#include <blsct/building_block/lazy_point.h>
+#include <blsct/building_block/g_h_gi_hi_unity_verifier.h>
+#include <blsct/common.h>
 #include <blsct/range_proof/range_proof_logic.h>
 #include <tinyformat.h>
 
@@ -92,73 +95,6 @@ typename T::Scalar RangeProofLogic<T>::GetUint64Max() const
 template Mcl::Scalar RangeProofLogic<Mcl>::GetUint64Max() const;
 
 template <typename T>
-bool RangeProofLogic<T>::InnerProductArgument(
-    const size_t concat_input_values_in_bits,
-    Elements<typename T::Point>& Gi,
-    Elements<typename T::Point>& Hi,
-    const typename T::Point& u,
-    const typename T::Scalar& cx_factor, // factor to multiply to cL and cR
-    Elements<typename T::Scalar>& a,
-    Elements<typename T::Scalar>& b,
-    const typename T::Scalar& y,
-    RangeProof<T>& proof,
-    CHashWriter& transcript_gen) const
-{
-    using Scalar = typename T::Scalar;
-    using Point = typename T::Point;
-    using Scalars = Elements<Scalar>;
-
-    const Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), concat_input_values_in_bits);
-    size_t n = concat_input_values_in_bits;
-    size_t rounds = 0;
-
-    while (n > 1) {
-        n /= 2;
-
-        Scalar cL = (a.To(n) * b.From(n)).Sum();
-        Scalar cR = (a.From(n) * b.To(n)).Sum();
-
-        Point L = (LazyG1Points<T>(Gi.From(n), a.To(n)) +
-                   LazyG1Points<T>(Hi.To(n), rounds == 0 ? b.From(n) * y_inv_pows.To(n) : b.From(n)) +
-                   LazyG1Point<T>(u, cL * cx_factor))
-                      .Sum();
-        Point R = (LazyG1Points<T>(Gi.To(n), a.From(n)) +
-                   LazyG1Points<T>(Hi.From(n), rounds == 0 ? b.To(n) * y_inv_pows.From(n) : b.To(n)) +
-                   LazyG1Point<T>(u, cR * cx_factor))
-                      .Sum();
-        proof.Ls.Add(L);
-        proof.Rs.Add(R);
-
-        transcript_gen << L;
-        transcript_gen << R;
-
-        Scalar x = transcript_gen.GetHash();
-        if (x == 0)
-            return false;
-        Scalar x_inv = x.Invert();
-
-        // update Gi, Hi, a, b and y_inv_pows
-        if (n > 1) { // if the last loop, there is no need to update Gi and Hi
-            Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * x);
-            if (rounds == 0) {
-                Hi = (Hi.To(n) * y_inv_pows.To(n) * x) + (Hi.From(n) * y_inv_pows.From(n) * x_inv);
-            } else {
-                Hi = (Hi.To(n) * x) + (Hi.From(n) * x_inv);
-            }
-        }
-        a = (a.To(n) * x) + (a.From(n) * x_inv);
-        b = (b.To(n) * x_inv) + (b.From(n) * x);
-
-        ++rounds;
-    }
-
-    proof.a = a[0];
-    proof.b = b[0];
-
-    return true;
-}
-
-template <typename T>
 RangeProof<T> RangeProofLogic<T>::Prove(
     Elements<typename T::Scalar>& vs,
     typename T::Point& nonce,
@@ -179,7 +115,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     }
 
     const size_t num_input_values_power_of_2 =
-        Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
+        blsct::Common::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
 
     // this is power of 2 as well since m_input_value_bits is power of 2
     const size_t concat_input_values_in_bits =
@@ -258,7 +194,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     alpha = alpha + msg1_v0;
 
     // Using generator H for alpha following the paper
-    proof.A = (LazyG1Points<T>(Gi, aL) + LazyG1Points<T>(Hi, aR) + LazyG1Point<T>(H, alpha)).Sum();
+    proof.A = (LazyPoints<T>(Gi, aL) + LazyPoints<T>(Hi, aR) + LazyPoint<T>(H, alpha)).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -267,7 +203,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    proof.S = (LazyG1Points<T>(Gi, sL) + LazyG1Points<T>(Hi, sR) + LazyG1Point<T>(H, rho)).Sum();
+    proof.S = (LazyPoints<T>(Gi, sL) + LazyPoints<T>(Hi, sR) + LazyPoint<T>(H, rho)).Sum();
 
     // (48)-(50)
     transcript_gen << proof.A;
@@ -362,18 +298,20 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     Scalar cx_factor = transcript_gen.GetHash();
     if (cx_factor == 0) goto retry;
 
-    if (!InnerProductArgument( // fails if x == 0 is generated from transcript_gen
+    {
+        auto res = ImpInnerProdArg::Run<Mcl>(
             concat_input_values_in_bits,
-            Gi,
-            Hi,
-            G, // u
-            cx_factor,
-            l, // a
-            r, // b
-            y,
-            proof,
-            transcript_gen)) {
-        goto retry;
+            Gi, Hi, G,
+            l,  r,
+            cx_factor, y,
+            transcript_gen
+        );
+        if (res == std::nullopt) goto retry;
+
+        proof.Ls = res.value().Ls;
+        proof.Rs = res.value().Rs;
+        proof.a = res.value().a;
+        proof.b = res.value().b;
     }
     return proof;
 }
@@ -414,25 +352,15 @@ template void RangeProofLogic<Mcl>::ValidateProofsBySizes(
     const std::vector<RangeProof<Mcl>>&);
 
 template <typename T>
-typename T::Point RangeProofLogic<T>::VerifyProofs(
+bool RangeProofLogic<T>::VerifyProofs(
     const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
     const Generators<T>& gens,
     const size_t& max_mn) const
 {
     using Scalar = typename T::Scalar;
-    using Point = typename T::Point;
     using Scalars = Elements<Scalar>;
 
-    LazyG1Points<T> points;
-    Scalar h_pos_exp = 0;
-    Scalar g_neg_exp = 0;
-    Scalar h_neg_exp = 0;
-    Scalar g_pos_exp = 0;
-    Scalars gi_exps(max_mn, 0);
-    Scalars hi_exps(max_mn, 0);
-
-    Point G = gens.G;
-    Point H = gens.H.get();
+    G_H_Gi_Hi_UnityVerifier<T> verifier(max_mn);
 
     for (const RangeProofWithTranscript<T>& p : proof_transcripts) {
         auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(p.proof.Vs.Size());
@@ -447,7 +375,7 @@ typename T::Point RangeProofLogic<T>::VerifyProofs(
         // g^(t_hat - delta_yz) = h^(-tau_x) * V^(z^2) * T1^x * T2^(x^2)
 
         // LHS (65)
-        h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y; // LHS (65)
+        verifier.AddNegativeH(p.proof.tau_x * weight_y); // LHS (65)
 
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
@@ -463,97 +391,74 @@ typename T::Point RangeProofLogic<T>::VerifyProofs(
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
-        g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
+        verifier.AddNegativeG((p.proof.t_hat - delta_yz) * weight_y);
 
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-            points.Add(LazyG1Point<T>(p.proof.Vs[i], z_pows_from_2[i] * weight_y)); // multiply z^2, z^3, ...
+            verifier.AddPoint(LazyPoint<T>(p.proof.Vs[i], z_pows_from_2[i] * weight_y)); // multiply z^2, z^3, ...
         }
 
         // T1^x and T2^(x^2) in RHS (65)
-        points.Add(LazyG1Point<T>(p.proof.T1, p.x * weight_y));          // T1^x
-        points.Add(LazyG1Point<T>(p.proof.T2, p.x.Square() * weight_y)); // T2^(x^2)
+        verifier.AddPoint(LazyPoint<T>(p.proof.T1, p.x * weight_y));          // T1^x
+        verifier.AddPoint(LazyPoint<T>(p.proof.T2, p.x.Square() * weight_y)); // T2^(x^2)
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
         // exponents of g and (h') are created in a loop later
 
         // A and S^x in RHS (66)
-        points.Add(LazyG1Point<T>(p.proof.A, weight_z));       // A
-        points.Add(LazyG1Point<T>(p.proof.S, p.x * weight_z)); // S^x
+        verifier.AddPoint(LazyPoint<T>(p.proof.A, weight_z));       // A
+        verifier.AddPoint(LazyPoint<T>(p.proof.S, p.x * weight_z)); // S^x
 
         //////// (67), (68)
-
-        // this loop generates exponents for gi and hi generators so that
-        // when there are aggregated, they become g and h in (16)
-        std::vector<Scalar> acc_xs(1ull << num_rounds, 1); // initialize all elems to 1
-        acc_xs[0] = p.inv_xs[0];
-        acc_xs[1] = p.xs[0];
-        for (size_t i = 1; i < num_rounds; ++i) {
-            const size_t sl = 1ull << (i + 1); // 4, 8, 16 ...
-            for (long signed int s = sl - 1; s > 0; s -= 2) {
-                acc_xs[s] = acc_xs[s / 2] * p.xs[i];
-                acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[i];
-            }
-        }
+        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<T>(num_rounds, p.xs, p.inv_xs);
 
         // for all bits of concat input values, do:
-        Scalar y_inv_pow(1);
-        Scalar y_pow(1);
-        for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
+        ImpInnerProdArg::LoopWithYPows<Mcl>(p.concat_input_values_in_bits, p.y,
+            [&](const size_t& i, const Scalar& y_pow, const Scalar& y_inv_pow) {
             // g^a * h^b (16)
-            Scalar gi_exp = p.proof.a * acc_xs[i]; // g^a in (16) is distributed to each generator
+            Scalar gi_exp = p.proof.a * gen_exps[i]; // g^a in (16) is distributed to each generator
             Scalar hi_exp = p.proof.b *
                             y_inv_pow *
-                            acc_xs[p.concat_input_values_in_bits - 1 - i]; // h^b in (16) is distributed to each generator. y_inv_pow to turn generator to (h')
+                            gen_exps[p.concat_input_values_in_bits - 1 - i]; // h^b in (16) is distributed to each generator. y_inv_pow to turn generator to (h')
 
             gi_exp = gi_exp + p.z; // g^(-z) in RHS (66)
 
             // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             Scalar tmp =
-                z_pows_from_2[i / Config::m_input_value_bits] *   // skipping the first 2 powers, different z_pow is assigned to each number
+                z_pows_from_2[i / Config::m_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
                 (*m_two_pows_64)[i % Config::m_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
 
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z); // (16) g^a moved to LHS
-            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z); // (16) h^b moved to LHS
+            verifier.SetGiExp(i, (gi_exp * weight_z).Negate()); // (16) g^a moved to LHS
+            verifier.SetHiExp(i, (hi_exp * weight_z).Negate()); // (16) h^b moved to LHS
+        });
 
-            // update y_pow and y_inv_pow to the next power
-            y_inv_pow = y_inv_pow * p.inv_y;
-            y_pow = y_pow * p.y;
-        }
-
-        h_neg_exp = h_neg_exp + p.proof.mu * weight_z; // ** h^mu (67) RHS
+        verifier.AddNegativeH(p.proof.mu * weight_z); // ** h^mu (67) RHS
 
         // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
         for (size_t i = 0; i < num_rounds; ++i) {
-            points.Add(LazyG1Point<T>(p.proof.Ls[i], p.xs[i].Square() * weight_z));
-            points.Add(LazyG1Point<T>(p.proof.Rs[i], p.inv_xs[i].Square() * weight_z));
+            verifier.AddPoint(LazyPoint<T>(p.proof.Ls[i], p.xs[i].Square() * weight_z));
+            verifier.AddPoint(LazyPoint<T>(p.proof.Rs[i], p.inv_xs[i].Square() * weight_z));
         }
 
-        g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
-    }
-    // generate points from aggregated exponents from G, H, Gi and Hi generators
-    points.Add(LazyG1Point<T>(G, g_pos_exp - g_neg_exp));
-    points.Add(LazyG1Point<T>(H, h_pos_exp - h_neg_exp));
-
-    auto Gi = gens.GetGiSubset(max_mn);
-    auto Hi = gens.GetHiSubset(max_mn);
-
-    for (size_t i = 0; i < max_mn; ++i) {
-        points.Add(LazyG1Point<T>(Gi[i], gi_exps[i]));
-        points.Add(LazyG1Point<T>(Hi[i], hi_exps[i]));
+        verifier.AddPositiveG((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
 
-    // should be aggregated to zero if proofs are all valid
-    return points.Sum();
+    return verifier.Verify(
+        gens.G,
+        gens.H.get(),
+        gens.GetGiSubset(max_mn),
+        gens.GetHiSubset(max_mn)
+    );
 }
-template Mcl::Point RangeProofLogic<Mcl>::VerifyProofs(
+template bool RangeProofLogic<Mcl>::VerifyProofs(
     const std::vector<RangeProofWithTranscript<Mcl>>&,
     const Generators<Mcl>&,
-    const size_t&) const;
+    const size_t&
+) const;
 
 template <typename T>
 bool RangeProofLogic<T>::Verify(
@@ -577,11 +482,11 @@ bool RangeProofLogic<T>::Verify(
     const size_t max_mn = 1ull << max_num_rounds;
     const Generators<T> gens = m_gf->GetInstance(token_id);
 
-    auto point_sum = VerifyProofs(
+    return VerifyProofs(
         proof_transcripts,
         gens,
-        max_mn);
-    return point_sum.IsUnity();
+        max_mn
+    );
 }
 template bool RangeProofLogic<Mcl>::Verify(
     const std::vector<RangeProof<Mcl>>&,

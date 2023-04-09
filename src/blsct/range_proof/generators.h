@@ -6,6 +6,7 @@
 #define NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H
 
 #include <blsct/arith/elements.h>
+#include <blsct/building_block/generator_deriver.h>
 #include <blsct/range_proof/config.h>
 #include <ctokens/tokenid.h>
 
@@ -65,10 +66,7 @@ public:
     Generators<T> GetInstance(const TokenId& token_id);
 
 private:
-    Point DeriveGenerator(
-        const Point& p,
-        const size_t index,
-        const TokenId& token_id);
+    inline static GeneratorDeriver m_generator_deriver = GeneratorDeriver("bulletproofs");
 
     // G generators are cached
     inline static std::map<const TokenId, const Point> m_G_cache;

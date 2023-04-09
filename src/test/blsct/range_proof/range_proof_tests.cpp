@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2022 The Navcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 {
     auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
         RangeProof<T> p;
-        auto n = Config::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
+        auto n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
         for (size_t i=0; i<n; ++i) {
             p.Vs.Add(MclG1Point::GetBasePoint());
         }

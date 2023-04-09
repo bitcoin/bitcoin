@@ -11,12 +11,6 @@
 class Config
 {
 public:
-    /**
-     * Returns power of 2 that is greater or equal to input_value_len
-     * throws exception if such a number exceeds the maximum
-     */
-    static size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_vec_len);
-
     // maximum # of retries allowed for RangeProofLogic::Prove function
     inline static const size_t max_prove_func_retries = 100;
 

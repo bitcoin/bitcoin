@@ -48,6 +48,19 @@ template bool Elements<MclScalar>::Empty() const;
 template bool Elements<MclG1Point>::Empty() const;
 
 template <typename T>
+std::vector<uint8_t> Elements<T>::GetVch() const
+{
+    std::vector<uint8_t> aggr_vec;
+    for (T x: m_vec) {
+        auto vec = x.GetVch();
+        aggr_vec.insert(aggr_vec.end(), vec.begin(), vec.end());
+    }
+    return aggr_vec;
+}
+template std::vector<uint8_t> Elements<MclScalar>::GetVch() const;
+template std::vector<uint8_t> Elements<MclG1Point>::GetVch() const;
+
+template <typename T>
 T Elements<T>::Sum() const
 {
     T ret;
