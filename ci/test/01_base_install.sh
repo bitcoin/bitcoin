@@ -41,6 +41,11 @@ if [ -n "$PIP_PACKAGES" ]; then
   fi
 fi
 
+if [[ ${BUILD_VALGRIND} == "true" ]]; then
+  git clone --depth=1 https://sourceware.org/git/valgrind.git -b VALGRIND_3_21_0 "${BASE_SCRATCH_DIR}"/valgrind
+  cd "${BASE_SCRATCH_DIR}"/valgrind/ && ./autogen.sh && ./configure --prefix=/usr && make install "$MAKEJOBS"
+fi
+
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.6 "${BASE_SCRATCH_DIR}"/msan/llvm-project
 
