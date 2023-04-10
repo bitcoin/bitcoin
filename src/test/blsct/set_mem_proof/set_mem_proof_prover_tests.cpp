@@ -8,6 +8,7 @@
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
 #include <cstdio>
+#include <sstream>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
@@ -116,9 +117,9 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
         if (i == NUM_INPUTS / 2) {
             Ys.Add(sigma);
         } else {
-            char buf[1000];
-            sprintf(buf, "y%lu", i);
-            auto y = Point::MapToG1(buf, Endianness::Little);
+            std::ostringstream ss;
+            ss << "y" << i;
+            auto y = Point::MapToG1(ss.str(), Endianness::Little);
             Ys.Add(y);
         }
     }

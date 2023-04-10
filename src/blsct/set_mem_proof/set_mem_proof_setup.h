@@ -18,7 +18,7 @@ public:
     using Scalars = Elements<Scalar>;
     using Points = Elements<Point>;
 
-    const size_t N = 1ull << 20;   // N must be a power of 2
+    const size_t N = 1ull << 10;   // N must be a power of 2
 
     // Generators
     const Point g = Point::GetBasePoint();
