@@ -115,6 +115,8 @@
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <comment>An error message.</comment>
+        <extracomment>%1 is a name of the file (e.g., "addrbook.csv") that the bitcoin addresses were exported to.</extracomment>
         <translation>Произошла ошибка при сохранении адресной книги в %1. Пожалуйста, попробуйте еще раз.</translation>
     </message>
 </context>
@@ -516,10 +518,6 @@
         <translation>&amp;Консоль отладки</translation>
     </message>
     <message>
-        <source>Open debugging console</source>
-        <translation>Открыть консоль отладки</translation>
-    </message>
-    <message>
         <source>&amp;Network Monitor</source>
         <translation>&amp;Монитор сети</translation>
     </message>
@@ -572,10 +570,6 @@
         <translation>Открыть &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Открыть dash: URI или запрос платежа</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Параметры командной строки</translation>
     </message>
@@ -608,6 +602,14 @@
     <message>
         <source>Show information about %1</source>
         <translation>Показать информацию о %1</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Открыть консоль отладки и диагностики</translation>
+    </message>
+    <message>
+        <source>Open a dash: URI</source>
+        <translation>Открыть dash: URI</translation>
     </message>
     <message>
         <source>Create Wallet...</source>
@@ -1150,7 +1152,7 @@
         <translation>Фильтровать список:</translation>
     </message>
     <message>
-        <source>Filter propsal list</source>
+        <source>Filter proposal list</source>
         <translation>Фильтровать список предложений</translation>
     </message>
     <message>
@@ -1291,6 +1293,10 @@
         <translation>Сервис</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation>Тип</translation>
+    </message>
+    <message>
         <source>PoSe Score</source>
         <translation>PoSe штраф</translation>
     </message>
@@ -1426,6 +1432,10 @@
         <translation>Скрыть</translation>
     </message>
     <message>
+        <source>Dash Core is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>Dash Core синхронизируется.  Он будет скачивать заголовки и блоки и проверять их, пока не достигнет вершины цепочки блоков.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Неизвестно. Синхронизация заголовков (%1, %2%)...</translation>
     </message>
@@ -1437,20 +1447,8 @@
         <translation>Открыть URI</translation>
     </message>
     <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Открыть запрос платежа из URI или файла</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Выбрать файл запроса платежа</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Выберите файл запроса платежа</translation>
     </message>
 </context>
 <context>
@@ -1517,6 +1515,14 @@
     <message>
         <source>MiB</source>
         <translation>MiB</translation>
+    </message>
+    <message>
+        <source>Whether to keep the specified custom change address or not.</source>
+        <translation>Сохранять указанный свой адрес для сдачи или нет.</translation>
+    </message>
+    <message>
+        <source>Keep custom change &amp;address</source>
+        <translation>Сохранить свой &amp;адрес для сдачи</translation>
     </message>
     <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
@@ -1589,10 +1595,6 @@
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Автоматически открыть порт для Dash Core на роутере. Работает только в том случае, если Ваш роутер поддерживает UPnP и данная функция включена.</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation>Автоматически открыть порт для Dash Core на роутере. Работает только в том случае, если Ваш роутер поддерживает NAT-PMP и данная функция включена. Внешний порт может быть любым.</translation>
     </message>
     <message>
         <source>Map port using NA&amp;T-PMP</source>
@@ -1681,6 +1683,10 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Пробросить порт через &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation>Автоматически открыть порт для Dash Core на роутере. Работает только в том случае, если Ваш роутер поддерживает NAT-PMP и данная функция включена. Внешний порт может быть любым.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -2047,12 +2053,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>'dash://' не является валидным URI. Используйте 'dash:'.</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Неверный URL запроса платежа: %1</translation>
-    </message>
-    <message>
-        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>Невозможно обработать запрос платежа так как поддержка BIP70 была отключена.</translation>
+        <source>Cannot process payment request as BIP70 is no longer supported.</source>
+        <translation>Невозможно обработать запрос платежа так как BIP70 больше не поддерживается.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -2065,66 +2067,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment request file handling</source>
         <translation>Обработка файла запроса платежа</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Не удается прочесть либо разобрать файл запроса платежа! Возможно это некоректный файл.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Запрос платежа отклонен</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Сеть запроса платежа не соответствует сети клиента.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Время этого запроса платежа истекло.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Запрос платежа не инициализирован.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Непроверенные запросы платежей с нестандартными платёжными сценариями не поддерживаются.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Неправильный запрос платежа.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Запрошенная сумма платежа %1 слишком мала (считается "пылью").</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Возврат от %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Запрос платежа %1 слишком большой (%2 байт, разрешено %3 байт).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Ошибка связи с %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Не могу разобрать запрос платежа!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Плохой ответ от сервера %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Ошибка сетевого запроса</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Платёж принят</translation>
     </message>
 </context>
 <context>
@@ -2239,10 +2181,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сбросить все настройки, измененные через графический интерфейс</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
-    </message>
-    <message>
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Показывать заставку при запуске (по умолчанию: %u)</translation>
     </message>
@@ -2257,6 +2195,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error: %1</source>
         <translation>Ошибка: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Ошибка инициализации настроек: %1</translation>
     </message>
     <message>
         <source>Error: Failed to load application fonts.</source>
@@ -2400,29 +2342,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Сохранить изображение...</translation>
-    </message>
-    <message>
-        <source>Error creating QR Code.</source>
-        <translation>Ошибка создания QR-кода</translation>
-    </message>
-</context>
-<context>
-    <name>QRGeneralImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Сохранить изображение...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>&amp;Копировать изображение</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>Сохранить QR-код</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>Изображение PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2607,10 +2526,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-rescan=2: Перепроверить цепочку блоков на предмет отсутствующих в кошельке транзакций, начиная с самого первого блока.</translation>
     </message>
     <message>
-        <source>Wallet Path</source>
-        <translation>Путь к кошельку</translation>
-    </message>
-    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
@@ -2723,24 +2638,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ремонт &amp;кошелька</translation>
     </message>
     <message>
-        <source>Recover transactions 1</source>
-        <translation>Восстановление транзакций 1</translation>
-    </message>
-    <message>
-        <source>Recover transactions 2</source>
-        <translation>Восстановление транзакций 2</translation>
-    </message>
-    <message>
         <source>Upgrade wallet format</source>
         <translation>Обновить формат кошелька</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Восстановить транзакции из цепочки блоков (сохранить мета-данные, например, о владельцах аккаунтов).</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Восстановить транзакции из цепочки блоков (удалить мета-данные).</translation>
     </message>
     <message>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
@@ -3124,11 +3023,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Если ручная комиссия  установлена в 1000 duff, а транзакция по размеру только 250 байт, то плата "за килобайт" составит лишь 250 duff,&lt;br&gt;в то время как "минимум" будет равна 1000 duff. Для транзакций больше килобайта в любом случае идет расчет "за килобайт".</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Оплаты только минимальной комиссии должно быть достаточно во всех случаях, пока в блоках достаточно места.&lt;br&gt;Однако, будьте готовы к тому, что транзакция может вовсе не получить подтверждения,&lt;br&gt;если количество транзакций будет стабильно больше, чем сеть способна обработать.</translation>
+        <translation>Если ручная комиссия установлена в 1000 duff, а транзакция по размеру только 250 байт, то плата "за килобайт" составит лишь 250 duff,&lt;br&gt;в то время как "минимум" будет равна 1000 duff. Для транзакций больше килобайта в любом случае идет расчет "за килобайт".</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -3149,10 +3044,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Hide</source>
         <translation>Скрыть</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(прочтите всплывающую подсказку)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -3227,10 +3118,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 (блоков: %2)</translation>
     </message>
     <message>
-        <source>from wallet %1</source>
-        <translation>из кошелька %1</translation>
-    </message>
-    <message>
         <source>using</source>
         <translation>используя</translation>
     </message>
@@ -3253,6 +3140,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Confirm the %1 send action</source>
         <translation>Подтвердить отправку с помощью %1</translation>
+    </message>
+    <message>
+        <source> from wallet '%1'</source>
+        <translation>из кошелька '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 на '%2'</translation>
     </message>
     <message>
         <source>%1 funds only</source>
@@ -3303,6 +3198,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Подтвердите отправку монет</translation>
     </message>
     <message>
+        <source>Send</source>
+        <translation>Отправить</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Адрес получателя неверный. Пожалуйста, перепроверьте.</translation>
     </message>
@@ -3334,10 +3233,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Payment request expired.</source>
         <translation>Время этого запроса платежа истекло.</translation>
     </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Заплатить только требуемую комиссию %1</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Будет подтверждено приблизительно в течение %n блока.</numerusform><numerusform>Будет подтверждено приблизительно в течение %n блоков.</numerusform><numerusform>Будет подтверждено приблизительно в течение %n блоков.</numerusform><numerusform>Будет подтверждено приблизительно в течение %n блоков.</numerusform></translation>
@@ -3352,7 +3247,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Confirm custom change address</source>
-        <translation>Подтвердите адрес для сдачи</translation>
+        <translation>Подтвердите свой адрес для сдачи</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
@@ -3444,17 +3339,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Memo:</source>
         <translation>Примечание:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Введите метку для данного адреса для добавления его в адресную книгу</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Send</source>
-        <translation>Отправить</translation>
     </message>
 </context>
 <context>
@@ -3792,14 +3676,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Полный размер транзакции</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation> (Сертификат не был проверен)</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Продавец</translation>
-    </message>
-    <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Сгенерированные монеты должны подождать %1 блоков, прежде чем они могут быть потрачены. Когда Вы сгенерировали этот блок, он был отправлен в сеть для добавления в цепочку блоков. Если он не попадёт в цепочку, его статус изменится на "не принят", и монеты будут недействительны. Это иногда происходит в случае, если другой узел сгенерирует блок на несколько секунд раньше вас.</translation>
     </message>
@@ -4065,6 +3941,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сбросить транзакцию</translation>
     </message>
     <message>
+        <source>Resend transaction</source>
+        <translation>Отправить транзакцию еще раз</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>Копировать адрес</translation>
     </message>
@@ -4190,8 +4070,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Не был загружен ни один кошелёк.</translation>
+        <source>Create a new wallet</source>
+        <translation>Создать новый кошелёк</translation>
     </message>
 </context>
 <context>
@@ -4519,10 +4399,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Удаление блоков: последняя синхронизация кошелька выходит за рамки удаленных данных. Вам нужно запустить клиента с ключом -reindex (в случае узла с удаленными блоками это означает повторное скачивание всей цепи блоков)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Повторное сканирование невозможно в режиме удаления блоков. Вам надо будет использовать -reindex, что приведет к повторной загрузке всей цепи блоков.</translation>
-    </message>
-    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>База данных блоков содержит блок, созданный в будущем. Такое может случиться из-за некорректно установленных даты и времени на Вашем компьютере. Перестройте базу блоков, только если вы уверены, что дата и время корректны.</translation>
     </message>
@@ -4591,10 +4467,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ошибка обновления базы данных evo</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Ошибка: Произошла критическая ошибка, подробности смотрите в файле debug.log</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Ошибка: мало места на диске для %s</translation>
     </message>
@@ -4625,6 +4497,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Ошибка сканирования кошелька во время инициализации</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation>Ошибка проверки базы данных</translation>
     </message>
     <message>
         <source>Invalid P2P permission: '%s'</source>
@@ -4865,10 +4741,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Это комиссия, которую Вы заплатите при отправке транзакции, если расчет комиссии не доступен.</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Этот продукт включает ПО, разработанное проектом OpenSSL Project для использования в OpenSSL Toolkit %s, криптографическое ПО, написанное Eric Young и ПО для работы с UPnP, написанное Thomas Bernard.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Невозможно повторить блоки. Необходимо перестроить базы даных с помощью -reindex-chainstate.</translation>
     </message>
@@ -4947,10 +4819,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
         <translation>Ошибка загрузки %s: Вы не можете отключить HD режим для существующего HD кошелька</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Ошибка загрузки кошелька %s. Имя файла -wallet указано повторно.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -5171,10 +5039,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Your entries added successfully.</source>
         <translation>Ваши записи успешно добавлены.</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Удаление всех транзакций из кошелька...</translation>
     </message>
 </context>
 </TS>
