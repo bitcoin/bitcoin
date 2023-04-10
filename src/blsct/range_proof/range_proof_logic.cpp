@@ -7,7 +7,7 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/building_block/lazy_point.h>
-#include <blsct/building_block/g_h_gi_hi_unity_verifier.h>
+#include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
 #include <blsct/common.h>
 #include <blsct/range_proof/range_proof_logic.h>
 #include <tinyformat.h>
@@ -360,7 +360,7 @@ bool RangeProofLogic<T>::VerifyProofs(
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
-    G_H_Gi_Hi_UnityVerifier<T> verifier(max_mn);
+    G_H_Gi_Hi_ZeroVerifier<T> verifier(max_mn);
 
     for (const RangeProofWithTranscript<T>& p : proof_transcripts) {
         auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(p.proof.Vs.Size());

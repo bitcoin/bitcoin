@@ -163,7 +163,7 @@ bool MclG1Point::IsValid() const
     return mclBnG1_isValid(&m_p) == 1;
 }
 
-bool MclG1Point::IsUnity() const
+bool MclG1Point::IsZero() const
 {
     return mclBnG1_isZero(&m_p);
 }

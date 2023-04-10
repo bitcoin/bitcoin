@@ -1,10 +1,10 @@
 # Verifying Equations
 
 ## Verification Scheme
-Points on the LHS of a equation are negated and added to the points on the RHS. Verification is successful if the sum is the neutral element.
+Points on the LHS of a equation are negated and added to the points on the RHS. Verification is successful if the sum is the additive identity.
 
 ## Line (18), (20) and (21)
-(18), (20) and (21) are self-contained and each adds up to the neutral element.
+(18), (20) and (21) are self-contained and each adds up to the additive identity.
 
 ## Line (19)
 

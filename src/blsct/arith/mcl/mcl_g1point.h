@@ -45,7 +45,7 @@ public:
     static MclG1Point Rand();
 
     bool IsValid() const;
-    bool IsUnity() const;
+    bool IsZero() const;
 
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& vec);

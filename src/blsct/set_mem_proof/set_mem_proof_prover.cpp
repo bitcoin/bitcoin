@@ -5,7 +5,7 @@
 #include <blsct/common.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/building_block/lazy_point.h>
-#include <blsct/building_block/g_h_gi_hi_unity_verifier.h>
+#include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
 #include <stdexcept>
 #include <cmath>
@@ -238,7 +238,7 @@ bool SetMemProofProver::Verify(
     Points h_primes = setup.hs.To(n) * y_inv_to_n;
     Scalar x = ComputeX(omega, y, z, proof.T1, proof.T2);
 
-    G_H_Gi_Hi_UnityVerifier<Mcl> verifier(n);
+    G_H_Gi_Hi_ZeroVerifier<Mcl> verifier(n);
 
     //////// (18)
     {

@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_UNITY_VERIFIER_H
-#define NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_UNITY_VERIFIER_H
+#ifndef NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
+#define NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
 
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/lazy_point.h>
 
 template <typename T>
-struct G_H_Gi_Hi_UnityVerifier {
+struct G_H_Gi_Hi_ZeroVerifier {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<typename T::Scalar>;
     using Point = typename T::Point;
     using Points = Elements<typename T::Point>;
 
-    G_H_Gi_Hi_UnityVerifier(const size_t& n):
+    G_H_Gi_Hi_ZeroVerifier(const size_t& n):
         m_n{n}, m_gi_exps{Scalars(n, 0)}, m_hi_exps{Scalars(n, 0)} {}
 
     void AddPoint(const LazyPoint<T>& p);
@@ -40,5 +40,5 @@ private:
     LazyPoints<T> m_points;
 };
 
-#endif // NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_UNITY_VERIFIER_H
+#endif // NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
 

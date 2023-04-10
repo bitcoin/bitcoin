@@ -165,7 +165,7 @@ BITCOIN_CORE_H = \
   blsct/building_block/generator_deriver.h \
   blsct/building_block/imp_inner_prod_arg.h \
   blsct/building_block/lazy_point.h \
-  blsct/building_block/g_h_gi_hi_unity_verifier.h \
+  blsct/building_block/g_h_gi_hi_zero_verifier.h \
   blsct/common.h \
   blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \
@@ -429,7 +429,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/building_block/generator_deriver.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
   blsct/building_block/lazy_point.cpp \
-  blsct/building_block/g_h_gi_hi_unity_verifier.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
   blsct/common.cpp \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
