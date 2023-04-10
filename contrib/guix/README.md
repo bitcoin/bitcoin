@@ -87,7 +87,7 @@ crucial differences:
 An invocation with all default options would look like:
 
 ```
-env DETACHED_SIGS_REPO=<path/to/dash-detached-sigs> ./contrib/guix-codesign
+env DETACHED_SIGS_REPO=<path/to/dash-detached-sigs> ./contrib/guix/guix-codesign
 ```
 
 ## Cleaning intermediate work directories
@@ -223,7 +223,7 @@ details.
   bootstrappable build.
 
   _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu
-  <!--- riscv64-linux-gnu --> powerpc64-linux-gnu powerpc64le-linux-gnu
+  powerpc64-linux-gnu powerpc64le-linux-gnu
   x86\_64-w64-mingw32 x86\_64-apple-darwin18")_
 
 * _**SOURCES_PATH**_
