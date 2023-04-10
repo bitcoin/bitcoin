@@ -55,6 +55,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/bitcoingui -> qt/guiutil -> qt/bitcoingui"
     "qt/guiutil -> qt/optionsdialog -> qt/guiutil"
     "qt/guiutil -> qt/qvalidatedlineedit -> qt/guiutil"
+    "qt/clientmodel -> qt/guiutil -> qt/walletmodel -> qt/clientmodel"
     "core_io -> evo/cbtx -> evo/deterministicmns -> core_io"
     "core_io -> evo/cbtx -> evo/simplifiedmns -> core_io"
     "evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> evo/simplifiedmns"

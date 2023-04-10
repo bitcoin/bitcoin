@@ -26,7 +26,7 @@ class TransactionStatus
 public:
     TransactionStatus():
         countsForBalance(false), lockedByInstantSend(false), lockedByChainLocks(false), sortKey(""),
-        matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1),
+        matures_in(0), status(Unconfirmed), depth(0), open_for(0),
         cachedChainLockHeight(-1), needsUpdate(false)
     { }
 
@@ -67,8 +67,8 @@ public:
                       finalization */
     /**@}*/
 
-    /** Current number of blocks (to know whether cached status is still valid) */
-    int cur_num_blocks;
+    /** Current block hash (to know whether cached status is still valid) */
+    uint256 m_cur_block_hash{};
 
     //** Know when to update transaction for chainlocks **/
     int cachedChainLockHeight;
@@ -161,11 +161,11 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int chainLockHeight, int64_t block_time);
+    void updateStatus(const interfaces::WalletTxStatus& wtx, const uint256& block_hash, int numBlocks, int chainLockHeight, int64_t block_time);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int numBlocks, int chainLockHeight) const;
+    bool statusUpdateNeeded(const uint256& block_hash, int chainLockHeight) const;
 
     /** Update label from address book.
      */

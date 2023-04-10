@@ -38,6 +38,7 @@ struct NodeContext;
 namespace interfaces {
 class Handler;
 class WalletClient;
+struct BlockTip;
 
 //! Interface for the src/evo part of a dash node (dashd process).
 class EVO
@@ -229,6 +230,9 @@ public:
     //! Get num blocks.
     virtual int getNumBlocks() = 0;
 
+    //! Get best block hash.
+    virtual uint256 getBestBlockHash() = 0;
+
     //! Get last block time.
     virtual int64_t getLastBlockTime() = 0;
 
@@ -327,7 +331,7 @@ public:
 
     //! Register handler for block tip messages.
     using NotifyBlockTipFn =
-        std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
+        std::function<void(bool initial_download, interfaces::BlockTip tip, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) = 0;
 
     //! Register handler for chainlock messages.
@@ -337,7 +341,7 @@ public:
 
     //! Register handler for header tip messages.
     using NotifyHeaderTipFn =
-        std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
+        std::function<void(bool initial_download, interfaces::BlockTip tip, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
     //! Register handler for masternode list update messages.
@@ -359,6 +363,12 @@ public:
 //! Return implementation of Node interface.
 std::unique_ptr<Node> MakeNode(NodeContext* context = nullptr);
 
+//! Block tip (could be a header or not, depends on the subscribed signal).
+struct BlockTip {
+    int block_height;
+    int64_t block_time;
+    uint256 block_hash;
+};
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_NODE_H
