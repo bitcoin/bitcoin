@@ -10,7 +10,7 @@ Points on the LHS of a equation are negated and added to the points on the RHS. 
 
 On `PePoS` paper, the equation (19) is
 
-$h_2^{\mu}Y^l (h')^r = A_1 \cdot A_2^{\omega} \cdot S_2^x \cdot Y^{-z \cdot 1^n} \cdot (h')^{\omega z \cdot y^n + z^2 \cdot 1^n}$
+$h_2^{\mu}\mathbf{Y}^{\mathbf{l}} (\mathbf{h'})^\mathbf{r} = A_1 \cdot A_2^{\omega} \cdot S_2^x \cdot \mathbf{Y}^{-z \cdot \mathbf{1}^n} \cdot (\mathbf{h'})^{\omega z \cdot \mathbf{y}^n + z^2 \cdot \mathbf{1}^n}$
 
 But, due to the use of the improved inner product argument (`IIPA` from this point onward), the verification procedure is not straightforward. The procedure will be explained in details using a 2-round `IIPA` case in order to minimize the complexity.
 
@@ -39,20 +39,20 @@ points.Add(LazyPoint(h2, proof.mu.Negate()));
 
 Since $A_1$, $A_2^{\omega}$, $S_2^x$, and $h_2^{\mu}$ are defined to be
 
-- $A_1 = h_2^{\alpha|}Y^{bL}$
-- $A_2 = h_2^{\beta}h^{bR}$
-- $S_2 = h_2^{\rho}Y^{sL}h^{sR}$
+- $A_1 = h_2^{\alpha|}\mathbf{Y}^{\mathbf{bL}}$
+- $A_2 = h_2^{\beta}\mathbf{h}^{\mathbf{bR}}$
+- $S_2 = h_2^{\rho}\mathbf{Y}^{\mathbf{sL}}\mathbf{h}^{\mathbf{sR}}$
 - $\mu = \alpha + \beta \cdot \omega + \rho \cdot x $
 
 $h_2^{\mu} = h_2^{\alpha + \beta \cdot \omega + \rho \cdot x}$
 
 $A_1 \cdot A_2^{\omega} \cdot S_2^x - h_2^{\mu}$ is evaluated to
 
-$(h_2^{\alpha|}Y^{bL}) \cdot (h_2^{\beta}h^{bR})^{\omega} \cdot (h_2^{\rho}Y^{sL}h^{sR})^x - h_2^{\alpha + \beta \cdot \omega + \rho \cdot x}$
+$(h_2^{\alpha|}\mathbf{Y}^{\mathbf{bL}}) \cdot (h_2^{\beta}\mathbf{h}^{\mathbf{bR}})^{\omega} \cdot (h_2^{\rho}\mathbf{Y}^{\mathbf{sL}}\mathbf{h}^{\mathbf{sR}})^x - h_2^{\alpha + \beta \cdot \omega + \rho \cdot x}$
 
-$= (Y^{bL}) \cdot (h^{bR})^{\omega} \cdot (Y^{sL}h^{sR})^x$
+$= (\mathbf{Y}^{\mathbf{bL}}) \cdot (\mathbf{h}^{\mathbf{bR}})^{\omega} \cdot (\mathbf{Y}^{\mathbf{sL}}\mathbf{h}^{\mathbf{sR}})^x$
 
-$= Y^{bL + sLx} \cdot h^{bR\omega + sRx}$
+$= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x}$
 
 This is the initial sum we have.
 
@@ -73,7 +73,7 @@ for (size_t i = 0; i < num_rounds; ++i) {
 ```
 
 ### 3. Recovery of Generator Exponents
-At the end of the `IIPA`, the compressed generators $G$ and $H$ have $G_1^{\alpha_1}, G_2^{\alpha_2}, ..., G_n^{\alpha_n}$ and $H_1^{\beta_1}, H_2^{\beta_2}, ..., H_n^{\beta_n}$ as factors. $n$ here is the number of rounds in `IIPA`.
+At the end of the `IIPA`, the scalar compressed generators $G$ and $H$ have $G_1^{\alpha_1}, G_2^{\alpha_2}, ..., G_n^{\alpha_n}$ and $H_1^{\beta_1}, H_2^{\beta_2}, ..., H_n^{\beta_n}$ as factors. $n$ here is the number of rounds in `IIPA`.
 
 Below code calculates `acc_xs`'s that directly maps to $\alpha_i$ and maps to $\beta_i$ in reverse. i.e.
 
@@ -99,7 +99,7 @@ for (size_t i = 1; i < num_rounds; ++i) {
 }
 ```
 
-### 4. Addition of $L$ and $R$
+### 4. Addition of $L$'s and $R$'s
 Putting the for-loop aside for now, the next verification code is
 
 ```c++
@@ -154,7 +154,7 @@ Combining above we get
 
 Now the sum is
 
-$Y^{bL + sLx} \cdot h^{bR\omega + sRx} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}}$
+$\mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR} \omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}}$
 
 ### 5. Adding $t \cdot c\_factor$ and Subtracting $a \cdot b \cdot c\_factor$
 
@@ -176,11 +176,11 @@ $= a_1 \cdot b_1 \cdot c\_factor + a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor + a
 
 Adding this, the sum becomes
 
-$Y^{bL + sLx} \cdot h^{bR\omega + sRx} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}} - u^{a_1 \cdot b_1 \cdot c\_factor + a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor - a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor + a_2 \cdot b_2 \cdot c\_factor}$
+$\mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}} - u^{a_1 \cdot b_1 \cdot c\_factor + a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor - a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor + a_2 \cdot b_2 \cdot c\_factor}$
 
-$= Y^{bL + sLx} \cdot h^{bR\omega + sRx} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}} - (u^{a_1 \cdot b_1 \cdot c\_factor} + u^{a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor - a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor} + u^{a_2 \cdot b_2 \cdot c\_factor})$
+$= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}} - (u^{a_1 \cdot b_1 \cdot c\_factor} + u^{a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor - a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor} + u^{a_2 \cdot b_2 \cdot c\_factor})$
 
-$= Y^{bL + sLx} \cdot h^{bR\omega + sRx} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - u^{a_1 \cdot b_1 \cdot c\_factor} - u^{a_2 \cdot b_2 \cdot c\_factor}$
+$= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - u^{a_1 \cdot b_1 \cdot c\_factor} - u^{a_2 \cdot b_2 \cdot c\_factor}$
 
 The 2nd and 3rd terms $u^{a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor + a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor}$ removes the $u$ point in the sum $u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}}$.
 
@@ -198,7 +198,7 @@ So, $u^t$ is equivalent to $u^{a_1 \cdot b_1 \cdot c\_factor + a_2 \cdot b_2 \cd
 
 Adding this to the sum removes the remaining $u$ terms, and the sum becomes
 
-$= Y^{bL + sLx} \cdot h^{bR\omega + sRx} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}}$
+$= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}}$
 
 ### 6. Generating Exponents of Generator Vectors
 
@@ -267,31 +267,31 @@ $= -G_1^{a_1} - G_2^{a_2} - G_1^{a_2 \cdot x_1^{-2}} - G_2^{a_1 \cdot x_1^2}$
 
 Adding these points to the sum, the 3rd and 4th terms removes $G$ based points from the sum, we now have
 
-$Y^{bL + sLx} \cdot h^{bR\omega + sRx} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - (G_1^{a_1} + G_2^{a_2} + G_1^{a_2 \cdot x_1^{-2}} + G_2^{a_1 \cdot x_1^2})$
+$\mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - (G_1^{a_1} + G_2^{a_2} + G_1^{a_2 \cdot x_1^{-2}} + G_2^{a_1 \cdot x_1^2})$
 
-$= Y^{bL + sLx} \cdot h^{bR\omega + sRx} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
+$= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
 
-Since $Y$ generator vector is used as $G$ in `PePos`, replacing $Y$ with $G$, we get
+Since $\mathbf{Y}$ generator vector is used as $\mathbf{G}$ in `PePos`, replacing $\mathbf{Y}$ with $\mathbf{G}$, we get
 
-$G^{bL + sLx} \cdot h^{bR\omega + sRx} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
+$\mathbf{G}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
 
 Applying the 2nd line subtracting $z$, next the sum becomes
 
-$G^{bL + sLx - z} \cdot h^{bR\omega + sRx} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
+$\mathbf{G}^{\mathbf{bL} + \mathbf{sL}x - z} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
 
 On `PePoS` paper,
 
-$l(x) = bL - z \cdot 1^n + sL \cdot x$
+$l(x) = \mathbf{bL} - z \cdot \mathbf{1}^n + \mathbf{sL} \cdot x$
 
 and $l(x)$ in a form of $[l_1, l_2]$ is sent to `IIPA`.
 
 Since $l_1, l_2$ are called $a_1, a_2$ in `IIPA`, the sum is equivalent to
 
-$G_1^{a_1} + G_2^{a_2} + h^{bR\omega + sRx} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
+$G_1^{a_1} + G_2^{a_2} + \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
 
 $G_i$'s cancel out and that leaves
 
-$h^{bR\omega + sRx} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}}$
+$\mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}}$
 
 ### $H$ generator vector
 
@@ -331,9 +331,9 @@ $= -H_1^{b_1} - H_1^{b_2 \cdot {x_1^2}} - H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} 
 
 The 2nd and 3rd terms above cancel out two terms in the sum which results in
 
-$h^{bR\omega + sRx} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - H_1^{b_1} - H_1^{b_2 \cdot {x_1^2}} - H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - H_2^{b_2 \cdot y^{-1}}$
+$\mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - H_1^{b_1} - H_1^{b_2 \cdot {x_1^2}} - H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - H_2^{b_2 \cdot y^{-1}}$
 
-$= h^{bR\omega + sRx} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
+$= \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
 
 Then the 2nd line
 
@@ -341,7 +341,7 @@ Then the 2nd line
 hi_exps[i] = hi_exp + (proof.omega * z * y_pow + z_sq) * y_inv_pow;
 ```
 
-multiplies $H$ generators by $(\omega \cdot z \cdot y'_i + z^2) \cdot y'^{-1}_i$ where $y'_i = [y^0,y^1,y^2,...,y^n]$, $y'^{-1}_i = [y^0, y^{-1},y^{-2},...,y^{-n}]$ and $n$ is the size of the $G, H$ generator vectors.
+multiplies $\mathbf{H}$ generators by $(\omega \cdot z \cdot y'_i + z^2) \cdot \mathbf{y'}^{-1}_i$ where $\mathbf{y'_i} = [y^0,y^1,y^2,...,y^n]$, $\mathbf{y'}^{-1}_i = [y^0, y^{-1},y^{-2},...,y^{-n}]$ and $n$ is the size of the $\mathbf{G}, \mathbf{H}$ generator vectors.
 
 In 2-round `IIPA`, generated points are
 
@@ -351,13 +351,13 @@ $= H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}}$
 
 Adding those points to the sum results in
 
-$h^{bR\omega + sRx} - H_1^{b_1} - H_1^{b_2 \cdot y^{-1}} + H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}}$
+$\mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} - H_1^{b_1} - H_1^{b_2 \cdot y^{-1}} + H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}}$
 
-$= h^{bR\omega + sRx} + H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
+$= \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
 
-Because $h$ generator vector is called $H$ in `IIPA`
+Because $\mathbf{h}$ generator vector is called $\mathbf{H}$ in `IIPA`
 
-$H^{bR\omega + sRx} + H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
+$\mathbf{H}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{\omega \cdot z + z^2} + H_2^{\omega \cdot z + z^2 \cdot y^{-1}} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
 
 $= H_1^{bR[0] \cdot \omega + sR[0] \cdot x + \omega z + z^2} + H_2^{bR[1] \cdot \omega + sR[1] \cdot x + \omega \cdot z + z^2 \cdot y^{-1}} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}}$
 
