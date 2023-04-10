@@ -198,7 +198,7 @@ public:
             // Otherwise, simply re-use the cached status.
             interfaces::WalletTxStatus wtx;
             int64_t block_time;
-            if (rec->statusUpdateNeeded(cur_block_hash, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtx, block_time)) {
+            if (!cur_block_hash.IsNull() && rec->statusUpdateNeeded(cur_block_hash, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtx, block_time)) {
                 rec->updateStatus(wtx, cur_block_hash, cur_num_blocks, parent->getChainLockHeight(), block_time);
             }
             return rec;
@@ -726,7 +726,7 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
 QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    TransactionRecord *data = priv->index(walletModel->wallet(), walletModel->clientModel().getBestBlockHash(), walletModel->clientModel().getNumBlocks(), row);
+    TransactionRecord *data = priv->index(walletModel->wallet(), walletModel->getLastBlockProcessed(), walletModel->clientModel().getNumBlocks(), row);
     if (data) {
         return createIndex(row, column, data);
     }

@@ -93,7 +93,7 @@ void WalletModel::pollBalanceChanged()
 
     // Avoid recomputing wallet balances unless a TransactionChanged or
     // BlockTip notification was received.
-    if (!fForceCheckBalanceChanged && m_cached_last_update_tip == m_client_model->getBestBlockHash()) return;
+    if (!fForceCheckBalanceChanged && m_cached_last_update_tip == getLastBlockProcessed()) return;
 
     // Try to get balances and return early if locks can't be acquired. This
     // avoids the GUI from getting stuck on periodical polls if the core is
@@ -617,4 +617,9 @@ QString WalletModel::getDisplayName() const
 bool WalletModel::isMultiwallet()
 {
     return m_node.walletClient().getWallets().size() > 1;
+}
+
+uint256 WalletModel::getLastBlockProcessed() const
+{
+    return m_client_model ? m_client_model->getBestBlockHash() : uint256{};
 }

@@ -333,6 +333,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
 
 bool TransactionRecord::statusUpdateNeeded(const uint256& block_hash, int chainLockHeight) const
 {
+    assert(!block_hash.IsNull());
     return status.m_cur_block_hash != block_hash || status.needsUpdate
         || (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
 }
