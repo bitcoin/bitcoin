@@ -365,9 +365,9 @@ $= H_1^{\omega \cdot bR[0] + \omega z + sR[0] \cdot x + z^2} + H_2^{\omega \cdot
 
 Note that
 
-$r(x)=y^n \circ (\omega \cdot bR + \omega z \cdot 1^n + sR \cdot x) + z^2 \cdot 1^n$
+$r(x)= \mathbf{y}^n \circ (\omega \cdot bR + \omega z \cdot \mathbf{1}^n + sR \cdot x) + z^2 \cdot \mathbf{1}^n$
 
-$r(x)$ in 2-round case in $r_i$ form is
+where $\mathbf{y}= \{y^0,y^1,y^2,...,y^{n-1}\}$ and $r(x)$ in 2-round case in $r_i$ form is
 
 $r_1 = \omega \cdot bR[0] + \omega z + sR[0] \cdot x + z^2$
 
