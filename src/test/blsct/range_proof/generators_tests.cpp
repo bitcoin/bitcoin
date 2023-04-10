@@ -30,11 +30,11 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     auto max_size = Config::m_max_input_value_vec_len;
 
     // regardless of the token_id, the same Gi and Hi should be returned
-    //// same token_id
+    // same token_id
     BOOST_CHECK(gens1.GetGiSubset(max_size) == gens1_2.GetGiSubset(max_size));
     BOOST_CHECK(gens1.GetHiSubset(max_size) == gens1_2.GetHiSubset(max_size));
 
-    //// different token_ids
+    // different token_ids
     BOOST_CHECK(gens1.GetGiSubset(max_size) == gens2.GetGiSubset(max_size));
     BOOST_CHECK(gens1.GetHiSubset(max_size) == gens2.GetHiSubset(max_size));
 }
