@@ -78,7 +78,7 @@ At the end of the `IIPA`, the compressed generators $G$ and $H$ have $G_1^{\alph
 Below code calculates `acc_xs`'s that directly maps to $\alpha_i$ and maps to $\beta_i$ in reverse. i.e.
 
 - $\alpha_1 = acc\_xs[0], \alpha_2 = acc\_xs[1], ...$
-- $\beta = acc\_xs[n-1], \alpha_2 = acc\_xs[n-2], ...$.
+- $\beta = acc\_xs[n-1], \beta_2 = acc\_xs[n-2], ...$.
 
 ```c++
 // acc_xs's are factors used to recover Gi and Hi contained
