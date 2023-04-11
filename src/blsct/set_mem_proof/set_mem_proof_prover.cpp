@@ -188,13 +188,15 @@ SetMemProof SetMemProofProver::Prove(
     Scalar c_factor = Scalar::Rand();
     Points Hi = setup.hs.To(Ys.Size());
 
-    CHashWriter transcript_gen2(0, 0);
+    CHashWriter transcript_gen =
+        GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
+
     auto iipa_res = ImpInnerProdArg::Run<Mcl>(
         n,
         Ys, Hi, setup.g,
         l, r,
         c_factor, y,
-        transcript_gen2
+        transcript_gen
     );
 
     auto proof = SetMemProof(
@@ -209,6 +211,21 @@ SetMemProof SetMemProofProver::Prove(
         omega, c_factor
     );
     return proof;
+}
+
+CHashWriter SetMemProofProver::GenInitialTranscriptGen(
+    const Point& h2,
+    const Point& h3,
+    const Point& g2,
+    const Scalar& y,
+    const Scalar& z,
+    const Scalar& omega,
+    const Scalar& x
+) const
+{
+    CHashWriter transcript_gen(0, 0);
+    transcript_gen << h2 << h3 << g2 << y << z << omega << x;
+    return transcript_gen;
 }
 
 bool SetMemProofProver::Verify(
@@ -269,7 +286,8 @@ bool SetMemProofProver::Verify(
         verifier.AddPoint(LazyPoint(proof.S2, x));
         verifier.AddPoint(LazyPoint(h2, proof.mu.Negate()));
 
-        CHashWriter transcript_gen(0, 0);
+        CHashWriter transcript_gen =
+            GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
         size_t num_rounds = std::log2(n);
 
         auto xxi = ImpInnerProdArg::GenAllRoundXsXInvs<Mcl>(num_rounds, proof.Ls, proof.Rs, transcript_gen);

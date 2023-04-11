@@ -8,7 +8,7 @@ Points on the LHS of a equation are negated and added to the points on the RHS. 
 
 ## Line (19)
 
-On `PePoS` paper, the equation (19) is
+On the `PePoS` paper, the equation (19) is
 
 $h_2^{\mu}\mathbf{Y}^{\mathbf{l}} (\mathbf{h'})^\mathbf{r} = A_1 \cdot A_2^{\omega} \cdot S_2^x \cdot \mathbf{Y}^{-z \cdot \mathbf{1}^n} \cdot (\mathbf{h'})^{\omega z \cdot \mathbf{y}^n + z^2 \cdot \mathbf{1}^n}$
 
@@ -156,7 +156,7 @@ Now the sum is
 
 $\mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR} \omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} + u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}}$
 
-### 5. Adding $t \cdot c\_factor$ and Subtracting $a \cdot b \cdot c\_factor$
+### 5. Addition of $t \cdot c\_factor$ and Subtraction of $a \cdot b \cdot c\_factor$
 
 The next verification code adds and subtracts exponents of the $u$ generator.
 
@@ -182,7 +182,7 @@ $= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega +
 
 $= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - u^{a_1 \cdot b_1 \cdot c\_factor} - u^{a_2 \cdot b_2 \cdot c\_factor}$
 
-The 2nd and 3rd terms $u^{a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor + a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor}$ removes the $u$ point in the sum $u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}}$.
+The 2nd and 3rd terms $u^{a_1 \cdot b_2 \cdot x_1^2 \cdot c\_factor + a_2 \cdot b_1 \cdot x_1^{-2} \cdot c\_factor}$ removes the $u$ point from the sum $u^{a_1 b_2 \cdot c\_factor \cdot x_1^2 + a_2 b_1 \cdot c\_factor \cdot x_1^{-2}}$.
 
 The 1st and 4th terms are
 
@@ -200,9 +200,9 @@ Adding this to the sum removes the remaining $u$ terms, and the sum becomes
 
 $= \mathbf{Y}^{\mathbf{bL} + \mathbf{sL}x} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + G_1^{a_2 x_1^{-2}} + G_2^{a_1 x_1^2} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}}$
 
-### 6. Generating Exponents of Generator Vectors
+### 6. Generation of Generator Vector Exponents
 
-Now only the for-loop of the verification code remains unexplained. The loop calculates exponents of the `G` and `H` generator vectors.
+Now only the for-loop of the verification code remains unexplained. The loop calculates exponents of the $\mathbf{G}$ and $\mathbf{H}$ generator vectors.
 
 ```c++
 Scalar y_inv_pow(1);
@@ -279,7 +279,7 @@ Applying the 2nd line subtracting $z$, next the sum becomes
 
 $\mathbf{G}^{\mathbf{bL} + \mathbf{sL}x - z} \cdot \mathbf{h}^{\mathbf{bR}\omega + \mathbf{sR}x} + H_1^{b_2 x_1^2} + H_2^{b_1 \cdot y^{-1} \cdot x_1^{-2}} - G_1^{a_1} - G_2^{a_2}$
 
-On `PePoS` paper,
+On the `PePoS` paper,
 
 $l(x) = \mathbf{bL} - z \cdot \mathbf{1}^n + \mathbf{sL} \cdot x$
 

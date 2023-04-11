@@ -39,6 +39,16 @@ public:
 #ifndef BOOST_UNIT_TEST
 private:
 #endif
+    CHashWriter GenInitialTranscriptGen(
+        const Point& h2,
+        const Point& h3,
+        const Point& g2,
+        const Scalar& y,
+        const Scalar& z,
+        const Scalar& omega,
+        const Scalar& x
+    ) const;
+
     Scalar ComputeX(
         const Scalar& omega,
         const Scalar& y,
