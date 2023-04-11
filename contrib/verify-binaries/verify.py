@@ -97,7 +97,7 @@ def bool_from_env(key, default=False) -> bool:
 
 
 VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
-VERSION_EXAMPLE = "22.0-x86_64 or 0.21.0-rc2-osx"
+VERSION_EXAMPLE = "22.0-x86_64 or 23.1-rc1-darwin"
 
 def parse_version_string(version_str):
     parts = version_str.split('-')
@@ -530,7 +530,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
 
     # download binaries
     for _, binary_filename in hashes_to_verify:
-        log.info(f"downloading {binary_filename}")
+        log.info(f"downloading {binary_filename} to {WORKINGDIR}")
         success, output = download_with_wget(
             HOST1 + remote_dir + binary_filename, binary_filename)
 
