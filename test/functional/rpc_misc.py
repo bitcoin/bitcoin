@@ -66,6 +66,8 @@ class RpcMiscTest(BitcoinTestFramework):
         # Test logging RPC returns the logging categories in alphabetical order.
         sorted_logging_categories = sorted(node.logging())
         assert_equal(list(node.logging()), sorted_logging_categories)
+        for all_or_none_category in ["all", "none", "1", "0"]:
+            assert all_or_none_category not in sorted_logging_categories
 
         # Test logging help returns the logging categories string in alphabetical order.
         categories = ', '.join(sorted_logging_categories)
