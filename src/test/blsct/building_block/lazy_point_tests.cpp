@@ -6,7 +6,6 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/building_block/lazy_point.h>
 #include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(lazy_point_tests, BasicTestingSetup)
