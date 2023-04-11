@@ -123,12 +123,11 @@ class CreateWalletTest(BitcoinTestFramework):
         w7 = node.get_wallet_rpc('w7')
         assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 10)
 
-        # TODO: renable this when avoid reuse flag is added
-        # self.log.info('Test making a wallet with avoid reuse flag')
-        # self.nodes[0].createwallet('w8', False, False, '', True) # Use positional arguments to check for bug where avoid_reuse could not be set for wallets without needing them to be encrypted
-        # w8 = node.get_wallet_rpc('w8')
-        # assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 10)
-        # assert_equal(w8.getwalletinfo()["avoid_reuse"], True)
+        self.log.info('Test making a wallet with avoid reuse flag')
+        self.nodes[0].createwallet('w8', False, False, '', True) # Use positional arguments to check for bug where avoid_reuse could not be set for wallets without needing them to be encrypted
+        w8 = node.get_wallet_rpc('w8')
+        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 10)
+        assert_equal(w8.getwalletinfo()["avoid_reuse"], True)
 
         self.log.info('Using a passphrase with private keys disabled returns error')
         assert_raises_rpc_error(-4, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w9', disable_private_keys=True, passphrase='thisisapassphrase')
