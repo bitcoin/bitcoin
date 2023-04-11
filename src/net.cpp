@@ -153,7 +153,7 @@ uint16_t GetListenPort()
 }
 
 // find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
+bool GetLocal(CService& addr, const CNode& peer)
 {
     if (!fListen)
         return false;
@@ -165,7 +165,7 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
         for (const auto& entry : mapLocalHost)
         {
             int nScore = entry.second.nScore;
-            int nReachability = entry.first.GetReachabilityFrom(paddrPeer);
+            int nReachability = entry.first.GetReachabilityFrom(&peer.addr);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
                 addr = CService(entry.first, entry.second.nPort);
@@ -203,10 +203,10 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
 // Otherwise, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
-CService GetLocalAddress(const CNetAddr& addrPeer)
+CService GetLocalAddress(const CNode& peer)
 {
     CService addr;
-    if (GetLocal(addr, &addrPeer)) {
+    if (GetLocal(addr, peer)) {
         return addr;
     }
     return CService{CNetAddr(), GetListenPort()};
@@ -229,7 +229,7 @@ bool IsPeerAddrLocalGood(CNode *pnode)
 
 std::optional<CService> GetLocalAddrForPeer(CNode& node)
 {
-    CService addrLocal{GetLocalAddress(node.addr)};
+    CService addrLocal{GetLocalAddress(node)};
     if (gArgs.GetBoolArg("-addrmantest", false)) {
         // use IPv4 loopback during addrmantest
         addrLocal = CService(LookupNumeric("127.0.0.1", GetListenPort()));
