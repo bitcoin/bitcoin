@@ -411,7 +411,7 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
     // Set change address
     sendCoinsDialog.getCoinControl()->destChange = GetDestinationForKey(test.coinbaseKey.GetPubKey(), OutputType::LEGACY);
 
-    // Reject "save" PSBT dialog
+    // Time to reject "save" PSBT dialog ('SendCoins' locks the main thread until the dialog receives the event).
     QTimer timer;
     timer.setInterval(500);
     QObject::connect(&timer, &QTimer::timeout, [&](){
@@ -422,6 +422,7 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
                 button->setEnabled(true);
                 button->click();
                 timer.stop();
+                break;
             }
         }
     });
