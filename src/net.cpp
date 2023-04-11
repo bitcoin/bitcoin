@@ -165,7 +165,7 @@ bool GetLocal(CService& addr, const CNode& peer)
         for (const auto& entry : mapLocalHost)
         {
             int nScore = entry.second.nScore;
-            int nReachability = entry.first.GetReachabilityFrom(&peer.addr);
+            int nReachability = entry.first.GetReachabilityFrom(peer.addr);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
                 addr = CService(entry.first, entry.second.nPort);
