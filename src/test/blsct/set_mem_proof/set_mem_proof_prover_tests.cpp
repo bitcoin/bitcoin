@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_extend_ys)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_input)
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_input)
 {
     auto y1 = Point::MapToG1("y1", Endianness::Little);
     auto y2 = Point::MapToG1("y2", Endianness::Little);
@@ -102,6 +102,38 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_input)
     auto res = prover.Verify(Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, true);
+}
+
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_bad_input)
+{
+    auto y1 = Point::MapToG1("y1", Endianness::Little);
+    auto y2 = Point::MapToG1("y2", Endianness::Little);
+    auto y4 = Point::MapToG1("y4", Endianness::Little);
+
+    SetMemProofSetup setup;
+    Scalar m = Scalar::Rand();
+    Scalar f = Scalar::Rand();
+    auto sigma = setup.PedersenCommitment(m, f);
+
+    Points prove_Ys;
+    prove_Ys.Add(y1);
+    prove_Ys.Add(y2);
+    prove_Ys.Add(sigma);
+    prove_Ys.Add(y4);
+
+    auto y3 = Point::MapToG1("y3", Endianness::Little);
+    Points verify_Ys;
+    verify_Ys.Add(y1);
+    verify_Ys.Add(y2);
+    verify_Ys.Add(y3);
+    verify_Ys.Add(y4);
+
+    Scalar eta = Scalar::Rand();
+    SetMemProofProver prover;
+    auto proof = prover.Prove(prove_Ys, sigma, f, m, eta);
+    auto res = prover.Verify(verify_Ys, eta, proof);
+
+    BOOST_CHECK_EQUAL(res, false);
 }
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
