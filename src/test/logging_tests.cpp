@@ -110,6 +110,8 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo10: %s\n", "bar10");
     LogPrintfCategory(BCLog::VALIDATION, "foo11: %s\n", "bar11");
+    LogPrintfCategory(BCLog::ALL, "foo12: %s\n", "bar12");
+    LogPrintfCategory(BCLog::NONE, "foo13: %s\n", "bar13");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
@@ -123,6 +125,8 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
         "[net:warning] foo9: bar9",
         "[net:error] foo10: bar10",
         "[validation] foo11: bar11",
+        "[all] foo12: bar12",
+        "foo13: bar13",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
@@ -174,6 +178,9 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo5: %s\n", "bar5");
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo6: %s. This log level is the same as the global one but lower than the category-specific one, which takes precedence. \n", "bar6");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo7: %s\n", "bar7");
+    LogPrintLevel(BCLog::ALL, BCLog::Level::Info, "foo8: %s\n", "bar8");
+    LogPrintLevel(BCLog::NONE, BCLog::Level::Info, "foo9: %s\n", "bar9"); // no-op
+    LogPrintLevel(BCLog::NONE, BCLog::Level::Warning, "foo10: %s\n", "bar10"); // printed unconditionally
 
     std::vector<std::string> expected = {
         "[http:info] foo1: bar1",
@@ -181,6 +188,8 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
         "[rpc:error] foo4: bar4",
         "[net:warning] foo5: bar5",
         "[net:error] foo7: bar7",
+        "[all:info] foo8: bar8",
+        "[warning] foo10: bar10",
     };
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
