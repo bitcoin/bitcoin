@@ -48,12 +48,11 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  update-alternatives --install /usr/bin/clang++ clang++ "$(which clang++-12)" 100
-  update-alternatives --install /usr/bin/clang clang "$(which clang-12)" 100
-  mkdir -p "${BASE_SCRATCH_DIR}"/msan/build/
-  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-12.0.0 "${BASE_SCRATCH_DIR}"/msan/llvm-project
-  cd "${BASE_SCRATCH_DIR}"/msan/build/ && cmake -DLLVM_ENABLE_PROJECTS='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 ../llvm-project/llvm/
-  cd "${BASE_SCRATCH_DIR}"/msan/build/ && make "$MAKEJOBS" cxx
+  update-alternatives --install /usr/bin/clang++ clang++ "$(which clang++-16)" 100
+  update-alternatives --install /usr/bin/clang clang "$(which clang-16)" 100
+  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.1 "${BASE_SCRATCH_DIR}"/msan/llvm-project
+  cmake -B "${BASE_SCRATCH_DIR}"/msan/build/ -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF -S "${BASE_SCRATCH_DIR}"/msan/llvm-project/runtimes
+  make -C "${BASE_SCRATCH_DIR}"/msan/build/ "$MAKEJOBS"
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
