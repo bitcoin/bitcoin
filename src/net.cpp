@@ -164,6 +164,16 @@ bool GetLocal(CService& addr, const CNode& peer)
         LOCK(g_maplocalhost_mutex);
         for (const auto& entry : mapLocalHost)
         {
+            // For privacy reasons, don't advertise our privacy-network address
+            // to other networks and don't advertise our other-network address
+            // to privacy networks.
+            const Network our_net{entry.first.GetNetwork()};
+            const Network peers_net{peer.ConnectedThroughNetwork()};
+            if (our_net != peers_net &&
+                (our_net == NET_ONION || our_net == NET_I2P ||
+                 peers_net == NET_ONION || peers_net == NET_I2P)) {
+                continue;
+            }
             int nScore = entry.second.nScore;
             int nReachability = entry.first.GetReachabilityFrom(peer.addr);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
