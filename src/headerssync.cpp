@@ -26,11 +26,11 @@ constexpr size_t REDOWNLOAD_BUFFER_SIZE{13959}; // 13959/584 = ~23.9 commitments
 
 HeadersSyncState::HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
         const CBlockIndex* chain_start, const arith_uint256& minimum_required_work) :
+    m_commit_offset(GetRand<unsigned>(HEADER_COMMITMENT_PERIOD)),
     m_id(id), m_consensus_params(consensus_params),
     m_chain_start(chain_start),
     m_minimum_required_work(minimum_required_work),
     m_current_chain_work(chain_start->nChainWork),
-    m_commit_offset(GetRand<unsigned>(HEADER_COMMITMENT_PERIOD)),
     // SYSCOIN
     m_last_header_received(m_chain_start->GetPureHeader()),
     m_current_height(chain_start->nHeight)
