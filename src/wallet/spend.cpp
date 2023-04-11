@@ -356,12 +356,6 @@ CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl*
     return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, params);
 }
 
-CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl)
-{
-    LOCK(wallet.cs_wallet);
-    return AvailableCoins(wallet, coinControl).GetTotalAmount();
-}
-
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
 {
     AssertLockHeld(wallet.cs_wallet);
