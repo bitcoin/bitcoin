@@ -279,7 +279,7 @@ bool SetMemProofProver::Verify(
         verifier.AddPoint(LazyPoint(proof.T2, x.Square())); // T2^(x^2)
     }
 
-    //////// (19): details are in ./verifying_equations.md
+    //////// (19): refer to ./verifying_equations.md for the details
     {
         verifier.AddPoint(LazyPoint(proof.A1, one()));
         verifier.AddPoint(LazyPoint(proof.A2, proof.omega));
