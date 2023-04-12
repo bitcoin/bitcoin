@@ -93,9 +93,12 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
+        printf("In Elements.Serialize. Size=%lu\n", m_vec.size());
         ::WriteCompactSize(s, m_vec.size());
         for (auto& it : m_vec) {
-            ::Serialize(s, it.GetVch());
+            printf("Serializing 1 MclG1Point\n");
+            ::Serialize(s, it); //.GetVch());
+            //::Serialize(s, it.GetVch());
         }
     }
 

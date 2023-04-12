@@ -14,6 +14,9 @@
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 
+#include <iostream>
+#include <util/strencodings.h>  // FOR TESTING. DROP THIS!!!
+
 class MclG1Point
 {
 public:
@@ -57,6 +60,7 @@ public:
     void Serialize(Stream& s) const
     {
         auto vec = GetVch();
+        printf("In MclG1Point.Serialize\n");
         s.write(MakeByteSpan(vec));
     }
 
