@@ -17,20 +17,19 @@ using Point = Mcl::Point;
 
 BOOST_AUTO_TEST_CASE(test_size_of_hs)
 {
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
     BOOST_CHECK(setup.N == setup.hs.Size());
 }
 
 BOOST_AUTO_TEST_CASE(test_g)
 {
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
     BOOST_CHECK(setup.g == Point::GetBasePoint());
 }
 
 BOOST_AUTO_TEST_CASE(test_all_generators_differ)
 {
-    SetMemProofSetup setup;
-
+    auto setup = SetMemProofSetup::Get();
     BOOST_CHECK(setup.g != setup.h);
 
     Point prev_p = setup.h;
@@ -42,7 +41,7 @@ BOOST_AUTO_TEST_CASE(test_all_generators_differ)
 
 BOOST_AUTO_TEST_CASE(test_hash)
 {
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
 
     // same msg and index should hash to the same scalar value
     {
@@ -68,7 +67,7 @@ BOOST_AUTO_TEST_CASE(test_hash)
 
 BOOST_AUTO_TEST_CASE(test_h1_to_h7)
 {
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
 
     std::vector<uint8_t> msg {1,2,3};
 

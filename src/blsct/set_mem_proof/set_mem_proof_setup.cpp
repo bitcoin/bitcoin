@@ -8,6 +8,18 @@ using Scalar = Mcl::Scalar;
 using Point = Mcl::Point;
 using Points = Elements<Point>;
 
+const SetMemProofSetup& SetMemProofSetup::Get()
+{
+    static SetMemProofSetup* x = nullptr;
+    if (x == nullptr) {
+        Point g = Point::GetBasePoint();
+        Point h = m_deriver.Derive(g, 0);
+        Points hs = GenGenerators(h, N);
+        x = new SetMemProofSetup(g, h, hs);
+    }
+    return *x;
+}
+
 Points SetMemProofSetup::GenGenerators(const Point& base_point, const size_t& size)
 {
     Points ps;

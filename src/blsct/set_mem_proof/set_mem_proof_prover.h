@@ -20,26 +20,26 @@ public:
     using Scalars = Elements<Scalar>;
     using Points = Elements<Point>;
 
-    SetMemProof Prove(
+    static SetMemProof Prove(
+        const SetMemProofSetup& setup,
         const Points& Ys, // N Pedersen Commitment Y^n
         const Point& sigma,  // Commitment of the set member
         const Scalar& f,  // Mask f used for the commitment of the set member
         const Scalar& m,  // Message used for the commitment of the set member
         const Scalar& eta  // Entropy
-    ) const;
+    );
 
-    const SetMemProofSetup& GenSetup() const;
-
-    bool Verify(
+    static bool Verify(
+        const SetMemProofSetup& setup,
         const Points& Ys,  // Same as Ys in Prove()
         const Scalar& eta,  // Same as eta in Prove()
         const SetMemProof& proof  // The output of Prove()
-    ) const;
+    );
 
 #ifndef BOOST_UNIT_TEST
 private:
 #endif
-    CHashWriter GenInitialTranscriptGen(
+    static CHashWriter GenInitialTranscriptGen(
         const Point& h2,
         const Point& h3,
         const Point& g2,
@@ -47,17 +47,18 @@ private:
         const Scalar& z,
         const Scalar& omega,
         const Scalar& x
-    ) const;
+    );
 
-    Scalar ComputeX(
+    static Scalar ComputeX(
+        const SetMemProofSetup& setup,
         const Scalar& omega,
         const Scalar& y,
         const Scalar& z,
         const Point& T1,
         const Point& T2
-    ) const;
+    );
 
-    std::vector<uint8_t> ComputeStr(
+    static std::vector<uint8_t> ComputeStr(
         Points Ys,
         Point A1,
         Point A2,
@@ -66,15 +67,15 @@ private:
         Point S3,
         Point phi,
         Scalar eta
-    ) const;
+    );
 
-    Points ExtendYs(
+    static Points ExtendYs(
+        const SetMemProofSetup& setup,
         const Points& Ys_src,
         const size_t& new_size
-    ) const;
+    );
 
-    const SetMemProofSetup& setup = GenSetup();
-    static const Scalar& one();
+    static const Scalar& One();
 };
 
 #endif // NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROVER_H

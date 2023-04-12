@@ -20,46 +20,43 @@ BOOST_FIXTURE_TEST_SUITE(set_mem_proof_prover_tests, BasicTestingSetup)
 using Point = Mcl::Point;
 using Scalar = Mcl::Scalar;
 using Points = Elements<Point>;
+using Prover = SetMemProofProver;
 
 BOOST_AUTO_TEST_CASE(test_extend_ys)
 {
+    auto setup = SetMemProofSetup::Get();
     {
-        SetMemProofProver prover;
         Points ys;
-        auto ys2 = prover.ExtendYs(ys, 1);
+        auto ys2 = Prover::ExtendYs(setup, ys, 1);
         BOOST_CHECK_EQUAL(ys2.Size(), 1);
     }
     {
-        SetMemProofProver prover;
         Points ys;
-        auto ys2 = prover.ExtendYs(ys, 2);
+        auto ys2 = Prover::ExtendYs(setup, ys, 2);
         BOOST_CHECK_EQUAL(ys2.Size(), 2);
     }
     {
-        SetMemProofProver prover;
         Points ys;
         ys.Add(Point::GetBasePoint());
-        auto ys2 = prover.ExtendYs(ys, 1);
+        auto ys2 = Prover::ExtendYs(setup, ys, 1);
         BOOST_CHECK_EQUAL(ys2.Size(), 1);
 
         BOOST_CHECK(ys2[0] == ys[0]);
     }
     {
-        SetMemProofProver prover;
         Points ys;
         ys.Add(Point::GetBasePoint());
-        auto ys2 = prover.ExtendYs(ys, 2);
+        auto ys2 = Prover::ExtendYs(setup, ys, 2);
         BOOST_CHECK_EQUAL(ys2.Size(), 2);
 
         BOOST_CHECK(ys2[0] == ys[0]);
         BOOST_CHECK(ys2[0] != ys2[1]);
     }
     {
-        SetMemProofProver prover;
         Points ys;
         ys.Add(Point::GetBasePoint());
         size_t new_size = 64;
-        auto ys2 = prover.ExtendYs(ys, new_size);
+        auto ys2 = Prover::ExtendYs(setup, ys, new_size);
         BOOST_CHECK_EQUAL(ys2.Size(), new_size);
 
         BOOST_CHECK(ys2[0] == ys[0]);
@@ -72,10 +69,9 @@ BOOST_AUTO_TEST_CASE(test_extend_ys)
         }
     }
     {
-        SetMemProofProver prover;
         Points ys;
         ys.Add(Point::GetBasePoint());
-        BOOST_CHECK_THROW(prover.ExtendYs(ys, 0), std::runtime_error);
+        BOOST_CHECK_THROW(Prover::ExtendYs(setup, ys, 0), std::runtime_error);
     }
 }
 
@@ -85,7 +81,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_input)
     auto y2 = Point::MapToG1("y2", Endianness::Little);
     auto y4 = Point::MapToG1("y4", Endianness::Little);
 
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
     auto sigma = setup.PedersenCommitment(m, f);
@@ -97,9 +93,8 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_input)
     Ys.Add(y4);
 
     Scalar eta = Scalar::Rand();
-    SetMemProofProver prover;
-    auto proof = prover.Prove(Ys, sigma, f, m, eta);
-    auto res = prover.Verify(Ys, eta, proof);
+    auto proof = Prover::Prove(setup, Ys, sigma, f, m, eta);
+    auto res = Prover::Verify(setup, Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, true);
 }
@@ -110,7 +105,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_bad_input)
     auto y2 = Point::MapToG1("y2", Endianness::Little);
     auto y4 = Point::MapToG1("y4", Endianness::Little);
 
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
     auto sigma = setup.PedersenCommitment(m, f);
@@ -129,16 +124,15 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_bad_input)
     verify_Ys.Add(y4);
 
     Scalar eta = Scalar::Rand();
-    SetMemProofProver prover;
-    auto proof = prover.Prove(prove_Ys, sigma, f, m, eta);
-    auto res = prover.Verify(verify_Ys, eta, proof);
+    auto proof = Prover::Prove(setup, prove_Ys, sigma, f, m, eta);
+    auto res = Prover::Verify(setup, verify_Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, false);
 }
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 {
-    SetMemProofSetup setup;
+    auto setup = SetMemProofSetup::Get();
     const size_t NUM_INPUTS = setup.N;
     Points Ys;
     Scalar m = Scalar::Rand();
@@ -157,9 +151,8 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
     }
 
     Scalar eta = Scalar::Rand();
-    SetMemProofProver prover;
-    auto proof = prover.Prove(Ys, sigma, f, m, eta);
-    auto res = prover.Verify(Ys, eta, proof);
+    auto proof = Prover::Prove(setup, Ys, sigma, f, m, eta);
+    auto res = Prover::Verify(setup, Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, true);
 }

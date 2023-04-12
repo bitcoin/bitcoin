@@ -18,7 +18,8 @@ using Point = SetMemProofProver::Point;
 using Scalars = SetMemProofProver::Scalars;
 using Points = SetMemProofProver::Points;
 
-const Scalar& SetMemProofProver::one() {
+const Scalar& SetMemProofProver::One()
+{
     static Scalar* x = nullptr;
     if (x == nullptr) {
         x = new Scalar(1);
@@ -26,20 +27,14 @@ const Scalar& SetMemProofProver::one() {
     return *x;
 }
 
-const SetMemProofSetup& SetMemProofProver::GenSetup() const
-{
-    static SetMemProofSetup setup;
-    return setup;
-}
-
 Scalar SetMemProofProver::ComputeX(
+    const SetMemProofSetup& setup,
     const Scalar& omega,
     const Scalar& y,
     const Scalar& z,
     const Point& T1,
     const Point& T2
-) const
-{
+) {
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
     st << omega << y << z << T1 << T2;
     auto vec = blsct::Common::CDataSteamToVector(st);
@@ -56,8 +51,7 @@ std::vector<uint8_t> SetMemProofProver::ComputeStr(
     Point S3,
     Point phi,
     Scalar eta
-) const
-{
+) {
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
     st << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
     std::vector<uint8_t> str = blsct::Common::CDataSteamToVector(st);
@@ -65,10 +59,10 @@ std::vector<uint8_t> SetMemProofProver::ComputeStr(
 }
 
 Points SetMemProofProver::ExtendYs(
+    const SetMemProofSetup& setup,
     const Points& Ys_src,
     const size_t& new_size
-) const
-{
+) {
     if (Ys_src.Size() > new_size) {
         throw std::runtime_error("Not expecting new_size < current_size");
     }
@@ -90,18 +84,18 @@ Points SetMemProofProver::ExtendYs(
 }
 
 SetMemProof SetMemProofProver::Prove(
+    const SetMemProofSetup& setup,
     const Points& Ys_src,
     const Point& sigma,
     const Scalar& f,
     const Scalar& m,
     const Scalar& eta
-) const
-{
+) {
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
         throw std::runtime_error("# of commitments exceeds the setup maximum");
     }
-    Points Ys = ExtendYs(Ys_src, n);
+    Points Ys = ExtendYs(setup, Ys_src, n);
 
     // Prepare Index
     Scalars bL;
@@ -172,7 +166,7 @@ SetMemProof SetMemProofProver::Prove(
     Point T2 = setup.g * t2 + setup.h * tau_2;
 
     // Challenge 2
-    Scalar x = ComputeX(omega, y, z, T1, T2);
+    Scalar x = ComputeX(setup, omega, y, z, T1, T2);
 
     // Response
     Scalar tau_x = tau_1 * x + tau_2 * x.Square();
@@ -221,19 +215,18 @@ CHashWriter SetMemProofProver::GenInitialTranscriptGen(
     const Scalar& z,
     const Scalar& omega,
     const Scalar& x
-) const
-{
+) {
     CHashWriter transcript_gen(0, 0);
     transcript_gen << h2 << h3 << g2 << y << z << omega << x;
     return transcript_gen;
 }
 
 bool SetMemProofProver::Verify(
+    const SetMemProofSetup& setup,
     const Points& Ys,
     const Scalar& eta,
     const SetMemProof& proof
-) const
-{
+) {
     using LazyPoint = LazyPoint<Mcl>;
 
     size_t n = Ys.Size();
@@ -253,7 +246,7 @@ bool SetMemProofProver::Verify(
     Scalars y_inv_to_n = Scalars::FirstNPow(y_inv, n);
     Scalar z_sq = z.Square();
     Points h_primes = setup.hs.To(n) * y_inv_to_n;
-    Scalar x = ComputeX(omega, y, z, proof.T1, proof.T2);
+    Scalar x = ComputeX(setup, omega, y, z, proof.T1, proof.T2);
 
     G_H_Gi_Hi_ZeroVerifier<Mcl> verifier(n);
 
@@ -281,7 +274,7 @@ bool SetMemProofProver::Verify(
 
     //////// (19): refer to ./verifying_equations.md for the details
     {
-        verifier.AddPoint(LazyPoint(proof.A1, one()));
+        verifier.AddPoint(LazyPoint(proof.A1, One()));
         verifier.AddPoint(LazyPoint(proof.A2, proof.omega));
         verifier.AddPoint(LazyPoint(proof.S2, x));
         verifier.AddPoint(LazyPoint(h2, proof.mu.Negate()));
@@ -319,7 +312,7 @@ bool SetMemProofProver::Verify(
         verifier.AddNegativeG(proof.z_tau);
 
         // RHS
-        verifier.AddPoint(LazyPoint(proof.S1, one()));
+        verifier.AddPoint(LazyPoint(proof.S1, One()));
         verifier.AddPoint(LazyPoint(proof.A1, x));
     }
 
@@ -330,7 +323,7 @@ bool SetMemProofProver::Verify(
         verifier.AddPoint(LazyPoint(g2, proof.z_tau.Negate()));
 
         // RHS
-        verifier.AddPoint(LazyPoint(proof.S3, one()));
+        verifier.AddPoint(LazyPoint(proof.S3, One()));
         verifier.AddPoint(LazyPoint(proof.phi, x));
     }
 

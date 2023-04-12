@@ -18,12 +18,14 @@ public:
     using Scalars = Elements<Scalar>;
     using Points = Elements<Point>;
 
-    const size_t N = 1ull << 10;   // N must be a power of 2
+    static inline const size_t N = 1ull << 10;   // N must be a power of 2
+
+    static const SetMemProofSetup& Get();
 
     // Generators
-    const Point g = Point::GetBasePoint();
-    const Point h = m_deriver.Derive(g, 0);
-    const Points hs = GenGenerators(h, N);
+    const Point g;
+    const Point h;
+    const Points hs;
 
     // Hash functions
     Scalar Hash(const std::vector<uint8_t>& msg, uint8_t index) const;
@@ -41,6 +43,8 @@ public:
 #ifndef BOOST_UNIT_TEST
 private:
 #endif
+    SetMemProofSetup(const Point& g, const Point& h, const Points& hs): g{g}, h{h}, hs{hs} {}
+
     inline static const GeneratorDeriver m_deriver = GeneratorDeriver("set_membership_proof");
     static Points GenGenerators(const Point& base_point, const size_t& size);
 };
