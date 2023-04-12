@@ -138,7 +138,7 @@ void WalletModel::updateTransaction()
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label,
-        bool isMine, const QString &purpose, int status)
+        bool isMine, wallet::AddressPurpose purpose, int status)
 {
     if(addressTableModel)
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
@@ -280,11 +280,11 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
                 if (!m_wallet->getAddress(
                      dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr))
                 {
-                    m_wallet->setAddressBook(dest, strLabel, "send");
+                    m_wallet->setAddressBook(dest, strLabel, wallet::AddressPurpose::SEND);
                 }
                 else if (name != strLabel)
                 {
-                    m_wallet->setAddressBook(dest, strLabel, ""); // "" means don't change purpose
+                    m_wallet->setAddressBook(dest, strLabel, {}); // {} means don't change purpose
                 }
             }
         }
@@ -377,18 +377,17 @@ static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel)
 
 static void NotifyAddressBookChanged(WalletModel *walletmodel,
         const CTxDestination &address, const std::string &label, bool isMine,
-        const std::string &purpose, ChangeType status)
+        wallet::AddressPurpose purpose, ChangeType status)
 {
     QString strAddress = QString::fromStdString(EncodeDestination(address));
     QString strLabel = QString::fromStdString(label);
-    QString strPurpose = QString::fromStdString(purpose);
 
-    qDebug() << "NotifyAddressBookChanged: " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + strPurpose + " status=" + QString::number(status);
+    qDebug() << "NotifyAddressBookChanged: " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + QString::number(static_cast<uint8_t>(purpose)) + " status=" + QString::number(status);
     bool invoked = QMetaObject::invokeMethod(walletmodel, "updateAddressBook",
                               Q_ARG(QString, strAddress),
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),
-                              Q_ARG(QString, strPurpose),
+                              Q_ARG(wallet::AddressPurpose, purpose),
                               Q_ARG(int, status));
     assert(invoked);
 }
@@ -613,5 +612,17 @@ uint256 WalletModel::getLastBlockProcessed() const
 
 CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
 {
-    return control && control->HasSelected() ? wallet().getAvailableBalance(*control) : getCachedBalance().balance;
+    // No selected coins, return the cached balance
+    if (!control || !control->HasSelected()) {
+        const interfaces::WalletBalances& balances = getCachedBalance();
+        CAmount available_balance = balances.balance;
+        // if wallet private keys are disabled, this is a watch-only wallet
+        // so, let's include the watch-only balance.
+        if (balances.have_watch_only && m_wallet->privateKeysDisabled()) {
+            available_balance += balances.watch_only_balance;
+        }
+        return available_balance;
+    }
+    // Fetch balance from the wallet, taking into account the selected coins
+    return wallet().getAvailableBalance(*control);
 }

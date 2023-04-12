@@ -52,13 +52,6 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
-    {WALLET_FLAG_AVOID_REUSE,
-        "You need to rescan the blockchain in order to correctly mark used "
-        "destinations in the past. Until this is done, some destinations may "
-        "be considered unused, even if the opposite is the case."
-    },
-};
 
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 {
@@ -1229,7 +1222,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                         // (e.g. it wasn't generated on this node or we're restoring from backup)
                         // add it to the address book for proper transaction accounting
                         if (!*dest.internal && !FindAddressBookEntry(dest.dest, /* allow_change= */ false)) {
-                            SetAddressBook(dest.dest, "", "receive");
+                            SetAddressBook(dest.dest, "", AddressPurpose::RECEIVE);
                         }
                     }
                 }
@@ -1777,7 +1770,7 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
             CTxDestination dest;
             ExtractDestination(script, dest);
             if (IsValidDestination(dest)) {
-                SetAddressBookWithDB(batch, dest, label, "receive");
+                SetAddressBookWithDB(batch, dest, label, AddressPurpose::RECEIVE);
             }
         }
     }
@@ -2400,35 +2393,40 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     return DBErrors::LOAD_OK;
 }
 
-bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
+bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& new_purpose)
 {
     bool fUpdated = false;
     bool is_mine;
+    std::optional<AddressPurpose> purpose;
     {
         LOCK(cs_wallet);
         std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
         fUpdated = (mi != m_address_book.end() && !mi->second.IsChange());
         m_address_book[address].SetLabel(strName);
-        if (!strPurpose.empty()) /* update purpose only if requested */
-            m_address_book[address].purpose = strPurpose;
         is_mine = IsMine(address) != ISMINE_NO;
+        if (new_purpose) { /* update purpose only if requested */
+            purpose = m_address_book[address].purpose = new_purpose;
+        } else {
+            purpose = m_address_book[address].purpose;
+        }
     }
+    // In very old wallets, address purpose may not be recorded so we derive it from IsMine
     NotifyAddressBookChanged(address, strName, is_mine,
-                             strPurpose, (fUpdated ? CT_UPDATED : CT_NEW));
-    if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose))
+                             purpose.value_or(is_mine ? AddressPurpose::RECEIVE : AddressPurpose::SEND),
+                             (fUpdated ? CT_UPDATED : CT_NEW));
+    if (new_purpose && !batch.WritePurpose(EncodeDestination(address), PurposeToString(*new_purpose)))
         return false;
     return batch.WriteName(EncodeDestination(address), strName);
 }
 
-bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
+bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& purpose)
 {
     WalletBatch batch(GetDatabase());
-    return SetAddressBookWithDB(batch, address, strName, strPurpose);
+    return SetAddressBookWithDB(batch, address, strName, purpose);
 }
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
-    bool is_mine;
     WalletBatch batch(GetDatabase());
     {
         LOCK(cs_wallet);
@@ -2446,10 +2444,9 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
             batch.EraseDestData(strAddress, item.first);
         }
         m_address_book.erase(address);
-        is_mine = IsMine(address) != ISMINE_NO;
     }
 
-    NotifyAddressBookChanged(address, "", is_mine, "", CT_DELETED);
+    NotifyAddressBookChanged(address, "", /*is_mine=*/false, AddressPurpose::SEND, CT_DELETED);
 
     batch.ErasePurpose(EncodeDestination(address));
     return batch.EraseName(EncodeDestination(address));
@@ -2503,7 +2500,7 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
 
     auto op_dest = spk_man->GetNewDestination(type);
     if (op_dest) {
-        SetAddressBook(*op_dest, label, "receive");
+        SetAddressBook(*op_dest, label, AddressPurpose::RECEIVE);
     }
 
     return op_dest;
@@ -2553,7 +2550,7 @@ void CWallet::ForEachAddrBookEntry(const ListAddrBookFunc& func) const
     AssertLockHeld(cs_wallet);
     for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book) {
         const auto& entry = item.second;
-        func(item.first, entry.GetLabel(), entry.purpose, entry.IsChange());
+        func(item.first, entry.GetLabel(), entry.IsChange(), entry.purpose);
     }
 }
 
@@ -2562,7 +2559,7 @@ std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<A
     AssertLockHeld(cs_wallet);
     std::vector<CTxDestination> result;
     AddrBookFilter filter = _filter ? *_filter : AddrBookFilter();
-    ForEachAddrBookEntry([&result, &filter](const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change) {
+    ForEachAddrBookEntry([&result, &filter](const CTxDestination& dest, const std::string& label, bool is_change, const std::optional<AddressPurpose>& purpose) {
         // Filter by change
         if (filter.ignore_change && is_change) return;
         // Filter by label
@@ -2573,14 +2570,14 @@ std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<A
     return result;
 }
 
-std::set<std::string> CWallet::ListAddrBookLabels(const std::string& purpose) const
+std::set<std::string> CWallet::ListAddrBookLabels(const std::optional<AddressPurpose> purpose) const
 {
     AssertLockHeld(cs_wallet);
     std::set<std::string> label_set;
     ForEachAddrBookEntry([&](const CTxDestination& _dest, const std::string& _label,
-                             const std::string& _purpose, bool _is_change) {
+                             bool _is_change, const std::optional<AddressPurpose>& _purpose) {
         if (_is_change) return;
-        if (purpose.empty() || _purpose == purpose) {
+        if (!purpose || purpose == _purpose) {
             label_set.insert(_label);
         }
     });
@@ -3792,7 +3789,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
             for (const auto& script : script_pub_keys) {
                 CTxDestination dest;
                 if (ExtractDestination(script, dest)) {
-                    SetAddressBook(dest, label, "receive");
+                    SetAddressBook(dest, label, AddressPurpose::RECEIVE);
                 }
             }
         }
@@ -3978,7 +3975,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     std::vector<CTxDestination> dests_to_delete;
     for (const auto& addr_pair : m_address_book) {
         // Labels applied to receiving addresses should go based on IsMine
-        if (addr_pair.second.purpose == "receive") {
+        if (addr_pair.second.purpose == AddressPurpose::RECEIVE) {
             if (!IsMine(addr_pair.first)) {
                 // Check the address book data is the watchonly wallet's
                 if (data.watchonly_wallet) {
@@ -3986,10 +3983,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                     if (data.watchonly_wallet->IsMine(addr_pair.first)) {
                         // Add to the watchonly. Preserve the labels, purpose, and change-ness
                         std::string label = addr_pair.second.GetLabel();
-                        std::string purpose = addr_pair.second.purpose;
-                        if (!purpose.empty()) {
-                            data.watchonly_wallet->m_address_book[addr_pair.first].purpose = purpose;
-                        }
+                        data.watchonly_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
                         if (!addr_pair.second.IsChange()) {
                             data.watchonly_wallet->m_address_book[addr_pair.first].SetLabel(label);
                         }
@@ -4002,10 +3996,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                     if (data.solvable_wallet->IsMine(addr_pair.first)) {
                         // Add to the solvable. Preserve the labels, purpose, and change-ness
                         std::string label = addr_pair.second.GetLabel();
-                        std::string purpose = addr_pair.second.purpose;
-                        if (!purpose.empty()) {
-                            data.solvable_wallet->m_address_book[addr_pair.first].purpose = purpose;
-                        }
+                        data.solvable_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
                         if (!addr_pair.second.IsChange()) {
                             data.solvable_wallet->m_address_book[addr_pair.first].SetLabel(label);
                         }
@@ -4023,10 +4014,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 LOCK(data.watchonly_wallet->cs_wallet);
                 // Add to the watchonly. Preserve the labels, purpose, and change-ness
                 std::string label = addr_pair.second.GetLabel();
-                std::string purpose = addr_pair.second.purpose;
-                if (!purpose.empty()) {
-                    data.watchonly_wallet->m_address_book[addr_pair.first].purpose = purpose;
-                }
+                data.watchonly_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
                 if (!addr_pair.second.IsChange()) {
                     data.watchonly_wallet->m_address_book[addr_pair.first].SetLabel(label);
                 }
@@ -4036,10 +4024,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 LOCK(data.solvable_wallet->cs_wallet);
                 // Add to the solvable. Preserve the labels, purpose, and change-ness
                 std::string label = addr_pair.second.GetLabel();
-                std::string purpose = addr_pair.second.purpose;
-                if (!purpose.empty()) {
-                    data.solvable_wallet->m_address_book[addr_pair.first].purpose = purpose;
-                }
+                data.solvable_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
                 if (!addr_pair.second.IsChange()) {
                     data.solvable_wallet->m_address_book[addr_pair.first].SetLabel(label);
                 }
@@ -4054,10 +4039,9 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         WalletBatch batch{wallet.GetDatabase()};
         for (const auto& [destination, addr_book_data] : wallet.m_address_book) {
             auto address{EncodeDestination(destination)};
-            auto purpose{addr_book_data.purpose};
             auto label{addr_book_data.GetLabel()};
             // don't bother writing default values (unknown purpose, empty label)
-            if (purpose != "unknown") batch.WritePurpose(address, purpose);
+            if (addr_book_data.purpose) batch.WritePurpose(address, PurposeToString(*addr_book_data.purpose));
             if (!label.empty()) batch.WriteName(address, label);
         }
     };

@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <interfaces/wallet.h>
 #include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -145,8 +146,6 @@ static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
     {"external_signer", WALLET_FLAG_EXTERNAL_SIGNER}
 };
 
-extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
-
 /** A wrapper to reserve an address from a wallet
  *
  * ReserveDestination is used to reserve an address.
@@ -200,27 +199,63 @@ public:
     void KeepDestination();
 };
 
-/** Address book data */
-class CAddressBookData
+/**
+ * Address book data.
+ */
+struct CAddressBookData
 {
-private:
-    bool m_change{true};
-    std::string m_label;
-public:
-    std::string purpose;
+    /**
+     * Address label which is always nullopt for change addresses. For sending
+     * and receiving addresses, it will be set to an arbitrary label string
+     * provided by the user, or to "", which is the default label. The presence
+     * or absence of a label is used to distinguish change addresses from
+     * non-change addresses by wallet transaction listing and fee bumping code.
+     */
+    std::optional<std::string> label;
 
-    CAddressBookData() : purpose("unknown") {}
+    /**
+     * Address purpose which was originally recorded for payment protocol
+     * support but now serves as a cached IsMine value. Wallet code should
+     * not rely on this field being set.
+     */
+    std::optional<AddressPurpose> purpose;
 
+    /**
+     * Additional address metadata map that can currently hold two types of keys:
+     *
+     *   "used" keys with values always set to "1" or "p" if present. This is set on
+     *       IsMine addresses that have already been spent from if the
+     *       avoid_reuse option is enabled
+     *
+     *   "rr##" keys where ## is a decimal number, with serialized
+     *       RecentRequestEntry objects as values
+     */
     typedef std::map<std::string, std::string> StringMap;
     StringMap destdata;
 
-    bool IsChange() const { return m_change; }
-    const std::string& GetLabel() const { return m_label; }
-    void SetLabel(const std::string& label) {
-        m_change = false;
-        m_label = label;
-    }
+    /** Accessor methods. */
+    bool IsChange() const { return !label.has_value(); }
+    std::string GetLabel() const { return label ? *label : std::string{}; }
+    void SetLabel(std::string name) { label = std::move(name); }
 };
+
+inline std::string PurposeToString(AddressPurpose p)
+{
+    switch(p) {
+    case AddressPurpose::RECEIVE: return "receive";
+    case AddressPurpose::SEND: return "send";
+    case AddressPurpose::REFUND: return "refund";
+    } // no default case so the compiler will warn when a new enum as added
+    assert(false);
+}
+
+inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)
+{
+    if (s == "receive") return AddressPurpose::RECEIVE;
+    else if (s == "send") return AddressPurpose::SEND;
+    else if (s == "refund") return AddressPurpose::REFUND;
+    return {};
+}
 
 struct CRecipient
 {
@@ -300,7 +335,7 @@ private:
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
 
-    bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
+    bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& strPurpose);
 
     //! Unsets a wallet flag and saves it to disk
     void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
@@ -664,13 +699,13 @@ public:
     /**
      * Retrieve all the known labels in the address book
      */
-    std::set<std::string> ListAddrBookLabels(const std::string& purpose) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::set<std::string> ListAddrBookLabels(const std::optional<AddressPurpose> purpose) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Walk-through the address book entries.
      * Stops when the provided 'ListAddrBookFunc' returns false.
      */
-    using ListAddrBookFunc = std::function<void(const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change)>;
+    using ListAddrBookFunc = std::function<void(const CTxDestination& dest, const std::string& label, bool is_change, const std::optional<AddressPurpose> purpose)>;
     void ForEachAddrBookEntry(const ListAddrBookFunc& func) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
@@ -700,7 +735,7 @@ public:
     DBErrors LoadWallet();
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
+    bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
 
@@ -739,7 +774,7 @@ public:
      */
     boost::signals2::signal<void(const CTxDestination& address,
                                  const std::string& label, bool isMine,
-                                 const std::string& purpose, ChangeType status)>
+                                 AddressPurpose purpose, ChangeType status)>
         NotifyAddressBookChanged;
 
     /**

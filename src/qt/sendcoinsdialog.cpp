@@ -403,7 +403,7 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << psbtx;
     GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
-    QMessageBox msgBox;
+    QMessageBox msgBox(this);
     //: Caption of "PSBT has been copied" messagebox
     msgBox.setText(tr("Unsigned Transaction", "PSBT copied"));
     msgBox.setInformativeText(tr("The PSBT has been copied to the clipboard. You can also save it."));
@@ -791,8 +791,13 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     // Include watch-only for wallets without private key
     m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner();
 
+    // Same behavior as send: if we have selected coins, only obtain their available balance.
+    // Copy to avoid modifying the member's data.
+    CCoinControl coin_control = *m_coin_control;
+    coin_control.m_allow_other_inputs = !coin_control.HasSelected();
+
     // Calculate available amount to send.
-    CAmount amount = model->getAvailableBalance(m_coin_control.get());
+    CAmount amount = model->getAvailableBalance(&coin_control);
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry* e = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if (e && !e->isHidden() && e != entry) {

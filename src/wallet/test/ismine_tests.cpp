@@ -8,7 +8,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <test/util/setup_common.h>
-#include <wallet/ismine.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>

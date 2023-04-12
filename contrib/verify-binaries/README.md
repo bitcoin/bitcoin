@@ -42,47 +42,47 @@ See the `Config` object for various options.
 
 Validate releases with default settings:
 ```sh
-./contrib/verifybinaries/verify.py pub 22.0
-./contrib/verifybinaries/verify.py pub 22.0-rc2
+./contrib/verify-binaries/verify.py pub 22.0
+./contrib/verify-binaries/verify.py pub 22.0-rc3
 ```
 
 Get JSON output and don't prompt for user input (no auto key import):
 
 ```sh
-./contrib/verifybinaries/verify.py --json pub 22.0-x86
+./contrib/verify-binaries/verify.py --json pub 22.0-x86
 ```
 
 Rely only on local GPG state and manually specified keys, while requiring a
 threshold of at least 10 trusted signatures:
 ```sh
-./contrib/verifybinaries/verify.py \
+./contrib/verify-binaries/verify.py \
     --trusted-keys 74E2DEF5D77260B98BC19438099BAD163C70FBFA,9D3CC86A72F8494342EA5FD10A41BDC3F4FAFF1C \
     --min-good-sigs 10 pub 22.0-x86
 ```
 
-If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
+If you only want to download the binaries for a certain platform, add the corresponding suffix, e.g.:
 
 ```sh
-./contrib/verifybinaries/verify.py pub 22.0-osx
-./contrib/verifybinaries/verify.py pub 22.0-rc2-win64
+./contrib/verify-binaries/verify.py pub 24.0.1-darwin
+./contrib/verify-binaries/verify.py pub 23.1-rc1-win64
 ```
 
 If you do not want to keep the downloaded binaries, specify the cleanup option.
 
 ```sh
-./contrib/verifybinaries/verify.py pub --cleanup 22.0
+./contrib/verify-binaries/verify.py pub --cleanup 22.0
 ```
 
 Use the bin subcommand to verify all files listed in a local checksum file
 
 ```sh
-./contrib/verifybinaries/verify.py bin SHA256SUMS
+./contrib/verify-binaries/verify.py bin SHA256SUMS
 ```
 
 Verify only a subset of the files listed in a local checksum file
 
 ```sh
-./contrib/verifybinaries/verify.py bin ~/Downloads/SHA256SUMS \
+./contrib/verify-binaries/verify.py bin ~/Downloads/SHA256SUMS \
     ~/Downloads/bitcoin-24.0.1-x86_64-linux-gnu.tar.gz \
     ~/Downloads/bitcoin-24.0.1-arm-linux-gnueabihf.tar.gz
 ```

@@ -3,20 +3,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_ISMINE_H
-#define BITCOIN_WALLET_ISMINE_H
+//! @file Public type definitions that are used inside and outside of the wallet
+//! (e.g. by src/wallet and src/interfaces and src/qt code).
+//!
+//! File is home for simple enum and struct definitions that don't deserve
+//! separate header files. More complicated wallet public types like
+//! CCoinControl that are used externally can have separate headers.
 
-#include <script/standard.h>
+#ifndef BITCOIN_WALLET_TYPES_H
+#define BITCOIN_WALLET_TYPES_H
 
-#include <bitset>
-#include <cstdint>
 #include <type_traits>
 
-class CScript;
-
 namespace wallet {
-class CWallet;
-
 /**
  * IsMine() return codes, which depend on ScriptPubKeyMan implementation.
  * Not every ScriptPubKeyMan covers all types, please refer to
@@ -51,23 +50,18 @@ enum isminetype : unsigned int {
 using isminefilter = std::underlying_type<isminetype>::type;
 
 /**
- * Cachable amount subdivided into watchonly and spendable parts.
+ * Address purpose field that has been been stored with wallet sending and
+ * receiving addresses since BIP70 payment protocol support was added in
+ * https://github.com/bitcoin/bitcoin/pull/2539. This field is not currently
+ * used for any logic inside the wallet, but it is still shown in RPC and GUI
+ * interfaces and saved for new addresses. It is basically redundant with an
+ * address's IsMine() result.
  */
-struct CachableAmount
-{
-    // NO and ALL are never (supposed to be) cached
-    std::bitset<ISMINE_ENUM_ELEMENTS> m_cached;
-    CAmount m_value[ISMINE_ENUM_ELEMENTS];
-    inline void Reset()
-    {
-        m_cached.reset();
-    }
-    void Set(isminefilter filter, CAmount value)
-    {
-        m_cached.set(filter);
-        m_value[filter] = value;
-    }
+enum class AddressPurpose {
+    RECEIVE,
+    SEND,
+    REFUND, //!< Never set in current code may be present in older wallet databases
 };
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_ISMINE_H
+#endif // BITCOIN_WALLET_TYPES_H
