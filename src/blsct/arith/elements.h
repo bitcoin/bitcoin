@@ -108,7 +108,6 @@ public:
         Clear();
         for (size_t i = 0; i < v_size; i++) {
             T n;
-            std::vector<uint8_t> v;
             ::Unserialize(s, n);
             Add(n);
         }
