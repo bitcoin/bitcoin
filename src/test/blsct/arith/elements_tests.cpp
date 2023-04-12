@@ -515,4 +515,42 @@ BOOST_AUTO_TEST_CASE(test_set_via_index_operator)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_serialize)
+{
+    {
+        Scalar one(1);
+        Scalar two(2);
+
+        Scalars xs;
+        xs.Add(one);
+        xs.Add(two);
+
+        CDataStream st(0, 0);
+        xs.Serialize(st);
+
+        Scalars ys;
+        ys.Unserialize(st);
+        BOOST_CHECK(ys.Size() == 2);
+        BOOST_CHECK(ys[0] == one);
+        BOOST_CHECK(ys[1] == two);
+    }
+    {
+        Point g = Point::GetBasePoint();
+        Point gg = g + g;
+
+        Points xs;
+        xs.Add(g);
+        xs.Add(gg);
+
+        CDataStream st(0, 0);
+        xs.Serialize(st);
+
+        Points ys;
+        ys.Unserialize(st);
+        BOOST_CHECK(ys.Size() == 2);
+        BOOST_CHECK(ys[0] == g);
+        BOOST_CHECK(ys[1] == gg);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
