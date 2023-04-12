@@ -1414,24 +1414,25 @@ static RPCHelpMan getchaintips()
     CChain& active_chain = chainman.ActiveChain();
 
     /*
-     * Idea: The set of chain tips is the active chain tip, plus orphan blocks which do not have another orphan building off of them.
+     * Idea: The set of chain tips is all the leaves of the block tree. This includes the active chain tip plus any block with no descendants.
      * Algorithm:
-     *  - Make one pass through BlockIndex(), picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
-     *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
+     *  - Make one pass through BlockIndex(), picking out all the blocks outside of the active chain, and also storing a set of the these blocks' pprev pointers.
+     *  - Iterate through the non-active-chain blocks. If the block has no descendants (no blocks point to it as prev), it is a chain tip.
      *  - Add the active chain tip
+     *  - For all tips that are "headers-only", trace their ancestry back to the active chain and check for invalid blocks along the way
      */
     std::set<CBlockIndex*, CompareBlocksByHeight> setTips;
-    std::set<CBlockIndex*> setOrphans;
+    std::set<CBlockIndex*> setInactive;
     std::set<CBlockIndex*> setPrevs;
 
     for (auto& [_, block_index] : chainman.BlockIndex()) {
         if (!active_chain.Contains(&block_index)) {
-            setOrphans.insert(&block_index);
+            setInactive.insert(&block_index);
             setPrevs.insert(block_index.pprev);
         }
     }
 
-    for (std::set<CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
+    for (std::set<CBlockIndex*>::iterator it = setInactive.begin(); it != setInactive.end(); ++it) {
         if (setPrevs.erase(*it) == 0) {
             setTips.insert(*it);
         }
