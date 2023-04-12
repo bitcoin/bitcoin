@@ -15,6 +15,45 @@ interface, which can be optionally built.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
 
+Steps to compile Bitcoin Core in Windows
+----------------------------------------
+1. Open Command Prompt.   
+2. Install `WSL` (Windows Subsystem for Linux) by using command    
+   `wsl --install`   
+   For more information on WSL refer https://learn.microsoft.com/en-us/windows/wsl/install
+3. Install the general dependencies using commands:   
+    `sudo apt update`    
+    `sudo apt upgrade`      
+    `sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git`   
+4. If you want to build the windows installer with make deploy you need NSIS:     
+    `sudo apt install nsis`
+5. Acquire the source in the usual way:   
+   `git clone https://github.com/bitcoin/bitcoin.git`  
+   `cd bitcoin`   
+6. Install the mingw-w64 cross-compilation tool chain:   
+   on modern systems (Ubuntu 21.04 Hirsute Hippo or newer, Debian 11 Bullseye or newer) using the command:   
+   `sudo apt install g++-mingw-w64-x86-64-posix`   
+   on older systems using the command:   
+   `sudo apt install g++-mingw-w64-x86-64`   
+   
+   Once the toolchain is installed the build steps are common:    
+   Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for example /usr/src/bitcoin, AND not under /mnt/d/. If this is    not the case the dependency autoconf scripts will fail. This means you cannot use a directory that is located directly on the host Windows file system to perform    the build.
+7. Build using:   
+   `PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var`   
+   `sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.`   
+   `cd depends`   
+   `make HOST=x86_64-w64-mingw32`    
+   `cd ..`    
+   `./autogen.sh`    
+   `CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/`   
+   `make # use "-j N" for N parallel jobs`   
+   `sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.`   
+   
+ 8. After building using the Windows subsystem it can be useful to copy the compiled executables to a directory on the Windows drive in the same directory structure     as they appear in the release .zip archive. This can be done in the following way. This will install to c:\workspace\bitcoin, for example:   
+    `make install DESTDIR=/mnt/c/workspace/bitcoin`
+ 9. You can also create an installer using:   
+    `make deploy`
+  
 License
 -------
 
