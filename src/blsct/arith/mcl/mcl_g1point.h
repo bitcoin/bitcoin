@@ -60,7 +60,6 @@ public:
     void Serialize(Stream& s) const
     {
         auto vec = GetVch();
-        printf("In MclG1Point.Serialize\n");
         s.write(MakeByteSpan(vec));
     }
 

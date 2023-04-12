@@ -289,7 +289,6 @@ public:
 
     void write(Span<const value_type> src)
     {
-        printf("DataSteam.write\n");
         // Write to the end of the buffer
         vch.insert(vch.end(), src.begin(), src.end());
     }
