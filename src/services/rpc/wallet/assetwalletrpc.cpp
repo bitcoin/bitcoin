@@ -91,7 +91,7 @@ static RPCHelpMan convertaddresswallet()
         LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();	
         if(spk_man)	
             spk_man->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility	
-        pwallet->SetAddressBook(v4Dest, strLabel, "receive");	
+        pwallet->SetAddressBook(v4Dest, strLabel, wallet::AddressPurpose::RECEIVE);	
         WalletRescanReserver reserver(*pwallet);                   	
         if (fRescan) {	
             int64_t scanned_time = pwallet->RescanFromTime(0, reserver, true);	
