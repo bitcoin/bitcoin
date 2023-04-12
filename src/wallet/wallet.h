@@ -146,8 +146,6 @@ static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
     {"external_signer", WALLET_FLAG_EXTERNAL_SIGNER}
 };
 
-extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
-
 /** A wrapper to reserve an address from a wallet
  *
  * ReserveDestination is used to reserve an address.

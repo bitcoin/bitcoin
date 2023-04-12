@@ -1225,7 +1225,7 @@ static UniValue ProcessImport(CWallet& wallet, const UniValue& data, const int64
 
         result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, "Missing required fields"));
     }
-    if (warnings.size()) result.pushKV("warnings", warnings);
+    PushWarnings(warnings, result);
     return result;
 }
 
@@ -1579,7 +1579,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         result.pushKV("success", UniValue(false));
         result.pushKV("error", e);
     }
-    if (warnings.size()) result.pushKV("warnings", warnings);
+    PushWarnings(warnings, result);
     return result;
 }
 
@@ -1903,7 +1903,11 @@ RPCHelpMan restorewallet()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "name", "The wallet name if restored successfully."},
-                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+                {RPCResult::Type::STR, "warning", /*optional=*/true, "Warning messages, if any, related to restoring the wallet. Multiple messages will be delimited by newlines. (DEPRECATED, returned only if config option -deprecatedrpc=walletwarningfield is passed.)"},
+                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to restoring the wallet.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
             }
         },
         RPCExamples{
@@ -1933,7 +1937,10 @@ RPCHelpMan restorewallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
+        obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+    }
+    PushWarnings(warnings, obj);
 
     return obj;
 
