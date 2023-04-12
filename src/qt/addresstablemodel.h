@@ -5,6 +5,8 @@
 #ifndef BITCOIN_QT_ADDRESSTABLEMODEL_H
 #define BITCOIN_QT_ADDRESSTABLEMODEL_H
 
+#include <optional>
+
 #include <QAbstractTableModel>
 #include <QStringList>
 
@@ -16,6 +18,9 @@ class WalletModel;
 namespace interfaces {
 class Wallet;
 }
+namespace wallet {
+enum class AddressPurpose;
+} // namespace wallet
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
@@ -71,7 +76,7 @@ public:
     QString labelForAddress(const QString &address) const;
 
     /** Look up purpose for address in address book, if not found return empty string. */
-    QString purposeForAddress(const QString &address) const;
+    std::optional<wallet::AddressPurpose> purposeForAddress(const QString &address) const;
 
     /* Look up row index of an address in the model.
        Return -1 if not found.
@@ -89,7 +94,7 @@ private:
     EditStatus editStatus = OK;
 
     /** Look up address book data given an address string. */
-    bool getAddressData(const QString &address, std::string* name, std::string* purpose) const;
+    bool getAddressData(const QString &address, std::string* name, wallet::AddressPurpose* purpose) const;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
@@ -97,7 +102,7 @@ private:
 public Q_SLOTS:
     /* Update address list from core.
      */
-    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
+    void updateEntry(const QString &address, const QString &label, bool isMine, wallet::AddressPurpose purpose, int status);
 
     friend class AddressTablePriv;
 };

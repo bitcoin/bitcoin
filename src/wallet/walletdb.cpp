@@ -347,7 +347,13 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::PURPOSE) {
             std::string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->m_address_book[DecodeDestination(strAddress)].purpose;
+            std::string purpose_str;
+            ssValue >> purpose_str;
+            std::optional<AddressPurpose> purpose{PurposeFromString(purpose_str)};
+            if (!purpose) {
+                pwallet->WalletLogPrintf("Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
+            }
+            pwallet->m_address_book[DecodeDestination(strAddress)].purpose = purpose;
         } else if (strType == DBKeys::TX) {
             uint256 hash;
             ssKey >> hash;
