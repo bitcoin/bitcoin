@@ -383,4 +383,14 @@ private:
     const RPCResults m_results;
     const RPCExamples m_examples;
 };
+
+/**
+ * Push warning messages to an RPC "warnings" field as a JSON array of strings.
+ *
+ * @param[in] warnings  Warning messages to push.
+ * @param[out] obj      UniValue object to push the warnings array object to.
+ */
+void PushWarnings(const UniValue& warnings, UniValue& obj);
+void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
+
 #endif // SYSCOIN_RPC_UTIL_H
