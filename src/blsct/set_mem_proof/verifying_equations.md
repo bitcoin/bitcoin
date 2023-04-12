@@ -7,7 +7,6 @@ Points on the LHS of a equation are negated and added to the points on the RHS. 
 (18), (20) and (21) are self-contained and each adds up to the additive identity.
 
 ## Line (19)
-
 On the `PePoS` paper, the equation (19) is
 
 $h_2^{\mu}\mathbf{Y}^{\mathbf{l}} (\mathbf{h'})^\mathbf{r} = A_1 \cdot A_2^{\omega} \cdot S_2^x \cdot \mathbf{Y}^{-z \cdot \mathbf{1}^n} \cdot (\mathbf{h'})^{\omega z \cdot \mathbf{y}^n + z^2 \cdot \mathbf{1}^n}$
