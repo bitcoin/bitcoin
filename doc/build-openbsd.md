@@ -1,6 +1,6 @@
 # OpenBSD Build Guide
 
-**Updated for OpenBSD [7.1](https://www.openbsd.org/71.html)**
+**Updated for OpenBSD [7.3](https://www.openbsd.org/73.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
 
@@ -79,10 +79,6 @@ export AUTOMAKE_VERSION=1.16
 ```
 
 ### 1. Configuration
-
-Note that external signer support is currently not available on OpenBSD, since
-the used header-only library Boost.Process fails to compile (certain system
-calls and preprocessor defines like `waitid()` and `WEXITED` are missing).
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
