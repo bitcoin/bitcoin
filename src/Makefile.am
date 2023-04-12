@@ -392,7 +392,6 @@ SYSCOIN_CORE_H = \
   wallet/external_signer_scriptpubkeyman.h \
   wallet/feebumper.h \
   wallet/fees.h \
-  wallet/ismine.h \
   wallet/load.h \
   wallet/receive.h \
   wallet/rpc/util.h \
@@ -403,6 +402,7 @@ SYSCOIN_CORE_H = \
   wallet/spend.h \
   wallet/sqlite.h \
   wallet/transaction.h \
+  wallet/types.h \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/wallettool.h \

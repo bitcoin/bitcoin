@@ -14,7 +14,7 @@
 #include <util/result.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
-#include <wallet/ismine.h>
+#include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
