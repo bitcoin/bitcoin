@@ -91,6 +91,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
 };
+
+static_assert(NUM_NET_MESSAGE_TYPES == sizeof(allNetMessageTypes) / sizeof(allNetMessageTypes[0]), "Please update NUM_NET_MESSAGE_TYPES");
+
 const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
