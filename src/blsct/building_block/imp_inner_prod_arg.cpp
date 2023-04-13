@@ -86,11 +86,12 @@ std::optional<ImpInnerProdArgResult<Mcl>> ImpInnerProdArg::Run(
 template <typename T>
 std::vector<typename T::Scalar> ImpInnerProdArg::GenGeneratorExponents(
     const size_t& num_rounds,
-    const Elements<typename T::Scalar>& xs,
-    const Elements<typename T::Scalar>& x_invs
+    const Elements<typename T::Scalar>& xs
 ) {
     using Scalar = typename T::Scalar;
+    using Scalars = Elements<Scalar>;
 
+    Scalars x_invs = xs.Invert();
     std::vector<Scalar> acc_xs(1ull << num_rounds, 1);
     acc_xs[0] = x_invs[0];
     acc_xs[1] = xs[0];
@@ -107,8 +108,7 @@ std::vector<typename T::Scalar> ImpInnerProdArg::GenGeneratorExponents(
 template
 std::vector<Mcl::Scalar> ImpInnerProdArg::GenGeneratorExponents<Mcl>(
     const size_t& num_rounds,
-    const Elements<Mcl::Scalar>& xs,
-    const Elements<Mcl::Scalar>& inv_xs
+    const Elements<Mcl::Scalar>& xs
 );
 
 template <typename T>
@@ -135,7 +135,7 @@ void ImpInnerProdArg::LoopWithYPows<Mcl>(
 );
 
 template <typename T>
-XsXInvs<T> ImpInnerProdArg::GenAllRoundXsXInvs(
+Elements<typename T::Scalar> ImpInnerProdArg::GenAllRoundXs(
     const size_t& num_rounds,
     const Elements<typename T::Point>& Ls,
     const Elements<typename T::Point>& Rs,
@@ -145,18 +145,16 @@ XsXInvs<T> ImpInnerProdArg::GenAllRoundXsXInvs(
     using Scalars = Elements<Scalar>;
 
     Scalars xs;
-    Scalars x_invs;
     for (size_t i = 0; i < num_rounds; ++i) {
         transcript_gen << Ls[i];
         transcript_gen << Rs[i];
         Scalar x(transcript_gen.GetHash());
         xs.Add(x);
-        x_invs.Add(x.Invert());
     }
-    return XsXInvs<T> {xs, x_invs};
+    return xs;
 }
 template
-XsXInvs<Mcl> ImpInnerProdArg::GenAllRoundXsXInvs<Mcl>(
+Elements<Mcl::Scalar> ImpInnerProdArg::GenAllRoundXs<Mcl>(
     const size_t& num_rounds,
     const Elements<Mcl::Point>& Ls,
     const Elements<Mcl::Point>& Rs,

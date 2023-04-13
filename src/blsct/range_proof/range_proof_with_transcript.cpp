@@ -43,7 +43,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
     Scalar cx_factor = transcript_gen.GetHash();
 
     auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(proof.Vs.Size());
-    auto xs_x_invs = ImpInnerProdArg::GenAllRoundXsXInvs<T>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
+    auto xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
 
     size_t num_input_values_power_2 = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
     size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
@@ -54,8 +54,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
         y,
         z,
         cx_factor,
-        xs_x_invs.xs,
-        xs_x_invs.x_invs,
+        xs,
         num_input_values_power_2,
         concat_input_values_in_bits
     );

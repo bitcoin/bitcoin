@@ -28,12 +28,8 @@ BOOST_AUTO_TEST_CASE(test_gen_generator_exponents)
     xs.Add(two);
     xs.Add(three);
     xs.Add(four);
-    x_invs.Add(xs[0].Invert());
-    x_invs.Add(xs[1].Invert());
-    x_invs.Add(xs[2].Invert());
-    x_invs.Add(xs[3].Invert());
 
-    auto res = ImpInnerProdArg::GenGeneratorExponents<Mcl>(4, xs, x_invs);
+    auto res = ImpInnerProdArg::GenGeneratorExponents<Mcl>(4, xs);
 
     BOOST_CHECK(res[0].GetString(16) == "6f1915afb28c42ba866cc45d093b19afc595bd2d8aa91829b555555460000001");
     BOOST_CHECK(res[1].GetString(16) == "26a48d1bb889d46d66689d580335f2ac713f36abaaaa1eaa5555555500000001");
@@ -95,15 +91,11 @@ BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
     Rs.Add(g + g + g);
     Rs.Add(g + g + g + g);
 
-    auto res = ImpInnerProdArg::GenAllRoundXsXInvs<Mcl>(2, Ls, Rs, transcript_gen);
+    auto res = ImpInnerProdArg::GenAllRoundXs<Mcl>(2, Ls, Rs, transcript_gen);
 
-    BOOST_CHECK(res.xs.Size() == 2);
-    BOOST_CHECK(res.x_invs.Size() == 2);
-
-    BOOST_CHECK(res.xs[0].GetString(16) == "1549ffc50ba69bf258b57da9e829cf787d7996fb9b6f779667a3d83544f8fac3");
-    BOOST_CHECK(res.xs[1].GetString(16) == "4ef56006527d9bd77bec57c74d96cd237d1af6c0a424cd890c26969a2ef7d55c");
-    BOOST_CHECK(res.x_invs[0].GetString(16) == "3db0952223fad5fbe0558447e239cbbf6ca9caf5f4c3bf1a8fe021b9534075a7");
-    BOOST_CHECK(res.x_invs[1].GetString(16) == "5a032a135b144dfd40cc0a83d676e7318e0ec441db142bc92d34c335499b0b62");
+    BOOST_CHECK(res.Size() == 2);
+    BOOST_CHECK(res[0].GetString(16) == "1549ffc50ba69bf258b57da9e829cf787d7996fb9b6f779667a3d83544f8fac3");
+    BOOST_CHECK(res[1].GetString(16) == "4ef56006527d9bd77bec57c74d96cd237d1af6c0a424cd890c26969a2ef7d55c");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

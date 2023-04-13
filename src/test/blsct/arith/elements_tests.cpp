@@ -480,6 +480,16 @@ BOOST_AUTO_TEST_CASE(test_negate)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_invert)
+{
+    {
+        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        auto ss_inv = ss.Invert();
+        BOOST_CHECK(ss_inv[0] == ss[0].Invert());
+        BOOST_CHECK(ss_inv[1] == ss[1].Invert());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_get_via_index_operator)
 {
     {

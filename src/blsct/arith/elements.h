@@ -85,10 +85,9 @@ public:
      */
     Elements<T> To(const size_t to_index) const;
 
-    /**
-     * Negate each contained elements
-     */
     Elements<T> Negate() const;
+
+    Elements<T> Invert() const;
 
     template <typename Stream>
     void Serialize(Stream& s) const

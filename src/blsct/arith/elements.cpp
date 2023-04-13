@@ -307,3 +307,14 @@ Elements<T> Elements<T>::Negate() const
     return ret;
 }
 template Elements<MclScalar> Elements<MclScalar>::Negate() const;
+
+template <typename T>
+Elements<T> Elements<T>::Invert() const
+{
+    Elements<T> ret;
+    for (auto& x : m_vec) {
+        ret.Add(x.Invert());
+    }
+    return ret;
+}
+template Elements<MclScalar> Elements<MclScalar>::Invert() const;

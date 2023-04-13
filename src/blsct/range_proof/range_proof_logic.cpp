@@ -411,7 +411,7 @@ bool RangeProofLogic<T>::VerifyProofs(
         verifier.AddPoint(LazyPoint<T>(p.proof.S, p.x * weight_z)); // S^x
 
         //////// (67), (68)
-        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<T>(num_rounds, p.xs, p.inv_xs);
+        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<T>(num_rounds, p.xs);
 
         // for all bits of concat input values, do:
         ImpInnerProdArg::LoopWithYPows<Mcl>(p.concat_input_values_in_bits, p.y,
@@ -437,11 +437,12 @@ bool RangeProofLogic<T>::VerifyProofs(
         });
 
         verifier.AddNegativeH(p.proof.mu * weight_z); // ** h^mu (67) RHS
+        auto x_invs = p.xs.Invert();
 
         // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
         for (size_t i = 0; i < num_rounds; ++i) {
             verifier.AddPoint(LazyPoint<T>(p.proof.Ls[i], p.xs[i].Square() * weight_z));
-            verifier.AddPoint(LazyPoint<T>(p.proof.Rs[i], p.inv_xs[i].Square() * weight_z));
+            verifier.AddPoint(LazyPoint<T>(p.proof.Rs[i], x_invs[i].Square() * weight_z));
         }
 
         verifier.AddPositiveG((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);

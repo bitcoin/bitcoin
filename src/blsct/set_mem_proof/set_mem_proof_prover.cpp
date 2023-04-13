@@ -283,8 +283,9 @@ bool SetMemProofProver::Verify(
             GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
         size_t num_rounds = std::log2(n);
 
-        auto xxi = ImpInnerProdArg::GenAllRoundXsXInvs<Mcl>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
-        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<Mcl>(num_rounds, xxi.xs, xxi.x_invs);
+        auto xs = ImpInnerProdArg::GenAllRoundXs<Mcl>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
+        auto x_invs = xs.Invert();
+        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<Mcl>(num_rounds, xs);
 
         ImpInnerProdArg::LoopWithYPows<Mcl>(n, y,
             [&](const size_t& i, const Scalar& y_pow, const Scalar& y_inv_pow) {
@@ -297,8 +298,8 @@ bool SetMemProofProver::Verify(
         );
 
         for (size_t i=0; i<num_rounds; ++i) {
-            verifier.AddPoint(LazyPoint(proof.Ls[i], xxi.xs[i].Square()));
-            verifier.AddPoint(LazyPoint(proof.Rs[i], xxi.x_invs[i].Square()));
+            verifier.AddPoint(LazyPoint(proof.Ls[i], xs[i].Square()));
+            verifier.AddPoint(LazyPoint(proof.Rs[i], x_invs[i].Square()));
         }
 
         verifier.AddPositiveG((proof.t - proof.a * proof.b) * proof.c_factor);

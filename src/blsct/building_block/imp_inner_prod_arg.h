@@ -19,12 +19,6 @@ struct ImpInnerProdArgResult {
     typename T::Scalar b;
 };
 
-template <typename T>
-struct XsXInvs {
-    Elements<typename T::Scalar> xs;
-    Elements<typename T::Scalar> x_invs;
-};
-
 // Given P in G, the prover proves that it has vectors a, b in Zp
 // for which P = Gi^a + Hi^b + u^<a,b>
 struct ImpInnerProdArg {
@@ -48,8 +42,7 @@ struct ImpInnerProdArg {
     template <typename T>
     static std::vector<typename T::Scalar> GenGeneratorExponents(
         const size_t& num_rounds,
-        const Elements<typename T::Scalar>& xs,
-        const Elements<typename T::Scalar>& x_invs
+        const Elements<typename T::Scalar>& xs
     );
 
     template <typename T>
@@ -62,7 +55,7 @@ struct ImpInnerProdArg {
     // Generates list of x's and x^1's of all rounds of improved
     // inner product argument from a given hasher
     template <typename T>
-    static XsXInvs<T> GenAllRoundXsXInvs(
+    static Elements<typename T::Scalar> GenAllRoundXs(
         const size_t& num_rounds,
         const Elements<typename T::Point>& Ls,
         const Elements<typename T::Point>& Rs,
