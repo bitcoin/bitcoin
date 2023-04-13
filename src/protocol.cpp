@@ -54,7 +54,7 @@ const std::string NET_MESSAGE_TYPE_OTHER{"*other*"};
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
-const static std::vector<std::string> g_all_net_message_types{
+const static std::string allNetMessageTypes[] = {
     NetMsgType::VERSION,
     NetMsgType::VERACK,
     NetMsgType::ADDR,
@@ -91,6 +91,10 @@ const static std::vector<std::string> g_all_net_message_types{
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
 };
+
+static_assert(NUM_NET_MESSAGE_TYPES == sizeof(allNetMessageTypes) / sizeof(allNetMessageTypes[0]), "Please update NUM_NET_MESSAGE_TYPES");
+
+const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
     : pchMessageStart{pchMessageStartIn}
@@ -182,7 +186,7 @@ std::string CInv::ToString() const
 
 const std::vector<std::string> &getAllNetMessageTypes()
 {
-    return g_all_net_message_types;
+    return allNetMessageTypesVec;
 }
 
 /**
