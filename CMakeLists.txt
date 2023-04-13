@@ -43,6 +43,11 @@ option(ASM "Use assembly routines." ON)
 cmake_dependent_option(CXX20 "Enable compilation in C++20 mode." OFF "NOT MSVC" ON)
 option(THREADLOCAL "Enable features that depend on the C++ thread_local keyword (currently just thread names in debug logs)." ON)
 
+# TODO: These tri-state options will be removed and most features
+#       will become opt-in by default before merging into master.
+include(TristateOption)
+tristate_option(CCACHE "Use ccache for compiling." "if ccache is found." AUTO)
+
 if(CXX20)
   set(CMAKE_CXX_STANDARD 20)
 else()
@@ -113,6 +118,8 @@ include(cmake/secp256k1.cmake)
 include(CheckStdFilesystem)
 check_std_filesystem()
 
+include(cmake/optional.cmake)
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
   check_pie_supported(OUTPUT_VARIABLE check_pie_output LANGUAGES CXX)
@@ -175,6 +182,7 @@ else()
   message(" - LDFLAGS for shared libraries ....... ${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 endif()
 message("Use assembly routines ................. ${ASM}")
+message("Use ccache for compiling .............. ${CCACHE}")
 message("\n")
 if(configure_warnings)
     message("  ******\n")
