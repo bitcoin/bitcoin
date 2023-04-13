@@ -189,6 +189,29 @@ const std::vector<std::string> &getAllNetMessageTypes()
     return allNetMessageTypesVec;
 }
 
+int messageTypeToIndex(const std::string& msg_type)
+{
+    const std::vector<std::string>& message_types = getAllNetMessageTypes();
+    auto msg_type_itr = std::find(message_types.begin(), message_types.end(), msg_type);
+
+    if (msg_type_itr != message_types.end()) {
+        int index = msg_type_itr - message_types.begin();
+        return index;
+    } else {
+        // assign the last index to be a catch all for NET_MESSAGE_TYPE_OTHER
+        return NUM_NET_MESSAGE_TYPES;
+    }
+}
+
+const std::string& messageTypeFromIndex(size_t index)
+{
+    if (index >= NUM_NET_MESSAGE_TYPES) {
+        return NET_MESSAGE_TYPE_OTHER;
+    }
+
+    return getAllNetMessageTypes().at(index);
+}
+
 /**
  * Convert a service flag (NODE_*) to a human readable string.
  * It supports unknown service flags which will be returned as "UNKNOWN[...]".
