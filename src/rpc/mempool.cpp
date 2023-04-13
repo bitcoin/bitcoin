@@ -719,6 +719,66 @@ static RPCHelpMan getmempoolinfo()
     };
 }
 
+static RPCHelpMan importmempool()
+{
+    return RPCHelpMan{
+        "importmempool",
+        "Import a mempool.dat file and attempt to add its contents to the mempool.\n"
+        "Warning: Importing untrusted files is dangerous, especially if metadata from the file is taken over.",
+        {
+            {"filepath", RPCArg::Type::STR, RPCArg::Optional::NO, "The mempool file"},
+            {"options",
+             RPCArg::Type::OBJ_NAMED_PARAMS,
+             RPCArg::Optional::OMITTED,
+             "",
+             {
+                 {"use_current_time", RPCArg::Type::BOOL, RPCArg::Default{true},
+                  "Whether to use the current system time or use the entry time metadata from the mempool file.\n"
+                  "Warning: Importing untrusted metadata may lead to unexpected issues and undesirable behavior."},
+                 {"apply_fee_delta_priority", RPCArg::Type::BOOL, RPCArg::Default{false},
+                  "Whether to apply the fee delta metadata from the mempool file.\n"
+                  "It will be added to any existing fee deltas.\n"
+                  "The fee delta can be set by the prioritisetransaction RPC.\n"
+                  "Warning: Importing untrusted metadata may lead to unexpected issues and undesirable behavior.\n"
+                  "Only set this bool if you understand what it does."},
+                 {"apply_unbroadcast_set", RPCArg::Type::BOOL, RPCArg::Default{false},
+                  "Whether to apply the unbroadcast set metadata from the mempool file.\n"
+                  "Warning: Importing untrusted metadata may lead to unexpected issues and undesirable behavior."},
+             },
+             RPCArgOptions{.oneline_description = "\"options\""}},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
+        RPCExamples{HelpExampleCli("importmempool", "/path/to/mempool.dat") + HelpExampleRpc("importmempool", "/path/to/mempool.dat")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+
+            CTxMemPool& mempool{EnsureMemPool(node)};
+            Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
+
+            if (chainstate.IsInitialBlockDownload()) {
+                throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Can only import the mempool after the block download and sync is done.");
+            }
+
+            const fs::path load_path{fs::u8path(request.params[0].get_str())};
+            const UniValue& use_current_time{request.params[1]["use_current_time"]};
+            const UniValue& apply_fee_delta{request.params[1]["apply_fee_delta_priority"]};
+            const UniValue& apply_unbroadcast{request.params[1]["apply_unbroadcast_set"]};
+            kernel::ImportMempoolOptions opts{
+                .use_current_time = use_current_time.isNull() ? true : use_current_time.get_bool(),
+                .apply_fee_delta_priority = apply_fee_delta.isNull() ? false : apply_fee_delta.get_bool(),
+                .apply_unbroadcast_set = apply_unbroadcast.isNull() ? false : apply_unbroadcast.get_bool(),
+            };
+
+            if (!kernel::LoadMempool(mempool, load_path, chainstate, std::move(opts))) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Unable to import mempool file, see debug.log for details.");
+            }
+
+            UniValue ret{UniValue::VOBJ};
+            return ret;
+        },
+    };
+}
+
 static RPCHelpMan savemempool()
 {
     return RPCHelpMan{"savemempool",
@@ -921,6 +981,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &gettxspendingprevout},
         {"blockchain", &getmempoolinfo},
         {"blockchain", &getrawmempool},
+        {"blockchain", &importmempool},
         {"blockchain", &savemempool},
         {"hidden", &submitpackage},
     };

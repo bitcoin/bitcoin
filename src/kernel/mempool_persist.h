@@ -19,6 +19,9 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path,
 
 struct ImportMempoolOptions {
     fsbridge::FopenFn mockable_fopen_function{fsbridge::fopen};
+    bool use_current_time{false};
+    bool apply_fee_delta_priority{true};
+    bool apply_unbroadcast_set{true};
 };
 /** Import the file and attempt to add its contents to the mempool. */
 bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
