@@ -527,6 +527,7 @@ BOOST_AUTO_TEST_CASE(test_serialize)
 
         CDataStream st(0, 0);
         xs.Serialize(st);
+        BOOST_CHECK(st.size() == 1 + xs.Size() * sizeof(one.m_fr));
 
         Scalars ys;
         ys.Unserialize(st);
