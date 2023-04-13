@@ -49,6 +49,8 @@ const char* WTXIDRELAY = "wtxidrelay";
 const char* SENDTXRCNCL = "sendtxrcncl";
 } // namespace NetMsgType
 
+const std::string NET_MESSAGE_TYPE_OTHER{"*other*"};
+
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
