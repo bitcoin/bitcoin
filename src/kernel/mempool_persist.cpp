@@ -36,11 +36,11 @@ namespace kernel {
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, FopenFn mockable_fopen_function)
+bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {
     if (load_path.empty()) return false;
 
-    FILE* filestr{mockable_fopen_function(load_path, "rb")};
+    FILE* filestr{opts.mockable_fopen_function(load_path, "rb")};
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");

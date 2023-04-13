@@ -17,10 +17,13 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path,
                  fsbridge::FopenFn mockable_fopen_function = fsbridge::fopen,
                  bool skip_file_commit = false);
 
+struct ImportMempoolOptions {
+    fsbridge::FopenFn mockable_fopen_function{fsbridge::fopen};
+};
 /** Import the file and attempt to add its contents to the mempool. */
 bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
                  Chainstate& active_chainstate,
-                 fsbridge::FopenFn mockable_fopen_function = fsbridge::fopen);
+                 ImportMempoolOptions&& opts);
 
 } // namespace kernel
 
