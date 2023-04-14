@@ -48,6 +48,13 @@ bool CheckValidEphemeralTx(const CTransaction& tx,
                            CAmount& txfee,
                            bool package_context);
 
+/** Any V3 transaction package must have all ephemeral anchors spent by the child since the child is alone. */
+std::optional<uint256> CheckEphemeralSpends(const Package& package);
+
+/** Any V3 transaction must spend all in-mempool parent's ephemeral anchors since the child is alone.  */
+std::optional<std::string> CheckEphemeralSpends(const CTransactionRef& ptx,
+                                                const CTxMemPool::setEntries& ancestors);
+
 /** The following rules apply to V3 transactions:
  * 1. Tx with all of its ancestors must be within V3_ANCESTOR_SIZE_LIMIT_KVB.
  * 2. Tx with all of its ancestors must be within V3_ANCESTOR_LIMIT.

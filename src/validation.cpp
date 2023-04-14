@@ -373,6 +373,8 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                 }
             }
         }
+        // FIXME Do we want this here?
+        // if (auto err{CheckEphemeralSpends(MakeTransactionRef(it->GetTx()), ancestors)}) return true;
         return false;
     };
     // We also need to remove any now-immature transactions
@@ -1011,6 +1013,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-tx-nonstandard", *err_string);
     }
 
+    if (auto err_string{CheckEphemeralSpends(ws.m_ptx, ws.m_ancestors)}) {
+        return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "ephemeral-anchor-unspent", *err_string);
+    }
+
     // A transaction that spends outputs that would be replaced by it is invalid. Now
     // that we have the set of all ancestors we can detect this
     // pathological case by making sure ws.m_conflicts and ws.m_ancestors don't
@@ -1441,6 +1447,16 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         }
         package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
         results.emplace(child_wtxid, MempoolAcceptResult::Failure(child_state));
+        return PackageMempoolAcceptResult(package_state, std::move(results));
+    }
+
+    if (const auto ephemeral_violation{CheckEphemeralSpends(txns)}) {
+        const auto parent_wtxid = ephemeral_violation.value();
+        TxValidationState child_state;
+        child_state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "missing-ephemeral-spends",
+                      strprintf("V3 tx %s has unspent ephemeral anchor", parent_wtxid.ToString()));
+        package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+        results.emplace(parent_wtxid, MempoolAcceptResult::Failure(child_state));
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
     // fixme: make ApplyV3Rules take package instead of just entries
