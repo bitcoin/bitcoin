@@ -410,6 +410,7 @@ libbitcoin_node_a_SOURCES = \
   kernel/mempool_removal_reason.cpp \
   mapport.cpp \
   net.cpp \
+  netstats.cpp \
   net_processing.cpp \
   netgroup.cpp \
   node/abort.cpp \

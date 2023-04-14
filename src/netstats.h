@@ -50,6 +50,21 @@ public:
     using MultiDimensionalStats = std::array<NetMaxArray, NUM_DIRECTIONS>;
 
     MultiDimensionalStats m_data;
+
+    // The ...FromIndex() and ...ToIndex() methods below convert from/to
+    // indexes of `m_data[]` to the actual values they represent. For example,
+    // assuming MessageTypeToIndex("ping") == 15, then everything stored in
+    // m_data[x][y][z][15] is traffic from "ping" messages (for any x, y or z).
+
+    [[nodiscard]] static Direction DirectionFromIndex(size_t index);
+    [[nodiscard]] static Network NetworkFromIndex(size_t index);
+    [[nodiscard]] static ConnectionType ConnectionTypeFromIndex(size_t index);
+
+private:
+    // Helper methods to make sure the indexes associated with enums are reliable
+    [[nodiscard]] static size_t DirectionToIndex(Direction direction);
+    [[nodiscard]] static size_t NetworkToIndex(Network net);
+    [[nodiscard]] static size_t ConnectionTypeToIndex(ConnectionType conn_type);
 };
 
 #endif // BITCOIN_NETSTATS_H
