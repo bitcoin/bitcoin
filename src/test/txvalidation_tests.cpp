@@ -74,7 +74,7 @@ static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, int3
         mtx.vin[i].prevout = inputs[i];
     }
     for (auto i{0}; i < 25; ++i) {
-        mtx.vout[i].scriptPubKey = CScript() << OP_TRUE;
+        mtx.vout[i].scriptPubKey = CScript() << OP_2;
         mtx.vout[i].nValue = 10000;
     }
     return MakeTransactionRef(mtx);

@@ -137,6 +137,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.test_nonzero_anchor()
         self.test_prioritise_parent()
         self.test_non_v3()
+        self.test_unspent_ephemeral()
 
     def test_fee_having_parent(self):
         self.log.info("Test that a transaction with ephemeral anchor may not have base fee")
@@ -222,6 +223,26 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         package_hex, package_txns = self.create_simple_package(parent_coin=parent_coin, parent_fee=0, child_fee=DEFAULT_FEE, version=2)
         assert_raises_rpc_error(-26, "wrong-ephemeral-nversion", node.submitpackage, package_hex)
         assert_equal(node.getrawmempool(), [])
+
+    def test_unspent_ephemeral(self):
+        self.log.info("Test that ephemeral outputs of any value are disallowed if not spent in a package")
+        node = self.nodes[0]
+        # Reuse the same coins so that the transactions conflict with one another.
+        parent_coin = self.coins[-1]
+        del self.coins[-1]
+
+        # Submit whole package, but anchor are unspent
+        package_hex0, package_txns0 = self.create_simple_package(parent_coin=parent_coin, parent_fee=0, child_fee=DEFAULT_FEE, spend_anchor=
+0)
+        assert_raises_rpc_error(-26, "missing-ephemeral-spends", node.submitpackage, package_hex0)
+        assert_equal(node.getrawmempool(), [])
+
+        # One more time, correct nversion
+        package_hex3, package_txns3 = self.create_simple_package(parent_coin=parent_coin, parent_fee=0, child_fee=DEFAULT_FEE)
+        node.submitpackage(package_hex3)
+        self.assert_mempool_contents(expected=package_txns3, unexpected=[])
+
+        self.generate(node, 1)
 
 
 if __name__ == "__main__":

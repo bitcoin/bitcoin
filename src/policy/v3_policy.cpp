@@ -66,12 +66,76 @@ std::optional<std::string> CheckV3Inheritance(const CTransactionRef& ptx,
     return std::nullopt;
 }
 
+std::optional<uint256> CheckEphemeralSpends(const Package& package)
+{
+    assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+
+    // Only size one or two are possible to violate ephemeral spend checks
+    if (package.empty() || package.size() > V3_ANCESTOR_LIMIT) {
+        return std::nullopt;
+    }
+    static_assert(V3_ANCESTOR_LIMIT == 2, "value of V3_ANCESTOR_LIMIT changed");
+
+    const auto& parent = package.front();
+
+    for (uint32_t i=0; i<parent->vout.size(); i++) {
+        // Once we find an anchor, it must be spent by child
+        if (parent->vout[i].scriptPubKey.IsPayToAnchor()) {
+            if (package.size() == V3_ANCESTOR_LIMIT) {
+                for (const auto& child_input : package.back()->vin) {
+                    if (child_input.prevout == COutPoint(parent->GetHash(), i)) {
+                        return std::nullopt;
+                    }
+                }
+            }
+            return parent->GetWitnessHash();
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::string> CheckEphemeralSpends(const CTransactionRef& ptx,
+                                                const CTxMemPool::setEntries& ancestors)
+{
+    /* Ephemeral anchors are disallowed already, no need to check */
+    if (ptx->nVersion != 3) {
+        return std::nullopt;
+    }
+
+    std::unordered_set<COutPoint, SaltedOutpointHasher> unspent_ephemeral_outputs;
+
+    // Note that all ancestors are direct parents due to V3
+    for (const auto& entry : ancestors) {
+        const auto& tx = entry->GetTx();
+        for (uint32_t i=0; i<tx.vout.size(); i++) {
+            if (tx.vout[i].scriptPubKey.IsPayToAnchor()) {
+                unspent_ephemeral_outputs.insert(COutPoint(tx.GetHash(), i));
+            }
+        }
+    }
+
+    for (const auto& input : ptx->vin) {
+        unspent_ephemeral_outputs.erase(input.prevout);
+    }
+
+    if (!unspent_ephemeral_outputs.empty()) {
+        return strprintf("tx does not spend all parent ephemeral anchors");
+    }
+
+    return std::nullopt;
+}
+
 std::optional<std::string> ApplyV3Rules(const CTransactionRef& ptx,
                                         const CTxMemPool::setEntries& ancestors,
                                         const std::set<uint256>& direct_conflicts)
 {
     // These rules only apply to transactions with nVersion=3.
     if (ptx->nVersion != 3) return std::nullopt;
+
+    if (auto err_string{CheckEphemeralSpends(ptx, ancestors)}) {
+        return err_string;
+    }
 
     if (ancestors.size() + 1 > V3_ANCESTOR_LIMIT) {
         return strprintf("tx %s would have too many ancestors", ptx->GetWitnessHash().ToString());

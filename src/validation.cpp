@@ -1407,6 +1407,16 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
 
+    if (const auto ephemeral_violation{CheckEphemeralSpends(txns)}) {
+        const auto parent_wtxid = ephemeral_violation.value();
+        TxValidationState child_state;
+        child_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
+                      strprintf("V3 tx %s has unspent ephemeral anchor", parent_wtxid.ToString()));
+        package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+        results.emplace(parent_wtxid, MempoolAcceptResult::Failure(child_state));
+        return PackageMempoolAcceptResult(package_state, std::move(results));
+    }
+
     LOCK(m_pool.cs);
 
     // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
