@@ -671,6 +671,14 @@ const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
     return pindex->GetAncestor(nHeight);
 }
 
+bool IsV20Active(const CBlockIndex* pindex)
+{
+    assert(pindex);
+
+    LOCK(cs_llmq_vbc);
+    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache) == ThresholdState::ACTIVE;
+}
+
 bool IsInstantSendLLMQTypeShared()
 {
     if (Params().GetConsensus().llmqTypeInstantSend == Params().GetConsensus().llmqTypeChainLocks ||

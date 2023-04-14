@@ -85,6 +85,7 @@ Consensus::LLMQType GetInstantSendLLMQType(bool deterministic);
 bool IsDIP0024Active(const CBlockIndex* pindex);
 bool IsV19Active(const CBlockIndex* pindex);
 const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex);
+bool IsV20Active(const CBlockIndex* pindex);
 
 /// Returns the state of `-llmq-data-recovery`
 bool QuorumDataRecoveryEnabled();
