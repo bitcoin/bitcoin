@@ -10,7 +10,7 @@ export CONTAINER_NAME=ci_native
 export CI_IMAGE_NAME_TAG=debian:buster
 # Use minimum supported python3.7 and gcc-8, see doc/dependencies.md
 export PACKAGES="gcc-8 g++-8 python3-zmq libdbus-1-dev libharfbuzz-dev"
-export DEP_OPTS="NO_QT=1 NO_UPNP=1 NO_NATPMP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1 CC=gcc-8 CXX=g++-8"
+export DEP_OPTS="NO_UPNP=1 NO_NATPMP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1 CC=gcc-8 CXX=g++-8"
 export TEST_RUNNER_EXTRA="--previous-releases --coverage --extended --exclude feature_dbcrash"  # Run extended tests so that coverage does not fail, but exclude the very slow dbcrash
 export RUN_UNIT_TESTS_SEQUENTIAL="true"
 export RUN_UNIT_TESTS="false"
