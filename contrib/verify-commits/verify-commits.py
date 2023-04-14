@@ -178,7 +178,20 @@ def main():
         allow_unclean = current_commit in unclean_merge_allowed
         if len(parents) == 2 and check_merge and not allow_unclean:
             current_tree = subprocess.check_output([GIT, 'show', '--format=%T', current_commit]).decode('utf8').splitlines()[0]
-            recreated_tree = subprocess.check_output([GIT, "merge-tree", parents[0], parents[1]]).decode('utf8').splitlines()[0]
+
+            # This merge-tree functionality requires git >= 2.38. The
+            # --write-tree option was added in order to opt-in to the new
+            # behavior. Older versions of git will not recognize the option and
+            # will instead exit with code 128.
+            try:
+                recreated_tree = subprocess.check_output([GIT, "merge-tree", "--write-tree", parents[0], parents[1]]).decode('utf8').splitlines()[0]
+            except subprocess.CalledProcessError as e:
+                if e.returncode == 128:
+                    print("git v2.38+ is required for this functionality.", file=sys.stderr)
+                    sys.exit(1)
+                else:
+                    raise e
+
             if current_tree != recreated_tree:
                 print("Merge commit {} is not clean".format(current_commit), file=sys.stderr)
                 subprocess.call([GIT, 'diff', recreated_tree, current_tree])
