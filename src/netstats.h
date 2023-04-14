@@ -51,6 +51,36 @@ public:
 
     MultiDimensionalStats m_data;
 
+    void Init()
+    {
+        for (std::size_t direction_index = 0; direction_index < NUM_DIRECTIONS; direction_index++) {
+            for (int network_index = 0; network_index < NET_MAX; network_index++) {
+                for (std::size_t connection_index = 0; connection_index < NUM_CONNECTION_TYPES; connection_index++) {
+                    for (std::size_t message_index = 0; message_index < NUM_NET_MESSAGE_TYPES + 1; message_index++) {
+                        // +1 for the "other" message type
+                        auto& stat = m_data
+                            .at(direction_index)
+                            .at(network_index)
+                            .at(connection_index)
+                            .at(message_index);
+
+                        stat.msg_count = 0;
+                        stat.byte_count = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Increment the amount of bytes transferred by `bytes` and the amount of messages by 1.
+     */
+    void Record(Direction direction,
+                Network net,
+                ConnectionType conn_type,
+                const std::string& msg_type,
+                size_t byte_count);
+
     // The ...FromIndex() and ...ToIndex() methods below convert from/to
     // indexes of `m_data[]` to the actual values they represent. For example,
     // assuming MessageTypeToIndex("ping") == 15, then everything stored in

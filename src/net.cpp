@@ -2124,7 +2124,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                 }
                 RecordBytesRecv(nBytes);
                 if (notify) {
-                    pnode->MarkReceivedMsgsForProcessing();
+                    pnode->MarkReceivedMsgsForProcessing(m_net_stats);
                     WakeMessageHandler();
                 }
             }
@@ -3573,6 +3573,11 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
+NetStats CConnman::GetNetStats() const
+{
+    return m_net_stats;
+}
+
 uint64_t CConnman::GetMaxOutboundTarget() const
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
@@ -3704,7 +3709,7 @@ CNode::CNode(NodeId idIn,
     }
 }
 
-void CNode::MarkReceivedMsgsForProcessing()
+void CNode::MarkReceivedMsgsForProcessing(NetStats& net_stats)
 {
     AssertLockNotHeld(m_msg_process_queue_mutex);
 
@@ -3713,6 +3718,12 @@ void CNode::MarkReceivedMsgsForProcessing()
         // vRecvMsg contains only completed CNetMessage
         // the single possible partially deserialized message are held by TransportDeserializer
         nSizeAdded += msg.m_raw_message_size;
+
+        net_stats.Record(NetStats::Direction::RECV,
+                         ConnectedThroughNetwork(),
+                         m_conn_type,
+                         msg.m_type,
+                         msg.m_raw_message_size);
     }
 
     LOCK(m_msg_process_queue_mutex);
@@ -3770,6 +3781,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         // Update memory usage of send buffer.
         pnode->m_send_memusage += msg.GetMemoryUsage();
         if (pnode->m_send_memusage + pnode->m_transport->GetSendMemoryUsage() > nSendBufferMaxSize) pnode->fPauseSend = true;
+        // Store the message type for netmsgstats before moving msg
+        std::string msgType = msg.m_type;
         // Move message to vSendMsg queue.
         pnode->vSendMsg.push_back(std::move(msg));
 
@@ -3783,6 +3796,13 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         if (queue_was_empty && more) {
             std::tie(nBytesSent, std::ignore) = SocketSendData(*pnode);
         }
+        // update network message stats
+        m_net_stats.Record(NetStats::Direction::SENT,
+                           pnode->ConnectedThroughNetwork(),
+                           pnode->m_conn_type,
+                           msgType,
+                           nBytesSent);
+
     }
     if (nBytesSent) RecordBytesSent(nBytesSent);
 }

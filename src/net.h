@@ -19,6 +19,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <netstats.h>
 #include <node/connection_types.h>
 #include <policy/feerate.h>
 #include <protocol.h>
@@ -750,8 +751,10 @@ public:
 
     const ConnectionType m_conn_type;
 
-    /** Move all messages from the received queue to the processing queue. */
-    void MarkReceivedMsgsForProcessing()
+    /** Move all messages from the received queue to the processing queue.
+     * Also update the global map of network message statistics.
+     */
+    void MarkReceivedMsgsForProcessing(NetStats& net_stats)
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
     /** Poll the next message from the processing queue of this connection.
@@ -1098,6 +1101,7 @@ public:
             }
         }
         m_onion_binds = connOptions.onion_binds;
+        m_net_stats.Init();
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
@@ -1244,6 +1248,8 @@ public:
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
+    NetStats GetNetStats() const;
+
 private:
     struct ListenSocket {
     public:
@@ -1384,6 +1390,8 @@ private:
     mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
     uint64_t nTotalBytesSent GUARDED_BY(m_total_bytes_sent_mutex) {0};
+
+    NetStats m_net_stats;
 
     // outbound limit & stats
     uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(m_total_bytes_sent_mutex) {0};

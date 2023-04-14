@@ -81,3 +81,19 @@ size_t NetStats::ConnectionTypeToIndex(ConnectionType conn_type)
     }
     assert(false);
 }
+
+void NetStats::Record(Direction direction,
+                      Network net,
+                      ConnectionType conn_type,
+                      const std::string& msg_type,
+                      size_t byte_count)
+{
+    auto& data = m_data
+        .at(DirectionToIndex(direction))
+        .at(NetworkToIndex(net))
+        .at(ConnectionTypeToIndex(conn_type))
+        .at(messageTypeToIndex(msg_type));
+
+    ++data.msg_count;
+    data.byte_count += byte_count;
+}
