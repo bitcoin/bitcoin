@@ -138,6 +138,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.test_prioritise_parent()
         self.test_non_v3()
         self.test_unspent_ephemeral()
+        self.test_xor_rbf()
 
     def test_fee_having_parent(self):
         self.log.info("Test that a transaction with ephemeral anchor may not have base fee")
@@ -243,6 +244,123 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.assert_mempool_contents(expected=package_txns3, unexpected=[])
 
         self.generate(node, 1)
+
+    def test_xor_rbf(self):
+        self.log.info("Test some child RBF behavior")
+        node = self.nodes[0]
+        num_parents = 2
+        # Coins to create parents
+        parent_coins = self.coins[:num_parents]
+        del self.coins[:num_parents]
+
+        # Coin to RBF own child
+        child_coin = self.coins[0]
+        del self.coins[0]
+
+        package_hex = []
+        package_txns = []
+
+
+        child_inputs = []
+        # Make two parents with one normal and one ephemeral output each
+        for i, coin in enumerate(parent_coins):
+            parent_result = self.wallet.create_self_transfer(
+                fee_rate=0,
+                fee=0,
+                utxo_to_spend=parent_coins[i],
+                sequence=MAX_BIP125_RBF_SEQUENCE,
+                version=3
+            )
+
+            self.insert_additional_outputs(parent_result, [CTxOut(0, CScript([OP_TRUE]))])
+
+            child_inputs.append(parent_result["new_utxo"])
+            child_inputs.append({**parent_result["new_utxo"], 'vout': 1, 'value': 0, 'anchor': True})
+
+            package_hex.append(parent_result["hex"])
+            package_txns.append(parent_result["tx"])
+
+
+        # Append child_coin to possible spends
+        child_inputs.append(child_coin)
+
+        assert_equal(len(child_inputs), 5)
+
+        # First child spends first parent's two inputs
+        child_one = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=child_inputs[:2],
+            num_outputs=1,
+            fee_per_output=int(COIN),
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        self.spend_ephemeral_anchor_witness(child_one, child_inputs[:2])
+
+        # Submit first parent and child together
+        first_package_hex = [package_hex[0], child_one["hex"]]
+        first_package_txns = [package_txns[0], child_one["tx"]]
+        node.submitpackage(first_package_hex)
+        self.assert_mempool_contents(expected=first_package_txns, unexpected=[])
+
+        # Second child RBF spends first parent's two inputs, plus their own confirmed input
+        second_inputs = child_inputs[:2] + [child_inputs[-1]]
+        child_two = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=second_inputs,
+            num_outputs=1,
+            fee_per_output=int(COIN)*2,
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        self.spend_ephemeral_anchor_witness(child_two, second_inputs)
+
+        second_package_hex = [package_hex[0], child_two["hex"]]
+        second_package_txns = [package_txns[0], child_two["tx"]]
+        node.submitpackage(second_package_hex)
+        self.assert_mempool_contents(expected=second_package_txns, unexpected=[])
+
+        # Third makes first parent childless via child's confirmed input double-spend
+        # spending the second parent's ephemeral anchor and not the other output
+        third_inputs = [child_inputs[3], child_inputs[-1]]
+        child_three = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=third_inputs,
+            num_outputs=1,
+            fee_per_output=int(COIN)*3,
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        self.spend_ephemeral_anchor_witness(child_three, third_inputs)
+
+        third_package_hex = [package_hex[1], child_three["hex"]]
+        third_package_txns = [package_txns[1], child_three["tx"]]
+        node.submitpackage(third_package_hex)
+
+        # First parent not in mempool because it has been trimmed
+        self.assert_mempool_contents(expected=third_package_txns, unexpected=[package_txns[0]])
+
+        # Demonstrate "absurd" asymmetrical fee bump since CheckMinerScores requires new ancestor package to be same individual feerate as old child
+        fourth_inputs = child_inputs[:2] + [child_inputs[-1]]
+        child_four = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=fourth_inputs,
+            num_outputs=1,
+            # Fairly absurd bump required due to CheckMinerScores requiring new ancestor package to be same individual feerate as old child
+            fee_per_output=int(COIN)*7,
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        self.spend_ephemeral_anchor_witness(child_four, fourth_inputs)
+
+        fourth_package_hex = [package_hex[0], child_four["hex"]]
+        fourth_package_txns = [package_txns[0], child_four["tx"]]
+        node.submitpackage(fourth_package_hex)
+        self.assert_mempool_contents(expected=fourth_package_txns, unexpected=[child_three["tx"]])
+
+        # Mining everything
+        self.generate(node, 1)
+        assert_equal(node.getrawmempool(), [])
 
 
 if __name__ == "__main__":
