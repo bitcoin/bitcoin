@@ -312,31 +312,29 @@ template Elements<MclScalar> Elements<MclScalar>::Negate() const;
 template <typename T>
 Elements<T> Elements<T>::Invert() const
 {
-    // build a product of all elements and a cumulative product sequence
-    // - product = x_1*x_2*...*x_n
-    // - cum_prod_seq = [1, x_1, x_1*x_2, ..., x_1*...*x_n]
-    T product(1);
-    Elements<T> cum_prod_seq;
-
-    for (auto& x: m_vec) {
-        cum_prod_seq.Add(product);
-        product = product * x;
+    // build:
+    // - elem_inverses = (x_1, x_2, ..., x_n)^-1
+    // - extract_factors = [1, x_1, x_1*x_2, ..., x_1*...*x_n]
+    Elements<T> extract_factors;  // cumulative product sequence used to cancel out inverses
+    T elem_inverse_prod;  // product of all element inverses
+    {
+        T n(1);
+        for (auto& x: m_vec) {
+            extract_factors.Add(n);
+            n = n * x;
+        }
+        elem_inverse_prod = n.Invert();
     }
 
-    // calculate the inverse of the product
-    T product_inv = product.Invert();
-
-    // generate a list of inverses from the product
+    // calculate inverses of all elements
     std::deque<T> q;
     for (size_t i = m_vec.size()-1; i != std::numeric_limits<size_t>::max(); --i) {
-        // drop the last factor to generate cancel-out factors of the next loop
-        T next_product_inv = product_inv * m_vec[i];
-
-        // extract an inverse by cancelling out other factors
-        T x = product_inv * cum_prod_seq[i];
+        // extract x_i^-1 by multiplying x_1*...*x_{i-1}
+        T x = elem_inverse_prod * extract_factors[i];
         q.push_front(x);
 
-        product_inv = next_product_inv;
+        // drop the inverse just extracted
+        elem_inverse_prod = elem_inverse_prod * m_vec[i];
     }
 
     Elements<T> ret({ q.begin(), q.end() });
