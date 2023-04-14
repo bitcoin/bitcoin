@@ -245,21 +245,27 @@ linux64-build:
     BUILD_TARGET: linux64
 
 linux64_cxx20-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu-debug
   variables:
     BUILD_TARGET: linux64_cxx20
 
 linux64_sqlite-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu-debug
   variables:
     BUILD_TARGET: linux64_sqlite
 
 linux64_fuzz-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu-debug
   variables:
@@ -320,7 +326,9 @@ linux64-test:
     BUILD_TARGET: linux64
 
 linux64_sqlite-test:
-  extends: .test-template
+  extends:
+    - .test-template
+    - .skip-in-fast-mode-template
   needs:
     - linux64_sqlite-build
   variables:
