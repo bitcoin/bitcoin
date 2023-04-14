@@ -71,6 +71,9 @@ struct SetMemProof {
         omega{omega}
         {}
 
+    bool operator==(const SetMemProof& other) const;
+    bool operator!=(const SetMemProof& other) const;
+
     template <typename Stream>
     void Serialize(Stream& st) const;
 

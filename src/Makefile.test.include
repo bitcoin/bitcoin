@@ -93,6 +93,7 @@ BITCOIN_TESTS =\
   test/blsct/eip_2333/bls12_381_keygen_tests.cpp \
   test/blsct/keys_tests.cpp \
   test/blsct/range_proof/generators_tests.cpp \
+  test/blsct/range_proof/range_proof_logic_tests.cpp \
   test/blsct/range_proof/range_proof_tests.cpp \
   test/blsct/range_proof/range_proof_with_transcript_tests.cpp \
   test/blsct/set_mem_proof/set_mem_proof_setup_tests.cpp \
