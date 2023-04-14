@@ -6,6 +6,7 @@
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <tinyformat.h>
+#include <deque>
 
 template <typename T>
 Elements<T>::Elements()
@@ -311,10 +312,34 @@ template Elements<MclScalar> Elements<MclScalar>::Negate() const;
 template <typename T>
 Elements<T> Elements<T>::Invert() const
 {
-    Elements<T> ret;
-    for (auto& x : m_vec) {
-        ret.Add(x.Invert());
+    // build a product of all elements and a cumulative product sequence
+    // - product = x_1*x_2*...*x_n
+    // - cum_prod_seq = [1, x_1, x_1*x_2, ..., x_1*...*x_n]
+    T product(1);
+    Elements<T> cum_prod_seq;
+
+    for (auto& x: m_vec) {
+        cum_prod_seq.Add(product);
+        product = product * x;
     }
+
+    // calculate the inverse of the product
+    T product_inv = product.Invert();
+
+    // generate a list of inverses from the product
+    std::deque<T> q;
+    for (size_t i = m_vec.size()-1; i != std::numeric_limits<size_t>::max(); --i) {
+        // drop the last factor to generate cancel-out factors of the next loop
+        T next_product_inv = product_inv * m_vec[i];
+
+        // extract an inverse by cancelling out other factors
+        T x = product_inv * cum_prod_seq[i];
+        q.push_front(x);
+
+        product_inv = next_product_inv;
+    }
+
+    Elements<T> ret({ q.begin(), q.end() });
     return ret;
 }
 template Elements<MclScalar> Elements<MclScalar>::Invert() const;
