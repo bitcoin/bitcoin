@@ -66,7 +66,8 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
 {
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
-        node.MarkReceivedMsgsForProcessing();
+        NetStats net_stats = NetStats(m_net_stats);
+        node.MarkReceivedMsgsForProcessing(net_stats);
     }
 }
 
