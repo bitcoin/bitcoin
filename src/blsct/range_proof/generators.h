@@ -66,7 +66,7 @@ public:
     Generators<T> GetInstance(const TokenId& token_id);
 
 private:
-    inline static GeneratorDeriver m_generator_deriver = GeneratorDeriver("bulletproofs");
+    inline const static GeneratorDeriver m_deriver = GeneratorDeriver("bulletproofs");
 
     // G generators are cached
     inline static std::map<const TokenId, const Point> m_G_cache;
