@@ -209,6 +209,7 @@ BITCOIN_CORE_H = \
   netaddress.h \
   netbase.h \
   netgroup.h \
+  netstats.h \
   netmessagemaker.h \
   node/abort.h \
   node/blockmanager_args.h \
