@@ -37,7 +37,7 @@ Scalar SetMemProofProver::ComputeX(
 ) {
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
     st << omega << y << z << T1 << T2;
-    auto vec = blsct::Common::CDataSteamToVector(st);
+    auto vec = blsct::Common::CDataStreamToVector(st);
     Scalar x = setup.H1(vec);
     return x;
 }
@@ -54,7 +54,7 @@ std::vector<uint8_t> SetMemProofProver::ComputeStr(
 ) {
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
     st << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
-    std::vector<uint8_t> str = blsct::Common::CDataSteamToVector(st);
+    std::vector<uint8_t> str = blsct::Common::CDataStreamToVector(st);
     return str;
 }
 
