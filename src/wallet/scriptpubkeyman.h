@@ -205,6 +205,9 @@ public:
      */
     virtual std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) { return {}; }
 
+    /* Determines if address is derived from active key manager */
+    virtual bool IsKeyActive(const CScript& script) const = 0;
+
     /** Sets up the key generation stuff, i.e. generates new HD seeds and sets them as active.
       * Returns false if already setup or setup fails, true if setup is successful
       * Set force=true to make it re-setup if already setup, used for upgrades
@@ -462,6 +465,8 @@ public:
 
     std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
 
+    [[nodiscard]] bool IsKeyActive(const CScript& script) const override;
+
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
     void UpgradeKeyMetadata();
 
@@ -649,6 +654,8 @@ public:
     bool TopUp(unsigned int size = 0) override;
 
     std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
+
+    [[nodiscard]] bool IsKeyActive(const CScript& script) const override { return IsMine(script); }
 
     bool IsHDEnabled() const override;
 
