@@ -14,6 +14,7 @@
 #include <net_processing.h>
 #include <net_types.h> // For banmap_t
 #include <netbase.h>
+#include <netstats.h>
 #include <node/context.h>
 #include <policy/settings.h>
 #include <protocol.h>
@@ -24,6 +25,7 @@
 #include <sync.h>
 #include <timedata.h>
 #include <util/chaintype.h>
+#include <util/overloaded.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -537,6 +539,214 @@ static RPCHelpMan getaddednodeinfo()
 },
     };
 }
+
+namespace net_stats {
+
+enum class DimensionType {
+    CONNECTION_TYPE,
+    DIRECTION,
+    MESSAGE_TYPE,
+    NETWORK_TYPE,
+    NONE,
+};
+
+DimensionType StringToDimensionType(std::string dimension)
+{
+    if (dimension == "message_type") {
+        return DimensionType::MESSAGE_TYPE;
+    } else if (dimension == "connection_type") {
+        return DimensionType::CONNECTION_TYPE;
+    } else if (dimension == "network") {
+        return DimensionType::NETWORK_TYPE;
+    } else if (dimension == "direction") {
+        return DimensionType::DIRECTION;
+    }
+
+    return DimensionType::NONE;
+}
+
+class MultiLevelStatsMap
+{
+private:
+    size_t m_levels = 0;
+    std::variant<
+        std::map<std::string, NetStats::MsgStat>,
+        std::map<std::string, MultiLevelStatsMap>>
+        m_varmap;
+
+public:
+    explicit MultiLevelStatsMap(size_t levels) : m_levels{levels}
+    {
+        if (levels > 1) {
+            m_varmap.emplace<1>();
+        } else {
+            m_varmap.emplace<0>();
+        }
+    }
+
+    NetStats::MsgStat* get_value(const Span<std::string>& steps)
+    {
+        if (steps.size() == 0) return nullptr;
+        return std::visit(util::Overloaded{
+                              [&](std::map<std::string, NetStats::MsgStat>& m) {
+                                  return &m[steps.front()]; // create if not present
+                              },
+                              [&](std::map<std::string, MultiLevelStatsMap>& m) {
+                                  size_t sublevel = m_levels > 0 ? m_levels - 1 : 0;
+                                  auto [it, inserted] = m.try_emplace(steps.front(), sublevel);
+                                  return it->second.get_value(steps.subspan(1));
+                              }},
+                          m_varmap);
+    }
+
+    UniValue to_univalue() const
+    {
+        UniValue result(UniValue::VOBJ);
+        std::visit(util::Overloaded{
+                       [&](const std::map<std::string, NetStats::MsgStat>& m) {
+                           for (auto& [k, v] : m) {
+                               if (v.msg_count > 0) {
+                                   UniValue msg_stats(UniValue::VOBJ);
+                                   msg_stats.pushKV("message_count", v.msg_count.load());
+                                   msg_stats.pushKV("byte_count", v.byte_count.load());
+                                   result.pushKV(k, msg_stats);
+                               }
+                           }
+                       },
+                       [&](const std::map<std::string, MultiLevelStatsMap>& m) {
+                           for (auto& [k, v] : m) {
+                               UniValue v_univalue = v.to_univalue();
+                               if (v_univalue.size() > 0) {
+                                   result.pushKV(k, v_univalue);
+                               }
+                           }
+                       }},
+                   m_varmap);
+        return result;
+    }
+};
+
+/**
+ * Arrange the stats in `stats.m_data` according to the `dimension_types`. Sum all the
+ * data for dimensions that are not listed.
+ * @code
+ * sent                      recv                      (direction)
+ * ||___________             ||___________
+ * |            |            |            |
+ * tor          ipv4         tor          ipv4         (network)
+ * ||_____      ||_____      ||_____      ||_____
+ * |      |     |      |     |      |     |      |
+ * verack ping  verack ping  verack ping  verack ping  (message type)
+ * |      |     |      |     |      |     |      |
+ * a      b     c      d     e      f     g      h
+ * @endcode
+ *
+ * If the direction and network dimensions are requested, the stats for message type are
+ * summarized and the above would become:
+ * @code
+ * sent                      recv                      (direction)
+ * ||___________             ||___________
+ * |            |            |            |
+ * tor          ipv4         tor          ipv4         (network)
+ * |            |            |            |
+ * *            *            *            *
+ * |            |            |            |
+ * a+b          c+d          e+f          g+h          (message type)
+ * @endcode
+ *
+ * This method can also rearrange results by dimension, allowing the requester to specify
+ * the order. If the message type and network dimensions are requested, the response
+ * would be:
+ * @code
+ * verack                    ping                      (message type)
+ * ||___________             ||___________
+ * |            |            |            |
+ * tor          ipv4         tor          ipv4         (network)
+ * |            |            |            |
+ * *            *            *            *
+ * |            |            |            |
+ * a+e          c+g          b+f          d+h          (direction)
+ * @endcode
+ *
+ */
+UniValue Aggregate(const std::vector<DimensionType>& dimensions, const NetStats::MultiDimensionalStats& raw_stats)
+{
+    const size_t num_dimensions = dimensions.size();
+    size_t map_depth = 1;
+
+    if (num_dimensions > 0) {
+        map_depth = num_dimensions;
+    }
+
+    MultiLevelStatsMap result{map_depth};
+
+    // Iterate over the multi dimensional array that holds the raw stats
+    for (std::size_t direction_i = 0; direction_i < NetStats::NUM_DIRECTIONS; direction_i++) {
+        for (int network_i = 0; network_i < NET_MAX; network_i++) {
+            for (std::size_t connection_i = 0; connection_i < NUM_CONNECTION_TYPES; connection_i++) {
+                for (std::size_t message_i = 0; message_i < (NUM_NET_MESSAGE_TYPES + 1); message_i++) {
+                    // a single statistic
+                    const NetStats::MsgStat& raw_stat = raw_stats[direction_i][network_i][connection_i][message_i];
+
+                    std::vector<std::string> path{};
+                    // "result" is our multi-level map, we use path to keep track of where we are as we move down it
+
+                    std::string dimension_name;
+                    // For each dimension type, get the actual name of the dimension on this stat
+                    // (i.e. the dimension name could be "tor" if the dimension type is "network")
+                    // This tells us which subtree to move into.
+                    for (unsigned int i = 0; i < num_dimensions; i++) {
+                        DimensionType dimension = dimensions[i];
+
+                        switch (dimension) {
+                        case DimensionType::MESSAGE_TYPE:
+                            dimension_name = messageTypeFromIndex(message_i);
+
+                            if (dimension_name == NET_MESSAGE_TYPE_OTHER) {
+                                dimension_name = "other"; // special case: instead of *other*
+                            }
+                            break;
+                        case DimensionType::CONNECTION_TYPE:
+                            dimension_name = ConnectionTypeAsString(NetStats::ConnectionTypeFromIndex(connection_i));
+                            break;
+                        case DimensionType::NETWORK_TYPE:
+                            dimension_name = GetNetworkName(NetStats::NetworkFromIndex(network_i));
+                            break;
+                        case DimensionType::DIRECTION:
+                            dimension_name = NetStats::DirectionAsString(NetStats::DirectionFromIndex(direction_i));
+                            break;
+                        case DimensionType::NONE:
+                            break;
+                        }
+                        path.push_back(dimension_name);
+                    }
+
+                    // If no dimensions are requested to be shown, return a single field for totals.
+                    if (path.size() == 0) {
+                        path.emplace_back("totals");
+                    }
+
+                    NetStats::MsgStat* v = result.get_value(path);
+
+                    // If this path does not exist in the result object, create it.
+                    if (v == nullptr) {
+                        NetStats::MsgStat msg_stat = NetStats::MsgStat{raw_stat.byte_count.load(),
+                                                                       raw_stat.msg_count.load()};
+                        v = &msg_stat;
+                        // Otherwise, retrieve the corresponding path from the result object
+                        // and add the current stat to it.
+                    } else if (raw_stat.byte_count > 0) {
+                        v->msg_count += raw_stat.msg_count;
+                        v->byte_count += raw_stat.byte_count;
+                    }
+                }
+            }
+        }
+    }
+    return result.to_univalue();
+}
+
+}; // namespace net_stats
 
 static RPCHelpMan getnettotals()
 {

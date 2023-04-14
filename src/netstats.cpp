@@ -82,6 +82,19 @@ size_t NetStats::ConnectionTypeToIndex(ConnectionType conn_type)
     assert(false);
 }
 
+
+std::string NetStats::DirectionAsString(Direction direction)
+{
+    switch (direction) {
+    case Direction::SENT:
+        return "sent";
+    case Direction::RECV:
+        return "received";
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
+}
+
 void NetStats::Record(Direction direction,
                       Network net,
                       ConnectionType conn_type,

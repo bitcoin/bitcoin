@@ -90,6 +90,8 @@ public:
     [[nodiscard]] static Network NetworkFromIndex(size_t index);
     [[nodiscard]] static ConnectionType ConnectionTypeFromIndex(size_t index);
 
+    static std::string DirectionAsString(Direction direction);
+
 private:
     // Helper methods to make sure the indexes associated with enums are reliable
     [[nodiscard]] static size_t DirectionToIndex(Direction direction);
