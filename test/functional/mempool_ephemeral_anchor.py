@@ -68,7 +68,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         child_result["hex"] = child_tx.serialize().hex()
 
 
-    def create_simple_package(self, parent_coin, parent_fee=0, child_fee=DEFAULT_FEE, spend_anchor=1, additional_outputs=None):
+    def create_simple_package(self, parent_coin, parent_fee=0, child_fee=DEFAULT_FEE, spend_anchor=1, additional_outputs=None, version=3):
         """Create a 1 parent 1 child package using the coin passed in as the parent's input. The
         parent has 1 output, used to fund 1 child transaction.
         All transactions signal BIP125 replaceability, but nSequence changes based on self.ctr. This
@@ -90,6 +90,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
             fee=parent_fee,
             utxo_to_spend=parent_coin,
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            version=version,
         )
 
         self.insert_additional_outputs(parent_result, additional_outputs)
@@ -106,6 +107,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
             num_outputs=1,
             fee_per_output=int(child_fee * COIN),
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            version=version,
         )
 
         if spend_anchor:
@@ -134,6 +136,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.test_multianchor()
         self.test_nonzero_anchor()
         self.test_prioritise_parent()
+        self.test_non_v3()
 
     def test_fee_having_parent(self):
         self.log.info("Test that a transaction with ephemeral anchor may not have base fee")
@@ -205,6 +208,20 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.assert_mempool_contents(expected=package_txns1, unexpected=[])
 
         self.generate(node, 1)
+
+    def test_non_v3(self):
+        self.log.info("Test that v2 EA-having transaction is rejected")
+        # N.B. Currently we never actually hit the "wrong version" check but min relay restriction
+        # may be relaxed in the future for non-V3.
+
+        node = self.nodes[0]
+        # Reuse the same coins so that the transactions conflict with one another.
+        parent_coin = self.coins[-1]
+        del self.coins[-1]
+
+        package_hex, package_txns = self.create_simple_package(parent_coin=parent_coin, parent_fee=0, child_fee=DEFAULT_FEE, version=2)
+        assert_raises_rpc_error(-26, "wrong-ephemeral-nversion", node.submitpackage, package_hex)
+        assert_equal(node.getrawmempool(), [])
 
 
 if __name__ == "__main__":
