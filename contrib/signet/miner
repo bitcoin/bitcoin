@@ -268,7 +268,7 @@ def get_reward_address(args, height):
         return args.address
 
     if '*' not in args.descriptor:
-        addr = args.bcli("deriveaddresses", args.descriptor)[0]
+        addr = args.bcli("deriveaddresses", args.descriptor)[0]  # ITCOIN_SPECIFIC: the call to args.bcli() was originally enclosed in a json.loads()
         args.address = addr
         return addr
 
@@ -278,7 +278,7 @@ def get_reward_address(args, height):
 
     addr = args.derived_addresses.get(height, None)
     if addr is None:
-        addrs = args.bcli("deriveaddresses", args.descriptor, "[%d,%d]" % (height, height+20))
+        addrs = args.bcli("deriveaddresses", args.descriptor, "[%d,%d]" % (height, height+20))  # ITCOIN_SPECIFIC: the call to args.bcli() was originally enclosed in a json.loads()
         addr = addrs[0]
         for k, a in enumerate(addrs):
             args.derived_addresses[height+k] = a
@@ -292,7 +292,7 @@ def get_reward_addr_spk(args, height):
         return args.address, args.reward_spk
 
     reward_addr = get_reward_address(args, height)
-    reward_spk = bytes.fromhex(args.bcli("getaddressinfo", reward_addr)["scriptPubKey"])
+    reward_spk = bytes.fromhex(args.bcli("getaddressinfo", reward_addr)["scriptPubKey"])  # ITCOIN_SPECIFIC: the call to args.bcli() was originally enclosed in a json.loads()
     if args.address is not None:
         # will always be the same, so cache
         args.reward_spk = reward_spk
@@ -636,10 +636,10 @@ def do_generate(args):
     while max_blocks is None or mined_blocks < max_blocks:
 
         # current status?
-        bci = args.bcli("getblockchaininfo")
+        bci = args.bcli("getblockchaininfo")  # ITCOIN_SPECIFIC: the call to args.bcli() was originally enclosed in a json.loads()
 
         if bestheader["hash"] != bci["bestblockhash"]:
-            bestheader = args.bcli("getblockheader", bci["bestblockhash"])
+            bestheader = args.bcli("getblockheader", bci["bestblockhash"])  # ITCOIN_SPECIFIC: the call to args.bcli() was originally enclosed in a json.loads()
 
         if lastheader is None:
             lastheader = bestheader["hash"]
