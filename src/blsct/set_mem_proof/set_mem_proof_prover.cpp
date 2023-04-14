@@ -159,6 +159,7 @@ SetMemProof SetMemProofProver::Prove(
     Scalar t1 = (l0 * r1).Sum() + (l1 * r0).Sum();
     Scalar t2 = (l1 * r1).Sum();
 
+retry:
     Scalar tau_1 = Scalar::Rand(true);
     Scalar tau_2 = Scalar::Rand(true);
 
@@ -179,11 +180,13 @@ SetMemProof SetMemProofProver::Prove(
     Scalars r = r0 + r1 * x;
     Scalar t = (l * r).Sum();
 
-    Scalar c_factor = Scalar::Rand();
     Points Hi = setup.hs.To(Ys.Size());
 
     CHashWriter transcript_gen =
         GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
+
+    Scalar c_factor = transcript_gen.GetHash();
+    if (c_factor == 0) goto retry;
 
     auto iipa_res = ImpInnerProdArg::Run<Mcl>(
         n,
@@ -192,6 +195,7 @@ SetMemProof SetMemProofProver::Prove(
         c_factor, y,
         transcript_gen
     );
+    if (iipa_res == std::nullopt) goto retry;
 
     auto proof = SetMemProof(
         phi, A1,
@@ -202,7 +206,7 @@ SetMemProof SetMemProofProver::Prove(
         iipa_res.value().Rs,
         iipa_res.value().a,
         iipa_res.value().b,
-        omega, c_factor
+        omega
     );
     return proof;
 }
@@ -281,6 +285,8 @@ bool SetMemProofProver::Verify(
 
         CHashWriter transcript_gen =
             GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
+
+        Scalar c_factor = transcript_gen.GetHash();
         size_t num_rounds = std::log2(n);
 
         auto xs = ImpInnerProdArg::GenAllRoundXs<Mcl>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
@@ -302,7 +308,7 @@ bool SetMemProofProver::Verify(
             verifier.AddPoint(LazyPoint(proof.Rs[i], x_invs[i].Square()));
         }
 
-        verifier.AddPositiveG((proof.t - proof.a * proof.b) * proof.c_factor);
+        verifier.AddPositiveG((proof.t - proof.a * proof.b) * c_factor);
     }
 
     //////// (20)

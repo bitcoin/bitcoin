@@ -26,8 +26,7 @@ void SetMemProof::Serialize(Stream& st) const
        << Rs
        << a
        << b
-       << omega
-       << c_factor;
+       << omega;
 }
 template
 void SetMemProof::Serialize(CDataStream& st) const;
@@ -53,8 +52,7 @@ void SetMemProof::Unserialize(Stream& st)
        >> Rs
        >> a
        >> b
-       >> omega
-       >> c_factor;
+       >> omega;
 }
 template
 void SetMemProof::Unserialize(CDataStream& st);

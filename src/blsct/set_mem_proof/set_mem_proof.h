@@ -37,7 +37,6 @@ struct SetMemProof {
     Scalar a;
     Scalar b;
     Scalar omega;
-    Scalar c_factor;
 
     // for unserialization
     SetMemProof() {}
@@ -64,13 +63,12 @@ struct SetMemProof {
         const Points& Rs,
         const Scalar& a,
         const Scalar& b,
-        const Scalar& omega,
-        const Scalar& c_factor
+        const Scalar& omega
     ): phi{phi}, A1{A1}, A2{A2}, S1{S1}, S2{S2},
         S3{S3}, T1{T1}, T2{T2}, tau_x{tau_x},
         mu{mu}, z_alpha{z_alpha}, z_tau{z_tau}, z_beta{z_beta}, t{t},
         Ls{Ls}, Rs{Rs}, a{a}, b{b},
-        omega{omega}, c_factor{c_factor}
+        omega{omega}
         {}
 
     template <typename Stream>

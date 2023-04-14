@@ -37,15 +37,14 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     Scalar z_beta(5);
     Scalar t(6);
     Points Ls;
-    Ls.Add(g * 10);
-    Ls.Add(g * 11);
+    Ls.Add(g * 100);
+    Ls.Add(g * 101);
     Points Rs;
-    Rs.Add(g * 20);
-    Rs.Add(g * 21);
+    Rs.Add(g * 200);
+    Rs.Add(g * 201);
     Scalar a(7);
     Scalar b(8);
     Scalar omega(9);
-    Scalar c_factor(10);
 
     auto p = SetMemProof(
         phi,
@@ -66,8 +65,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
         Rs,
         a,
         b,
-        omega,
-        c_factor
+        omega
     );
 
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
@@ -95,7 +93,6 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     BOOST_CHECK(p.a == q.a);
     BOOST_CHECK(p.b == q.b);
     BOOST_CHECK(p.omega == q.omega);
-    BOOST_CHECK(p.c_factor == q.c_factor);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

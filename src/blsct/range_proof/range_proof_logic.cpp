@@ -295,15 +295,15 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     transcript_gen << proof.mu;
     transcript_gen << proof.t_hat;
 
-    Scalar cx_factor = transcript_gen.GetHash();
-    if (cx_factor == 0) goto retry;
+    Scalar c_factor = transcript_gen.GetHash();
+    if (c_factor == 0) goto retry;
 
     {
         auto res = ImpInnerProdArg::Run<Mcl>(
             concat_input_values_in_bits,
             Gi, Hi, G,
             l,  r,
-            cx_factor, y,
+            c_factor, y,
             transcript_gen
         );
         if (res == std::nullopt) goto retry;
