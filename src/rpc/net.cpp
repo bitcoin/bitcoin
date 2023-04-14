@@ -718,7 +718,189 @@ UniValue Aggregate(const std::vector<DimensionType>& dimensions, const NetStats:
     return result.to_univalue();
 }
 
+static std::vector<RPCResult> NetMsgStat()
+{
+    return {
+        {RPCResult::Type::NUM, "message_count", "Total number of messages sent"},
+        {RPCResult::Type::NUM, "byte_count", "Total number of bytes sent"}};
+}
 }; // namespace net_stats
+
+static RPCHelpMan getnetmsgstats()
+{
+    return RPCHelpMan{
+        /*name=*/"getnetmsgstats",
+        /*description=*/
+        "\nReturns the message count and total number of bytes for network traffic.\n"
+        "Results may optionally be grouped so only certain dimensions are shown.",
+        /*args=*/
+        {
+            {
+                /*name=*/"show_only",
+                /*type=*/RPCArg::Type::ARR,
+                /*fallback=*/RPCArg::Optional::OMITTED,
+                /*description=*/"An array of dimensions to arrange results by.",
+                /*inner=*/{
+                    {
+                        /*name=*/"dimension_type",
+                        /*type=*/RPCArg::Type::STR,
+                        /*fallback=*/RPCArg::Optional::OMITTED,
+                        /*description=*/"Dimension type to arrange results by.\n"
+                        "Valid options are: direction, network, connection_type, and message_type"
+                    }
+                }
+            }
+        },
+        /*results=*/{
+            // A return object with one level of data: either when totals are returned (no dimensions),
+            // or one dimension has been specified
+            RPCResult {
+                /*type=*/RPCResult::Type::OBJ_DYN,
+                /*m_key_name=*/"",
+                /*description=*/"",
+                /*inner=*/{
+                    {
+                        /*type=*/RPCResult::Type::OBJ,
+                        /*m_key_name=*/"totals",
+                        /*optional=*/true,
+                        /*description=*/"Network traffic statistics.\n"
+                            "When a message, connection, network type, or direction is not listed,\n"
+                            "the statistics for that type are 0. Only known message,\n"
+                            "connection, and network types can appear as keys in the object.",
+                        /*inner=*/net_stats::NetMsgStat()
+                    },
+                    {
+                        /*type=*/RPCResult::Type::OBJ_DYN,
+                        /*m_key_name=*/"keys for the dimension type",
+                        /*optional=*/true,
+                        /*description=*/"Network traffic statistics.\n"
+                            "When a message, connection, network type, or direction is not listed,\n"
+                            "the statistics for that type are 0. Only known message,\n"
+                            "connection, and network types can appear as keys in the object.",
+                        /*inner=*/net_stats::NetMsgStat()
+                    }
+                }
+            },
+            // A return object with two levels of data: two dimensions
+            RPCResult {
+                /*type=*/RPCResult::Type::OBJ_DYN,
+                /*m_key_name=*/"",
+                /*description=*/"",
+                /*inner=*/{
+                    {
+                        /*type=*/RPCResult::Type::OBJ_DYN,
+                        /*m_key_name=*/"keys for the first dimension type",
+                        /*description=*/"Network traffic statistics.\n"
+                            "When a message, connection, network type, or direction is not listed,\n"
+                            "the statistics for that type are 0. Only known message,\n"
+                            "connection, and network types can appear as keys in the object.",
+                        /*inner=*/{
+                            {
+                                /*type=*/RPCResult::Type::OBJ_DYN,
+                                /*m_key_name=*/"keys for the second dimension type",
+                                /*description=*/"",
+                                /*inner=*/net_stats::NetMsgStat()
+                            }
+                        }
+                    }
+                }
+            },
+            // A return object with three levels of data: three dimensions
+            RPCResult {
+                /*type=*/RPCResult::Type::OBJ_DYN,
+                /*m_key_name=*/"",
+                /*description=*/"",
+                /*inner=*/{
+                    {
+                        /*type=*/RPCResult::Type::OBJ_DYN,
+                        /*m_key_name=*/"keys for the first dimension type",
+                        /*description=*/"Network traffic statistics.\n"
+                            "When a message, connection, network type, or direction is not listed,\n"
+                            "the statistics for that type are 0. Only known message,\n"
+                            "connection, and network types can appear as keys in the object.",
+                        /*inner=*/{
+                            {
+                                /*type=*/RPCResult::Type::OBJ_DYN,
+                                /*m_key_name=*/"keys for the second dimension type",
+                                /*description=*/"",
+                                /*inner=*/{
+                                    {
+                                        /*type=*/RPCResult::Type::OBJ_DYN,
+                                        /*m_key_name=*/"keys for the third dimension type",
+                                        /*description=*/"",
+                                        /*inner=*/net_stats::NetMsgStat()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            // A return object with four levels of data: four dimensions
+            RPCResult {
+                /*type=*/RPCResult::Type::OBJ_DYN,
+                /*m_key_name=*/"",
+                /*description=*/"",
+                /*inner=*/{
+                    {
+                        /*type=*/RPCResult::Type::OBJ_DYN,
+                        /*m_key_name=*/"keys for the first dimension type",
+                        /*description=*/"Network traffic statistics.\n"
+                            "When a message, connection, network type, or direction is not listed,\n"
+                            "the statistics for that type are 0. Only known message,\n"
+                            "connection, and network types can appear as keys in the object.",
+                        /*inner=*/{
+                            {
+                                /*type=*/RPCResult::Type::OBJ_DYN,
+                                /*m_key_name=*/"keys for the second dimension type",
+                                /*description=*/"",
+                                /*inner=*/{
+                                    {
+                                        /*type=*/RPCResult::Type::OBJ_DYN,
+                                        /*m_key_name=*/"keys for the third dimension type",
+                                        /*description=*/"",
+                                        /*inner=*/{
+                                            {
+                                                /*type=*/RPCResult::Type::OBJ_DYN,
+                                                /*m_key_name=*/"keys for the fourth dimension type",
+                                                /*description*/"",
+                                                /*inner*/net_stats::NetMsgStat()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        /*examples=*/
+        RPCExamples {
+            HelpExampleCli("getnetmsgstats", "") +
+            HelpExampleCli("getnetmsgstats", R"('["connection_type","message_type"]')") +
+            HelpExampleRpc("getnetmsgstats", "") +
+            HelpExampleRpc("getnetmsgstats", R"(["message_type","network"])")},
+        /*fun=*/[&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            const CConnman& connman = EnsureConnman(node);
+            std::vector<net_stats::DimensionType> dimensions;
+
+            // Aggregate the messages to show only requested dimensions
+            if (request.params[0].isArray()) {
+                const UniValue raw_dimensions = request.params[0].get_array();
+
+                for (unsigned int i = 0; i < raw_dimensions.size(); ++i) {
+                    std::string dimension_string = raw_dimensions[i].get_str();
+                    net_stats::DimensionType dimension = net_stats::StringToDimensionType(dimension_string);
+                    dimensions.push_back(dimension);
+                }
+            }
+
+            UniValue obj = net_stats::Aggregate(dimensions, connman.GetNetStats().m_data);
+            return obj;
+        }};
+}
 
 static RPCHelpMan getnettotals()
 {
@@ -1186,6 +1368,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"network", &addnode},
         {"network", &disconnectnode},
         {"network", &getaddednodeinfo},
+        {"network", &getnetmsgstats},
         {"network", &getnettotals},
         {"network", &getnetworkinfo},
         {"network", &setban},

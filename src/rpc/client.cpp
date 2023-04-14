@@ -172,6 +172,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "verifychain", 1, "nblocks" },
     { "getblockstats", 0, "hash_or_height" },
     { "getblockstats", 1, "stats" },
+    { "getnetmsgstats", 0, "show_only"},
     { "pruneblockchain", 0, "height" },
     { "keypoolrefill", 0, "newsize" },
     { "getrawmempool", 0, "verbose" },
