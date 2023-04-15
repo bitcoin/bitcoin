@@ -221,11 +221,11 @@ bool SetMemProofProver::Verify(
         Ys, proof.A1, proof.A2, proof.S1,
         proof.S2, proof.S3, proof.phi, eta
     );
-retry:
     Point h2 = setup.H5(Ys.GetVch());
     Point h3 = setup.H6(eta.GetVch());
     Point g2 = setup.H7(eta.GetVch());
 
+retry:
     GEN_FIAT_SHAMIR_VAR(y, fiat_shamir, retry);
     GEN_FIAT_SHAMIR_VAR(z, fiat_shamir, retry);
     GEN_FIAT_SHAMIR_VAR(omega, fiat_shamir, retry);
