@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_input)
     BOOST_CHECK_EQUAL(res, true);
 }
 
-BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_bad_input)
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
 {
     auto y1 = Point::MapToG1("y1", Endianness::Little);
     auto y2 = Point::MapToG1("y2", Endianness::Little);
@@ -129,6 +129,96 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_bad_input)
 
     BOOST_CHECK_EQUAL(res, false);
 }
+
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
+{
+    auto y1 = Point::MapToG1("y1", Endianness::Little);
+    auto y2 = Point::MapToG1("y2", Endianness::Little);
+    auto y3 = Point::MapToG1("y4", Endianness::Little);
+
+    auto setup = SetMemProofSetup::Get();
+    Scalar m = Scalar::Rand();
+    Scalar f = Scalar::Rand();
+    auto sigma = setup.PedersenCommitment(m, f);
+
+    Points prove_Ys;
+    prove_Ys.Add(y1);
+    prove_Ys.Add(y2);
+    prove_Ys.Add(sigma);
+    prove_Ys.Add(y3);
+
+    Points verify_Ys;
+    verify_Ys.Add(y1);
+    verify_Ys.Add(y2);
+    verify_Ys.Add(y3);
+    prove_Ys.Add(sigma);
+
+    Scalar eta = Scalar::Rand();
+    auto proof = Prover::Prove(setup, prove_Ys, sigma, f, m, eta);
+    auto res = Prover::Verify(setup, verify_Ys, eta, proof);
+
+    BOOST_CHECK_EQUAL(res, false);
+}
+
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
+{
+    auto y1 = Point::MapToG1("y1", Endianness::Little);
+    auto y2 = Point::MapToG1("y2", Endianness::Little);
+    auto y4 = Point::MapToG1("y4", Endianness::Little);
+
+    auto setup = SetMemProofSetup::Get();
+    Scalar m = Scalar::Rand();
+    Scalar f = Scalar::Rand();
+    auto sigma = setup.PedersenCommitment(m, f);
+
+    Points ys;
+    ys.Add(y1);
+    ys.Add(y2);
+    ys.Add(sigma);
+    ys.Add(y4);
+
+    Scalar eta = Scalar::Rand();
+    Scalar different_eta = eta + 1;
+    auto proof = Prover::Prove(setup, ys, sigma, f, m, eta);
+    auto res = Prover::Verify(setup, ys, different_eta, proof);
+
+    BOOST_CHECK_EQUAL(res, false);
+}
+
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
+{
+    auto y1_1 = Point::MapToG1("y1_1", Endianness::Little);
+    auto y2_1 = Point::MapToG1("y2_1", Endianness::Little);
+    auto y4_1 = Point::MapToG1("y4_1", Endianness::Little);
+
+    auto y1_2 = Point::MapToG1("y1_2", Endianness::Little);
+    auto y2_2 = Point::MapToG1("y2_2", Endianness::Little);
+    auto y4_2 = Point::MapToG1("y4_2", Endianness::Little);
+
+    auto setup = SetMemProofSetup::Get();
+    Scalar m = Scalar::Rand();
+    Scalar f = Scalar::Rand();
+    auto sigma = setup.PedersenCommitment(m, f);
+
+    Points prove_Ys;
+    prove_Ys.Add(y1_1);
+    prove_Ys.Add(y2_1);
+    prove_Ys.Add(sigma);
+    prove_Ys.Add(y4_1);
+
+    Points verify_Ys;
+    verify_Ys.Add(y1_2);
+    verify_Ys.Add(y2_2);
+    prove_Ys.Add(sigma);
+    verify_Ys.Add(y4_2);
+
+    Scalar eta = Scalar::Rand();
+    auto proof = Prover::Prove(setup, prove_Ys, sigma, f, m, eta);
+    auto res = Prover::Verify(setup, verify_Ys, eta, proof);
+
+    BOOST_CHECK_EQUAL(res, false);
+}
+
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 {
