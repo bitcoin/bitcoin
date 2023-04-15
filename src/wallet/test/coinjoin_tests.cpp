@@ -129,10 +129,7 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
-        node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
-        chain = interfaces::MakeChain(node);
-        wallet = std::make_unique<CWallet>(chain.get(), "", CreateMockWalletDatabase());
+        wallet = std::make_unique<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
         wallet->SetupLegacyScriptPubKeyMan();
         bool firstRun;
         wallet->LoadWallet(firstRun);
@@ -143,7 +140,7 @@ public:
             wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
             WalletRescanReserver reserver(wallet.get());
             reserver.reserve();
-            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
+            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(),  0 /* start_height */, {} /* max_height */, reserver, true /* fUpdate */);
             BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         }
     }
@@ -153,8 +150,6 @@ public:
         RemoveWallet(wallet, std::nullopt);
     }
 
-    NodeContext node;
-    std::shared_ptr<interfaces::Chain> chain;
     std::shared_ptr<CWallet> wallet;
 
     CWalletTx& AddTxToChain(uint256 nTxHash)

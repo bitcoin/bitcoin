@@ -1415,7 +1415,7 @@ static UniValue verifychain(const JSONRPCRequest& request)
     const NodeContext& node_context = EnsureNodeContext(request.context);
 
     return CVerifyDB().VerifyDB(
-        Params(), ::ChainstateActive(), &::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
+        ::ChainstateActive(), Params(), ::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
 }
 
 /** Implementation of IsSuperMajority with better feedback */

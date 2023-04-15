@@ -105,6 +105,7 @@ BITCOIN_TESTS =\
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
+  test/interfaces_tests.cpp \
   test/key_io_tests.cpp \
   test/key_tests.cpp \
   test/lcg.h \

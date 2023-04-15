@@ -36,12 +36,16 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <QObject>
 #include <QString>
 
 class OptionsModel;
+
+namespace interfaces {
+class Node;
+} // namespace interfaces
 
 QT_BEGIN_NAMESPACE
 class QApplication;

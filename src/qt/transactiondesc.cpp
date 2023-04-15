@@ -17,9 +17,10 @@
 #include <consensus/consensus.h>
 #include <key_io.h>
 #include <interfaces/node.h>
-#include <validation.h>
+#include <interfaces/wallet.h>
 #include <script/script.h>
 #include <util/system.h>
+#include <validation.h>
 #include <wallet/ismine.h>
 
 #include <stdint.h>

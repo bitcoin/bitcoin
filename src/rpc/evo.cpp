@@ -178,7 +178,7 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
     if (!pkhash) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PKH address, not %s", paramName, strAddress));
     }
-    return CKeyID(*pkhash);
+    return ToKeyID(*pkhash);
 }
 
 static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName, bool specific_legacy_bls_scheme = false)
@@ -773,7 +773,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
             }
 
             CKey key;
-            if (!spk_man->GetKey(CKeyID(*pkhash), key)) {
+            if (!spk_man->GetKey(ToKeyID(*pkhash), key)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
             }
             SignSpecialTxPayloadByString(tx, ptx, key);
@@ -1235,7 +1235,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
-        if ((std::get_if<PKHash>(&dest) && spk_man->HaveKey(CKeyID(*std::get_if<PKHash>(&dest)))) || (std::get_if<ScriptHash>(&dest) && spk_man->HaveCScript(ScriptHash(*std::get_if<ScriptHash>(&dest))))) {
+        if ((std::get_if<PKHash>(&dest) && spk_man->HaveKey(ToKeyID(*std::get_if<PKHash>(&dest)))) || (std::get_if<ScriptHash>(&dest) && spk_man->HaveCScript(CScriptID{ScriptHash(*std::get_if<ScriptHash>(&dest))}))) {
             return true;
         }
     }

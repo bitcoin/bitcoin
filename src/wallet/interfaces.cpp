@@ -16,6 +16,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <validation.h>
 #include <wallet/context.h>
@@ -30,9 +31,22 @@
 #include <utility>
 #include <vector>
 
-namespace interfaces {
-namespace {
+using interfaces::Chain;
+using interfaces::FoundBlock;
+using interfaces::Handler;
+using interfaces::MakeHandler;
+using interfaces::Wallet;
+using interfaces::WalletAddress;
+using interfaces::WalletBalances;
+using interfaces::WalletClient;
+using interfaces::WalletOrderForm;
+using interfaces::WalletTx;
+using interfaces::WalletTxOut;
+using interfaces::WalletTxStatus;
+using interfaces::WalletValueMap;
 
+namespace wallet {
+namespace {
 //! Construct wallet tx struct.
 WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 {
@@ -77,7 +91,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    result.block_height = wallet.chain().getBlockHeight(wtx.m_confirm.hashBlock).value_or(std::numeric_limits<int>::max());
+    result.block_height = wtx.m_confirm.block_height > 0 ? wtx.m_confirm.block_height : std::numeric_limits<int>::max();
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
     result.time_received = wtx.nTimeReceived;
@@ -106,6 +120,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     return result;
 }
 
+namespace CoinJoin = interfaces::CoinJoin;
 class CoinJoinImpl : public CoinJoin::Client
 {
     std::shared_ptr<CCoinJoinClientManager> m_manager;
@@ -357,6 +372,7 @@ public:
     }
     bool tryGetTxStatus(const uint256& txid,
         interfaces::WalletTxStatus& tx_status,
+        int& num_blocks,
         int64_t& block_time) override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
@@ -367,11 +383,9 @@ public:
         if (mi == m_wallet->mapWallet.end()) {
             return false;
         }
-        if (std::optional<int> height = m_wallet->chain().getHeight()) {
-            block_time = m_wallet->chain().getBlockTime(*height);
-        } else {
-            block_time = -1;
-        }
+        num_blocks = m_wallet->GetLastBlockHeight();
+        block_time = -1;
+        CHECK_NONFATAL(m_wallet->chain().findBlock(m_wallet->GetLastBlockHash(), FoundBlock().time(block_time)));
         tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
         return true;
     }
@@ -419,14 +433,14 @@ public:
         }
         return result;
     }
-    bool tryGetBalances(WalletBalances& balances, int& num_blocks) override
+    bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
         if (!locked_wallet) {
             return false;
         }
+        block_hash = m_wallet->GetLastBlockHash();
         balances = getBalances();
-        num_blocks = m_wallet->chain().getHeight().value_or(-1);
         return true;
     }
     CAmount getBalance() override
@@ -661,14 +675,12 @@ public:
     std::vector<std::unique_ptr<Handler>> m_rpc_handlers;
     std::list<CRPCCommand> m_rpc_commands;
 };
-
 } // namespace
+} // namespace wallet
 
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<WalletImpl>(wallet) : nullptr; }
-
-std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args)
-{
-    return std::make_unique<WalletClientImpl>(chain, args);
+namespace interfaces {
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
+std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args) {
+    return std::make_unique<wallet::WalletClientImpl>(chain, args);
 }
-
 } // namespace interfaces

@@ -1416,7 +1416,7 @@ template <typename ProTx>
 static bool CheckHashSig(const ProTx& proTx, const PKHash& pkhash, CValidationState& state)
 {
     std::string strError;
-    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), CKeyID(pkhash), proTx.vchSig, strError)) {
+    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), ToKeyID(pkhash), proTx.vchSig, strError)) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-sig");
     }
     return true;
@@ -1426,7 +1426,7 @@ template <typename ProTx>
 static bool CheckStringSig(const ProTx& proTx, const PKHash& pkhash, CValidationState& state)
 {
     std::string strError;
-    if (!CMessageSigner::VerifyMessage(CKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
+    if (!CMessageSigner::VerifyMessage(ToKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-sig");
     }
     return true;
