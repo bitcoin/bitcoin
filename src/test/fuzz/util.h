@@ -10,6 +10,7 @@
 #include <attributes.h>
 #include <chainparamsbase.h>
 #include <coins.h>
+#include <compat.h>
 #include <consensus/consensus.h>
 #include <merkleblock.h>
 #include <net.h>
@@ -518,14 +519,22 @@ public:
     {
     }
 
+    FuzzedSock& operator=(Sock&& other) override
+    {
+        assert(false && "Not implemented yet.");
+        return *this;
+    }
+
     SOCKET Get() const override
     {
         assert(false && "Not implemented yet.");
+        return INVALID_SOCKET;
     }
 
     SOCKET Release() override
     {
         assert(false && "Not implemented yet.");
+        return INVALID_SOCKET;
     }
 
     void Reset() override
