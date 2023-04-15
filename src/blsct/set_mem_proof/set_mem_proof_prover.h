@@ -40,13 +40,14 @@ public:
 private:
 #endif
     static CHashWriter GenInitialTranscriptGen(
-        const Point& h2,
-        const Point& h3,
-        const Point& g2,
-        const Scalar& y,
-        const Scalar& z,
-        const Scalar& omega,
-        const Scalar& x
+        const Points& Ys,
+        const Point& A1,
+        const Point& A2,
+        const Point& S1,
+        const Point& S2,
+        const Point& S3,
+        const Point& phi,
+        const Scalar& eta
     );
 
     static Scalar ComputeX(
@@ -56,17 +57,6 @@ private:
         const Scalar& z,
         const Point& T1,
         const Point& T2
-    );
-
-    static std::vector<uint8_t> ComputeStr(
-        Points Ys,
-        Point A1,
-        Point A2,
-        Point S1,
-        Point S2,
-        Point S3,
-        Point phi,
-        Scalar eta
     );
 
     static Points ExtendYs(

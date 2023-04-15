@@ -18,6 +18,15 @@ using Point = SetMemProofProver::Point;
 using Scalars = SetMemProofProver::Scalars;
 using Points = SetMemProofProver::Points;
 
+#define GEN_FIAT_SHAMIR_VAR(var, transcript_gen, retry) \
+    Scalar var = transcript_gen.GetHash(); \
+    if (var == 0) goto retry; \
+    transcript_gen << var;
+
+#define GEN_FIAT_SHAMIR_VAR_NO_RETRY(var, transcript_gen) \
+    Scalar var = transcript_gen.GetHash(); \
+    transcript_gen << var;
+
 const Scalar& SetMemProofProver::One()
 {
     static Scalar* x = nullptr;
@@ -42,20 +51,19 @@ Scalar SetMemProofProver::ComputeX(
     return x;
 }
 
-std::vector<uint8_t> SetMemProofProver::ComputeStr(
-    Points Ys,
-    Point A1,
-    Point A2,
-    Point S1,
-    Point S2,
-    Point S3,
-    Point phi,
-    Scalar eta
+CHashWriter SetMemProofProver::GenInitialTranscriptGen(
+    const Points& Ys,
+    const Point& A1,
+    const Point& A2,
+    const Point& S1,
+    const Point& S2,
+    const Point& S3,
+    const Point& phi,
+    const Scalar& eta
 ) {
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
-    st << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
-    std::vector<uint8_t> str = blsct::Common::CDataStreamToVector(st);
-    return str;
+    CHashWriter transcript_gen(0, 0);
+    transcript_gen << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
+    return transcript_gen;
 }
 
 Points SetMemProofProver::ExtendYs(
@@ -140,12 +148,14 @@ SetMemProof SetMemProofProver::Prove(
     Point phi = h3 * m + g2 * f;
 
     // Challenge 1
-    std::vector<uint8_t> str = ComputeStr(
+    auto transcript_gen = GenInitialTranscriptGen(
         Ys, A1, A2, S1, S2, S3, phi, eta
     );
-    Scalar y = setup.H2(str);
-    Scalar z = setup.H3(str);
-    Scalar omega = setup.H4(str);
+
+retry: // retrying without generating transcript_gen again to get different hashes
+    GEN_FIAT_SHAMIR_VAR(y, transcript_gen, retry);
+    GEN_FIAT_SHAMIR_VAR(z, transcript_gen, retry);
+    GEN_FIAT_SHAMIR_VAR(omega, transcript_gen, retry);
 
     // Commonly used constants
     Scalars y_to_n = Scalars::FirstNPow(y, n);
@@ -159,7 +169,6 @@ SetMemProof SetMemProofProver::Prove(
     Scalar t1 = (l0 * r1).Sum() + (l1 * r0).Sum();
     Scalar t2 = (l1 * r1).Sum();
 
-retry:
     Scalar tau_1 = Scalar::Rand(true);
     Scalar tau_2 = Scalar::Rand(true);
 
@@ -182,11 +191,7 @@ retry:
 
     Points Hi = setup.hs.To(Ys.Size());
 
-    CHashWriter transcript_gen =
-        GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
-
-    Scalar c_factor = transcript_gen.GetHash();
-    if (c_factor == 0) goto retry;
+    GEN_FIAT_SHAMIR_VAR(c_factor, transcript_gen, retry);
 
     auto iipa_res = ImpInnerProdArg::Run<Mcl>(
         n,
@@ -211,20 +216,6 @@ retry:
     return proof;
 }
 
-CHashWriter SetMemProofProver::GenInitialTranscriptGen(
-    const Point& h2,
-    const Point& h3,
-    const Point& g2,
-    const Scalar& y,
-    const Scalar& z,
-    const Scalar& omega,
-    const Scalar& x
-) {
-    CHashWriter transcript_gen(0, 0);
-    transcript_gen << h2 << h3 << g2 << y << z << omega << x;
-    return transcript_gen;
-}
-
 bool SetMemProofProver::Verify(
     const SetMemProofSetup& setup,
     const Points& Ys,
@@ -234,16 +225,17 @@ bool SetMemProofProver::Verify(
     using LazyPoint = LazyPoint<Mcl>;
 
     size_t n = Ys.Size();
-    std::vector<uint8_t> str = ComputeStr(
+    auto transcript_gen = GenInitialTranscriptGen(
         Ys, proof.A1, proof.A2, proof.S1,
         proof.S2, proof.S3, proof.phi, eta
     );
     Point h2 = setup.H5(Ys.GetVch());
     Point h3 = setup.H6(eta.GetVch());
     Point g2 = setup.H7(eta.GetVch());
-    Scalar y = setup.H2(str);
-    Scalar z = setup.H3(str);
-    Scalar omega = setup.H4(str);
+
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(y, transcript_gen);
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(z, transcript_gen);
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(omega, transcript_gen);
 
     Scalar y_inv = y.Invert();
     Scalars y_to_n = Scalars::FirstNPow(y, n);
@@ -283,10 +275,7 @@ bool SetMemProofProver::Verify(
         verifier.AddPoint(LazyPoint(proof.S2, x));
         verifier.AddPoint(LazyPoint(h2, proof.mu.Negate()));
 
-        CHashWriter transcript_gen =
-            GenInitialTranscriptGen(h2, h3, g2, y, z, omega, x);
-
-        Scalar c_factor = transcript_gen.GetHash();
+        GEN_FIAT_SHAMIR_VAR_NO_RETRY(c_factor, transcript_gen);
         size_t num_rounds = std::log2(n);
 
         auto xs = ImpInnerProdArg::GenAllRoundXs<Mcl>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
