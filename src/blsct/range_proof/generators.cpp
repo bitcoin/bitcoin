@@ -4,8 +4,8 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/building_block/generator_deriver.h>
-#include <blsct/range_proof/config.h>
 #include <blsct/range_proof/generators.h>
+#include <blsct/range_proof/range_proof_setup.h>
 #include <ctokens/tokenid.h>
 #include <hash.h>
 #include <tinyformat.h>
@@ -43,7 +43,7 @@ GeneratorsFactory<T>::GeneratorsFactory()
     const Point default_G = m_deriver.Derive(Point::GetBasePoint(), 0, default_token_id);
     m_G_cache.insert(std::make_pair(default_token_id, default_G));
 
-    for (size_t i = 0; i < Config::m_max_input_value_vec_len; ++i) {
+    for (size_t i = 0; i < RangeProofSetup::m_max_input_value_vec_len; ++i) {
         const size_t base_index = i * 2;
         Point hi = m_deriver.Derive(default_G, base_index + 1, default_token_id);
         Point gi = m_deriver.Derive(default_G, base_index + 2, default_token_id);

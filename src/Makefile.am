@@ -174,9 +174,9 @@ BITCOIN_CORE_H = \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
-  blsct/range_proof/config.h \
   blsct/range_proof/generators.h \
   blsct/range_proof/range_proof_logic.h \
+  blsct/range_proof/range_proof_setup.h \
   blsct/range_proof/range_proof_with_transcript.h \
   blsct/range_proof/range_proof.h \
   blsct/set_mem_proof/set_mem_proof_setup.h \

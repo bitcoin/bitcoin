@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <cmath>
 
-class Config
+class RangeProofSetup
 {
 public:
     // maximum # of retries allowed for RangeProofLogic::Prove function

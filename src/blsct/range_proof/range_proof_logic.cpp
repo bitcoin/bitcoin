@@ -72,9 +72,9 @@ RangeProofLogic<T>::RangeProofLogic()
     RangeProofLogic<T>::m_two = new Scalar(2);
     RangeProofLogic<T>::m_gf = new GeneratorsFactory<T>();
     {
-        auto two_pows_64 = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
+        auto two_pows_64 = Scalars::FirstNPow(*m_two, RangeProofSetup::m_input_value_bits);
         RangeProofLogic<T>::m_two_pows_64 = new Scalars(two_pows_64);
-        auto ones_64 = Scalars::RepeatN(*RangeProofLogic<T>::m_one, Config::m_input_value_bits);
+        auto ones_64 = Scalars::RepeatN(*RangeProofLogic<T>::m_one, RangeProofSetup::m_input_value_bits);
         RangeProofLogic<T>::m_inner_prod_1x2_pows_64 =
             new Scalar((ones_64 * *RangeProofLogic<T>::m_two_pows_64).Sum());
     }
@@ -105,13 +105,13 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
-    if (message.size() > Config::m_max_message_size) {
+    if (message.size() > RangeProofSetup::m_max_message_size) {
         throw std::runtime_error(strprintf("%s: message size is too large", __func__));
     }
     if (vs.Empty()) {
         throw std::runtime_error(strprintf("%s: no input values to prove", __func__));
     }
-    if (vs.Size() > Config::m_max_input_values) {
+    if (vs.Size() > RangeProofSetup::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
 
@@ -120,7 +120,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
 
     // this is power of 2 as well since m_input_value_bits is power of 2
     const size_t concat_input_values_in_bits =
-        num_input_values_power_of_2 * Config::m_input_value_bits;
+        num_input_values_power_of_2 * RangeProofSetup::m_input_value_bits;
 
     ////////////// Proving steps
     RangeProof<T> proof;
@@ -159,7 +159,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     // only the first 64 bits of each Scalar<S> is picked up
     Scalars aL;                  // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v : vs.m_vec) { // for each input value
-        for (size_t i = 0; i < Config::m_input_value_bits; ++i) {
+        for (size_t i = 0; i < RangeProofSetup::m_input_value_bits; ++i) {
             aL.Add(v.GetSeriBit(i) ? 1 : 0);
         }
     }
@@ -178,13 +178,13 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
 
-    // part of the message up to Config::m_message_1_max_size
+    // part of the message up to RangeProofSetup::m_message_1_max_size
     Scalar msg1(
-        message.size() > Config::m_message_1_max_size ?
-            std::vector<uint8_t>(message.begin(), message.begin() + Config::m_message_1_max_size) :
+        message.size() > RangeProofSetup::m_message_1_max_size ?
+            std::vector<uint8_t>(message.begin(), message.begin() + RangeProofSetup::m_message_1_max_size) :
             message);
     // message followed by 64-bit vs[0]
-    Scalar msg1_v0 = (msg1 << Config::m_input_value_bits) | vs[0];
+    Scalar msg1_v0 = (msg1 << RangeProofSetup::m_input_value_bits) | vs[0];
 
     Scalar alpha = nonce.GetHashWithSalt(1);
     alpha = alpha + msg1_v0;
@@ -226,7 +226,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto base_z_pow = z_pows_from_2[i]; // use different Scalar<S> for each input value
 
-        for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
+        for (size_t bit_idx = 0; bit_idx < RangeProofSetup::m_input_value_bits; ++bit_idx) {
             z_pow_twos.Add(base_z_pow * (*m_two_pows_64)[bit_idx]);
         }
     }
@@ -243,9 +243,9 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     Scalar tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
-    // part of the message after Config::m_message_1_max_size
-    Scalar msg2 = Scalar({message.size() > Config::m_message_1_max_size ?
-                              std::vector<uint8_t>(message.begin() + Config::m_message_1_max_size, message.end()) :
+    // part of the message after RangeProofSetup::m_message_1_max_size
+    Scalar msg2 = Scalar({message.size() > RangeProofSetup::m_message_1_max_size ?
+                              std::vector<uint8_t>(message.begin() + RangeProofSetup::m_message_1_max_size, message.end()) :
                               std::vector<uint8_t>()});
     tau1 = tau1 + msg2;
 
@@ -319,9 +319,9 @@ void RangeProofLogic<T>::ValidateProofsBySizes(
             throw std::runtime_error(strprintf("%s: no input value", __func__));
 
         // invalid if # of input values are lager than maximum
-        if (proof.Vs.Size() > Config::m_max_input_values)
+        if (proof.Vs.Size() > RangeProofSetup::m_max_input_values)
             throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum %ld",
-                                               __func__, Config::m_max_input_values));
+                                               __func__, RangeProofSetup::m_max_input_values));
 
         // L,R keep track of aggregation history and the size should equal to # of rounds
         if (proof.Ls.Size() != num_rounds)
@@ -412,8 +412,8 @@ bool RangeProofLogic<T>::VerifyProofs(
 
             // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             Scalar tmp =
-                z_pows_from_2[i / Config::m_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
-                (*m_two_pows_64)[i % Config::m_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
+                z_pows_from_2[i / RangeProofSetup::m_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
+                (*m_two_pows_64)[i % RangeProofSetup::m_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
 
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
