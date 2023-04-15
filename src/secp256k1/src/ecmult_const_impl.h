@@ -228,4 +228,139 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
     secp256k1_fe_mul(&r->z, &r->z, &Z);
 }
 
+static int secp256k1_ecmult_const_xonly(secp256k1_fe* r, const secp256k1_fe *n, const secp256k1_fe *d, const secp256k1_scalar *q, int bits, int known_on_curve) {
+
+    /* This algorithm is a generalization of Peter Dettman's technique for
+     * avoiding the square root in a random-basepoint x-only multiplication
+     * on a Weierstrass curve:
+     * https://mailarchive.ietf.org/arch/msg/cfrg/7DyYY6gg32wDgHAhgSb6XxMDlJA/
+     *
+     *
+     * === Background: the effective affine technique ===
+     *
+     * Let phi_u be the isomorphism that maps (x, y) on secp256k1 curve y^2 = x^3 + 7 to
+     * x' = u^2*x, y' = u^3*y on curve y'^2 = x'^3 + u^6*7. This new curve has the same order as
+     * the original (it is isomorphic), but moreover, has the same addition/doubling formulas, as
+     * the curve b=7 coefficient does not appear in those formulas (or at least does not appear in
+     * the formulas implemented in this codebase, both affine and Jacobian). See also Example 9.5.2
+     * in https://www.math.auckland.ac.nz/~sgal018/crypto-book/ch9.pdf.
+     *
+     * This means any linear combination of secp256k1 points can be computed by applying phi_u
+     * (with non-zero u) on all input points (including the generator, if used), computing the
+     * linear combination on the isomorphic curve (using the same group laws), and then applying
+     * phi_u^{-1} to get back to secp256k1.
+     *
+     * Switching to Jacobian coordinates, note that phi_u applied to (X, Y, Z) is simply
+     * (X, Y, Z/u). Thus, if we want to compute (X1, Y1, Z) + (X2, Y2, Z), with identical Z
+     * coordinates, we can use phi_Z to transform it to (X1, Y1, 1) + (X2, Y2, 1) on an isomorphic
+     * curve where the affine addition formula can be used instead.
+     * If (X3, Y3, Z3) = (X1, Y1) + (X2, Y2) on that curve, then our answer on secp256k1 is
+     * (X3, Y3, Z3*Z).
+     *
+     * This is the effective affine technique: if we have a linear combination of group elements
+     * to compute, and all those group elements have the same Z coordinate, we can simply pretend
+     * that all those Z coordinates are 1, perform the computation that way, and then multiply the
+     * original Z coordinate back in.
+     *
+     * The technique works on any a=0 short Weierstrass curve. It is possible to generalize it to
+     * other curves too, but there the isomorphic curves will have different 'a' coefficients,
+     * which typically does affect the group laws.
+     *
+     *
+     * === Avoiding the square root for x-only point multiplication ===
+     *
+     * In this function, we want to compute the X coordinate of q*(n/d, y), for
+     * y = sqrt((n/d)^3 + 7). Its negation would also be a valid Y coordinate, but by convention
+     * we pick whatever sqrt returns (which we assume to be a deterministic function).
+     *
+     * Let g = y^2*d^3 = n^3 + 7*d^3. This also means y = sqrt(g/d^3).
+     * Further let v = sqrt(d*g), which must exist as d*g = y^2*d^4 = (y*d^2)^2.
+     *
+     * The input point (n/d, y) also has Jacobian coordinates:
+     *
+     *     (n/d, y, 1)
+     *   = (n/d * v^2, y * v^3, v)
+     *   = (n/d * d*g, y * sqrt(d^3*g^3), v)
+     *   = (n/d * d*g, sqrt(y^2 * d^3*g^3), v)
+     *   = (n*g, sqrt(g/d^3 * d^3*g^3), v)
+     *   = (n*g, sqrt(g^4), v)
+     *   = (n*g, g^2, v)
+     *
+     * It is easy to verify that both (n*g, g^2, v) and its negation (n*g, -g^2, v) have affine X
+     * coordinate n/d, and this holds even when the square root function doesn't have a
+     * determinstic sign. We choose the (n*g, g^2, v) version.
+     *
+     * Now switch to the effective affine curve using phi_v, where the input point has coordinates
+     * (n*g, g^2). Compute (X, Y, Z) = q * (n*g, g^2) there.
+     *
+     * Back on secp256k1, that means q * (n*g, g^2, v) = (X, Y, v*Z). This last point has affine X
+     * coordinate X / (v^2*Z^2) = X / (d*g*Z^2). Determining the affine Y coordinate would involve
+     * a square root, but as long as we only care about the resulting X coordinate, no square root
+     * is needed anywhere in this computation.
+     */
+
+    secp256k1_fe g, i;
+    secp256k1_ge p;
+    secp256k1_gej rj;
+
+    /* Compute g = (n^3 + B*d^3). */
+    secp256k1_fe_sqr(&g, n);
+    secp256k1_fe_mul(&g, &g, n);
+    if (d) {
+        secp256k1_fe b;
+#ifdef VERIFY
+        VERIFY_CHECK(!secp256k1_fe_normalizes_to_zero(d));
+#endif
+        secp256k1_fe_sqr(&b, d);
+        VERIFY_CHECK(SECP256K1_B <= 8); /* magnitude of b will be <= 8 after the next call */
+        secp256k1_fe_mul_int(&b, SECP256K1_B);
+        secp256k1_fe_mul(&b, &b, d);
+        secp256k1_fe_add(&g, &b);
+        if (!known_on_curve) {
+            /* We need to determine whether (n/d)^3 + 7 is square.
+             *
+             *     is_square((n/d)^3 + 7)
+             * <=> is_square(((n/d)^3 + 7) * d^4)
+             * <=> is_square((n^3 + 7*d^3) * d)
+             * <=> is_square(g * d)
+             */
+            secp256k1_fe c;
+            secp256k1_fe_mul(&c, &g, d);
+            if (!secp256k1_fe_is_square_var(&c)) return 0;
+        }
+    } else {
+        secp256k1_fe_add_int(&g, SECP256K1_B);
+        if (!known_on_curve) {
+            /* g at this point equals x^3 + 7. Test if it is square. */
+            if (!secp256k1_fe_is_square_var(&g)) return 0;
+        }
+    }
+
+    /* Compute base point P = (n*g, g^2), the effective affine version of (n*g, g^2, v), which has
+     * corresponding affine X coordinate n/d. */
+    secp256k1_fe_mul(&p.x, &g, n);
+    secp256k1_fe_sqr(&p.y, &g);
+    p.infinity = 0;
+
+    /* Perform x-only EC multiplication of P with q. */
+#ifdef VERIFY
+    VERIFY_CHECK(!secp256k1_scalar_is_zero(q));
+#endif
+    secp256k1_ecmult_const(&rj, &p, q, bits);
+#ifdef VERIFY
+    VERIFY_CHECK(!secp256k1_gej_is_infinity(&rj));
+#endif
+
+    /* The resulting (X, Y, Z) point on the effective-affine isomorphic curve corresponds to
+     * (X, Y, Z*v) on the secp256k1 curve. The affine version of that has X coordinate
+     * (X / (Z^2*d*g)). */
+    secp256k1_fe_sqr(&i, &rj.z);
+    secp256k1_fe_mul(&i, &i, &g);
+    if (d) secp256k1_fe_mul(&i, &i, d);
+    secp256k1_fe_inv(&i, &i);
+    secp256k1_fe_mul(r, &rj.x, &i);
+
+    return 1;
+}
+
 #endif /* SECP256K1_ECMULT_CONST_IMPL_H */
