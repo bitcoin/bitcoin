@@ -15,7 +15,8 @@ const SetMemProofSetup& SetMemProofSetup::Get()
         Point g = Point::GetBasePoint();
         Point h = m_deriver.Derive(g, 0);
         Points hs = GenGenerators(h, N);
-        x = new SetMemProofSetup(g, h, hs);
+        PedersenCommitment<Mcl> pedersen_commitment(g, h);
+        x = new SetMemProofSetup(g, h, hs, pedersen_commitment);
     }
     return *x;
 }

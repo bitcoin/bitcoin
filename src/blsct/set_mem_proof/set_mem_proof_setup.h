@@ -9,6 +9,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
+#include <blsct/building_block/pedersen_commitment.h>
 
 // N is the maximum size of the set of membership public key
 class SetMemProofSetup {
@@ -38,10 +39,17 @@ public:
     Point H6(const std::vector<uint8_t>& msg) const;
     Point H7(const std::vector<uint8_t>& msg) const;
 
+    const PedersenCommitment<Mcl> pedersen;
+
 #ifndef BOOST_UNIT_TEST
 private:
 #endif
-    SetMemProofSetup(const Point& g, const Point& h, const Points& hs): g{g}, h{h}, hs{hs} {}
+    SetMemProofSetup(
+        const Point& g,
+        const Point& h,
+        const Points& hs,
+        const PedersenCommitment<Mcl>& pedersen
+    ): g{g}, h{h}, hs{hs}, pedersen{pedersen} {}
 
     inline static const GeneratorDeriver m_deriver = GeneratorDeriver("set_membership_proof");
     static Points GenGenerators(const Point& base_point, const size_t& size);
