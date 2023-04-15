@@ -15,15 +15,20 @@ This process also assumes that there will be no minor releases for old major rel
 ## Regular release
 
 1. Open a PR to the master branch with a commit (using message `"release: prepare for $MAJOR.$MINOR.$PATCH"`, for example) that
-   * finalizes the release notes in [CHANGELOG.md](../CHANGELOG.md) (make sure to include an entry for `### ABI Compatibility`) and
-   * updates `_PKG_VERSION_*`, `_LIB_VERSION_*`, and sets `_PKG_VERSION_IS_RELEASE` to `true` in `configure.ac`.
+   * finalizes the release notes in [CHANGELOG.md](../CHANGELOG.md) (make sure to include an entry for `### ABI Compatibility`),
+   * updates `_PKG_VERSION_*` and `_LIB_VERSION_*` and sets `_PKG_VERSION_IS_RELEASE` to `true` in `configure.ac`, and
+   * updates `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_*` in `CMakeLists.txt`.
 2. After the PR is merged, tag the commit and push it:
    ```
    RELEASE_COMMIT=<merge commit of step 1>
    git tag -s v$MAJOR.$MINOR.$PATCH -m "libsecp256k1 $MAJOR.$MINOR.$PATCH" $RELEASE_COMMIT
    git push git@github.com:bitcoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
    ```
-3. Open a PR to the master branch with a commit (using message `"release cleanup: bump version after $MAJOR.$MINOR.$PATCH"`, for example) that sets `_PKG_VERSION_IS_RELEASE` to `false` and `_PKG_VERSION_PATCH` to `$PATCH + 1` and increases `_LIB_VERSION_REVISION`. If other maintainers are not present to approve the PR, it can be merged without ACKs.
+3. Open a PR to the master branch with a commit (using message `"release cleanup: bump version after $MAJOR.$MINOR.$PATCH"`, for example) that
+   * sets `_PKG_VERSION_IS_RELEASE` to `false` and increments `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac`, and
+   * increments the `$PATCH` component of `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_REVISION` in `CMakeLists.txt`.
+
+   If other maintainers are not present to approve the PR, it can be merged without ACKs.
 4. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Maintenance release
@@ -38,7 +43,9 @@ Note that bugfixes only need to be backported to releases for which no compatibl
 2. Open a pull request to the `$MAJOR.$MINOR` branch that
    * includes the bugfixes,
    * finalizes the release notes,
-   * bumps `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac` (with commit message `"release: update PKG_ and LIB_VERSION for $MAJOR.$MINOR.$PATCH"`, for example).
+   * increments `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac`
+     and the `$PATCH` component of `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_REVISION` in `CMakeLists.txt`
+     (with commit message `"release: bump versions for $MAJOR.$MINOR.$PATCH"`, for example).
 3. After the PRs are merged, update the release branch and tag the commit:
    ```
    git checkout $MAJOR.$MINOR && git pull
