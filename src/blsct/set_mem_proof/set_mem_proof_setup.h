@@ -38,8 +38,6 @@ public:
     Point H6(const std::vector<uint8_t>& msg) const;
     Point H7(const std::vector<uint8_t>& msg) const;
 
-    Point PedersenCommitment(const Scalar& m, const Scalar& f) const;
-
 #ifndef BOOST_UNIT_TEST
 private:
 #endif

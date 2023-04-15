@@ -93,8 +93,3 @@ Point SetMemProofSetup::H7(const std::vector<uint8_t>& msg) const
     x.SetVch(msg);
     return x.GetHashWithSalt(7);
 }
-
-Point SetMemProofSetup::PedersenCommitment(const Scalar& m, const Scalar& f) const
-{
-    return h * m + g * f;
-}

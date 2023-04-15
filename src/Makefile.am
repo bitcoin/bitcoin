@@ -164,9 +164,10 @@ BITCOIN_CORE_H = \
   blsct/arith/endianness.h \
   blsct/building_block/fiat_shamir.h \
   blsct/building_block/generator_deriver.h \
+  blsct/building_block/g_h_gi_hi_zero_verifier.h \
   blsct/building_block/imp_inner_prod_arg.h \
   blsct/building_block/lazy_point.h \
-  blsct/building_block/g_h_gi_hi_zero_verifier.h \
+  blsct/building_block/pedersen_commitment.h \
   blsct/common.h \
   blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \

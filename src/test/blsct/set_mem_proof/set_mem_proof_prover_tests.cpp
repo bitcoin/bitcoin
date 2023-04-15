@@ -11,6 +11,7 @@
 #include <sstream>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
+#include <blsct/building_block/pedersen_commitment.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
 #include <blsct/set_mem_proof/set_mem_proof_setup.h>
 #include <blsct/set_mem_proof/set_mem_proof.h>
@@ -82,9 +83,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_input)
     auto y4 = Point::MapToG1("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> pedersen_commitment(setup.g, setup.h);
+
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.PedersenCommitment(m, f);
+    auto sigma = pedersen_commitment.Commit(m, f);
 
     Points Ys;
     Ys.Add(y1);
@@ -106,9 +109,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
     auto y4 = Point::MapToG1("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> perdersen_commitment(setup.g, setup.h);
+
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.PedersenCommitment(m, f);
+    auto sigma = perdersen_commitment.Commit(m, f);
 
     Points prove_Ys;
     prove_Ys.Add(y1);
@@ -133,6 +138,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inputs)
 {
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> pedersen_commitment(setup.g, setup.h);
 
     // Commitment set includes A=g*f_a+h*m_a, B=g*f_b+h*m_b, and C=g*f_c+h*m_c
     Scalar m_a = Scalar::Rand();
@@ -142,9 +148,9 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inp
     Scalar f_b = Scalar::Rand();
     Scalar f_c = Scalar::Rand();
 
-    auto A = setup.PedersenCommitment(m_a, f_a);
-    auto B = setup.PedersenCommitment(m_b, f_b);
-    auto C = setup.PedersenCommitment(m_c, f_c);
+    auto A = pedersen_commitment.Commit(m_a, f_a);
+    auto B = pedersen_commitment.Commit(m_b, f_b);
+    auto C = pedersen_commitment.Commit(m_c, f_c);
 
     Points ys;
     ys.Add(A);
@@ -156,7 +162,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inp
     // A proof over the membership of D=A+B=g*(f_a+f_b)+h*(m_a+m_b) should be deemed as invalid
     auto m_d = m_a + m_b;
     auto f_d = f_a + f_b;
-    auto D = setup.PedersenCommitment(m_d, f_d);
+    auto D = pedersen_commitment.Commit(m_d, f_d);
 
     auto proof = Prover::Prove(setup, ys, D, m_d, f_d, eta);
     auto res = Prover::Verify(setup, ys, eta, proof);
@@ -171,9 +177,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
     auto y3 = Point::MapToG1("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> pedersen_commitment(setup.g, setup.h);
+
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.PedersenCommitment(m, f);
+    auto sigma = pedersen_commitment.Commit(m, f);
 
     Points prove_Ys;
     prove_Ys.Add(y1);
@@ -201,9 +209,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
     auto y4 = Point::MapToG1("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> pedersen_commitment(setup.g, setup.h);
+
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.PedersenCommitment(m, f);
+    auto sigma = pedersen_commitment.Commit(m, f);
 
     Points ys;
     ys.Add(y1);
@@ -230,9 +240,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
     auto y4_2 = Point::MapToG1("y4_2", Endianness::Little);
 
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> pedersen_commitment(setup.g, setup.h);
+
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.PedersenCommitment(m, f);
+    auto sigma = pedersen_commitment.Commit(m, f);
 
     Points prove_Ys;
     prove_Ys.Add(y1_1);
@@ -257,11 +269,13 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 {
     auto setup = SetMemProofSetup::Get();
+    PedersenCommitment<Mcl> pedersen_commitment(setup.g, setup.h);
+
     const size_t NUM_INPUTS = setup.N;
     Points Ys;
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    Point sigma = setup.PedersenCommitment(m, f);
+    Point sigma = pedersen_commitment.Commit(m, f);
 
     for (size_t i=0; i<NUM_INPUTS; ++i) {
         if (i == NUM_INPUTS / 2) {
