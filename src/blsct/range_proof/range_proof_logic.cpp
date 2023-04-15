@@ -5,6 +5,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
+#include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/building_block/lazy_point.h>
 #include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
@@ -144,13 +145,13 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     auto G = gens.G;
 
     // This hash is updated for Fiat-Shamir throughout the proof
-    CHashWriter transcript_gen(0, 0);
+    CHashWriter fiat_shamir(0, 0);
 
     // Calculate value commitments directly form the input values
     for (size_t i = 0; i < vs.Size(); ++i) {
         auto V = (G * vs[i]) + (H * gammas[i]);
         proof.Vs.Add(V);
-        transcript_gen << V;
+        fiat_shamir << V;
     }
 
     // (41)-(42)
@@ -206,16 +207,11 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     proof.S = (LazyPoints<T>(Gi, sL) + LazyPoints<T>(Hi, sR) + LazyPoint<T>(H, rho)).Sum();
 
     // (48)-(50)
-    transcript_gen << proof.A;
-    transcript_gen << proof.S;
+    fiat_shamir << proof.A;
+    fiat_shamir << proof.S;
 
-    Scalar y = transcript_gen.GetHash();
-    if (y == 0) goto retry;
-    transcript_gen << y;
-
-    Scalar z = transcript_gen.GetHash();
-    if (z == 0) goto retry;
-    transcript_gen << z;
+    GEN_FIAT_SHAMIR_VAR(y, fiat_shamir, retry);
+    GEN_FIAT_SHAMIR_VAR(z, fiat_shamir, retry);
 
     // Polynomial construction by coefficients
     // AFTER (50)
@@ -262,13 +258,10 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     proof.T2 = (G * t2) + (H * tau2);
 
     // (54)-(56)
-    transcript_gen << proof.T1;
-    transcript_gen << proof.T2;
+    fiat_shamir << proof.T1;
+    fiat_shamir << proof.T2;
 
-    Scalar x = transcript_gen.GetHash();
-    if (x == 0) goto retry;
-
-    // x will be added to transcript later
+    GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
 
     // (58)-(59)
     Scalars l = l0 + (l1 * x); // l0 = aL - z_mn; l1 = sL
@@ -290,13 +283,11 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     proof.mu = alpha + (rho * x);                                                    // (62)
 
     // (63)
-    transcript_gen << x;
-    transcript_gen << proof.tau_x;
-    transcript_gen << proof.mu;
-    transcript_gen << proof.t_hat;
+    fiat_shamir << proof.tau_x;
+    fiat_shamir << proof.mu;
+    fiat_shamir << proof.t_hat;
 
-    Scalar c_factor = transcript_gen.GetHash();
-    if (c_factor == 0) goto retry;
+    GEN_FIAT_SHAMIR_VAR(c_factor, fiat_shamir, retry);
 
     {
         auto res = ImpInnerProdArg::Run<Mcl>(
@@ -304,7 +295,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
             Gi, Hi, G,
             l,  r,
             c_factor, y,
-            transcript_gen
+            fiat_shamir
         );
         if (res == std::nullopt) goto retry;
 

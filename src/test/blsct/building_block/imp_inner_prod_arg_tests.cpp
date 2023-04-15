@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test_exec_ypow_loop)
 
 BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
 {
-    CHashWriter transcript_gen(0, 0);
+    CHashWriter fiat_shamir(0, 0);
 
     Points Ls, Rs;
     Point g = Point::GetBasePoint();
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
     Rs.Add(g + g + g);
     Rs.Add(g + g + g + g);
 
-    auto res = ImpInnerProdArg::GenAllRoundXs<Mcl>(2, Ls, Rs, transcript_gen);
+    auto res = ImpInnerProdArg::GenAllRoundXs<Mcl>(2, Ls, Rs, fiat_shamir);
 
     BOOST_CHECK(res.Size() == 2);
     BOOST_CHECK(res[0].GetString(16) == "1549ffc50ba69bf258b57da9e829cf787d7996fb9b6f779667a3d83544f8fac3");

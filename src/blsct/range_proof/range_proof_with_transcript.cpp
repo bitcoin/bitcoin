@@ -6,6 +6,7 @@
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/range_proof/range_proof_with_transcript.h>
 #include <blsct/common.h>
@@ -16,34 +17,30 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
     using Scalar = typename T::Scalar;
 
     // build transcript from proof in the same way it was built in Prove function
-    CHashWriter transcript_gen(0,0);
+    CHashWriter fiat_shamir(0,0);
 
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
-        transcript_gen << proof.Vs[i];
+        fiat_shamir << proof.Vs[i];
     }
-    transcript_gen << proof.A;
-    transcript_gen << proof.S;
+    fiat_shamir << proof.A;
+    fiat_shamir << proof.S;
 
-    Scalar y = transcript_gen.GetHash();
-    transcript_gen << y;
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(y, fiat_shamir);
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(z, fiat_shamir);
 
-    Scalar z = transcript_gen.GetHash();
-    transcript_gen << z;
+    fiat_shamir << proof.T1;
+    fiat_shamir << proof.T2;
 
-    transcript_gen << proof.T1;
-    transcript_gen << proof.T2;
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(x, fiat_shamir);
 
-    Scalar x = transcript_gen.GetHash();
-    transcript_gen << x;
+    fiat_shamir << proof.tau_x;
+    fiat_shamir << proof.mu;
+    fiat_shamir << proof.t_hat;
 
-    transcript_gen << proof.tau_x;
-    transcript_gen << proof.mu;
-    transcript_gen << proof.t_hat;
-
-    Scalar cx_factor = transcript_gen.GetHash();
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(c_factor, fiat_shamir);
 
     auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(proof.Vs.Size());
-    auto xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
+    auto xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
 
     size_t num_input_values_power_2 = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
     size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
@@ -53,7 +50,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
         x,
         y,
         z,
-        cx_factor,
+        c_factor,
         xs,
         num_input_values_power_2,
         concat_input_values_in_bits

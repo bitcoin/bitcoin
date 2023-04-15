@@ -162,6 +162,7 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
+  blsct/building_block/fiat_shamir.h \
   blsct/building_block/generator_deriver.h \
   blsct/building_block/imp_inner_prod_arg.h \
   blsct/building_block/lazy_point.h \

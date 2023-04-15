@@ -63,9 +63,9 @@ Below code recovers $x$'s used in all rounds of `IIPA` with `Fiat-Shamir`.
 Scalars xs;
 Scalars inv_xs;
 for (size_t i = 0; i < num_rounds; ++i) {
-    transcript_gen << proof.Ls[i];
-    transcript_gen << proof.Rs[i];
-    Scalar x(transcript_gen.GetHash());
+    fiat_shamir << proof.Ls[i];
+    fiat_shamir << proof.Rs[i];
+    Scalar x(fiat_shamir.GetHash());
     xs.Add(x);
     inv_xs.Add(x.Invert());
 }

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/common.h>
+#include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/building_block/lazy_point.h>
 #include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
@@ -17,15 +18,6 @@ using Scalar = SetMemProofProver::Scalar;
 using Point = SetMemProofProver::Point;
 using Scalars = SetMemProofProver::Scalars;
 using Points = SetMemProofProver::Points;
-
-#define GEN_FIAT_SHAMIR_VAR(var, transcript_gen, retry) \
-    Scalar var = transcript_gen.GetHash(); \
-    if (var == 0) goto retry; \
-    transcript_gen << var;
-
-#define GEN_FIAT_SHAMIR_VAR_NO_RETRY(var, transcript_gen) \
-    Scalar var = transcript_gen.GetHash(); \
-    transcript_gen << var;
 
 const Scalar& SetMemProofProver::One()
 {
@@ -51,7 +43,7 @@ Scalar SetMemProofProver::ComputeX(
     return x;
 }
 
-CHashWriter SetMemProofProver::GenInitialTranscriptGen(
+CHashWriter SetMemProofProver::GenInitialFiatShamir(
     const Points& Ys,
     const Point& A1,
     const Point& A2,
@@ -61,9 +53,9 @@ CHashWriter SetMemProofProver::GenInitialTranscriptGen(
     const Point& phi,
     const Scalar& eta
 ) {
-    CHashWriter transcript_gen(0, 0);
-    transcript_gen << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
-    return transcript_gen;
+    CHashWriter fiat_shamir(0, 0);
+    fiat_shamir << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
+    return fiat_shamir;
 }
 
 Points SetMemProofProver::ExtendYs(
@@ -148,14 +140,14 @@ SetMemProof SetMemProofProver::Prove(
     Point phi = h3 * m + g2 * f;
 
     // Challenge 1
-    auto transcript_gen = GenInitialTranscriptGen(
+    auto fiat_shamir = GenInitialFiatShamir(
         Ys, A1, A2, S1, S2, S3, phi, eta
     );
 
-retry: // retrying without generating transcript_gen again to get different hashes
-    GEN_FIAT_SHAMIR_VAR(y, transcript_gen, retry);
-    GEN_FIAT_SHAMIR_VAR(z, transcript_gen, retry);
-    GEN_FIAT_SHAMIR_VAR(omega, transcript_gen, retry);
+retry: // retrying without generating fiat_shamir again to get different hashes
+    GEN_FIAT_SHAMIR_VAR(y, fiat_shamir, retry);
+    GEN_FIAT_SHAMIR_VAR(z, fiat_shamir, retry);
+    GEN_FIAT_SHAMIR_VAR(omega, fiat_shamir, retry);
 
     // Commonly used constants
     Scalars y_to_n = Scalars::FirstNPow(y, n);
@@ -191,14 +183,14 @@ retry: // retrying without generating transcript_gen again to get different hash
 
     Points Hi = setup.hs.To(Ys.Size());
 
-    GEN_FIAT_SHAMIR_VAR(c_factor, transcript_gen, retry);
+    GEN_FIAT_SHAMIR_VAR(c_factor, fiat_shamir, retry);
 
     auto iipa_res = ImpInnerProdArg::Run<Mcl>(
         n,
         Ys, Hi, setup.g,
         l, r,
         c_factor, y,
-        transcript_gen
+        fiat_shamir
     );
     if (iipa_res == std::nullopt) goto retry;
 
@@ -225,7 +217,7 @@ bool SetMemProofProver::Verify(
     using LazyPoint = LazyPoint<Mcl>;
 
     size_t n = Ys.Size();
-    auto transcript_gen = GenInitialTranscriptGen(
+    auto fiat_shamir = GenInitialFiatShamir(
         Ys, proof.A1, proof.A2, proof.S1,
         proof.S2, proof.S3, proof.phi, eta
     );
@@ -233,9 +225,9 @@ bool SetMemProofProver::Verify(
     Point h3 = setup.H6(eta.GetVch());
     Point g2 = setup.H7(eta.GetVch());
 
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(y, transcript_gen);
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(z, transcript_gen);
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(omega, transcript_gen);
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(y, fiat_shamir);
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(z, fiat_shamir);
+    GEN_FIAT_SHAMIR_VAR_NO_RETRY(omega, fiat_shamir);
 
     Scalar y_inv = y.Invert();
     Scalars y_to_n = Scalars::FirstNPow(y, n);
@@ -275,10 +267,10 @@ bool SetMemProofProver::Verify(
         verifier.AddPoint(LazyPoint(proof.S2, x));
         verifier.AddPoint(LazyPoint(h2, proof.mu.Negate()));
 
-        GEN_FIAT_SHAMIR_VAR_NO_RETRY(c_factor, transcript_gen);
+        GEN_FIAT_SHAMIR_VAR_NO_RETRY(c_factor, fiat_shamir);
         size_t num_rounds = std::log2(n);
 
-        auto xs = ImpInnerProdArg::GenAllRoundXs<Mcl>(num_rounds, proof.Ls, proof.Rs, transcript_gen);
+        auto xs = ImpInnerProdArg::GenAllRoundXs<Mcl>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
         auto x_invs = xs.Invert();
         auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<Mcl>(num_rounds, xs);
 
