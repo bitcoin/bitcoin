@@ -81,38 +81,11 @@ EXTENDED_SCRIPTS = [
     'feature_dbcrash.py',
 ]
 
-NONDETERMINISTIC_SCRIPTS = [
+BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_llmq_data_recovery.py',
-    # vv Tests less than 2m vv
-    'feature_dip3_v19.py',
-    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
-    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_rotation.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_hpmn.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_migration.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
-    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
-    # vv Tests less than 60s vv
-    'wallet_listreceivedby.py',
-    # vv Tests less than 30s vv
-    'feature_dip0020_activation.py',
-    'interface_zmq_dash.py',
-    'mempool_unbroadcast.py',
-    'p2p_addrv2_relay.py',
-    'rpc_net.py',
-]
-
-BASE_SCRIPTS = [
-    # Scripts that are run by default.
-    # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
@@ -134,12 +107,26 @@ BASE_SCRIPTS = [
     'wallet_dump.py',
     'wallet_listtransactions.py',
     'feature_multikeysporks.py',
+    'feature_dip3_v19.py',
+    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
+    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_rotation.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_hpmn.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_migration.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
+    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
     'p2p_sendheaders_compressed.py', # NOTE: needs dash_hash to pass
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
+    'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
@@ -149,6 +136,7 @@ BASE_SCRIPTS = [
     'rpc_quorum.py',
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',
+    'interface_zmq_dash.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
@@ -175,6 +163,7 @@ BASE_SCRIPTS = [
     'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
+    'p2p_addrv2_relay.py',
     'wallet_groups.py',
     'p2p_disconnect_ban.py',
     'feature_addressindex.py',
@@ -185,6 +174,7 @@ BASE_SCRIPTS = [
     'rpc_deprecated.py',
     'wallet_disable.py',
     'p2p_getdata.py',
+    'rpc_net.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
     'p2p_mempool.py',
@@ -255,6 +245,7 @@ BASE_SCRIPTS = [
     'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'rpc_platform_filter.py',
+    'feature_dip0020_activation.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
     'feature_filelock.py',
@@ -262,6 +253,7 @@ BASE_SCRIPTS = [
     'p2p_blockfilters.py',
     'feature_asmap.py',
     'feature_includeconf.py',
+    'mempool_unbroadcast.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
@@ -279,8 +271,8 @@ BASE_SCRIPTS = [
     # Put them in a random line within the section that fits their approximate run-time
 ]
 
-# Place NONDETERMINISTIC_SCRIPTS first since it has the 3 longest running tests
-ALL_SCRIPTS = NONDETERMINISTIC_SCRIPTS + EXTENDED_SCRIPTS + BASE_SCRIPTS
+# Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
+ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -298,6 +290,7 @@ def main():
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
+    parser.add_argument('--attempts', '-a', type=int, default=1, help='how many attempts should be allowed for the non-deterministic test suite. Default=1.')
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
@@ -310,8 +303,6 @@ def main():
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
-    parser.add_argument('--retries', '-r', type=int, default=3, help='how many reattempts should be allowed for the non-deterministic test suite. Default=3.')
-    parser.add_argument('--sleep', '-s', type=int, default=15, help='how many seconds should the test sleep before reattempting (in seconds). Default=15.')
 
     args, unknown_args = parser.parse_known_args()
     if not args.ansi:
@@ -417,8 +408,7 @@ def main():
         build_dir=config["environment"]["BUILDDIR"],
         tmpdir=tmpdir,
         jobs=args.jobs,
-        retries=args.retries,
-        retry_sleep=args.sleep,
+        attempts=args.attempts,
         enable_coverage=args.coverage,
         args=passon_args,
         combined_logs_len=args.combinedlogslen,
@@ -427,7 +417,7 @@ def main():
         use_term_control=args.ansi,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, retries=3, retry_sleep=15, enable_coverage=False, args=None, combined_logs_len=0,failfast=False, runs_ci=False, use_term_control):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, attempts=1, enable_coverage=False, args=None, combined_logs_len=0,failfast=False, runs_ci=False, use_term_control):
     args = args or []
 
     # Warn if dashd is already running
@@ -482,57 +472,40 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, retries=3, retry
         flags=flags,
         timeout_duration=30 * 60 if runs_ci else float('inf'),  # in seconds
         use_term_control=use_term_control,
+        attempts=attempts,
     )
     start_time = time.time()
     test_results = []
 
     max_len_name = len(max(test_list, key=len))
     test_count = len(test_list)
-
-    def run_test(test_result, testdir, stdout, stderr, attempt, limit):
-        if test_result.status == "Passed":
-            logging.debug("%s passed, Duration: %s s" % (done_str, test_result.time))
-            return True
-        elif test_result.status == "Skipped":
-            logging.debug("%s skipped" % (done_str))
-            return True
-        else:
-            if limit > 1:
-                logging.debug("%s failed at attempt %s of %s, Duration: %s s\n" % (done_str, attempt, limit, test_result.time))
-            if limit == attempt:
-                print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
-                print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
-                print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
-                if combined_logs_len and os.path.isdir(testdir):
-                    # Print the final `combinedlogslen` lines of the combined logs
-                    print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
-                    print('\n============')
-                    print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
-                    print('============\n')
-                    combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
-                    if BOLD[0]:
-                        combined_logs_args += ['--color']
-                    combined_logs, _ = subprocess.Popen(combined_logs_args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
-                    print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
-            else:
-                time.sleep(retry_sleep)
-            return False
-
     for i in range(test_count):
         test_result, testdir, stdout, stderr = job_queue.get_next()
+        test_results.append(test_result)
         done_str = "{}/{} - {}{}{}".format(i + 1, test_count, BOLD[1], test_result.name, BOLD[0])
-        retry_limit = retries if test_result.name in NONDETERMINISTIC_SCRIPTS else 1
-        test_status = False
-        for itx in range(retry_limit):
-            test_status = run_test(test_result, testdir, stdout, stderr, itx + 1, retry_limit)
-            # Only append result if test either passes or fails till retry_limit, pushing only
-            # the result of the last attempt to test_results.
-            if test_status or retry_limit == itx + 1:
-                test_results.append(test_result)
+        if test_result.status == "Passed":
+            logging.debug("%s passed, Duration: %s s" % (done_str, test_result.time))
+        elif test_result.status == "Skipped":
+            logging.debug("%s skipped" % (done_str))
+        else:
+            print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
+            print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
+            print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
+            if combined_logs_len and os.path.isdir(testdir):
+                # Print the final `combinedlogslen` lines of the combined logs
+                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
+                print('\n============')
+                print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
+                print('============\n')
+                combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
+                if BOLD[0]:
+                    combined_logs_args += ['--color']
+                combined_logs, _ = subprocess.Popen(combined_logs_args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
+
+            if failfast:
+                logging.debug("Early exiting after test failure")
                 break
-        if failfast and not test_status:
-            logging.debug("Early exiting after test failure")
-            break
 
     print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
@@ -583,7 +556,7 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, use_term_control):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, use_term_control, attempts):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
@@ -594,6 +567,7 @@ class TestHandler:
         self.num_running = 0
         self.jobs = []
         self.use_term_control = use_term_control
+        self.attempts = attempts
 
     def get_next(self):
         while self.num_running < self.num_jobs and self.test_list:
@@ -615,7 +589,9 @@ class TestHandler:
                                                stderr=log_stderr),
                               testdir,
                               log_stdout,
-                              log_stderr))
+                              log_stderr,
+                              portseed,
+                              1))  # attempt
         if not self.jobs:
             raise IndexError('pop from empty list')
 
@@ -628,7 +604,7 @@ class TestHandler:
             # Return first proc that finishes
             time.sleep(.5)
             for job in self.jobs:
-                (name, start_time, proc, testdir, log_out, log_err) = job
+                (name, start_time, proc, testdir, log_out, log_err, portseed, attempt) = job
                 if int(time.time() - start_time) > self.timeout_duration:
                     # Timeout individual tests if timeout is specified (to stop
                     # tests hanging and not providing useful output).
@@ -641,6 +617,34 @@ class TestHandler:
                         status = "Passed"
                     elif proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
+                    elif attempt < self.attempts:
+                        # cleanup
+                        if self.use_term_control:
+                            clearline = '\r' + (' ' * dot_count) + '\r'
+                            print(clearline, end='', flush=True)
+                        dot_count = 0
+                        shutil.rmtree(testdir, ignore_errors=True)
+                        self.jobs.remove(job)
+                        print(f"{name} failed at attempt {attempt}/{self.attempts}, Duration: {int(time.time() - start_time)} s")
+                        # start over
+                        portseed_arg = ["--portseed={}".format(portseed)]
+                        log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
+                        log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
+                        test_argv = name.split()
+                        tmpdir_arg = ["--tmpdir={}".format(testdir)]
+                        self.jobs.append((name,
+                                          time.time(),
+                                          subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
+                                                           universal_newlines=True,
+                                                           stdout=log_stdout,
+                                                           stderr=log_stderr),
+                                          testdir,
+                                          log_stdout,
+                                          log_stderr,
+                                          portseed,
+                                          attempt + 1))  # attempt
+                        # no results for now, move to the next job
+                        continue
                     else:
                         status = "Failed"
                     self.num_running -= 1
