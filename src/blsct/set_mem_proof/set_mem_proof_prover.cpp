@@ -87,8 +87,8 @@ SetMemProof SetMemProofProver::Prove(
     const SetMemProofSetup& setup,
     const Points& Ys_src,
     const Point& sigma,
-    const Scalar& f,
     const Scalar& m,
+    const Scalar& f,
     const Scalar& eta
 ) {
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());

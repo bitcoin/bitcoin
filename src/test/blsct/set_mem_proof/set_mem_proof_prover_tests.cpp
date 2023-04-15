@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_input)
     Ys.Add(y4);
 
     Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, Ys, sigma, f, m, eta);
+    auto proof = Prover::Prove(setup, Ys, sigma, m, f, eta);
     auto res = Prover::Verify(setup, Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, true);
@@ -124,8 +124,42 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
     verify_Ys.Add(y4);
 
     Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, prove_Ys, sigma, f, m, eta);
+    auto proof = Prover::Prove(setup, prove_Ys, sigma, m, f, eta);
     auto res = Prover::Verify(setup, verify_Ys, eta, proof);
+
+    BOOST_CHECK_EQUAL(res, false);
+}
+
+BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inputs)
+{
+    auto setup = SetMemProofSetup::Get();
+
+    // Commitment set includes A=g*f_a+h*m_a, B=g*f_b+h*m_b, and C=g*f_c+h*m_c
+    Scalar m_a = Scalar::Rand();
+    Scalar m_b = Scalar::Rand();
+    Scalar m_c = Scalar::Rand();
+    Scalar f_a = Scalar::Rand();
+    Scalar f_b = Scalar::Rand();
+    Scalar f_c = Scalar::Rand();
+
+    auto A = setup.PedersenCommitment(m_a, f_a);
+    auto B = setup.PedersenCommitment(m_b, f_b);
+    auto C = setup.PedersenCommitment(m_c, f_c);
+
+    Points ys;
+    ys.Add(A);
+    ys.Add(B);
+    ys.Add(C);
+
+    Scalar eta = Scalar::Rand();
+
+    // A proof over the membership of D=A+B=g*(f_a+f_b)+h*(m_a+m_b) should be deemed as invalid
+    auto m_d = m_a + m_b;
+    auto f_d = f_a + f_b;
+    auto D = setup.PedersenCommitment(m_d, f_d);
+
+    auto proof = Prover::Prove(setup, ys, D, m_d, f_d, eta);
+    auto res = Prover::Verify(setup, ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, false);
 }
@@ -154,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
     prove_Ys.Add(sigma);
 
     Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, prove_Ys, sigma, f, m, eta);
+    auto proof = Prover::Prove(setup, prove_Ys, sigma, m, f, eta);
     auto res = Prover::Verify(setup, verify_Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, false);
@@ -179,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
 
     Scalar eta = Scalar::Rand();
     Scalar different_eta = eta + 1;
-    auto proof = Prover::Prove(setup, ys, sigma, f, m, eta);
+    auto proof = Prover::Prove(setup, ys, sigma, m, f, eta);
     auto res = Prover::Verify(setup, ys, different_eta, proof);
 
     BOOST_CHECK_EQUAL(res, false);
@@ -213,7 +247,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
     verify_Ys.Add(y4_2);
 
     Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, prove_Ys, sigma, f, m, eta);
+    auto proof = Prover::Prove(setup, prove_Ys, sigma, m, f, eta);
     auto res = Prover::Verify(setup, verify_Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, false);
@@ -241,7 +275,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
     }
 
     Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, Ys, sigma, f, m, eta);
+    auto proof = Prover::Prove(setup, Ys, sigma, m, f, eta);
     auto res = Prover::Verify(setup, Ys, eta, proof);
 
     BOOST_CHECK_EQUAL(res, true);

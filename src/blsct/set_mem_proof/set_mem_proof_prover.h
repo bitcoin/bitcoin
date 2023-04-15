@@ -24,8 +24,8 @@ public:
         const SetMemProofSetup& setup,
         const Points& Ys, // N Pedersen Commitment Y^n
         const Point& sigma,  // Commitment of the set member
-        const Scalar& f,  // Mask f used for the commitment of the set member
         const Scalar& m,  // Message used for the commitment of the set member
+        const Scalar& f,  // Mask f used for the commitment of the set member
         const Scalar& eta  // Entropy
     );
 
