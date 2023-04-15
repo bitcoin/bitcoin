@@ -18,29 +18,30 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
 
     // build transcript from proof in the same way it was built in Prove function
     CHashWriter fiat_shamir(0,0);
-
+retry:
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
         fiat_shamir << proof.Vs[i];
     }
     fiat_shamir << proof.A;
     fiat_shamir << proof.S;
 
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(y, fiat_shamir);
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(z, fiat_shamir);
+    GEN_FIAT_SHAMIR_VAR(y, fiat_shamir, retry);
+    GEN_FIAT_SHAMIR_VAR(z, fiat_shamir, retry);
 
     fiat_shamir << proof.T1;
     fiat_shamir << proof.T2;
 
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(x, fiat_shamir);
+    GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
 
     fiat_shamir << proof.tau_x;
     fiat_shamir << proof.mu;
     fiat_shamir << proof.t_hat;
 
-    GEN_FIAT_SHAMIR_VAR_NO_RETRY(c_factor, fiat_shamir);
+    GEN_FIAT_SHAMIR_VAR(c_factor, fiat_shamir, retry);
 
     auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(proof.Vs.Size());
-    auto xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
+    auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
+    if (!maybe_xs.has_value()) goto retry;
 
     size_t num_input_values_power_2 = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
     size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
@@ -51,7 +52,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
         y,
         z,
         c_factor,
-        xs,
+        maybe_xs.value(),
         num_input_values_power_2,
         concat_input_values_in_bits
     );

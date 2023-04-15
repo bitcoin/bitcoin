@@ -135,7 +135,7 @@ void ImpInnerProdArg::LoopWithYPows<Mcl>(
 );
 
 template <typename T>
-Elements<typename T::Scalar> ImpInnerProdArg::GenAllRoundXs(
+std::optional<Elements<typename T::Scalar>> ImpInnerProdArg::GenAllRoundXs(
     const size_t& num_rounds,
     const Elements<typename T::Point>& Ls,
     const Elements<typename T::Point>& Rs,
@@ -149,12 +149,13 @@ Elements<typename T::Scalar> ImpInnerProdArg::GenAllRoundXs(
         fiat_shamir << Ls[i];
         fiat_shamir << Rs[i];
         Scalar x(fiat_shamir.GetHash());
+        if (x == 0) return std::nullopt;
         xs.Add(x);
     }
     return xs;
 }
 template
-Elements<Mcl::Scalar> ImpInnerProdArg::GenAllRoundXs<Mcl>(
+std::optional<Elements<Mcl::Scalar>> ImpInnerProdArg::GenAllRoundXs<Mcl>(
     const size_t& num_rounds,
     const Elements<Mcl::Point>& Ls,
     const Elements<Mcl::Point>& Rs,

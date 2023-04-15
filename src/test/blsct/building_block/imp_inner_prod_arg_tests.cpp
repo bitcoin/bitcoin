@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
     Rs.Add(g + g + g);
     Rs.Add(g + g + g + g);
 
-    auto res = ImpInnerProdArg::GenAllRoundXs<Mcl>(2, Ls, Rs, fiat_shamir);
+    auto res = ImpInnerProdArg::GenAllRoundXs<Mcl>(2, Ls, Rs, fiat_shamir).value();
 
     BOOST_CHECK(res.Size() == 2);
     BOOST_CHECK(res[0].GetString(16) == "1549ffc50ba69bf258b57da9e829cf787d7996fb9b6f779667a3d83544f8fac3");

@@ -10,6 +10,7 @@
 #include <blsct/range_proof/range_proof.h>
 #include <hash.h>
 #include <vector>
+#include <optional>
 
 template <typename T>
 struct ImpInnerProdArgResult {
@@ -55,7 +56,7 @@ struct ImpInnerProdArg {
     // Generates list of x's and x^1's of all rounds of improved
     // inner product argument from a given hasher
     template <typename T>
-    static Elements<typename T::Scalar> GenAllRoundXs(
+    static std::optional<Elements<typename T::Scalar>> GenAllRoundXs(
         const size_t& num_rounds,
         const Elements<typename T::Point>& Ls,
         const Elements<typename T::Point>& Rs,
