@@ -156,7 +156,7 @@ chain for " target " development."))
                                        (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
-desirable for building Bitcoin Core release binaries."
+desirable for building Dash Core release binaries."
   (make-cross-toolchain target
                         base-gcc-for-libc
                         base-kernel-headers
