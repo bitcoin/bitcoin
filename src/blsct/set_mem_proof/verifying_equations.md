@@ -387,3 +387,4 @@ Since $r_i$ is called $b_i$ in `IIPA`, by replacing $r_i$ with $b_i$, we get
 $H_1^{b_1} + H_2^{b_2 \cdot y^{-1}} - H_1^{b_1} - H_2^{b_2 \cdot y^{-1}} = 0$
 
 This completes the verification of (19).
+
