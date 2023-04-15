@@ -56,7 +56,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 private:
     CScheduler* scheduler;
     std::thread* scheduler_thread;
-    mutable RecursiveMutex cs;
+    Mutex cs;
     bool isEnabled GUARDED_BY(cs) {false};
     bool isEnforced GUARDED_BY(cs) {false};
     std::atomic_bool tryLockChainTipScheduled {false};
@@ -85,24 +85,24 @@ public:
     void Start();
     void Stop();
 
-    bool AlreadyHave(const uint256& hash) const;
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
-    CChainLockSig GetMostRecentChainLock() const;
-    CChainLockSig GetBestChainLock() const ;
-    const CBlockIndex* GetPreviousChainLock() const ;
-    std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() const;
+    bool AlreadyHave(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    CChainLockSig GetMostRecentChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    CChainLockSig GetBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    const CBlockIndex* GetPreviousChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
-    void ProcessNewChainLock(NodeId from, CChainLockSig& clsig, const uint256& hash, const uint256& idIn = uint256());
-    void NotifyHeaderTip(const CBlockIndex* pindexNew);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void ProcessNewChainLock(NodeId from, CChainLockSig& clsig, const uint256& hash, const uint256& idIn = uint256()) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void NotifyHeaderTip(const CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
-    void CheckActiveState();
-    void TrySignChainTip();
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
+    void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void TrySignChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool HasChainLock(int nHeight, const uint256& blockHash) const;
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
-    void SetToPreviousChainLock();
+    bool HasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void SetToPreviousChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     // these require locks to be held already
@@ -110,9 +110,9 @@ private:
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret) LOCKS_EXCLUDED(cs);
-    bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan) LOCKS_EXCLUDED(cs);
-    void Cleanup();
+    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 extern CChainLocksHandler* chainLocksHandler;

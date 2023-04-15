@@ -93,13 +93,13 @@ void CChainLocksHandler::Stop()
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
-bool CChainLocksHandler::AlreadyHave(const uint256& hash) const
+bool CChainLocksHandler::AlreadyHave(const uint256& hash)
 {
     LOCK(cs);
     return seenChainLocks.count(hash) != 0;
 }
 
-bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLockSig& ret) const
+bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLockSig& ret)
 {
     LOCK(cs);
 
@@ -133,22 +133,22 @@ bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLoc
 }
 
 
-CChainLockSig CChainLocksHandler::GetMostRecentChainLock() const
+CChainLockSig CChainLocksHandler::GetMostRecentChainLock()
 {
     LOCK(cs);
     return mostRecentChainLockShare;
 }
-CChainLockSig CChainLocksHandler::GetBestChainLock() const
+CChainLockSig CChainLocksHandler::GetBestChainLock()
 {
     LOCK(cs);
     return bestChainLockWithKnownBlock;
 }
-const CBlockIndex* CChainLocksHandler::GetPreviousChainLock() const
+const CBlockIndex* CChainLocksHandler::GetPreviousChainLock()
 {
     LOCK(cs);
     return bestChainLockBlockIndexPrev;
 }
-std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockShares() const
+std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockShares()
 {
 
     LOCK(cs);
@@ -836,7 +836,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
     ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig), recoveredSig.id);
 }
 
-bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash) const
+bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
 {
     LOCK(cs);
     return InternalHasChainLock(nHeight, blockHash);
@@ -863,7 +863,7 @@ bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockH
     return pAncestor && pAncestor->GetBlockHash() == blockHash;
 }
 
-bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blockHash) const
+bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blockHash)
 {
     LOCK(cs);
     return InternalHasConflictingChainLock(nHeight, blockHash);
@@ -871,11 +871,11 @@ bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blo
 
 void CChainLocksHandler::SetToPreviousChainLock()
 {
-    LOCK(cs);
     const CBlockIndex* prevIndex = GetPreviousChainLock();
     if(!prevIndex) {
         return;
     }
+    LOCK(cs);
     bestChainLockShares.erase(bestChainLockBlockIndex->nHeight);
     bestChainLockWithKnownBlock = bestChainLockWithKnownBlockPrev;
     // move index back to previous lock position so chain cannot reorg farther than 2 chainlocks no matter what

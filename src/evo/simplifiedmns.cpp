@@ -220,7 +220,6 @@ bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseB
         return false;
     }
     const int nHeight = chainman.ActiveHeight();
-    LOCK(deterministicMNManager->cs);
     auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
     auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
     mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList, nHeight);
