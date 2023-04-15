@@ -140,9 +140,11 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 {
     AssertLockHeld(cs_main);
 
+    const auto blockHash = pindex->GetBlockHash();
+
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
     if (!fDIP0003Active) {
-        m_evoDb.Write(DB_BEST_BLOCK_UPGRADE, block.GetHash());
+        m_evoDb.Write(DB_BEST_BLOCK_UPGRADE, blockHash);
         return true;
     }
 
@@ -155,8 +157,6 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     if (!GetCommitmentsFromBlock(block, pindex, qcs, state)) {
         return false;
     }
-
-    auto blockHash = block.GetHash();
 
     // The following checks make sure that there is always a (possibly null) commitment while in the mining phase
     // until the first non-null commitment has been mined. After the non-null commitment, no other commitments are

@@ -29,7 +29,7 @@ static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
 namespace llmq
 {
 
-CCriticalSection cs_llmq_vbc;
+Mutex cs_llmq_vbc;
 VersionBitsCache llmq_versionbitscache;
 
 namespace utils
@@ -153,7 +153,6 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
     const CBlockIndex* pBlockHMinusCIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - cycleLength);
     const CBlockIndex* pBlockHMinus2CIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 2 * cycleLength);
     const CBlockIndex* pBlockHMinus3CIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 3 * cycleLength);
-    LOCK(deterministicMNManager->cs);
     const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 8);
     auto allMns = deterministicMNManager->GetListForBlock(pWorkBlockIndex);
     LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n", ToUnderlying(llmqType), pCycleQuorumBaseBlockIndex->nHeight, allMns.GetValidMNsCount());
@@ -267,7 +266,6 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
     const CBlockIndex* pWorkBlockIndex = pQuorumBaseBlockIndex->GetAncestor(pQuorumBaseBlockIndex->nHeight - 8);
     auto modifier = ::SerializeHash(std::make_pair(llmqParams.type, pWorkBlockIndex->GetBlockHash()));
 
-    LOCK(deterministicMNManager->cs);
     auto allMns = deterministicMNManager->GetListForBlock(pWorkBlockIndex);
 
     if (allMns.GetValidMNsCount() < quarterSize) {
@@ -540,7 +538,6 @@ std::pair<CDeterministicMNList, CDeterministicMNList> GetMNUsageBySnapshot(Conse
 {
     CDeterministicMNList usedMNs;
     CDeterministicMNList nonUsedMNs;
-    LOCK(deterministicMNManager->cs);
 
     const CBlockIndex* pWorkBlockIndex = pQuorumBaseBlockIndex->GetAncestor(pQuorumBaseBlockIndex->nHeight - 8);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pWorkBlockIndex->GetBlockHash()));
@@ -621,7 +618,6 @@ bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, const CBlo
         return false;
     }
 
-    LOCK(cs_llmq_vbc);
     int cycleQuorumBaseHeight = pindex->nHeight - (pindex->nHeight % llmqParams.dkgInterval);
     if (cycleQuorumBaseHeight < 1) {
         return false;
@@ -663,12 +659,15 @@ const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
 {
     assert(pindex);
 
-    LOCK(cs_llmq_vbc);
-    if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
-        return nullptr;
-    }
-    int nHeight = VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache);
-    return pindex->GetAncestor(nHeight);
+    auto opt_height = [&pindex]() -> std::optional<int> {
+       LOCK(cs_llmq_vbc);
+       if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
+           return std::nullopt;
+       }
+       return {VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache)};
+    }();
+    if (opt_height == std::nullopt) return nullptr;
+    return pindex->GetAncestor(*opt_height);
 }
 
 bool IsV20Active(const CBlockIndex* pindex)

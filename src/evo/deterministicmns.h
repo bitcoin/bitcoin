@@ -541,7 +541,7 @@ class CDeterministicMNManager
     static constexpr int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
 
 public:
-    CCriticalSection cs;
+    Mutex cs;
 
 private:
     Mutex cs_cleanup;
@@ -564,10 +564,10 @@ public:
     ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state,
-                      const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
+                      const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(cs);
+    bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
 
-    void UpdatedBlockTip(const CBlockIndex* pindex);
+    void UpdatedBlockTip(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view,
@@ -575,20 +575,24 @@ public:
     static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
-    CDeterministicMNList GetListForBlock(const CBlockIndex* pindex);
-    CDeterministicMNList GetListAtChainTip();
+    CDeterministicMNList GetListForBlock(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs) {
+        LOCK(cs);
+        return GetListForBlockInternal(pindex);
+    };
+    CDeterministicMNList GetListAtChainTip() LOCKS_EXCLUDED(cs);
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
-    bool IsDIP3Enforced(int nHeight = -1);
+    bool IsDIP3Enforced(int nHeight = -1) LOCKS_EXCLUDED(cs);
 
     bool MigrateDBIfNeeded();
 
-    void DoMaintenance();
+    void DoMaintenance() LOCKS_EXCLUDED(cs);
 
 private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs);

@@ -197,7 +197,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         return;
     }
 
-    connman.ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&oldMNList, &diff](CNode* pnode) {
         const auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
             return;
@@ -209,12 +209,9 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         bool doRemove = false;
         if (diff.removedMns.count(verifiedDmn->GetInternalId())) {
             doRemove = true;
-        } else {
-            const auto it = diff.updatedMNs.find(verifiedDmn->GetInternalId());
-            if (it != diff.updatedMNs.end()) {
-                if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->GetVerifiedPubKeyHash()) {
-                    doRemove = true;
-                }
+        } else if (const auto it = diff.updatedMNs.find(verifiedDmn->GetInternalId()); it != diff.updatedMNs.end()) {
+            if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->GetVerifiedPubKeyHash()) {
+                doRemove = true;
             }
         }
 

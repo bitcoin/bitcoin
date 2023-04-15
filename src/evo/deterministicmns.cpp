@@ -376,7 +376,7 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
 {
     CDeterministicMNListDiff diffRet;
 
-    to.ForEachMNShared(false, [&](const CDeterministicMNCPtr& toPtr) {
+    to.ForEachMNShared(false, [this, &diffRet](const CDeterministicMNCPtr& toPtr) {
         auto fromPtr = GetMN(toPtr->proTxHash);
         if (fromPtr == nullptr) {
             diffRet.addedMNs.emplace_back(toPtr);
@@ -695,7 +695,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
             newList.RepopulateUniquePropertyMap();
         }
 
-        oldList = GetListForBlock(pindex->pprev);
+        oldList = GetListForBlockInternal(pindex->pprev);
         diff = oldList.BuildDiff(newList);
 
         m_evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
@@ -746,8 +746,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
 
         if (diff.HasChanges()) {
             // need to call this before erasing
-            curList = GetListForBlock(pindex);
-            prevList = GetListForBlock(pindex->pprev);
+            curList = GetListForBlockInternal(pindex);
+            prevList = GetListForBlockInternal(pindex->pprev);
         }
 
         mnListsCache.erase(blockHash);
@@ -781,7 +781,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
     int nHeight = pindexPrev->nHeight + 1;
 
-    CDeterministicMNList oldList = GetListForBlock(pindexPrev);
+    CDeterministicMNList oldList = GetListForBlockInternal(pindexPrev);
     CDeterministicMNList newList = oldList;
     newList.SetBlockHash(uint256()); // we can't know the final block hash, so better not return a (invalid) block hash
     newList.SetHeight(nHeight);
@@ -791,7 +791,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     // we iterate the oldList here and update the newList
     // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
     // code above this loop that modifies newList
-    oldList.ForEachMN(false, [&](auto& dmn) {
+    oldList.ForEachMN(false, [&pindexPrev, &newList](auto& dmn) {
         if (!dmn.pdmnState->confirmedHash.IsNull()) {
             // already confirmed
             return;
@@ -1088,7 +1088,7 @@ void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList
     toDecrease.reserve(mnList.GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
-    mnList.ForEachMN(true /* onlyValid */, [&](auto& dmn) {
+    mnList.ForEachMN(true /* onlyValid */, [&toDecrease](auto& dmn) {
         // There is no reason to check if this MN is banned here since onlyValid=true will only run on non-banned MNs
         if (dmn.pdmnState->nPoSePenalty > 0) {
             toDecrease.emplace_back(dmn.proTxHash);
@@ -1100,10 +1100,9 @@ void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList
     }
 }
 
-CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex)
+CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlockIndex* pindex)
 {
-    LOCK(cs);
-
+    AssertLockHeld(cs);
     CDeterministicMNList snapshot;
     std::list<const CBlockIndex*> listDiffIndexes;
 
@@ -1159,7 +1158,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
         } else {
             // keep snapshots for yet alive quorums
             if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& params){
-                LOCK(cs);
+                AssertLockHeld(cs);
                 return (snapshot.GetHeight() % params.dkgInterval == 0) &&
                 (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >= tipIndex->nHeight);
             })) {
@@ -1177,7 +1176,7 @@ CDeterministicMNList CDeterministicMNManager::GetListAtChainTip()
     if (!tipIndex) {
         return {};
     }
-    return GetListForBlock(tipIndex);
+    return GetListForBlockInternal(tipIndex);
 }
 
 bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n)

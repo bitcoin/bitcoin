@@ -49,7 +49,7 @@ private:
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
-    mutable CCriticalSection cs;
+    mutable Mutex cs;
     std::atomic<bool> tryLockChainTipScheduled{false};
     std::atomic<bool> isEnabled{false};
     std::atomic<bool> isEnforced{false};
@@ -85,35 +85,35 @@ public:
     void Start();
     void Stop();
 
-    bool AlreadyHave(const CInv& inv) const;
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
-    CChainLockSig GetBestChainLock() const;
+    bool AlreadyHave(const CInv& inv) const LOCKS_EXCLUDED(cs);
+    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const LOCKS_EXCLUDED(cs);
+    CChainLockSig GetBestChainLock() const LOCKS_EXCLUDED(cs);
 
     void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
-    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
-    void AcceptedBlockHeader(const CBlockIndex* pindexNew);
+    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) LOCKS_EXCLUDED(cs);
+    void AcceptedBlockHeader(const CBlockIndex* pindexNew) LOCKS_EXCLUDED(cs);
     void UpdatedBlockTip();
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
-    void CheckActiveState();
-    void TrySignChainTip();
-    void EnforceBestChainLock();
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) LOCKS_EXCLUDED(cs);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) LOCKS_EXCLUDED(cs);
+    void CheckActiveState() LOCKS_EXCLUDED(cs);
+    void TrySignChainTip() LOCKS_EXCLUDED(cs);
+    void EnforceBestChainLock() LOCKS_EXCLUDED(cs);
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs);
 
-    bool HasChainLock(int nHeight, const uint256& blockHash) const;
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
+    bool HasChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
 
-    bool IsTxSafeForMining(const CInstantSendManager& isman, const uint256& txid) const;
+    bool IsTxSafeForMining(const CInstantSendManager& isman, const uint256& txid) const LOCKS_EXCLUDED(cs);
 
 private:
     // these require locks to be held already
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash);
+    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash) LOCKS_EXCLUDED(cs);
 
-    void Cleanup();
+    void Cleanup() LOCKS_EXCLUDED(cs);
 };
 
 extern std::unique_ptr<CChainLocksHandler> chainLocksHandler;
