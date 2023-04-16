@@ -164,18 +164,22 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inp
     Scalar m_a = Scalar::Rand();
     Scalar m_b = Scalar::Rand();
     Scalar m_c = Scalar::Rand();
+    Scalar m_e = Scalar::Rand();
     Scalar f_a = Scalar::Rand();
     Scalar f_b = Scalar::Rand();
     Scalar f_c = Scalar::Rand();
+    Scalar f_e = Scalar::Rand();
 
     auto A = setup.pedersen.Commit(m_a, f_a);
     auto B = setup.pedersen.Commit(m_b, f_b);
     auto C = setup.pedersen.Commit(m_c, f_c);
+    auto E = setup.pedersen.Commit(m_e, f_e);
 
     Points ys;
     ys.Add(A);
     ys.Add(B);
     ys.Add(C);
+    ys.Add(E);
 
     Scalar eta = Scalar::Rand();
 
