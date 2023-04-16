@@ -10,6 +10,7 @@
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
 #include <blsct/building_block/pedersen_commitment.h>
+#include <mutex>
 
 // N is the maximum size of the set of membership public key
 class SetMemProofSetup {
@@ -51,8 +52,10 @@ private:
         const PedersenCommitment<Mcl>& pedersen
     ): g{g}, h{h}, hs{hs}, pedersen{pedersen} {}
 
-    inline static const GeneratorDeriver m_deriver = GeneratorDeriver("set_membership_proof");
     static Points GenGenerators(const Point& base_point, const size_t& size);
+
+    inline static const GeneratorDeriver m_deriver = GeneratorDeriver("set_membership_proof");
+    inline static std::mutex m_init_mutex;
 };
 
 #endif // NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_SETUP_H
