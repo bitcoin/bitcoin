@@ -380,7 +380,7 @@ bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const std::share
 bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& govobj)
 {
     uint256 nHash = govobj->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, type = %d\n", nHash.ToString(), govobj->GetObjectType());
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, type = %d\n", nHash.ToString(), ToUnderlying(govobj->GetObjectType()));
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *govobj;
     return SendZmqMessage(MSG_RAWGOBJ, &(*ss.begin()), ss.size());

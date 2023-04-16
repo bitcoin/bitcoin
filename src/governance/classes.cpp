@@ -13,6 +13,7 @@
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <util/underlying.h>
 
 #include <univalue.h>
 
@@ -119,7 +120,7 @@ bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
         return false;
     }
 
-    pSuperblock->SetStatus(SEEN_OBJECT_IS_VALID);
+    pSuperblock->SetStatus(SeenObjectStatus::Valid);
 
     mapTrigger.insert(std::make_pair(nHash, pSuperblock));
 
@@ -149,20 +150,20 @@ void CGovernanceTriggerManager::CleanAndRemove()
             remove = true;
         } else {
             pObj = governance->FindGovernanceObject(it->first);
-            if (!pObj || pObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
+            if (!pObj || pObj->GetObjectType() != GovernanceObject::TRIGGER) {
                 LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Unknown or non-trigger superblock\n");
-                pSuperblock->SetStatus(SEEN_OBJECT_ERROR_INVALID);
+                pSuperblock->SetStatus(SeenObjectStatus::ErrorInvalid);
             }
 
-            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- superblock status = %d\n", pSuperblock->GetStatus());
+            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- superblock status = %d\n", ToUnderlying(pSuperblock->GetStatus()));
             switch (pSuperblock->GetStatus()) {
-            case SEEN_OBJECT_ERROR_INVALID:
-            case SEEN_OBJECT_UNKNOWN:
+            case SeenObjectStatus::ErrorInvalid:
+            case SeenObjectStatus::Unknown:
                 LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Unknown or invalid trigger found\n");
                 remove = true;
                 break;
-            case SEEN_OBJECT_IS_VALID:
-            case SEEN_OBJECT_EXECUTED: {
+            case SeenObjectStatus::Valid:
+            case SeenObjectStatus::Executed: {
                 LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Valid trigger found\n");
                 if (pSuperblock->IsExpired(*governance)) {
                     // update corresponding object
@@ -391,7 +392,7 @@ CSuperblock::
     CSuperblock() :
     nGovObjHash(),
     nBlockHeight(0),
-    nStatus(SEEN_OBJECT_UNKNOWN),
+    nStatus(SeenObjectStatus::Unknown),
     vecPayments()
 {
 }
@@ -400,7 +401,7 @@ CSuperblock::
     CSuperblock(uint256& nHash) :
     nGovObjHash(nHash),
     nBlockHeight(0),
-    nStatus(SEEN_OBJECT_UNKNOWN),
+    nStatus(SeenObjectStatus::Unknown),
     vecPayments()
 {
     CGovernanceObject* pGovObj = GetGovernanceObject(*governance);
@@ -410,15 +411,15 @@ CSuperblock::
     }
 
     LogPrint(BCLog::GOBJECT, "CSuperblock -- Constructor pGovObj: %s, nObjectType = %d\n",
-                pGovObj->GetDataAsPlainString(), pGovObj->GetObjectType());
+                pGovObj->GetDataAsPlainString(), ToUnderlying(pGovObj->GetObjectType()));
 
-    if (pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
+    if (pGovObj->GetObjectType() != GovernanceObject::TRIGGER) {
         throw std::runtime_error("CSuperblock: Governance Object not a trigger");
     }
 
     UniValue obj = pGovObj->GetJSONObject();
 
-    if (obj["type"].get_int() != GOVERNANCE_OBJECT_TRIGGER) {
+    if (obj["type"].get_int() != ToUnderlying(GovernanceObject::TRIGGER)) {
         throw std::runtime_error("CSuperblock: invalid data type");
     }
 
@@ -681,10 +682,10 @@ bool CSuperblock::IsExpired(const CGovernanceManager& governanceManager) const
     // Other valid triggers are kept for ~1 day only (for mainnet, but no longer than a superblock cycle for other networks).
     // Everything else is pruned after ~1h (for mainnet, but no longer than a superblock cycle for other networks).
     switch (nStatus) {
-    case SEEN_OBJECT_EXECUTED:
+    case SeenObjectStatus::Executed:
         nExpirationBlocks = Params().GetConsensus().nSuperblockCycle;
         break;
-    case SEEN_OBJECT_IS_VALID:
+    case SeenObjectStatus::Valid:
         nExpirationBlocks = std::min(576, Params().GetConsensus().nSuperblockCycle);
         break;
     default:

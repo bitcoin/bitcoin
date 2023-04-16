@@ -9,6 +9,7 @@
 #include <timedata.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <util/underlying.h>
 
 #include <algorithm>
 
@@ -77,8 +78,8 @@ bool CProposalValidator::ValidateType()
         return false;
     }
 
-    if (nType != GOVERNANCE_OBJECT_PROPOSAL) {
-        strErrorMessages += strprintf("type is not %d;", GOVERNANCE_OBJECT_PROPOSAL);
+    if (nType != ToUnderlying(GovernanceObject::PROPOSAL)) {
+        strErrorMessages += strprintf("type is not %d;", ToUnderlying(GovernanceObject::PROPOSAL));
         return false;
     }
 

@@ -10,6 +10,7 @@
 #include <governance/votedb.h>
 #include <logging.h>
 #include <sync.h>
+#include <util/underlying.h>
 
 #include <univalue.h>
 
@@ -26,9 +27,12 @@ extern CCriticalSection cs_main;
 
 static constexpr double GOVERNANCE_FILTER_FP_RATE = 0.001;
 
-static constexpr int GOVERNANCE_OBJECT_UNKNOWN = 0;
-static constexpr int GOVERNANCE_OBJECT_PROPOSAL = 1;
-static constexpr int GOVERNANCE_OBJECT_TRIGGER = 2;
+enum class GovernanceObject {
+    UNKNOWN = 0,
+    PROPOSAL,
+    TRIGGER
+};
+
 
 static constexpr CAmount GOVERNANCE_PROPOSAL_FEE_TX = (1 * COIN);
 static constexpr CAmount GOVERNANCE_PROPOSAL_FEE_TX_OLD = (5 * COIN);
@@ -40,10 +44,12 @@ static constexpr int64_t GOVERNANCE_DELETION_DELAY = 10 * 60;
 static constexpr int64_t GOVERNANCE_ORPHAN_EXPIRATION_TIME = 10 * 60;
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
-static constexpr int SEEN_OBJECT_IS_VALID = 0;
-static constexpr int SEEN_OBJECT_ERROR_INVALID = 1;
-static constexpr int SEEN_OBJECT_EXECUTED = 3; //used for triggers
-static constexpr int SEEN_OBJECT_UNKNOWN = 4;  // the default
+enum class SeenObjectStatus {
+    Valid = 0,
+    ErrorInvalid,
+    Executed,
+    Unknown
+};
 
 using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 
@@ -99,7 +105,7 @@ private:
     mutable CCriticalSection cs;
 
     /// Object typecode
-    int nObjectType;
+    GovernanceObject nObjectType;
 
     /// parent object, 0 is root
     uint256 nHashParent;
@@ -175,7 +181,7 @@ public:
         return nDeletionTime;
     }
 
-    int GetObjectType() const
+    GovernanceObject GetObjectType() const
     {
         return nObjectType;
     }
@@ -295,7 +301,7 @@ public:
                 obj.nTime,
                 obj.nCollateralHash,
                 obj.vchData,
-                obj.nObjectType,
+                ToUnderlying(obj.nObjectType),
                 obj.masternodeOutpoint
                 );
         if (!(s.GetType() & SER_GETHASH)) {

@@ -22,7 +22,7 @@
 
 CGovernanceObject::CGovernanceObject() :
     cs(),
-    nObjectType(GOVERNANCE_OBJECT_UNKNOWN),
+    nObjectType(GovernanceObject::UNKNOWN),
     nHashParent(),
     nRevision(0),
     nTime(0),
@@ -49,7 +49,7 @@ CGovernanceObject::CGovernanceObject() :
 
 CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const uint256& nCollateralHashIn, const std::string& strDataHexIn) :
     cs(),
-    nObjectType(GOVERNANCE_OBJECT_UNKNOWN),
+    nObjectType(GovernanceObject::UNKNOWN),
     nHashParent(nHashParentIn),
     nRevision(nRevisionIn),
     nTime(nTimeIn),
@@ -184,7 +184,7 @@ bool CGovernanceObject::ProcessVote(const CGovernanceVote& vote, CGovernanceExce
         nVoteTimeUpdate = nNow;
     }
 
-    bool onlyVotingKeyAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
+    bool onlyVotingKeyAllowed = nObjectType == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
     if (!vote.IsValid(onlyVotingKeyAllowed)) {
@@ -245,7 +245,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         return {};
     }
 
-    auto removedVotes = fileVotes.RemoveInvalidVotes(mnOutpoint, nObjectType == GOVERNANCE_OBJECT_PROPOSAL);
+    auto removedVotes = fileVotes.RemoveInvalidVotes(mnOutpoint, nObjectType == GovernanceObject::PROPOSAL);
     if (removedVotes.empty()) {
         return {};
     }
@@ -371,7 +371,7 @@ void CGovernanceObject::LoadData()
         GetData(objResult);
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::LoadData -- GetDataAsPlainString = %s\n", GetDataAsPlainString());
         UniValue obj = GetJSONObject();
-        nObjectType = obj["type"].get_int();
+        nObjectType = GovernanceObject(obj["type"].get_int());
     } catch (std::exception& e) {
         fUnparsable = true;
         std::ostringstream ostr;
@@ -468,7 +468,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
     }
 
     switch (nObjectType) {
-    case GOVERNANCE_OBJECT_PROPOSAL: {
+    case GovernanceObject::PROPOSAL: {
         bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
         CProposalValidator validator(GetDataAsHexString(), fAllowScript);
         // Note: It's ok to have expired proposals
@@ -484,7 +484,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         }
         return true;
     }
-    case GOVERNANCE_OBJECT_TRIGGER: {
+    case GovernanceObject::TRIGGER: {
         if (!fCheckCollateral) {
             // nothing else we can check here (yet?)
             return true;
@@ -508,7 +508,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         return true;
     }
     default: {
-        strError = strprintf("Invalid object type %d", nObjectType);
+        strError = strprintf("Invalid object type %d", ToUnderlying(nObjectType));
         return false;
     }
     }
@@ -518,13 +518,16 @@ CAmount CGovernanceObject::GetMinCollateralFee(bool fork_active) const
 {
     // Only 1 type has a fee for the moment but switch statement allows for future object types
     switch (nObjectType) {
-    case GOVERNANCE_OBJECT_PROPOSAL:
-        if (fork_active) return GOVERNANCE_PROPOSAL_FEE_TX;
-        else return GOVERNANCE_PROPOSAL_FEE_TX_OLD;
-    case GOVERNANCE_OBJECT_TRIGGER:
-        return 0;
-    default:
-        return MAX_MONEY;
+        case GovernanceObject::PROPOSAL: {
+            if (fork_active) return GOVERNANCE_PROPOSAL_FEE_TX;
+            else return GOVERNANCE_PROPOSAL_FEE_TX_OLD;
+        }
+        case GovernanceObject::TRIGGER: {
+            return 0;
+        }
+        default: {
+            return MAX_MONEY;
+        }
     }
 }
 
@@ -687,7 +690,7 @@ void CGovernanceObject::Relay(CConnman& connman) const
     }
 
     int minProtoVersion = MIN_PEER_PROTO_VERSION;
-    if (nObjectType == GOVERNANCE_OBJECT_PROPOSAL) {
+    if (nObjectType == GovernanceObject::PROPOSAL) {
         // We know this proposal is valid locally, otherwise we would not get to the point we should relay it.
         // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
         // because they won't accept it anyway and will simply ban us eventually.

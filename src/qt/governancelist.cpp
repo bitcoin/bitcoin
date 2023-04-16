@@ -355,7 +355,7 @@ void GovernanceList::updateProposalList()
         clientModel->getAllGovernanceObjects(govObjList);
         std::vector<const Proposal*> newProposals;
         for (const auto& govObj : govObjList) {
-            if (govObj.GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) {
+            if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
                 continue; // Skip triggers.
             }
 

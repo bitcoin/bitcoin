@@ -270,7 +270,8 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
         return;
     }
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(),
+             ToUnderlying(govobj.GetObjectType()));
 
     // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
     // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
@@ -284,9 +285,9 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
-                govobj.GetDataAsPlainString(), govobj.GetObjectType());
+                govobj.GetDataAsPlainString(), ToUnderlying(govobj.GetObjectType()));
 
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER && !triggerman.AddNewTrigger(nHash)) {
+    if (govobj.GetObjectType() == GovernanceObject::TRIGGER && !triggerman.AddNewTrigger(nHash)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
         objpair.first->second.PrepareDeletion(GetAdjustedTime());
         return;
@@ -382,7 +383,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
             int64_t nTimeExpired{0};
 
-            if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            if (pObj->GetObjectType() == GovernanceObject::PROPOSAL) {
                 // keep hashes of deleted proposals forever
                 nTimeExpired = std::numeric_limits<int64_t>::max();
             } else {
@@ -394,7 +395,7 @@ void CGovernanceManager::UpdateCachesAndClean()
             mapObjects.erase(it++);
         } else {
             // NOTE: triggers are handled via triggerman
-            if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            if (pObj->GetObjectType() == GovernanceObject::PROPOSAL) {
                 bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
                 CProposalValidator validator(pObj->GetDataAsHexString(), fAllowScript);
                 if (!validator.Validate()) {
@@ -602,7 +603,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
     for (const auto& vote : fileVotes.GetVotes()) {
         uint256 nVoteHash = vote.GetHash();
 
-        bool onlyVotingKeyAllowed = govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
+        bool onlyVotingKeyAllowed = govobj.GetObjectType() == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
         if (filter.contains(nVoteHash) || !vote.IsValid(onlyVotingKeyAllowed)) {
             continue;
@@ -653,7 +654,7 @@ void CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
             continue;
         }
 
-        if (fAllowScript && peer.nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+        if (fAllowScript && peer.nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
             // We know this proposal is valid locally, otherwise we would not store it.
             // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
             // because they won't accept it anyway and will simply ban us eventually.
@@ -679,7 +680,7 @@ void CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 
 void CGovernanceManager::MasternodeRateUpdate(const CGovernanceObject& govobj)
 {
-    if (govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) return;
+    if (govobj.GetObjectType() != GovernanceObject::TRIGGER) return;
 
     const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
     auto it = mapLastMasternodeObject.find(masternodeOutpoint);
@@ -715,7 +716,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return true;
     }
 
-    if (govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
+    if (govobj.GetObjectType() != GovernanceObject::TRIGGER) {
         return true;
     }
 
@@ -837,7 +838,7 @@ void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
         const uint256& nHash = it->first;
         CGovernanceObject& govobj = it->second;
 
-        assert(govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER);
+        assert(govobj.GetObjectType() != GovernanceObject::TRIGGER);
 
         std::string strError;
         bool fMissingConfirmations;
@@ -972,7 +973,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
                 if (mapAskedRecently[nHash].size() >= nPeersPerHashMax) continue;
             }
 
-            if (objPair.second.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+            if (objPair.second.GetObjectType() == GovernanceObject::TRIGGER) {
                 vTriggerObjHashes.push_back(nHash);
             } else {
                 vOtherObjHashes.push_back(nHash);
@@ -1076,7 +1077,7 @@ void CGovernanceManager::AddCachedTriggers()
     for (auto& objpair : mapObjects) {
         CGovernanceObject& govobj = objpair.second;
 
-        if (govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
+        if (govobj.GetObjectType() != GovernanceObject::TRIGGER) {
             continue;
         }
 
@@ -1109,10 +1110,10 @@ std::string CGovernanceManager::ToString() const
 
     for (const auto& objPair : mapObjects) {
         switch (objPair.second.GetObjectType()) {
-        case GOVERNANCE_OBJECT_PROPOSAL:
+        case GovernanceObject::PROPOSAL:
             nProposalCount++;
             break;
-        case GOVERNANCE_OBJECT_TRIGGER:
+        case GovernanceObject::TRIGGER:
             nTriggerCount++;
             break;
         default:
@@ -1137,10 +1138,10 @@ UniValue CGovernanceManager::ToJson() const
 
     for (const auto& objpair : mapObjects) {
         switch (objpair.second.GetObjectType()) {
-        case GOVERNANCE_OBJECT_PROPOSAL:
+        case GovernanceObject::PROPOSAL:
             nProposalCount++;
             break;
-        case GOVERNANCE_OBJECT_TRIGGER:
+        case GovernanceObject::TRIGGER:
             nTriggerCount++;
             break;
         default:

@@ -108,7 +108,7 @@ static UniValue gobject_check(const JSONRPCRequest& request)
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
 
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+    if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         LOCK(cs_main);
         bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
         CProposalValidator validator(strDataHex, fAllowScript);
@@ -183,7 +183,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
                 request.params[2].getValStr(), request.params[3].getValStr(),
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
 
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+    if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         LOCK(cs_main);
         bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
         CProposalValidator validator(strDataHex, fAllowScript);
@@ -192,7 +192,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         }
     }
 
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+    if (govobj.GetObjectType() == GovernanceObject::TRIGGER) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
     }
 
@@ -348,7 +348,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     LogPrint(BCLog::GOBJECT, "gobject_submit -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), txidFee.ToString());
 
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+    if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         LOCK(cs_main);
         bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
         CProposalValidator validator(strDataHex, fAllowScript);
@@ -358,7 +358,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     // Attempt to sign triggers if we are a MN
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+    if (govobj.GetObjectType() == GovernanceObject::TRIGGER) {
         if (fMnFound) {
             LOCK(activeMasternodeInfoCs);
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
@@ -443,15 +443,13 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    int govObjType;
-    {
-        LOCK(governance->cs);
+    GovernanceObject govObjType = WITH_LOCK(governance->cs, return [&](){
         CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
-        govObjType = pGovObj->GetObjectType();
-    }
+        return pGovObj->GetObjectType();
+    }());
 
     int nSuccessful = 0;
     int nFailed = 0;
@@ -476,7 +474,7 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
 
     bool signSuccess = false;
-    if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
+    if (govObjType == GovernanceObject::PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
 
@@ -727,15 +725,15 @@ static UniValue ListObjects(const std::string& strCachedSignal, const std::strin
         if (strCachedSignal == "delete" && !govObj.IsSetCachedDelete()) continue;
         if (strCachedSignal == "endorsed" && !govObj.IsSetCachedEndorsed()) continue;
 
-        if (strType == "proposals" && govObj.GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
-        if (strType == "triggers" && govObj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) continue;
+        if (strType == "proposals" && govObj.GetObjectType() != GovernanceObject::PROPOSAL) continue;
+        if (strType == "triggers" && govObj.GetObjectType() != GovernanceObject::TRIGGER) continue;
 
         UniValue bObj(UniValue::VOBJ);
         bObj.pushKV("DataHex",  govObj.GetDataAsHexString());
         bObj.pushKV("DataString",  govObj.GetDataAsPlainString());
         bObj.pushKV("Hash",  govObj.GetHash().ToString());
         bObj.pushKV("CollateralHash",  govObj.GetCollateralHash().ToString());
-        bObj.pushKV("ObjectType", govObj.GetObjectType());
+        bObj.pushKV("ObjectType", ToUnderlying(govObj.GetObjectType()));
         bObj.pushKV("CreationTime", govObj.GetCreationTime());
         const COutPoint& masternodeOutpoint = govObj.GetMasternodeOutpoint();
         if (masternodeOutpoint != COutPoint()) {
@@ -869,7 +867,7 @@ static UniValue gobject_get(const JSONRPCRequest& request)
     objResult.pushKV("DataString",  pGovObj->GetDataAsPlainString());
     objResult.pushKV("Hash",  pGovObj->GetHash().ToString());
     objResult.pushKV("CollateralHash",  pGovObj->GetCollateralHash().ToString());
-    objResult.pushKV("ObjectType", pGovObj->GetObjectType());
+    objResult.pushKV("ObjectType", ToUnderlying(pGovObj->GetObjectType()));
     objResult.pushKV("CreationTime", pGovObj->GetCreationTime());
     const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
     if (masternodeOutpoint != COutPoint()) {
@@ -1094,15 +1092,14 @@ static UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    int govObjType;
-    {
-        LOCK(governance->cs);
+    GovernanceObject govObjType = WITH_LOCK(governance->cs, return [&](){
         CGovernanceObject *pGovObj = governance->FindGovernanceObject(hashGovObj);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
-        govObjType = pGovObj->GetObjectType();
-    }
+        return pGovObj->GetObjectType();
+    }());
+
 
     int64_t nTime = request.params[5].get_int64();
     std::string strSig = request.params[6].get_str();
@@ -1123,7 +1120,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
     vote.SetTime(nTime);
     vote.SetSignature(vchSig);
 
-    bool onlyVotingKeyAllowed = govObjType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
+    bool onlyVotingKeyAllowed = govObjType == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
     if (!vote.IsValid(onlyVotingKeyAllowed)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");

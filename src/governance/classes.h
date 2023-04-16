@@ -117,7 +117,7 @@ private:
     uint256 nGovObjHash;
 
     int nBlockHeight;
-    int nStatus;
+    SeenObjectStatus nStatus;
     std::vector<CGovernancePayment> vecPayments;
 
     void ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts);
@@ -130,11 +130,11 @@ public:
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
     static CAmount GetPaymentsLimit(int nBlockHeight);
 
-    int GetStatus() const { return nStatus; }
-    void SetStatus(int nStatusIn) { nStatus = nStatusIn; }
+    SeenObjectStatus GetStatus() const { return nStatus; }
+    void SetStatus(SeenObjectStatus nStatusIn) { nStatus = nStatusIn; }
 
     // TELL THE ENGINE WE EXECUTED THIS EVENT
-    void SetExecuted() { nStatus = SEEN_OBJECT_EXECUTED; }
+    void SetExecuted() { nStatus = SeenObjectStatus::Executed; }
 
     CGovernanceObject* GetGovernanceObject(CGovernanceManager& governanceManager);
 
