@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
     Points verify_Ys;
     verify_Ys.Add(y1_2);
     verify_Ys.Add(y2_2);
-    prove_Ys.Add(sigma);
+    verify_Ys.Add(sigma);
     verify_Ys.Add(y4_2);
 
     Scalar eta = Scalar::Rand();
