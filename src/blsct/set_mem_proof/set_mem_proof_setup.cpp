@@ -11,10 +11,9 @@ using Points = Elements<Point>;
 const SetMemProofSetup& SetMemProofSetup::Get()
 {
     static SetMemProofSetup* x = nullptr;
-    static bool is_initialized = false;
 
     std::lock_guard<std::mutex> lock(m_init_mutex);
-    if (is_initialized) return *x;
+    if (m_is_initialized) return *x;
 
     Point g = Point::GetBasePoint();
     Point h = m_deriver.Derive(g, 0);
@@ -22,7 +21,7 @@ const SetMemProofSetup& SetMemProofSetup::Get()
     PedersenCommitment<Mcl> pedersen_commitment(g, h);
     x = new SetMemProofSetup(g, h, hs, pedersen_commitment);
 
-    is_initialized = true;
+    m_is_initialized = true;
     return *x;
 }
 

@@ -56,6 +56,7 @@ private:
 
     inline static const GeneratorDeriver m_deriver = GeneratorDeriver("set_membership_proof");
     inline static std::mutex m_init_mutex;
+    inline static bool m_is_initialized = false;
 };
 
 #endif // NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_SETUP_H
