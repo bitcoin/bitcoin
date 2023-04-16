@@ -1,23 +1,37 @@
-# Copyright (c) 2022 The Dash Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2022-2023 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+"""
+
+Usage:
+    $ ./handle_potential_conflicts.py <conflicts>
+
+Where <conflicts> is a json string which looks like
+    {   pull_number: 26,
+        conflictPrs:
+            [ { number: 15,
+                files: [ 'testfile1', `testfile2` ],
+                conflicts: [ 'testfile1' ] },
+                ...
+            ]}
+"""
+
 import sys
 import requests
 
 # need to install via pip
 import hjson
 
-'''Looks like'''
-'''{ pull_number: 26,
-    conflictPrs:
-        [ { number: 25,
-            files: [ '.github/workflows/testfile' ],
-            conflicts: [ '.github/workflows/testfile' ] }
-        { number: 24,
-            files: [ '.github/workflows/testfile' ],
-            conflicts: [ '.github/workflows/testfile' ] } ] }'''
+def get_label(pr_num):
+    return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['head']['label']
 
 def main():
+    if len(sys.argv) != 2:
+        print(f'Usage: {sys.argv[0]} <conflicts>', file=sys.stderr)
+        sys.exit(1)
+
     input = sys.argv[1]
     print(input)
     j_input = hjson.loads(input)
@@ -56,11 +70,6 @@ def main():
     print("Conflicting PRs: ", bad)
     if len(bad) > 0:
         sys.exit(1)
-
-
-
-def get_label(pr_num):
-    return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['head']['label']
 
 
 if __name__ == "__main__":

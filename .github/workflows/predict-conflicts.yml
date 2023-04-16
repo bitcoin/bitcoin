@@ -21,8 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check for potential conflicts
-        uses: PastaPastaPasta/potential-conflicts-checker-action@0.1.9
+        uses: PastaPastaPasta/potential-conflicts-checker-action@v0.1.10
         with:
           ghToken: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: validate potential conflicts
-        run: wget https://raw.githubusercontent.com/dashpay/dash/develop/.github/workflows/handle_potential_conflicts.py && pip3 install hjson && python3 handle_potential_conflicts.py "$conflicts"
+        run: pip3 install hjson && .github/workflows/handle_potential_conflicts.py "$conflicts"
