@@ -1,8 +1,3 @@
-# -fsanitize=undefined suppressions
-# =================================
-float-divide-by-zero:validation.cpp
-float-divide-by-zero:wallet/wallet.cpp
-
 # -fsanitize=integer suppressions
 # ===============================
 # Unsigned integer overflow occurs when the result of an unsigned integer

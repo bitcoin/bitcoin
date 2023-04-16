@@ -16,12 +16,16 @@
 
 FUZZ_TARGET(rolling_bloom_filter)
 {
+    // Pick an arbitrary upper bound to limit the runtime and avoid timeouts on
+    // inputs.
+    int limit_max_ops{3000};
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     CRollingBloomFilter rolling_bloom_filter{
         fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 1000),
         0.999 / fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, std::numeric_limits<unsigned int>::max())};
-    while (fuzzed_data_provider.remaining_bytes() > 0) {
+    while (--limit_max_ops >= 0 && fuzzed_data_provider.remaining_bytes() > 0) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -32,13 +36,10 @@ FUZZ_TARGET(rolling_bloom_filter)
                 assert(present);
             },
             [&] {
-                const std::optional<uint256> u256 = ConsumeDeserializable<uint256>(fuzzed_data_provider);
-                if (!u256) {
-                    return;
-                }
-                (void)rolling_bloom_filter.contains(*u256);
-                rolling_bloom_filter.insert(*u256);
-                const bool present = rolling_bloom_filter.contains(*u256);
+                const uint256 u256{ConsumeUInt256(fuzzed_data_provider)};
+                (void)rolling_bloom_filter.contains(u256);
+                rolling_bloom_filter.insert(u256);
+                const bool present = rolling_bloom_filter.contains(u256);
                 assert(present);
             },
             [&] {

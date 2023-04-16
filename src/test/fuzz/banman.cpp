@@ -31,12 +31,16 @@ void initialize_banman()
 
 FUZZ_TARGET_INIT(banman, initialize_banman)
 {
+    // The complexity is O(N^2), where N is the input size, because each call
+    // might call DumpBanlist (or other methods that are at least linear
+    // complexity of the input size).
+    int limit_max_ops{300};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     const fs::path banlist_file = GetDataDir() / "fuzzed_banlist.dat";
     fs::remove(banlist_file);
     {
         BanMan ban_man{banlist_file, nullptr, ConsumeBanTimeOffset(fuzzed_data_provider)};
-        while (fuzzed_data_provider.ConsumeBool()) {
+        while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {
@@ -50,7 +54,6 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
                 [&] {
                     ban_man.ClearBanned();
                 },
-                [] {},
                 [&] {
                     ban_man.IsBanned(ConsumeNetAddr(fuzzed_data_provider));
                 },
@@ -70,7 +73,6 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
                 [&] {
                     ban_man.DumpBanlist();
                 },
-                [] {},
                 [&] {
                     ban_man.Discourage(ConsumeNetAddr(fuzzed_data_provider));
                 });
