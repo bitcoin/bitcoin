@@ -328,13 +328,17 @@ Elements<T> Elements<T>::Invert() const
 
     // calculate inverses of all elements
     std::deque<T> q;
-    for (size_t i = m_vec.size()-1; i != std::numeric_limits<size_t>::max(); --i) {
+    size_t i = m_vec.size()-1;
+    for (;;) {
         // extract x_i^-1 by multiplying x_1*...*x_{i-1}
         T x = elem_inverse_prod * extract_factors[i];
         q.push_front(x);
 
         // drop the inverse just extracted
         elem_inverse_prod = elem_inverse_prod * m_vec[i];
+
+        if (i == 0) break;
+        --i;
     }
 
     Elements<T> ret({ q.begin(), q.end() });
