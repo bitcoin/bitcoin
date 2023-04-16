@@ -33,6 +33,7 @@ IGNORED_WARNINGS=(
     "src/spork.h:.* warning: struct member 'CSporkDef::defaultValue' is never used."
     "src/test/dip0020opcodes_tests.cpp:.* warning: There is an unknown macro here somewhere. Configuration is required. If BOOST_FIXTURE_TEST_SUITE is a macro then please configure it."
     "src/ctpl_stl.h:.*22: warning: Dereferencing '_f' after it is deallocated / released"
+    "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const"
 
 #    "src/llmq/snapshot.cpp:.*:17: warning: Consider using std::copy algorithm instead of a raw loop."
 #    "src/llmq/snapshot.cpp:.*:18: warning: Consider using std::copy algorithm instead of a raw loop."

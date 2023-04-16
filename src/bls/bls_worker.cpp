@@ -771,7 +771,7 @@ bool CBLSWorker::VerifyVerificationVectors(const std::vector<BLSVerificationVect
 
     std::set<uint256> set;
     for (size_t i = 0; i < count; i++) {
-        auto& vvec = vvecs[start + i];
+        const auto& vvec = vvecs[start + i];
         if (vvec == nullptr) {
             return false;
         }
