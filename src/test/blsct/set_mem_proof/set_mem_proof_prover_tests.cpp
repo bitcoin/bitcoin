@@ -210,16 +210,22 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
     Scalar f = Scalar::Rand();
     auto sigma = setup.pedersen.Commit(m, f);
 
-    Points ys;
-    ys.Add(y1);
-    ys.Add(y2);
-    ys.Add(sigma);
-    ys.Add(y4);
+    Points prove_ys;
+    prove_ys.Add(y1);
+    prove_ys.Add(y2);
+    prove_ys.Add(sigma);
+    prove_ys.Add(y4);
 
-    Scalar eta = Scalar::Rand();
-    Scalar different_eta = eta + 1;
-    auto proof = Prover::Prove(setup, ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, ys, different_eta, proof);
+    Points verify_ys;
+    verify_ys.Add(y1);
+    verify_ys.Add(y2);
+    verify_ys.Add(sigma);
+    verify_ys.Add(y4);
+
+    Scalar eta_123(123);
+    Scalar eta_456(456);
+    auto proof = Prover::Prove(setup, prove_ys, sigma, m, f, eta_123);
+    auto res = Prover::Verify(setup, verify_ys, eta_456, proof);
 
     BOOST_CHECK_EQUAL(res, false);
 }
