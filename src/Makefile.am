@@ -263,6 +263,7 @@ BITCOIN_CORE_H = \
   reverse_iterator.h \
   rpc/blockchain.h \
   rpc/client.h \
+  rpc/mining.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
