@@ -210,13 +210,18 @@ retry: // retrying without generating fiat_shamir again to get different hashes
 
 bool SetMemProofProver::Verify(
     const SetMemProofSetup& setup,
-    const Points& Ys,
+    const Points& Ys_src,
     const Scalar& eta,
     const SetMemProof& proof
 ) {
     using LazyPoint = LazyPoint<Mcl>;
 
-    size_t n = Ys.Size();
+    size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
+    if (n > setup.N) {
+        throw std::runtime_error("# of commitments exceeds the setup maximum");
+    }
+    Points Ys = ExtendYs(setup, Ys_src, n);
+
     auto fiat_shamir = GenInitialFiatShamir(
         Ys, proof.A1, proof.A2, proof.S1,
         proof.S2, proof.S3, proof.phi, eta

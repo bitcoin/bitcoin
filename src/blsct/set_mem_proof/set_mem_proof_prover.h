@@ -22,7 +22,7 @@ public:
 
     static SetMemProof Prove(
         const SetMemProofSetup& setup,
-        const Points& Ys, // N Pedersen Commitment Y^n
+        const Points& Ys_src, // N Pedersen Commitment Y^n
         const Point& sigma,  // Commitment of the set member
         const Scalar& m,  // Message used for the commitment of the set member
         const Scalar& f,  // Mask f used for the commitment of the set member
@@ -31,9 +31,9 @@ public:
 
     static bool Verify(
         const SetMemProofSetup& setup,
-        const Points& Ys,  // Same as Ys in Prove()
-        const Scalar& eta,  // Same as eta in Prove()
-        const SetMemProof& proof  // The output of Prove()
+        const Points& Ys_src,
+        const Scalar& eta,
+        const SetMemProof& proof  // Output of Prove()
     );
 
 #ifndef BOOST_UNIT_TEST
