@@ -82,7 +82,7 @@ public:
     explicit CChainLocksHandler(CConnman &connman, PeerManager& peerman, ChainstateManager& chainman);
     ~CChainLocksHandler();
 
-    void Start();
+    void Start() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Stop();
 
     bool AlreadyHave(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);

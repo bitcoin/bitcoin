@@ -615,8 +615,6 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& _state, const CCoinsViewCache& view, bool fJustCheck)
 {
-    AssertLockNotHeld(cs);
-    AssertLockHeld(cs_main);
     const auto& consensusParams = Params().GetConsensus();
     bool fDIP0003Active = pindex->nHeight >= consensusParams.DIP0003Height;
     if (!fDIP0003Active) {
@@ -687,7 +685,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
 bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    AssertLockNotHeld(cs);
     uint256 blockHash = block.GetHash();
 
     CDeterministicMNList curList;
@@ -718,15 +715,12 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
 
 void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
 {
-    AssertLockNotHeld(cs);
     LOCK(cs);
     tipIndex = pindex;
 }
 
 bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
-    AssertLockHeld(cs_main);
-    AssertLockHeld(cs);
 
     int nHeight = pindexPrev->nHeight + 1;
 
@@ -1019,7 +1013,6 @@ void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList
 
 CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlockIndex* pindex)
 {
-    AssertLockHeld(cs);
     CDeterministicMNList snapshot;
     std::list<const CBlockIndex*> listDiffIndexes;
 
@@ -1088,7 +1081,6 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlo
     return snapshot;
 }
 CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex) {
-    AssertLockNotHeld(cs);
     return WITH_LOCK(cs, return GetListForBlockInternal(pindex));
 };
 CDeterministicMNList CDeterministicMNManager::GetListAtChainTip()
@@ -1139,8 +1131,6 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 
 void CDeterministicMNManager::CleanupCache(int nHeight)
 {
-    AssertLockHeld(cs);
-
     std::vector<uint256> toDeleteLists;
     std::vector<uint256> toDeleteDiffs;
     for (const auto& p : mnListsCache) {

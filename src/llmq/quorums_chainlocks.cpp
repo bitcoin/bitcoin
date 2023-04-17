@@ -75,7 +75,6 @@ void CChainLocksHandler::Start()
         }
         bool bEnforce = false;
         if(enforced) {
-            AssertLockNotHeld(cs);
             bEnforce = chainman.ActiveChainstate().EnforceBestChainLock(pindex);
         }
         if(bEnforce)
@@ -162,8 +161,6 @@ std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockSha
 
 bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
 {
-    AssertLockHeld(cs);
-
     if (pindex == nullptr || pindex->nHeight <= bestChainLockWithKnownBlock.nHeight) {
         return false;
     }
@@ -484,8 +481,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 clsigAggInv = CInv(MSG_CLSIG, ::SerializeHash(bestChainLockWithKnownBlock));
             }
         }
-        // Note: do not hold cs while calling RelayInv
-        AssertLockNotHeld(cs);
         if (clsigAggInv.type == MSG_CLSIG) {
             // We just created an aggregated CLSIG, relay it
             peerman.RelayTransactionOther(clsigAggInv);
@@ -525,8 +520,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             mostRecentChainLockShare = clsig;
             TryUpdateBestChainLock(pindexScan);
         }
-        // Note: do not hold cs while calling RelayInv
-        AssertLockNotHeld(cs);
         peerman.RelayTransactionOther(clsigInv);
     }
     
@@ -541,7 +534,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             enforced = isEnforced;
         }
         if(enforced) {
-            AssertLockNotHeld(cs);
             chainman.ActiveChainstate().EnforceBestChainLock(pindex);
         }
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
@@ -587,7 +579,6 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
             }
             bool bEnforce = false;
             if(enforced) {
-                AssertLockNotHeld(cs);
                 bEnforce = chainman.ActiveChainstate().EnforceBestChainLock(pindex);
             }
             if(bEnforce)
@@ -844,8 +835,6 @@ bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
 
 bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockHash) const
 {
-    AssertLockHeld(cs);
-
     if (!isEnforced) {
         return false;
     }
@@ -891,8 +880,6 @@ void CChainLocksHandler::SetToPreviousChainLock()
 
 bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const
 {
-    AssertLockHeld(cs);
-
     if (!isEnforced) {
         return false;
     }
