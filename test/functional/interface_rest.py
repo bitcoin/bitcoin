@@ -277,6 +277,10 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
 
+        # Check invalid uri (% symbol at the end of the request)
+        resp = self.test_rest_request(f"/headers/{bb_hash}%", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), "URI parsing failed, it likely contained RFC 3986 invalid characters")
+
         # Compare with normal RPC block response
         rpc_block_json = self.nodes[0].getblock(bb_hash)
         for key in ['hash', 'confirmations', 'height', 'version', 'merkleroot', 'time', 'nonce', 'bits', 'difficulty', 'chainwork', 'previousblockhash']:
