@@ -23,7 +23,7 @@ public:
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static CZMQNotificationInterface* Create();
+    static std::unique_ptr<CZMQNotificationInterface> Create();
 
 protected:
     bool Initialize();
@@ -43,6 +43,6 @@ private:
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 
-extern CZMQNotificationInterface* g_zmq_notification_interface;
+extern std::unique_ptr<CZMQNotificationInterface> g_zmq_notification_interface;
 
 #endif // BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H

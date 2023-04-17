@@ -39,7 +39,7 @@ std::list<const CZMQAbstractNotifier*> CZMQNotificationInterface::GetActiveNotif
     return result;
 }
 
-CZMQNotificationInterface* CZMQNotificationInterface::Create()
+std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create()
 {
     std::map<std::string, CZMQNotifierFactory> factories;
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
@@ -68,7 +68,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notificationInterface->notifiers = std::move(notifiers);
 
         if (notificationInterface->Initialize()) {
-            return notificationInterface.release();
+            return notificationInterface;
         }
     }
 
@@ -198,4 +198,4 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     });
 }
 
-CZMQNotificationInterface* g_zmq_notification_interface = nullptr;
+std::unique_ptr<CZMQNotificationInterface> g_zmq_notification_interface;
