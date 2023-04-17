@@ -641,12 +641,11 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     std::map<OutputType, size_t> expected_coins_sizes;
     for (const auto& out_type : OUTPUT_TYPES) { expected_coins_sizes[out_type] = 0U; }
 
-    // Verify our wallet has one usable coinbase UTXO before starting
-    // This UTXO is a P2PK, so it should show up in the Other bucket
-    expected_coins_sizes[OutputType::UNKNOWN] = 1U;
+    // The wallet starts with one spendable P2PK coinbase UTXO.
+    expected_coins_sizes[OutputType::LEGACY] = 1U;
     CoinsResult available_coins = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet));
-    BOOST_CHECK_EQUAL(available_coins.Size(), expected_coins_sizes[OutputType::UNKNOWN]);
-    BOOST_CHECK_EQUAL(available_coins.coins[OutputType::UNKNOWN].size(), expected_coins_sizes[OutputType::UNKNOWN]);
+    BOOST_CHECK_EQUAL(available_coins.Size(), expected_coins_sizes[OutputType::LEGACY]);
+    BOOST_CHECK_EQUAL(available_coins.coins[OutputType::LEGACY].size(), expected_coins_sizes[OutputType::LEGACY]);
 
     // We will create a self transfer for each of the OutputTypes and
     // verify it is put in the correct bucket after running GetAvailablecoins
@@ -656,8 +655,7 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     //   2. One UTXO from the change, due to payment address matching logic
 
     for (const auto& out_type : OUTPUT_TYPES) {
-        if (out_type == OutputType::UNKNOWN) continue;
-        expected_coins_sizes[out_type] = 2U;
+        expected_coins_sizes[out_type] += 2U;
         TestCoinsResult(*this, out_type, 1 * COIN, expected_coins_sizes);
     }
 }

@@ -149,6 +149,7 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
             else return OutputType::BECH32;
         case TxoutType::SCRIPTHASH:
         case TxoutType::PUBKEYHASH:
+        case TxoutType::PUBKEY:
             return OutputType::LEGACY;
         default:
             return OutputType::UNKNOWN;
