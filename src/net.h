@@ -451,6 +451,7 @@ public:
             case ConnectionType::MANUAL:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::FEELER:
+            case ConnectionType::SENSITIVE_RELAY:
                 return false;
         } // no default case, so the compiler can warn about missing cases
 
@@ -477,6 +478,10 @@ public:
         return m_conn_type == ConnectionType::ADDR_FETCH;
     }
 
+    bool IsSensitiveRelayConn() const {
+        return m_conn_type == ConnectionType::SENSITIVE_RELAY;
+    }
+
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
     }
@@ -490,6 +495,7 @@ public:
             case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
+            case ConnectionType::SENSITIVE_RELAY:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 

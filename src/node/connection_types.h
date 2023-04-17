@@ -74,6 +74,13 @@ enum class ConnectionType {
      * AddrMan is empty.
      */
     ADDR_FETCH,
+
+    /**
+     * Sensitive-relay connections are short-lived and only opened to
+     * privacy networks (Tor, I2P) for relaying sensitive data (like our
+     * own transactions) and closed afterwards.
+     */
+    SENSITIVE_RELAY,
 };
 
 /** Convert ConnectionType enum to a string value */
