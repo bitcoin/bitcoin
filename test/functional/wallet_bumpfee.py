@@ -101,10 +101,12 @@ class BumpFeeTest(BitcoinTestFramework):
         test_change_script_match(self, rbf_node, dest_address)
         test_settxfee(self, rbf_node, dest_address)
         test_maxtxfee_fails(self, rbf_node, dest_address)
-        test_feerate_checks_replaced_outputs(self, rbf_node)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
+
+        # Context independent tests
+        test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -670,7 +672,11 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     self.clear_mempool()
 
 
-def test_feerate_checks_replaced_outputs(self, rbf_node):
+def test_feerate_checks_replaced_outputs(self, rbf_node, peer_node):
+    # Make sure there is enough balance
+    peer_node.sendtoaddress(rbf_node.getnewaddress(), 60)
+    self.generate(peer_node, 1)
+
     self.log.info("Test that feerate checks use replaced outputs")
     outputs = []
     for i in range(50):
@@ -693,6 +699,7 @@ def test_feerate_checks_replaced_outputs(self, rbf_node):
 
     # Bumpfee and replace all outputs with a single one using the minimum feerate
     rbf_node.bumpfee(tx_res["txid"], {"fee_rate": min_fee_rate, "outputs": new_outputs})
+    self.clear_mempool()
 
 
 if __name__ == "__main__":
