@@ -130,20 +130,20 @@ void DeleteAuthCookie()
     }
 }
 
-std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
+std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
 {
     if (!in.isArray()) {
         throw std::runtime_error("Batch must be an array");
     }
+    const size_t num {in.size()};
     std::vector<UniValue> batch(num);
-    for (size_t i=0; i<in.size(); ++i) {
-        const UniValue &rec = in[i];
+    for (const UniValue& rec : in.getValues()) {
         if (!rec.isObject()) {
-            throw std::runtime_error("Batch member must be object");
+            throw std::runtime_error("Batch member must be an object");
         }
         size_t id = rec["id"].get_int();
         if (id >= num) {
-            throw std::runtime_error("Batch member id larger than size");
+            throw std::runtime_error("Batch member id is larger than batch size");
         }
         batch[id] = rec;
     }
