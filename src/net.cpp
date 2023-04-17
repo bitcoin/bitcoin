@@ -54,6 +54,7 @@
 #include <sys/event.h>
 #endif
 
+#include <algorithm>
 #include <cstdint>
 #include <unordered_map>
 
@@ -99,6 +100,11 @@ enum BindFlags {
     BF_NONE         = 0,
     BF_EXPLICIT     = (1U << 0),
     BF_REPORT_ERROR = (1U << 1),
+    /**
+     * Do not call AddLocal() for our special addresses, e.g., for incoming
+     * Tor connections, to prevent gossiping them over the network.
+     */
+    BF_DONT_ADVERTISE = (1U << 2),
 };
 
 #ifndef USE_WAKEUP_PIPE
@@ -580,6 +586,11 @@ std::string CNode::GetLogString() const
     return fLogIPs ? addr.ToString() : strprintf("%d", id);
 }
 
+Network CNode::ConnectedThroughNetwork() const
+{
+    return fInbound && m_inbound_onion ? NET_ONION : addr.GetNetClass();
+}
+
 #undef X
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
@@ -588,6 +599,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(nServices);
     X(addr);
     X(addrBind);
+    stats.m_network = GetNetworkName(ConnectedThroughNetwork());
     stats.m_mapped_as = addr.GetMappedAS(m_asmap);
     if (!m_block_relay_only_peer) {
         LOCK(m_tx_relay->cs_filter);
@@ -1199,7 +1211,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     if (NetPermissions::HasFlag(permissionFlags, PF_BLOOMFILTER)) {
         nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_BLOOM);
     }
-    CNode* pnode = new CNode(id, nodeServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
+
+    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+    CNode* pnode = new CNode(id, nodeServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true, inbound_onion);
     pnode->AddRef();
     pnode->m_permissionFlags = permissionFlags;
     // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
@@ -2875,9 +2889,6 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 
     vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
 
-    if (addrBind.IsRoutable() && fDiscover && (permissions & PF_NOBAN) == 0)
-        AddLocal(addrBind, LOCAL_BIND);
-
     return true;
 }
 
@@ -2974,10 +2985,18 @@ bool CConnman::Bind(const CService &addr, unsigned int flags, NetPermissionFlags
         }
         return false;
     }
+
+    if (addr.IsRoutable() && fDiscover && !(flags & BF_DONT_ADVERTISE) && !(permissions & PF_NOBAN)) {
+        AddLocal(addr, LOCAL_BIND);
+    }
+
     return true;
 }
 
-bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<NetWhitebindPermissions>& whiteBinds)
+bool CConnman::InitBinds(
+    const std::vector<CService>& binds,
+    const std::vector<NetWhitebindPermissions>& whiteBinds,
+    const std::vector<CService>& onion_binds)
 {
     bool fBound = false;
     for (const auto& addrBind : binds) {
@@ -2988,11 +3007,16 @@ bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<N
     }
     if (binds.empty() && whiteBinds.empty()) {
         struct in_addr inaddr_any;
-        inaddr_any.s_addr = INADDR_ANY;
+        inaddr_any.s_addr = htonl(INADDR_ANY);
         struct in6_addr inaddr6_any = IN6ADDR_ANY_INIT;
         fBound |= Bind(CService(inaddr6_any, GetListenPort()), BF_NONE, NetPermissionFlags::PF_NONE);
         fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE, NetPermissionFlags::PF_NONE);
     }
+
+    for (const auto& addr_bind : onion_binds) {
+        fBound |= Bind(addr_bind, BF_EXPLICIT | BF_DONT_ADVERTISE, NetPermissionFlags::PF_NONE);
+    }
+
     return fBound;
 }
 
@@ -3031,7 +3055,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     }
 #endif
 
-    if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds)) {
+    if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds, connOptions.onion_binds)) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
                 _("Failed to listen on any port. Use -listen=0 if you want this."),
@@ -3741,7 +3765,7 @@ int CConnman::GetBestHeight() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, bool fInboundIn, bool block_relay_only)
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, bool fInboundIn, bool block_relay_only, bool inbound_onion)
     : nTimeConnected(GetSystemTimeInSeconds()),
     addr(addrIn),
     addrBind(addrBindIn),
@@ -3752,7 +3776,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     id(idIn),
     nLocalHostNonce(nLocalHostNonceIn),
     nLocalServices(nLocalServicesIn),
-    nMyStartingHeight(nMyStartingHeightIn)
+    nMyStartingHeight(nMyStartingHeightIn),
+    m_inbound_onion(inbound_onion)
 {
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;

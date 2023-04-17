@@ -178,6 +178,7 @@ public:
         std::vector<NetWhitelistPermissions> vWhitelistedRange;
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
+        std::vector<CService> onion_binds;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
@@ -211,6 +212,7 @@ public:
             vAddedNodes = connOptions.m_added_nodes;
         }
         socketEventsMode = connOptions.socketEventsMode;
+        m_onion_binds = connOptions.onion_binds;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman);
@@ -496,7 +498,11 @@ private:
 
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
-    bool InitBinds(const std::vector<CService>& binds, const std::vector<NetWhitebindPermissions>& whiteBinds);
+    bool InitBinds(
+        const std::vector<CService>& binds,
+        const std::vector<NetWhitebindPermissions>& whiteBinds,
+        const std::vector<CService>& onion_binds);
+
     void ThreadOpenAddedConnections();
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
@@ -675,6 +681,12 @@ private:
 
     std::atomic<int64_t> m_next_send_inv_to_incoming{0};
 
+    /**
+     * A vector of -bind=<address>:<port>=onion arguments each of which is
+     * an address and port that are designated for incoming Tor connections.
+     */
+    std::vector<CService> m_onion_binds;
+
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
 };
@@ -797,6 +809,8 @@ public:
     CAddress addr;
     // Bind address of our side of the connection
     CAddress addrBind;
+    // Name of the network the peer connected through
+    std::string m_network;
     uint32_t m_mapped_as;
     // In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
@@ -1010,6 +1024,18 @@ public:
     std::atomic_bool fHasRecvData{false};
     std::atomic_bool fCanSendData{false};
 
+    /**
+     * Get network the peer connected through.
+     *
+     * Returns Network::NET_ONION for *inbound* onion connections,
+     * and CNetAddr::GetNetClass() otherwise. The latter cannot be used directly
+     * because it doesn't detect the former, and it's not the responsibility of
+     * the CNetAddr class to know the actual network a peer is connected through.
+     *
+     * @return network the peer connected through.
+     */
+    Network ConnectedThroughNetwork() const;
+
 protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
@@ -1112,7 +1138,7 @@ public:
 
     std::set<uint256> orphan_work_set;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool block_relay_only = false);
+    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool block_relay_only = false, bool inbound_onion = false);
     ~CNode();
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
@@ -1149,6 +1175,9 @@ private:
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
     mutable CCriticalSection cs_addrLocal;
+
+    //! Whether this peer connected via our Tor onion service.
+    const bool m_inbound_onion{false};
 
     // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
     mutable CCriticalSection cs_mnauth;

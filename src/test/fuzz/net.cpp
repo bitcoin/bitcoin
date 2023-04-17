@@ -47,6 +47,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                *address_bind,
                fuzzed_data_provider.ConsumeRandomLengthString(32),
                fuzzed_data_provider.ConsumeBool(),
+               fuzzed_data_provider.ConsumeBool(),
                fuzzed_data_provider.ConsumeBool()
            };
     while (fuzzed_data_provider.ConsumeBool()) {
@@ -148,4 +149,5 @@ FUZZ_TARGET_INIT(net, initialize_net)
                                                         fuzzed_data_provider.PickValueInArray<NetPermissionFlags>({NetPermissionFlags::PF_NONE, NetPermissionFlags::PF_BLOOMFILTER, NetPermissionFlags::PF_RELAY, NetPermissionFlags::PF_FORCERELAY, NetPermissionFlags::PF_NOBAN, NetPermissionFlags::PF_MEMPOOL, NetPermissionFlags::PF_ISIMPLICIT, NetPermissionFlags::PF_ALL}) :
                                                         static_cast<NetPermissionFlags>(fuzzed_data_provider.ConsumeIntegral<uint32_t>());
     (void)node.HasPermission(net_permission_flags);
+    (void)node.ConnectedThroughNetwork();
 }
