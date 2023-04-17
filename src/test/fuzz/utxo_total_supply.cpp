@@ -14,6 +14,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <util/chaintype.h>
 #include <validation.h>
 #include <version.h>
 
@@ -21,7 +22,7 @@ FUZZ_TARGET(utxo_total_supply)
 {
     /** The testing setup that creates a chainman only (no chainstate) */
     ChainTestingSetup test_setup{
-        CBaseChainParams::REGTEST,
+        ChainType::REGTEST,
         {
             "-testactivationheight=bip34@2",
         },

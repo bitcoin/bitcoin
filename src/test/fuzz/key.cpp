@@ -17,6 +17,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chaintype.h>
 #include <util/strencodings.h>
 
 #include <cassert>
@@ -28,7 +29,7 @@
 void initialize_key()
 {
     ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(key, initialize_key)

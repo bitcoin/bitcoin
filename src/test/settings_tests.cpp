@@ -6,12 +6,12 @@
 
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
-#include <util/fs.h>
-
 
 #include <boost/test/unit_test.hpp>
 #include <common/args.h>
 #include <univalue.h>
+#include <util/chaintype.h>
+#include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }
 
-    const std::string& network = CBaseChainParams::MAIN;
+    const std::string& network = ChainTypeToString(ChainType::MAIN);
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool force_set,
                           bool ignore_default_section_config) {
         std::string desc;
@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         }
 
         desc += " || ";
-        desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_name=*/false).write();
+        desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_type=*/false).write();
         desc += " |";
         for (const auto& s : GetSettingsList(settings, network, name, ignore_default_section_config)) {
             desc += " ";

@@ -143,7 +143,7 @@ std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
     if (m_network.empty()) return std::set<std::string> {};
 
     // if it's okay to use the default section for this network, don't worry
-    if (m_network == CBaseChainParams::MAIN) return std::set<std::string> {};
+    if (m_network == ChainTypeToString(ChainType::MAIN)) return std::set<std::string> {};
 
     for (const auto& arg : m_network_only_args) {
         if (OnlyHasDefaultSectionSetting(m_settings, m_network, SettingName(arg))) {
@@ -157,10 +157,10 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
 {
     // Section names to be recognized in the config file.
     static const std::set<std::string> available_sections{
-        CBaseChainParams::REGTEST,
-        CBaseChainParams::SIGNET,
-        CBaseChainParams::TESTNET,
-        CBaseChainParams::MAIN
+        ChainTypeToString(ChainType::REGTEST),
+        ChainTypeToString(ChainType::SIGNET),
+        ChainTypeToString(ChainType::TESTNET),
+        ChainTypeToString(ChainType::MAIN),
     };
 
     LOCK(cs_args);
@@ -445,7 +445,7 @@ util::SettingsValue ArgsManager::GetPersistentSetting(const std::string& name) c
 {
     LOCK(cs_args);
     return util::GetSetting(m_settings, m_network, name, !UseDefaultSection("-" + name),
-        /*ignore_nonpersistent=*/true, /*get_chain_name=*/false);
+        /*ignore_nonpersistent=*/true, /*get_chain_type=*/false);
 }
 
 bool ArgsManager::IsArgNegated(const std::string& strArg) const
@@ -726,7 +726,7 @@ ChainType ArgsManager::GetChainType() const
     throw std::runtime_error(strprintf("Unknown chain %s.", std::get<std::string>(arg)));
 }
 
-std::string ArgsManager::GetChainName() const
+std::string ArgsManager::GetChainTypeString() const
 {
     auto arg = GetChainArg();
     if (auto* parsed = std::get_if<ChainType>(&arg)) return ChainTypeToString(*parsed);
@@ -740,7 +740,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
         util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
             /* ignore_default_section_config= */ false,
             /*ignore_nonpersistent=*/false,
-            /* get_chain_name= */ true);
+            /* get_chain_type= */ true);
         return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
     };
 
@@ -765,7 +765,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {
-    return m_network == CBaseChainParams::MAIN || m_network_only_args.count(arg) == 0;
+    return m_network == ChainTypeToString(ChainType::MAIN) || m_network_only_args.count(arg) == 0;
 }
 
 util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
@@ -773,7 +773,7 @@ util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
     LOCK(cs_args);
     return util::GetSetting(
         m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
-        /*ignore_nonpersistent=*/false, /*get_chain_name=*/false);
+        /*ignore_nonpersistent=*/false, /*get_chain_type=*/false);
 }
 
 std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const

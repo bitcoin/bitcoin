@@ -12,6 +12,7 @@
 #include <hash.h> // for signet block challenge hash
 #include <logging.h>
 #include <script/interpreter.h>
+#include <util/chaintype.h>
 #include <util/string.h>
 
 #include <assert.h>
@@ -97,26 +98,29 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const std::string& chain)
+std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
 {
-    if (chain == CBaseChainParams::MAIN) {
+    switch (chain) {
+    case ChainType::MAIN:
         return CChainParams::Main();
-    } else if (chain == CBaseChainParams::TESTNET) {
+    case ChainType::TESTNET:
         return CChainParams::TestNet();
-    } else if (chain == CBaseChainParams::SIGNET) {
+    case ChainType::SIGNET: {
         auto opts = CChainParams::SigNetOptions{};
         ReadSigNetArgs(args, opts);
         return CChainParams::SigNet(opts);
-    } else if (chain == CBaseChainParams::REGTEST) {
+    }
+    case ChainType::REGTEST: {
         auto opts = CChainParams::RegTestOptions{};
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
     }
-    throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+    }
+    throw std::invalid_argument(strprintf("%s: Invalid ChainType value", __func__));
 }
 
-void SelectParams(const std::string& network)
+void SelectParams(const ChainType chain)
 {
-    SelectBaseParams(network);
-    globalChainParams = CreateChainParams(gArgs, network);
+    SelectBaseParams(chain);
+    globalChainParams = CreateChainParams(gArgs, chain);
 }

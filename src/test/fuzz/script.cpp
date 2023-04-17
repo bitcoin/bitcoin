@@ -22,6 +22,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 
 #include <algorithm>
 #include <cassert>
@@ -32,7 +33,7 @@
 
 void initialize_script()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(script, initialize_script)

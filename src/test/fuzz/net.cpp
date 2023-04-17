@@ -16,6 +16,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
+#include <util/chaintype.h>
 
 #include <cstdint>
 #include <optional>
@@ -24,7 +25,7 @@
 
 void initialize_net()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::MAIN);
+    static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
 }
 
 FUZZ_TARGET_INIT(net, initialize_net)
