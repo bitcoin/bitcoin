@@ -53,11 +53,12 @@ config file): *Needed for Tor version 0.2.7.0 and older versions of Tor only. Fo
 versions of Tor see [Section 4](#4-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/dashcore-service/
-	HiddenServicePort 9999 127.0.0.1:9999
-	HiddenServicePort 19999 127.0.0.1:19999
+	HiddenServicePort 9999 127.0.0.1:9996
+	HiddenServicePort 19999 127.0.0.1:19996
 
-The directory can be different of course, but (both) port numbers should be equal to
-your dashd's P2P listen port (9999 by default).
+The directory can be different of course, but virtual port numbers should be equal to
+your dashd's P2P listen port (9999 by default), and target addresses and ports
+should be equal to binding address and port for inbound Tor connections (127.0.0.1:9996 by default).
 
 	-externalip=X   You can tell Dash Core about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
