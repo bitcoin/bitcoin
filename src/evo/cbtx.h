@@ -8,10 +8,11 @@
 #include <primitives/transaction.h>
 #include <univalue.h>
 
+class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
-class CValidationState;
+class TxValidationState;
 
 namespace llmq {
 class CQuorumBlockProcessor;
@@ -53,10 +54,10 @@ public:
     }
 };
 
-bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
-bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const llmq::CQuorumBlockProcessor& quorum_block_processor, CValidationState& state, const CCoinsViewCache& view);
-bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state, const CCoinsViewCache& view);
-bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet, CValidationState& state);
+bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state, const CCoinsViewCache& view);
+bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const CCoinsViewCache& view);
+bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet, BlockValidationState& state);
 
 #endif // BITCOIN_EVO_CBTX_H

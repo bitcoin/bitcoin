@@ -38,6 +38,10 @@ extern RecursiveMutex cs_wallets;
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
+namespace {
+constexpr CAmount fallbackFee = 1000;
+} // anonymous namespace
+
 static std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain& chain)
 {
     DatabaseOptions options;
@@ -869,7 +873,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         coinControl.Select(GetCoins({{100000, false}})[0]);
 
         // Start with fallback feerate
-        runTest(1, DEFAULT_FALLBACK_FEE, {
+        runTest(1, fallbackFee, {
             {0, {true, ChangeTest::ChangeExpected}},
             {1, {true, ChangeTest::ChangeExpected}},
             {2, {true, ChangeTest::ChangeExpected}},
@@ -886,7 +890,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             {13, {false, ChangeTest::Skip}}
         });
         // Now with 100x fallback feerate
-        runTest(2, DEFAULT_FALLBACK_FEE * 100, {
+        runTest(2, fallbackFee * 100, {
             {0, {true, ChangeTest::ChangeExpected}},
             {1, {false, ChangeTest::Skip}},
             {2, {true, ChangeTest::ChangeExpected}},
@@ -912,7 +916,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         }
 
         // Start with fallback feerate
-        runTest(3, DEFAULT_FALLBACK_FEE, {
+        runTest(3, fallbackFee, {
             {0, {true, ChangeTest::ChangeExpected}},
             {1, {false, ChangeTest::Skip}},
             {2, {true, ChangeTest::ChangeExpected}},
@@ -929,7 +933,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             {13, {false, ChangeTest::Skip}}
         });
         // Now with 100x fallback feerate
-        runTest(4, DEFAULT_FALLBACK_FEE * 100, {
+        runTest(4, fallbackFee * 100, {
             {0, {true, ChangeTest::ChangeExpected}},
             {1, {false, ChangeTest::Skip}},
             {2, {true, ChangeTest::ChangeExpected}},
@@ -958,7 +962,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         }
 
         // Start with fallback feerate
-        runTest(5, DEFAULT_FALLBACK_FEE, {
+        runTest(5, fallbackFee, {
             {0, {true, ChangeTest::ChangeExpected}},
             {1, {false, ChangeTest::Skip}},
             {2, {true, ChangeTest::ChangeExpected}},
@@ -975,7 +979,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             {13, {false, ChangeTest::Skip}}
         });
         // Now with 100x fallback feerate
-        runTest(6, DEFAULT_FALLBACK_FEE * 100, {
+        runTest(6, fallbackFee * 100, {
             {0, {false, ChangeTest::Skip}},
             {1, {false, ChangeTest::Skip}},
             {2, {false, ChangeTest::Skip}},
@@ -996,6 +1000,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     // which inputs to use
     {
         coinControl.SetNull();
+        coinControl.m_feerate = CFeeRate(fallbackFee);
         auto setCoins = GetCoins({{1000, false}, {1000, false}, {1000, false}, {1000, false}, {1000, false},
                                   {1100, false}, {1200, false}, {1300, false}, {1400, false}, {1500, false},
                                   {3000, false}, {3000, false}, {2000, false}, {2000, false}, {1000, false}});
@@ -1044,6 +1049,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     // Test if the change output ends up at the requested position
     {
         coinControl.SetNull();
+        coinControl.m_feerate = CFeeRate(fallbackFee);
         coinControl.Select(GetCoins({{100000, false}})[0]);
 
         BOOST_CHECK(CreateTransaction({{25000, false}, {25000, false}, {25000, false}}, {}, 0, true, ChangeTest::ChangeExpected));
@@ -1054,6 +1060,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     // Test error cases
     {
         coinControl.SetNull();
+        coinControl.m_feerate = CFeeRate(fallbackFee);
         // First try to send something without any coins available
         {
             // Lock all other coins
@@ -1090,6 +1097,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         };
 
         coinControl.SetNull();
+        coinControl.m_feerate = CFeeRate(fallbackFee);
         coinControl.Select(GetCoins({{100 * COIN, false}})[0]);
 
         BOOST_CHECK(CreateTransaction({{-5000, false}}, strAmountNotNegative, false));

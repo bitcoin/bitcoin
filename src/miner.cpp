@@ -205,7 +205,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
 
         cbTx.nHeight = nHeight;
 
-        CValidationState state;
+        BlockValidationState state;
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
         }
@@ -233,8 +233,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
     pblocktemplate->nPrevBits = pindexPrev->nBits;
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*pblock->vtx[0]);
 
-    CValidationState state;
     assert(std::addressof(::ChainstateActive()) == std::addressof(chainstate));
+    BlockValidationState state;
     if (!TestBlockValidity(state, m_clhandler, m_evoDb, chainparams, chainstate, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }

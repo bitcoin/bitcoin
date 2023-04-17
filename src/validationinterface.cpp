@@ -44,7 +44,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const std::shared_ptr<const CBlock>&, const CBlockIndex* pindex)> BlockDisconnected;
     boost::signals2::signal<void (const CTransactionRef &, MemPoolRemovalReason)> TransactionRemovedFromMempool;
     boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
-    boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
+    boost::signals2::signal<void (const CBlock&, const BlockValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
     boost::signals2::signal<void (const CBlockIndex *)>AcceptedBlockHeader;
     boost::signals2::signal<void (const CBlockIndex *, bool)>NotifyHeaderTip;
@@ -198,7 +198,7 @@ void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
     });
 }
 
-void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& state) {
+void CMainSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
     m_internals->BlockChecked(block, state);
 }
 

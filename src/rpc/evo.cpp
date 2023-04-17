@@ -326,7 +326,7 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const CMu
     {
     LOCK(cs_main);
 
-    CValidationState state;
+    TxValidationState state;
     if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), true)) {
         throw std::runtime_error(FormatStateMessage(state));
     }

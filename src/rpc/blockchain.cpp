@@ -1811,7 +1811,7 @@ static UniValue preciousblock(const JSONRPCRequest& request)
         }
     }
 
-    CValidationState state;
+    BlockValidationState state;
     ::ChainstateActive().PreciousBlock(state, Params(), pblockindex);
 
     if (!state.IsValid()) {
@@ -1836,7 +1836,7 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
     }.Check(request);
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
-    CValidationState state;
+    BlockValidationState state;
 
     CBlockIndex* pblockindex;
     {
@@ -1886,7 +1886,7 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
         ::ChainstateActive().ResetBlockFailureFlags(pblockindex);
     }
 
-    CValidationState state;
+    BlockValidationState state;
     ::ChainstateActive().ActivateBestChain(state, Params());
 
     if (!state.IsValid()) {

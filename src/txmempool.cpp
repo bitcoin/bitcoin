@@ -1023,9 +1023,9 @@ void CTxMemPool::clear()
 
 static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const int64_t spendheight)
 {
-    CValidationState state;
+    TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, spendheight, txfee);
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
@@ -1207,7 +1207,7 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid) const
 }
 
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
-    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), CFeeRate(it->GetFee(), it->GetTxSize()), it->GetModifiedFee() - it->GetFee()};
+    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
 }
 
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const

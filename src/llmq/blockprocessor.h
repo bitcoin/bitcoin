@@ -16,9 +16,9 @@
 
 #include <optional>
 
+class BlockValidationState;
 class CNode;
 class CConnman;
-class CValidationState;
 class CEvoDB;
 
 extern CCriticalSection cs_main;
@@ -49,7 +49,7 @@ public:
 
     void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void AddMineableCommitment(const CFinalCommitment& fqc);
@@ -67,8 +67,8 @@ public:
     std::vector<std::pair<int, const CBlockIndex*>> GetLastMinedCommitmentsPerQuorumIndexUntilBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, size_t cycle) const;
     std::optional<const CBlockIndex*> GetLastMinedCommitmentsByQuorumIndexUntilBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, int quorumIndex, size_t cycle) const;
 private:
-    static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::multimap<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::multimap<Consensus::LLMQType, CFinalCommitment>& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     static bool IsMiningPhase(const Consensus::LLMQParams& llmqParams, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     size_t GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     static uint256 GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight, int quorumIndex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

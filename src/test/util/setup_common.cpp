@@ -253,7 +253,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
-    CValidationState state;
+    BlockValidationState state;
     if (!::ChainstateActive().ActivateBestChain(state, chainparams)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
     }
@@ -338,7 +338,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
         if (!GetTxPayload(*block.vtx[0], cbTx)) {
             BOOST_ASSERT(false);
         }
-        CValidationState state;
+        BlockValidationState state;
         if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }

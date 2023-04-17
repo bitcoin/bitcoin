@@ -27,7 +27,7 @@
 class CConnman;
 class CBlock;
 class CBlockIndex;
-class CValidationState;
+class TxValidationState;
 class CSimplifiedMNListDiff;
 
 extern CCriticalSection cs_main;
@@ -563,14 +563,14 @@ public:
         m_evoDb(evoDb), connman(_connman) {}
     ~CDeterministicMNManager() = default;
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state,
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state,
                       const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(cs);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
 
     void UpdatedBlockTip(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view,
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, const CCoinsViewCache& view,
                                CDeterministicMNList& mnListRet, bool debugLogs) EXCLUSIVE_LOCKS_REQUIRED(cs);
     static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
@@ -595,10 +595,10 @@ private:
     CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs);
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs);
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs);
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs);
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs);
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool check_sigs);
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs);
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool check_sigs);
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 

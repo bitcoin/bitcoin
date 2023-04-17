@@ -320,9 +320,9 @@ void CCoinJoinServer::CommitFinalTransaction()
     {
         // See if the transaction is valid
         TRY_LOCK(cs_main, lockMain);
-        CValidationState validationState;
+        TxValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, 0.1 * COIN);
-        if (!lockMain || !AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, finalTransaction, nullptr /* pfMissingInputs */, false /* bypass_limits */, DEFAULT_MAX_RAW_TX_FEE /* nAbsurdFee */)) {
+        if (!lockMain || !AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, finalTransaction, false /* bypass_limits */, DEFAULT_MAX_RAW_TX_FEE /* nAbsurdFee */)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             WITH_LOCK(cs_coinjoin, SetNull());
             // not much we can do in this case, just notify clients
@@ -454,8 +454,8 @@ void CCoinJoinServer::ChargeRandomFees() const
 void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
 {
     LOCK(cs_main);
-    CValidationState validationState;
-    if (!AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, txref, nullptr /* pfMissingInputs */, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+    TxValidationState validationState;
+    if (!AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, txref, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
         LogPrint(BCLog::COINJOIN, "%s -- AcceptToMemoryPool failed\n", __func__);
     } else {
         connman.RelayTransaction(*txref);

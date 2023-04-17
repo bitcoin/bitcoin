@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
     const CChain& active = Assert(m_node.chainman)->ActiveChain();
     auto* orig_tip = active.Tip();
     for (int i = 0; i < 10; ++i) {
-        CValidationState state;
+        BlockValidationState state;
         ChainstateActive().InvalidateBlock(state, Params(), active.Tip());
     }
     BOOST_CHECK_EQUAL(active.Height(), orig_tip->nHeight - 10);

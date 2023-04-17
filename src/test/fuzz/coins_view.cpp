@@ -223,12 +223,12 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
             },
             [&] {
-                CValidationState state;
+                TxValidationState state;
                 CAmount tx_fee_out;
                 const CTransaction transaction{random_mutable_transaction};
                 if (ContainsSpentInput(transaction, coins_view_cache)) {
                     // Avoid:
-                    // consensus/tx_verify.cpp:171: bool Consensus::CheckTxInputs(const CTransaction &, CValidationState &, const CCoinsViewCache &, int, CAmount &): Assertion `!coin.IsSpent()' failed.
+                    // consensus/tx_verify.cpp:171: bool Consensus::CheckTxInputs(const CTransaction &, TxValidationState&, const CCoinsViewCache &, int, CAmount &): Assertion `!coin.IsSpent()' failed.
                     return;
                 }
                 try {

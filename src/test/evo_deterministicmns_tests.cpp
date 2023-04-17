@@ -294,12 +294,12 @@ void FuncDIP3Protx(TestChainSetup& setup)
         // payload itself. This means, we need to rely on script verification, which takes the hash of the extra payload
         // into account
         auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
-        CValidationState dummyState;
+        TxValidationState dummy_state;
         // Technically, the payload is still valid...
         {
             LOCK(cs_main);
-            BOOST_ASSERT(CheckProRegTx(CTransaction(tx), ::ChainActive().Tip(), dummyState, ::ChainstateActive().CoinsTip(), true));
-            BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummyState, ::ChainstateActive().CoinsTip(), true));
+            BOOST_ASSERT(CheckProRegTx(CTransaction(tx), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
+            BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
         }
         // But the signature should not verify anymore
         BOOST_ASSERT(CheckTransactionSignature(*(setup.m_node.mempool), tx));
@@ -401,11 +401,11 @@ void FuncDIP3Protx(TestChainSetup& setup)
     tx = CreateProUpRegTx(*(setup.m_node.mempool), utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, setup.coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
-    CValidationState dummyState;
+    TxValidationState dummy_state;
     {
         LOCK(cs_main);
-        BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), ::ChainActive().Tip(), dummyState, ::ChainstateActive().CoinsTip(), true));
-        BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummyState, ::ChainstateActive().CoinsTip(), true));
+        BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
+        BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
     }
     BOOST_ASSERT(CheckTransactionSignature(*(setup.m_node.mempool), tx));
     BOOST_ASSERT(!CheckTransactionSignature(*(setup.m_node.mempool), tx2));

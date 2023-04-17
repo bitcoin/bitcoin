@@ -12,7 +12,7 @@
 #include <univalue.h>
 
 class CBlockIndex;
-class CValidationState;
+class TxValidationState;
 extern CCriticalSection cs_main;
 
 // mnhf signal special transaction
@@ -72,6 +72,6 @@ public:
     }
 };
 
-bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_EVO_MNHFTX_H

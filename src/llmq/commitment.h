@@ -15,7 +15,7 @@
 #include <univalue.h>
 
 class CBlockIndex;
-class CValidationState;
+class TxValidationState;
 
 namespace llmq
 {
@@ -168,7 +168,7 @@ public:
     }
 };
 
-bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
 } // namespace llmq
 
