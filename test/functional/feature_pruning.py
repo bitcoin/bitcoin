@@ -91,9 +91,6 @@ class PruneTest(BitcoinTestFramework):
         ]
         self.rpc_timeout = 120
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def setup_network(self):
         self.setup_nodes()
 
@@ -109,7 +106,8 @@ class PruneTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
-        self.import_deterministic_coinbase_privkeys()
+        if self.is_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
@@ -454,8 +452,9 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Test manual pruning with timestamps")
         self.manual_test(4, use_timestamp=True)
 
-        self.log.info("Test wallet re-scan")
-        self.wallet_test()
+        if self.is_wallet_compiled():
+            self.log.info("Test wallet re-scan")
+            self.wallet_test()
 
         self.log.info("Stopping pruned nodes manually")
         for i in range(2, 6):

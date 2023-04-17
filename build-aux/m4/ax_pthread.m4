@@ -14,20 +14,24 @@
 #   flags that are needed. (The user can also force certain compiler
 #   flags/libs to be tested by setting these environment variables.)
 #
-#   Also sets PTHREAD_CC to any special C compiler that is needed for
-#   multi-threaded programs (defaults to the value of CC otherwise). (This
-#   is necessary on AIX to use the special cc_r compiler alias.)
+#   Also sets PTHREAD_CC and PTHREAD_CXX to any special C compiler that is
+#   needed for multi-threaded programs (defaults to the value of CC
+#   respectively CXX otherwise). (This is necessary on e.g. AIX to use the
+#   special cc_r/CC_r compiler alias.)
 #
 #   NOTE: You are assumed to not only compile your program with these flags,
 #   but also to link with them as well. For example, you might link with
 #   $PTHREAD_CC $CFLAGS $PTHREAD_CFLAGS $LDFLAGS ... $PTHREAD_LIBS $LIBS
+#   $PTHREAD_CXX $CXXFLAGS $PTHREAD_CFLAGS $LDFLAGS ... $PTHREAD_LIBS $LIBS
 #
 #   If you are only building threaded programs, you may wish to use these
 #   variables in your default LIBS, CFLAGS, and CC:
 #
 #     LIBS="$PTHREAD_LIBS $LIBS"
 #     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+#     CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
 #     CC="$PTHREAD_CC"
+#     CXX="$PTHREAD_CXX"
 #
 #   In addition, if the PTHREAD_CREATE_JOINABLE thread-attribute constant
 #   has a nonstandard name, this macro defines PTHREAD_CREATE_JOINABLE to
@@ -83,7 +87,7 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 27
+#serial 31
 
 AU_ALIAS([ACX_PTHREAD], [AX_PTHREAD])
 AC_DEFUN([AX_PTHREAD], [
@@ -105,6 +109,7 @@ if test "x$PTHREAD_CFLAGS$PTHREAD_LIBS" != "x"; then
         ax_pthread_save_CFLAGS="$CFLAGS"
         ax_pthread_save_LIBS="$LIBS"
         AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
+        AS_IF([test "x$PTHREAD_CXX" != "x"], [CXX="$PTHREAD_CXX"])
         CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
         LIBS="$PTHREAD_LIBS $LIBS"
         AC_MSG_CHECKING([for pthread_join using $CC $PTHREAD_CFLAGS $PTHREAD_LIBS])
@@ -386,7 +391,7 @@ if test "x$ax_pthread_clang" = "xyes"; then
              # step
              ax_pthread_save_ac_link="$ac_link"
              ax_pthread_sed='s/conftest\.\$ac_ext/conftest.$ac_objext/g'
-             ax_pthread_link_step=`$as_echo "$ac_link" | sed "$ax_pthread_sed"`
+             ax_pthread_link_step=`AS_ECHO(["$ac_link"]) | sed "$ax_pthread_sed"`
              ax_pthread_2step_ac_link="($ac_compile) && (echo ==== >&5) && ($ax_pthread_link_step)"
              ax_pthread_save_CFLAGS="$CFLAGS"
              for ax_pthread_try in '' -Qunused-arguments -Wno-unused-command-line-argument unknown; do
@@ -482,18 +487,28 @@ if test "x$ax_pthread_ok" = "xyes"; then
                     [#handle absolute path differently from PATH based program lookup
                      AS_CASE(["x$CC"],
                          [x/*],
-                         [AS_IF([AS_EXECUTABLE_P([${CC}_r])],[PTHREAD_CC="${CC}_r"])],
-                         [AC_CHECK_PROGS([PTHREAD_CC],[${CC}_r],[$CC])])])
+                         [
+			   AS_IF([AS_EXECUTABLE_P([${CC}_r])],[PTHREAD_CC="${CC}_r"])
+			   AS_IF([test "x${CXX}" != "x"], [AS_IF([AS_EXECUTABLE_P([${CXX}_r])],[PTHREAD_CXX="${CXX}_r"])])
+			 ],
+                         [
+			   AC_CHECK_PROGS([PTHREAD_CC],[${CC}_r],[$CC])
+			   AS_IF([test "x${CXX}" != "x"], [AC_CHECK_PROGS([PTHREAD_CXX],[${CXX}_r],[$CXX])])
+			 ]
+                     )
+                    ])
                 ;;
             esac
         fi
 fi
 
 test -n "$PTHREAD_CC" || PTHREAD_CC="$CC"
+test -n "$PTHREAD_CXX" || PTHREAD_CXX="$CXX"
 
 AC_SUBST([PTHREAD_LIBS])
 AC_SUBST([PTHREAD_CFLAGS])
 AC_SUBST([PTHREAD_CC])
+AC_SUBST([PTHREAD_CXX])
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "x$ax_pthread_ok" = "xyes"; then

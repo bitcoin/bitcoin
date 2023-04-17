@@ -19,20 +19,6 @@
 #include <vector>
 
 namespace {
-uint64_t MapIntoRange(const uint64_t x, const uint64_t n)
-{
-    const uint64_t x_hi = x >> 32;
-    const uint64_t x_lo = x & 0xFFFFFFFF;
-    const uint64_t n_hi = n >> 32;
-    const uint64_t n_lo = n & 0xFFFFFFFF;
-    const uint64_t ac = x_hi * n_hi;
-    const uint64_t ad = x_hi * n_lo;
-    const uint64_t bc = x_lo * n_hi;
-    const uint64_t bd = x_lo * n_lo;
-    const uint64_t mid34 = (bd >> 32) + (bc & 0xFFFFFFFF) + (ad & 0xFFFFFFFF);
-    const uint64_t upper64 = ac + (bc >> 32) + (ad >> 32) + (mid34 >> 32);
-    return upper64;
-}
 
 uint64_t HashToRange(const std::vector<uint8_t>& element, const uint64_t f)
 {
