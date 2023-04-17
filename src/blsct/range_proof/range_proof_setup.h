@@ -8,15 +8,9 @@
 #include <cstddef>
 #include <cmath>
 
-class Config
+class RangeProofSetup
 {
 public:
-    /**
-     * Returns power of 2 that is greater or equal to input_value_len
-     * throws exception if such a number exceeds the maximum
-     */
-    static size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_vec_len);
-
     // maximum # of retries allowed for RangeProofLogic::Prove function
     inline static const size_t max_prove_func_retries = 100;
 
@@ -35,9 +29,6 @@ public:
     inline static const size_t m_max_message_size = 54;
 
     inline static const size_t m_max_input_value_vec_len = m_max_input_values * m_input_value_bits;
-
-    // maximum number of tries in Prove() function
-    inline static const size_t m_max_prove_tries = 100;
 };
 
 #endif // NAVCOIN_BLSCT_RANGE_PROOF_CONFIG_H

@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2022 The Navcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl.h>
-#include <blsct/range_proof/config.h>
 #include <blsct/range_proof/generators.h>
+#include <blsct/range_proof/range_proof_setup.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 
@@ -27,14 +27,14 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     TokenId token_id_2(uint256(2), 22ULL);
     Generators<T> gens2 = gf.GetInstance(token_id_2);
 
-    auto max_size = Config::m_max_input_value_vec_len;
+    auto max_size = RangeProofSetup::m_max_input_value_vec_len;
 
     // regardless of the token_id, the same Gi and Hi should be returned
-    //// same token_id
+    // same token_id
     BOOST_CHECK(gens1.GetGiSubset(max_size) == gens1_2.GetGiSubset(max_size));
     BOOST_CHECK(gens1.GetHiSubset(max_size) == gens1_2.GetHiSubset(max_size));
 
-    //// different token_ids
+    // different token_ids
     BOOST_CHECK(gens1.GetGiSubset(max_size) == gens2.GetGiSubset(max_size));
     BOOST_CHECK(gens1.GetHiSubset(max_size) == gens2.GetHiSubset(max_size));
 }
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_generators_get_gihi_subset)
     BOOST_CHECK_NO_THROW(gens.GetGiSubset(0));
     BOOST_CHECK_NO_THROW(gens.GetHiSubset(0));
 
-    auto max_size = Config::m_max_input_value_vec_len;
+    auto max_size = RangeProofSetup::m_max_input_value_vec_len;
 
     // should be able to get Gi and Hi up to of size max_input_value_vec_len
     BOOST_CHECK_NO_THROW(gens.GetGiSubset(max_size));

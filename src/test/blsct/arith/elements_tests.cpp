@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2022 The Navcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -480,6 +480,16 @@ BOOST_AUTO_TEST_CASE(test_negate)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_invert)
+{
+    {
+        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        auto ss_inv = ss.Invert();
+        BOOST_CHECK(ss_inv[0] == ss[0].Invert());
+        BOOST_CHECK(ss_inv[1] == ss[1].Invert());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_get_via_index_operator)
 {
     {
@@ -512,6 +522,45 @@ BOOST_AUTO_TEST_CASE(test_set_via_index_operator)
         BOOST_CHECK_NO_THROW(xs[0] = one);
         BOOST_CHECK_NO_THROW(xs[1] = two);
         BOOST_CHECK_THROW(xs[2] = three, std::runtime_error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_serialize)
+{
+    {
+        Scalar one(1);
+        Scalar two(2);
+
+        Scalars xs;
+        xs.Add(one);
+        xs.Add(two);
+
+        CDataStream st(0, 0);
+        xs.Serialize(st);
+        BOOST_CHECK(st.size() == 1 + xs.Size() * sizeof(one.m_fr));
+
+        Scalars ys;
+        ys.Unserialize(st);
+        BOOST_CHECK(ys.Size() == 2);
+        BOOST_CHECK(ys[0] == one);
+        BOOST_CHECK(ys[1] == two);
+    }
+    {
+        Point g = Point::GetBasePoint();
+        Point gg = g + g;
+
+        Points xs;
+        xs.Add(g);
+        xs.Add(gg);
+
+        CDataStream st(0, 0);
+        xs.Serialize(st);
+
+        Points ys;
+        ys.Unserialize(st);
+        BOOST_CHECK(ys.Size() == 2);
+        BOOST_CHECK(ys[0] == g);
+        BOOST_CHECK(ys[1] == gg);
     }
 }
 

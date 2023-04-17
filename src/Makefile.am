@@ -162,18 +162,26 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
+  blsct/building_block/fiat_shamir.h \
+  blsct/building_block/generator_deriver.h \
+  blsct/building_block/g_h_gi_hi_zero_verifier.h \
+  blsct/building_block/imp_inner_prod_arg.h \
+  blsct/building_block/lazy_point.h \
+  blsct/building_block/pedersen_commitment.h \
   blsct/common.h \
   blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
-  blsct/range_proof/config.h \
   blsct/range_proof/generators.h \
-  blsct/range_proof/lazy_g1point.h \
   blsct/range_proof/range_proof_logic.h \
+  blsct/range_proof/range_proof_setup.h \
   blsct/range_proof/range_proof_with_transcript.h \
   blsct/range_proof/range_proof.h \
+  blsct/set_mem_proof/set_mem_proof_setup.h \
+  blsct/set_mem_proof/set_mem_proof.h \
+  blsct/set_mem_proof/set_mem_proof_prover.h \
   blsct/signature.h \
   dandelion.h \
   chain.h \
@@ -420,17 +428,23 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
+  blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/common.cpp \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
-  blsct/range_proof/config.cpp \
   blsct/range_proof/generators.cpp \
-  blsct/range_proof/lazy_g1point.cpp \
   blsct/range_proof/range_proof_logic.cpp \
   blsct/range_proof/range_proof.cpp \
   blsct/range_proof/range_proof_with_transcript.cpp \
+  blsct/set_mem_proof/set_mem_proof.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
+  blsct/set_mem_proof/set_mem_proof_prover.cpp \
   blsct/signature.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \

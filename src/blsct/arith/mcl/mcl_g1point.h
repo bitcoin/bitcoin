@@ -14,6 +14,9 @@
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 
+#include <iostream>
+#include <util/strencodings.h>  // FOR TESTING. DROP THIS!!!
+
 class MclG1Point
 {
 public:
@@ -45,7 +48,7 @@ public:
     static MclG1Point Rand();
 
     bool IsValid() const;
-    bool IsUnity() const;
+    bool IsZero() const;
 
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& vec);

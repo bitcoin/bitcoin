@@ -6,6 +6,7 @@
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <tinyformat.h>
+#include <deque>
 
 template <typename T>
 Elements<T>::Elements()
@@ -46,6 +47,19 @@ bool Elements<T>::Empty() const
 }
 template bool Elements<MclScalar>::Empty() const;
 template bool Elements<MclG1Point>::Empty() const;
+
+template <typename T>
+std::vector<uint8_t> Elements<T>::GetVch() const
+{
+    std::vector<uint8_t> aggr_vec;
+    for (T x: m_vec) {
+        auto vec = x.GetVch();
+        aggr_vec.insert(aggr_vec.end(), vec.begin(), vec.end());
+    }
+    return aggr_vec;
+}
+template std::vector<uint8_t> Elements<MclScalar>::GetVch() const;
+template std::vector<uint8_t> Elements<MclG1Point>::GetVch() const;
 
 template <typename T>
 T Elements<T>::Sum() const
@@ -294,3 +308,40 @@ Elements<T> Elements<T>::Negate() const
     return ret;
 }
 template Elements<MclScalar> Elements<MclScalar>::Negate() const;
+
+template <typename T>
+Elements<T> Elements<T>::Invert() const
+{
+    // build:
+    // - elem_inverses = (x_1, x_2, ..., x_n)^-1
+    // - extract_factors = [1, x_1, x_1*x_2, ..., x_1*...*x_n]
+    Elements<T> extract_factors;  // cumulative product sequence used to cancel out inverses
+    T elem_inverse_prod;  // product of all element inverses
+    {
+        T n(1);
+        for (auto& x: m_vec) {
+            extract_factors.Add(n);
+            n = n * x;
+        }
+        elem_inverse_prod = n.Invert();
+    }
+
+    // calculate inverses of all elements
+    std::deque<T> q;
+    size_t i = m_vec.size()-1;
+    for (;;) {
+        // extract x_i^-1 by multiplying x_1*...*x_{i-1}
+        T x = elem_inverse_prod * extract_factors[i];
+        q.push_front(x);
+
+        // drop the inverse just extracted
+        elem_inverse_prod = elem_inverse_prod * m_vec[i];
+
+        if (i == 0) break;
+        --i;
+    }
+
+    Elements<T> ret({ q.begin(), q.end() });
+    return ret;
+}
+template Elements<MclScalar> Elements<MclScalar>::Invert() const;

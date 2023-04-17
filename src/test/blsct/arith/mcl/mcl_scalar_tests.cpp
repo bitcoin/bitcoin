@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2022 The Navcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -787,6 +787,7 @@ BOOST_AUTO_TEST_CASE(test_setpow2)
 BOOST_AUTO_TEST_CASE(test_hash)
 {
     // upon generating the digest, following data is added to the hasher:
+    // - 1 byte storing the size of the following array
     // - 32-byte big-endian array representing the Scalar value
     // - 4-byte little-endian array representing the parameter of Hash function
 

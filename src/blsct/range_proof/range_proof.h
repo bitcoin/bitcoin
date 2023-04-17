@@ -30,9 +30,12 @@ struct RangeProof {
     Points Rs;
 
     // proof results
-    Scalar t_hat; // inner product of l and r
     Scalar a;     // result of inner product argument
     Scalar b;     // result of inner product argument
+    Scalar t_hat; // inner product of l and r
+
+    bool operator==(const RangeProof<T>& other) const;
+    bool operator!=(const RangeProof<T>& other) const;
 
     template <typename Stream>
     void Serialize(Stream& s) const

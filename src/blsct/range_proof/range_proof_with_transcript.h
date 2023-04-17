@@ -23,11 +23,9 @@ public:
         const Scalar& z,
         const Scalar& cx_factor,
         const Scalars& xs,
-        const Scalars& inv_xs,
         const size_t& num_input_values_power_2,
         const size_t& concat_input_values_in_bits
-    ): proof{proof}, x{x}, y{y}, z{z}, cx_factor{cx_factor}, xs(xs),
-        inv_xs{inv_xs}, inv_y(y.Invert()),
+    ): proof{proof}, x{x}, y{y}, z{z}, cx_factor{cx_factor}, xs(xs), inv_y(y.Invert()),
         num_input_values_power_2(num_input_values_power_2),
         concat_input_values_in_bits(concat_input_values_in_bits) {}
 
@@ -43,7 +41,6 @@ public:
     const Scalar z;
     const Scalar cx_factor;  // factor multiplied to cL and cR in inner product argument
     const Scalars xs;      // x used in inner product argument
-    const Scalars inv_xs;  // x^-1 used in inner product argument
     const Scalar inv_y;
 
     const size_t num_input_values_power_2;  // M in old impl
