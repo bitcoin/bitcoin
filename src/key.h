@@ -22,6 +22,12 @@
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
+/** Size of ECDH shared secrets. */
+constexpr static size_t ECDH_SECRET_SIZE = CSHA256::OUTPUT_SIZE;
+
+// Used to represent ECDH shared secret (ECDH_SECRET_SIZE bytes)
+using ECDHSecret = std::array<std::byte, ECDH_SECRET_SIZE>;
+
 /** An encapsulated private key. */
 class CKey
 {
@@ -156,6 +162,27 @@ public:
 
     //! Load private key and check that public key matches.
     bool Load(const CPrivKey& privkey, const CPubKey& vchPubKey, bool fSkipCheck);
+
+    /** Create an ellswift-encoded public key for this key, with specified entropy.
+     *
+     *  entropy must be a 32-byte span with additional entropy to use in the encoding. Every
+     *  public key has ~2^256 different encodings, and this function will deterministically pick
+     *  one of them, based on entropy. Note that even without truly random entropy, the
+     *  resulting encoding will be indistinguishable from uniform to any adversary who does not
+     *  know the private key (because the private key itself is always used as entropy as well).
+     */
+    EllSwiftPubKey EllSwiftCreate(Span<const std::byte> entropy) const;
+
+    /** Compute a BIP324-style ECDH shared secret.
+     *
+     *  - their_ellswift: EllSwiftPubKey that was received from the other side.
+     *  - our_ellswift: EllSwiftPubKey that was sent to the other side (must have been generated
+     *                  from *this using EllSwiftCreate()).
+     *  - initiating: whether we are the initiating party (true) or responding party (false).
+     */
+    ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
+                                       const EllSwiftPubKey& our_ellswift,
+                                       bool initiating) const;
 };
 
 struct CExtKey {
