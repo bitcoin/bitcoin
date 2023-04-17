@@ -1068,7 +1068,6 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlo
         } else {
             // keep snapshots for yet alive quorums
             if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& p_llmq){
-                LOCK(cs);
                 const auto& [_, params] = p_llmq;
                 return (snapshot.GetHeight() % params.dkgInterval == 0) &&
                 (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >= tipIndex->nHeight);
