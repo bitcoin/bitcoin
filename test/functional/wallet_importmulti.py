@@ -29,6 +29,7 @@ from test_framework.util import (
 from test_framework.wallet_util import (
     get_key,
     get_multisig,
+    labels_value,
     test_address,
 )
 
@@ -122,7 +123,7 @@ class ImportMultiTest(BitcoinTestFramework):
         self.test_importmulti({"scriptPubKey": key.p2pkh_script,
                                "timestamp": "now",
                                "internal": True,
-                               "label": "Example label"},
+                               "label": "Unsuccessful labelling for internal addresses"},
                               success=False,
                               error_code=-8,
                               error_message='Internal addresses should not have a label')
@@ -491,17 +492,19 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Test importing of a P2PKH address via descriptor
         key = get_key(self.nodes[0])
+        p2pkh_label = "P2PKH descriptor import"
         self.log.info("Should import a p2pkh address from descriptor")
         self.test_importmulti({"desc": descsum_create("pkh(" + key.pubkey + ")"),
                                "timestamp": "now",
-                               "label": "Descriptor import test"},
+                               "label": p2pkh_label},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         test_address(self.nodes[1],
                      key.p2pkh_addr,
                      solvable=True,
                      ismine=False,
-                     label="Descriptor import test")
+                     label=p2pkh_label,
+                     labels=labels_value(name=p2pkh_label))
 
         # Test import fails if both desc and scriptPubKey are provided
         key = get_key(self.nodes[0])

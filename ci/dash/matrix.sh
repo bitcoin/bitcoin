@@ -36,4 +36,6 @@ elif [ "$BUILD_TARGET" = "linux64_nowallet" ]; then
   source ./ci/test/00_setup_env_native_nowallet.sh
 elif [ "$BUILD_TARGET" = "mac" ]; then
   source ./ci/test/00_setup_env_mac.sh
+elif [ "$BUILD_TARGET" = "s390x" ]; then
+  source ./ci/test/00_setup_env_s390x.sh
 fi
