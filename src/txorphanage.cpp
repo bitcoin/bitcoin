@@ -21,8 +21,14 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     if (tx == nullptr) return false;
 
     const uint256& hash = tx->GetHash();
-    if (m_orphans.count(hash))
+    if (m_orphans.count(hash)) {
+        const auto ret = m_orphans.at(hash).announcers.insert(peer);
+        if (ret.second) {
+            m_peer_bytes_used.try_emplace(peer, 0);
+            m_peer_bytes_used.at(peer) += tx->GetTotalSize();
+        }
         return false;
+    }
 
     // Ignore big transactions, to avoid a
     // send-big-orphans memory exhaustion attack. If a peer has a legitimate
@@ -38,7 +44,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         return false;
     }
 
-    auto ret = m_orphans.emplace(hash, OrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size()});
+    auto ret = m_orphans.emplace(hash, OrphanTx{tx, GetTime() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size(), {peer}});
     assert(ret.second);
     m_orphan_list.push_back(ret.first);
     // Allow for lookups in the orphan pool by wtxid, as well as txid
@@ -75,11 +81,12 @@ int TxOrphanage::EraseTxNoLock(const uint256& wtxid)
     if (wtxid_it == m_wtxid_to_orphan_it.end()) return 0;
     std::map<uint256, OrphanTx>::iterator it = wtxid_it->second;
     m_total_orphan_bytes -= it->second.tx->GetTotalSize();
-    const auto peer{it->second.fromPeer};
-    Assume(m_peer_bytes_used.count(peer) > 0);
-    m_peer_bytes_used.at(peer) -= it->second.tx->GetTotalSize();
-    if (m_peer_bytes_used.at(peer) == 0) {
-        m_peer_bytes_used.erase(peer);
+    for (const auto peer : it->second.announcers) {
+        Assume(m_peer_bytes_used.count(peer) > 0);
+        m_peer_bytes_used.at(peer) -= it->second.tx->GetTotalSize();
+        if (m_peer_bytes_used.at(peer) == 0) {
+            m_peer_bytes_used.erase(peer);
+        }
     }
     for (const CTxIn& txin : it->second.tx->vin)
     {
@@ -106,6 +113,26 @@ int TxOrphanage::EraseTxNoLock(const uint256& wtxid)
     m_orphans.erase(it);
     return 1;
 }
+void TxOrphanage::EraseOrphanOfPeer(const uint256& wtxid, NodeId peer)
+{
+    LOCK(m_mutex);
+    const auto wtxid_it = m_wtxid_to_orphan_it.find(wtxid);
+    if (wtxid_it == m_wtxid_to_orphan_it.end()) return;
+    std::map<uint256, OrphanTx>::iterator it = wtxid_it->second;
+    if (it->second.announcers.count(peer) > 0) {
+        if (it->second.announcers.size() == 1) {
+            EraseTxNoLock(wtxid);
+        } else {
+            // Don't erase this orphan. Another peer has also announced it, so it may still be useful.
+            it->second.announcers.erase(peer);
+            Assume(m_peer_bytes_used.count(peer) > 0);
+            m_peer_bytes_used.at(peer) -= it->second.tx->GetTotalSize();
+            if (m_peer_bytes_used.at(peer) == 0) {
+                m_peer_bytes_used.erase(peer);
+            }
+        }
+    }
+}
 
 void TxOrphanage::EraseForPeer(NodeId peer)
 {
@@ -119,10 +146,14 @@ void TxOrphanage::EraseForPeer(NodeId peer)
     while (iter != m_orphans.end())
     {
         std::map<uint256, OrphanTx>::iterator maybeErase = iter++; // increment to avoid iterator becoming invalid
-        if (maybeErase->second.fromPeer == peer)
-        {
+        if (maybeErase->second.announcers.count(peer) > 0) {
             bytes_counted -= maybeErase->second.tx->GetTotalSize();
-            nErased += EraseTxNoLock(maybeErase->second.tx->GetWitnessHash());
+            if (maybeErase->second.announcers.size() == 1) {
+                nErased += EraseTxNoLock(maybeErase->second.tx->GetWitnessHash());
+            } else {
+                // Don't erase this orphan. Another peer has also announced it, so it may still be useful.
+                maybeErase->second.announcers.erase(peer);
+            }
         }
     }
     if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx from peer=%d\n", nErased, peer);
@@ -176,9 +207,15 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
         if (it_by_prev != m_outpoint_to_orphan_it.end()) {
             for (const auto& elem : it_by_prev->second) {
+                Assume(elem->second.announcers.size() >= 1);
+                if (elem->second.announcers.empty()) break;
+                // Pick a random peer from announcers set.
+                FastRandomContext rng;
+                auto rand_peer_iter = elem->second.announcers.begin();
+                std::advance(rand_peer_iter, rng.randrange(elem->second.announcers.size()));
                 // Get this source peer's work set, emplacing an empty set if it didn't exist
                 // (note: if this peer wasn't still connected, we would have removed the orphan tx already)
-                std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(elem->second.fromPeer).first->second;
+                std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(*rand_peer_iter).first->second;
                 // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
             }
