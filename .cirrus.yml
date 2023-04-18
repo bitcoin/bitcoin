@@ -228,7 +228,7 @@ task:
     PACKAGE_MANAGER_INSTALL: "yum install -y"
 
 task:
-  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
+  name: '[previous releases, qt5 dev package and depends packages, DEBUG] [focal]'
   previous_releases_cache:
     folder: "releases"
   << : *GLOBAL_TASK_TEMPLATE
