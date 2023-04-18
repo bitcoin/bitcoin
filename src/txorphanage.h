@@ -32,8 +32,14 @@ public:
       @returns true if the transaction was added as a new orphan. */
     bool AddTx(const CTransactionRef& tx, NodeId peer, const std::vector<Txid>& parent_txids);
 
+    /** Add an additional announcer to an orphan if it exists. Otherwise, do nothing. */
+    bool AddAnnouncer(const Wtxid& wtxid, NodeId peer);
+
     /** Check if we already have an orphan transaction (by wtxid only) */
     bool HaveTx(const Wtxid& wtxid) const;
+
+    /** Check if a {tx, peer} exists in the orphanage.*/
+    bool HaveTxAndPeer(const Wtxid& wtxid, NodeId peer) const;
 
     /** Extract a transaction from a peer's work set
      *  Returns nullptr if there are no transactions to work on.
@@ -45,7 +51,8 @@ public:
     /** Erase an orphan by wtxid */
     int EraseTx(const Wtxid& wtxid);
 
-    /** Erase all orphans announced by a peer (eg, after that peer disconnects) */
+    /** Maybe erase all orphans announced by a peer (eg, after that peer disconnects). If an orphan
+     * has been announced by another peer, don't erase, just remove this peer from the list of announcers. */
     void EraseForPeer(NodeId peer);
 
     /** Erase all orphans included in or invalidated by a new block */
@@ -71,6 +78,9 @@ public:
     /** Get an orphan's parent_txids, or std::nullopt if the orphan is not present. */
     std::optional<std::vector<Txid>> GetParentTxids(const Wtxid& wtxid);
 
+    /** Erase this peer as an announcer of this orphan. If there are no more announcers, delete the orphan. */
+    void EraseOrphanOfPeer(const Wtxid& wtxid, NodeId peer);
+
     /** Return how many entries exist in the orphange */
     size_t Size() const
     {
@@ -80,7 +90,8 @@ public:
     /** Allows providing orphan information externally */
     struct OrphanTxBase {
         CTransactionRef tx;
-        NodeId fromPeer;
+        /** Peers added with AddTx or AddAnnouncer. */
+        std::set<NodeId> announcers;
         NodeSeconds nTimeExpire;
     };
 
