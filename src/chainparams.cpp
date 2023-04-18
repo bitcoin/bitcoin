@@ -5,6 +5,7 @@
 
 #include <chainparams.h>
 
+#include <chainparamsbase.h>
 #include <chainparamsseeds.h>
 #include <common/args.h>
 #include <consensus/merkle.h>

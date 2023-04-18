@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <vector>
 
+class ArgsManager;
+
 /**
  * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.
  * @returns a CChainParams* of the chosen chain.
