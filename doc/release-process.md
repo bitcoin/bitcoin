@@ -98,7 +98,7 @@ Generate the change log. As this is a huge amount of work to do manually, there 
 
 Generate list of authors:
 
-    git log --format='- %aN' v(current version, e.g. 0.20.0)..v(new version, e.g. 0.20.1) | sort -fiu
+    git log --format='- %aN' v(current version, e.g. 24.0)..v(new version, e.g. 24.1) | sort -fiu
 
 ### Setup and perform Guix builds
 
@@ -107,7 +107,7 @@ Checkout the Bitcoin Core version you'd like to build:
 ```sh
 pushd ./bitcoin
 SIGNER='(your builder key, ie bluematt, sipa, etc)'
-VERSION='(new version without v-prefix, e.g. 0.20.0)'
+VERSION='(new version without v-prefix, e.g. 24.0)'
 git fetch origin "v${VERSION}"
 git checkout "v${VERSION}"
 popd
