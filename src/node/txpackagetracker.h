@@ -25,9 +25,6 @@ public:
     ~TxPackageTracker();
 
     // Orphanage wrapper functions
-    /** Add new tx to orphanage if it isn't already there. Returns whether the tx was added. */
-    bool OrphanageAddTx(const CTransactionRef& tx, NodeId peer);
-
     /** Check if we already have an orphan transaction (by txid or wtxid) */
     bool OrphanageHaveTx(const GenTxid& gtxid);
 
