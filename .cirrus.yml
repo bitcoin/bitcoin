@@ -228,15 +228,12 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
-  # For faster CI feedback, immediately schedule a task that compiles most modules
-  << : *CREDITS_TEMPLATE
+  previous_releases_cache:
+    folder: "releases"
   << : *GLOBAL_TASK_TEMPLATE
-  depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
-  container:
-    image: debian:buster
+  << : *PERSISTENT_WORKER_TEMPLATE
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
@@ -298,7 +295,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     cpu: 4
-    memory: 24G  # The default memory is sometimes just a bit too small, so double everything
+    memory: 16G  # The default memory is sometimes just a bit too small, so double everything
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:focal
       FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
