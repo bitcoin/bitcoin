@@ -231,7 +231,7 @@ void ProposalModel::remove(int row)
     endRemoveRows();
 }
 
-void ProposalModel::reconcile(const std::vector<const Proposal*>& proposals)
+void ProposalModel::reconcile(Span<const Proposal*> proposals)
 {
     // Vector of m_data.count() false values. Going through new proposals,
     // set keep_index true for each old proposal found in the new proposals.

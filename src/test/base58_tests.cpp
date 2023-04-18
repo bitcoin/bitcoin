@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
         std::vector<unsigned char> sourcedata = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
         BOOST_CHECK_MESSAGE(
-                    EncodeBase58(sourcedata.data(), sourcedata.data() + sourcedata.size()) == base58string,
+                    EncodeBase58(sourcedata) == base58string,
                     strTest);
     }
 }

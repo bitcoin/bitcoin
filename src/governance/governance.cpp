@@ -925,12 +925,11 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
 
 int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman)
 {
-    std::vector<CNode*> vNodesCopy;
-    vNodesCopy.push_back(&peer);
-    return RequestGovernanceObjectVotes(vNodesCopy, connman);
+    std::array<CNode*, 1> nodeCopy{&peer};
+    return RequestGovernanceObjectVotes(nodeCopy, connman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman)
+int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman)
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 
