@@ -10,7 +10,6 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <hash.h>
-#include <chainparamsbase.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>

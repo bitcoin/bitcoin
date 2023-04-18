@@ -6,7 +6,6 @@
 
 #include <qt/guiconstants.h>
 
-#include <chainparamsbase.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
 

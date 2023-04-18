@@ -8,7 +8,6 @@
 
 #include <kernel/chainparams.h>
 
-#include <chainparamsbase.h>
 #include <consensus/params.h>
 #include <netaddress.h>
 #include <primitives/block.h>
