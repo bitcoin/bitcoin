@@ -122,8 +122,8 @@ bool CCoinJoinBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) const
 bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const
 {
     // expire confirmed DSTXes after ~1h since confirmation or chainlocked confirmation
-    if (nConfirmedHeight == -1 || pindex->nHeight < nConfirmedHeight) return false; // not mined yet
-    if (pindex->nHeight - nConfirmedHeight > 24) return true; // mined more than an hour ago
+    if (!nConfirmedHeight.has_value() || pindex->nHeight < *nConfirmedHeight) return false; // not mined yet
+    if (pindex->nHeight - *nConfirmedHeight > 24) return true; // mined more than an hour ago
     return clhandler.HasChainLock(pindex->nHeight, *pindex->phashBlock);
 }
 
@@ -471,7 +471,7 @@ void CCoinJoin::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLoc
     }
 }
 
-void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight)
+void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
 {
     AssertLockHeld(cs_mapdstx);
 
@@ -481,14 +481,14 @@ void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight
     }
 
     it->second.SetConfirmedHeight(nHeight);
-    LogPrint(BCLog::COINJOIN, "CCoinJoin::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight);
+    LogPrint(BCLog::COINJOIN, "CCoinJoin::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight.value_or(-1));
 }
 
 void CCoinJoin::TransactionAddedToMempool(const CTransactionRef& tx)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
-    UpdateDSTXConfirmedHeight(tx, -1);
+    UpdateDSTXConfirmedHeight(tx, std::nullopt);
 }
 
 void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
@@ -506,7 +506,7 @@ void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, c
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     for (const auto& tx : pblock->vtx) {
-        UpdateDSTXConfirmedHeight(tx, -1);
+        UpdateDSTXConfirmedHeight(tx, std::nullopt);
     }
 }
 
