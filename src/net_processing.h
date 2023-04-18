@@ -80,12 +80,12 @@ public:
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
 
-    /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
+    /** Schedule a transaction to be relayed to all peers at a later time. */
+    virtual void ScheduleTxForRelayToAll(const uint256& txid, const uint256& wtxid) = 0;
 
     /**
      * Schedule a local transaction to be relayed. This is done asynchronously
-     * either via short-lived privacy connections or via `RelayTransaction()`.
+     * either via short-lived privacy connections or via `ScheduleTxForRelayToAll()`.
      */
     virtual void ScheduleLocalTxForRelay(const uint256& txid, const uint256& wtxid) = 0;
 
