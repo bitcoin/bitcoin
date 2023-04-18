@@ -97,7 +97,7 @@ Generate the change log. As this is a huge amount of work to do manually, there 
 
 Generate list of authors:
 
-    git log --format='- %aN' v(current version, e.g. 4.1.3)..v(new version, e.g. 4.1.3) | sort -fiu
+    git log --format='- %aN' v(current version, e.g. 4.4.2)..v(new version, e.g. 4.4.2) | sort -fiu
 
 ### Setup and perform Guix builds
 
@@ -106,7 +106,7 @@ Checkout the Syscoin Core version you'd like to build:
 ```sh
 pushd ./syscoin
 SIGNER='(your builder key, ie sidhujag, willyk, etc)'
-VERSION='(new version without v-prefix, e.g. 4.3.0)'
+VERSION='(new version without v-prefix, e.g. 4.4.2)'
 git fetch origin "v${VERSION}"
 git checkout "v${VERSION}"
 popd
