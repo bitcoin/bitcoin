@@ -2929,6 +2929,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 orphan_wtxid.ToString(),
                 m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
+            FastRandomContext rng;
             m_orphanage.AddChildrenToWorkSet(*porphanTx);
             m_orphanage.EraseTx(orphan_wtxid);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
@@ -4162,6 +4163,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+            FastRandomContext rng;
             m_orphanage.AddChildrenToWorkSet(tx);
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();

@@ -85,6 +85,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {
+                    FastRandomContext rng{true};
                     orphanage.AddChildrenToWorkSet(*tx);
                 },
                 [&] {
