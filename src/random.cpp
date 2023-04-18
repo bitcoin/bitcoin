@@ -599,6 +599,12 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
     return ret;
 }
 
+void FastRandomContext::fillrand(Span<std::byte> output)
+{
+    if (requires_seed) RandomSeed();
+    rng.Keystream(UCharCast(output.data()), output.size());
+}
+
 FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), bitbuf_size(0)
 {
     rng.SetKey32(seed.begin());
