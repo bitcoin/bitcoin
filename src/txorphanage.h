@@ -72,6 +72,13 @@ public:
         LOCK(m_mutex);
         return m_total_orphan_bytes;
     }
+    size_t BytesFromPeer(NodeId peer) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
+        auto peer_bytes_it = m_peer_bytes_used.find(peer);
+        return peer_bytes_it == m_peer_bytes_used.end() ? 0 : peer_bytes_it->second;
+    }
+
 protected:
     size_t m_total_orphan_bytes{0};
 
@@ -113,6 +120,9 @@ protected:
     /** Index from wtxid into the m_orphans to lookup orphan
      *  transactions using their witness ids. */
     std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
+
+    /** Map from nodeid to the amount of orphans provided by this peer, in bytes. */
+    std::map<NodeId, size_t> m_peer_bytes_used GUARDED_BY(m_mutex);
 
     /** Erase an orphan by txid */
     int EraseTxNoLock(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
