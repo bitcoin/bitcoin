@@ -47,6 +47,26 @@ static void MakeNewKeyWithFastRandomContext(CKey& key)
     assert(key.IsValid());
 }
 
+static CTransactionRef MakeLargeOrphan()
+{
+    CKey key;
+    MakeNewKeyWithFastRandomContext(key);
+    CMutableTransaction tx;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = CENT;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    tx.vin.resize(80);
+    for (unsigned int j = 0; j < tx.vin.size(); j++) {
+        tx.vin[j].prevout.n = j;
+        tx.vin[j].prevout.hash = GetRandHash();
+        tx.vin[j].scriptWitness.stack.reserve(100);
+        for (int i = 0; i < 100; ++i) {
+            tx.vin[j].scriptWitness.stack.push_back(std::vector<unsigned char>(j));
+        }
+    }
+    return MakeTransactionRef(tx);
+}
+
 BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 {
     // This test had non-deterministic coverage due to
@@ -191,6 +211,59 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
             // The maximum size should be exceeded at some point, otherwise this test is useless.
             BOOST_CHECK(i < 149);
         }
+    }
+}
+BOOST_AUTO_TEST_CASE(multiple_announcers)
+{
+    const NodeId node0{0};
+    const NodeId node1{1};
+    size_t expected_total_count{0};
+    size_t expected_total_size{0};
+    size_t expected_node0_size{0};
+    size_t expected_node1_size{0};
+    TxOrphanageTest orphanage;
+    // Check that accounting for bytes per peer is accurate.
+    {
+        auto ptx{MakeLargeOrphan()};
+        const auto tx_size = ptx->GetTotalSize();
+        orphanage.AddTx(ptx, node0);
+        expected_total_size += tx_size;
+        expected_total_count += 1;
+        expected_node0_size += tx_size;
+        BOOST_CHECK_EQUAL(orphanage.Size(), expected_total_count);
+        BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node0), expected_node0_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node1), expected_node1_size);
+        // Adding again should do nothing.
+        orphanage.AddTx(ptx, node0);
+        BOOST_CHECK_EQUAL(orphanage.Size(), expected_total_count);
+        BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node0), expected_node0_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node1), expected_node1_size);
+        // Adding existing tx for another peer should change that peer's bytes, but not total bytes.
+        orphanage.AddTx(ptx, node1);
+        expected_node1_size += tx_size;
+        BOOST_CHECK_EQUAL(orphanage.Size(), expected_total_count);
+        BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node0), expected_node0_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node1), expected_node1_size);
+        // if EraseForPeer is called for an orphan with multiple announcers, the orphanage should only
+        // decrement the number of bytes for that peer.
+        orphanage.EraseForPeer(node0);
+        expected_node0_size -= tx_size;
+        BOOST_CHECK_EQUAL(orphanage.Size(), expected_total_count);
+        BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node0), expected_node0_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node1), expected_node1_size);
+        // EraseForPeer should delete the orphan if it's the only announcer left.
+        orphanage.EraseForPeer(node1);
+        expected_total_count -= 1;
+        expected_total_size -= tx_size;
+        expected_node1_size -= tx_size;
+        BOOST_CHECK_EQUAL(orphanage.Size(), expected_total_count);
+        BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node0), expected_node0_size);
+        BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node1), expected_node1_size);
     }
 }
 
