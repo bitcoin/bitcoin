@@ -212,7 +212,7 @@ public:
         Unserialize(s, bls::bls_legacy_scheme.load(), checkMalleable);
     }
 
-    inline bool CheckMalleable(const std::vector<uint8_t>& vecBytes, const bool specificLegacyScheme) const
+    inline bool CheckMalleable(Span<uint8_t> vecBytes, const bool specificLegacyScheme) const
     {
         if (memcmp(vecBytes.data(), ToByteVector(specificLegacyScheme).data(), SerSize)) {
             // TODO not sure if this is actually possible with the BLS libs. I'm assuming here that somewhere deep inside
@@ -223,7 +223,7 @@ public:
         return true;
     }
 
-    inline bool CheckMalleable(const std::vector<uint8_t>& vecBytes) const
+    inline bool CheckMalleable(Span<uint8_t> vecBytes) const
     {
         return CheckMalleable(vecBytes, bls::bls_legacy_scheme.load());
     }
@@ -284,12 +284,12 @@ public:
     CBLSSecretKey& operator=(const CBLSSecretKey&) = default;
 
     void AggregateInsecure(const CBLSSecretKey& o);
-    static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
+    static CBLSSecretKey AggregateInsecure(Span<CBLSSecretKey> sks);
 
 #ifndef BUILD_SYSCOIN_INTERNAL
     void MakeNewKey();
 #endif
-    bool SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const CBLSId& id);
+    bool SecretKeyShare(Span<CBLSSecretKey> msk, const CBLSId& id);
 
     [[nodiscard]] CBLSPublicKey GetPublicKey() const;
     [[nodiscard]] CBLSSignature Sign(const uint256& hash) const;
@@ -309,9 +309,9 @@ public:
     CBLSPublicKey() = default;
 
     void AggregateInsecure(const CBLSPublicKey& o);
-    static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks);
+    static CBLSPublicKey AggregateInsecure(Span<CBLSPublicKey> pks);
 
-    bool PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const CBLSId& id);
+    bool PublicKeyShare(Span<CBLSPublicKey> mpk, const CBLSId& id);
     bool DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk);
 
 };
@@ -366,17 +366,17 @@ public:
     CBLSSignature& operator=(const CBLSSignature&) = default;
 
     void AggregateInsecure(const CBLSSignature& o);
-    static CBLSSignature AggregateInsecure(const std::vector<CBLSSignature>& sigs);
-    static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash);
+    static CBLSSignature AggregateInsecure(Span<CBLSSignature> sigs);
+    static CBLSSignature AggregateSecure(Span<CBLSSignature> sigs, Span<CBLSPublicKey> pks, const uint256& hash);
 
     void SubInsecure(const CBLSSignature& o);
     [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash, const bool specificLegacyScheme) const;
     [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
-    [[nodiscard]] bool VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const;
+    [[nodiscard]] bool VerifyInsecureAggregated(Span<CBLSPublicKey> pubKeys, Span<uint256> hashes) const;
 
-    [[nodiscard]] bool VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks, const uint256& hash) const;
+    [[nodiscard]] bool VerifySecureAggregated(Span<CBLSPublicKey> pks, const uint256& hash) const;
 
-    bool Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids);
+    bool Recover(Span<CBLSSignature> sigs, Span<CBLSId> ids);
 };
 
 class CBLSSignatureVersionWrapper {
