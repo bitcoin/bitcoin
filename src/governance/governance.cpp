@@ -944,12 +944,11 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
 
 int CGovernanceManager::RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman, const PeerManager& peerman)
 {
-    std::vector<CNode*> vNodesCopy;
-    vNodesCopy.push_back(pnode);
-    return RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
+    std::array<CNode*, 1> nodeCopy{pnode};
+    return RequestGovernanceObjectVotes(nodeCopy, connman, peerman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman, const PeerManager& peerman)
+int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman, const PeerManager& peerman)
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 
