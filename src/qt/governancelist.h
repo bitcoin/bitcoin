@@ -113,7 +113,7 @@ public:
     static int columnWidth(int section);
     void append(const Proposal* proposal);
     void remove(int row);
-    void reconcile(const std::vector<const Proposal*>& proposals);
+    void reconcile(Span<const Proposal*> proposals);
     void setVotingParams(int nAbsVoteReq);
 
     const Proposal* getProposalAt(const QModelIndex& index) const;
