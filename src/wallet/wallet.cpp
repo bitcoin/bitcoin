@@ -3498,6 +3498,11 @@ LegacyScriptPubKeyMan* CWallet::GetOrCreateLegacyScriptPubKeyMan()
     return GetLegacyScriptPubKeyMan();
 }
 
+void CWallet::AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man)
+{
+    m_spk_managers[id] = std::move(spkm_man);
+}
+
 void CWallet::SetupLegacyScriptPubKeyMan()
 {
     if (!m_internal_spk_managers.empty() || !m_external_spk_managers.empty() || !m_spk_managers.empty() || IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
@@ -3509,7 +3514,8 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         m_internal_spk_managers[type] = spk_manager.get();
         m_external_spk_managers[type] = spk_manager.get();
     }
-    m_spk_managers[spk_manager->GetID()] = std::move(spk_manager);
+    uint256 id = spk_manager->GetID();
+    AddScriptPubKeyMan(id, std::move(spk_manager));
 }
 
 const CKeyingMaterial& CWallet::GetEncryptionKey() const
@@ -3534,10 +3540,10 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
 {
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
         auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc, m_keypool_size));
-        m_spk_managers[id] = std::move(spk_manager);
+        AddScriptPubKeyMan(id, std::move(spk_manager));
     } else {
         auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
-        m_spk_managers[id] = std::move(spk_manager);
+        AddScriptPubKeyMan(id, std::move(spk_manager));
     }
 }
 
@@ -3558,7 +3564,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
             }
             spk_manager->SetupDescriptorGeneration(master_key, t, internal);
             uint256 id = spk_manager->GetID();
-            m_spk_managers[id] = std::move(spk_manager);
+            AddScriptPubKeyMan(id, std::move(spk_manager));
             AddActiveScriptPubKeyMan(id, t, internal);
         }
     }
@@ -3606,7 +3612,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                 auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, m_keypool_size));
                 spk_manager->SetupDescriptor(std::move(desc));
                 uint256 id = spk_manager->GetID();
-                m_spk_managers[id] = std::move(spk_manager);
+                AddScriptPubKeyMan(id, std::move(spk_manager));
                 AddActiveScriptPubKeyMan(id, t, internal);
             }
         }
@@ -3723,7 +3729,8 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory
-        m_spk_managers[new_spk_man->GetID()] = std::move(new_spk_man);
+        uint256 id = new_spk_man->GetID();
+        AddScriptPubKeyMan(id, std::move(new_spk_man));
     }
 
     // Add the private keys to the descriptor
@@ -3866,7 +3873,8 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             error = _("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.");
             return false;
         }
-        m_spk_managers[desc_spkm->GetID()] = std::move(desc_spkm);
+        uint256 id = desc_spkm->GetID();
+        AddScriptPubKeyMan(id, std::move(desc_spkm));
     }
 
     // Remove the LegacyScriptPubKeyMan from disk
