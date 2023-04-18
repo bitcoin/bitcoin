@@ -200,7 +200,11 @@ static bool rest_headers(const std::any& context,
     } else if (path.size() == 1) {
         // new path with query parameter: /rest/headers/<hash>?count=<count>
         hashStr = path[0];
-        raw_count = req->GetQueryParameter("count").value_or("5");
+        try {
+            raw_count = req->GetQueryParameter("count").value_or("5");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
     } else {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>.<ext>?count=<count>");
     }
@@ -369,7 +373,11 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     } else if (uri_parts.size() == 2) {
         // new path with query parameter: /rest/blockfilterheaders/<filtertype>/<blockhash>?count=<count>
         raw_blockhash = uri_parts[1];
-        raw_count = req->GetQueryParameter("count").value_or("5");
+        try {
+            raw_count = req->GetQueryParameter("count").value_or("5");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
     } else {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<blockhash>.<ext>?count=<count>");
     }

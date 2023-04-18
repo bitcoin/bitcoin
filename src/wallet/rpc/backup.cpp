@@ -1886,7 +1886,7 @@ RPCHelpMan restorewallet()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "name", "The wallet name if restored successfully."},
-                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+                {RPCResult::Type::STR, "warning", "Warning messages, if any, related to restoring the wallet. Multiple messages will be delimited by newlines."},
             }
         },
         RPCExamples{

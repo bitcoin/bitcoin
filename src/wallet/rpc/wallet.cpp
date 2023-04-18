@@ -207,7 +207,7 @@ static RPCHelpMan loadwallet()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::STR, "name", "The wallet name if loaded successfully."},
-                        {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+                        {RPCResult::Type::STR, "warning", "Warning messages, if any, related to loading the wallet. Multiple messages will be delimited by newlines."},
                     }
                 },
                 RPCExamples{
@@ -327,7 +327,7 @@ static RPCHelpMan createwallet()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "name", "The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path."},
-                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+                {RPCResult::Type::STR, "warning", "Warning messages, if any, related to creating the wallet. Multiple messages will be delimited by newlines."},
             }
         },
         RPCExamples{
@@ -414,7 +414,7 @@ static RPCHelpMan unloadwallet()
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{RPCResult::Type::OBJ, "", "", {
-                    {RPCResult::Type::STR, "warning", "Warning message if wallet was not unloaded cleanly."},
+                    {RPCResult::Type::STR, "warning", "Warning messages, if any, related to unloading the wallet. Multiple messages will be delimited by newlines."},
                 }},
                 RPCExamples{
                     HelpExampleCli("unloadwallet", "wallet_name")
