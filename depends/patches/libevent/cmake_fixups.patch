@@ -1,0 +1,35 @@
+cmake: set minimum version to 3.5
+
+Fix generated pkg-config files, see
+https://github.com/libevent/libevent/pull/1165.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19,7 +19,7 @@
+ #       start libevent.sln
+ #
+ 
+-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+ 
+ if (POLICY CMP0054)
+     cmake_policy(SET CMP0054 NEW)
+diff --git a/cmake/AddEventLibrary.cmake b/cmake/AddEventLibrary.cmake
+index 04f5837e..d8ea42c4 100644
+--- a/cmake/AddEventLibrary.cmake
++++ b/cmake/AddEventLibrary.cmake
+@@ -20,12 +20,12 @@ macro(generate_pkgconfig LIB_NAME)
+ 
+     set(LIBS         "")
+     foreach (LIB ${LIB_PLATFORM})
+-        set(LIBS "${LIBS} -L${LIB}")
++        set(LIBS "${LIBS} -l${LIB}")
+     endforeach()
+ 
+     set(OPENSSL_LIBS "")
+     foreach(LIB ${OPENSSL_LIBRARIES})
+-        set(OPENSSL_LIBS "${OPENSSL_LIBS} -L${LIB}")
++        set(OPENSSL_LIBS "${OPENSSL_LIBS} -l${LIB}")
+     endforeach()
+ 
+     configure_file("lib${LIB_NAME}.pc.in" "lib${LIB_NAME}.pc" @ONLY)
