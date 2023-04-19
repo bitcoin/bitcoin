@@ -134,7 +134,11 @@ public:
             for (const auto& txid : unique_parents) {
                 results.emplace_back(GenTxid::Txid(txid));
             }
-            // Mark the orphan as requested
+            // Mark the orphan as requested. Limitation: we aren't tracking these txids in
+            // relation to the orphan's wtxid anywhere. If we get a NOTFOUND for the parent(s),
+            // we won't automatically know that it corresponds to this orphan (i.e. won't be
+            // able to call ReceivedResponse()). We will need to wait until it expires before
+            // requesting from somebody else.
             orphan_request_tracker.RequestedTx(nodeid, gtxid.GetHash(), current_time + ORPHAN_ANCESTOR_GETDATA_INTERVAL);
         }
         if (!results.empty()) LogPrint(BCLog::TXPACKAGES, "\nRequesting %u items from peer=%d\n", results.size(), nodeid);
