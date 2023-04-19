@@ -682,8 +682,8 @@ private:
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
 
-    /** Send a ping message every PING_INTERVAL or if requested via RPC. May
-     *  mark the peer to be disconnected if a ping has timed out.
+    /** Send a ping message every PING_INTERVAL or if requested via RPC (peer.m_ping_queued is true).
+     *  May mark the peer to be disconnected if a ping has timed out.
      *  We use mockable time for ping timeouts, so setmocktime may cause pings
      *  to time out. */
     void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
@@ -923,6 +923,15 @@ private:
 
     /** Process compact block txns  */
     void ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const BlockTransactions& block_transactions)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
+
+    /**
+     * Schedule a transaction be sent to the given peer (via `PushMessage()`), unsolicited.
+     * The transaction is picked from the list of locally submitted, unbroadcast ones.
+     * It is assumed that the connection to the peer is a sensitive relay. Calling this
+     * for an ordinary peer will degrade privacy. Don't do that.
+     */
+    void PushUnbroadcastTxToSensistiveRelay(CNode& node, Peer& peer, const std::atomic<bool>& interrupt)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
 
     /**
@@ -1414,26 +1423,53 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
 
 void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 {
-    uint64_t my_services{peer.m_our_services};
-    const int64_t nTime{count_seconds(GetTime<std::chrono::seconds>())};
-    uint64_t nonce = pnode.GetLocalNonce();
-    const int nNodeStartingHeight{m_best_height};
-    NodeId nodeid = pnode.GetId();
-    CAddress addr = pnode.addr;
-
-    CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
-    uint64_t your_services{addr.nServices};
-
-    const bool tx_relay{!RejectIncomingTxs(pnode)};
-    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, my_services, nTime,
-            your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
-            my_services, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
-            nonce, strSubVersion, nNodeStartingHeight, tx_relay));
-
-    if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addr_you.ToStringAddrPort(), tx_relay, nodeid);
+    uint64_t my_services;
+    int64_t my_time;
+    uint64_t your_services;
+    CService your_addr;
+    std::string my_user_agent;
+    int my_height;
+    bool my_tx_relay;
+    if (pnode.IsSensitiveRelayConn()) {
+        my_services = NODE_NONE;
+        my_time = 0;
+        your_services = NODE_NONE;
+        your_addr = CService{};
+        my_user_agent = "/pynode:0.0.1/";
+        my_height = 0;
+        my_tx_relay = false;
     } else {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, tx_relay, nodeid);
+        CAddress addr{pnode.addr};
+
+        my_services = peer.m_our_services;
+        my_time = count_seconds(GetTime<std::chrono::seconds>());
+        your_services = addr.nServices;
+        your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService{};
+        my_user_agent = strSubVersion;
+        my_height = m_best_height;
+        my_tx_relay = !RejectIncomingTxs(pnode);
+    }
+
+    m_connman.PushMessage(&pnode,
+                          CNetMsgMaker(INIT_PROTO_VERSION)
+                              .Make(NetMsgType::VERSION,
+                                    PROTOCOL_VERSION,
+                                    my_services,
+                                    my_time,
+                                    your_services, // Together the pre-version-31402 serialization of CAddress
+                                    your_addr,     // "addrYou" (without nTime)
+                                    my_services,   // Together the pre-version-31402 serialization of CAddress
+                                    CService{},    // "addrMe" (without nTime)
+                                    pnode.GetLocalNonce(),
+                                    my_user_agent,
+                                    my_height,
+                                    my_tx_relay));
+
+    const NodeId nodeid{pnode.GetId()};
+    if (fLogIPs) {
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, my_height, your_addr.ToStringAddrPort(), my_tx_relay, nodeid);
+    } else {
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, my_height, my_tx_relay, nodeid);
     }
 }
 
@@ -3308,6 +3344,73 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
     return;
 }
 
+void PeerManagerImpl::PushUnbroadcastTxToSensistiveRelay(CNode& node, Peer& peer, const std::atomic<bool>& interrupt)
+{
+    Assume(node.IsSensitiveRelayConn());
+
+    Peer::TxRelay* tx_relay{peer.GetTxRelay()};
+    if (tx_relay == nullptr) {
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Disconnecting: no transactions relay with this peer (connected in vain), peer=%d%s\n",
+                      node.GetId(),
+                      fLogIPs ? strprintf(", peeraddr=%s", node.addr.ToStringAddrPort()) : "");
+        node.fDisconnect = true;
+        m_connman.ScheduleSensitiveRelayConnections(1);
+        return;
+    }
+
+    const auto unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+
+    if (unbroadcast_txids.empty()) {
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Disconnecting: no more sensitive transactions to "
+                      "relay (connected in vain), peer=%d%s\n",
+                      node.GetId(),
+                      fLogIPs ? strprintf(", peeraddr=%s", node.addr.ToStringAddrPort()) : "");
+        node.fDisconnect = true;
+        return;
+    }
+
+    // Randomly pick some transaction from unbroadcast_txids.
+    const auto tx_iter = std::next(unbroadcast_txids.begin(), FastRandomContext{}.randrange(unbroadcast_txids.size()));
+
+    CTransactionRef tx = m_mempool.get(*tx_iter);
+    if (tx == nullptr) {
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Disconnecting: cannot send unbroadcast transaction txid=%s because it is not in the "
+                      "mempool, peer=%d%s\n",
+                      tx_iter->ToString(),
+                      node.GetId(),
+                      fLogIPs ? strprintf(", peeraddr=%s", node.addr.ToStringAddrPort()) : "");
+        node.fDisconnect = true;
+        return;
+    }
+
+    LogPrintLevel( /* Continued */
+        BCLog::SENSITIVE_RELAY,
+        BCLog::Level::Debug,
+        "P2P handshake completed, pretending peer sent us request for %stxid=%s, peer=%d%s\n",
+        tx->HasWitness() ? "w" : "",
+        tx_iter->ToString(),
+        node.GetId(),
+        fLogIPs ? strprintf(", peeraddr=%s", node.addr.ToStringAddrPort()) : "");
+
+    LOCK(peer.m_getdata_requests_mutex);
+
+    if (tx->HasWitness()) {
+        tx_relay->m_recently_announced_invs.insert(tx->GetWitnessHash());
+        peer.m_getdata_requests.emplace_back(MSG_WTX, tx->GetWitnessHash());
+    } else {
+        tx_relay->m_recently_announced_invs.insert(tx->GetHash());
+        peer.m_getdata_requests.emplace_back(MSG_TX, tx->GetHash());
+    }
+
+    ProcessGetData(node, peer, interrupt);
+}
+
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
@@ -3456,6 +3559,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
+        if (pfrom.IsSensitiveRelayConn()) {
+            if (fRelay) {
+                m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::VERACK));
+            } else {
+                LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                              BCLog::Level::Info,
+                              "Disconnecting: does not support transactions relay (connected in vain), peer=%d%s\n",
+                              pfrom.GetId(),
+                              fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                pfrom.fDisconnect = true;
+                m_connman.ScheduleSensitiveRelayConnections(1);
+            }
+            return;
+        }
+
         if (greatest_common_version >= WTXID_RELAY_VERSION) {
             m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::WTXIDRELAY));
         }
@@ -3562,7 +3680,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                       pfrom.ConnectionTypeAsString());
         }
 
-        if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
+        if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION && !pfrom.IsSensitiveRelayConn()) {
             // Tell our peer we are willing to provide version 2 cmpctblocks.
             // However, we do not request new block announcements using
             // cmpctblock messages.
@@ -3595,6 +3713,19 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         pfrom.fSuccessfullyConnected = true;
+
+        if (pfrom.IsSensitiveRelayConn()) {
+            // The peer may intend to later send us NetMsgType::FEEFILTER limiting
+            // cheap transactions, but we don't wait for that and thus we may send
+            // them a transaction below their threshold. This is ok because this
+            // relay logic is designed to work even in cases when the peer drops
+            // the transaction (due to it being too cheap, or for other reasons).
+            PushUnbroadcastTxToSensistiveRelay(pfrom, *peer, interruptMsgProc);
+
+            peer->m_ping_queued = true; // Ensure a ping will be sent: mimick a request via RPC.
+            MaybeSendPing(pfrom, *peer, GetTime<std::chrono::microseconds>());
+        }
+
         return;
     }
 
@@ -3715,6 +3846,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (!pfrom.fSuccessfullyConnected) {
         LogPrint(BCLog::NET, "Unsupported message \"%s\" prior to verack from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
         return;
+    }
+
+    if (pfrom.IsSensitiveRelayConn()) {
+        if (msg_type != NetMsgType::PONG) {
+            LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                          BCLog::Level::Debug,
+                          "Ignoring incoming message '%s', peer=%d%s\n",
+                          msg_type,
+                          pfrom.GetId(),
+                          fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+            return;
+        }
     }
 
     if (msg_type == NetMsgType::ADDR || msg_type == NetMsgType::ADDRV2) {
@@ -4779,6 +4922,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     if (ping_time.count() >= 0) {
                         // Let connman know about this successful ping-pong
                         pfrom.PongReceived(ping_time);
+                        if (pfrom.IsSensitiveRelayConn()) {
+                            pfrom.fDisconnect = true;
+                        }
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";
@@ -5477,6 +5623,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     // Don't send anything until the version handshake is complete
     if (!pto->fSuccessfullyConnected || pto->fDisconnect)
         return true;
+
+    // The logic below does not apply to sensitive relay peers, so skip it.
+    if (pto->IsSensitiveRelayConn()) {
+        return true;
+    }
 
     // If we get here, the outgoing message serialization version is set and can't change.
     const CNetMsgMaker msgMaker(pto->GetCommonVersion());

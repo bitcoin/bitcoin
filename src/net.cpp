@@ -2951,6 +2951,22 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
+
+    if (pnode->IsSensitiveRelayConn() &&
+        msg.m_type != NetMsgType::VERSION &&
+        msg.m_type != NetMsgType::VERACK &&
+        msg.m_type != NetMsgType::TX &&
+        msg.m_type != NetMsgType::PING) {
+        // Ensure sensitive relay connections only send the above message types. Others are not needed and may degrade privacy.
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Omitting send of message '%s', peer=%d%s\n",
+                      msg.m_type,
+                      pnode->GetId(),
+                      fLogIPs ? strprintf(", peeraddr=%s", pnode->addr.ToStringAddrPort()) : "");
+        return;
+    }
+
     size_t nMessageSize = msg.data.size();
     LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
