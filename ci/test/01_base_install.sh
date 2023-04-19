@@ -51,7 +51,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   update-alternatives --install /usr/bin/clang++ clang++ "$(which clang++-16)" 100
   update-alternatives --install /usr/bin/clang clang "$(which clang-16)" 100
   git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.1 "${BASE_SCRATCH_DIR}"/msan/llvm-project
-  cmake -B "${BASE_SCRATCH_DIR}"/msan/build/ -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF -S "${BASE_SCRATCH_DIR}"/msan/llvm-project/runtimes
+  cmake -B "${BASE_SCRATCH_DIR}"/msan/build/ -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF -DLIBCXX_ENABLE_DEBUG_MODE=ON -DLIBCXX_ENABLE_ASSERTIONS=ON -S "${BASE_SCRATCH_DIR}"/msan/llvm-project/runtimes
   make -C "${BASE_SCRATCH_DIR}"/msan/build/ "$MAKEJOBS"
 fi
 
