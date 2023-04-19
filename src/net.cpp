@@ -367,7 +367,16 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(m_nodes_mutex);
     for (const CNode* pnode : m_nodes) {
-        if (!pnode->fSuccessfullyConnected && !pnode->IsInboundConn() && pnode->GetLocalNonce() == nonce)
+        // Omit private broadcast connections from this check to prevent this privacy attack:
+        // - We connect to a peer in an attempt to privately broadcast a transaction. From our
+        //   VERSION message the peer deducts that this is a short-lived connection for
+        //   broadcasting a transaction, takes our nonce and delays their VERACK.
+        // - The peer starts connecting to (clearnet) nodes and sends them a VERSION message
+        //   which contains our nonce. If the peer manages to connect to us we would disconnect.
+        // - Upon a disconnect, the peer knows our clearnet address. They go back to the short
+        //   lived privacy broadcast connection and continue with VERACK.
+        if (!pnode->fSuccessfullyConnected && !pnode->IsInboundConn() && !pnode->IsPrivateBroadcastConn() &&
+            pnode->GetLocalNonce() == nonce)
             return false;
     }
     return true;
@@ -4048,6 +4057,22 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
+
+    if (pnode->IsPrivateBroadcastConn() &&
+        msg.m_type != NetMsgType::VERSION &&
+        msg.m_type != NetMsgType::VERACK &&
+        msg.m_type != NetMsgType::INV &&
+        msg.m_type != NetMsgType::TX &&
+        msg.m_type != NetMsgType::PING) {
+        // Ensure private broadcast connections only send the above message types.
+        // Others are not needed and may degrade privacy.
+        LogDebug(BCLog::PRIVATE_BROADCAST,
+                 "Omitting send of message '%s', peer=%d%s",
+                 msg.m_type,
+                 pnode->GetId(),
+                 pnode->LogIP(fLogIPs));
+        return;
+    }
 
     if (!m_private_broadcast.m_outbound_tor_ok_at_least_once.load() && !pnode->IsInboundConn() &&
         pnode->addr.IsTor() && msg.m_type == NetMsgType::VERACK) {
