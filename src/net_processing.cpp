@@ -523,7 +523,7 @@ static void PushNodeVersion(CNode& pnode, CConnman& connman, int64_t nTime)
     }
 
     connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && !pnode.m_block_relay_only_peer, mnauthChallenge, pnode.m_masternode_connection.load()));
+            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.IsAddrRelayPeer(), mnauthChallenge, pnode.m_masternode_connection.load()));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -1010,7 +1010,7 @@ void PeerLogicValidation::FinalizeNode(const CNode& node) {
     }
     } // cs_main
 
-    if (node.fSuccessfullyConnected && misbehavior == 0 && !node.m_block_relay_only_peer && !node.fInbound) {
+    if (node.fSuccessfullyConnected && misbehavior == 0 && node.IsAddrRelayPeer() && !node.fInbound) {
         // Only change visible addrman state for full outbound peers.  We don't
         // call Connected() for feeler connections since they don't have
         // fSuccessfullyConnected set.
@@ -1794,7 +1794,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
             else if (inv.type == MSG_FILTERED_BLOCK) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
-                if (!pfrom.m_block_relay_only_peer) {
+                if (pfrom.IsAddrRelayPeer()) {
                     LOCK(pfrom.m_tx_relay->cs_filter);
                     if (pfrom.m_tx_relay->pfilter) {
                         sendMerkleBlock = true;
@@ -1867,7 +1867,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
     // mempool entries added before this time have likely expired from mapRelay
     const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
     // Get last mempool request time
-    const std::chrono::seconds mempool_req = pfrom.m_block_relay_only_peer ? pfrom.m_tx_relay->m_last_mempool_req.load()
+    const std::chrono::seconds mempool_req = !pfrom.IsAddrRelayPeer() ? pfrom.m_tx_relay->m_last_mempool_req.load()
                                                                           : std::chrono::seconds::min();
 
     {
@@ -1891,7 +1891,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             }
             ++it;
 
-            if (pfrom.m_block_relay_only_peer && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+            if (!pfrom.IsAddrRelayPeer() && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
                 // Note that if we receive a getdata for non-block messages
                 // from a block-relay-only outbound peer that violate the policy,
                 // we skip such getdata messages from this peer
@@ -2261,7 +2261,7 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman& connman, ChainstateMan
             }
         }
 
-        if (!pfrom.fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && !pfrom.m_block_relay_only_peer) {
+        if (!pfrom.fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && pfrom.IsAddrRelayPeer()) {
             // If this is an outbound full-relay peer, check to see if we should protect
             // it from the bad/lagging chain logic.
             // Note that block-relay-only peers are already implicitly protected, so we
@@ -2764,7 +2764,7 @@ void PeerLogicValidation::ProcessMessage(
         // set nodes not capable of serving the complete blockchain history as "limited nodes"
         pfrom.m_limited_node = (!(nServices & NODE_NETWORK) && (nServices & NODE_NETWORK_LIMITED));
 
-        if (!pfrom.m_block_relay_only_peer) {
+        if (pfrom.IsAddrRelayPeer()) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             pfrom.m_tx_relay->fRelayTxes = fRelay; // set to true after we get the first filter* message
         }
@@ -2843,7 +2843,7 @@ void PeerLogicValidation::ProcessMessage(
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), pfrom.nStartingHeight,
                       pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
-                      pfrom.m_block_relay_only_peer ? "block-relay" : "full-relay");
+                      pfrom.IsAddrRelayPeer()?  "full-relay" : "block-relay");
         }
 
         if (!pfrom.m_masternode_probe_connection) {
@@ -3912,7 +3912,7 @@ void PeerLogicValidation::ProcessMessage(
             return;
         }
 
-        if (!pfrom.m_block_relay_only_peer) {
+        if (pfrom.IsAddrRelayPeer()) {
             LOCK(pfrom.m_tx_relay->cs_tx_inventory);
             pfrom.m_tx_relay->fSendMempool = true;
         }
@@ -4002,7 +4002,7 @@ void PeerLogicValidation::ProcessMessage(
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom.GetId(), 100, "too-large bloom filter");
         }
-        else if (!pfrom.m_block_relay_only_peer)
+        else if (pfrom.IsAddrRelayPeer())
         {
             LOCK(pfrom.m_tx_relay->cs_filter);
             pfrom.m_tx_relay->pfilter.reset(new CBloomFilter(filter));
@@ -4020,7 +4020,7 @@ void PeerLogicValidation::ProcessMessage(
         bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             bad = true;
-        } else if (!pfrom.m_block_relay_only_peer) {
+        } else if (pfrom.IsAddrRelayPeer()) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             if (pfrom.m_tx_relay->pfilter) {
                 pfrom.m_tx_relay->pfilter->insert(vData);
@@ -4035,7 +4035,7 @@ void PeerLogicValidation::ProcessMessage(
     }
 
     if (msg_type == NetMsgType::FILTERCLEAR) {
-        if (pfrom.m_block_relay_only_peer) {
+        if (!pfrom.IsAddrRelayPeer()) {
             return;
         }
         LOCK(pfrom.m_tx_relay->cs_filter);
@@ -4381,7 +4381,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
             // Don't evict our block-relay-only peers.
-            if (pnode->m_block_relay_only_peer) return;
+            if (!pnode->IsAddrRelayPeer()) return;
             if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;
@@ -4742,7 +4742,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             LOCK2(m_mempool.cs, pto->cs_inventory);
 
             size_t reserve = INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000;
-            if (!pto->m_block_relay_only_peer) {
+            if (pto->IsAddrRelayPeer()) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 reserve = std::min<size_t>(pto->m_tx_relay->setInventoryTxToSend.size(), reserve);
             }
@@ -4772,7 +4772,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 }
             };
 
-            if (!pto->m_block_relay_only_peer) {
+            if (pto->IsAddrRelayPeer()) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
                 // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes

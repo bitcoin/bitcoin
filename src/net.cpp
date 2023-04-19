@@ -601,7 +601,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(addrBind);
     stats.m_network = GetNetworkName(ConnectedThroughNetwork());
     stats.m_mapped_as = addr.GetMappedAS(m_asmap);
-    if (!m_block_relay_only_peer) {
+    if (IsAddrRelayPeer()) {
         LOCK(m_tx_relay->cs_filter);
         stats.fRelayTxes = m_tx_relay->fRelayTxes;
     } else {
@@ -1014,7 +1014,7 @@ bool CConnman::AttemptToEvictConnection()
 
             bool peer_relay_txes = false;
             bool peer_filter_not_null = false;
-            if (!node->m_block_relay_only_peer) {
+            if (node->IsAddrRelayPeer()) {
                 LOCK(node->m_tx_relay->cs_filter);
                 peer_relay_txes = node->m_tx_relay->fRelayTxes;
                 peer_filter_not_null = node->m_tx_relay->pfilter != nullptr;
@@ -2272,7 +2272,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // also have the added issue that they're attacker controlled and could be used
                     // to prevent us from connecting to particular hosts if we used them here.
                     setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
-                    if (pnode->m_block_relay_only_peer) {
+                    if (!pnode->IsAddrRelayPeer()) {
                         nOutboundBlockRelay++;
                     } else if (!pnode->fFeeler) {
                         nOutboundFullRelay++;
@@ -2480,8 +2480,7 @@ void CConnman::ThreadOpenAddedConnections()
                 }
                 tried = true;
                 CAddress addr(CService(), NODE_NONE);
-                // KNST should be false
-                OpenNetworkConnection(addr, false, &grant, info.strAddedNode.c_str(), false, false, true /* ,false*/);
+                OpenNetworkConnection(addr, false, &grant, info.strAddedNode.c_str(), false, false, true);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                     return;
             }
@@ -3619,7 +3618,7 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->m_block_relay_only_peer) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !pnode->IsAddrRelayPeer()) {
             continue;
         }
         {
@@ -3639,7 +3638,7 @@ void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const i
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->m_block_relay_only_peer) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !pnode->IsAddrRelayPeer()) {
             continue;
         }
         {
@@ -3772,7 +3771,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fInbound(fInboundIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
     m_addr_known{block_relay_only ? nullptr : std::make_unique<CRollingBloomFilter>(5000, 0.001)},
-    m_block_relay_only_peer(block_relay_only),
     id(idIn),
     nLocalHostNonce(nLocalHostNonceIn),
     nLocalServices(nLocalServicesIn),
@@ -3782,7 +3780,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     hashContinue = uint256();
-    m_tx_relay = std::make_unique<TxRelay>();
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;

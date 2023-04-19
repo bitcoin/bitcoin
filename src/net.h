@@ -1051,8 +1051,6 @@ public:
     int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing){0};
     int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
 
-    const bool m_block_relay_only_peer;
-
     // Don't relay addr messages to peers that we connect to as block-relay-only
     // peers (to prevent adversaries from inferring these links from addr
     // traffic).
@@ -1063,7 +1061,7 @@ public:
         // Stop processing non-block data early if
         // 1) We are in blocks only mode and peer has no relay permission
         // 2) This peer is a block-relay-only peer
-        return (!g_relay_txes && !HasPermission(PF_RELAY)) || m_block_relay_only_peer;
+        return (!g_relay_txes && !HasPermission(PF_RELAY)) || !IsAddrRelayPeer();
     }
 
     // List of block ids we still have announce.
@@ -1110,8 +1108,8 @@ public:
     };
 
     // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
-    // in dash: m_tx_relay should never be nullptr, use m_block_relay_only_peer == true instead
-    std::unique_ptr<TxRelay> m_tx_relay;
+    // in dash: m_tx_relay should never be nullptr, use `IsAddrRelayPeer() == false` instead
+    std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
