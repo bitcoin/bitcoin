@@ -1,0 +1,24 @@
+From 9e99c44adbde41b0ba0f8c45a8a345c7182f27c3 Mon Sep 17 00:00:00 2001
+From: Biswapriyo Nath <nathbappai@gmail.com>
+Date: Fri, 1 Apr 2022 20:41:28 +0530
+Subject: [PATCH] cmake: Fix static library name in mingw
+
+This corrects the static library name to libminiupnpc.a.
+Otherwise 'lib' is prepended twice, like liblibminiupnpc.a.
+---
+ miniupnpc/CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/miniupnpc/CMakeLists.txt b/miniupnpc/CMakeLists.txt
+index 433fc732..007ac729 100644
+--- a/miniupnpc/CMakeLists.txt
++++ b/miniupnpc/CMakeLists.txt
+@@ -99,7 +99,7 @@ if (UPNPC_BUILD_STATIC)
+     add_library (miniupnpc::miniupnpc ALIAS libminiupnpc-static)
+   endif()
+   set_target_properties (libminiupnpc-static PROPERTIES EXPORT_NAME miniupnpc)
+-  if (WIN32)
++  if (WIN32 AND NOT MINGW)
+     set_target_properties (libminiupnpc-static PROPERTIES OUTPUT_NAME "libminiupnpc")
+   else()
+     set_target_properties (libminiupnpc-static PROPERTIES OUTPUT_NAME "miniupnpc")
