@@ -486,12 +486,32 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
       m_results{std::move(results)},
       m_examples{std::move(examples)}
 {
-    std::set<std::string> named_args;
+    // Map of parameter names and types just used to check whether the names are
+    // unique. Parameter names always need to be unique, with the exception that
+    // there can be pairs of POSITIONAL and NAMED parameters with the same name.
+    enum ParamType { POSITIONAL = 1, NAMED = 2, NAMED_ONLY = 4 };
+    std::map<std::string, int> param_names;
+
     for (const auto& arg : m_args) {
         std::vector<std::string> names = SplitString(arg.m_names, '|');
         // Should have unique named arguments
         for (const std::string& name : names) {
-            CHECK_NONFATAL(named_args.insert(name).second);
+            auto& param_type = param_names[name];
+            CHECK_NONFATAL(!(param_type & POSITIONAL));
+            CHECK_NONFATAL(!(param_type & NAMED_ONLY));
+            param_type |= POSITIONAL;
+        }
+        if (arg.m_type == RPCArg::Type::OBJ_NAMED_PARAMS) {
+            for (const auto& inner : arg.m_inner) {
+                std::vector<std::string> inner_names = SplitString(inner.m_names, '|');
+                for (const std::string& inner_name : inner_names) {
+                    auto& param_type = param_names[inner_name];
+                    CHECK_NONFATAL(!(param_type & POSITIONAL) || inner.m_opts.also_positional);
+                    CHECK_NONFATAL(!(param_type & NAMED));
+                    CHECK_NONFATAL(!(param_type & NAMED_ONLY));
+                    param_type |= inner.m_opts.also_positional ? NAMED : NAMED_ONLY;
+                }
+            }
         }
         // Default value type should match argument type only when defined
         if (arg.m_fallback.index() == 2) {

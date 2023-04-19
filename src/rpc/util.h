@@ -130,6 +130,15 @@ struct RPCArgOptions {
     std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
     std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
     bool hidden{false};                  //!< For testing only
+    bool also_positional{false};         //!< If set allows a named-parameter field in an OBJ_NAMED_PARAM options object
+                                         //!< to have the same name as a top-level parameter. By default the RPC
+                                         //!< framework disallows this, because if an RPC request passes the value by
+                                         //!< name, it is assigned to top-level parameter position, not to the options
+                                         //!< position, defeating the purpose of using OBJ_NAMED_PARAMS instead OBJ for
+                                         //!< that option. But sometimes it makes sense to allow less-commonly used
+                                         //!< options to be passed by name only, and more commonly used options to be
+                                         //!< passed by name or position, so the RPC framework allows this as long as
+                                         //!< methods set the also_positional flag and read values from both positions.
 };
 
 struct RPCArg {

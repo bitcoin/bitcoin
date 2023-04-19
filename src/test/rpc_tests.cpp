@@ -528,6 +528,53 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     }
 }
 
+// Make sure errors are triggered appropriately if parameters have the same names.
+BOOST_AUTO_TEST_CASE(check_dup_param_names)
+{
+    enum ParamType { POSITIONAL, NAMED, NAMED_ONLY };
+    auto make_rpc = [](std::vector<std::tuple<std::string, ParamType>> param_names) {
+        std::vector<RPCArg> params;
+        std::vector<RPCArg> options;
+        auto push_options = [&] { if (!options.empty()) params.emplace_back(RPCArg{strprintf("options%i", params.size()), RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", std::move(options)}); };
+        for (auto& [param_name, param_type] : param_names) {
+            if (param_type == POSITIONAL) {
+                push_options();
+                params.emplace_back(std::move(param_name), RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description");
+            } else {
+                options.emplace_back(std::move(param_name), RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description", RPCArgOptions{.also_positional = param_type == NAMED});
+            }
+        }
+        push_options();
+        return RPCHelpMan{"method_name", "description", params, RPCResults{}, RPCExamples{""}};
+    };
+
+    // No errors if parameter names are unique.
+    make_rpc({{"p1", POSITIONAL}, {"p2", POSITIONAL}});
+    make_rpc({{"p1", POSITIONAL}, {"p2", NAMED}});
+    make_rpc({{"p1", POSITIONAL}, {"p2", NAMED_ONLY}});
+    make_rpc({{"p1", NAMED}, {"p2", POSITIONAL}});
+    make_rpc({{"p1", NAMED}, {"p2", NAMED}});
+    make_rpc({{"p1", NAMED}, {"p2", NAMED_ONLY}});
+    make_rpc({{"p1", NAMED_ONLY}, {"p2", POSITIONAL}});
+    make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED}});
+    make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED_ONLY}});
+
+    // Error if parameters names are duplicates, unless one parameter is
+    // positional and the other is named and .also_positional is true.
+    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", POSITIONAL}}), NonFatalCheckError);
+    make_rpc({{"p1", POSITIONAL}, {"p1", NAMED}});
+    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+    make_rpc({{"p1", NAMED}, {"p1", POSITIONAL}});
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", POSITIONAL}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+
+    // Make sure duplicate aliases are detected too.
+    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p2|p1", NAMED_ONLY}}), NonFatalCheckError);
+}
+
 BOOST_AUTO_TEST_CASE(help_example)
 {
     // test different argument types
