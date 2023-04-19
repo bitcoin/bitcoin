@@ -228,12 +228,16 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
+  << : *CREDITS_TEMPLATE
+  << : *GLOBAL_TASK_TEMPLATE
   previous_releases_cache:
     folder: "releases"
-  << : *GLOBAL_TASK_TEMPLATE
-  << : *PERSISTENT_WORKER_TEMPLATE
+  depends_releases_cache:
+    folder: "/tmp/cirrus-ci-build/releases"
+  container:
+    image: debian:buster
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
