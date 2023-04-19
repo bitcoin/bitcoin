@@ -211,6 +211,12 @@ class PackageRBFTest(BitcoinTestFramework):
         assert_equal(len(expected_txns), num_coins * 2)
         self.assert_mempool_contents(expected=expected_txns)
 
+        # 101 clusters
+        clusters = set([])
+        for txn in expected_txns:
+            clusters.add(node.getmempoolentry(txn.rehash())["clusterid"])
+        assert_equal(len(clusters), num_coins)
+
         # parent feeerate needs to be high enough for minrelay
         # child feerate needs to be large enough to trigger package rbf with a very large parent and
         # pay for all evicted fees. maxfeerate turned off for all submissions since child feerate

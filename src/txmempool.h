@@ -438,6 +438,8 @@ public:
             const Limits& limits, Entries& all_parents) const
         EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    std::vector<FeeFrac> GetFeerateDiagram() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     size_t GetUniqueClusterCount(const setEntries& iters_conflicting) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
         std::vector<TxEntry::TxEntryRef> entries;
         for (auto it : iters_conflicting) {

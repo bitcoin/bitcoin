@@ -1149,3 +1149,20 @@ bool CTxMemPool::ChangeSet::CheckMemPoolPolicyLimits()
     }
     return true;
 }
+
+std::vector<FeeFrac> CTxMemPool::GetFeerateDiagram() const
+{
+    TxSelector txselector(&txgraph);
+    FeeFrac zero{0, 0};
+
+    std::vector<FeeFrac> ret;
+    std::vector<TxEntry::TxEntryRef> dummy;
+    // TODO: Add an accessor that skips copying the transactions into dummy
+    FeeFrac last_selection = txselector.SelectNextChunk(dummy);
+    while (last_selection != zero) {
+        ret.emplace_back(last_selection);
+        txselector.Success();
+        last_selection = txselector.SelectNextChunk(dummy);
+    }
+    return ret;
+}
