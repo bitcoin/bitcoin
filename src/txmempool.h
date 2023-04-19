@@ -406,6 +406,23 @@ public:
      */
     void UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
 
+    std::vector<FeePerWeight> GetFeerateDiagram() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    FeePerWeight GetMainChunkFeerate(const CTxMemPoolEntry& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        return m_txgraph->GetMainChunkFeerate(tx);
+    }
+    std::vector<const CTxMemPoolEntry*> GetCluster(Txid txid) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        auto tx = GetIter(txid);
+        if (!tx) return {};
+        auto cluster = m_txgraph->GetCluster(**tx, TxGraph::Level::MAIN);
+        std::vector<const CTxMemPoolEntry*> ret;
+        ret.reserve(cluster.size());
+        for (const auto& tx : cluster) {
+            ret.emplace_back(static_cast<const CTxMemPoolEntry*>(tx));
+        }
+        return ret;
+    }
+
+
     size_t GetUniqueClusterCount(const setEntries& iters_conflicting) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
         std::vector<const TxGraph::Ref *> entries;
         entries.reserve(iters_conflicting.size());
