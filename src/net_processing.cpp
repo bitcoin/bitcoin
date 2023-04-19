@@ -199,6 +199,8 @@ static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
 /** For private broadcast, send a transaction to this many peers. */
 static constexpr size_t NUM_PRIVATE_BROADCAST_PER_TX{3};
+/** Private broadcast connections must complete within this time. Disconnect the peer if it takes longer. */
+static constexpr auto PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME{3min};
 
 // Internal stuff
 namespace {
@@ -723,8 +725,8 @@ private:
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
 
-    /** Send a ping message every PING_INTERVAL or if requested via RPC. May
-     *  mark the peer to be disconnected if a ping has timed out.
+    /** Send a ping message every PING_INTERVAL or if requested via RPC (peer.m_ping_queued is true).
+     *  May mark the peer to be disconnected if a ping has timed out.
      *  We use mockable time for ping timeouts, so setmocktime may cause pings
      *  to time out. */
     void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
@@ -961,6 +963,14 @@ private:
     /** Process compact block txns  */
     void ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const BlockTransactions& block_transactions)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
+
+    /**
+     * Schedule an INV for a transaction to be sent to the given peer (via `PushMessage()`).
+     * The transaction is picked from the list of transactions for private broadcast.
+     * It is assumed that the connection to the peer is `ConnectionType::PRIVATE_BROADCAST`.
+     * Avoid calling this for other peers since it will degrade privacy.
+     */
+    void PushPrivateBroadcastTx(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
 
     /**
      * When a peer sends us a valid block, instruct it to announce blocks to us
@@ -1535,15 +1545,24 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     std::string my_user_agent;
     int my_height;
     bool my_tx_relay;
-
-    const CAddress& addr{pnode.addr};
-    my_services = peer.m_our_services;
-    my_time = count_seconds(GetTime<std::chrono::seconds>());
-    your_services = addr.nServices;
-    your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{};
-    my_user_agent = strSubVersion;
-    my_height = m_best_height;
-    my_tx_relay = !RejectIncomingTxs(pnode);
+    if (pnode.IsPrivateBroadcastConn()) {
+        my_services = NODE_NONE;
+        my_time = 0;
+        your_services = NODE_NONE;
+        your_addr = CService{};
+        my_user_agent = "/pynode:0.0.1/"; // Use a constant other than the default (or user-configured). See https://github.com/bitcoin/bitcoin/pull/27509#discussion_r1214671917
+        my_height = 0;
+        my_tx_relay = false;
+    } else {
+        const CAddress& addr{pnode.addr};
+        my_services = peer.m_our_services;
+        my_time = count_seconds(GetTime<std::chrono::seconds>());
+        your_services = addr.nServices;
+        your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{};
+        my_user_agent = strSubVersion;
+        my_height = m_best_height;
+        my_tx_relay = !RejectIncomingTxs(pnode);
+    }
 
     MakeAndPushMessage(
         pnode,
@@ -1671,15 +1690,22 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     }
     } // cs_main
     if (node.fSuccessfullyConnected &&
-        !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
+        !node.IsBlockOnlyConn() && !node.IsPrivateBroadcastConn() && !node.IsInboundConn()) {
         // Only change visible addrman state for full outbound peers.  We don't
         // call Connected() for feeler connections since they don't have
-        // fSuccessfullyConnected set.
+        // fSuccessfullyConnected set. Also don't call Connected() for private broadcast
+        // connections since they could leak information in addrman.
         m_addrman.Connected(node.addr);
     }
     {
         LOCK(m_headers_presync_mutex);
         m_headers_presync_stats.erase(nodeid);
+    }
+    if (node.IsPrivateBroadcastConn() &&
+        !m_tx_for_private_broadcast.DidNodeConfirmReception(nodeid) &&
+        m_tx_for_private_broadcast.HavePendingTransactions()) {
+
+        m_connman.m_private_broadcast.NumToOpenAdd(1);
     }
     LogDebug(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
@@ -3459,6 +3485,25 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer
     }
 }
 
+void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
+{
+    Assume(node.IsPrivateBroadcastConn());
+
+    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId())};
+    if (!opt_tx) {
+        LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: no more transactions for private broadcast (connected in vain), peer=%d%s", node.GetId(), node.LogIP(fLogIPs));
+        node.fDisconnect = true;
+        return;
+    }
+    const CTransactionRef& tx{*opt_tx};
+
+    LogInfo("[privatebroadcast] P2P handshake completed, sending INV for txid=%s%s, peer=%d%s",
+            tx->GetHash().ToString(), tx->HasWitness() ? strprintf(", wtxid=%s", tx->GetWitnessHash().ToString()) : "",
+            node.GetId(), node.LogIP(fLogIPs));
+
+    MakeAndPushMessage(node, NetMsgType::INV, std::vector<CInv>{{CInv{MSG_TX, tx->GetHash().ToUint256()}}});
+}
+
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
@@ -3588,6 +3633,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                   cleanSubVer, pfrom.nVersion,
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   pfrom.LogIP(fLogIPs), (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+
+        if (pfrom.IsPrivateBroadcastConn()) {
+            if (fRelay) {
+                MakeAndPushMessage(pfrom, NetMsgType::VERACK);
+            } else {
+                LogInfo("[privatebroadcast] Disconnecting: does not support transactions relay (connected in vain), peer=%d%s",
+                        pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                pfrom.fDisconnect = true;
+            }
+            return;
+        }
 
         if (greatest_common_version >= WTXID_RELAY_VERSION) {
             MakeAndPushMessage(pfrom, NetMsgType::WTXIDRELAY);
@@ -3731,6 +3787,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 tx_relay->m_tx_inventory_mutex,
                 return tx_relay->m_tx_inventory_to_send.empty() &&
                        tx_relay->m_next_inv_send_time == 0s));
+        }
+
+        if (pfrom.IsPrivateBroadcastConn()) {
+            pfrom.fSuccessfullyConnected = true;
+            // The peer may intend to later send us NetMsgType::FEEFILTER limiting
+            // cheap transactions, but we don't wait for that and thus we may send
+            // them a transaction below their threshold. This is ok because this
+            // relay logic is designed to work even in cases when the peer drops
+            // the transaction (due to it being too cheap, or for other reasons).
+            PushPrivateBroadcastTx(pfrom);
+            return;
         }
 
         if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
@@ -3882,6 +3949,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (!pfrom.fSuccessfullyConnected) {
         LogDebug(BCLog::NET, "Unsupported message \"%s\" prior to verack from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
         return;
+    }
+
+    if (pfrom.IsPrivateBroadcastConn()) {
+        if (msg_type != NetMsgType::PONG && msg_type != NetMsgType::GETDATA) {
+            LogDebug(BCLog::PRIVBROADCAST, "Ignoring incoming message '%s', peer=%d%s", msg_type, pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            return;
+        }
     }
 
     if (msg_type == NetMsgType::ADDR || msg_type == NetMsgType::ADDRV2) {
@@ -4085,6 +4159,33 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (vInv.size() > 0) {
             LogDebug(BCLog::NET, "received getdata for: %s peer=%d\n", vInv[0].ToString(), pfrom.GetId());
+        }
+
+        if (pfrom.IsPrivateBroadcastConn()) {
+            const auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
+            if (!pushed_tx_opt) {
+                LogInfo("[privatebroadcast] Disconnecting: got GETDATA without sending an INV, peer=%d%s",
+                        pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                pfrom.fDisconnect = true;
+                return;
+            }
+
+            const CTransactionRef& pushed_tx{*pushed_tx_opt};
+
+            // The GETDATA request must contain exactly one inv and it must be for the transaction
+            // that we INVed to the peer earlier.
+            if (vInv.size() == 1 && vInv[0].IsMsgTx() && vInv[0].hash == pushed_tx->GetHash().ToUint256()) {
+
+                MakeAndPushMessage(pfrom, NetMsgType::TX, TX_WITH_WITNESS(*pushed_tx));
+
+                peer->m_ping_queued = true; // Ensure a ping will be sent: mimic a request via RPC.
+                MaybeSendPing(pfrom, *peer, GetTime<std::chrono::microseconds>());
+            } else {
+                LogInfo("[privatebroadcast] Disconnecting: got an unexpected GETDATA message, peer=%d%s",
+                        pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                pfrom.fDisconnect = true;
+            }
+            return;
         }
 
         {
@@ -4828,6 +4929,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     if (ping_time.count() >= 0) {
                         // Let connman know about this successful ping-pong
                         pfrom.PongReceived(ping_time);
+                        if (pfrom.IsPrivateBroadcastConn()) {
+                            m_tx_for_private_broadcast.NodeConfirmedReception(pfrom.GetId());
+                            LogInfo("[privatebroadcast] Got a PONG (the transaction will probably reach the network), marking for disconnect, peer=%d%s",
+                                    pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                            pfrom.fDisconnect = true;
+                        }
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";
@@ -5534,6 +5641,18 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         return true;
 
     const auto current_time{GetTime<std::chrono::microseconds>()};
+
+    // The logic below does not apply to private broadcast peers, so skip it.
+    // Also in CConnman::PushMessage() we make sure that unwanted messages are
+    // not sent. This here is just an optimization.
+    if (pto->IsPrivateBroadcastConn()) {
+        if (pto->m_connected + PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME < current_time) {
+            LogInfo("[privatebroadcast] Disconnecting: did not complete the transaction send within %d seconds, peer=%d%s",
+                    count_seconds(PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME), pto->GetId(), pto->LogIP(fLogIPs));
+            pto->fDisconnect = true;
+        }
+        return true;
+    }
 
     if (pto->IsAddrFetchConn() && current_time - pto->m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
         LogDebug(BCLog::NET, "addrfetch connection timeout, %s\n", pto->DisconnectMsg(fLogIPs));
