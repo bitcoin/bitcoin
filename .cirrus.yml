@@ -230,8 +230,6 @@ task:
   name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
-  previous_releases_cache:
-    folder: "releases"
   depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
   container:
