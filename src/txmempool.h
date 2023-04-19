@@ -451,6 +451,8 @@ public:
             const Limits& limits, Entries& all_parents) const
         EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    std::vector<FeeFrac> GetFeerateDiagram() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
 private:
     util::Result<bool> CheckClusterSizeAgainstLimits(const std::vector<TxEntry::TxEntryRef>& parents,
             int64_t count, int64_t vbytes, GraphLimits limits) const

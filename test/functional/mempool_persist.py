@@ -97,6 +97,9 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(total_fee_old, sum(v['fees']['base'] for k, v in self.nodes[0].getrawmempool(verbose=True).items()))
 
         last_entry = self.nodes[0].getmempoolentry(txid=last_txid)
+        del last_entry["fees"]["chunk"]
+        del last_entry["clusterid"]
+        del last_entry["chunksize"]
         tx_creation_time = last_entry['time']
         assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
         assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
@@ -131,7 +134,11 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
 
         self.log.debug('Verify all fields are loaded correctly')
-        assert_equal(last_entry, self.nodes[0].getmempoolentry(txid=last_txid))
+        new_entry = self.nodes[0].getmempoolentry(txid=last_txid)
+        del new_entry["fees"]["chunk"]
+        del new_entry["clusterid"]
+        del new_entry["chunksize"]
+        assert_equal(last_entry, new_entry)
         self.nodes[0].sendrawtransaction(tx_prioritised_not_submitted['hex'])
         entry_prioritised_before_restart = self.nodes[0].getmempoolentry(txid=tx_prioritised_not_submitted['txid'])
         assert_equal(entry_prioritised_before_restart['fees']['base'] + Decimal('0.00009999'), entry_prioritised_before_restart['fees']['modified'])
