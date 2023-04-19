@@ -116,7 +116,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        node.peerman->ScheduleTxForRelayToAll(txid, wtxid);
+        node.peerman->ScheduleLocalTxForRelay(txid, wtxid);
     }
 
     return TransactionError::OK;

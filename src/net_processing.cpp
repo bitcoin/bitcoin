@@ -1533,7 +1533,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
         CTransactionRef tx = m_mempool.get(txid);
 
         if (tx != nullptr) {
-            ScheduleTxForRelayToAll(txid, tx->GetWitnessHash());
+            ScheduleLocalTxForRelay(txid, tx->GetWitnessHash());
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
