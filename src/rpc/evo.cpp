@@ -1467,6 +1467,92 @@ static UniValue protx_diff(const JSONRPCRequest& request)
     return ret;
 }
 
+static void protx_listdiff_help(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"protx listdiff",
+               "\nCalculate a full MN list diff between two masternode lists.\n",
+               {
+                       {"baseBlock", RPCArg::Type::NUM, RPCArg::Optional::NO, "The starting block height."},
+                       {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "The ending block height."},
+               },
+               RPCResults{},
+               RPCExamples{""},
+    }.Check(request);
+}
+
+static const CBlockIndex* ParseBlockIndex(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+
+    try {
+        uint256 hash = ParseHashV(v, strName);
+        const CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        if (!pblockindex)
+            throw std::runtime_error(strprintf("Block %s with hash %s not found", strName, v.getValStr()));
+        return pblockindex;
+    } catch (...) {
+        int h = ParseInt32V(v, strName);
+        if (h < 1 || h > ::ChainActive().Height())
+            throw std::runtime_error(strprintf("%s must be a chain height and not %s", strName, v.getValStr()));
+        return ::ChainActive()[h];
+    }
+}
+
+static UniValue protx_listdiff(const JSONRPCRequest& request)
+{
+    protx_listdiff_help(request);
+
+    LOCK(cs_main);
+    UniValue ret(UniValue::VOBJ);
+
+    const CBlockIndex* pBaseBlockIndex = ParseBlockIndex(request.params[0], "baseBlock");
+    const CBlockIndex* pTargetBlockIndex = ParseBlockIndex(request.params[1], "block");
+
+    if (pBaseBlockIndex == nullptr) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Base block not found");
+    }
+
+    if (pTargetBlockIndex == nullptr) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+
+    ret.pushKV("baseHeight", pBaseBlockIndex->nHeight);
+    ret.pushKV("blockHeight", pTargetBlockIndex->nHeight);
+
+    auto baseBlockMNList = deterministicMNManager->GetListForBlock(pBaseBlockIndex);
+    auto blockMNList = deterministicMNManager->GetListForBlock(pTargetBlockIndex);
+
+    auto mnDiff = baseBlockMNList.BuildDiff(blockMNList);
+
+    UniValue jaddedMNs(UniValue::VARR);
+    for(const auto& mn : mnDiff.addedMNs) {
+        UniValue obj;
+        mn->ToJson(obj);
+        jaddedMNs.push_back(obj);
+    }
+    ret.pushKV("addedMNs", jaddedMNs);
+
+    UniValue jremovedMNs(UniValue::VARR);
+    for(const auto& internal_id : mnDiff.removedMns) {
+        auto dmn = baseBlockMNList.GetMNByInternalId(internal_id);
+        jremovedMNs.push_back(dmn->proTxHash.ToString());
+    }
+    ret.pushKV("removedMNs", jremovedMNs);
+
+    UniValue jupdatedMNs(UniValue::VARR);
+    for(const auto& [internal_id, stateDiff] : mnDiff.updatedMNs) {
+        auto dmn = baseBlockMNList.GetMNByInternalId(internal_id);
+        UniValue s(UniValue::VOBJ);
+        stateDiff.ToJson(s, dmn->nType);
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV(dmn->proTxHash.ToString(), s);
+        jupdatedMNs.push_back(obj);
+    }
+    ret.pushKV("updatedMNs", jupdatedMNs);
+
+    return ret;
+}
+
 [[ noreturn ]] static void protx_help()
 {
     RPCHelpMan{
@@ -1495,7 +1581,8 @@ static UniValue protx_diff(const JSONRPCRequest& request)
         "  update_registrar_legacy  - Create ProUpRegTx by parsing BLS using the legacy scheme, then send it to network\n"
         "  revoke                   - Create and send ProUpRevTx to network\n"
 #endif
-        "  diff                     - Calculate a diff and a proof between two masternode lists\n",
+        "  diff                     - Calculate a diff and a proof between two masternode lists\n"
+        "  listdiff                 - Calculate a full MN list diff between two masternode lists\n",
         {
             {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
         },
@@ -1536,7 +1623,10 @@ static UniValue protx(const JSONRPCRequest& request)
         return protx_info(new_request);
     } else if (command == "protxdiff") {
         return protx_diff(new_request);
-    } else {
+    } else if (command == "protxlistdiff") {
+        return protx_listdiff(new_request);
+    }
+    else {
         protx_help();
     }
 }

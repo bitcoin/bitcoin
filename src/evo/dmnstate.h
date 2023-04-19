@@ -261,6 +261,8 @@ public:
 #undef DMN_STATE_DIFF_LINE
     }
 
+    void ToJson(UniValue& obj, MnType nType) const;
+
     SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
     {
         READWRITE(VARINT(obj.fields));

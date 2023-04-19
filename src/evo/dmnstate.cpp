@@ -61,3 +61,65 @@ void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
         obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }
 }
+
+void CDeterministicMNStateDiff::ToJson(UniValue& obj, MnType nType) const
+{
+    obj.clear();
+    obj.setObject();
+    if (fields & Field_addr) {
+        obj.pushKV("service", state.addr.ToStringIPPort(false));
+    }
+    if (fields & Field_nRegisteredHeight) {
+        obj.pushKV("registeredHeight", state.nRegisteredHeight);
+    }
+    if (fields & Field_nLastPaidHeight) {
+        obj.pushKV("lastPaidHeight", state.nLastPaidHeight);
+    }
+    if (fields & Field_nConsecutivePayments) {
+        obj.pushKV("consecutivePayments", state.nConsecutivePayments);
+    }
+    if (fields & Field_nPoSePenalty) {
+        obj.pushKV("PoSePenalty", state.nPoSePenalty);
+    }
+    if (fields & Field_nPoSeRevivedHeight) {
+        obj.pushKV("PoSeRevivedHeight", state.nPoSeRevivedHeight);
+    }
+    if (fields & Field_nPoSeBanHeight) {
+        obj.pushKV("PoSeBanHeight", state.nPoSeBanHeight);
+    }
+    if (fields & Field_nRevocationReason) {
+        obj.pushKV("revocationReason", state.nRevocationReason);
+    }
+    if (fields & Field_keyIDOwner) {
+        obj.pushKV("ownerAddress", EncodeDestination(PKHash(state.keyIDOwner)));
+    }
+    if (fields & Field_keyIDVoting) {
+        obj.pushKV("votingAddress", EncodeDestination(PKHash(state.keyIDVoting)));
+    }
+    if (fields & Field_scriptPayout) {
+        CTxDestination dest;
+        if (ExtractDestination(state.scriptPayout, dest)) {
+            obj.pushKV("payoutAddress", EncodeDestination(dest));
+        }
+    }
+    if (fields & Field_scriptOperatorPayout) {
+        CTxDestination dest;
+        if (ExtractDestination(state.scriptOperatorPayout, dest)) {
+            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
+        }
+    }
+    if (fields & Field_pubKeyOperator) {
+        obj.pushKV("pubKeyOperator", state.pubKeyOperator.Get().ToString());
+    }
+    if (nType == MnType::HighPerformance) {
+        if (fields & Field_platformNodeID) {
+            obj.pushKV("platformNodeID", state.platformNodeID.ToString());
+        }
+        if (fields & Field_platformP2PPort) {
+            obj.pushKV("platformP2PPort", state.platformP2PPort);
+        }
+        if (fields & Field_platformHTTPPort) {
+            obj.pushKV("platformHTTPPort", state.platformHTTPPort);
+        }
+    }
+}
