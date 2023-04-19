@@ -328,6 +328,10 @@ if(BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
+if(BUILD_FUZZ_BINARY)
+  add_subdirectory(test/fuzz)
+endif()
+
 
 install(TARGETS ${installable_targets}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

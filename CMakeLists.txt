@@ -87,6 +87,8 @@ tristate_option(WITH_QRENCODE "Enable QR code support." "if libqrencode is found
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
 option(BUILD_BENCH "Build bench_bitcoin executable." ON)
+cmake_dependent_option(BUILD_FUZZ_BINARY "Build fuzz binary." ON "NOT MSVC" OFF)
+
 option(INSTALL_MAN "Install man pages." ON)
 
 if(CXX20)
@@ -517,6 +519,7 @@ message("  experimental syscall sandbox ........ ${WITH_SECCOMP}")
 message("Tests:")
 message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("  bench_bitcoin ....................... ${BUILD_BENCH}")
+message("  fuzz binary ......................... ${BUILD_FUZZ_BINARY}")
 message("")
 if(CMAKE_CROSSCOMPILING)
   set(cross_status "TRUE, for ${CMAKE_SYSTEM_NAME}, ${CMAKE_SYSTEM_PROCESSOR}")
