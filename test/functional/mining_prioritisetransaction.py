@@ -30,6 +30,27 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         ]] * self.num_nodes
         self.supports_cli = False
 
+    def test_replacement(self):
+        self.log.info("Test tx prioritisation stays after a tx is replaced")
+        conflicting_input = self.wallet.get_utxo()
+        tx_replacee = self.wallet.create_self_transfer(utxo_to_spend=conflicting_input, fee_rate=Decimal("0.0001"))
+        tx_replacement = self.wallet.create_self_transfer(utxo_to_spend=conflicting_input, fee_rate=Decimal("0.005"))
+        # Add 1 satoshi fee delta to replacee
+        self.nodes[0].prioritisetransaction(tx_replacee["txid"], 0, 100)
+        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : False}})
+        self.nodes[0].sendrawtransaction(tx_replacee["hex"])
+        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : True}})
+        self.nodes[0].sendrawtransaction(tx_replacement["hex"])
+        assert tx_replacee["txid"] not in self.nodes[0].getrawmempool()
+        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : False}})
+
+        # PrioritiseTransaction is additive
+        self.nodes[0].prioritisetransaction(tx_replacee["txid"], 0, COIN)
+        self.nodes[0].sendrawtransaction(tx_replacee["hex"])
+        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : COIN + 100, "in_mempool" : True}})
+        self.generate(self.nodes[0], 1)
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {})
+
     def test_diamond(self):
         self.log.info("Test diamond-shape package with priority")
         mock_time = int(time.time())
@@ -142,6 +163,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # Test `prioritisetransaction` invalid `fee_delta`
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].prioritisetransaction, txid=txid, fee_delta='foo')
 
+        self.test_replacement()
         self.test_diamond()
 
         self.txouts = gen_return_txouts()
