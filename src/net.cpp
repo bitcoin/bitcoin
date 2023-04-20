@@ -2614,6 +2614,11 @@ size_t CConnman::GetNodeCount(ConnectionDirection flags) const
     return nNum;
 }
 
+uint32_t CConnman::GetMappedAS(const CNetAddr& addr) const
+{
+    return m_netgroupman.GetMappedAS(addr);
+}
+
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
 {
     vstats.clear();
@@ -2622,7 +2627,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     for (CNode* pnode : m_nodes) {
         vstats.emplace_back();
         pnode->CopyStats(vstats.back());
-        vstats.back().m_mapped_as = m_netgroupman.GetMappedAS(pnode->addr);
+        vstats.back().m_mapped_as = GetMappedAS(pnode->addr);
     }
 }
 
