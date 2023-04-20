@@ -49,6 +49,7 @@ public:
         /** Whether this node is running in -blocksonly mode */
         bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
         bool reconcile_txs{DEFAULT_TXRECONCILIATION_ENABLE};
+        uint32_t max_orphan_txs{DEFAULT_MAX_ORPHAN_TRANSACTIONS};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
