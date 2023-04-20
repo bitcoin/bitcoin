@@ -1323,8 +1323,9 @@ private:
     void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
 
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
-    void ThreadAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
+    void ThreadAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex);
     void QueryDNSSeeds() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
+    void ProcessFixedSeeds(std::chrono::microseconds start) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_addr_fetches_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
