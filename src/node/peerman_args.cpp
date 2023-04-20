@@ -16,6 +16,8 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
     if (auto value{argsman.GetIntArg("-blockreconstructionextratxn")}) {
         options.max_extra_txs = size_t(std::max(int64_t{0}, *value));
     }
+
+    if (auto value{argsman.GetBoolArg("-capturemessages")}) options.capture_messages = *value;
 }
 
 } // namespace node

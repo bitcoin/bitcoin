@@ -10,7 +10,6 @@
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chainparams.h>
-#include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
@@ -5005,7 +5004,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
         msg.m_recv.data()
     );
 
-    if (gArgs.GetBoolArg("-capturemessages", false)) {
+    if (m_opts.capture_messages) {
         CaptureMessage(pfrom->addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
     }
 
