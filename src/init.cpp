@@ -50,6 +50,7 @@
 #include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
+#include <node/peerman_args.h>
 #include <node/txreconciliation.h>
 #include <node/validation_cache_args.h>
 #include <policy/feerate.h>
@@ -1539,9 +1540,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
 
+
+    PeerManager::Options peerman_opts{
+        .ignore_incoming_txs = ignores_incoming_txs,
+    };
+    ApplyArgsManOptions(args, peerman_opts);
+
     assert(!node.peerman);
-    node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
-                                     chainman, *node.mempool, ignores_incoming_txs);
+    node.peerman = PeerManager::make(*node.connman, *node.addrman,
+                                     node.banman.get(), chainman,
+                                     *node.mempool, peerman_opts);
     RegisterValidationInterface(node.peerman.get());
 
     // ********************************************************* Step 8: start indexers

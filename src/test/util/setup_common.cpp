@@ -27,6 +27,7 @@
 #include <node/kernel_notifications.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/peerman_args.h>
 #include <node/validation_cache_args.h>
 #include <noui.h>
 #include <policy/fees.h>
@@ -251,9 +252,12 @@ TestingSetup::TestingSetup(
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    PeerManager::Options peerman_opts;
+    ApplyArgsManOptions(*m_node.args, peerman_opts);
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
-                                       *m_node.mempool, false);
+                                       *m_node.mempool, peerman_opts);
+
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();

@@ -43,9 +43,13 @@ struct CNodeStateStats {
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
+    struct Options {
+        bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
+    };
+
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
                                              BanMan* banman, ChainstateManager& chainman,
-                                             CTxMemPool& pool, bool ignore_incoming_txs);
+                                             CTxMemPool& pool, Options opts);
     virtual ~PeerManager() { }
 
     /**
