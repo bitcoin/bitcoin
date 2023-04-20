@@ -44,6 +44,7 @@ class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
     struct Options {
+        /** Whether this node is running in -blocksonly mode */
         bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
     };
 
