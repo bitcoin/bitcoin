@@ -21,6 +21,8 @@
 #include <limits>
 #include <memory>
 
+#include <support/events.h>
+
 #ifndef WIN32
 #include <fcntl.h>
 #endif
@@ -36,53 +38,85 @@ static Proxy nameProxy GUARDED_BY(g_proxyinfo_mutex);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
+static GlobalMutex dns_mutex;
+
 // Need ample time for negotiation for very slow proxies such as Tor (milliseconds)
 int g_socks5_recv_timeout = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
 
-std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup)
+void GAICallback(int errcode, struct evutil_addrinfo *addrinfo, void *user_data)
 {
-    addrinfo ai_hint{};
+    struct DNSResolveResponse* res = (struct DNSResolveResponse*)user_data;
+
+    struct evutil_addrinfo *addr = addrinfo;
+    while (addr != nullptr) {
+        if (addr->ai_family == AF_INET) {
+            assert(addr->ai_addrlen >= sizeof(sockaddr_in));
+            res->vAddr->emplace_back(reinterpret_cast<sockaddr_in*>(addr->ai_addr)->sin_addr);
+        }
+        if (addr->ai_family == AF_INET6) {
+            assert(addr->ai_addrlen >= sizeof(sockaddr_in6));
+            const sockaddr_in6* s6{reinterpret_cast<sockaddr_in6*>(addr->ai_addr)};
+            res->vAddr->emplace_back(s6->sin6_addr, s6->sin6_scope_id);
+        }
+        addr = addr->ai_next;
+    }
+    if (addrinfo)
+        evutil_freeaddrinfo(addrinfo);
+    LOCK(dns_mutex);
+    res->complete = true;
+}
+
+std::vector<CNetAddr> DNSResolveAsync(const std::string& name, bool allow_lookup)
+{
+    raii_event_base base = obtain_event_base();
+    raii_evdns_base dnsbase = obtain_evdns_base(base.get());
+
+    struct evutil_addrinfo hints{};
     // We want a TCP port, which is a streaming socket type
-    ai_hint.ai_socktype = SOCK_STREAM;
-    ai_hint.ai_protocol = IPPROTO_TCP;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
     // We don't care which address family (IPv4 or IPv6) is returned
-    ai_hint.ai_family = AF_UNSPEC;
-    // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
+    hints.ai_family = AF_UNSPEC;
+    // If we allow lookups of hostnames, use the EVUTIL_AI_ADDRCONFIG flag to only
     // return addresses whose family we have an address configured for.
     //
-    // If we don't allow lookups, then use the AI_NUMERICHOST flag for
+    // If we don't allow lookups, then use the EVUTIL_AI_NUMERICHOST flag for
     // getaddrinfo to only decode numerical network addresses and suppress
     // hostname lookups.
-    ai_hint.ai_flags = allow_lookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
+    hints.ai_flags = allow_lookup ? EVUTIL_AI_ADDRCONFIG : EVUTIL_AI_NUMERICHOST;
 
-    addrinfo* ai_res{nullptr};
-    const int n_err{getaddrinfo(name.c_str(), nullptr, &ai_hint, &ai_res)};
-    if (n_err != 0) {
-        return {};
-    }
-
-    // Traverse the linked list starting with ai_trav.
-    addrinfo* ai_trav{ai_res};
     std::vector<CNetAddr> resolved_addresses;
-    while (ai_trav != nullptr) {
-        if (ai_trav->ai_family == AF_INET) {
-            assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in));
-            resolved_addresses.emplace_back(reinterpret_cast<sockaddr_in*>(ai_trav->ai_addr)->sin_addr);
-        }
-        if (ai_trav->ai_family == AF_INET6) {
-            assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in6));
-            const sockaddr_in6* s6{reinterpret_cast<sockaddr_in6*>(ai_trav->ai_addr)};
-            resolved_addresses.emplace_back(s6->sin6_addr, s6->sin6_scope_id);
-        }
-        ai_trav = ai_trav->ai_next;
-    }
-    freeaddrinfo(ai_res);
+    struct DNSResolveResponse res = {.complete = false, .vAddr = &resolved_addresses};
 
+    auto req = evdns_getaddrinfo(dnsbase.get(), name.c_str(), nullptr, &hints, GAICallback, &res);
+
+    if (!req) {
+        // evdns_getaddrinfo() returned immediately.
+        // There might have been an error, or no name lookup was necessary
+        return resolved_addresses;
+    }
+
+    // We need to wait for the name resolution callback on a new temporary event loop
+    std::thread thread(event_base_loop, base.get(), 1);
+
+    int checks = 0;
+    while (true)
+    {
+        {
+            LOCK(dns_mutex);
+            if (res.complete) break;
+        }
+        // Check every 100ms for 2 seconds
+        if (++checks > 20) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    thread.join();
     return resolved_addresses;
 }
 
-DNSLookupFn g_dns_lookup{WrappedGetAddrInfo};
+DNSLookupFn g_dns_lookup{DNSResolveAsync};
 
 enum Network ParseNetwork(const std::string& net_in) {
     std::string net = ToLower(net_in);

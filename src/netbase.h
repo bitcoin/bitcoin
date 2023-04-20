@@ -65,9 +65,15 @@ struct ProxyCredentials
 };
 
 /**
- * Wrapper for getaddrinfo(3). Do not use directly: call Lookup/LookupHost/LookupNumeric/LookupSubNet.
+ * Async wrapper for getaddrinfo(3) provided by libevent. Do not use directly: call Lookup/LookupHost/LookupNumeric/LookupSubNet.
  */
-std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup);
+std::vector<CNetAddr> DNSResolveAsync(const std::string& name, bool allow_lookup);
+
+struct DNSResolveResponse
+{
+    bool complete;
+    std::vector<CNetAddr>* vAddr;
+};
 
 enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);

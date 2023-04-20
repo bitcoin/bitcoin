@@ -74,7 +74,7 @@ void initialize()
         if (allow_lookup) {
             std::terminate();
         }
-        return WrappedGetAddrInfo(name, false);
+        return DNSResolveAsync(name, false);
     };
 
     bool should_abort{false};
