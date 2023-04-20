@@ -12,6 +12,10 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
     if (auto value{argsman.GetIntArg("-maxorphantx")}) {
         options.max_orphan_txs = uint32_t(std::max(int64_t{0}, *value));
     }
+
+    if (auto value{argsman.GetIntArg("-blockreconstructionextratxn")}) {
+        options.max_extra_txs = size_t(std::max(int64_t{0}, *value));
+    }
 }
 
 } // namespace node
