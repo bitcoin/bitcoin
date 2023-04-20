@@ -158,6 +158,14 @@ BOOST_AUTO_TEST_CASE(embedded_test)
     BOOST_CHECK_EQUAL(addr1.ToStringAddr(), addr2.ToStringAddr());
 }
 
+BOOST_AUTO_TEST_CASE(dns_lookup)
+{
+    CNetAddr addr;
+    bool ret = LookupHost("nic.com", addr, /*fAllowLookup=*/true);
+    BOOST_CHECK(ret);
+    BOOST_CHECK(addr.IsRoutable());
+}
+
 BOOST_AUTO_TEST_CASE(subnet_test)
 {
 
