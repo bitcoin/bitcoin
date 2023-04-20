@@ -7,6 +7,7 @@ namespace node {
 
 void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& options)
 {
+    if(auto value{argsman.GetBoolArg("-txreconciliation")}) options.reconcile_txs = *value;
 }
 
 } // namespace node

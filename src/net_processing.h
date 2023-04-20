@@ -14,6 +14,8 @@ class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
 
+/** Whether transaction reconciliation protocol should be enabled by default. */
+static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
@@ -46,6 +48,7 @@ public:
     struct Options {
         /** Whether this node is running in -blocksonly mode */
         bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
+        bool reconcile_txs{DEFAULT_TXRECONCILIATION_ENABLE};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
