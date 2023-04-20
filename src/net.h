@@ -72,6 +72,8 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
+/** Maximum number of sensitive relay connections */
+static constexpr size_t MAX_SENSITIVE_RELAY_CONNECTIONS{64};
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain. */
@@ -709,6 +711,7 @@ public:
         int m_max_outbound_full_relay = 0;
         int m_max_outbound_block_relay = 0;
         int nMaxAddnode = 0;
+        size_t max_sensitive_relay_connections = 0;
         int nMaxFeeler = 0;
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
@@ -781,6 +784,13 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+
+    /**
+     * Schedule `num_new` new connections of type `ConnectionType::SENSITIVE_RELAY` to
+     * be opened by `CConnman::ThreadOpenConnections()`.
+     */
+    void ScheduleSensitiveRelayConnections(size_t num_new);
+
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -1161,6 +1171,12 @@ private:
      *  as these connections are intended to be short-lived and low-bandwidth.
      */
     std::atomic_bool m_start_extra_block_relay_peers{false};
+
+    /**
+     * Number of `ConnectionType::SENSITIVE_RELAY` connections to open.
+     * Whenever such a connection is opened this is decremented with 1.
+     */
+    std::atomic_size_t m_sensitive_relay_connections_to_open{0};
 
     /**
      * A vector of -bind=<address>:<port>=onion arguments each of which is

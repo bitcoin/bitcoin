@@ -54,6 +54,7 @@ public:
         uint32_t max_orphan_txs{DEFAULT_MAX_ORPHAN_TRANSACTIONS};
         size_t max_extra_txs{DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN};
         bool capture_messages{false};
+        bool sensitiverelayowntx{DEFAULT_SENSITIVE_RELAY_OWN_TX};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
@@ -81,6 +82,12 @@ public:
 
     /** Relay transaction to all peers. */
     virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
+
+    /**
+     * Schedule a local transaction to be relayed. This is done asynchronously
+     * either via short-lived privacy connections or via `RelayTransaction()`.
+     */
+    virtual void ScheduleLocalTxForRelay(const uint256& txid, const uint256& wtxid) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;

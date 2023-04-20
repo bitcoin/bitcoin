@@ -494,7 +494,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         if (addrConnect.GetNetwork() == NET_I2P && use_proxy) {
             i2p::Connection conn;
 
-            if (m_i2p_sam_session) {
+            if (m_i2p_sam_session && conn_type != ConnectionType::SENSITIVE_RELAY) {
                 connected = m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed);
             } else {
                 {
@@ -1606,6 +1606,59 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
     return networks;
 }
 
+/**
+ * Decide whether to open a sensitive relay connection and if yes, to which network.
+ * @param[in,out] net When called, this should have a value if the previous attempt
+ * to open a connection was sensitive relay (successful or not). When the function
+ * ends if this has value then it will contain the network to which to open the
+ * connection.
+ * @param[in] num_needed Number of sensitive relay connections that need to be opened.
+ * @param[in] num_opened Number of sensitive relay connections that are currently opened.
+ */
+static void MaybePickSensitiveRelayNetwork(std::optional<Network>& net, size_t num_needed, size_t num_opened)
+{
+    if (net.has_value()) {
+        // Yield to other connection types.
+        net = std::nullopt;
+        return;
+    }
+
+    if (num_needed == 0) {
+        net = std::nullopt;
+        return;
+    }
+
+    if (num_opened >= MAX_SENSITIVE_RELAY_CONNECTIONS) {
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Requested to open %d connection(s), but there are already %d "
+                      "such connections opened, will wait for some of them to be "
+                      "closed before opening a new one\n",
+                      num_needed,
+                      num_opened);
+        net = std::nullopt;
+        return;
+    }
+
+    if (!IsReachable(NET_ONION) && !IsReachable(NET_I2P)) {
+        net = std::nullopt;
+        return;
+    }
+
+    if (IsReachable(NET_ONION) && IsReachable(NET_I2P)) {
+        net = FastRandomContext{}.randbool() ? NET_ONION : NET_I2P;
+    } else if (IsReachable(NET_ONION)) {
+        net = NET_ONION;
+    } else {
+        net = NET_I2P;
+    }
+
+    LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                  BCLog::Level::Debug,
+                  "Requested to open %d connection(s), trying to open one\n",
+                  num_needed);
+}
+
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
@@ -1644,6 +1697,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         LogPrintf("Fixed seeds are disabled\n");
     }
 
+    // Sensitive relay connections are opened with priority over others, but only half
+    // of the time to avoid depriving other connection types if sensitive relay is
+    // needed but opening such connections is unsuccessful for some reason.
+    std::optional<Network> open_sensitive_relay_to;
+
     while (!interruptNet)
     {
         ProcessAddrFetch();
@@ -1655,6 +1713,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
         int outbound_privacy_network_peers = 0;
+        size_t num_sensitive_relay_opened = 0;
         std::set<std::vector<unsigned char>> outbound_ipv46_peer_netgroups;
 
         {
@@ -1673,7 +1732,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // peers from addrman.
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
+                        break;
                     case ConnectionType::SENSITIVE_RELAY:
+                        ++num_sensitive_relay_opened;
                         break;
                     case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
@@ -1695,7 +1756,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
         }
 
-        CSemaphoreGrant grant(*semOutbound);
+        MaybePickSensitiveRelayNetwork(open_sensitive_relay_to,
+                                       m_sensitive_relay_connections_to_open.load(),
+                                       num_sensitive_relay_opened);
+
+        // Don't wait for outbound connection slot to be available if we are going
+        // to open a connection of type SENSITIVE_RELAY.
+        CSemaphoreGrant grant;
+        if (!open_sensitive_relay_to.has_value()) {
+            CSemaphoreGrant{*semOutbound}.MoveTo(grant);
+        }
+
         if (interruptNet)
             return;
 
@@ -1750,18 +1821,19 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         bool anchor = false;
         bool fFeeler = false;
 
-        // Determine what type of connection to open. Opening
-        // BLOCK_RELAY connections to addresses from anchors.dat gets the highest
-        // priority. Then we open OUTBOUND_FULL_RELAY priority until we
-        // meet our full-relay capacity. Then we open BLOCK_RELAY connection
-        // until we hit our block-relay-only peer limit.
-        // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
-        // try opening an additional OUTBOUND_FULL_RELAY connection. If none of
-        // these conditions are met, check to see if it's time to try an extra
-        // block-relay-only peer (to confirm our tip is current, see below) or the next_feeler
-        // timer to decide if we should open a FEELER.
+        // Determine what type of connection to open, in order of priority:
+        // * SENSITIVE_RELAY if needed
+        // * BLOCK_RELAY connections to addresses from anchors.dat until we reach m_max_outbound_block_relay
+        // * OUTBOUND_FULL_RELAY until we reach m_max_outbound_full_relay
+        // * BLOCK_RELAY until we reach m_max_outbound_block_relay
+        // * OUTBOUND_FULL_RELAY if GetTryNewOutboundPeer() is true (a stale tip is detected)
+        // * BLOCK_RELAY if it's time to try an extra block-relay-only peer (to confirm our tip is current)
+        // * FEELER if it's time to try a feeler
+        // * else retry the loop (sleep a bit and start from the top of this list)
 
-        if (!m_anchors.empty() && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
+        if (open_sensitive_relay_to.has_value()) {
+            conn_type = ConnectionType::SENSITIVE_RELAY;
+        } else if (!m_anchors.empty() && nOutboundBlockRelay < m_max_outbound_block_relay) {
             conn_type = ConnectionType::BLOCK_RELAY;
             anchor = true;
         } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
@@ -1830,7 +1902,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             CAddress addr;
             NodeSeconds addr_last_try{0s};
 
-            if (fFeeler) {
+            if (open_sensitive_relay_to.has_value()) {
+                std::tie(addr, addr_last_try) = addrman.Select(/*new_only=*/false, open_sensitive_relay_to.value());
+            } else if (!fFeeler) {
+                std::tie(addr, addr_last_try) = addrman.Select();
+            } else {
                 // First, try to get a tried table collision address. This returns
                 // an empty (invalid) address if there are no collisions to try.
                 std::tie(addr, addr_last_try) = addrman.SelectTriedCollision();
@@ -1849,9 +1925,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // Select a new table address for our feeler instead.
                     std::tie(addr, addr_last_try) = addrman.Select(true);
                 }
-            } else {
-                // Not a feeler
-                std::tie(addr, addr_last_try) = addrman.Select();
             }
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
@@ -1903,7 +1976,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // Don't record addrman failure attempts when node is offline. This can be identified since all local
             // network connections (if any) belong in the same netgroup, and the size of `outbound_ipv46_peer_netgroups` would only be 1.
             const bool count_failures{((int)outbound_ipv46_peer_netgroups.size() + outbound_privacy_network_peers) >= std::min(nMaxConnections - 1, 2)};
-            OpenNetworkConnection(addrConnect, count_failures, &grant, /*strDest=*/nullptr, conn_type);
+            OpenNetworkConnection(addrConnect,
+                                  count_failures,
+                                  open_sensitive_relay_to.has_value() ? nullptr : &grant,
+                                  /*strDest=*/nullptr,
+                                  conn_type);
         }
     }
 }
@@ -2033,11 +2110,32 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
 
+    if (conn_type == ConnectionType::SENSITIVE_RELAY) {
+        const size_t before_sub{m_sensitive_relay_connections_to_open.fetch_sub(1)};
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Connected to %s, decremented the number of required connections from %d to %d\n",
+                      addrConnect.ToStringAddrPort(),
+                      before_sub,
+                      before_sub - 1);
+    }
+
     m_msgproc->InitializeNode(*pnode, nLocalServices);
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
     }
+}
+
+void CConnman::ScheduleSensitiveRelayConnections(size_t num_new)
+{
+    const size_t before_add{m_sensitive_relay_connections_to_open.fetch_add(num_new)};
+    LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                  BCLog::Level::Debug,
+                  "Request for %d new connections, incremented the number of connections to open from %d to %d\n",
+                  num_new,
+                  before_add,
+                  before_add + num_new);
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;

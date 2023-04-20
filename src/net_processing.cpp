@@ -18,6 +18,7 @@
 #include <index/blockfilterindex.h>
 #include <kernel/mempool_entry.h>
 #include <merkleblock.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
@@ -178,6 +179,9 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+
+/** Relay a local transaction to this many peers per one broadcast attempt (if sensitive relay is used). */
+static constexpr size_t SENSITIVE_RELAY_NUM_BROADCAST_PER_TX{5};
 
 // Internal stuff
 namespace {
@@ -517,6 +521,7 @@ public:
     bool IgnoresIncomingTxs() override { return m_opts.ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void ScheduleLocalTxForRelay(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestHeight(int height) override { m_best_height = height; };
     void UnitTestMisbehaving(NodeId peer_id, int howmuch) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), howmuch, ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
@@ -2087,6 +2092,20 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
             tx_relay->m_tx_inventory_to_send.insert(hash);
         }
     };
+}
+
+void PeerManagerImpl::ScheduleLocalTxForRelay(const uint256& txid, const uint256& wtxid)
+{
+    if (m_opts.sensitiverelayowntx) {
+        LogPrintLevel(BCLog::SENSITIVE_RELAY, /* Continued */
+                      BCLog::Level::Debug,
+                      "Requesting %d new connections due to txid=%s\n",
+                      SENSITIVE_RELAY_NUM_BROADCAST_PER_TX,
+                      txid.ToString());
+        m_connman.ScheduleSensitiveRelayConnections(SENSITIVE_RELAY_NUM_BROADCAST_PER_TX);
+    } else {
+        RelayTransaction(txid, wtxid);
+    }
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,
