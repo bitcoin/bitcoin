@@ -15,6 +15,7 @@ TEST_UTIL_H = \
   test/util/logging.h \
   test/util/mining.h \
   test/util/net.h \
+  test/util/poolresourcetester.h \
   test/util/random.h \
   test/util/script.h \
   test/util/setup_common.h \

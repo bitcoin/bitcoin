@@ -115,7 +115,8 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 random_mutable_transaction = *opt_mutable_transaction;
             },
             [&] {
-                CCoinsMap coins_map;
+                CCoinsMapMemoryResource resource;
+                CCoinsMap coins_map{0, SaltedOutpointHasher{/*deterministic=*/true}, CCoinsMap::key_equal{}, &resource};
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     CCoinsCacheEntry coins_cache_entry;
                     coins_cache_entry.flags = fuzzed_data_provider.ConsumeIntegral<unsigned char>();

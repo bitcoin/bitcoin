@@ -34,7 +34,7 @@ size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView* baseIn, bool deterministic) :
     CCoinsViewBacked(baseIn), m_deterministic(deterministic),
-    cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic))
+    cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
 {}
 
 size_t CCoinsViewCache::DynamicMemoryUsage() const {
@@ -253,9 +253,12 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
 
 bool CCoinsViewCache::Flush() {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/true);
-    if (fOk && !cacheCoins.empty()) {
-        /* BatchWrite must erase all cacheCoins elements when erase=true. */
-        throw std::logic_error("Not all cached coins were erased");
+    if (fOk) {
+        if (!cacheCoins.empty()) {
+            /* BatchWrite must erase all cacheCoins elements when erase=true. */
+            throw std::logic_error("Not all cached coins were erased");
+        }
+        ReallocateCache();
     }
     cachedCoinsUsage = 0;
     return fOk;
@@ -314,7 +317,9 @@ void CCoinsViewCache::ReallocateCache()
     // Cache should be empty when we're calling this.
     assert(cacheCoins.size() == 0);
     cacheCoins.~CCoinsMap();
-    ::new (&cacheCoins) CCoinsMap(0, SaltedOutpointHasher(/*deterministic=*/m_deterministic));
+    m_cache_coins_memory_resource.~CCoinsMapMemoryResource();
+    ::new (&m_cache_coins_memory_resource) CCoinsMapMemoryResource{};
+    ::new (&cacheCoins) CCoinsMap{0, SaltedOutpointHasher{/*deterministic=*/m_deterministic}, CCoinsMap::key_equal{}, &m_cache_coins_memory_resource};
 }
 
 void CCoinsViewCache::SanityCheck() const
