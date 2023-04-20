@@ -11,6 +11,7 @@
 #include <memusage.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
+#include <support/allocators/pool.h>
 #include <uint256.h>
 #include <util/hasher.h>
 
@@ -131,7 +132,23 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
-typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+/**
+ * PoolAllocator's MAX_BLOCK_SIZE_BYTES parameter here uses sizeof the data, and adds the size
+ * of 4 pointers. We do not know the exact node size used in the std::unordered_node implementation
+ * because it is implementation defined. Most implementations have an overhead of 1 or 2 pointers,
+ * so nodes can be connected in a linked list, and in some cases the hash value is stored as well.
+ * Using an additional sizeof(void*)*4 for MAX_BLOCK_SIZE_BYTES should thus be sufficient so that
+ * all implementations can allocate the nodes from the PoolAllocator.
+ */
+using CCoinsMap = std::unordered_map<COutPoint,
+                                     CCoinsCacheEntry,
+                                     SaltedOutpointHasher,
+                                     std::equal_to<COutPoint>,
+                                     PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
+                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4,
+                                                   alignof(void*)>>;
+
+using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
@@ -220,6 +237,7 @@ protected:
      * declared as "const".
      */
     mutable uint256 hashBlock;
+    mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
