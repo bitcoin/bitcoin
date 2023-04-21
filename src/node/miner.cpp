@@ -35,7 +35,7 @@
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
 #include <validationinterface.h>
-
+extern bool fNEVMConnection;
 namespace node {
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {

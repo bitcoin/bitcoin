@@ -95,10 +95,6 @@ pid_t gethpid = -1;
 #ifdef WIN32
 HANDLE hProcessGeth = NULL;
 #endif
-uint32_t nLastKnownHeightOnStart = 0;
-bool fNEVMConnection = false;
-bool fRegTest = false;
-bool fSigNet = false;
 RecursiveMutex cs_geth;
 NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;

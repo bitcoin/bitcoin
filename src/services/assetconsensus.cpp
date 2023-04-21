@@ -23,6 +23,10 @@ std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CNEVMDataDB> pnevmdatadb;
 RecursiveMutex cs_setethstatus;
+uint32_t nLastKnownHeightOnStart = 0;
+bool fNEVMConnection = false;
+bool fRegTest = false;
+bool fSigNet = false;
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const uint32_t& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET MINT %d %s %s bSanityCheck=%d\n", nHeight,
