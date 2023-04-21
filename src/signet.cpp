@@ -13,15 +13,16 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <hash.h>
+#include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <span.h>
 #include <script/interpreter.h>
 #include <script/standard.h>
+#include <span.h>
 #include <streams.h>
+#include <uint256.h>
 #include <util/strencodings.h>
 #include <util/system.h>
-#include <uint256.h>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 

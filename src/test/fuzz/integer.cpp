@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <common/args.h>
 #include <compressor.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>

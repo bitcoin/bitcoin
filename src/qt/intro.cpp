@@ -15,9 +15,9 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
+#include <common/args.h>
 #include <interfaces/node.h>
 #include <util/fs_helpers.h>
-#include <util/system.h>
 #include <validation.h>
 
 #include <QFileDialog>

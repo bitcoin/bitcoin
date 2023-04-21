@@ -4,7 +4,7 @@
 
 #include <node/blockmanager_args.h>
 
-#include <util/system.h>
+#include <common/args.h>
 #include <validation.h>
 
 namespace node {

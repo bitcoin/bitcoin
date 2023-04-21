@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <sync.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
@@ -9,7 +10,6 @@
 #include <univalue.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <array>
 #include <optional>

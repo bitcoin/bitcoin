@@ -4,10 +4,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/compat.h>
+#include <logging.h>
 #include <util/fs.h>
+#include <util/time.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
+#include <sync.h>
 #include <util/check.h>
 #include <util/fs_helpers.h>
 #include <util/strencodings.h>
