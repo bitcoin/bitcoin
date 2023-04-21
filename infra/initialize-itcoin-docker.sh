@@ -22,7 +22,7 @@
 #
 #     TIME_SHIFT: how many minutes in the past should the first block date be.
 #                 If you want to use the current time, set this to 0.
-#                 Default: 120 minutes.
+#                 Default: 10 minutes.
 #
 # Author: muxator <antonio.muci@bancaditalia.it>
 
@@ -154,7 +154,7 @@ errecho "Address ${ADDR} generated"
 # TIME_SHIFT command line parameter (or 120 if no value was given).
 errecho "Mine the first block"
 
-TIME_SHIFT="${1:-120}"
+TIME_SHIFT="${1:-10}"
 BLOCK_1_DATE=$(date --date "-${TIME_SHIFT} min" '+%s')
 
 "${MYDIR}/run-docker-miner.sh" "${ADDR}" --set-block-time "${BLOCK_1_DATE}"
