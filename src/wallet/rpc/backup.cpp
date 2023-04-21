@@ -1937,7 +1937,7 @@ RPCHelpMan restorewallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
+    if (IsDeprecatedRPCEnabled("walletwarningfield")) {
         obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
     }
     PushWarnings(warnings, obj);

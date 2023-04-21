@@ -253,7 +253,7 @@ static RPCHelpMan loadwallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
+    if (IsDeprecatedRPCEnabled("walletwarningfield")) {
         obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
     }
     PushWarnings(warnings, obj);
@@ -425,7 +425,7 @@ static RPCHelpMan createwallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
+    if (IsDeprecatedRPCEnabled("walletwarningfield")) {
         obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
     }
     PushWarnings(warnings, obj);
@@ -488,7 +488,7 @@ static RPCHelpMan unloadwallet()
         }
     }
     UniValue result(UniValue::VOBJ);
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
+    if (IsDeprecatedRPCEnabled("walletwarningfield")) {
         result.pushKV("warning", Join(warnings, Untranslated("\n")).original);
     }
     PushWarnings(warnings, result);
