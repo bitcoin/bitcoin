@@ -22,7 +22,6 @@
 
 #include <cxxtimer.hpp>
 #include <net.h>
-extern bool fRegTest;
 namespace llmq
 {
 
