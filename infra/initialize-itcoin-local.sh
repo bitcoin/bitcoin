@@ -101,7 +101,7 @@ errecho "Wallet itcoin_signer created"
 # Now we need to import the private descriptors previously created into
 # itcoin_signer
 errecho "Import private descriptors into itcoin_signer"
-"${BITCOIN_CLI}" -datadir="${DATADIR}" importdescriptors "${DESCRIPTORS}"
+"${BITCOIN_CLI}" -datadir="${DATADIR}" importdescriptors "${DESCRIPTORS}" >/dev/null
 errecho "Private descriptors imported into itcoin_signer"
 
 # Generate a bech32m address we'll send bitcoins to.
