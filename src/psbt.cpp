@@ -442,6 +442,38 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     return sig_complete;
 }
 
+void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, const int& sighash_type)
+{
+    // Only drop non_witness_utxos if sighash_type != SIGHASH_ANYONECANPAY
+    if ((sighash_type & 0x80) != SIGHASH_ANYONECANPAY) {
+        // Figure out if any non_witness_utxos should be dropped
+        std::vector<unsigned int> to_drop;
+        for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
+            const auto& input = psbtx.inputs.at(i);
+            int wit_ver;
+            std::vector<unsigned char> wit_prog;
+            if (input.witness_utxo.IsNull() || !input.witness_utxo.scriptPubKey.IsWitnessProgram(wit_ver, wit_prog)) {
+                // There's a non-segwit input or Segwit v0, so we cannot drop any witness_utxos
+                to_drop.clear();
+                break;
+            }
+            if (wit_ver == 0) {
+                // Segwit v0, so we cannot drop any non_witness_utxos
+                to_drop.clear();
+                break;
+            }
+            if (input.non_witness_utxo) {
+                to_drop.push_back(i);
+            }
+        }
+
+        // Drop the non_witness_utxos that we can drop
+        for (unsigned int i : to_drop) {
+            psbtx.inputs.at(i).non_witness_utxo = nullptr;
+        }
+    }
+}
+
 bool FinalizePSBT(PartiallySignedTransaction& psbtx)
 {
     // Finalize input signatures -- in case we have partial signatures that add up to a complete
