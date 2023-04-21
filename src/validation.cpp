@@ -12,6 +12,7 @@
 #include <auxpow.h>
 #include <chain.h>
 #include <checkqueue.h>
+#include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -94,6 +95,10 @@ pid_t gethpid = -1;
 #ifdef WIN32
 HANDLE hProcessGeth = NULL;
 #endif
+uint32_t nLastKnownHeightOnStart = 0;
+bool fNEVMConnection = false;
+bool fRegTest = false;
+bool fSigNet = false;
 RecursiveMutex cs_geth;
 NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
@@ -6766,6 +6771,19 @@ fs::path FindExecPath(std::string &binArchitectureTag) {
     #endif
     return fpathDefault;
 }
+std::string GetGethFilename(){
+    // For Windows:
+    #ifdef WIN32
+       return "sysgeth.exe";
+    #endif    
+    #ifdef MAC_OSX
+        // Mac
+        return "sysgeth";
+    #else
+        // Linux
+        return "sysgeth";
+    #endif
+}
 bool StartGethNode()
 {
     LOCK(cs_geth);
@@ -7021,8 +7039,6 @@ bool DoGethMaintenance() {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
             return false;
         }
-        // set flag that geth is resyncing
-        fGethSynced = false;
         LogPrintf("%s: Done, waiting for resync...\n", __func__);
     }
     return true;

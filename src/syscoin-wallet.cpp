@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <common/args.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <interfaces/init.h>
@@ -99,7 +100,7 @@ MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
 #ifdef WIN32
-    util::WinCmdLineArgs winArgs;
+    common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
 

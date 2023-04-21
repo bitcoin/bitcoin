@@ -32,6 +32,7 @@
 #include <wallet/rpc/spend.h>
 #include <wallet/rpc/wallet.h>
 #include <llmq/quorums_utils.h>
+#include <common/args.h>
 using namespace wallet;
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {

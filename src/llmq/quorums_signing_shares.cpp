@@ -18,7 +18,6 @@
 #include <cxxtimer.hpp>
 #include <banman.h>
 #include <util/thread.h>
-#include <util/system.h>
 namespace llmq
 {
 

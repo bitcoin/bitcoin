@@ -639,6 +639,7 @@ private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
     CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
-
+extern bool fMasternodeMode;
+extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE; // keep them for a week
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 #endif // SYSCOIN_EVO_DETERMINISTICMNS_H

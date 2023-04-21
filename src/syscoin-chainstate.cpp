@@ -17,6 +17,7 @@
 #include <kernel/validation_cache_sizes.h>
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <node/blockstorage.h>
@@ -24,7 +25,6 @@
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <validation.h>
 #include <validationinterface.h>

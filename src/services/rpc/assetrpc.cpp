@@ -22,6 +22,7 @@
 #include <interfaces/node.h>
 #include <llmq/quorums_chainlocks.h>
 #include <key_io.h>
+#include <common/args.h>
 using node::ReadBlockFromDisk;
 using node::GetTransaction;
 extern RecursiveMutex cs_setethstatus;

@@ -3,7 +3,6 @@
 
 #include <primitives/transaction.h>
 #include <sync.h>
-#include <util/system.h>
 
 #include <evo/deterministicmns.h>
 

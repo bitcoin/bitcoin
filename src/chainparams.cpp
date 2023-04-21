@@ -6,15 +6,15 @@
 #include <chainparams.h>
 
 #include <chainparamsseeds.h>
+#include <common/args.h>
 #include <consensus/merkle.h>
 #include <deploymentinfo.h>
 #include <hash.h> // for signet block challenge hash
+#include <logging.h>
 #include <script/interpreter.h>
 #include <util/string.h>
-#include <util/system.h>
 
 #include <assert.h>
-
 void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
 {
     if (args.IsArgSet("-signetseednode")) {

@@ -6,10 +6,11 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/moneystr.h>
+#include <util/system.h>
 
 #include <numeric>
 #include <optional>

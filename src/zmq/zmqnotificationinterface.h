@@ -56,7 +56,8 @@ private:
     void *pcontextsub{nullptr};
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
-
+// SYSCOIN
+extern std::string fNEVMSub;
 extern CZMQNotificationInterface* g_zmq_notification_interface;
 
 #endif // SYSCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H

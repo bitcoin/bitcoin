@@ -10,6 +10,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <primitives/transaction.h>
+#include <common/args.h>
 #include <consensus/merkle.h>
 #include <key.h>
 #include <merkleblock.h>
@@ -25,7 +26,6 @@
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
-#include <util/system.h>
 #include <version.h>
 
 #include <exception>

@@ -19,7 +19,8 @@
 #include <timedata.h>
 #include <algorithm>
 #include <unordered_set>
-#include <util/system.h>
+#include <common/args.h>
+#include <evo/deterministicmns.h>
 namespace llmq
 {
 

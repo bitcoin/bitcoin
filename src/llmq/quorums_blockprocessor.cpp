@@ -22,7 +22,6 @@
 #include <validation.h>
 #include <saltedhasher.h>
 #include <sync.h>
-#include <util/system.h>
 #include <map>
 namespace llmq
 {

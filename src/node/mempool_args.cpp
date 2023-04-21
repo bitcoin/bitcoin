@@ -7,6 +7,7 @@
 #include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
+#include <common/args.h>
 #include <consensus/amount.h>
 #include <kernel/chainparams.h>
 #include <logging.h>
@@ -16,7 +17,6 @@
 #include <tinyformat.h>
 #include <util/error.h>
 #include <util/moneystr.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 #include <chrono>

@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/args.h>
 #include <compat/compat.h>
 #include <cstdint>
 #include <net.h>
@@ -19,7 +20,6 @@
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <validation.h>
 #include <version.h>
 

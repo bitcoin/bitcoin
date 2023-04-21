@@ -43,10 +43,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    // SYSCOIN
-    if(fAssetIndex) {
-        LogPrintf("Asset Index enabled, allowing for an asset aware spending policy\n");
-    }
     LogPrintf("Creating LLMQ and asset databases...\n");
     llmq::DestroyLLMQSystem();
     evoDb.reset();

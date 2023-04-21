@@ -12,7 +12,6 @@
 #include <evo/deterministicmns.h>
 #include <messagesigner.h>
 #include <net.h>
-#include <util/system.h>
 #include <validation.h>
 #include <node/transaction.h>
 #include <string>

@@ -17,7 +17,6 @@
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <spork.h>
-#include <util/system.h>
 #include <protocol.h>
 #include <evo/deterministicmns.h>
 #include <validationinterface.h>

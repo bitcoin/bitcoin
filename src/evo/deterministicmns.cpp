@@ -18,7 +18,9 @@
 #include <llmq/quorums_utils.h>
 #include <univalue.h>
 #include <shutdown.h>
-#include <util/system.h>
+#include <common/args.h>
+bool fMasternodeMode = false;
+int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
 static const std::string DB_LIST_DIFF = "dmn_D";
 

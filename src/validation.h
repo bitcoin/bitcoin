@@ -98,7 +98,11 @@ extern std::condition_variable g_best_block_cv;
 /** Used to notify getblocktemplate RPC of new tips. */
 extern uint256 g_best_block;
 // SYSCOIN
+extern bool fRegTest;
+extern bool fSigNet;
+extern bool fNEVMConnection;
 extern std::atomic_bool fReindexGeth;
+extern uint32_t nLastKnownHeightOnStart;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 
 /** Documentation for argument 'checklevel'. */

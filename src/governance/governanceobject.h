@@ -9,7 +9,6 @@
 #include <governance/governanceexceptions.h>
 #include <governance/governancevote.h>
 #include <governance/governancevotedb.h>
-#include <util/system.h>
 #include <threadsafety.h>
 
 #include <univalue.h>

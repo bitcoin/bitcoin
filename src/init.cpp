@@ -18,6 +18,7 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <hash.h>
@@ -1241,7 +1242,11 @@ bool AppInitInterfaces(NodeContext& node)
     node.chain = node.init->makeChain();
     return true;
 }
-
+// SYSCOIN
+std::string GetDefaultPubNEVM() {
+    std::string defaultPubNevm = (!fRegTest && !fSigNet)? "tcp://127.0.0.1:1111": "";
+    return defaultPubNevm;
+}
 bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const ArgsManager& args = *Assert(node.args);
@@ -1712,9 +1717,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                      chainman, *node.mempool, ignores_incoming_txs);
         
         // SYSCOIN
-        fAssetIndex = args.GetBoolArg("-assetindex", false);
         node::ChainstateLoadOptions options;
-        options.fAssetIndex = fAssetIndex;
         options.fReindexGeth = fReindexGeth;
         options.connman = Assert(node.connman.get());
         options.banman = Assert(node.banman.get());
@@ -1977,7 +1980,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         block_notify_genesis_wait_connection.disconnect();
     }
     // if regtest then make sure geth is shown as synced as well
-    fGethSynced = fRegTest;
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must have an NEVM connection on a masternode. You may need to reindex to ensure you get an NEVM connection properly."));
     }

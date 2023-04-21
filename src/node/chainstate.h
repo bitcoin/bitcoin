@@ -42,7 +42,6 @@ struct ChainstateLoadOptions {
     CConnman* connman{nullptr};
     BanMan* banman{nullptr};
     PeerManager* peerman{nullptr};
-    bool fAssetIndex{false};
     bool fReindexGeth{false};
 };
 

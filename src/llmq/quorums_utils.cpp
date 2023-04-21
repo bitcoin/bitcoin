@@ -17,7 +17,7 @@
 #include <versionbits.h>
 #include <masternode/masternodemeta.h>
 #include <util/ranges.h>
-#include <util/system.h>
+#include <common/args.h>
 namespace llmq
 {
 bool CLLMQUtils::IsV19Active(const int nHeight)

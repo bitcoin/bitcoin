@@ -6,6 +6,7 @@
 #include <wallet/rpc/util.h>
 #include <wallet/spend.h>
 #include <wallet/rpc/wallet.h>
+#include <common/args.h>
 using namespace wallet;
 static RPCHelpMan masternode_outputs()
 {

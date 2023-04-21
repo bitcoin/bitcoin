@@ -5,6 +5,7 @@
 #include <arith_uint256.h>
 // SYSCOIN
 #include <primitives/transaction.h>
+#include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>

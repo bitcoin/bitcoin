@@ -16,8 +16,8 @@
 #include <validation.h>
 #include <scheduler.h>
 #include <util/thread.h>
-#include <util/system.h>
 #include <services/assetconsensus.h>
+#include <evo/deterministicmns.h>
 namespace llmq
 {
 

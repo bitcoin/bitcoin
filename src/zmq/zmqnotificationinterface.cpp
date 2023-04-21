@@ -4,10 +4,10 @@
 
 #include <zmq/zmqnotificationinterface.h>
 
+#include <common/args.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <util/system.h>
 #include <validationinterface.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqpublishnotifier.h>
@@ -20,7 +20,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-
+// SYSCOIN
+std::string fNEVMSub;
 CZMQNotificationInterface::CZMQNotificationInterface()
 {
 }

@@ -10,7 +10,6 @@
 #include <nevm/sha3.h>
 #include <services/asset.h>
 #include <script/standard.h>
-#include <util/system.h>
 #include <messagesigner.h>
 #include <util/rbf.h>
 #include <undo.h>

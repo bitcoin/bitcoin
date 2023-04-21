@@ -8,7 +8,6 @@
 #include <masternode/masternodesync.h>
 #include <messagesigner.h>
 #include <net.h>
-#include <util/system.h>
 #include <timedata.h>
 #include <evo/deterministicmns.h>
 #include <net_processing.h>
