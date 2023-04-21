@@ -308,7 +308,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
     }
 
     if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
-    const NodeContext& node = EnsureAnyNodeContext(context);
+    const node::NodeContext& node = EnsureAnyNodeContext(context);
 
     // If we can't find the corresponding full transaction for all of our inputs,
     // this will be used to find just the utxos for the segwit inputs for which
