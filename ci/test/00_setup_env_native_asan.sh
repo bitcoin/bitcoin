@@ -8,13 +8,8 @@ export LC_ALL=C.UTF-8
 
 # Only install BCC tracing packages in Cirrus CI.
 if [[ "${CIRRUS_CI}" == "true" ]]; then
-  # We install an up-to-date 'bpfcc-tools' package from an untrusted PPA.
-  # This can be dropped with the next Ubuntu or Debian release that includes up-to-date packages.
-  # See the if-then in ci/test/04_install.sh too.
-  export ADD_UNTRUSTED_BPFCC_PPA=true
   export BPFCC_PACKAGE="bpfcc-tools"
 else
-  export ADD_UNTRUSTED_BPFCC_PPA=false
   export BPFCC_PACKAGE=""
 fi
 
