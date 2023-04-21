@@ -5,7 +5,7 @@
 # entire repo as docker context during build; if it lived elsewhere, it wouldn't be
 # able to make back-references to pull in the install scripts. So here it lives.
 
-FROM python:3.7-buster
+FROM python:3.8-buster
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
