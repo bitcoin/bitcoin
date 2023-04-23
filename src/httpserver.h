@@ -14,6 +14,7 @@ static const int DEFAULT_HTTP_WORKQUEUE=16;
 static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
 struct evhttp_request;
+struct evhttp_uri;
 struct event_base;
 class CService;
 class HTTPRequest;
@@ -57,6 +58,10 @@ class HTTPRequest
 {
 private:
     struct evhttp_request* req;
+    /// The URI, as returned by `evhttp_request_get_uri()`. Will never be `nullptr`.
+    const char* const m_uri;
+    /// The parsed URI, as returned by `evhttp_uri_parse()`. Will never be `nullptr`.
+    evhttp_uri* const m_uri_parsed;
     bool replySent;
 
 public:
@@ -71,9 +76,9 @@ public:
         PUT
     };
 
-    /** Get requested URI.
+    /** Get requested URI. Will always return non-nullptr.
      */
-    std::string GetURI() const;
+    const char* GetURI() const;
 
     /** Get CService (address:ip) for the origin of the http request.
      */
@@ -126,8 +131,8 @@ public:
     void WriteReply(int nStatus, const std::string& strReply = "");
 };
 
-/** Get the query parameter value from request uri for a specified key, or std::nullopt if the key
- * is not found.
+/** Get the query parameter value from a evhttp_uri (parsed) object for a specified key, or std::nullopt
+ * if the key is not found.
  *
  * If the query string contains duplicate keys, the first value is returned. Many web frameworks
  * would instead parse this as an array of values, but this is not (yet) implemented as it is
@@ -135,10 +140,10 @@ public:
  *
  * Helper function for HTTPRequest::GetQueryParameter.
  *
- * @param[in] uri is the entire request uri
+ * @param[in] uri_parsed is the uri parsed with libevent's evhttp_uri_parse
  * @param[in] key represents the query parameter of which the value is returned
  */
-std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::string& key);
+std::optional<std::string> GetQueryParameterFromUri(const evhttp_uri& uri_parsed, const std::string& key);
 
 /** Event handler closure.
  */

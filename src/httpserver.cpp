@@ -17,6 +17,7 @@
 #include <rpc/protocol.h> // For HTTP status codes
 #include <shutdown.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>
 #include <util/threadnames.h>
@@ -236,7 +237,15 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             }
         }
     }
-    std::unique_ptr<HTTPRequest> hreq(new HTTPRequest(req));
+
+    std::unique_ptr<HTTPRequest> hreq;
+
+    try {
+        hreq = std::make_unique<HTTPRequest>(req);
+    } catch (const std::runtime_error& e) {
+        LogPrint(BCLog::HTTP, "%s\n", e.what());
+        return;
+    }
 
     // Early address-based allow check
     if (!ClientAllowed(hreq->GetPeer())) {
@@ -254,11 +263,11 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         return;
     }
 
+    const std::string strURI{hreq->GetURI()};
     LogPrint(BCLog::HTTP, "Received a %s request for %s from %s\n",
-             RequestMethodString(hreq->GetRequestMethod()), SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
+             RequestMethodString(hreq->GetRequestMethod()), SanitizeString(strURI, SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
 
     // Find registered handler for prefix
-    std::string strURI = hreq->GetURI();
     std::string path;
     LOCK(g_httppathhandlers_mutex);
     std::vector<HTTPPathHandler>::const_iterator i = pathHandlers.begin();
@@ -536,18 +545,34 @@ void HTTPEvent::trigger(struct timeval* tv)
     else
         evtimer_add(ev, tv); // trigger after timeval passed
 }
-HTTPRequest::HTTPRequest(struct evhttp_request* _req, bool _replySent) : req(_req), replySent(_replySent)
+HTTPRequest::HTTPRequest(struct evhttp_request* _req, bool _replySent) :
+        req{_req},
+        m_uri{req != nullptr ? evhttp_request_get_uri(req) : nullptr},
+        m_uri_parsed{m_uri != nullptr && m_uri[0] != '\0' ? evhttp_uri_parse(m_uri) : nullptr},
+        replySent{_replySent}
 {
+    // This is for backwards compatibility, for now, only fuzz test
+    // httpserver_tests creates an httprequest instance with replySent set on true
+    if (replySent && req != nullptr) return;
+
+    if (m_uri_parsed == nullptr) {
+        const char* err{"URI parsing failed, it likely contained RFC 3986 invalid characters"};
+        const std::string peerAddress{GetPeer().ToStringAddr()};
+        WriteReply(HTTP_BAD_REQUEST, err);
+        throw std::runtime_error(
+            strprintf("HTTP request from %s rejected: %s", peerAddress, err));
+    }
 }
 
 HTTPRequest::~HTTPRequest()
 {
+    // evhttpd cleans up the request, as long as a reply was sent.
     if (!replySent) {
         // Keep track of whether reply was sent to avoid request leaks
         LogPrintf("%s: Unhandled request\n", __func__);
         WriteReply(HTTP_INTERNAL_SERVER_ERROR, "Unhandled request");
     }
-    // evhttpd cleans up the request, as long as a reply was sent.
+    evhttp_uri_free(m_uri_parsed);
 }
 
 std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string& hdr) const
@@ -643,9 +668,9 @@ CService HTTPRequest::GetPeer() const
     return peer;
 }
 
-std::string HTTPRequest::GetURI() const
+const char* HTTPRequest::GetURI() const
 {
-    return evhttp_request_get_uri(req);
+    return m_uri;
 }
 
 HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
@@ -666,18 +691,12 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
 
 std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string& key) const
 {
-    const char* uri{evhttp_request_get_uri(req)};
-
-    return GetQueryParameterFromUri(uri, key);
+    return GetQueryParameterFromUri(*m_uri_parsed, key);
 }
 
-std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::string& key)
+std::optional<std::string> GetQueryParameterFromUri(const evhttp_uri& uri_parsed, const std::string& key)
 {
-    evhttp_uri* uri_parsed{evhttp_uri_parse(uri)};
-    if (!uri_parsed) {
-        throw std::runtime_error("URI parsing failed, it likely contained RFC 3986 invalid characters");
-    }
-    const char* query{evhttp_uri_get_query(uri_parsed)};
+    const char* query{evhttp_uri_get_query(&uri_parsed)};
     std::optional<std::string> result;
 
     if (query) {
@@ -693,7 +712,8 @@ std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::
         }
         evhttp_clear_headers(&params_q);
     }
-    evhttp_uri_free(uri_parsed);
+
+
 
     return result;
 }
