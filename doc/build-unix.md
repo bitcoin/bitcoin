@@ -152,7 +152,7 @@ The standard ulimit restrictions in OpenBSD are very strict:
 
     data(kbytes)         1572864
 
-This, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
+This is, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
 (see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
 If your user is in the `staff` group the limit can be raised with:
 
