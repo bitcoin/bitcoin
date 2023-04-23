@@ -275,14 +275,6 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
         <translation type="unfinished">Ciddi xəta baş verdi. Ayarlar faylının yazılabilən olduğunu yoxlayın və ya -nonsettings (ayarlarsız) parametri ilə işə salın.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Xəta: Göstərilmiş verilənlər qovluğu "%1" mövcud deyil</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Xəta: Tənzimləmə faylını təhlil etmək mümkün deyil: %1</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">XƏta: %1</translation>
     </message>
@@ -335,41 +327,6 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">Ayarlar faylı oxuna bilmədi</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">Ayarlar faylı yazıla bilmədi</translation>
-    </message>
-    <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation type="unfinished">Ödəniş təxmin edilmədi. Fallbackfee sıradan çıxarıldı. Bir neçə blok gözləyin və ya Fallbackfee-ni fəallaşdırın.</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Xəbərdarlıq: Gizli açarlar, sıradan çıxarılmış gizli açarlar ilə {%s} pulqabısında aşkarlandı.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">'%s' verilənlər kateqoriyasına yazıla bilmir; icazələri yoxlayın.</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Yükləmə tamamlandı</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Yetərsiz balans</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">Mənbə kodu %s-dən əldə edilə bilər.</translation>
     </message>
     </context>
 <context>
@@ -548,16 +505,12 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
         <translation type="unfinished">Bloklar diskdə icra olunur...</translation>
     </message>
     <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Bloklar diskdə təkrar indekslənir...</translation>
-    </message>
-    <message>
         <source>Connecting to peers…</source>
         <translation type="unfinished">İştirakçılara qoşulur...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Ödəmə tələbi (QR-kodlar və Bitcoin URI-ləri yaradılır):</translation>
+        <translation type="unfinished">Ödəmə tələbi (QR-kodlar və Bitcoin URI-ləri yaradılır)^</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -565,7 +518,7 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">İstifadə edilmiş qəbuletmə ünvanlarının və etiketlərin siyahısını göstərmək</translation>
+        <translation type="unfinished">İstifadə edilmiş </translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -580,7 +533,7 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 geridə qalır</translation>
+        <translation type="unfinished">%1 geridə qaldı</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -1268,6 +1221,10 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
         <source>version</source>
         <translation type="unfinished">versiya</translation>
     </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">Haqqında %1</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -1666,6 +1623,37 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     <message>
         <source>Cancel</source>
         <translation type="unfinished">Ləğv et</translation>
+    </message>
+</context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Xəbərdarlıq: Gizli açarlar, sıradan çıxarılmış gizli açarlar ilə {%s} pulqabısında aşkarlandı.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">'%s' verilənlər kateqoriyasına yazıla bilmir; icazələri yoxlayın.</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Yükləmə tamamlandı</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Yetərsiz balans</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Mənbə kodu %s-dən əldə edilə bilər.</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Ayarlar faylı oxuna bilmədi</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Ayarlar faylı yazıla bilmədi</translation>
     </message>
 </context>
 </TS>

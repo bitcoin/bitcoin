@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen.</translation>
+        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">afer</translation>
+        <translation type="unfinished">afër</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -276,13 +276,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Fonde te pamjaftueshme</translation>
     </message>
     </context>
 <context>
@@ -844,6 +837,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Fonde te pamjaftueshme</translation>
     </message>
     </context>
 </TS>

@@ -34,12 +34,28 @@
         <translation type="unfinished">&amp;Futa</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">Chagua anwani ya kutuma sarafu</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Chagua anwani ya kupokea sarafu</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation type="unfinished">Kutuma anuani</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
         <translation type="unfinished">Kupokea anuani</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Hizi ndizo anwani zako za kutuma malipo ya sarafu ya Bitcoin. Hakikisha kila wakati kiwango na anwani ya kupokea kabla ya kutuma sarafu.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">Nakili &amp;anwani</translation>
     </message>
     </context>
 <context>
@@ -113,6 +129,28 @@
     </message>
     </context>
 <context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Wingi</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation type="unfinished">ndio</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation type="unfinished">La</translation>
+    </message>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation type="unfinished">Jina</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message numerus="yes">
         <source>%n GB of space available</source>
@@ -154,6 +192,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Wingi</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">

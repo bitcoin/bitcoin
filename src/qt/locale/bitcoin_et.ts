@@ -321,69 +321,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">See on test-versioon - kasutamine omal riisikol - ära kasuta mining'uks ega kaupmeeste programmides</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">Tuvastati vigane bloki andmebaas</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Kas soovid bloki andmebaasi taastada?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Laetud</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Tõrge bloki andmebaasi käivitamisel</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Tõrge rahakoti keskkonna %s käivitamisel!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">Tõrge bloki baasi lugemisel</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">Tõrge bloki andmebaasi avamisel</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Pordi kuulamine nurjus. Soovikorral kasuta -listen=0.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Liiga suur summa</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Tehingu allkirjastamine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">Tehingu summa on tasu maksmiseks liiga väikene</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">Tehingu summa liiga väikene</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Tehing liiga suur</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Kirjeldatud tundmatu võrgustik -onlynet'is: '%s'</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -1013,10 +950,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
-    <message>
-        <source>Dialog</source>
-        <translation type="unfinished">Dialoog</translation>
-    </message>
     <message>
         <source>or</source>
         <translation type="unfinished">või</translation>
@@ -1920,6 +1853,69 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Backup Successful</source>
         <translation type="unfinished">Varundamine õnnestus</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation type="unfinished">See on test-versioon - kasutamine omal riisikol - ära kasuta mining'uks ega kaupmeeste programmides</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">Tuvastati vigane bloki andmebaas</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">Kas soovid bloki andmebaasi taastada?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Laetud</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Tõrge bloki andmebaasi käivitamisel</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">Tõrge rahakoti keskkonna %s käivitamisel!</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Tõrge bloki baasi lugemisel</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Tõrge bloki andmebaasi avamisel</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Pordi kuulamine nurjus. Soovikorral kasuta -listen=0.</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Liiga suur summa</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Tehingu allkirjastamine ebaõnnestus</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">Tehingu summa on tasu maksmiseks liiga väikene</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Tehingu summa liiga väikene</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Tehing liiga suur</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Kirjeldatud tundmatu võrgustik -onlynet'is: '%s'</translation>
     </message>
     </context>
 </TS>

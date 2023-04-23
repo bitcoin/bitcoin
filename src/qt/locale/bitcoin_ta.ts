@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">தற்போது தேர்ந்தெடுக்கப்பட்ட முகவரியை கணினி கிளிப்போர்டுக்கு காபி செய்யவும்.</translation>
+        <translation type="unfinished">தற்போது தேர்ந்தெடுக்கப்பட்ட முகவரியை கணினி கிளிப்போர்டுக்கு காபி செய்யவும்</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -253,7 +253,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Internal error</source>
         <translation type="unfinished">உள் எறர்</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">உள் பிழை ஏற்பட்டது. 1%1  தொடர முயற்சிக்கும். இது எதிர்பாராத பிழை, கீழே விவரிக்கப்பட்டுள்ளபடி புகாரளிக்கலாம்.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -265,14 +269,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation type="unfinished">ஒரு அபாயகரமான பிழை ஏற்பட்டது. அமைப்புகள் கோப்பு எழுதக்கூடியதா என்பதைச் சரிபார்க்கவும் அல்லது -nosettings மூலம் இயக்க முயற்சிக்கவும்.</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">பிழை: குறிப்பிட்ட தரவு அடைவு "%1" இல்லை.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">பிழை: கட்டமைப்பு கோப்பை அலச முடியவில்லை: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -355,293 +351,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">அமைப்புகள் கோப்பைப் படிக்க முடியவில்லை</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">அமைப்புகள் கோப்பை எழுத முடியவில்லை</translation>
-    </message>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">%s டெவலப்பர்கள்</translation>
-    </message>
-    <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee மிக அதிகமாக அமைக்கப்பட்டுள்ளது! இவ்வாறு அதிகமுள்ள கட்டணம் ஒரே பரிவர்த்தனையில் செலுத்தப்படலாம்.</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">தரவு கோப்பகத்தை %s லாக் செய்ய முடியாது. %s ஏற்கனவே இயங்குகிறது.</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished">எம்ஐடி சாப்ட்வேர் விதிமுறைகளின் கீழ் பகிர்ந்தளிக்கப்படுகிறது, அதனுடன் கொடுக்கப்பட்டுள்ள %s அல்லது %s பைல் ஐ பார்க்கவும்</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">%s படிப்பதில் பிழை! எல்லா விசைகளும் சரியாகப் படிக்கப்படுகின்றன, ஆனால் பரிவர்த்தனை டேட்டா அல்லது முகவரி புத்தக உள்ளீடுகள் காணவில்லை அல்லது தவறாக இருக்கலாம்.</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">உங்கள் கணினியின் தேதி மற்றும் நேரம் சரியாக உள்ளதா என்பதனை சரிபார்க்கவும்! உங்கள் கடிகாரம் தவறாக இருந்தால், %s சரியாக இயங்காது.</translation>
-    </message>
-    <message>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation type="unfinished">%s பயனுள்ளதாக இருந்தால் தயவுசெய்து பங்களியுங்கள். இந்த சாஃட்வேர் பற்றிய கூடுதல் தகவலுக்கு %s ஐப் பார்வையிடவும்.</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">ப்ரூனிங் குறைந்தபட்சம் %d MiB க்கு கீழே கட்டமைக்கப்பட்டுள்ளது. அதிக எண்ணிக்கையைப் பயன்படுத்தவும்.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">ப்ரூன்: கடைசி வாலட் ஒத்திசைவு ப்ரூன் தரவுக்கு அப்பாற்பட்டது. நீங்கள் -reindex செய்ய வேண்டும் (ப்ரூன் நோட் உபயோகித்தால் முழு பிளாக்செயினையும் மீண்டும் டவுன்லோட் செய்யவும்)</translation>
-    </message>
-    <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation type="unfinished">பிளாக் டேட்டாபேசில் எதிர்காலத்தில் இருந்து தோன்றும் ஒரு பிளாக் உள்ளது. இது உங்கள் கணினியின் தேதி மற்றும் நேரம் தவறாக அமைக்கப்பட்டதன் காரணமாக இருக்கலாம். உங்கள் கணினியின் தேதி மற்றும் நேரம் சரியானதாக இருந்தால் மட்டுமே பிளாக் டேட்டாபேசை மீண்டும் உருவாக்கவும்</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished">கட்டணம் கழிக்கப்பட்ட பின்னர் பரிவர்த்தனை தொகை அனுப்ப மிகவும் சிறியது</translation>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">இது ஒரு வெளியீட்டுக்கு முந்தைய சோதனை கட்டமைப்பாகும் - உங்கள் சொந்த ஆபத்தில் பயன்படுத்தவும் - மைனிங் அல்லது வணிக பயன்பாடுகளுக்கு பயன்படுத்த வேண்டாம்</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation type="unfinished">இது பரிவர்த்தனைக் கட்டணம் ஆகும் அதன் வேறுபாடு தூசியை விட சிறியதாக இருந்தால் நீங்கள் அதை நிராகரிக்கலாம்.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">கட்டண மதிப்பீடுகள் இல்லாதபோது நீங்கள் செலுத்த வேண்டிய பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
-    </message>
-    <message>
-        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation type="unfinished">பிளாக்களை இயக்க முடியவில்லை. -reindex-chainstate ஐப் பயன்படுத்தி டேட்டாபேசை மீண்டும் உருவாக்க வேண்டும்.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">எச்சரிக்கை: நாங்கள் எங்கள் பீர்களுடன் முழுமையாக உடன்படுவதாகத் தெரியவில்லை! நீங்கள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம், அல்லது மற்ற நோடுகள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம்.</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation type="unfinished">%s மிக அதிகமாக அமைக்கப்பட்டுள்ளது!</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation type="unfinished">-மேக்ஸ்மெம்பூல் குறைந்தது %d எம்பி ஆக இருக்க வேண்டும்</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: '%s'</source>
-        <translation type="unfinished">தீர்க்க முடியாது -%s முகவரி: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
-        <translation type="unfinished">-blockfiltersindex இல்லாத -peerblockfilters அமைப்பு முடியாது </translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation type="unfinished">பதிப்புரிமை (ப) %i-%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">சிதைந்த பிளாக் டேட்டாபேஸ் கண்டறியப்பட்டது</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">இப்போது பிளாக் டேட்டாபேஸை மீண்டும் உருவாக்க விரும்புகிறீர்களா?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">லோடிங் முடிந்தது</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">பிளாக் டேட்டாபேஸ் துவக்குவதில் பிழை!</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">வாலட் டேட்டாபேஸ் சூழல் %s துவக்குவதில் பிழை!</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">%s லோட் செய்வதில் பிழை</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">லோட் செய்வதில் பிழை %s: ப்ரைவேட் கீஸ் உருவாக்கத்தின் போது மட்டுமே முடக்கப்படும்</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">லோட் செய்வதில் பிழை %s: வாலட் சிதைந்தது</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">லோட் செய்வதில் பிழை %s: வாலட்டிற்கு %s புதிய பதிப்பு தேவை</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">பிளாக் டேட்டாபேஸை லோட் செய்வதில் பிழை</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">பிளாக் டேட்டாபேஸை திறப்பதில் பிழை</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">டேட்டாபேசிலிருந்து படிப்பதில் பிழை, ஷட் டவுன் செய்யப்படுகிறது.</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">பிழை: டிஸ்க் ஸ்பேஸ் %s க்கு குறைவாக உள்ளது</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">எந்த போர்டிலும் கேட்க முடியவில்லை. இதை நீங்கள் கேட்க விரும்பினால் -லிசென்= 0 வை பயன்படுத்தவும்.</translation>
-    </message>
-    <message>
-        <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">துவக்கத்தின் போது வாலட்டை ரீஸ்கேன் செய்வதில் தோல்வி</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">போதுமான பணம் இல்லை</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">தவறான -onion முகவரி அல்லது ஹோஸ்ட்நேம்: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">தவறான -proxy முகவரி அல்லது ஹோஸ்ட்நேம்: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid P2P permission: '%s'</source>
-        <translation type="unfinished">தவறான பி2பி அனுமதி: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">-%s=&lt;amount&gt;: '%s' கான தவறான தொகை</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">-discardfee கான தவறான தொகை=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">தவறான தொகை -fallbackfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">-paytxfee க்கான தவறான தொகை=&lt;amount&gt;: '%s' (குறைந்தது %s ஆக இருக்க வேண்டும்)</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">போதுமான ஃபைல் டிஸ்கிரிப்டார் கிடைக்கவில்லை.</translation>
-    </message>
-    <message>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">ப்ரூனை எதிர்மறை மதிப்புகளுடன் கட்டமைக்க முடியாது.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished">ப்ரூன் பயன்முறை -txindex உடன் பொருந்தாது.</translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">கணினி வரம்புகள் காரணமாக -maxconnections %d இலிருந்து %d ஆகக் குறைக்கப்படுகிறது.</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">பிரிவு [%s] கண்டறியப்படவில்லை.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">கையொப்பமிடும் பரிவர்த்தனை தோல்வியடைந்தது</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">குறிப்பிடப்பட்ட -walletdir "%s" இல்லை</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">குறிப்பிடப்பட்ட -walletdir "%s" ஒரு டைரக்டரி அல்ல</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">குறிப்பிடப்பட்ட பிளாக் டைரக்டரி "%s" இல்லை.</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">சோர்ஸ் கோட் %s இலிருந்து கிடைக்கிறது.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">கட்டணம் செலுத்த பரிவர்த்தனை தொகை  மிகவும் குறைவு</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">இது ஒரு ஆராய்ச்சி மென்பொருள்.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">ஒவ்வொரு பரிவர்த்தனைக்கும் நீங்கள் செலுத்த வேண்டிய குறைந்தபட்ச பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">நீங்கள் ஒரு பரிவர்த்தனையை அனுப்பும்பொழுது நீங்கள் செலுத்த வேண்டிய பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">பரிவர்த்தனை தொகை மிகக் குறைவு</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">பரிவர்த்தனை தொகை எதிர்மறையாக இருக்கக்கூடாது</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">பரிவர்த்தனைக்கு குறைந்தபட்சம் ஒரு பெறுநர் இருக்க வேண்டும்</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">பரிவர்த்தனை மிகப் பெரிது</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">PID பைலை உருவாக்க முடியவில்லை '%s': %s</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">ஆரம்ப கீகளை உருவாக்க முடியவில்லை</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">கீஸை உருவாக்க முடியவில்லை</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">HTTP சேவையகத்தைத் தொடங்க முடியவில்லை. விவரங்களுக்கு debug.log ஐ பார்க்கவும்.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">தெரியாத முகவரி வகை '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown change type '%s'</source>
-        <translation type="unfinished">தெரியாத மாற்று வகை '%s'</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">வாலட் மீண்டும் எழுத படவேண்டும்: முடிக்க %s ஐ மறுதொடக்கம் செய்யுங்கள்</translation>
-    </message>
-</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -751,7 +460,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Open &amp;URI…</source>
-        <translation type="unfinished">திறந்த &amp;யூஆற்ஐ...</translation>
+        <translation type="unfinished">திறந்த &amp;URI...</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -3187,6 +2896,277 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Cancel</source>
         <translation type="unfinished">ரத்து</translation>
+    </message>
+</context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">%s டெவலப்பர்கள்</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation type="unfinished">தரவு கோப்பகத்தை %s லாக் செய்ய முடியாது. %s ஏற்கனவே இயங்குகிறது.</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation type="unfinished">எம்ஐடி சாப்ட்வேர் விதிமுறைகளின் கீழ் பகிர்ந்தளிக்கப்படுகிறது, அதனுடன் கொடுக்கப்பட்டுள்ள %s அல்லது %s பைல் ஐ பார்க்கவும்</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished">%s படிப்பதில் பிழை! எல்லா விசைகளும் சரியாகப் படிக்கப்படுகின்றன, ஆனால் பரிவர்த்தனை டேட்டா அல்லது முகவரி புத்தக உள்ளீடுகள் காணவில்லை அல்லது தவறாக இருக்கலாம்.</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation type="unfinished">உங்கள் கணினியின் தேதி மற்றும் நேரம் சரியாக உள்ளதா என்பதனை சரிபார்க்கவும்! உங்கள் கடிகாரம் தவறாக இருந்தால், %s சரியாக இயங்காது.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation type="unfinished">%s பயனுள்ளதாக இருந்தால் தயவுசெய்து பங்களியுங்கள். இந்த சாஃட்வேர் பற்றிய கூடுதல் தகவலுக்கு %s ஐப் பார்வையிடவும்.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished">ப்ரூனிங் குறைந்தபட்சம் %d MiB க்கு கீழே கட்டமைக்கப்பட்டுள்ளது. அதிக எண்ணிக்கையைப் பயன்படுத்தவும்.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation type="unfinished">ப்ரூன்: கடைசி வாலட் ஒத்திசைவு ப்ரூன் தரவுக்கு அப்பாற்பட்டது. நீங்கள் -reindex செய்ய வேண்டும் (ப்ரூன் நோட் உபயோகித்தால் முழு பிளாக்செயினையும் மீண்டும் டவுன்லோட் செய்யவும்)</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation type="unfinished">பிளாக் டேட்டாபேசில் எதிர்காலத்தில் இருந்து தோன்றும் ஒரு பிளாக் உள்ளது. இது உங்கள் கணினியின் தேதி மற்றும் நேரம் தவறாக அமைக்கப்பட்டதன் காரணமாக இருக்கலாம். உங்கள் கணினியின் தேதி மற்றும் நேரம் சரியானதாக இருந்தால் மட்டுமே பிளாக் டேட்டாபேசை மீண்டும் உருவாக்கவும்</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation type="unfinished">கட்டணம் கழிக்கப்பட்ட பின்னர் பரிவர்த்தனை தொகை அனுப்ப மிகவும் சிறியது</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation type="unfinished">இது ஒரு வெளியீட்டுக்கு முந்தைய சோதனை கட்டமைப்பாகும் - உங்கள் சொந்த ஆபத்தில் பயன்படுத்தவும் - மைனிங் அல்லது வணிக பயன்பாடுகளுக்கு பயன்படுத்த வேண்டாம்</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation type="unfinished">இது பரிவர்த்தனைக் கட்டணம் ஆகும் அதன் வேறுபாடு தூசியை விட சிறியதாக இருந்தால் நீங்கள் அதை நிராகரிக்கலாம்.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished">கட்டண மதிப்பீடுகள் இல்லாதபோது நீங்கள் செலுத்த வேண்டிய பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
+    </message>
+    <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation type="unfinished">பிளாக்களை இயக்க முடியவில்லை. -reindex-chainstate ஐப் பயன்படுத்தி டேட்டாபேசை மீண்டும் உருவாக்க வேண்டும்.</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished">எச்சரிக்கை: நாங்கள் எங்கள் பீர்களுடன் முழுமையாக உடன்படுவதாகத் தெரியவில்லை! நீங்கள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம், அல்லது மற்ற நோடுகள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம்.</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation type="unfinished">%s மிக அதிகமாக அமைக்கப்பட்டுள்ளது!</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation type="unfinished">-மேக்ஸ்மெம்பூல் குறைந்தது %d எம்பி ஆக இருக்க வேண்டும்</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation type="unfinished">தீர்க்க முடியாது -%s முகவரி: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">-blockfiltersindex இல்லாத -peerblockfilters அமைப்பு முடியாது </translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation type="unfinished">பதிப்புரிமை (ப) %i-%i</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">சிதைந்த பிளாக் டேட்டாபேஸ் கண்டறியப்பட்டது</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">இப்போது பிளாக் டேட்டாபேஸை மீண்டும் உருவாக்க விரும்புகிறீர்களா?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">லோடிங் முடிந்தது</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">பிளாக் டேட்டாபேஸ் துவக்குவதில் பிழை!</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">வாலட் டேட்டாபேஸ் சூழல் %s துவக்குவதில் பிழை!</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">%s லோட் செய்வதில் பிழை</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished">லோட் செய்வதில் பிழை %s: ப்ரைவேட் கீஸ் உருவாக்கத்தின் போது மட்டுமே முடக்கப்படும்</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation type="unfinished">லோட் செய்வதில் பிழை %s: வாலட் சிதைந்தது</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation type="unfinished">லோட் செய்வதில் பிழை %s: வாலட்டிற்கு %s புதிய பதிப்பு தேவை</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">பிளாக் டேட்டாபேஸை லோட் செய்வதில் பிழை</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">பிளாக் டேட்டாபேஸை திறப்பதில் பிழை</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">டேட்டாபேசிலிருந்து படிப்பதில் பிழை, ஷட் டவுன் செய்யப்படுகிறது.</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">பிழை: டிஸ்க் ஸ்பேஸ் %s க்கு குறைவாக உள்ளது</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">எந்த போர்டிலும் கேட்க முடியவில்லை. இதை நீங்கள் கேட்க விரும்பினால் -லிசென்= 0 வை பயன்படுத்தவும்.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation type="unfinished">துவக்கத்தின் போது வாலட்டை ரீஸ்கேன் செய்வதில் தோல்வி</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">போதுமான பணம் இல்லை</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation type="unfinished">தவறான -onion முகவரி அல்லது ஹோஸ்ட்நேம்: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation type="unfinished">தவறான -proxy முகவரி அல்லது ஹோஸ்ட்நேம்: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation type="unfinished">தவறான பி2பி அனுமதி: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">-%s=&lt;amount&gt;: '%s' கான தவறான தொகை</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">போதுமான ஃபைல் டிஸ்கிரிப்டார் கிடைக்கவில்லை.</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation type="unfinished">ப்ரூனை எதிர்மறை மதிப்புகளுடன் கட்டமைக்க முடியாது.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation type="unfinished">ப்ரூன் பயன்முறை -txindex உடன் பொருந்தாது.</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished">கணினி வரம்புகள் காரணமாக -maxconnections %d இலிருந்து %d ஆகக் குறைக்கப்படுகிறது.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">பிரிவு [%s] கண்டறியப்படவில்லை.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">கையொப்பமிடும் பரிவர்த்தனை தோல்வியடைந்தது</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">குறிப்பிடப்பட்ட -walletdir "%s" இல்லை</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">குறிப்பிடப்பட்ட -walletdir "%s" ஒரு டைரக்டரி அல்ல</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation type="unfinished">குறிப்பிடப்பட்ட பிளாக் டைரக்டரி "%s" இல்லை.</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">சோர்ஸ் கோட் %s இலிருந்து கிடைக்கிறது.</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">கட்டணம் செலுத்த பரிவர்த்தனை தொகை  மிகவும் குறைவு</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">இது ஒரு ஆராய்ச்சி மென்பொருள்.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">ஒவ்வொரு பரிவர்த்தனைக்கும் நீங்கள் செலுத்த வேண்டிய குறைந்தபட்ச பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">நீங்கள் ஒரு பரிவர்த்தனையை அனுப்பும்பொழுது நீங்கள் செலுத்த வேண்டிய பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">பரிவர்த்தனை தொகை மிகக் குறைவு</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">பரிவர்த்தனை தொகை எதிர்மறையாக இருக்கக்கூடாது</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">பரிவர்த்தனைக்கு குறைந்தபட்சம் ஒரு பெறுநர் இருக்க வேண்டும்</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">பரிவர்த்தனை மிகப் பெரிது</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">PID பைலை உருவாக்க முடியவில்லை '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">ஆரம்ப கீகளை உருவாக்க முடியவில்லை</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">கீஸை உருவாக்க முடியவில்லை</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished">HTTP சேவையகத்தைத் தொடங்க முடியவில்லை. விவரங்களுக்கு debug.log ஐ பார்க்கவும்.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">தெரியாத முகவரி வகை '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation type="unfinished">தெரியாத மாற்று வகை '%s'</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished">வாலட் மீண்டும் எழுத படவேண்டும்: முடிக்க %s ஐ மறுதொடக்கம் செய்யுங்கள்</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">அமைப்புகள் கோப்பைப் படிக்க முடியவில்லை</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">அமைப்புகள் கோப்பை எழுத முடியவில்லை</translation>
     </message>
 </context>
 </TS>

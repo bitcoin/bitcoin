@@ -258,13 +258,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Villa við lestur %s! Allir lyklar fóru inn á réttan hátt, en færslugögn eða færslugildi gætu verið röng eða horfin.</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -863,6 +856,13 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Flytja gögn í flipanum í skrá</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished">Villa við lestur %s! Allir lyklar fóru inn á réttan hátt, en færslugögn eða færslugildi gætu verið röng eða horfin.</translation>
     </message>
     </context>
 </TS>
