@@ -60,6 +60,11 @@ All build scripts and commands will run from this directory.
 ``` bash
 git clone https://github.com/bitcoin/bitcoin.git
 ```
+From here, change your working directory to "bitcoin" by running
+
+``` bash
+cd bitcoin
+```
 
 ### 5. Install Optional Dependencies
 
@@ -226,6 +231,17 @@ Run the following in your terminal to compile Bitcoin Core:
 ``` bash
 make        # use "-j N" here for N parallel jobs
 make check  # Run tests if Python 3 is available
+```
+
+Next, verify the build was successful and the GUI was compiled by running the following command
+
+```bash
+# Verify the successful build
+./src/bitcoind --version
+./src/bitcoin-cli --version
+
+# If you have compiled the GUI
+./src/qt/bitcoin-qt --version
 ```
 
 ### 3. Deploy (optional)
