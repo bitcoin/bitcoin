@@ -16,6 +16,12 @@
 #error Client version information missing: version is not defined by bitcoin-config.h or in any other way
 #endif
 
+// ITCOIN_SPECIFIC - START
+#if !defined(CLIENT_VERSION_ITCOIN_BUILD)
+#error Itcoin client version information missing: itcoin-specific version fields are not defined by bitcoin-config.h or in any other way
+#endif
+// ITCOIN_SPECIFIC - END
+
 //! Copyright string used in Windows .rc files
 #define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " " COPYRIGHT_HOLDERS_FINAL
 

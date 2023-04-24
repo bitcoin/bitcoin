@@ -7,6 +7,7 @@
 
 #include <tinyformat.h>
 
+#include <regex> // ITCOIN_SPECIFIC
 #include <sstream>
 #include <string>
 #include <vector>
@@ -84,16 +85,17 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
     // Make sure Bitcoin Core copyright is not removed by accident
     if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+        std::string bitcoinPrefix = std::regex_replace(strPrefix, std::regex("2019-" + std::to_string(COPYRIGHT_YEAR)), "2009-" + std::to_string(COPYRIGHT_YEAR)); // ITCOIN_SPECIFIC: reset back to 2009 the initial bitcoin copyright year
+        strCopyrightHolders += "\n" + bitcoinPrefix + "The Bitcoin Core developers"; // ITCOIN_SPECIFIC: replaced "strPrefix" -> "bitcoinPrefix"
     }
     return strCopyrightHolders;
 }
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/bancaditalia/itcoin-core>"; // ITCOIN_SPECIFIC
 
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2019, COPYRIGHT_YEAR) + " ") + "\n" + // ITCOIN_SPECIFIC: "2009" -> "2019"
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software.").translated, PACKAGE_NAME, "<" PACKAGE_URL ">") +
