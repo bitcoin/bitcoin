@@ -147,6 +147,7 @@ static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 #else
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
+static const int RESERVED_FILE_DESCRIPTORS = MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + NUM_FDS_MESSAGE_CAPTURE;
 
 static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
@@ -973,7 +974,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
-    nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + nBind + NUM_FDS_MESSAGE_CAPTURE);
+    nFD = RaiseFileDescriptorLimit(nMaxConnections + nBind + RESERVED_FILE_DESCRIPTORS);
 
 #ifdef USE_POLL
     int fd_max = nFD;
@@ -982,10 +983,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 #endif
     // Trim requested connection counts, to fit into system limitations
     // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
-    nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE), 0);
+    nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - RESERVED_FILE_DESCRIPTORS), 0);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
-    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE, nMaxConnections);
+    nMaxConnections = std::min(nFD - RESERVED_FILE_DESCRIPTORS, nMaxConnections);
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
