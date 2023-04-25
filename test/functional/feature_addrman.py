@@ -32,12 +32,12 @@ def serialize_addrman(
     r += struct.pack("B", format)
     r += struct.pack("B", INCOMPATIBILITY_BASE + lowest_compatible)
     r += ser_uint256(bucket_key)
-    r += struct.pack("i", len_new or len(new))
-    r += struct.pack("i", len_tried or len(tried))
+    r += struct.pack("<i", len_new or len(new))
+    r += struct.pack("<i", len_tried or len(tried))
     ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
-    r += struct.pack("i", ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30))
+    r += struct.pack("<i", ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30))
     for _ in range(ADDRMAN_NEW_BUCKET_COUNT):
-        r += struct.pack("i", 0)
+        r += struct.pack("<i", 0)
     checksum = hash256(r)
     r += mock_checksum or checksum
     return r
