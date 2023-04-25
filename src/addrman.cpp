@@ -757,10 +757,10 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::option
 
         // Iterate over the positions of that bucket, starting at the initial one,
         // and looping around.
-        int i;
+        int i, position, node_id;
         for (i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
-            int position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
-            int node_id = GetEntry(search_tried, bucket, position);
+            position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
+            node_id = GetEntry(search_tried, bucket, position);
             if (node_id != -1) {
                 if (network.has_value()) {
                     const auto it{mapInfo.find(node_id)};
@@ -777,9 +777,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::option
         if (i == ADDRMAN_BUCKET_SIZE) continue;
 
         // Find the entry to return.
-        int position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
-        int nId = GetEntry(search_tried, bucket, position);
-        const auto it_found{mapInfo.find(nId)};
+        const auto it_found{mapInfo.find(node_id)};
         assert(it_found != mapInfo.end());
         const AddrInfo& info{it_found->second};
 
