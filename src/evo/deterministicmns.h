@@ -46,6 +46,12 @@ public:
     static constexpr uint16_t CURRENT_MN_FORMAT = 0;
     static constexpr uint16_t MN_TYPE_FORMAT = 1;
 
+    uint256 proTxHash;
+    COutPoint collateralOutpoint;
+    uint16_t nOperatorReward{0};
+    MnType nType{MnType::Regular};
+    std::shared_ptr<const CDeterministicMNState> pdmnState;
+
     CDeterministicMN() = delete; // no default constructor, must specify internalId
     explicit CDeterministicMN(uint64_t _internalId, MnType mnType = MnType::Regular) :
         internalId(_internalId),
@@ -60,12 +66,6 @@ public:
     {
         SerializationOp(s, CSerActionUnserialize(), format_version);
     }
-
-    uint256 proTxHash;
-    COutPoint collateralOutpoint;
-    uint16_t nOperatorReward{0};
-    MnType nType{MnType::Regular};
-    std::shared_ptr<const CDeterministicMNState> pdmnState;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, const uint8_t format_version)
