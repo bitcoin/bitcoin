@@ -220,6 +220,11 @@ private:
     uint64_t internalId{std::numeric_limits<uint64_t>::max()};
 
 public:
+    uint256 proTxHash;
+    COutPoint collateralOutpoint;
+    uint16_t nOperatorReward{0};
+    CDeterministicMNStateCPtr pdmnState;
+
     CDeterministicMN() = delete; // no default constructor, must specify internalId
     explicit CDeterministicMN(uint64_t _internalId) : internalId(_internalId)
     {
@@ -232,11 +237,6 @@ public:
     {
         s >> *this;
     }
-
-    uint256 proTxHash;
-    COutPoint collateralOutpoint;
-    uint16_t nOperatorReward{0};
-    CDeterministicMNStateCPtr pdmnState;
 
 public:
     SERIALIZE_METHODS(CDeterministicMN, obj) {
