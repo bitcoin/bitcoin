@@ -239,8 +239,9 @@ BOOST_AUTO_TEST_CASE(addrman_select_by_network)
     // ensure that both new and tried table are selected from
     bool new_selected{false};
     bool tried_selected{false};
+    int counter = 256;
 
-    while (!new_selected || !tried_selected) {
+    while (--counter > 0 && (!new_selected || !tried_selected)) {
         const CAddress selected{addrman->Select(/*new_only=*/false, NET_I2P).first};
         BOOST_REQUIRE(selected == i2p_addr || selected == i2p_addr2);
         if (selected == i2p_addr) {
@@ -249,6 +250,9 @@ BOOST_AUTO_TEST_CASE(addrman_select_by_network)
             new_selected = true;
         }
     }
+
+    BOOST_CHECK(new_selected);
+    BOOST_CHECK(tried_selected);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_select_special)
