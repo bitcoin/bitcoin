@@ -969,7 +969,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // Make sure enough file descriptors are available
-    int nBind = std::max(nUserBind, size_t(1));
+    const int nBind = std::max(nUserBind, size_t(1));
     nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
