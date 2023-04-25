@@ -30,7 +30,19 @@ If you want to build the disk image with `make deploy` (.dmg / optional), you ne
 brew install librsvg
 ```
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-osx.md#disable-wallet-mode)).
+## Berkeley DB
+
+It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
+you can use [the installation script included in contrib/](contrib/install_db4.sh)
+like so:
+
+```shell
+./contrib/install_db4.sh .
+```
+
+from the root of the repository.
+
+**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
 
 ## Build Dash Core
 
