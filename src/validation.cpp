@@ -200,7 +200,7 @@ CBlockIndex* BlockManager::FindForkInGlobalIndex(const CChain& chain, const CBlo
 
 std::unique_ptr<CBlockTreeDB> pblocktree;
 
-bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
+bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
 static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
@@ -490,19 +490,19 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
 
     // pool.cs should be locked already, but go ahead and re-take the lock here
     // to enforce that mempool doesn't change between when we check the view
-    // and when we actually call through to CheckInputs
+    // and when we actually call through to CheckInputScripts
     LOCK(pool.cs);
 
     assert(!tx.IsCoinBase());
     for (const CTxIn& txin : tx.vin) {
         const Coin& coin = view.AccessCoin(txin.prevout);
 
-        // At this point we haven't actually checked if the coins are all
-        // available (or shouldn't assume we have, since CheckInputs does).
-        // So we just return failure if the inputs are not available here,
-        // and then only have to check equivalence for available inputs.
+        // AcceptToMemoryPoolWorker has already checked that the coins are
+        // available, so this shouldn't fail. If the inputs are not available
+        // here then return false.
         if (coin.IsSpent()) return false;
 
+        // Check equivalence for available inputs.
         const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
@@ -516,8 +516,8 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         }
     }
 
-    // Call CheckInputs() to cache signature and script validity against current tip consensus rules.
-    return CheckInputs(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
+    // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
+    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
 }
 
 namespace {
@@ -838,10 +838,10 @@ bool MemPoolAccept::PolicyScriptChecks(ATMPArgs& args, Workspace& ws, Precompute
 
     constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
-    // Check against previous transactions
+    // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-    if (!CheckInputs(tx, state, m_view, scriptVerifyFlags, true, false, txdata)) {
-        return false; // state filled in by CheckInputs
+    if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, true, false, txdata)) {
+        return false; // state filled in by CheckInputScripts
     }
 
     return true;
@@ -874,7 +874,7 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
     unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(m_active_chainstate.m_chain.Tip(), chainparams.GetConsensus());
     assert(std::addressof(::ChainstateActive().CoinsTip()) == std::addressof(m_active_chainstate.CoinsTip()));
     if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags, txdata, m_active_chainstate.CoinsTip())) {
-        return error("%s: BUG! PLEASE REPORT THIS! CheckInputs failed against latest-block but not STANDARD flags %s, %s",
+        return error("%s: BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
     }
 
@@ -1508,8 +1508,10 @@ void InitScriptExecutionCache() {
 }
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
- * This does not modify the UTXO set.
+ * Check whether all of this transaction's input scripts succeed.
+ *
+ * This involves ECDSA signature checks so can be computationally intensive. This function should
+ * only be called after the cheap sanity checks in CheckTxInputs passed.
  *
  * If pvChecks is not nullptr, script checks are pushed onto it instead of being performed inline. Any
  * script checks which are not necessary (eg due to script execution cache hits) are, obviously,
@@ -1524,7 +1526,7 @@ void InitScriptExecutionCache() {
  *
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
-bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     if (tx.IsCoinBase()) return true;
@@ -1605,7 +1607,7 @@ bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsV
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
-    statsClient.timing("CheckInputs_ms", diff.total_milliseconds(), 1.0f);
+    statsClient.timing("CheckInputScripts_ms", diff.total_milliseconds(), 1.0f);
     return true;
 }
 
@@ -2357,11 +2359,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             TxValidationState tx_state;
-            if (fScriptChecks && !CheckInputs(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], g_parallel_script_checks ? &vChecks : nullptr)) {
+            if (fScriptChecks && !CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], g_parallel_script_checks ? &vChecks : nullptr)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                LogPrintf("ERROR: ConnectBlock(): CheckInputs on %s failed with %s\n",
+                LogPrintf("ERROR: ConnectBlock(): CheckInputScripts on %s failed with %s\n",
                     tx.GetHash().ToString(), FormatStateMessage(state));
                 return false;
             }

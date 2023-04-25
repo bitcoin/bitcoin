@@ -212,19 +212,6 @@ after_success:
       script:
         - set -o errexit; source ./ci/lint/06_script.sh
 
-    - stage: extended-lint
-      name: 'extended lint [runtime >= 60 seconds]'
-      env:
-      cache: false
-      language: python
-      python: '3.5'
-      install:
-        - set -o errexit; source ./ci/extended_lint/04_install.sh
-      before_script:
-        - set -o errexit; source ./ci/lint/05_before_script.sh
-      script:
-        - set -o errexit; source ./ci/extended_lint/06_script.sh
-
     - stage: test
       name: 'ARM  [GOAL: install]  [bionic]  [unit tests, functional tests]'
       arch: arm64
@@ -237,6 +224,7 @@ after_success:
       arch: s390x
       env: >-
         FILE_ENV="./ci/test/00_setup_env_s390x.sh"
+        QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'

@@ -28,6 +28,7 @@ echo "Fallback to default values in env (if not yet set)"
 MAKEJOBS="-j$(nproc)"
 export MAKEJOBS
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
+# This folder only exists on the ci host.
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch/}
 # What host to compile for. See also ./depends/README.md
 # Tests that need cross-compilation export the appropriate HOST.
@@ -47,16 +48,19 @@ export CACHE_DIR=${CACHE_DIR:-$HOST_CACHE_DIR}
 export CCACHE_SIZE=${CCACHE_SIZE:-100M}
 export CCACHE_TEMPDIR=${CCACHE_TEMPDIR:-/tmp/.ccache-temp}
 export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
+# The cache dir.
+# This folder exists on the ci host and ci guest. Changes are propagated back and forth.
 export CCACHE_DIR=${CCACHE_DIR:-$CACHE_DIR/ccache}
-# Folder where the build is done (depends and dist). Can not be changed and is equal to the root of the git repo
-export BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_ROOT_DIR}
-# Folder where the build is done (bin and lib). Can not be changed.
-export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_BUILD_DIR/out}
+# The depends dir.
+# This folder exists on the ci host and ci guest. Changes are propagated back and forth.
+export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
+# Folder where the build is done (bin and lib).
+export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out/$HOST}
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 export WINEDEBUG=${WINEDEBUG:-fixme-all}
 export DOCKER_PACKAGES=${DOCKER_PACKAGES:-build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3 rsync git}
 export GOAL=${GOAL:-install}
-export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_BUILD_DIR}/qa-assets}
+export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_SCRATCH_DIR}/qa-assets}
 export PATH=${BASE_ROOT_DIR}/ci/retry:$PATH
 export CI_RETRY_EXE=${CI_RETRY_EXE:-"retry --"}
 # Dash's Docker-specifics

@@ -17,19 +17,19 @@ unset DISPLAY
 mkdir -p $CACHE_DIR/depends
 mkdir -p $CACHE_DIR/sdk-sources
 
-ln -s $CACHE_DIR/depends depends/built
-ln -s $CACHE_DIR/sdk-sources depends/sdk-sources
+ln -s $CACHE_DIR/depends ${DEPENDS_DIR}/built
+ln -s $CACHE_DIR/sdk-sources ${DEPENDS_DIR}/sdk-sources
 
-mkdir -p depends/SDKs
+mkdir -p ${DEPENDS_DIR}/SDKs
 
 if [ -n "$XCODE_VERSION" ]; then
   OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
-  OSX_SDK_PATH="depends/sdk-sources/${OSX_SDK_BASENAME}"
+  OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
   if [ ! -f "$OSX_SDK_PATH" ]; then
     curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
   fi
   if [ -f "$OSX_SDK_PATH" ]; then
-    tar -C depends/SDKs -xf "$OSX_SDK_PATH"
+    tar -C ${DEPENDS_DIR}/SDKs -xf "$OSX_SDK_PATH"
   fi
 fi
 

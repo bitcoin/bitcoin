@@ -29,7 +29,6 @@ from test_framework.util import (
 from test_framework.wallet_util import (
     get_key,
     get_multisig,
-    labels_value,
     test_address,
 )
 
@@ -504,7 +503,7 @@ class ImportMultiTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=False,
                      label=p2pkh_label,
-                     labels=labels_value(name=p2pkh_label))
+                     labels=[p2pkh_label])
 
         # Test import fails if both desc and scriptPubKey are provided
         key = get_key(self.nodes[0])

@@ -13,13 +13,13 @@ else
   DOCKER_EXEC echo \> \$HOME/.dashcore
 fi
 
-DOCKER_EXEC mkdir -p depends/SDKs depends/sdk-sources
+DOCKER_EXEC mkdir -p ${DEPENDS_DIR}/SDKs ${DEPENDS_DIR}/sdk-sources
 
 if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
   DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
 fi
 if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
-  DOCKER_EXEC tar -C "depends/SDKs" -xf "$OSX_SDK_PATH"
+  DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\)

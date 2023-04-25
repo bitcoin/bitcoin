@@ -17,7 +17,7 @@ if [ "$RUN_UNIT_TESTS" != "true" ]; then
 fi
 
 export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
-export LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib
+export LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib
 
 export WINEDEBUG=fixme-all
 export BOOST_TEST_LOG_LEVEL=test_suite

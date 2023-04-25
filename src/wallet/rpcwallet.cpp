@@ -3622,6 +3622,8 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
 
 UniValue getaddressinfo(const JSONRPCRequest& request)
 {
+    const std::string example_address = "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"";
+
     RPCHelpMan{"getaddressinfo",
         "\nReturn information about the given dash address.\n"
         "Some of the information will only be present if the address is in the active wallet.\n",
@@ -3652,7 +3654,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                 {RPCResult::Type::NUM, "sigsrequired", /* optional */ true, "The number of signatures required to spend multisig output (only if script is multisig)."},
                 {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key, for single-key addresses."},
                 {RPCResult::Type::BOOL, "iscompressed", /* optional */ true, "If the pubkey is compressed."},
-                {RPCResult::Type::STR, "label", "The label associated with the address. Defaults to \"\". Equivalent to the name field in the labels array."},
+                {RPCResult::Type::STR, "label", "The label associated with the address. Defaults to \"\". Equivalent to the name label in the labels array below."},
                 {RPCResult::Type::NUM_TIME, "timestamp", /* optional */ true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
                 {RPCResult::Type::STR_HEX, "hdchainid", /* optional */ true, "The ID of the HD chain."},
                 {RPCResult::Type::STR, "hdkeypath", /* optional */ true, "The HD keypath, if the key is HD and available."},
@@ -3670,8 +3672,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             }
         },
         RPCExamples{
-            HelpExampleCli("getaddressinfo", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"")
-    + HelpExampleRpc("getaddressinfo", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"")
+            HelpExampleCli("getaddressinfo", example_address)
+    + HelpExampleRpc("getaddressinfo", example_address)
         },
     }.Check(request);
 
@@ -3683,7 +3685,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
-
     // Make sure the destination is valid
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -3709,24 +3710,18 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
 
-    // Return DescribeWalletAddress fields.
-    // Always returned: isscript, ischange, iswitness.
-    // Optional: witness_version, witness_program, script, hex, pubkeys (array),
-    // sigsrequired, pubkey, embedded, iscompressed.
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
 
     // Return label field if existing. Currently only one label can be
     // associated with an address, so the label should be equivalent to the
-    // value of the name key/value pair in the labels hash array below.
+    // value of the name key/value pair in the labels array below.
     if (pwallet->mapAddressBook.count(dest)) {
         ret.pushKV("label", pwallet->mapAddressBook.at(dest).name);
     }
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
-    // Fetch KeyMetadata, if present, for the timestamp, hdkeypath, hdseedid,
-    // and hdmasterfingerprint fields.
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         const PKHash *pkhash = std::get_if<PKHash>(&dest);
@@ -3746,15 +3741,22 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         }
     }
 
-    // Return a labels array containing a hash of key/value pairs for the label
-    // name and address purpose. The name value is equivalent to the label field
-    // above. Currently only one label can be associated with an address, but we
-    // return an array so the API remains stable if we allow multiple labels to
-    // be associated with an address in the future.
+    // Return a `labels` array containing the label associated with the address,
+    // equivalent to the `label` field above. Currently only one label can be
+    // associated with an address, but we return an array so the API remains
+    // stable if we allow multiple labels to be associated with an address in
+    // the future.
+    //
+    // DEPRECATED: The previous behavior of returning an array containing a JSON
+    // object of `name` and `purpose` key/value pairs has been deprecated.
     UniValue labels(UniValue::VARR);
     std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwallet->mapAddressBook.find(dest);
     if (mi != pwallet->mapAddressBook.end()) {
-        labels.push_back(AddressBookDataToJSON(mi->second, true));
+        if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
+            labels.push_back(AddressBookDataToJSON(mi->second, true));
+        } else {
+            labels.push_back(mi->second.name);
+        }
     }
     ret.pushKV("labels", std::move(labels));
 

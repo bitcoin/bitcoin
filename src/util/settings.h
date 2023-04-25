@@ -57,11 +57,18 @@ bool WriteSettings(const fs::path& path,
 //!                                        [section] keywords)
 //! @param get_chain_name - enable special backwards compatible behavior
 //!                         for GetChainName
-SettingsValue GetSetting(const Settings& settings, const std::string& section, const std::string& name, bool ignore_default_section_config, bool get_chain_name);
+SettingsValue GetSetting(const Settings& settings,
+    const std::string& section,
+    const std::string& name,
+    bool ignore_default_section_config,
+    bool get_chain_name);
 
 //! Get combined setting value similar to GetSetting(), except if setting was
 //! specified multiple times, return a list of all the values specified.
-std::vector<SettingsValue> GetSettingsList(const Settings& settings, const std::string& section, const std::string& name, bool ignore_default_section_config);
+std::vector<SettingsValue> GetSettingsList(const Settings& settings,
+    const std::string& section,
+    const std::string& name,
+    bool ignore_default_section_config);
 
 //! Return true if a setting is set in the default config file section, and not
 //! overridden by a higher priority command-line or network section value.
