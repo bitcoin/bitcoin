@@ -11,40 +11,40 @@
 #include <script/standard.h>
 #include <util/underlying.h>
 
-maybe_error CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+bool CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
     if (!IsValidMnType(nType)) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-type"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
     }
     if (nMode != 0) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-mode"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-mode");
     }
 
     if (keyIDOwner.IsNull() || !pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null");
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee");
     }
 
     CTxDestination payoutDest;
     if (!ExtractDestination(scriptPayout, payoutDest)) {
         // should not happen as we checked script types before
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-dest"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-dest");
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
     if (payoutDest == CTxDestination(PKHash(keyIDOwner)) || payoutDest == CTxDestination(PKHash(keyIDVoting))) {
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-reuse"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-reuse");
     }
 
     if (nOperatorReward > 10000) {
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-reward"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-reward");
     }
 
-    return {};
+    return true;
 }
 
 std::string CProRegTx::MakeSignString() const
@@ -84,13 +84,13 @@ std::string CProRegTx::ToString() const
                      nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
-maybe_error CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+bool CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
 
-    return {};
+    return true;
 }
 
 std::string CProUpServTx::ToString() const
@@ -105,22 +105,22 @@ std::string CProUpServTx::ToString() const
                      nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
-maybe_error CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+bool CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
     if (nMode != 0) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-mode"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-mode");
     }
 
     if (!pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null");
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
-        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee"};
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee");
     }
-    return {};
+    return true;
 }
 
 std::string CProUpRegTx::ToString() const
@@ -135,18 +135,18 @@ std::string CProUpRegTx::ToString() const
         nVersion, proTxHash.ToString(), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(PKHash(keyIDVoting)), payee);
 }
 
-maybe_error CProUpRevTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+bool CProUpRevTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
 
     // nReason < CProUpRevTx::REASON_NOT_SPECIFIED is always `false` since
     // nReason is unsigned and CProUpRevTx::REASON_NOT_SPECIFIED == 0
     if (nReason > CProUpRevTx::REASON_LAST) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-reason"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-reason");
     }
-    return {};
+    return true;
 }
 
 std::string CProUpRevTx::ToString() const

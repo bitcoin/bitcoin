@@ -43,33 +43,34 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
             BOOST_CHECK_EQUAL(tx.nVersion, 3);
             BOOST_CHECK_EQUAL(tx.GetHash(), txHash);
             // Deserialization based on transaction nType
+            TxValidationState dummy_state;
             switch (tx.nType) {
                 case TRANSACTION_PROVIDER_REGISTER: {
                     BOOST_CHECK_EQUAL(txType, "proregtx");
                     CProRegTx ptx;
                     BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                     break;
                 }
                 case TRANSACTION_PROVIDER_UPDATE_SERVICE: {
                     BOOST_CHECK_EQUAL(txType, "proupservtx");
                     CProUpServTx ptx;
                     BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                     break;
                 }
                 case TRANSACTION_PROVIDER_UPDATE_REGISTRAR: {
                     BOOST_CHECK_EQUAL(txType, "proupregtx");
                     CProUpRegTx ptx;
                     BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                     break;
                 }
                 case TRANSACTION_PROVIDER_UPDATE_REVOKE: {
                     BOOST_CHECK_EQUAL(txType, "prouprevtx");
                     CProUpRevTx ptx;
                     BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                     break;
                 }
                 default:
@@ -108,10 +109,11 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             BOOST_CHECK_EQUAL(tx.nVersion, 3);
             BOOST_CHECK_EQUAL(tx.GetHash(), txHash);
             // Deserialization based on transaction nType
+            TxValidationState dummy_state;
             if (txType == "proregtx") {
                 CProRegTx ptx;
                 if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                 } else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_REGISTER || ptx.nVersion == 0);
                 }
@@ -119,7 +121,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             else if (txType == "proupservtx") {
                 CProUpServTx ptx;
                 if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                 } else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE || ptx.nVersion == 0);
                 }
@@ -127,7 +129,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             else if (txType == "proupregtx") {
                 CProUpRegTx ptx;
                 if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                 }
                 else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR || ptx.nVersion == 0);
@@ -136,7 +138,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             else if (txType == "prouprevtx") {
                 CProUpRevTx ptx;
                 if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(ptx.IsTriviallyValid(bls::bls_legacy_scheme.load()).did_err);
+                    BOOST_CHECK(!ptx.IsTriviallyValid(bls::bls_legacy_scheme.load(), dummy_state));
                 } else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE || ptx.nVersion == 0);
                 }

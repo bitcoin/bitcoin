@@ -15,15 +15,6 @@
 #include <string_view>
 #include <vector>
 
-struct maybe_error {
-    bool did_err{false};
-    TxValidationResult reason{TxValidationResult::TX_CONSENSUS};
-    std::string_view error_str;
-
-    constexpr maybe_error() = default;
-    constexpr maybe_error(TxValidationResult reasonIn, std::string_view err): did_err(true), reason(reasonIn), error_str(err) {};
-};
-
 template <typename T>
 inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
 {

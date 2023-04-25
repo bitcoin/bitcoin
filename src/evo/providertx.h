@@ -114,7 +114,7 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
+    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
 };
 
 class CProUpServTx
@@ -194,7 +194,7 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
+    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
 };
 
 class CProUpRegTx
@@ -259,7 +259,7 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
+    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
 };
 
 class CProUpRevTx
@@ -322,17 +322,17 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
+    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
 };
 
 template <typename ProTx>
-static maybe_error CheckInputsHash(const CTransaction& tx, const ProTx& proTx)
+static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValidationState& state)
 {
     if (uint256 inputsHash = CalcTxInputsHash(tx); inputsHash != proTx.inputsHash) {
-        return {TxValidationResult::TX_CONSENSUS, "bad-protx-inputs-hash"};
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-inputs-hash");
     }
 
-    return {};
+    return true;
 }
 
 
