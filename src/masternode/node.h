@@ -16,7 +16,7 @@ struct CActiveMasternodeInfo;
 class CActiveMasternodeManager;
 
 extern CActiveMasternodeInfo activeMasternodeInfo;
-extern CCriticalSection activeMasternodeInfoCs;
+extern RecursiveMutex activeMasternodeInfoCs;
 extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 struct CActiveMasternodeInfo {

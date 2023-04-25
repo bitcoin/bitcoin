@@ -19,7 +19,7 @@ class CQuorumBlockProcessor;
 class CChainLocksHandler;
 } // namespace llmq
 
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,

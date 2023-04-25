@@ -43,7 +43,7 @@ void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filena
     }
 }
 
-CCriticalSection cs_db;
+RecursiveMutex cs_db;
 std::map<std::string, std::weak_ptr<BerkeleyEnvironment>> g_dbenvs GUARDED_BY(cs_db); //!< Map from directory name to db environment.
 } // namespace
 
@@ -423,7 +423,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
 {
     // Make sure that no Db's are in use
     AssertLockNotHeld(cs_db);
-    std::unique_lock<CCriticalSection> lock(cs_db);
+    std::unique_lock<RecursiveMutex> lock(cs_db);
     m_db_in_use.wait(lock, [this](){
         for (auto& db : m_databases) {
             if (db.second.get().m_refcount > 0) return false;

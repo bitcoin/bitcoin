@@ -109,7 +109,7 @@ class CRecoveredSigsDb
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};
 
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     mutable unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
     mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache GUARDED_BY(cs);
     mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
@@ -164,7 +164,7 @@ class CSigningManager
     static constexpr int SIGN_HEIGHT_OFFSET{8};
 
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     CRecoveredSigsDb db;
     CConnman& connman;

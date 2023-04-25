@@ -370,7 +370,7 @@ private:
     static constexpr int64_t MAX_SEND_FOR_RECOVERY_TIMEOUT{10000};
     static constexpr size_t MAX_MSGS_SIG_SHARES{32};
 
-    CCriticalSection cs;
+    RecursiveMutex cs;
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;

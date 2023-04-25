@@ -177,7 +177,7 @@ private:
     mutable CBLSWorkerCache blsCache;
     mutable std::atomic<bool> fQuorumDataRecoveryThreadRunning{false};
 
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     // These are only valid when we either participated in the DKG or fully watched it
     BLSVerificationVectorPtr quorumVvec GUARDED_BY(cs);
     CBLSSecretKey skShare GUARDED_BY(cs);
@@ -221,9 +221,9 @@ private:
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
-    mutable CCriticalSection cs_map_quorums;
+    mutable RecursiveMutex cs_map_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
-    mutable CCriticalSection cs_scan_quorums;
+    mutable RecursiveMutex cs_scan_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache GUARDED_BY(cs_scan_quorums);
 
     mutable ctpl::thread_pool workerPool;

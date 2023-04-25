@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -248,7 +248,7 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     abort();
 }
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
-template void AssertLockHeldInternal(const char*, const char*, int, CCriticalSection*);
+template void AssertLockHeldInternal(const char*, const char*, int, RecursiveMutex*);
 
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {

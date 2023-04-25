@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
     g_debug_lockorder_abort = false;
     #endif
 
-    CCriticalSection rmutex1, rmutex2;
+    RecursiveMutex rmutex1, rmutex2;
     TestPotentialDeadLockDetected(rmutex1, rmutex2);
     // The second test ensures that lock tracking data have not been broken by exception.
     TestPotentialDeadLockDetected(rmutex1, rmutex2);

@@ -92,7 +92,7 @@ public:
 class CDKGDebugManager
 {
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     CDKGDebugStatus localStatus GUARDED_BY(cs);
 
 public:

@@ -33,7 +33,7 @@ static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
 
 std::unique_ptr<CQuorumManager> quorumManager;
 
-CCriticalSection cs_data_requests;
+RecursiveMutex cs_data_requests;
 static std::unordered_map<CQuorumDataRequestKey, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
 
 static uint256 MakeQuorumKey(const CQuorum& q)

@@ -14,7 +14,7 @@
 #include <warnings.h>
 
 // Keep track of the active Masternode
-CCriticalSection activeMasternodeInfoCs;
+RecursiveMutex activeMasternodeInfoCs;
 CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
