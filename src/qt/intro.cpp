@@ -208,7 +208,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
         }
 
         /* Let the user choose one */
-        Intro intro(0, node.getAssumedChainStateSize(), node.getAssumedChainStateSize());
+        Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
         GUIUtil::disableMacFocusRect(&intro);
         GUIUtil::loadStyleSheet(true);
         intro.setDataDirectory(dataDirDefaultCurrent);
