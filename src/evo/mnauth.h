@@ -8,14 +8,16 @@
 #include <bls/bls.h>
 #include <serialize.h>
 
+class CBlockIndex;
 class CConnman;
 class CDataStream;
 class CDeterministicMN;
 class CDeterministicMNList;
 class CDeterministicMNListDiff;
 class CNode;
+class PeerLogicValidation;
+
 class UniValue;
-class CBlockIndex;
 
 /**
  * This class handles the p2p message MNAUTH. MNAUTH is sent directly after VERACK and authenticates the sender as a
@@ -46,7 +48,7 @@ public:
     }
 
     static void PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip);
-    static void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    static void ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 

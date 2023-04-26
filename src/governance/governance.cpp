@@ -87,7 +87,7 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
     return cmapVoteToObject.Get(nHash, pGovobj) && pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss);
 }
 
-void CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+void CGovernanceManager::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fDisableGovernance) return;
     if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
@@ -107,7 +107,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, std::str
         vRecv >> filter;
 
         if (nProp == uint256()) {
-            SyncObjects(peer, connman);
+            SyncObjects(peer, peer_logic, connman);
         } else {
             SyncSingleObjVotes(peer, nProp, filter, connman);
         }
@@ -617,7 +617,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, peer.GetId());
 }
 
-void CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
+void CGovernanceManager::SyncObjects(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman) const
 {
     // do not provide any data until our node is synced
     if (!::masternodeSync->IsSynced()) return;

@@ -26,7 +26,7 @@
 std::unique_ptr<CCoinJoinServer> coinJoinServer;
 constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 
-void CCoinJoinServer::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinServer::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, std::string_view msg_type, CDataStream& vRecv)
 {
     if (!fMasternodeMode) return;
     if (!m_mn_sync->IsBlockchainSynced()) return;
@@ -34,7 +34,7 @@ void CCoinJoinServer::ProcessMessage(CNode& peer, std::string_view msg_type, CDa
     if (msg_type == NetMsgType::DSACCEPT) {
         ProcessDSACCEPT(peer, vRecv);
     } else if (msg_type == NetMsgType::DSQUEUE) {
-        ProcessDSQUEUE(peer, vRecv);
+        ProcessDSQUEUE(peer, peer_logic, vRecv);
     } else if (msg_type == NetMsgType::DSVIN) {
         ProcessDSVIN(peer, vRecv);
     } else if (msg_type == NetMsgType::DSSIGNFINALTX) {
@@ -107,7 +107,7 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
     }
 }
 
-void CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv)
+void CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, PeerLogicValidation& peer_logic, CDataStream& vRecv)
 {
     CCoinJoinQueue dsq;
     vRecv >> dsq;

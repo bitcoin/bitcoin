@@ -31,7 +31,7 @@ std::map<const std::string, std::shared_ptr<CCoinJoinClientManager>> coinJoinCli
 std::unique_ptr<CCoinJoinClientQueueManager> coinJoinClientQueueManager;
 
 
-void CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, PeerLogicValidation& peer_logic, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -43,11 +43,11 @@ void CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_
     }
 
     if (msg_type == NetMsgType::DSQUEUE) {
-        CCoinJoinClientQueueManager::ProcessDSQueue(peer, vRecv);
+        CCoinJoinClientQueueManager::ProcessDSQueue(peer, peer_logic, vRecv);
     }
 }
 
-void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream& vRecv)
+void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerLogicValidation& peer_logic, CDataStream& vRecv)
 {
     CCoinJoinQueue dsq;
     vRecv >> dsq;
@@ -130,7 +130,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream&
     }
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -149,12 +149,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, cons
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, connman, mempool, msg_type, vRecv);
+            session.ProcessMessage(peer, peer_logic, connman, mempool, msg_type, vRecv);
         }
     }
 }
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;

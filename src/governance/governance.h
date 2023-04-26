@@ -18,6 +18,7 @@ class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 class CSporkManager;
+class PeerLogicValidation;
 
 extern std::unique_ptr<CGovernanceManager> governance;
 
@@ -231,9 +232,9 @@ public:
     bool ConfirmInventoryRequest(const CInv& inv);
 
     void SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    void SyncObjects(CNode& peer, CConnman& connman) const;
+    void SyncObjects(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman) const;
 
-    void ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     void DoMaintenance(CConnman& connman);
 

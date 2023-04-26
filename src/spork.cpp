@@ -105,16 +105,16 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+void CSporkManager::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type == NetMsgType::SPORK) {
-        ProcessSpork(peer, connman, vRecv);
+        ProcessSpork(peer, peer_logic, connman, vRecv);
     } else if (msg_type == NetMsgType::GETSPORKS) {
         ProcessGetSporks(peer, connman);
     }
 }
 
-void CSporkManager::ProcessSpork(const CNode& peer, CConnman& connman, CDataStream& vRecv)
+void CSporkManager::ProcessSpork(const CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, CDataStream& vRecv)
 {
     CSporkMessage spork;
     vRecv >> spork;
