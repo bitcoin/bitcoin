@@ -298,6 +298,13 @@ void BitcoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
+void BitcoinApplication::InitializePruneSetting(bool prune)
+{
+    // If prune is set, intentionally override existing prune size with
+    // the default size since this is called when choosing a new datadir.
+    optionsModel->SetPruneTargetGB(prune ? DEFAULT_PRUNE_TARGET_GB : 0, true);
+}
+
 void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
@@ -517,8 +524,10 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    if (!Intro::pickDataDirectory(*node))
-        return EXIT_SUCCESS;
+    bool did_show_intro = false;
+    bool prune = false; // Intro dialog prune check box
+    // Gracefully exit if the user cancels
+    if (!Intro::showIfNeeded(*node, did_show_intro, prune)) return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse dash.conf
     /// - Do not call GetDataDir(true) before this step finishes
@@ -541,7 +550,7 @@ int GuiMain(int argc, char* argv[])
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
@@ -559,7 +568,7 @@ int GuiMain(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     // QApplication::setApplicationName(networkStyle->getAppName()); // moved to NetworkStyle::NetworkStyle
@@ -686,6 +695,11 @@ int GuiMain(int argc, char* argv[])
     if (gArgs.GetBoolArg("-debug-ui", false)) {
         QMessageBox::warning(0, PACKAGE_NAME,
                                 "Warning: UI debug mode (-debug-ui) enabled" + QString(gArgs.IsArgSet("-custom-css-dir") ? "." : " without a custom css directory set with -custom-css-dir."));
+    }
+
+    if (did_show_intro) {
+        // Store intro dialog settings other than datadir (network specific)
+        app.InitializePruneSetting(prune);
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))

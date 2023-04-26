@@ -65,6 +65,8 @@ public:
     void parameterSetup();
     /// Create options model
     void createOptionsModel(bool resetSettings);
+    /// Initialize prune setting
+    void InitializePruneSetting(bool prune);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen

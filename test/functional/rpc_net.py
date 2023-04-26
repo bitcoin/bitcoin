@@ -17,13 +17,11 @@ from test_framework.util import (
     wait_until,
 )
 from test_framework.mininode import P2PInterface
+import test_framework.messages
 from test_framework.messages import (
     CAddress,
     msg_addr,
     NODE_NETWORK,
-    NODE_GETUTXO,NODE_BLOOM,
-    NODE_NETWORK_LIMITED,
-    NODE_HEADERS_COMPRESSED,
 )
 
 
@@ -34,16 +32,10 @@ def assert_net_servicesnames(servicesflag, servicenames):
     :param servicesflag: The services as an integer.
     :param servicenames: The list of decoded services names, as strings.
     """
-    if servicesflag & NODE_NETWORK:
-        assert "NETWORK" in servicenames
-    if servicesflag & NODE_GETUTXO:
-        assert "GETUTXO" in servicenames
-    if servicesflag & NODE_BLOOM:
-        assert "BLOOM" in servicenames
-    if servicesflag & NODE_NETWORK_LIMITED:
-        assert "NETWORK_LIMITED" in servicenames
-    if servicesflag & NODE_HEADERS_COMPRESSED:
-        assert "HEADERS_COMPRESSED" in servicenames
+    servicesflag_generated = 0
+    for servicename in servicenames:
+        servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
+    assert servicesflag_generated == servicesflag
 
 
 class NetTest(DashTestFramework):
@@ -126,7 +118,7 @@ class NetTest(DashTestFramework):
         # check the `servicesnames` field
         network_info = [node.getnetworkinfo() for node in self.nodes]
         for info in network_info:
-            assert_net_servicesnames(int(info["localservices"], 16), info["localservicesnames"])
+            assert_net_servicesnames(int(info["localservices"], 0x10), info["localservicesnames"])
 
         self.log.info('Test extended connections info')
         self.connect_nodes(1, 2)
@@ -166,7 +158,7 @@ class NetTest(DashTestFramework):
         assert_equal(peer_info[1][0]['addrbind'], peer_info[0][0]['addr'])
         # check the `servicesnames` field
         for info in peer_info:
-            assert_net_servicesnames(int(info[0]["services"], 16), info[0]["servicesnames"])
+            assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
 
     def test_service_flags(self):
         self.nodes[0].add_p2p_connection(P2PInterface(), services=(1 << 4) | (1 << 63))

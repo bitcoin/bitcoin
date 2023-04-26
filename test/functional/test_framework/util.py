@@ -430,9 +430,13 @@ def get_chain_folder(datadir, chain):
         pass
     return chain
 
-def get_bip9_status(node, key):
-    info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+def get_bip9_details(node, key):
+    """Return extra info about bip9 softfork"""
+    return node.getblockchaininfo()['softforks'][key]['bip9']
+
+def softfork_active(node, key):
+    """Return whether a softfork is active."""
+    return node.getblockchaininfo()['softforks'][key]['active']
 
 def set_node_times(nodes, t):
     for node in nodes:

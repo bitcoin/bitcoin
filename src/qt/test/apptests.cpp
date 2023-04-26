@@ -73,7 +73,7 @@ void AppTests::appTests()
     GUIUtil::loadFonts();
     m_app.createOptionsModel(true /* reset settings */);
     QScopedPointer<const NetworkStyle> style(
-        NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+        NetworkStyle::instantiate(Params().NetworkIDString()));
     m_app.createWindow(style.data());
     connect(&m_app, &BitcoinApplication::windowShown, this, &AppTests::guiTests);
     expectCallback("guiTests");

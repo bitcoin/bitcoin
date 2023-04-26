@@ -18,7 +18,7 @@ from test_framework.blocktools import get_masternode_payment, create_coinbase, c
 from test_framework.messages import CCbTx, CInv, COIN, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str, uint256_to_string
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, get_bip9_status, wait_until
+from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, wait_until
 
 
 class TestP2PConn(P2PInterface):
@@ -308,10 +308,10 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         coinbasevalue -= bt_fees
         coinbasevalue += new_fees
 
-        realloc_info = get_bip9_status(self.nodes[0], 'realloc')
+        realloc_info = self.nodes[0].getblockchaininfo()['softforks']['realloc']
         realloc_height = 99999999
-        if realloc_info['status'] == 'active':
-            realloc_height = realloc_info['since']
+        if realloc_info['active']:
+            realloc_height = realloc_info['height']
         mn_amount = get_masternode_payment(height, coinbasevalue, realloc_height)
         miner_amount = coinbasevalue - mn_amount
 

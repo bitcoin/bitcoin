@@ -5,7 +5,7 @@
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
 from test_framework.script import CScript, OP_CAT, OP_DROP, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status, satoshi_round
+from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_details, softfork_active, satoshi_round
 
 '''
 feature_dip0020_activation.py
@@ -55,12 +55,12 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx0_hex = ToHex(tx0)
 
         # This tx isn't valid yet
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'locked_in')
+        assert_equal(get_bip9_details(self.nodes[0], 'dip0020')['status'], 'locked_in')
         assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, self.node.sendrawtransaction, tx0_hex)
 
         # Generate enough blocks to activate DIP0020 opcodes
         self.node.generate(98)
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'active')
+        assert softfork_active(self.nodes[0], 'dip0020')
 
         # Still need 1 more block for mempool to accept new opcodes
         assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, self.node.sendrawtransaction, tx0_hex)

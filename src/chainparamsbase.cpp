@@ -32,9 +32,10 @@ void SetupChainParamsBaseOptions(ArgsManager& argsman)
     argsman.AddArg("-llmqtestinstantsendparams=<size>:<threshold>", "Override the default LLMQ size for the LLMQ_TEST_INSTANTSEND quorums (default: 3:2, regtest-only)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-powtargetspacing=<n>", "Override the default PowTargetSpacing value in seconds (default: 2.5 minutes, devnet-only)", ArgsManager::ALLOW_INT, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-minimumdifficultyblocks=<n>", "The number of blocks that can be mined with the minimum difficulty at the start of a chain (default: 0, devnet-only)", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
+    argsman.AddArg("-chain=<chain>", "Use the chain <chain> (default: main). Allowed values: main, test, regtest", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
-                                   "This is intended for regression testing tools and app development.", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
-    argsman.AddArg("-testnet", "Use the test chain", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
+                   "This is intended for regression testing tools and app development. Equivalent to -chain=regtest", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
+    argsman.AddArg("-testnet", "Use the test chain. Equivalent to -chain=test", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-vbparams=<deployment>:<start>:<end>(:<window>:<threshold/thresholdstart>(:<thresholdmin>:<falloffcoeff>))",
                  "Use given start/end times for specified version bits deployment (regtest-only). "
                  "Specifying window, threshold/thresholdstart, thresholdmin and falloffcoeff is optional.", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
