@@ -18,8 +18,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-class CSporkManager;
 class CMasternodeSync;
+class CSporkManager;
+class PeerLogicValidation;
 
 namespace llmq
 {
@@ -209,7 +210,9 @@ private:
     CSigningManager& sigman;
     CSigSharesManager& shareman;
     CChainLocksHandler& clhandler;
+
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -259,9 +262,10 @@ private:
 public:
     explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
-                                 CChainLocksHandler& _clhandler, const std::unique_ptr<CMasternodeSync>& mn_sync, bool unitTests, bool fWipe) :
+                                 CChainLocksHandler& _clhandler, const std::unique_ptr<CMasternodeSync>& mn_sync,
+                                 const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unitTests, bool fWipe) :
         db(unitTests, fWipe), connman(_connman), mempool(_mempool), spork_manager(sporkManager), qman(_qman), sigman(_sigman), shareman(_shareman),
-        clhandler(_clhandler), m_mn_sync(mn_sync)
+        clhandler(_clhandler), m_mn_sync(mn_sync), m_peer_logic(peer_logic)
     {
         workInterrupt.reset();
     }

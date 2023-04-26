@@ -17,10 +17,12 @@
 
 #include <unordered_map>
 
-using NodeId = int64_t;
 class CConnman;
 class CInv;
 class CNode;
+class PeerLogicValidation;
+
+using NodeId = int64_t;
 
 namespace llmq
 {
@@ -168,6 +170,8 @@ private:
     CConnman& connman;
     const CQuorumManager& qman;
 
+    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs GUARDED_BY(cs);
     std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs GUARDED_BY(cs);
@@ -179,7 +183,8 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
-    CSigningManager(CConnman& _connman, const CQuorumManager& _qman, bool fMemory, bool fWipe);
+    CSigningManager(CConnman& _connman, const CQuorumManager& _qman,
+                    const std::unique_ptr<PeerLogicValidation>& peer_logic, bool fMemory, bool fWipe);
 
     bool AlreadyHave(const CInv& inv) const;
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;

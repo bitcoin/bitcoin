@@ -526,8 +526,10 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CConnman& _connman, const CQuorumManager& _qman, bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), connman(_connman), qman(_qman)
+CSigningManager::CSigningManager(CConnman& _connman, const CQuorumManager& _qman,
+                                 const std::unique_ptr<PeerLogicValidation>& peer_logic,
+                                 bool fMemory, bool fWipe) :
+    db(fMemory, fWipe), connman(_connman), qman(_qman), m_peer_logic(peer_logic)
 {
 }
 

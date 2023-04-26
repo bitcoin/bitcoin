@@ -188,13 +188,15 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 }
 
 CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
-                               CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+                               CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mn_sync,
+                               const std::unique_ptr<PeerLogicValidation>& peer_logic) :
     m_evoDb(_evoDb),
     connman(_connman),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
     quorumBlockProcessor(_quorumBlockProcessor),
-    m_mn_sync(mn_sync)
+    m_mn_sync(mn_sync),
+    m_peer_logic(peer_logic)
 {
     utils::InitQuorumsCache(mapQuorumsCache);
     utils::InitQuorumsCache(scanQuorumsCache);

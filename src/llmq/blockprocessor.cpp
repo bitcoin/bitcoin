@@ -36,8 +36,8 @@ static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT_Q_INDEXED = "q_m
 
 static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB& evoDb, CConnman& _connman) :
-    m_evoDb(evoDb), connman(_connman)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB& evoDb, CConnman& _connman, const std::unique_ptr<PeerLogicValidation>& peer_logic) :
+    m_evoDb(evoDb), connman(_connman), m_peer_logic(peer_logic)
 {
     utils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }

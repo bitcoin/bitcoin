@@ -19,11 +19,12 @@
 #include <unordered_map>
 #include <utility>
 
+class CDeterministicMN;
 class CEvoDB;
 class CScheduler;
 class CSporkManager;
+class PeerLogicValidation;
 
-class CDeterministicMN;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
@@ -399,11 +400,15 @@ private:
     CConnman& connman;
     const CQuorumManager& qman;
     CSigningManager& sigman;
+
+    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    explicit CSigSharesManager(CConnman& _connman, CQuorumManager& _qman, CSigningManager& _sigman) : connman(_connman), qman(_qman), sigman(_sigman)
+    explicit CSigSharesManager(CConnman& _connman, CQuorumManager& _qman, CSigningManager& _sigman, const std::unique_ptr<PeerLogicValidation>& peer_logic) :
+        connman(_connman), qman(_qman), sigman(_sigman), m_peer_logic(peer_logic)
     {
         workInterrupt.reset();
     };

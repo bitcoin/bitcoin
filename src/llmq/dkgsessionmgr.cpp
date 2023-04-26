@@ -22,9 +22,16 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager, bool unitTests, bool fWipe) :
-        db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
-        blsWorker(_blsWorker), connman(_connman), spork_manager(sporkManager), dkgDebugManager(_dkgDebugManager), quorumBlockProcessor(_quorumBlockProcessor)
+CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager,
+                                       CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
+                                       const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unitTests, bool fWipe) :
+    db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
+    blsWorker(_blsWorker),
+    connman(_connman),
+    spork_manager(sporkManager),
+    dkgDebugManager(_dkgDebugManager),
+    quorumBlockProcessor(_quorumBlockProcessor),
+    m_peer_logic(peer_logic)
 {
     if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) {
         // Regular nodes do not care about any DKG internals, bail out
@@ -39,7 +46,7 @@ CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorke
         for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(params, blsWorker, *this, dkgDebugManager, quorumBlockProcessor, connman, i));
+                                       std::forward_as_tuple(params, blsWorker, *this, dkgDebugManager, quorumBlockProcessor, connman, peer_logic, i));
         }
     }
 }

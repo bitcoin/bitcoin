@@ -19,8 +19,9 @@
 #include <llmq/utils.h>
 #include <masternode/sync.h>
 
-LLMQContext::LLMQContext(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkManager, bool unitTests, bool fWipe) {
-    Create(evoDb, mempool, connman, sporkManager, unitTests, fWipe);
+LLMQContext::LLMQContext(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
+                         const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unit_tests, bool wipe) {
+    Create(evo_db, mempool, connman, sporkman, peer_logic, unit_tests, wipe);
 
     /* Context aliases to globals used by the LLMQ system */
     quorum_block_processor = llmq::quorumBlockProcessor.get();
@@ -38,21 +39,22 @@ LLMQContext::~LLMQContext() {
     Destroy();
 }
 
-void LLMQContext::Create(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkManager, bool unitTests, bool fWipe) {
+void LLMQContext::Create(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
+                         const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unit_tests, bool wipe) {
     bls_worker = std::make_shared<CBLSWorker>();
 
     dkg_debugman = std::make_unique<llmq::CDKGDebugManager>();
-    llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(evoDb, connman);
-    qdkgsman = std::make_unique<llmq::CDKGSessionManager>(connman, *bls_worker, *dkg_debugman, *llmq::quorumBlockProcessor, sporkManager, unitTests, fWipe);
-    llmq::quorumManager = std::make_unique<llmq::CQuorumManager>(evoDb, connman, *bls_worker, *llmq::quorumBlockProcessor, *qdkgsman, ::masternodeSync);
-    sigman = std::make_unique<llmq::CSigningManager>(connman, *llmq::quorumManager, unitTests, fWipe);
-    shareman = std::make_unique<llmq::CSigSharesManager>(connman, *llmq::quorumManager, *sigman);
-    llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(mempool, connman, sporkManager, *sigman, *shareman, *llmq::quorumManager, ::masternodeSync);
-    llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(mempool, connman, sporkManager, *llmq::quorumManager, *sigman, *shareman, *llmq::chainLocksHandler, ::masternodeSync, unitTests, fWipe);
+    llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(evo_db, connman, peer_logic);
+    qdkgsman = std::make_unique<llmq::CDKGSessionManager>(connman, *bls_worker, *dkg_debugman, *llmq::quorumBlockProcessor, sporkman, peer_logic, unit_tests, wipe);
+    llmq::quorumManager = std::make_unique<llmq::CQuorumManager>(evo_db, connman, *bls_worker, *llmq::quorumBlockProcessor, *qdkgsman, ::masternodeSync, peer_logic);
+    sigman = std::make_unique<llmq::CSigningManager>(connman, *llmq::quorumManager, peer_logic, unit_tests, wipe);
+    shareman = std::make_unique<llmq::CSigSharesManager>(connman, *llmq::quorumManager, *sigman, peer_logic);
+    llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(mempool, connman, sporkman, *sigman, *shareman, *llmq::quorumManager, ::masternodeSync, peer_logic);
+    llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(mempool, connman, sporkman, *llmq::quorumManager, *sigman, *shareman, *llmq::chainLocksHandler, ::masternodeSync, peer_logic, unit_tests, wipe);
 
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
     // TODO: remove it in some future version
-    auto llmqDbTmp = std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, true);
+    auto llmqDbTmp = std::make_unique<CDBWrapper>(unit_tests ? "" : (GetDataDir() / "llmq"), 1 << 20, unit_tests, true);
 }
 
 void LLMQContext::Destroy() {

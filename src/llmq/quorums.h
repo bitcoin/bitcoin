@@ -16,14 +16,14 @@
 
 #include <evo/evodb.h>
 
-class CNode;
-
 class CConnman;
 class CBlockIndex;
-
 class CDeterministicMN;
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 class CMasternodeSync;
+class CNode;
+class PeerLogicValidation;
+
+using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {
@@ -217,7 +217,9 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
+
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
 
     mutable CCriticalSection cs_map_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
@@ -229,7 +231,8 @@ private:
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
-                   CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mnSync);
+                   CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mnSync,
+                   const std::unique_ptr<PeerLogicValidation>& peer_logic);
     ~CQuorumManager() { Stop(); };
 
     void Start();

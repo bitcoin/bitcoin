@@ -13,6 +13,7 @@
 
 class CBLSWorker;
 class CBlockIndex;
+class PeerLogicValidation;
 
 namespace llmq
 {
@@ -117,6 +118,8 @@ private:
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
 
+    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+
     QuorumPhase phase GUARDED_BY(cs) {QuorumPhase::Idle};
     int currentHeight GUARDED_BY(cs) {-1};
     uint256 quorumHash GUARDED_BY(cs);
@@ -132,7 +135,8 @@ private:
 
 public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager,
-                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CConnman& _connman, int _quorumIndex);
+                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor,
+                       CConnman& _connman, const std::unique_ptr<PeerLogicValidation>& peer_logic, int _quorumIndex);
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
