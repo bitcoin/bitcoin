@@ -206,7 +206,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("masternode", stats.m_masternode_connection);
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
-            obj.pushKV("banscore", statestats.nMisbehavior);
+            obj.pushKV("banscore", statestats.m_misbehavior_score);
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);
