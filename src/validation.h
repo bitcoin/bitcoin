@@ -593,7 +593,7 @@ public:
                          const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                          CEvoDB& evoDb,
                          CTxMemPool& mempool,
-                         uint256 from_snapshot_blockhash = uint256());
+                         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -624,9 +624,9 @@ public:
     /**
      * The blockhash which is the base of the snapshot this chainstate was created from.
      *
-     * IsNull() if this chainstate was not created from a snapshot.
+     * std::nullopt if this chainstate was not created from a snapshot.
      */
-    const uint256 m_from_snapshot_blockhash{};
+    const std::optional<uint256> m_from_snapshot_blockhash;
 
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
@@ -917,7 +917,8 @@ public:
                                       const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                                       CEvoDB& evoDb,
                                       CTxMemPool& mempool,
-                                      const uint256& snapshot_blockhash = uint256()) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+                                      const std::optional<uint256>& snapshot_blockhash = std::nullopt)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
     std::vector<CChainState*> GetAll();

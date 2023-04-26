@@ -1302,7 +1302,7 @@ CChainState::CChainState(BlockManager& blockman,
                          const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                          CEvoDB& evoDb,
                          CTxMemPool& mempool,
-                         uint256 from_snapshot_blockhash)
+                         std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
       m_clhandler(clhandler),
       m_isman(isman),
@@ -1317,8 +1317,8 @@ void CChainState::InitCoinsDB(
     bool should_wipe,
     std::string leveldb_name)
 {
-    if (!m_from_snapshot_blockhash.IsNull()) {
-        leveldb_name += "_" + m_from_snapshot_blockhash.ToString();
+    if (m_from_snapshot_blockhash) {
+        leveldb_name += "_" + m_from_snapshot_blockhash->ToString();
     }
 
     m_coins_views = std::make_unique<CoinsViews>(
@@ -4800,7 +4800,7 @@ bool CVerifyDB::VerifyDB(
     int reportDone = 0;
     LogPrintf("[0%%]..."); /* Continued */
 
-    bool is_snapshot_cs = !chainstate.m_from_snapshot_blockhash.IsNull();
+    const bool is_snapshot_cs{!chainstate.m_from_snapshot_blockhash};
 
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
@@ -5418,8 +5418,8 @@ std::string CChainState::ToString()
 {
     CBlockIndex* tip = m_chain.Tip();
     return strprintf("Chainstate [%s] @ height %d (%s)",
-        m_from_snapshot_blockhash.IsNull() ? "ibd" : "snapshot",
-        tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
+                     m_from_snapshot_blockhash ? "snapshot" : "ibd",
+                     tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
 }
 
 bool CChainState::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
@@ -5644,8 +5644,7 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 
 std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
     LOCK(::cs_main);  // for m_active_chainstate access
-    if (m_active_chainstate != nullptr &&
-            !m_active_chainstate->m_from_snapshot_blockhash.IsNull()) {
+    if (m_active_chainstate && m_active_chainstate->m_from_snapshot_blockhash) {
         // If a snapshot chainstate exists, it will always be our active.
         return m_active_chainstate->m_from_snapshot_blockhash;
     }
@@ -5673,9 +5672,9 @@ CChainState& ChainstateManager::InitializeChainstate(const std::unique_ptr<llmq:
                                                      const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                                                      CEvoDB& evoDb,
                                                      CTxMemPool& mempool,
-                                                     const uint256& snapshot_blockhash)
+                                                     const std::optional<uint256>& snapshot_blockhash)
 {
-    bool is_snapshot = !snapshot_blockhash.IsNull();
+    bool is_snapshot = snapshot_blockhash.has_value();
     std::unique_ptr<CChainState>& to_modify =
         is_snapshot ? m_snapshot_chainstate : m_ibd_chainstate;
 
@@ -5805,6 +5804,26 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     uint256 base_blockhash = metadata.m_base_blockhash;
 
+    CBlockIndex* snapshot_start_block = WITH_LOCK(::cs_main, return m_blockman.LookupBlockIndex(base_blockhash));
+
+    if (!snapshot_start_block) {
+        // Needed for GetUTXOStats and ExpectedAssumeutxo to determine the height and to avoid a crash when base_blockhash.IsNull()
+        LogPrintf("[snapshot] Did not find snapshot start blockheader %s\n",
+                  base_blockhash.ToString());
+        return false;
+    }
+
+    int base_height = snapshot_start_block->nHeight;
+    auto maybe_au_data = ExpectedAssumeutxo(base_height, ::Params());
+
+    if (!maybe_au_data) {
+        LogPrintf("[snapshot] assumeutxo height in snapshot metadata not recognized " /* Continued */
+                  "(%d) - refusing to load snapshot\n", base_height);
+        return false;
+    }
+
+    const AssumeutxoData& au_data = *maybe_au_data;
+
     COutPoint outpoint;
     Coin coin;
     const uint64_t coins_count = metadata.m_coins_count;
@@ -5895,15 +5914,6 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     assert(coins_cache.GetBestBlock() == base_blockhash);
 
-    CBlockIndex* snapshot_start_block = WITH_LOCK(::cs_main, return m_blockman.LookupBlockIndex(base_blockhash));
-
-    if (!snapshot_start_block) {
-        // Needed for GetUTXOStats to determine the height
-        LogPrintf("[snapshot] Did not find snapshot start blockheader %s\n",
-                  base_blockhash.ToString());
-        return false;
-    }
-
     CCoinsStats stats;
     auto breakpoint_fnc = [] { /* TODO insert breakpoint here? */ };
 
@@ -5917,19 +5927,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     // Assert that the deserialized chainstate contents match the expected assumeutxo value.
-
-    int base_height = snapshot_start_block->nHeight;
-    auto maybe_au_data = ExpectedAssumeutxo(base_height, ::Params());
-
-    if (!maybe_au_data) {
-        LogPrintf("[snapshot] assumeutxo height in snapshot metadata not recognized " /* Continued */
-            "(%d) - refusing to load snapshot\n", base_height);
-        return false;
-    }
-
-    const AssumeutxoData& au_data = *maybe_au_data;
-
-    if (stats.hashSerialized != au_data.hash_serialized) {
+    if (AssumeutxoHash{stats.hashSerialized} != au_data.hash_serialized) {
         LogPrintf("[snapshot] bad snapshot content hash: expected %s, got %s\n",
             au_data.hash_serialized.ToString(), stats.hashSerialized.ToString());
         return false;
