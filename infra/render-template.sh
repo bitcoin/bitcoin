@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # Reads a bash-like templated file from stdin, and accepts a space separated
 # list of variable names to interpolate. The template file is written on stdout,

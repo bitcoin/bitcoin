@@ -367,7 +367,7 @@ public:
          * of the 2016 window are mined with the "I am supporting the update"
          * flag active.
          *
-         * Provided that in ItCoin 1 block is mined every minute, this means
+         * Provided that in itcoin 1 block is mined every minute, this means
          * that an update can be introduced in at most 2 days, even keeping 1916
          * and 2016. This is is fast enough.
          *

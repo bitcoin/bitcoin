@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # Builds a docker image for itcoin-core from the current working copy.
 # The image is named "arthub.azurecr.io/itcoin-core", and tagged with "git-"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # This script is meant for debugging purposes. Assuming
 # initialize-itcoin-local.sh has been already executed once, restarts the
@@ -65,9 +65,9 @@ MINER="${PATH_TO_BINARIES}/miner"
 "${BITCOIND}" -daemon -datadir="${DATADIR}"
 
 # wait until the daemon is fully started
-errecho "ItCoin daemon: waiting (at most 10 seconds) for warmup"
+errecho "Itcoin daemon: waiting (at most 10 seconds) for warmup"
 timeout 10 "${BITCOIN_CLI}" -datadir="${DATADIR}" -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-errecho "ItCoin daemon: warmed up"
+errecho "Itcoin daemon: warmed up"
 
 # Open the wallet WALLET_NAME
 errecho "Load wallet ${WALLET_NAME}"

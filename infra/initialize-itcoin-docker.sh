@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # Starts a local itcoin daemon via Docker, computes the information
 # necessary to initialize the system for the first time, prints on stdout the
@@ -56,7 +56,7 @@ errecho() {
 
 cleanup() {
     # stop the itcoin daemon
-    errecho "ItCoin daemon: cleaning up (deleting container ${CONTAINER_NAME})"
+    errecho "Itcoin daemon: cleaning up (deleting container ${CONTAINER_NAME})"
     docker stop "${CONTAINER_NAME}" > /dev/null
 }
 

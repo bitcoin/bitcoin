@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # Entrypoint for the docker container of itcoin-core.
 # Allows starting an arbitrary linux command inside the container.

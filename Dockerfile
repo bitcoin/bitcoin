@@ -1,4 +1,4 @@
-# ItCoin
+# Itcoin
 #
 # Dockerfile for building itcoin-core in a container
 #

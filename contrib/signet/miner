@@ -175,7 +175,7 @@ def signet_txs(block, challenge):
     # ITCOIN_SPECIFIC - START
     # assumes SIGNET_HEADER has already been added so does not need to be added here
 
-    # In itCoin, the transaction is first pow-ed and then signed
+    # In itcoin, the transaction is first pow-ed and then signed
     # the signature covers the whole block header, including the pow part, namely nBits and nNonce
     block_header: CBlockHeader = CBlockHeader(block)
     sd = block_header.serialize()
@@ -433,7 +433,7 @@ def do_generate_next_block(args, blocktime=None) -> Tuple[CBlock, dict, str]:
     logging.debug(f"Block merkle root (function which includes signatures) after appending witness commitment = { ser_uint256(block.calc_merkle_root()).hex() }")
 
     # Appending the SIGNET_HEADER
-    # In itCoin this is made here, because the merkle root should include the signet header but not the signet solution
+    # In itcoin this is made here, because the merkle root should include the signet header but not the signet solution
     # In the original signet, the signet header was appendend later, together with the signet solution. The merke root included both.
     block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER)
     block.vtx[0].rehash()
@@ -441,7 +441,7 @@ def do_generate_next_block(args, blocktime=None) -> Tuple[CBlock, dict, str]:
     logging.debug(f"Block merkle root (function which includes signatures) after appending signet header = { ser_uint256(block.calc_merkle_root()).hex() }")
 
     # Transactions updated, recalculate block merkle root
-    # Signet solution has not been added, so there is no need to use an itCoin signet specific merkle root calculator
+    # Signet solution has not been added, so there is no need to use an itcoin signet specific merkle root calculator
     block.hashMerkleRoot = block.calc_merkle_root()
 
     # Mine block

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # Starts a local itcoin daemon, computes the information necessary to initialize
 # the system for the first time and mines the first block of a new blockchain.
@@ -88,9 +88,9 @@ mkdir "${DATADIR}"
 "${BITCOIND}" -daemon -datadir="${DATADIR}"
 
 # wait until the daemon is fully started
-errecho "ItCoin daemon: waiting (at most 10 seconds) for warmup"
+errecho "Itcoin daemon: waiting (at most 10 seconds) for warmup"
 timeout 10 "${BITCOIN_CLI}" -datadir="${DATADIR}" -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-errecho "ItCoin daemon: warmed up"
+errecho "Itcoin daemon: warmed up"
 
 # Only the first time: let's create a blank descriptor wallet and call it
 # itcoin_signer

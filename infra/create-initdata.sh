@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # Starts an ephemeral local itcoin daemon, and computes the information
 # necessary to perform a first initialization of a 1-of-1 signet.

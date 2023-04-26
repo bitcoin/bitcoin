@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ItCoin
+# Itcoin
 #
 # This script configures the build for itcoin-core. It can be used both on bare
 # metal and inside a Docker container.

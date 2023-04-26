@@ -1,4 +1,4 @@
-# ItCoin
+# Itcoin
 #
 # This file limits which files may end up inside the docker build context,
 # i.e., which files will be available at container build time to an ADD/COPY
