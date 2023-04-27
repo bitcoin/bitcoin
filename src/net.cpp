@@ -130,7 +130,6 @@ static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // S
 //
 bool fDiscover = true;
 bool fListen = true;
-bool g_relay_txes = !DEFAULT_BLOCKSONLY;
 CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
@@ -553,6 +552,14 @@ void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNet
     for (const auto& subnet : vWhitelistedRange) {
         if (subnet.m_subnet.Match(addr)) NetPermissions::AddFlag(flags, subnet.m_flags);
     }
+}
+
+bool CNode::IsBlockRelayOnly() const {
+    bool ignores_incoming_txs{gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
+    // Stop processing non-block data early if
+    // 1) We are in blocks only mode and peer has no relay permission
+    // 2) This peer is a block-relay-only peer
+    return (ignores_incoming_txs && !HasPermission(PF_RELAY)) || !IsAddrRelayPeer();
 }
 
 std::string CNode::GetAddrName() const {

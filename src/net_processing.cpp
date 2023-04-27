@@ -452,43 +452,6 @@ static void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUS
     nPreferredDownload += state->fPreferredDownload;
 }
 
-static void PushNodeVersion(CNode& pnode, CConnman& connman, int64_t nTime)
-{
-    const auto& params = Params();
-
-    // Note that pnode->GetLocalServices() is a reflection of the local
-    // services we were offering when the CNode object was created for this
-    // peer.
-    ServiceFlags nLocalNodeServices = pnode.GetLocalServices();
-    uint64_t nonce = pnode.GetLocalNonce();
-    int nNodeStartingHeight = pnode.GetMyStartingHeight();
-    NodeId nodeid = pnode.GetId();
-    CAddress addr = pnode.addr;
-
-    CAddress addrYou = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ?
-                           addr :
-                           CAddress(CService(), addr.nServices);
-    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
-
-    uint256 mnauthChallenge;
-    GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
-    pnode.SetSentMNAuthChallenge(mnauthChallenge);
-
-    int nProtocolVersion = PROTOCOL_VERSION;
-    if (params.NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
-        nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
-    }
-
-    connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.IsAddrRelayPeer(), mnauthChallenge, pnode.m_masternode_connection.load()));
-
-    if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
-    } else {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), nodeid);
-    }
-}
-
 // Returns a bool indicating whether we requested this block.
 // Also used if a block was /not/ received and timed out or started with another peer
 static bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
@@ -735,6 +698,43 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
 }
 } // namespace
 
+void PeerManager::PushNodeVersion(CNode& pnode, int64_t nTime)
+{
+    const auto& params = Params();
+
+    // Note that pnode->GetLocalServices() is a reflection of the local
+    // services we were offering when the CNode object was created for this
+    // peer.
+    ServiceFlags nLocalNodeServices = pnode.GetLocalServices();
+    uint64_t nonce = pnode.GetLocalNonce();
+    int nNodeStartingHeight = pnode.GetMyStartingHeight();
+    NodeId nodeid = pnode.GetId();
+    CAddress addr = pnode.addr;
+
+    CAddress addrYou = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ?
+                           addr :
+                           CAddress(CService(), addr.nServices);
+    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
+
+    uint256 mnauthChallenge;
+    GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
+    pnode.SetSentMNAuthChallenge(mnauthChallenge);
+
+    int nProtocolVersion = PROTOCOL_VERSION;
+    if (params.NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+        nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+    }
+
+    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
+            nonce, strSubVersion, nNodeStartingHeight, !m_ignore_incoming_txs && pnode.IsAddrRelayPeer(), mnauthChallenge, pnode.m_masternode_connection.load()));
+
+    if (fLogIPs) {
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
+    } else {
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), nodeid);
+    }
+}
+
 void EraseObjectRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
@@ -906,7 +906,7 @@ void PeerManager::InitializeNode(CNode *pnode) {
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, std::move(peer));
     }
     if (!pnode->fInbound)
-        PushNodeVersion(*pnode, m_connman, GetTime());
+        PushNodeVersion(*pnode, GetTime());
 }
 
 void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
@@ -1288,7 +1288,7 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
 }
 
 PeerManager::PeerManager(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                         std::unique_ptr<LLMQContext>& llmq_ctx)
+                         std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_addrman(addrman),
@@ -1296,7 +1296,8 @@ PeerManager::PeerManager(const CChainParams& chainparams, CConnman& connman, CAd
       m_chainman(chainman),
       m_mempool(pool),
       m_llmq_ctx(llmq_ctx),
-      m_stale_tip_check_time(0)
+      m_stale_tip_check_time(0),
+      m_ignore_incoming_txs(ignore_incoming_txs)
 {
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
@@ -2681,7 +2682,7 @@ void PeerManager::ProcessMessage(
 
         // Be shy and don't send version until we hear
         if (pfrom.fInbound)
-            PushNodeVersion(pfrom, m_connman, GetAdjustedTime());
+            PushNodeVersion(pfrom, GetAdjustedTime());
 
         if (Params().NetworkIDString() == CBaseChainParams::DEVNET) {
             if (cleanSubVer.find(strprintf("devnet.%s", gArgs.GetDevNetName())) == std::string::npos) {

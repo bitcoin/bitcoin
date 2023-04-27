@@ -1756,10 +1756,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
 
-    // see Step 2: parameter interactions for more information about these
     fListen = args.GetBoolArg("-listen", DEFAULT_LISTEN);
     fDiscover = args.GetBoolArg("-discover", true);
-    g_relay_txes = !args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+    const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
     assert(!node.addrman);
     node.addrman = std::make_unique<CAddrMan>();
@@ -1771,7 +1770,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(!node.fee_estimator);
     // Don't initialize fee estimation with old data if we don't relay transactions,
     // as they would never get updated.
-    if (g_relay_txes) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
+    if (!ignores_incoming_txs) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
 
     assert(!node.mempool);
     int check_ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
@@ -1781,9 +1780,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    node.peerman.reset(new PeerManager(
-        chainparams, *node.connman, *node.addrman, node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
-    ));
+    assert(!node.peerman);
+    node.peerman = std::make_unique<PeerManager>(chainparams, *node.connman, *node.addrman, node.banman.get(),
+                                                 *node.scheduler, chainman, *node.mempool, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     ::governance = std::make_unique<CGovernanceManager>();
@@ -2310,7 +2309,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.mempool, *node.connman, ::masternodeSync);
 #ifdef ENABLE_WALLET
-    if (g_relay_txes) {
+    if (!ignores_incoming_txs) {
         ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, ::masternodeSync);
     }
 #endif // ENABLE_WALLET
@@ -2383,7 +2382,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*::coinJoinServer)), std::chrono::seconds{1});
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET
-    } else if (g_relay_txes && CCoinJoinClientOptions::IsEnabled()) {
+    } else if (!ignores_incoming_txs && CCoinJoinClientOptions::IsEnabled()) {
         node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.connman), std::ref(*node.fee_estimator), std::ref(*node.mempool)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }

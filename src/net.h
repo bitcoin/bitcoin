@@ -762,7 +762,6 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 
 extern bool fDiscover;
 extern bool fListen;
-extern bool g_relay_txes;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
@@ -1055,13 +1054,7 @@ public:
     // traffic).
     bool IsAddrRelayPeer() const { return m_addr_known != nullptr; }
 
-    bool IsBlockRelayOnly() const
-    {
-        // Stop processing non-block data early if
-        // 1) We are in blocks only mode and peer has no relay permission
-        // 2) This peer is a block-relay-only peer
-        return (!g_relay_txes && !HasPermission(PF_RELAY)) || !IsAddrRelayPeer();
-    }
+    bool IsBlockRelayOnly() const;
 
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately

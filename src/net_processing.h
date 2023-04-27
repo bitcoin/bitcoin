@@ -73,7 +73,7 @@ using PeerRef = std::shared_ptr<Peer>;
 class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
     PeerManager(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman, CScheduler &scheduler,
-                ChainstateManager& chainman, CTxMemPool& pool, std::unique_ptr<LLMQContext>& llmq_ctx);
+                ChainstateManager& chainman, CTxMemPool& pool, std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
 
     /**
      * Overridden from CValidationInterface.
@@ -131,6 +131,9 @@ public:
     /** Get statistics from node state */
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
 
+    /** Whether this node ignores txs received over p2p. */
+    bool IgnoresIncomingTxs() { return m_ignore_incoming_txs; };
+
     bool IsBanned(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
@@ -178,6 +181,9 @@ private:
 
     void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
 
+    /** Send a version message to a peer */
+    void PushNodeVersion(CNode& pnode, int64_t nTime);
+
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
@@ -188,6 +194,9 @@ private:
     std::unique_ptr<LLMQContext>& m_llmq_ctx;
 
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
+
+    //* Whether this node is running in blocks only mode */
+    const bool m_ignore_incoming_txs;
 
     /** Protects m_peer_map */
     mutable Mutex m_peer_mutex;
