@@ -3238,7 +3238,7 @@ void CConnman::Interrupt()
     }
 }
 
-void CConnman::Stop()
+void CConnman::StopThreads()
 {
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
@@ -3252,9 +3252,11 @@ void CConnman::Stop()
         threadDNSAddressSeed.join();
     if (threadSocketHandler.joinable())
         threadSocketHandler.join();
+}
 
-    if (fAddressesInitialized)
-    {
+void CConnman::StopNodes()
+{
+    if (fAddressesInitialized) {
         DumpAddresses();
         fAddressesInitialized = false;
     }
@@ -3287,10 +3289,10 @@ void CConnman::Stop()
     // clean up some globals (to help leak detection)
     std::vector<CNode*> nodes;
     WITH_LOCK(cs_vNodes, nodes.swap(vNodes));
-    for (CNode *pnode : nodes) {
+    for (CNode* pnode : nodes) {
         DeleteNode(pnode);
     }
-    for (CNode *pnode : vNodesDisconnected) {
+    for (CNode* pnode : vNodesDisconnected) {
         DeleteNode(pnode);
     }
     mapSocketToNode.clear();

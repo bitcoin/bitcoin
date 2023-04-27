@@ -21,6 +21,7 @@ class TxValidationState;
 struct LLMQContext;
 
 extern CCriticalSection cs_main;
+extern CCriticalSection g_cs_orphans;
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
