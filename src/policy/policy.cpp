@@ -83,7 +83,9 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
         if (m < 1 || m > n)
             return false;
     } else if (whichType == TxoutType::NULL_DATA) {
-        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes) {
+        // An empty OP_RETURN output doesn't carry any data, so don't apply the
+        // data carrier size limit to it.
+        if (scriptPubKey.size() > 1 && (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes)) {
             return false;
         }
     }

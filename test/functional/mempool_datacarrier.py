@@ -31,7 +31,10 @@ class DataCarrierTest(BitcoinTestFramework):
 
     def test_null_data_transaction(self, node: TestNode, data: bytes, success: bool) -> None:
         tx = self.wallet.create_self_transfer(fee_rate=0)["tx"]
-        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, data])))
+        if data is None:
+            tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN])))
+        else:
+            tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, data])))
         tx.vout[0].nValue -= tx.get_vsize()  # simply pay 1sat/vbyte fee
 
         tx_hex = tx.serialize().hex()
@@ -64,6 +67,12 @@ class DataCarrierTest(BitcoinTestFramework):
 
         self.log.info("Testing a null data transaction with a size smaller than accepted by -datacarriersize.")
         self.test_null_data_transaction(node=self.nodes[2], data=small_data, success=True)
+
+        # Should be accepted by all nodes
+        self.log.info("Testing a bare op_return transaction containing no data.")
+        self.test_null_data_transaction(node=self.nodes[0], data=None, success=True)
+        self.test_null_data_transaction(node=self.nodes[1], data=None, success=True)
+        self.test_null_data_transaction(node=self.nodes[2], data=None, success=True)
 
 
 if __name__ == '__main__':
