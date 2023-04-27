@@ -13,8 +13,6 @@ import random
 import sys
 import unittest
 
-from .util import modinv
-
 def TaggedHash(tag, data):
     ss = hashlib.sha256(tag.encode('utf-8')).digest()
     ss += ss
@@ -77,7 +75,7 @@ class EllipticCurve:
         x1, y1, z1 = p1
         if z1 == 0:
             return None
-        inv = modinv(z1, self.p)
+        inv = pow(z1, -1, self.p)
         inv_2 = (inv**2) % self.p
         inv_3 = (inv_2 * inv) % self.p
         return ((inv_2 * x1) % self.p, (inv_3 * y1) % self.p, 1)
@@ -318,7 +316,7 @@ class ECPubKey():
         z = int.from_bytes(msg, 'big')
 
         # Run verifier algorithm on r, s
-        w = modinv(s, SECP256K1_ORDER)
+        w = pow(s, -1, SECP256K1_ORDER)
         u1 = z*w % SECP256K1_ORDER
         u2 = r*w % SECP256K1_ORDER
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, u1), (self.p, u2)]))
@@ -383,7 +381,7 @@ class ECKey():
         k = random.randrange(1, SECP256K1_ORDER)
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, k)]))
         r = R[0] % SECP256K1_ORDER
-        s = (modinv(k, SECP256K1_ORDER) * (z + self.secret * r)) % SECP256K1_ORDER
+        s = (pow(k, -1, SECP256K1_ORDER) * (z + self.secret * r)) % SECP256K1_ORDER
         if low_s and s > SECP256K1_ORDER_HALF:
             s = SECP256K1_ORDER - s
         # Represent in DER format. The byte representations of r and s have
