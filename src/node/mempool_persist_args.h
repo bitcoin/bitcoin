@@ -5,7 +5,7 @@
 #ifndef BITCOIN_NODE_MEMPOOL_PERSIST_ARGS_H
 #define BITCOIN_NODE_MEMPOOL_PERSIST_ARGS_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 class ArgsManager;
 

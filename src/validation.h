@@ -15,7 +15,6 @@
 #include <chain.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
-#include <fs.h>
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
@@ -30,6 +29,7 @@
 #include <txmempool.h> // For CTxMemPool::cs
 #include <uint256.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/hasher.h>
 #include <util/translation.h>
 #include <versionbits.h>
@@ -997,7 +997,7 @@ public:
     std::set<CBlockIndex*> m_failed_blocks;
 
     /** Best header we've seen so far (used for getheaders queries' starting points). */
-    CBlockIndex* m_best_header = nullptr;
+    CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
 
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.

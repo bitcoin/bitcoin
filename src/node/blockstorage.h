@@ -7,12 +7,12 @@
 
 #include <attributes.h>
 #include <chain.h>
-#include <fs.h>
 #include <kernel/blockmanager_opts.h>
 #include <kernel/cs_main.h>
 #include <protocol.h>
 #include <sync.h>
 #include <txdb.h>
+#include <util/fs.h>
 
 #include <atomic>
 #include <cstdint>

@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <streams.h>
+#include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/bdb.h>
 #include <wallet/salvage.h>

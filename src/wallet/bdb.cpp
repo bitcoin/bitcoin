@@ -4,18 +4,29 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/compat.h>
-#include <fs.h>
+#include <logging.h>
+#include <util/fs.h>
+#include <util/time.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
+#include <sync.h>
 #include <util/check.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <stdint.h>
 
-#ifndef WIN32
 #include <sys/stat.h>
+
+// Windows may not define S_IRUSR or S_IWUSR. We define both
+// here, with the same values as glibc (see stat.h).
+#ifdef WIN32
+#ifndef S_IRUSR
+#define S_IRUSR             0400
+#define S_IWUSR             0200
+#endif
 #endif
 
 namespace wallet {

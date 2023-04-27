@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/system.h>
-
 #include <clientversion.h>
-#include <fs.h>
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
 #include <sync.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/bitdeque.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
@@ -22,7 +22,6 @@
 #include <util/string.h>
 #include <util/time.h>
 #include <util/vector.h>
-#include <util/bitdeque.h>
 
 #include <array>
 #include <cmath>
@@ -36,9 +35,11 @@
 #include <univalue.h>
 #include <utility>
 #include <vector>
+
+#include <sys/types.h>
+
 #ifndef WIN32
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #endif
 

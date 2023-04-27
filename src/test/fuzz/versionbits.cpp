@@ -4,9 +4,9 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
-#include <util/system.h>
 #include <versionbits.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>

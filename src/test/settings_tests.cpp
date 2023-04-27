@@ -4,16 +4,16 @@
 
 #include <util/settings.h>
 
-#include <fs.h>
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
+#include <util/fs.h>
 
 
 #include <boost/test/unit_test.hpp>
+#include <common/args.h>
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 
 #include <fstream>
 #include <map>

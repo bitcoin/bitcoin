@@ -162,7 +162,7 @@ static RPCHelpMan createmultisig()
                 // Only warns if the user has explicitly chosen an address type we cannot generate
                 warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
             }
-            if (!warnings.empty()) result.pushKV("warnings", warnings);
+            PushWarnings(warnings, result);
 
             return result;
         },

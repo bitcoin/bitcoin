@@ -5,12 +5,12 @@
 
 #include <wallet/walletdb.h>
 
-#include <fs.h>
 #include <key_io.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
 #include <util/bip32.h>
+#include <util/fs.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -347,7 +347,13 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::PURPOSE) {
             std::string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->m_address_book[DecodeDestination(strAddress)].purpose;
+            std::string purpose_str;
+            ssValue >> purpose_str;
+            std::optional<AddressPurpose> purpose{PurposeFromString(purpose_str)};
+            if (!purpose) {
+                pwallet->WalletLogPrintf("Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
+            }
+            pwallet->m_address_book[DecodeDestination(strAddress)].purpose = purpose;
         } else if (strType == DBKeys::TX) {
             uint256 hash;
             ssKey >> hash;

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_SETTINGS_H
 #define BITCOIN_UTIL_SETTINGS_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <map>
 #include <string>

@@ -113,8 +113,8 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
 
     {
         LOCK(wallet->cs_wallet);
-        wallet->SetAddressBook(r_key_dest, r_label.toStdString(), "receive");
-        wallet->SetAddressBook(s_key_dest, s_label.toStdString(), "send");
+        wallet->SetAddressBook(r_key_dest, r_label.toStdString(), wallet::AddressPurpose::RECEIVE);
+        wallet->SetAddressBook(s_key_dest, s_label.toStdString(), wallet::AddressPurpose::SEND);
     }
 
     auto check_addbook_size = [&wallet](int expected_size) {
