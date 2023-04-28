@@ -880,13 +880,18 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Gather sum of recipient output amounts and count number of outputs to subtract fees from
     CAmount recipients_sum = 0;
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
-    for (const auto& recipient : vecSend) {
+    std::optional<int> existent_change_out_index = std::nullopt;
+    for (size_t index = 0; index < vecSend.size(); index++) {
+        const auto& recipient = vecSend[index];
         recipients_sum += recipient.nAmount;
 
         if (recipient.fSubtractFeeFromAmount) {
             outputs_to_subtract_fee_from++;
             coin_selection_params.m_subtract_fee_outputs = true;
         }
+
+        // Index of the recipient going to the change address (if any).
+        if (recipient.scriptPubKey == scriptChange) existent_change_out_index = index;
     }
 
     CTxOut change_prototype_txout(0, scriptChange);
@@ -939,8 +944,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
     // vouts to the payees
-    for (const auto& recipient : vecSend)
-    {
+    for (const auto& recipient : vecSend) {
         CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
         // Include the fee cost for outputs.
@@ -989,14 +993,21 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
-        CTxOut newTxOut(change_amount, scriptChange);
-        if (nChangePosInOut == -1) {
-            // Insert change txn at random position:
-            nChangePosInOut = rng_fast.randrange(txNew.vout.size() + 1);
-        } else if ((unsigned int)nChangePosInOut > txNew.vout.size()) {
-            return util::Error{_("Transaction change output index out of range")};
+        if (existent_change_out_index) {
+            // Increase existent change output instead of creating a new one
+            txNew.vout.at(*existent_change_out_index).nValue += change_amount;
+            nChangePosInOut = *existent_change_out_index;
+        } else {
+            // New change output
+            CTxOut newTxOut(change_amount, scriptChange);
+            if (nChangePosInOut == -1) {
+                // Insert change txn at random position:
+                nChangePosInOut = rng_fast.randrange(txNew.vout.size() + 1);
+            } else if ((unsigned int)nChangePosInOut > txNew.vout.size()) {
+                return util::Error{_("Transaction change output index out of range")};
+            }
+            txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
         }
-        txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
     } else {
         nChangePosInOut = -1;
     }
@@ -1187,10 +1198,15 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     std::vector<CRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector.
+    bool custom_change = IsValidDestination(coinControl.destChange);
+    bool has_change_output = false;
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
+
+        CTxDestination dest;
+        has_change_output |= custom_change && ExtractDestination(txOut.scriptPubKey, dest) && dest == coinControl.destChange;
     }
 
     // Acquire the locks to prevent races to the new locked unspents between the
@@ -1229,7 +1245,8 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     nFeeRet = txr.fee;
     nChangePosInOut = txr.change_pos;
 
-    if (nChangePosInOut != -1) {
+    // Add change output if it doesn't exist
+    if (nChangePosInOut != -1 && !has_change_output) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
     }
 
