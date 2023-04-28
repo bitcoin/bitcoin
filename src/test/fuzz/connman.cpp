@@ -103,9 +103,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 }
             },
             [&] {
-                connman.SetBestHeight(fuzzed_data_provider.ConsumeIntegral<int>());
-            },
-            [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
@@ -113,7 +110,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             });
     }
     (void)connman.GetAddedNodeInfo();
-    (void)connman.GetBestHeight();
     (void)connman.GetExtraOutboundCount();
     (void)connman.GetLocalServices();
     (void)connman.GetMaxOutboundTarget();

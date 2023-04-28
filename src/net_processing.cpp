@@ -707,7 +707,7 @@ void PeerManager::PushNodeVersion(CNode& pnode, int64_t nTime)
     // peer.
     ServiceFlags nLocalNodeServices = pnode.GetLocalServices();
     uint64_t nonce = pnode.GetLocalNonce();
-    int nNodeStartingHeight = pnode.GetMyStartingHeight();
+    const int nNodeStartingHeight{m_best_height};
     NodeId nodeid = pnode.GetId();
     CAddress addr = pnode.addr;
 
@@ -1453,9 +1453,8 @@ void PeerManager::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_
  * Update our best height and announce any block hashes which weren't previously
  * in ::ChainActive() to our peers.
  */
-void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
-    const int nNewHeight = pindexNew->nHeight;
-    m_connman.SetBestHeight(nNewHeight);
+void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload){
+    m_best_height = pindexNew->nHeight;
 
     SetServiceFlagsIBDCache(!fInitialDownload);
     if (!fInitialDownload) {
@@ -1472,11 +1471,11 @@ void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInde
             }
         }
         // Relay inventory, but don't relay old inventory during initial block download.
-        m_connman.ForEachNode([nNewHeight, &vHashes](CNode* pnode) {
+        m_connman.ForEachNode([this, &vHashes](CNode* pnode) {
             if (!pnode->CanRelay()) {
                 return;
             }
-            if (nNewHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
+            if (m_best_height > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
                 for (const uint256& hash : reverse_iterate(vHashes)) {
                     pnode->PushBlockHash(hash);
                 }

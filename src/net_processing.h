@@ -131,6 +131,9 @@ public:
     /** Get statistics from node state */
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
 
+    /** Set the best height */
+    void SetBestHeight(int height) { m_best_height = height; };
+
     /** Whether this node ignores txs received over p2p. */
     bool IgnoresIncomingTxs() { return m_ignore_incoming_txs; };
 
@@ -193,9 +196,12 @@ private:
     CTxMemPool& m_mempool;
     std::unique_ptr<LLMQContext>& m_llmq_ctx;
 
+    /** The height of the best chain */
+    std::atomic<int> m_best_height{-1};
+
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 
-    //* Whether this node is running in blocks only mode */
+    /** Whether this node is running in blocks only mode */
     const bool m_ignore_incoming_txs;
 
     /** Protects m_peer_map */

@@ -39,7 +39,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
 
     CNode node{fuzzed_data_provider.ConsumeIntegral<NodeId>(),
                static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()),
-               fuzzed_data_provider.ConsumeIntegral<int>(),
                INVALID_SOCKET,
                *address,
                fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
@@ -138,7 +137,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
     (void)node.GetId();
     (void)node.GetLocalNonce();
     (void)node.GetLocalServices();
-    (void)node.GetMyStartingHeight();
     (void)node.GetRecvVersion();
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
