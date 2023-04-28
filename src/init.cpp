@@ -973,21 +973,17 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     const int nBind = std::max(nUserBind, size_t(1));
     nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
-    const int nFDMin = nBind + RESERVED_FILE_DESCRIPTORS;
+    const int nRpcThreads = std::max<int>(args.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    const int nFDMin = nBind + nRpcThreads + RESERVED_FILE_DESCRIPTORS;
 
     nFD = RaiseFileDescriptorLimit(nMaxConnections + nFDMin);
+    if (nFD < nFDMin) {
+        return InitError(strprintf(_("Not enough file descriptors available. %d available, %d required."), nFD, nFDMin));
+    }
 
-#ifdef USE_POLL
-    int fd_max = nFD;
-#else
-    int fd_max = FD_SETSIZE;
-#endif
     // Trim requested connection counts, to fit into system limitations
     // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
-    nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nFDMin), 0);
-    if (nFD < MIN_CORE_FILEDESCRIPTORS)
-        return InitError(_("Not enough file descriptors available."));
-    nMaxConnections = std::min(nFD - RESERVED_FILE_DESCRIPTORS, nMaxConnections);
+    nMaxConnections = std::max(std::min<int>(nFD - nFDMin, nMaxConnections), 0);
     LogPrintf("There are %d file descriptors available, %d required, %d reserved, and %d requested.\n", nFD, nFDMin, nFDMin + nMaxConnections, nFDMin + nUserMaxConnections);
 
     if (nMaxConnections < nUserMaxConnections)
