@@ -6,18 +6,13 @@
 #ifndef BITCOIN_NET_PROCESSING_H
 #define BITCOIN_NET_PROCESSING_H
 
-#include <consensus/params.h>
 #include <net.h>
 #include <sync.h>
 #include <validationinterface.h>
 
-class BlockTransactionsRequest;
-class BlockValidationState;
 class CAddrMan;
-class CBlockHeader;
 class CTxMemPool;
 class ChainstateManager;
-class TxValidationState;
 struct LLMQContext;
 
 extern CCriticalSection cs_main;
@@ -37,183 +32,39 @@ struct CNodeStateStats {
     std::vector<int> vHeightInFlight;
 };
 
-/**
- * Data structure for an individual peer. This struct is not protected by
- * cs_main since it does not contain validation-critical data.
- *
- * Memory is owned by shared pointers and this object is destructed when
- * the refcount drops to zero.
- *
- * TODO: move most members from CNodeState to this structure.
- * TODO: move remaining application-layer data members from CNode to this structure.
- */
-struct Peer {
-    /** Same id as the CNode object for this peer */
-    const NodeId m_id{0};
-
-    /** Protects misbehavior data members */
-    Mutex m_misbehavior_mutex;
-    /** Accumulated misbehavior score for this peer */
-    int m_misbehavior_score GUARDED_BY(m_misbehavior_mutex){0};
-    /** Whether this peer should be disconnected and marked as discouraged (unless it has the noban permission). */
-    bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
-
-    /** Set of txids to reconsider once their parent transactions have been accepted **/
-    std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
-
-    /** Protects m_getdata_requests **/
-    Mutex m_getdata_requests_mutex;
-    /** Work queue of items requested by this peer **/
-    std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
-
-    explicit Peer(NodeId id) : m_id(id) {}
-};
-
-using PeerRef = std::shared_ptr<Peer>;
-
-class PeerManager final : public CValidationInterface, public NetEventsInterface {
+class PeerManager : public CValidationInterface, public NetEventsInterface
+{
 public:
-    PeerManager(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman, CScheduler &scheduler,
-                ChainstateManager& chainman, CTxMemPool& pool, std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
+    static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                                             BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
+                                             CTxMemPool& pool, std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
+    virtual ~PeerManager() { }
 
-    /**
-     * Overridden from CValidationInterface.
-     */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
-    /**
-     * Overridden from CValidationInterface.
-     */
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
-    /**
-     * Overridden from CValidationInterface.
-     */
-    void BlockChecked(const CBlock& block, const BlockValidationState& state) override;
-    /**
-     * Overridden from CValidationInterface.
-     */
-    void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
+    /** Get statistics from node state */
+    virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) = 0;
 
-    /** Initialize a peer by adding it to mapNodeState and pushing a message requesting its version */
-    void InitializeNode(CNode* pnode) override;
-    /** Handle removal of a peer by updating various state and removing it from mapNodeState */
-    void FinalizeNode(const CNode& node) override;
-    /**
-    * Process protocol messages received from a given node
-    *
-    * @param[in]   pfrom           The node which we have received messages from.
-    * @param[in]   interrupt       Interrupt condition for processing threads
-    */
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
-    /**
-    * Send queued protocol messages to be sent to a give node.
-    *
-    * @param[in]   pto             The node which we are sending messages to.
-    * @return                      True if there is more work to be done
-    */
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
+    /** Whether this node ignores txs received over p2p. */
+    virtual bool IgnoresIncomingTxs() = 0;
 
-    /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
-    void ConsiderEviction(CNode& pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound */
-    void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
-    /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
-    void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
-    void ReattemptInitialBroadcast(CScheduler& scheduler) const;
-    /** Process a single message from a peer. Public for fuzz testing */
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const std::atomic<bool>& interruptMsgProc);
+    /** Set the best height */
+    virtual void SetBestHeight(int height) = 0;
 
     /**
      * Increment peer's misbehavior score. If the new value surpasses banscore (specified on startup or by default), mark node to be discouraged, meaning the peer might be disconnected & added to the discouragement filter.
      */
-    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "");
-
-    /** Get statistics from node state */
-    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
-
-    /** Set the best height */
-    void SetBestHeight(int height) { m_best_height = height; };
-
-    /** Whether this node ignores txs received over p2p. */
-    bool IgnoresIncomingTxs() { return m_ignore_incoming_txs; };
-
-    bool IsBanned(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-private:
-    /** Get a shared pointer to the Peer object.
-     *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef GetPeerRef(NodeId id) const;
-
-    /** Get a shared pointer to the Peer object and remove it from m_peer_map.
-     *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef RemovePeer(NodeId id);
+    virtual void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") = 0;
 
     /**
-     * Potentially mark a node discouraged based on the contents of a BlockValidationState object
-     *
-     * @param[in] via_compact_block this bool is passed in because net_processing should
-     * punish peers differently depending on whether the data was provided in a compact
-     * block message or not. If the compact block had a valid header, but contained invalid
-     * txs, the peer should not be punished. See BIP 152.
-     *
-     * @return Returns true if the peer was punished (probably disconnected)
+     * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.
+     * Public for unit testing.
      */
-    bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
-                                 bool via_compact_block, const std::string& message = "");
+    virtual void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams) = 0;
 
-    /**
-     * Potentially ban a node based on the contents of a TxValidationState object
-     *
-     * @return Returns true if the peer was punished (probably disconnected)
-     *
-     * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
-     */
-    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "");
+    /** Process a single message from a peer. Public for fuzz testing */
+    virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                                int64_t nTimeReceived, const std::atomic<bool>& interruptMsgProc) = 0;
 
-    /** Maybe disconnect a peer and discourage future connections from its address.
-     *
-     * @param[in]   pnode     The node to check.
-     * @return                True if the peer was marked for disconnection in this function
-     */
-    bool MaybeDiscourageAndDisconnect(CNode& pnode);
-
-    void ProcessOrphanTx(std::set<uint256>& orphan_work_set)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
-    /** Process a single headers message from a peer. */
-    void ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHeader>& headers, bool via_compact_block);
-
-    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
-
-    /** Send a version message to a peer */
-    void PushNodeVersion(CNode& pnode, int64_t nTime);
-
-    const CChainParams& m_chainparams;
-    CConnman& m_connman;
-    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
-    BanMan* const m_banman;
-    CAddrMan& m_addrman;
-    ChainstateManager& m_chainman;
-    CTxMemPool& m_mempool;
-    std::unique_ptr<LLMQContext>& m_llmq_ctx;
-
-    /** The height of the best chain */
-    std::atomic<int> m_best_height{-1};
-
-    int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
-
-    /** Whether this node is running in blocks only mode */
-    const bool m_ignore_incoming_txs;
-
-    /** Protects m_peer_map */
-    mutable Mutex m_peer_mutex;
-    /**
-     * Map of all Peer objects, keyed by peer id. This map is protected
-     * by the m_peer_mutex. Once a shared pointer reference is
-     * taken, the lock may be released. Individual fields are protected by
-     * their own locks.
-     */
-    std::map<NodeId, PeerRef> m_peer_map GUARDED_BY(m_peer_mutex);
+    virtual bool IsBanned(NodeId pnode) = 0;
 };
 
 void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

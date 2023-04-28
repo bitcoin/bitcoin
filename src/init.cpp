@@ -1794,8 +1794,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     ChainstateManager& chainman = *Assert(node.chainman);
 
     assert(!node.peerman);
-    node.peerman = std::make_unique<PeerManager>(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                                 *node.scheduler, chainman, *node.mempool, node.llmq_ctx, ignores_incoming_txs);
+    node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
+                                     *node.scheduler, chainman, *node.mempool, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     ::governance = std::make_unique<CGovernanceManager>();
