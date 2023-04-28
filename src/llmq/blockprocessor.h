@@ -20,7 +20,7 @@ class BlockValidationState;
 class CNode;
 class CConnman;
 class CEvoDB;
-class PeerLogicValidation;
+class PeerManager;
 
 extern CCriticalSection cs_main;
 
@@ -36,7 +36,7 @@ private:
     CEvoDB& m_evoDb;
     CConnman& connman;
 
-    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     // TODO cleanup
     mutable CCriticalSection minableCommitmentsCs;
@@ -46,7 +46,7 @@ private:
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman& _connman, const std::unique_ptr<PeerLogicValidation>& peer_logic);
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman& _connman, const std::unique_ptr<PeerManager>& peerman);
 
     bool UpgradeDB();
 

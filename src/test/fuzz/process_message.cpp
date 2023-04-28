@@ -68,14 +68,14 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
     p2p_node.fSuccessfullyConnected = true;
     p2p_node.nVersion = PROTOCOL_VERSION;
     p2p_node.SetSendVersion(PROTOCOL_VERSION);
-    g_setup->m_node.peer_logic->InitializeNode(&p2p_node);
+    g_setup->m_node.peerman->InitializeNode(&p2p_node);
     try {
-        g_setup->m_node.peer_logic->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), std::atomic<bool>{false});
+        g_setup->m_node.peerman->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), std::atomic<bool>{false});
     } catch (const std::ios_base::failure& e) {
     }
     {
         LOCK(p2p_node.cs_sendProcessing);
-        g_setup->m_node.peer_logic->SendMessages(&p2p_node);
+        g_setup->m_node.peerman->SendMessages(&p2p_node);
     }
     SyncWithValidationInterfaceQueue();
 }

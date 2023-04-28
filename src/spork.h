@@ -22,7 +22,7 @@
 class CConnman;
 class CNode;
 class CDataStream;
-class PeerLogicValidation;
+class PeerManager;
 
 class CSporkMessage;
 class CSporkManager;
@@ -234,7 +234,7 @@ public:
     /**
      * ProcessMessage is used to call ProcessSpork and ProcessGetSporks. See below
      */
-    void ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     /**
      * ProcessSpork is used to handle the 'spork' p2p message.
@@ -242,7 +242,7 @@ public:
      * For 'spork', it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    void ProcessSpork(const CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, CDataStream& vRecv) LOCKS_EXCLUDED(cs);
+    void ProcessSpork(const CNode& peer, PeerManager& peerman, CConnman& connman, CDataStream& vRecv) LOCKS_EXCLUDED(cs);
 
 
     /**

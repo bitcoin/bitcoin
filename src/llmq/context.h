@@ -13,7 +13,7 @@ class CDBWrapper;
 class CEvoDB;
 class CTxMemPool;
 class CSporkManager;
-class PeerLogicValidation;
+class PeerManager;
 
 namespace llmq {
 class CDKGDebugManager;
@@ -28,11 +28,11 @@ class CInstantSendManager;
 
 struct LLMQContext {
     LLMQContext(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
-                const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unit_tests, bool wipe);
+                const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     ~LLMQContext();
 
     void Create(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
-                const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unit_tests, bool wipe);
+                const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     void Destroy();
     void Interrupt();
     void Start();

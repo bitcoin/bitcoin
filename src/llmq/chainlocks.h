@@ -25,7 +25,7 @@ class CMasternodeSync;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-class PeerLogicValidation;
+class PeerManager;
 
 namespace llmq
 {
@@ -50,7 +50,7 @@ private:
     CQuorumManager& qman;
 
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
-    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
@@ -87,7 +87,7 @@ public:
     explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman,
                                 const std::unique_ptr<CMasternodeSync>& mn_sync,
-                                const std::unique_ptr<PeerLogicValidation>& peer_logic);
+                                const std::unique_ptr<PeerManager>& peerman);
     ~CChainLocksHandler();
 
     void Start();

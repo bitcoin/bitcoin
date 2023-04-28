@@ -105,16 +105,16 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+void CSporkManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type == NetMsgType::SPORK) {
-        ProcessSpork(peer, peer_logic, connman, vRecv);
+        ProcessSpork(peer, peerman, connman, vRecv);
     } else if (msg_type == NetMsgType::GETSPORKS) {
         ProcessGetSporks(peer, connman);
     }
 }
 
-void CSporkManager::ProcessSpork(const CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, CDataStream& vRecv)
+void CSporkManager::ProcessSpork(const CNode& peer, PeerManager& peerman, CConnman& connman, CDataStream& vRecv)
 {
     CSporkMessage spork;
     vRecv >> spork;
@@ -131,7 +131,7 @@ void CSporkManager::ProcessSpork(const CNode& peer, PeerLogicValidation& peer_lo
 
     if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
-        Misbehaving(peer.GetId(), 100);
+        peerman.Misbehaving(peer.GetId(), 100);
         return;
     }
 
@@ -139,7 +139,7 @@ void CSporkManager::ProcessSpork(const CNode& peer, PeerLogicValidation& peer_lo
 
     if (opt_keyIDSigner == std::nullopt || WITH_LOCK(cs, return !setSporkPubKeyIDs.count(*opt_keyIDSigner))) {
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
-        Misbehaving(peer.GetId(), 100);
+        peerman.Misbehaving(peer.GetId(), 100);
         return;
     }
 

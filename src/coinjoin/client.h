@@ -22,7 +22,7 @@ class CBlockPolicyEstimator;
 class CConnman;
 class CNode;
 class CTxMemPool;
-class PeerLogicValidation;
+class PeerManager;
 
 class UniValue;
 class CMasternodeSync;
@@ -129,7 +129,7 @@ public:
     {
     }
 
-    void ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
 
     void UnlockCoins();
 
@@ -164,8 +164,8 @@ public:
     explicit CCoinJoinClientQueueManager(CConnman& _connman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
         connman(_connman), m_mn_sync(mn_sync) {};
 
-    void ProcessMessage(const CNode& peer, PeerLogicValidation& peer_logic, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSQueue(const CNode& peer, PeerLogicValidation& peer_logic, CDataStream& vRecv);
+    void ProcessMessage(const CNode& peer, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSQueue(const CNode& peer, PeerManager& peerman, CDataStream& vRecv);
     void DoMaintenance();
 };
 
@@ -210,7 +210,7 @@ public:
     explicit CCoinJoinClientManager(CWallet& wallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
         m_mn_sync(mn_sync), mixingWallet(wallet) {}
 
-    void ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
+    void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
 
     bool StartMixing();
     void StopMixing();

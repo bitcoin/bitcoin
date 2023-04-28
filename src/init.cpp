@@ -244,7 +244,7 @@ void PrepareShutdown(NodeContext& node)
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
-    if (node.peer_logic) UnregisterValidationInterface(node.peer_logic.get());
+    if (node.peerman) UnregisterValidationInterface(node.peerman.get());
     if (node.connman) node.connman->Stop();
 
     StopTorControl();
@@ -275,7 +275,7 @@ void PrepareShutdown(NodeContext& node)
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
-    node.peer_logic.reset();
+    node.peerman.reset();
     node.connman.reset();
     node.banman.reset();
     node.addrman.reset();
@@ -1781,10 +1781,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    node.peer_logic.reset(new PeerLogicValidation(
-        *node.connman, *node.addrman, node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
+    node.peerman.reset(new PeerManager(
+        chainparams, *node.connman, *node.addrman, node.banman.get(), *node.scheduler, chainman, *node.mempool, node.llmq_ctx
     ));
-    RegisterValidationInterface(node.peer_logic.get());
+    RegisterValidationInterface(node.peerman.get());
 
     ::governance = std::make_unique<CGovernanceManager>();
     assert(!::sporkManager);
@@ -2028,7 +2028,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(*node.evodb, *node.mempool, *node.connman, *::sporkManager, node.peer_logic, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(*node.evodb, *node.mempool, *node.connman, *::sporkManager, node.peerman, false, fReset || fReindexChainState));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2496,7 +2496,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
-    connOptions.m_msgproc = node.peer_logic.get();
+    connOptions.m_msgproc = node.peerman.get();
     connOptions.nSendBufferMaxSize = 1000 * args.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000 * args.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     connOptions.m_added_nodes = args.GetArgs("-addnode");

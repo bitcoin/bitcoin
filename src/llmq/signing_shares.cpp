@@ -1409,7 +1409,7 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     }
 
     {
-        Misbehaving(nodeId, 100);
+        m_peerman->Misbehaving(nodeId, 100);
     }
 
     LOCK(cs);

@@ -11,9 +11,13 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class BlockTransactionsRequest;
+class BlockValidationState;
 class CAddrMan;
+class CBlockHeader;
 class CTxMemPool;
 class ChainstateManager;
+class TxValidationState;
 struct LLMQContext;
 
 extern CCriticalSection cs_main;
@@ -25,20 +29,10 @@ static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 
-class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
-private:
-    CConnman& m_connman;
-    BanMan* const m_banman;
-    CAddrMan& m_addrman;
-    ChainstateManager& m_chainman;
-    CTxMemPool& m_mempool;
-    std::unique_ptr<LLMQContext>& m_llmq_ctx;
-
-    bool MaybeDiscourageAndDisconnect(CNode& pnode);
-
+class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
-    PeerLogicValidation(CConnman& connman, CAddrMan& addrman, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                        std::unique_ptr<LLMQContext>& llmq_ctx);
+    PeerManager(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman, CScheduler &scheduler,
+                ChainstateManager& chainman, CTxMemPool& pool, std::unique_ptr<LLMQContext>& llmq_ctx);
 
     /**
      * Overridden from CValidationInterface.
@@ -86,9 +80,59 @@ public:
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) const;
     /** Process a single message from a peer. Public for fuzz testing */
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, const std::atomic<bool>& interruptMsgProc);
+    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const std::atomic<bool>& interruptMsgProc);
+
+    /**
+     * Increment peer's misbehavior score. If the new value surpasses banscore (specified on startup or by default), mark node to be discouraged, meaning the peer might be disconnected & added to the discouragement filter.
+     */
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "");
 
 private:
+    /**
+     * Potentially mark a node discouraged based on the contents of a BlockValidationState object
+     *
+     * @param[in] via_compact_block this bool is passed in because net_processing should
+     * punish peers differently depending on whether the data was provided in a compact
+     * block message or not. If the compact block had a valid header, but contained invalid
+     * txs, the peer should not be punished. See BIP 152.
+     *
+     * @return Returns true if the peer was punished (probably disconnected)
+     */
+    bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
+                                 bool via_compact_block, const std::string& message = "");
+
+    /**
+     * Potentially ban a node based on the contents of a TxValidationState object
+     *
+     * @return Returns true if the peer was punished (probably disconnected)
+     *
+     * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
+     */
+    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "");
+
+    /** Maybe disconnect a peer and discourage future connections from its address.
+     *
+     * @param[in]   pnode     The node to check.
+     * @return                True if the peer was marked for disconnection in this function
+     */
+    bool MaybeDiscourageAndDisconnect(CNode& pnode);
+
+    void ProcessOrphanTx(std::set<uint256>& orphan_work_set)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+    /** Process a single headers message from a peer. */
+    void ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHeader>& headers, bool via_compact_block);
+
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
+
+    const CChainParams& m_chainparams;
+    CConnman& m_connman;
+    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
+    BanMan* const m_banman;
+    CAddrMan& m_addrman;
+    ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
+    std::unique_ptr<LLMQContext>& m_llmq_ctx;
+
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 };
 
@@ -102,11 +146,6 @@ struct CNodeStateStats {
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 bool IsBanned(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-// Upstream moved this into net_processing.cpp (13417), however since we use Misbehaving in a number of dash specific
-// files such as mnauth.cpp and governance.cpp it makes sense to keep it in the header
-/** Increase a node's misbehavior score. */
-void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message="");
 
 void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

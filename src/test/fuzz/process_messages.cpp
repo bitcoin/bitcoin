@@ -51,7 +51,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         p2p_node.fPauseSend = false;
         p2p_node.nVersion = PROTOCOL_VERSION;
         p2p_node.SetSendVersion(PROTOCOL_VERSION);
-        g_setup->m_node.peer_logic->InitializeNode(&p2p_node);
+        g_setup->m_node.peerman->InitializeNode(&p2p_node);
 
         connman.AddTestNode(p2p_node);
     }
@@ -74,7 +74,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         }
         {
             LOCK(random_node.cs_sendProcessing);
-            g_setup->m_node.peer_logic->SendMessages(&random_node);
+            g_setup->m_node.peerman->SendMessages(&random_node);
         }
     }
     connman.ClearTestNodes();

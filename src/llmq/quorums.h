@@ -21,7 +21,7 @@ class CBlockIndex;
 class CDeterministicMN;
 class CMasternodeSync;
 class CNode;
-class PeerLogicValidation;
+class PeerManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -219,7 +219,7 @@ private:
     CQuorumBlockProcessor& quorumBlockProcessor;
 
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
-    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     mutable CCriticalSection cs_map_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
@@ -232,7 +232,7 @@ private:
 public:
     CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
                    CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mnSync,
-                   const std::unique_ptr<PeerLogicValidation>& peer_logic);
+                   const std::unique_ptr<PeerManager>& peerman);
     ~CQuorumManager() { Stop(); };
 
     void Start();

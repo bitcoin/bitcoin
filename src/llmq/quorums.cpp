@@ -189,14 +189,14 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 
 CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
                                CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mn_sync,
-                               const std::unique_ptr<PeerLogicValidation>& peer_logic) :
+                               const std::unique_ptr<PeerManager>& peerman) :
     m_evoDb(_evoDb),
     connman(_connman),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
     quorumBlockProcessor(_quorumBlockProcessor),
     m_mn_sync(mn_sync),
-    m_peer_logic(peer_logic)
+    m_peerman(peerman)
 {
     utils::InitQuorumsCache(mapQuorumsCache);
     utils::InitQuorumsCache(scanQuorumsCache);
@@ -620,7 +620,7 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     auto errorHandler = [&](const std::string& strError, int nScore = 10) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pfrom.GetId());
         if (nScore > 0) {
-            Misbehaving(pfrom.GetId(), nScore);
+            m_peerman->Misbehaving(pfrom.GetId(), nScore);
         }
     };
 

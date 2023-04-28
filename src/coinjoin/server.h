@@ -10,7 +10,7 @@
 
 class CCoinJoinServer;
 class CTxMemPool;
-class PeerLogicValidation;
+class PeerManager;
 
 class UniValue;
 
@@ -72,7 +72,7 @@ private:
     void RelayCompletedTransaction(PoolMessage nMessageID) LOCKS_EXCLUDED(cs_coinjoin);
 
     void ProcessDSACCEPT(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSQUEUE(const CNode& peer, PeerLogicValidation& peer_logic, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSQUEUE(const CNode& peer, PeerManager& peerman, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
     void ProcessDSVIN(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
     void ProcessDSSIGNFINALTX(CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
 
@@ -87,7 +87,7 @@ public:
         fUnitTest(false)
     {}
 
-    void ProcessMessage(CNode& pfrom, PeerLogicValidation& peer_logic, std::string_view msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode& pfrom, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
     bool HasTimedOut() const;
     void CheckTimeout();

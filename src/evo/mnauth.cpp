@@ -58,7 +58,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-void CMNAuth::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::MNAUTH || !::masternodeSync->IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
@@ -70,23 +70,23 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConn
 
     // only one MNAUTH allowed
     if (!peer.GetVerifiedProRegTxHash().IsNull()) {
-        Misbehaving(peer.GetId(), 100, "duplicate mnauth");
+        peerman.Misbehaving(peer.GetId(), 100, "duplicate mnauth");
         return;
     }
 
     if ((~peer.nServices) & (NODE_NETWORK | NODE_BLOOM)) {
         // either NODE_NETWORK or NODE_BLOOM bit is missing in node's services
-        Misbehaving(peer.GetId(), 100, "mnauth from a node with invalid services");
+        peerman.Misbehaving(peer.GetId(), 100, "mnauth from a node with invalid services");
         return;
     }
 
     if (mnauth.proRegTxHash.IsNull()) {
-        Misbehaving(peer.GetId(), 100, "empty mnauth proRegTxHash");
+        peerman.Misbehaving(peer.GetId(), 100, "empty mnauth proRegTxHash");
         return;
     }
 
     if (!mnauth.sig.IsValid()) {
-        Misbehaving(peer.GetId(), 100, "invalid mnauth signature");
+        peerman.Misbehaving(peer.GetId(), 100, "invalid mnauth signature");
         LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- invalid mnauth for protx=%s with sig=%s\n", mnauth.proRegTxHash.ToString(), mnauth.sig.ToString());
         return;
     }
@@ -97,7 +97,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConn
         // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
         // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a
         // low DoS score.
-        Misbehaving(peer.GetId(), 10, "missing mnauth masternode");
+        peerman.Misbehaving(peer.GetId(), 10, "missing mnauth masternode");
         return;
     }
 
@@ -120,7 +120,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerLogicValidation& peer_logic, CConn
     if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
         // Same as above, MN seems to not know its fate yet, so give it a chance to update. If this is a
         // malicious node (DoSing us), it'll get banned soon.
-        Misbehaving(peer.GetId(), 10, "mnauth signature verification failed");
+        peerman.Misbehaving(peer.GetId(), 10, "mnauth signature verification failed");
         return;
     }
 

@@ -13,7 +13,7 @@
 class CBlockIndex;
 class CDKGDebugManager;
 class CSporkManager;
-class PeerLogicValidation;
+class PeerManager;
 
 class UniValue;
 
@@ -33,7 +33,7 @@ private:
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
 
-    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     //TODO name struct instead of std::pair
     std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
@@ -60,7 +60,7 @@ private:
 public:
     CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager,
                        CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
-                       const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unitTests, bool fWipe);
+                       const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
     void StartThreads();

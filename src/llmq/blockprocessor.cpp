@@ -36,8 +36,8 @@ static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT_Q_INDEXED = "q_m
 
 static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB& evoDb, CConnman& _connman, const std::unique_ptr<PeerLogicValidation>& peer_logic) :
-    m_evoDb(evoDb), connman(_connman), m_peer_logic(peer_logic)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB& evoDb, CConnman& _connman, const std::unique_ptr<PeerManager>& peerman) :
+    m_evoDb(evoDb), connman(_connman), m_peerman(peerman)
 {
     utils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
@@ -55,7 +55,7 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
 
     if (qc.IsNull()) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, peer.GetId());
-        Misbehaving(peer.GetId(), 100);
+        m_peerman->Misbehaving(peer.GetId(), 100);
         return;
     }
 
@@ -63,7 +63,7 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
     if (!llmq_params_opt.has_value()) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                  ToUnderlying(qc.llmqType), peer.GetId());
-        Misbehaving(peer.GetId(), 100);
+        m_peerman->Misbehaving(peer.GetId(), 100);
         return;
     }
     auto type = qc.llmqType;
@@ -90,14 +90,14 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
         if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                      qc.quorumHash.ToString(), peer.GetId());
-            Misbehaving(peer.GetId(), 100);
+            m_peerman->Misbehaving(peer.GetId(), 100);
             return;
         }
         if (pQuorumBaseBlockIndex->nHeight < (::ChainActive().Height() - llmq_params_opt->dkgInterval)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is too old, peer=%d\n", __func__,
                      qc.quorumHash.ToString(), peer.GetId());
             // TODO: enable punishment in some future version when all/most nodes are running with this fix
-            // Misbehaving(peer.GetId(), 100);
+            // m_peerman->Misbehaving(peer.GetId(), 100);
             return;
         }
         if (HasMinedCommitment(type, qc.quorumHash)) {
@@ -126,7 +126,7 @@ void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view m
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
                  __func__, qc.quorumHash.ToString(),
                  ToUnderlying(qc.llmqType), qc.quorumIndex, qc.nVersion, peer.GetId());
-        Misbehaving(peer.GetId(), 100);
+        m_peerman->Misbehaving(peer.GetId(), 100);
         return;
     }
 

@@ -24,14 +24,14 @@ static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
 CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager,
                                        CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
-                                       const std::unique_ptr<PeerLogicValidation>& peer_logic, bool unitTests, bool fWipe) :
+                                       const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
     db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
     blsWorker(_blsWorker),
     connman(_connman),
     spork_manager(sporkManager),
     dkgDebugManager(_dkgDebugManager),
     quorumBlockProcessor(_quorumBlockProcessor),
-    m_peer_logic(peer_logic)
+    m_peerman(peerman)
 {
     if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) {
         // Regular nodes do not care about any DKG internals, bail out
@@ -46,7 +46,7 @@ CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorke
         for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(params, blsWorker, *this, dkgDebugManager, quorumBlockProcessor, connman, peer_logic, i));
+                                       std::forward_as_tuple(params, blsWorker, *this, dkgDebugManager, quorumBlockProcessor, connman, peerman, i));
         }
     }
 }
@@ -192,7 +192,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     }
 
     if (vRecv.empty()) {
-        Misbehaving(pfrom.GetId(), 100);
+        m_peerman->Misbehaving(pfrom.GetId(), 100);
         return;
     }
 
@@ -206,7 +206,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     const auto& llmq_params_opt = GetLLMQParams(llmqType);
     if (!llmq_params_opt.has_value()) {
         LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", ToUnderlying(llmqType));
-        Misbehaving(pfrom.GetId(), 100);
+        m_peerman->Misbehaving(pfrom.GetId(), 100);
         return;
     }
     const auto& llmq_params = llmq_params_opt.value();
@@ -228,13 +228,13 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
         if (pQuorumBaseBlockIndex == nullptr) {
             LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
             // NOTE: do not insta-ban for this, we might be lagging behind
-            Misbehaving(pfrom.GetId(), 10);
+            m_peerman->Misbehaving(pfrom.GetId(), 10);
             return;
         }
 
         if (!utils::IsQuorumTypeEnabled(llmqType, quorum_manager, pQuorumBaseBlockIndex->pprev)) {
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
-            Misbehaving(pfrom.GetId(), 100);
+            m_peerman->Misbehaving(pfrom.GetId(), 100);
             return;
         }
 
@@ -244,13 +244,13 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
 
         if (quorumIndex > quorumIndexMax) {
             LogPrintf("CDKGSessionManager -- invalid quorumHash %s\n", quorumHash.ToString());
-            Misbehaving(pfrom.GetId(), 100);
+            m_peerman->Misbehaving(pfrom.GetId(), 100);
             return;
         }
 
         if (!dkgSessionHandlers.count(std::make_pair(llmqType, quorumIndex))) {
             LogPrintf("CDKGSessionManager -- no session handlers for quorumIndex [%d]\n", quorumIndex);
-            Misbehaving(pfrom.GetId(), 100);
+            m_peerman->Misbehaving(pfrom.GetId(), 100);
             return;
         }
     }

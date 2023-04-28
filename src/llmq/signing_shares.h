@@ -23,7 +23,7 @@ class CDeterministicMN;
 class CEvoDB;
 class CScheduler;
 class CSporkManager;
-class PeerLogicValidation;
+class PeerManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -401,14 +401,14 @@ private:
     const CQuorumManager& qman;
     CSigningManager& sigman;
 
-    const std::unique_ptr<PeerLogicValidation>& m_peer_logic;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    explicit CSigSharesManager(CConnman& _connman, CQuorumManager& _qman, CSigningManager& _sigman, const std::unique_ptr<PeerLogicValidation>& peer_logic) :
-        connman(_connman), qman(_qman), sigman(_sigman), m_peer_logic(peer_logic)
+    explicit CSigSharesManager(CConnman& _connman, CQuorumManager& _qman, CSigningManager& _sigman, const std::unique_ptr<PeerManager>& peerman) :
+        connman(_connman), qman(_qman), sigman(_sigman), m_peerman(peerman)
     {
         workInterrupt.reset();
     };

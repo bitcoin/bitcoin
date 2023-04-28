@@ -188,7 +188,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 #endif // ENABLE_WALLET
 
     deterministicMNManager.reset(new CDeterministicMNManager(*m_node.evodb, *m_node.connman));
-    m_node.llmq_ctx = std::make_unique<LLMQContext>(*m_node.evodb, *m_node.mempool, *m_node.connman, *sporkManager, m_node.peer_logic, true, false);
+    m_node.llmq_ctx = std::make_unique<LLMQContext>(*m_node.evodb, *m_node.mempool, *m_node.connman, *sporkManager, m_node.peerman, true, false);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -244,12 +244,12 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.peer_logic = std::make_unique<PeerLogicValidation>(
-        *m_node.connman, *m_node.addrman, m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx
+    m_node.peerman = std::make_unique<PeerManager>(
+        chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx
     );
     {
         CConnman::Options options;
-        options.m_msgproc = m_node.peer_logic.get();
+        options.m_msgproc = m_node.peerman.get();
         m_node.connman->Init(options);
     }
 
