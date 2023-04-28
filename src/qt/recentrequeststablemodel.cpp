@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -175,7 +175,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
     newEntry.date = QDateTime::currentDateTime();
     newEntry.recipient = recipient;
 
-    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    DataStream ss{};
     ss << newEntry;
 
     if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(recipient.address.toStdString()), ToString(newEntry.id), ss.str()))
@@ -188,7 +188,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
 void RecentRequestsTableModel::addNewRequest(const std::string &recipient)
 {
     std::vector<uint8_t> data(recipient.begin(), recipient.end());
-    CDataStream ss(data, SER_DISK, CLIENT_VERSION);
+    DataStream ss{data};
 
     RecentRequestEntry entry;
     ss >> entry;

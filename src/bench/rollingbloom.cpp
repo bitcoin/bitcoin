@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,5 +32,5 @@ static void RollingBloomReset(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RollingBloom);
-BENCHMARK(RollingBloomReset);
+BENCHMARK(RollingBloom, benchmark::PriorityLevel::HIGH);
+BENCHMARK(RollingBloomReset, benchmark::PriorityLevel::HIGH);

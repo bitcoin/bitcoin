@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,8 @@
 #include <crypto/common.h>
 #include <logging.h>
 #include <sync.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/db.h>
 
@@ -22,9 +22,6 @@
 
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
-
-static GlobalMutex g_sqlite_mutex;
-static int g_sqlite_count GUARDED_BY(g_sqlite_mutex) = 0;
 
 static void ErrorLogCallback(void* arg, int code, const char* msg)
 {
@@ -83,6 +80,9 @@ static void SetPragma(sqlite3* db, const std::string& key, const std::string& va
     }
 }
 
+Mutex SQLiteDatabase::g_sqlite_mutex;
+int SQLiteDatabase::g_sqlite_count = 0;
+
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock)
     : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path)), m_use_unsafe_sync(options.use_unsafe_sync)
 {
@@ -125,7 +125,6 @@ void SQLiteBatch::SetupSQLStatements()
         {&m_insert_stmt, "INSERT INTO main VALUES(?, ?)"},
         {&m_overwrite_stmt, "INSERT or REPLACE into main values(?, ?)"},
         {&m_delete_stmt, "DELETE FROM main WHERE key = ?"},
-        {&m_cursor_stmt, "SELECT key, value FROM main"},
     };
 
     for (const auto& [stmt_prepared, stmt_text] : statements) {
@@ -146,6 +145,8 @@ SQLiteDatabase::~SQLiteDatabase()
 
 void SQLiteDatabase::Cleanup() noexcept
 {
+    AssertLockNotHeld(g_sqlite_mutex);
+
     Close();
 
     LOCK(g_sqlite_mutex);
@@ -374,7 +375,6 @@ void SQLiteBatch::Close()
         {&m_insert_stmt, "insert"},
         {&m_overwrite_stmt, "overwrite"},
         {&m_delete_stmt, "delete"},
-        {&m_cursor_stmt, "cursor"},
     };
 
     for (const auto& [stmt_prepared, stmt_description] : statements) {
@@ -387,7 +387,7 @@ void SQLiteBatch::Close()
     }
 }
 
-bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
+bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
 {
     if (!m_database.m_db) return false;
     assert(m_read_stmt);
@@ -414,7 +414,7 @@ bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
     return true;
 }
 
-bool SQLiteBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
+bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
 {
     if (!m_database.m_db) return false;
     assert(m_insert_stmt && m_overwrite_stmt);
@@ -441,7 +441,7 @@ bool SQLiteBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrit
     return res == SQLITE_DONE;
 }
 
-bool SQLiteBatch::EraseKey(CDataStream&& key)
+bool SQLiteBatch::EraseKey(DataStream&& key)
 {
     if (!m_database.m_db) return false;
     assert(m_delete_stmt);
@@ -459,7 +459,7 @@ bool SQLiteBatch::EraseKey(CDataStream&& key)
     return res == SQLITE_DONE;
 }
 
-bool SQLiteBatch::HasKey(CDataStream&& key)
+bool SQLiteBatch::HasKey(DataStream&& key)
 {
     if (!m_database.m_db) return false;
     assert(m_read_stmt);
@@ -472,28 +472,15 @@ bool SQLiteBatch::HasKey(CDataStream&& key)
     return res == SQLITE_ROW;
 }
 
-bool SQLiteBatch::StartCursor()
+DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
 {
-    assert(!m_cursor_init);
-    if (!m_database.m_db) return false;
-    m_cursor_init = true;
-    return true;
-}
-
-bool SQLiteBatch::ReadAtCursor(CDataStream& key, CDataStream& value, bool& complete)
-{
-    complete = false;
-
-    if (!m_cursor_init) return false;
-
     int res = sqlite3_step(m_cursor_stmt);
     if (res == SQLITE_DONE) {
-        complete = true;
-        return true;
+        return Status::DONE;
     }
     if (res != SQLITE_ROW) {
-        LogPrintf("SQLiteBatch::ReadAtCursor: Unable to execute cursor step: %s\n", sqlite3_errstr(res));
-        return false;
+        LogPrintf("%s: Unable to execute cursor step: %s\n", __func__, sqlite3_errstr(res));
+        return Status::FAIL;
     }
 
     // Leftmost column in result is index 0
@@ -503,13 +490,32 @@ bool SQLiteBatch::ReadAtCursor(CDataStream& key, CDataStream& value, bool& compl
     const std::byte* value_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 1))};
     size_t value_data_size(sqlite3_column_bytes(m_cursor_stmt, 1));
     value.write({value_data, value_data_size});
-    return true;
+    return Status::MORE;
 }
 
-void SQLiteBatch::CloseCursor()
+SQLiteCursor::~SQLiteCursor()
 {
     sqlite3_reset(m_cursor_stmt);
-    m_cursor_init = false;
+    int res = sqlite3_finalize(m_cursor_stmt);
+    if (res != SQLITE_OK) {
+        LogPrintf("%s: cursor closed but could not finalize cursor statement: %s\n",
+                  __func__, sqlite3_errstr(res));
+    }
+}
+
+std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewCursor()
+{
+    if (!m_database.m_db) return nullptr;
+    auto cursor = std::make_unique<SQLiteCursor>();
+
+    const char* stmt_text = "SELECT key, value FROM main";
+    int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, &cursor->m_cursor_stmt, nullptr);
+    if (res != SQLITE_OK) {
+        throw std::runtime_error(strprintf(
+            "%s: Failed to setup cursor SQL statement: %s\n", __func__, sqlite3_errstr(res)));
+    }
+
+    return cursor;
 }
 
 bool SQLiteBatch::TxnBegin()

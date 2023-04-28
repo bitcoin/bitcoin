@@ -12,6 +12,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -19,11 +20,13 @@ class UniValue {
 public:
     enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
 
+    class type_error : public std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
     UniValue() { typ = VNULL; }
-    UniValue(UniValue::VType initialType, const std::string& initialStr = "") {
-        typ = initialType;
-        val = initialStr;
-    }
+    UniValue(UniValue::VType type, std::string str = {}) : typ{type}, val{std::move(str)} {}
     template <typename Ref, typename T = std::remove_cv_t<std::remove_reference_t<Ref>>,
               std::enable_if_t<std::is_floating_point_v<T> ||                      // setFloat
                                    std::is_same_v<bool, T> ||                      // setBool
@@ -49,12 +52,12 @@ public:
 
     void setNull();
     void setBool(bool val);
-    void setNumStr(const std::string& val);
+    void setNumStr(std::string str);
     void setInt(uint64_t val);
     void setInt(int64_t val);
     void setInt(int val_) { return setInt(int64_t{val_}); }
     void setFloat(double val);
-    void setStr(const std::string& val);
+    void setStr(std::string str);
     void setArray();
     void setObject();
 
@@ -64,7 +67,6 @@ public:
 
     size_t size() const { return values.size(); }
 
-    bool getBool() const { return isTrue(); }
     void getObjMap(std::map<std::string,UniValue>& kv) const;
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes) const;
     const UniValue& operator[](const std::string& key) const;
@@ -94,9 +96,7 @@ public:
 
     bool read(const char *raw, size_t len);
     bool read(const char *raw) { return read(raw, strlen(raw)); }
-    bool read(const std::string& rawStr) {
-        return read(rawStr.data(), rawStr.size());
-    }
+    bool read(std::string_view raw) { return read(raw.data(), raw.size()); }
 
 private:
     UniValue::VType typ;

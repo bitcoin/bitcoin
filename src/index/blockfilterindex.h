@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,8 @@
 #include <flatfile.h>
 #include <index/base.h>
 #include <util/hasher.h>
+
+static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 
 /** Interval between compact filter checkpoints. See BIP 157. */
 static constexpr int CFCHECKPT_INTERVAL = 1000;

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2021 The Bitcoin Core developers
+# Copyright (c) 2010-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test objects for interacting with a bitcoind node over the p2p protocol.
@@ -62,6 +62,7 @@ from test_framework.messages import (
     msg_sendaddrv2,
     msg_sendcmpct,
     msg_sendheaders,
+    msg_sendtxrcncl,
     msg_tx,
     MSG_TX,
     MSG_TYPE_MASK,
@@ -126,6 +127,7 @@ MESSAGEMAP = {
     b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
+    b"sendtxrcncl": msg_sendtxrcncl,
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
@@ -383,7 +385,7 @@ class P2PInterface(P2PConnection):
                 self.message_count[msgtype] += 1
                 self.last_message[msgtype] = message
                 getattr(self, 'on_' + msgtype)(message)
-            except:
+            except Exception:
                 print("ERROR delivering %s (%s)" % (repr(message), sys.exc_info()[0]))
                 raise
 
@@ -421,6 +423,7 @@ class P2PInterface(P2PConnection):
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
+    def on_sendtxrcncl(self, message): pass
     def on_tx(self, message): pass
     def on_wtxidrelay(self, message): pass
 
@@ -446,6 +449,7 @@ class P2PInterface(P2PConnection):
             self.send_message(msg_sendaddrv2())
         self.send_message(msg_verack())
         self.nServices = message.nServices
+        self.relay = message.relay
         self.send_message(msg_getaddr())
 
     # Connection helper methods
@@ -460,7 +464,7 @@ class P2PInterface(P2PConnection):
 
     def wait_for_connect(self, timeout=60):
         test_function = lambda: self.is_connected
-        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock)
+        self.wait_until(test_function, timeout=timeout, check_connected=False)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected

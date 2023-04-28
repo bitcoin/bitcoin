@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 # Test Taproot softfork (BIPs 340-342)
@@ -19,6 +19,7 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     SEQUENCE_FINAL,
+    tx_from_hex,
 )
 from test_framework.script import (
     ANNEX_TAG,
@@ -96,13 +97,19 @@ from test_framework.util import (
     assert_equal,
     random_bytes,
 )
-from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
+from test_framework.key import (
+    generate_privkey,
+    compute_xonly_pubkey,
+    sign_schnorr,
+    tweak_add_privkey,
+    ECKey,
+    SECP256K1
+)
 from test_framework.address import (
     hash160,
     program_to_witness,
 )
 from collections import OrderedDict, namedtuple
-from io import BytesIO
 import json
 import hashlib
 import os
@@ -661,6 +668,44 @@ def spenders_taproot_active():
     # Test with signature with bit flipped.
     add_spender(spenders, "sig/bitflip", tap=tap, key=secs[0], failure={"signature": bitflipper(default_signature)}, **ERR_SIG_SCHNORR)
 
+    # == Test involving an internal public key not on the curve ==
+
+    # X-only public keys are 32 bytes, but not every 32-byte array is a valid public key; only
+    # around 50% of them are. This does not affect users using correct software; these "keys" have
+    # no corresponding private key, and thus will never appear as output of key
+    # generation/derivation/tweaking.
+    #
+    # Using an invalid public key as P2TR output key makes the UTXO unspendable. Revealing an
+    # invalid public key as internal key in a P2TR script path spend also makes the spend invalid.
+    # These conditions are explicitly spelled out in BIP341.
+    #
+    # It is however hard to create test vectors for this, because it involves "guessing" how a
+    # hypothetical incorrect implementation deals with an obviously-invalid condition, and making
+    # sure that guessed behavior (accepting it in certain condition) doesn't occur.
+    #
+    # The test case added here tries to detect a very specific bug a verifier could have: if they
+    # don't verify whether or not a revealed internal public key in a script path spend is valid,
+    # and (correctly) implement output_key == tweak(internal_key, tweakval) but (incorrectly) treat
+    # tweak(invalid_key, tweakval) as equal the public key corresponding to private key tweakval.
+    # This may seem like a far-fetched edge condition to test for, but in fact, the BIP341 wallet
+    # pseudocode did exactly that (but obviously only triggerable by someone invoking the tweaking
+    # function with an invalid public key, which shouldn't happen).
+
+    # Generate an invalid public key
+    while True:
+        invalid_pub = random_bytes(32)
+        if not SECP256K1.is_x_coord(int.from_bytes(invalid_pub, 'big')):
+            break
+
+    # Implement a test case that detects validation logic which maps invalid public keys to the
+    # point at infinity in the tweaking logic.
+    tap = taproot_construct(invalid_pub, [("true", CScript([OP_1]))], treat_internal_as_infinity=True)
+    add_spender(spenders, "output/invalid_x", tap=tap, key_tweaked=tap.tweak, failure={"leaf": "true", "inputs": []}, **ERR_WITNESS_PROGRAM_MISMATCH)
+
+    # Do the same thing without invalid point, to make sure there is no mistake in the test logic.
+    tap = taproot_construct(pubs[0], [("true", CScript([OP_1]))])
+    add_spender(spenders, "output/invalid_x_mock", tap=tap, key=secs[0], leaf="true", inputs=[])
+
     # == Tests for signature hashing ==
 
     # Run all tests once with no annex, and once with a valid random annex.
@@ -705,7 +750,7 @@ def spenders_taproot_active():
     # Reusing the scripts above, test that various features affect the sighash.
     add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=False, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/script", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, script_taproot=tap.leaves["codesep_pk"].script)}, **ERR_SIG_SCHNORR)
-    add_spender(spenders, "sighash/leafver", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leafversion=random.choice([x & 0xFE for x in range(0x100) if x & 0xFE != 0xC0]))}, **ERR_SIG_SCHNORR)
+    add_spender(spenders, "sighash/leafver", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leafversion=random.choice([x & 0xFE for x in range(0x100) if x & 0xFE != LEAF_VERSION_TAPSCRIPT]))}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/scriptpath", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leaf=None)}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/keypath", tap=tap, key=secs[0], **common, failure={"sighash": override(default_sighash, leaf="pk_codesep")}, **ERR_SIG_SCHNORR)
 
@@ -1007,13 +1052,13 @@ def spenders_taproot_active():
     # input a valid signature with the passed pk followed by a dummy push of bytes that are to be dropped, and
     # will execute sigops signature checks.
     SIGOPS_RATIO_SCRIPTS = [
-        # n OP_CHECKSIGVERFIYs and 1 OP_CHECKSIG.
+        # n OP_CHECKSIGVERIFYs and 1 OP_CHECKSIG.
         lambda n, pk: (CScript([OP_DROP, pk] + [OP_2DUP, OP_CHECKSIGVERIFY] * n + [OP_CHECKSIG]), n + 1),
         # n OP_CHECKSIGVERIFYs and 1 OP_CHECKSIGADD, but also one unexecuted OP_CHECKSIGVERIFY.
         lambda n, pk: (CScript([OP_DROP, pk, OP_0, OP_IF, OP_2DUP, OP_CHECKSIGVERIFY, OP_ENDIF] + [OP_2DUP, OP_CHECKSIGVERIFY] * n + [OP_2, OP_SWAP, OP_CHECKSIGADD, OP_3, OP_EQUAL]), n + 1),
         # n OP_CHECKSIGVERIFYs and 1 OP_CHECKSIGADD, but also one unexecuted OP_CHECKSIG.
         lambda n, pk: (CScript([random_bytes(220), OP_2DROP, pk, OP_1, OP_NOTIF, OP_2DUP, OP_CHECKSIG, OP_VERIFY, OP_ENDIF] + [OP_2DUP, OP_CHECKSIGVERIFY] * n + [OP_4, OP_SWAP, OP_CHECKSIGADD, OP_5, OP_EQUAL]), n + 1),
-        # n OP_CHECKSIGVERFIYs and 1 OP_CHECKSIGADD, but also one unexecuted OP_CHECKSIGADD.
+        # n OP_CHECKSIGVERIFYs and 1 OP_CHECKSIGADD, but also one unexecuted OP_CHECKSIGADD.
         lambda n, pk: (CScript([OP_DROP, pk, OP_1, OP_IF, OP_ELSE, OP_2DUP, OP_6, OP_SWAP, OP_CHECKSIGADD, OP_7, OP_EQUALVERIFY, OP_ENDIF] + [OP_2DUP, OP_CHECKSIGVERIFY] * n + [OP_8, OP_SWAP, OP_CHECKSIGADD, OP_9, OP_EQUAL]), n + 1),
         # n+1 OP_CHECKSIGs, but also one OP_CHECKSIG with an empty signature.
         lambda n, pk: (CScript([OP_DROP, OP_0, pk, OP_CHECKSIG, OP_NOT, OP_VERIFY, pk] + [OP_2DUP, OP_CHECKSIG, OP_VERIFY] * n + [OP_CHECKSIG]), n + 1),
@@ -1229,6 +1274,7 @@ UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
 class TaprootTest(BitcoinTestFramework):
     def add_options(self, parser):
+        self.add_wallet_options(parser)
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
 
@@ -1246,7 +1292,7 @@ class TaprootTest(BitcoinTestFramework):
         # It is not impossible to fit enough tapscript sigops to hit the old 80k limit without
         # busting txin-level limits. We simply have to account for the p2pk outputs in all
         # transactions.
-        extra_output_script = CScript([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR))
+        extra_output_script = CScript(bytes([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR)))
 
         coinbase_tx = create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees)
         block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
@@ -1340,8 +1386,7 @@ class TaprootTest(BitcoinTestFramework):
             # Add change
             fund_tx.vout.append(CTxOut(balance - 10000, random.choice(host_spks)))
             # Ask the wallet to sign
-            ss = BytesIO(bytes.fromhex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"]))
-            fund_tx.deserialize(ss)
+            fund_tx = tx_from_hex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"])
             # Construct UTXOData entries
             fund_tx.rehash()
             for i in range(count_this_tx):
@@ -1509,12 +1554,16 @@ class TaprootTest(BitcoinTestFramework):
 
         script_lists = [
             None,
-            [("0", CScript([pubs[50], OP_CHECKSIG]), 0xc0)],
-            [("0", CScript([pubs[51], OP_CHECKSIG]), 0xc0)],
-            [("0", CScript([pubs[52], OP_CHECKSIG]), 0xc0), ("1", CScript([b"BIP341"]), VALID_LEAF_VERS[pubs[99][0] % 41])],
-            [("0", CScript([pubs[53], OP_CHECKSIG]), 0xc0), ("1", CScript([b"Taproot"]), VALID_LEAF_VERS[pubs[99][1] % 41])],
-            [("0", CScript([pubs[54], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[55], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[56], OP_CHECKSIG]), 0xc0)]],
-            [("0", CScript([pubs[57], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[58], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[59], OP_CHECKSIG]), 0xc0)]],
+            [("0", CScript([pubs[50], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)],
+            [("0", CScript([pubs[51], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)],
+            [("0", CScript([pubs[52], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("1", CScript([b"BIP341"]), VALID_LEAF_VERS[pubs[99][0] % 41])],
+            [("0", CScript([pubs[53], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("1", CScript([b"Taproot"]), VALID_LEAF_VERS[pubs[99][1] % 41])],
+            [("0", CScript([pubs[54], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT),
+                [("1", CScript([pubs[55], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("2", CScript([pubs[56], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)]
+            ],
+            [("0", CScript([pubs[57], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT),
+                [("1", CScript([pubs[58], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("2", CScript([pubs[59], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)]
+            ],
         ]
         taps = [taproot_construct(inner_keys[i], script_lists[i]) for i in range(len(inner_keys))]
 

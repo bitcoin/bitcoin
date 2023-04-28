@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,9 @@ class TestShell:
     start a single TestShell at a time."""
 
     class __TestShell(BitcoinTestFramework):
+        def add_options(self, parser):
+            self.add_wallet_options(parser)
+
         def set_test_params(self):
             pass
 

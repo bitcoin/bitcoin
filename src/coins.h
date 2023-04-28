@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <memusage.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
+#include <support/allocators/pool.h>
 #include <uint256.h>
 #include <util/hasher.h>
 
@@ -131,7 +132,23 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
-typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+/**
+ * PoolAllocator's MAX_BLOCK_SIZE_BYTES parameter here uses sizeof the data, and adds the size
+ * of 4 pointers. We do not know the exact node size used in the std::unordered_node implementation
+ * because it is implementation defined. Most implementations have an overhead of 1 or 2 pointers,
+ * so nodes can be connected in a linked list, and in some cases the hash value is stored as well.
+ * Using an additional sizeof(void*)*4 for MAX_BLOCK_SIZE_BYTES should thus be sufficient so that
+ * all implementations can allocate the nodes from the PoolAllocator.
+ */
+using CCoinsMap = std::unordered_map<COutPoint,
+                                     CCoinsCacheEntry,
+                                     SaltedOutpointHasher,
+                                     std::equal_to<COutPoint>,
+                                     PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
+                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4,
+                                                   alignof(void*)>>;
+
+using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
@@ -176,7 +193,7 @@ public:
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
@@ -202,7 +219,7 @@ public:
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -211,19 +228,23 @@ public:
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
 {
+private:
+    const bool m_deterministic;
+
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".
      */
     mutable uint256 hashBlock;
+    mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
-    mutable size_t cachedCoinsUsage;
+    mutable size_t cachedCoinsUsage{0};
 
 public:
-    CCoinsViewCache(CCoinsView *baseIn);
+    CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
 
     /**
      * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
@@ -235,7 +256,7 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
@@ -282,11 +303,21 @@ public:
     bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
 
     /**
-     * Push the modifications applied to this cache to its base.
-     * Failure to call this method before destruction will cause the changes to be forgotten.
+     * Push the modifications applied to this cache to its base and wipe local state.
+     * Failure to call this method or Sync() before destruction will cause the changes
+     * to be forgotten.
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
     bool Flush();
+
+    /**
+     * Push the modifications applied to this cache to its base while retaining
+     * the contents of this cache (except for spent coins, which we erase).
+     * Failure to call this method or Flush() before destruction will cause the changes
+     * to be forgotten.
+     * If false is returned, the state of this cache (and its backing view) will be undefined.
+     */
+    bool Sync();
 
     /**
      * Removes the UTXO with the given outpoint from the cache, if it is
@@ -309,6 +340,9 @@ public:
     //!
     //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
     void ReallocateCache();
+
+    //! Run an internal sanity check on the cache data structure. */
+    void SanityCheck() const;
 
 private:
     /**

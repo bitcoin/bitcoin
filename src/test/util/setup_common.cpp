@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
+#include <common/url.h>
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
@@ -16,6 +17,7 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <kernel/mempool_entry.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
@@ -36,16 +38,17 @@
 #include <shutdown.h>
 #include <streams.h>
 #include <test/util/net.h>
+#include <test/util/txmempool.h>
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <util/url.h>
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -60,7 +63,6 @@ using node::ApplyArgsManOptions;
 using node::BlockAssembler;
 using node::CalculateCacheSizes;
 using node::LoadChainstate;
-using node::NodeContext;
 using node::RegenerateCommitments;
 using node::VerifyLoadedChainstate;
 
@@ -146,7 +148,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
 
     m_node.chain = interfaces::MakeChain(m_node);
-    fCheckBlockIndex = true;
     static bool noui_connected = false;
     if (!noui_connected) {
         noui_connect();
@@ -160,19 +161,6 @@ BasicTestingSetup::~BasicTestingSetup()
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
-}
-
-CTxMemPool::Options MemPoolOptionsForTest(const NodeContext& node)
-{
-    CTxMemPool::Options mempool_opts{
-        .estimator = node.fee_estimator.get(),
-        // Default to always checking mempool regardless of
-        // chainparams.DefaultConsistencyChecks for tests
-        .check_ratio = 1,
-    };
-    const auto err{ApplyArgsManOptions(*node.args, ::Params(), mempool_opts)};
-    Assert(!err);
-    return mempool_opts;
 }
 
 ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
@@ -193,15 +181,18 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     const ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
+        .datadir = m_args.GetDataDirNet(),
         .adjusted_time_callback = GetAdjustedTime,
+        .check_block_index = true,
     };
-    m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
-    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
+    m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts, node::BlockManager::Options{});
+    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(DBParams{
+        .path = m_args.GetDataDirNet() / "blocks" / "index",
+        .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),
+        .memory_only = true});
 
-    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
     StartScriptCheckWorkerThreads(script_check_threads);
-    g_parallel_script_checks = true;
 }
 
 ChainTestingSetup::~ChainTestingSetup()
@@ -220,32 +211,45 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.chainman.reset();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
-    : ChainTestingSetup(chainName, extra_args)
+void TestingSetup::LoadVerifyActivateChainstate()
+{
+    auto& chainman{*Assert(m_node.chainman)};
+    node::ChainstateLoadOptions options;
+    options.mempool = Assert(m_node.mempool.get());
+    options.block_tree_db_in_memory = m_block_tree_db_in_memory;
+    options.coins_db_in_memory = m_coins_db_in_memory;
+    options.reindex = node::fReindex;
+    options.reindex_chainstate = m_args.GetBoolArg("-reindex-chainstate", false);
+    options.prune = chainman.m_blockman.IsPruneMode();
+    options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+    options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
+    options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");
+    auto [status, error] = LoadChainstate(chainman, m_cache_sizes, options);
+    assert(status == node::ChainstateLoadStatus::SUCCESS);
+
+    std::tie(status, error) = VerifyLoadedChainstate(chainman, options);
+    assert(status == node::ChainstateLoadStatus::SUCCESS);
+
+    BlockValidationState state;
+    if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
+        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
+    }
+}
+
+TestingSetup::TestingSetup(
+    const std::string& chainName,
+    const std::vector<const char*>& extra_args,
+    const bool coins_db_in_memory,
+    const bool block_tree_db_in_memory)
+    : ChainTestingSetup(chainName, extra_args),
+      m_coins_db_in_memory(coins_db_in_memory),
+      m_block_tree_db_in_memory(block_tree_db_in_memory)
 {
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    node::ChainstateLoadOptions options;
-    options.mempool = Assert(m_node.mempool.get());
-    options.block_tree_db_in_memory = true;
-    options.coins_db_in_memory = true;
-    options.reindex = node::fReindex;
-    options.reindex_chainstate = m_args.GetBoolArg("-reindex-chainstate", false);
-    options.prune = node::fPruneMode;
-    options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
-    options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
-    auto [status, error] = LoadChainstate(*Assert(m_node.chainman), m_cache_sizes, options);
-    assert(status == node::ChainstateLoadStatus::SUCCESS);
-
-    std::tie(status, error) = VerifyLoadedChainstate(*Assert(m_node.chainman), options);
-    assert(status == node::ChainstateLoadStatus::SUCCESS);
-
-    BlockValidationState state;
-    if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
-        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
-    }
+    LoadVerifyActivateChainstate();
 
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
     m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
@@ -263,8 +267,12 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 }
 
-TestChain100Setup::TestChain100Setup(const std::string& chain_name, const std::vector<const char*>& extra_args)
-    : TestingSetup{chain_name, extra_args}
+TestChain100Setup::TestChain100Setup(
+        const std::string& chain_name,
+        const std::vector<const char*>& extra_args,
+        const bool coins_db_in_memory,
+        const bool block_tree_db_in_memory)
+    : TestingSetup{CBaseChainParams::REGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}
 {
     SetMockTime(1598887952);
     constexpr std::array<unsigned char, 32> vchKey = {
@@ -320,7 +328,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
         chainstate = &Assert(m_node.chainman)->ActiveChainstate();
     }
 
-    const CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
+    CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
 
@@ -396,15 +404,15 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             unspent_prevouts.pop_front();
         }
         const size_t num_outputs = det_rand.randrange(24) + 1;
-        // Approximately 1000sat "fee," equal output amounts.
-        const CAmount amount_per_output = (total_in - 1000) / num_outputs;
+        const CAmount fee = 100 * det_rand.randrange(30);
+        const CAmount amount_per_output = (total_in - fee) / num_outputs;
         for (size_t n{0}; n < num_outputs; ++n) {
             CScript spk = CScript() << CScriptNum(num_transactions + n);
             mtx.vout.push_back(CTxOut(amount_per_output, spk));
         }
         CTransactionRef ptx = MakeTransactionRef(mtx);
         mempool_transactions.push_back(ptx);
-        if (amount_per_output > 2000) {
+        if (amount_per_output > 3000) {
             // If the value is high enough to fund another transaction + fees, keep track of it so
             // it can be used to build a more complex transaction graph. Insert randomly into
             // unspent_prevouts for extra randomness in the resulting structures.
@@ -414,26 +422,44 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             }
         }
         if (submit) {
-            LOCK2(m_node.mempool->cs, cs_main);
+            LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
-            m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, 1000, 0, 1, false, 4, lp));
+            m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
+                                                         /*time=*/0, /*entry_height=*/1,
+                                                         /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
         }
         --num_transactions;
     }
     return mempool_transactions;
 }
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const
+void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
 {
-    return FromTx(MakeTransactionRef(tx));
-}
+    LOCK2(cs_main, m_node.mempool->cs);
+    // Transactions in the mempool will affect the new minimum feerate.
+    assert(m_node.mempool->size() == 0);
+    // The target feerate cannot be too low...
+    // ...otherwise the transaction's feerate will need to be negative.
+    assert(target_feerate > m_node.mempool->m_incremental_relay_feerate);
+    // ...otherwise this is not meaningful. The feerate policy uses the maximum of both feerates.
+    assert(target_feerate > m_node.mempool->m_min_relay_feerate);
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
-{
-    return CTxMemPoolEntry(tx, nFee, nTime, nHeight,
-                           spendsCoinbase, sigOpCost, lp);
+    // Manually create an invalid transaction. Manually set the fee in the CTxMemPoolEntry to
+    // achieve the exact target feerate.
+    CMutableTransaction mtx = CMutableTransaction();
+    mtx.vin.push_back(CTxIn{COutPoint{g_insecure_rand_ctx.rand256(), 0}});
+    mtx.vout.push_back(CTxOut(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE))));
+    const auto tx{MakeTransactionRef(mtx)};
+    LockPoints lp;
+    // The new mempool min feerate is equal to the removed package's feerate + incremental feerate.
+    const auto tx_fee = target_feerate.GetFee(GetVirtualTransactionSize(*tx)) -
+        m_node.mempool->m_incremental_relay_feerate.GetFee(GetVirtualTransactionSize(*tx));
+    m_node.mempool->addUnchecked(CTxMemPoolEntry(tx, /*fee=*/tx_fee,
+                                                 /*time=*/0, /*entry_height=*/1,
+                                                 /*spends_coinbase=*/true, /*sigops_cost=*/1, lp));
+    m_node.mempool->TrimToSize(0);
+    assert(m_node.mempool->GetMinFee() == target_feerate);
 }
-
 /**
  * @returns a real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
  *      with 9 txs.

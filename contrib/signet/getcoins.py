@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -142,7 +142,7 @@ if args.captcha != '': # Retrieve a captcha
 
 try:
     res = session.post(args.faucet, data=data)
-except:
+except Exception:
     raise SystemExit(f"Unexpected error when contacting faucet: {sys.exc_info()[0]}")
 
 # Display the output as per the returned status code

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -78,27 +78,29 @@ bool IsHexNumber(std::string_view str)
 }
 
 template <typename Byte>
-std::vector<Byte> ParseHex(std::string_view str)
+std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
 {
     std::vector<Byte> vch;
     auto it = str.begin();
-    while (it != str.end() && it + 1 != str.end()) {
+    while (it != str.end()) {
         if (IsSpace(*it)) {
             ++it;
             continue;
         }
         auto c1 = HexDigit(*(it++));
+        if (it == str.end()) return std::nullopt;
         auto c2 = HexDigit(*(it++));
-        if (c1 < 0 || c2 < 0) break;
+        if (c1 < 0 || c2 < 0) return std::nullopt;
         vch.push_back(Byte(c1 << 4) | Byte(c2));
     }
     return vch;
 }
-template std::vector<std::byte> ParseHex(std::string_view);
-template std::vector<uint8_t> ParseHex(std::string_view);
+template std::optional<std::vector<std::byte>> TryParseHex(std::string_view);
+template std::optional<std::vector<uint8_t>> TryParseHex(std::string_view);
 
-void SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
+bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 {
+    bool valid = false;
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
@@ -109,13 +111,18 @@ void SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
         if (ParseUInt16(in.substr(colon + 1), &n)) {
             in = in.substr(0, colon);
             portOut = n;
+            valid = (portOut != 0);
         }
+    } else {
+        valid = true;
     }
     if (in.size() > 0 && in[0] == '[' && in[in.size() - 1] == ']') {
         hostOut = in.substr(1, in.size() - 2);
     } else {
         hostOut = in;
     }
+
+    return valid;
 }
 
 std::string EncodeBase64(Span<const unsigned char> input)

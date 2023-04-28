@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of -maxuploadtarget.
@@ -164,6 +164,9 @@ class MaxUploadTest(BitcoinTestFramework):
         assert_equal(len(peer_info), 1)  # node is still connected
         assert_equal(peer_info[0]['permissions'], ['download'])
 
+        self.log.info("Test passing an unparsable value to -maxuploadtarget throws an error")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(extra_args=["-maxuploadtarget=abc"], expected_msg="Error: Unable to parse -maxuploadtarget: 'abc'")
 
 if __name__ == '__main__':
     MaxUploadTest().main()

@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     const auto params = CreateChainParams(*m_node.args, CBaseChainParams::REGTEST);
 
     // These heights don't have assumeutxo configurations associated, per the contents
-    // of chainparams.cpp.
+    // of kernel/chainparams.cpp.
     std::vector<int> bad_heights{0, 100, 111, 115, 209, 211};
 
     for (auto empty : bad_heights) {

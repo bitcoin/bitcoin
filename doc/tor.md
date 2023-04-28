@@ -92,18 +92,12 @@ out by default (if not, add them):
 ControlPort 9051
 CookieAuthentication 1
 CookieAuthFileGroupReadable 1
+DataDirectoryGroupReadable 1
 ```
 
 Add or uncomment those, save, and restart Tor (usually `systemctl restart tor`
 or `sudo systemctl restart tor` on most systemd-based systems, including recent
 Debian and Ubuntu, or just restart the computer).
-
-On some systems (such as Arch Linux), you may also need to add the following
-line:
-
-```
-DataDirectoryGroupReadable 1
-```
 
 ### Authentication
 

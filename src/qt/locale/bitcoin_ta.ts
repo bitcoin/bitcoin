@@ -92,6 +92,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">முகவரி பட்டியல் ஏக்ஸ்போர்ட் செய்க </translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">கமா பிரிக்கப்பட்ட கோப்பு</translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">முகவரி பட்டியலை %1 க்கு சேமிக்க முயற்சிக்கும் ஒரு பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.</translation>
@@ -235,7 +240,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">ரனவே எக்ஸெப்ஷன்</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">ஒரு அபாயகரமான ஏரற் ஏற்பட்டது. %1 இனி பாதுகாப்பாக தொடர முடியாது மற்றும் வெளியேறும்</translation>
+    </message>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">உள் எறர்</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">அமைப்புகளை இயல்புநிலை மதிப்புகளுக்கு மீட்டமைக்க வேண்டுமா அல்லது மாற்றங்களைச் செய்யாமல் நிறுத்த வேண்டுமா?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">ஒரு அபாயகரமான பிழை ஏற்பட்டது. அமைப்புகள் கோப்பு எழுதக்கூடியதா என்பதைச் சரிபார்க்கவும் அல்லது -nosettings மூலம் இயக்க முயற்சிக்கவும்.</translation>
+    </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">பிழை: குறிப்பிட்ட தரவு அடைவு "%1" இல்லை.</translation>
@@ -247,6 +277,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">பிழை: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1இன்னும் பாதுகாப்பாக வெளியேரவில்லை ...</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -324,6 +358,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">அமைப்புகள் கோப்பைப் படிக்க முடியவில்லை</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">அமைப்புகள் கோப்பை எழுத முடியவில்லை</translation>
+    </message>
+    <message>
         <source>The %s developers</source>
         <translation type="unfinished">%s டெவலப்பர்கள்</translation>
     </message>
@@ -400,6 +442,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">தீர்க்க முடியாது -%s முகவரி: '%s'</translation>
     </message>
     <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">-blockfiltersindex இல்லாத -peerblockfilters அமைப்பு முடியாது </translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation type="unfinished">பதிப்புரிமை (ப) %i-%i</translation>
     </message>
@@ -450,10 +496,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished">டேட்டாபேசிலிருந்து படிப்பதில் பிழை, ஷட் டவுன் செய்யப்படுகிறது.</translation>
-    </message>
-    <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">செயின்ஸ்டேட் தகவல்தளத்தை மேம்படுத்துவதில் பிழை</translation>
     </message>
     <message>
         <source>Error: Disk space is low for %s</source>
@@ -596,10 +638,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">தெரியாத மாற்று வகை '%s'</translation>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">UTXO தகவல்தளம் மேம்படுத்தப்படுகிறது</translation>
-    </message>
-    <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation type="unfinished">வாலட் மீண்டும் எழுத படவேண்டும்: முடிக்க %s ஐ மறுதொடக்கம் செய்யுங்கள்</translation>
     </message>
@@ -655,6 +693,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">புதிய வாலட்டை உருவாக்கு</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;குறைத்தல்</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">கைப்பை:</translation>
     </message>
@@ -688,8 +730,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;பெறு</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;விருப்பங்கள்</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished">உங்கள் பணப்பைச் சேர்ந்த தனிப்பட்ட விசைகளை குறியாக்குக</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">&amp;பேக்கப் வாலட்...</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -698,6 +748,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">குறிப்பிடப்பட்ட விக்கிபீடியா முகவர்களுடன் கையொப்பமிடப்பட்டதை உறுதிப்படுத்த, செய்திகளை சரிபார்க்கவும்</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">திறந்த &amp;யூஆற்ஐ...</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -826,6 +880,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">வாலட் எதுவும் இல்லை</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">வாலட் பெயர்</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1244,6 +1303,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(%n ஜிபி தேவை)</numerusform>
+            <numerusform>(%n ஜிபி தேவை)</numerusform>
+        </translation>
+    </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">குறைந்தது %1 ஜிபி தரவு இந்த அடைவில் சேமிக்கப்படும், மேலும் காலப்போக்கில் அது வளரும்.</translation>
@@ -1287,10 +1360,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">இது முதல் முறையாக துவங்கியது, நீங்கள் %1 அதன் தரவை எங்கு சேமித்து வைக்கும் என்பதை தேர்வு செய்யலாம்.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">நீங்கள் சரி என்பதைக் கிளிக் செய்தால் %1 ஆரம்பத்தில் %4 இல் ஆரம்பிக்கப்பட்ட %3 இன் ஆரம்ப பரிவர்த்தனைகளைத் தொடங்கும் போது முழு %4 தொகுதி சங்கிலி (%2GB) பதிவிறக்க மற்றும் செயலாக்கத் தொடங்கும்.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -1565,10 +1634,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">நாணயக் கட்டுப்பாட்டு அம்சங்களைக் காட்டலாமா அல்லது இல்லையா.</translation>
     </message>
     <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation type="unfinished">இந்த உரையாடலில் அமைக்கப்பட்டுள்ள விருப்பங்கள் கட்டளை வரியில் அல்லது கட்டமைப்பு கோப்பில் மீளமைக்கப்படும்:</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;சரி</translation>
     </message>
@@ -1582,14 +1647,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">விருப்பங்களை மீட்டமைக்கவும்</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">மாற்றங்களைச் செயல்படுத்த கிளையன் மறுதொடக்கம் தேவை.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">கிளையண்ட் மூடப்படும். நீங்கள் தொடர விரும்புகிறீர்களா?</translation>
     </message>
     <message>
@@ -1696,6 +1764,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Sign Tx</source>
+        <translation type="unfinished">கையெழுத்து Tx</translation>
+    </message>
     <message>
         <source>Close</source>
         <translation type="unfinished">நெருக்கமான</translation>
@@ -2419,10 +2491,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Transaction creation failed!</source>
         <translation type="unfinished">பரிவர்த்தனை உருவாக்கம் தோல்வியடைந்தது!</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">கட்டணம் கோரிக்கை காலாவதியானது.</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -2498,28 +2566,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">செய்தி:</translation>
     </message>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">இது ஒரு அங்கீகரிக்கப்படாத கட்டண கோரிக்கை.</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">இது ஒரு அங்கீகரிக்கப்பட்ட கட்டண கோரிக்கை.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished">இந்த முகவரியை பயன்படுத்தப்பட்ட முகவரிகளின் பட்டியலில் சேர்க்க ஒரு லேபிளை உள்ளிடவும்.</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished">பிட்காயினுடன் இணைக்கப்பட்ட செய்தி: உங்கள் எதிர்கால குறிப்புக்காக பரிவர்த்தனையுடன் யூஆர்ஐ சேமிக்கப்படும். குறிப்பு: இந்த செய்தி பிட்காயின் வலையமைப்பிற்கு அனுப்பப்படாது.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">பணம் செலுத்து:</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">குறிப்பாணை:</translation>
     </message>
 </context>
 <context>
@@ -2665,33 +2717,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">ஷட்டவுன் செய்ய, "q" ஐ அழுத்தவும்</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished">%1 உறுதிப்படுத்தல்களுடன் ஒரு பரிவர்த்தனை முரண்பட்டது</translation>
     </message>
     <message>
-        <source>0/unconfirmed, %1</source>
-        <translation type="unfinished">0/உறுதிப்படுத்தப்படாதது, %1</translation>
-    </message>
-    <message>
-        <source>in memory pool</source>
-        <translation type="unfinished">மெமரி பூலில் உள்ளது</translation>
-    </message>
-    <message>
-        <source>not in memory pool</source>
-        <translation type="unfinished">மெமரி பூலில் இல்லை</translation>
-    </message>
-    <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">கைவிடப்பட்டது</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1/உறுதிப்படுத்தப்படாதது</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 உறுதிப்படுத்தல்</translation>
     </message>
     <message>
@@ -2981,6 +3032,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">பரிவர்த்தனையின் வரலாற்றை எக்ஸ்போர்ட் செய்</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">கமா பிரிக்கப்பட்ட கோப்பு</translation>
     </message>
     <message>
         <source>Confirmed</source>

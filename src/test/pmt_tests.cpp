@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 #include <merkleblock.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <version.h>
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             CPartialMerkleTree pmt1(vTxid, vMatch);
 
             // serialize
-            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+            DataStream ss{};
             ss << pmt1;
 
             // verify CPartialMerkleTree's size guarantees

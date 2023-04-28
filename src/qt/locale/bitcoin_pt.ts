@@ -165,7 +165,7 @@ Assinar só é possível com endereços do tipo "legado".</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Aviso: se encriptar a sua carteira e perder a sua frase de segurnça, &lt;b&gt;PERDERÁ TODOS OS SEUS BITCOINS&lt;/b&gt;!</translation>
+        <translation type="unfinished">Aviso: se encriptar a sua carteira e perder a sua frase de segurança, &lt;b&gt;PERDERÁ TODAS AS SUAS BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -245,6 +245,10 @@ Assinar só é possível com endereços do tipo "legado".</translation>
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">O ficheiro de configurações %1 pode estar corrompido ou inválido.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Exceção de Runaway</translation>
@@ -331,6 +335,11 @@ Assinar só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Retransmissão de Blocos</translation>
     </message>
     <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">Antena</translation>
+    </message>
+    <message>
         <source>Address Fetch</source>
         <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
         <translation type="unfinished">Procura de endreços</translation>
@@ -346,36 +355,36 @@ Assinar só é possível com endereços do tipo "legado".</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n segundo</numerusform>
+            <numerusform>%n segundos</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuto</numerusform>
+            <numerusform>%n minutos</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hora</numerusform>
+            <numerusform>%n horas</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dia</numerusform>
+            <numerusform>%n dias</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n semana</numerusform>
+            <numerusform>%n semanas</numerusform>
         </translation>
     </message>
     <message>
@@ -385,8 +394,8 @@ Assinar só é possível com endereços do tipo "legado".</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n ano</numerusform>
+            <numerusform>%n anos </numerusform>
         </translation>
     </message>
     </context>
@@ -431,10 +440,6 @@ Assinar só é possível com endereços do tipo "legado".</translation>
     <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <translation type="unfinished">Erro: Esta versão do bitcoin-wallet apenas suporta arquivos de despejo na versão 1. (Versão atual: %s)</translation>
-    </message>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">Erro: a escuta de ligações de entrada falhou (escuta devolveu o erro %s)</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
@@ -630,10 +635,6 @@ deve ser fornecido.</translation>
         <translation type="unfinished">Erro ao ler o registo seguinte da base de dados da carteira</translation>
     </message>
     <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">Erro ao atualizar a base de dados do estado da cadeia (chainstate)</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low for %s</source>
         <translation type="unfinished">Erro: espaço em disco demasiado baixo para %s</translation>
     </message>
@@ -660,6 +661,10 @@ deve ser fornecido.</translation>
     <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
         <translation type="unfinished">Erro: Não foi possível converter versão %u como uint32_t</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Error: Não é possivel ler todos os registros no banco de dados</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -754,12 +759,16 @@ deve ser fornecido.</translation>
         <translation type="unfinished">A carregar a carteira…</translation>
     </message>
     <message>
+        <source>Missing amount</source>
+        <translation type="unfinished">Falta a quantia</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Necessário especificar uma porta com -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation type="unfinished">Sem servidor de proxy especificado. Use -proxy=&lt;ip&gt; ou -proxy=&lt;ip:port&gt;.</translation>
+        <source>No addresses available</source>
+        <translation type="unfinished">Sem endereços disponíveis</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -768,10 +777,6 @@ deve ser fornecido.</translation>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation type="unfinished">A redução não pode ser configurada com um valor negativo.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -coinstatsindex.</source>
-        <translation type="unfinished">Modo de poda é incompatível com -coinstatsindex.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -884,6 +889,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">A transação dever pelo menos um destinatário</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">Transação precisa de uma mudança de endereço, mas nós não a podemos gerar.</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transação grande demais</translation>
     </message>
@@ -938,10 +947,6 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Categoria de registos desconhecida %s=%s.</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">A atualizar a base de dados UTXO</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
@@ -1162,8 +1167,8 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform> %n bloco processado do histórico de transações.</numerusform>
+            <numerusform> %n blocos processados do histórico de transações.</numerusform>
         </translation>
     </message>
     <message>
@@ -1243,6 +1248,16 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Fechar a carteira</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">Restaurar carteira…</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">Restaurar uma carteira a partir de um ficheiro de cópia de segurança</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">Fechar todas carteiras.</translation>
     </message>
@@ -1267,6 +1282,26 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Sem carteiras disponíveis</translation>
     </message>
     <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">Dados da carteira</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Carregar cópia de segurança de carteira</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Restaurar carteira</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">Nome da Carteira</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Janela</translation>
     </message>
@@ -1282,12 +1317,20 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>%1 client</source>
         <translation type="unfinished">Cliente %1</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">Ocultar</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">Mo&amp;strar</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n conexão ativa na rede Bitcoin.</numerusform>
+            <numerusform>%n conexões ativas na rede Bitcoin.</numerusform>
         </translation>
     </message>
     <message>
@@ -1309,6 +1352,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Activar atividade da rede</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">A pré-sincronizar cabeçalhos (%1%)…</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1569,6 +1616,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>Can't list signers</source>
         <translation type="unfinished">Não é possível listar signatários</translation>
     </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Encontrados demasiados assinantes externos</translation>
+    </message>
 </context>
 <context>
     <name>LoadWalletsActivity</name>
@@ -1606,6 +1657,34 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation type="unfinished">A abrir a carteira &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+</context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Restaurar carteira</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">A restaurar a carteira &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Falha ao restaurar a carteira</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Aviso de restaurar carteira</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Mensagem de restaurar a carteira</translation>
     </message>
 </context>
 <context>
@@ -1783,13 +1862,26 @@ A pasta de blocos especificados "%s" não existe.</translation>
 </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation type="unfinished">(de %1 GB necessários)</translation>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform>%n GB de espaço disponível</numerusform>
+            <numerusform>%n GB de espaço disponível</numerusform>
+        </translation>
     </message>
-    <message>
-        <source>(%1 GB needed for full chain)</source>
-        <translation type="unfinished">(1%1 GB necessários para a blockchain  completa)</translation>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(de %n GB necessário)</numerusform>
+            <numerusform>(de %n GB necessários)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform>(%n GB necessário para a cadeia completa)</numerusform>
+            <numerusform>(%n GB necessários para a cadeia completa)</numerusform>
+        </translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1803,8 +1895,8 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(suficiente para restaurar backups de %n dia atrás)</numerusform>
+            <numerusform>(suficiente para restaurar backups de %n dias atrás)</numerusform>
         </translation>
     </message>
     <message>
@@ -1836,10 +1928,6 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Sendo esta a primeira vez que o programa é iniciado, poderá escolher onde o %1 irá guardar os seus dados.</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">Quando clicar OK, %1 vai começar a descarregar e processar a cadeia de blocos %4 completa (%2GB) começando com as transações mais antigas em %3 quando a %4 foi inicialmente lançada.</translation>
-    </message>
-    <message>
         <source>Limit block chain storage to</source>
         <translation type="unfinished">Limitar o tamanho da blockchain para</translation>
     </message>
@@ -1850,6 +1938,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Esta sincronização inicial é muito exigente, e pode expor problemas com o seu computador que previamente podem ter passado despercebidos. Cada vez que corre %1, este vai continuar a descarregar de onde deixou.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Quando clicar em OK, %1 iniciará o download e irá processar a cadeia de blocos completa %4 (%2 GB) iniciando com as transações mais recentes em %3 enquanto %4 é processado. </translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1948,6 +2040,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Desconhecido. A sincronizar cabeçalhos (%1, %2%)...</translation>
     </message>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Desconhecido. Pré-Sincronizando Cabeçalhos (%1, %2%)...</translation>
+    </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
@@ -2004,6 +2100,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Minimize em vez de sair da aplicação quando a janela é fechada. Quando esta opção é ativada, a aplicação apenas será encerrada quando escolher Sair no menu.</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">Opções configuradas nessa caixa de diálogo serão sobrescritas pela linhas de comando: </translation>
+    </message>
+    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation type="unfinished">Abrir o ficheiro de configuração %1 da pasta aberta.</translation>
     </message>
@@ -2041,12 +2141,37 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Tamanho máximo da cache da base de dados. Uma cache maior pode contribuir para uma sincronização mais rápida, a partir do qual os benefícios são menos visíveis. Ao baixar o tamanho da cache irá diminuir a utilização de memória. Memória da mempool não usada será partilhada com esta cache.</translation>
     </message>
     <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Define o número de threads do script de verificação. Valores negativos correspondem ao número de núcleos que deseja deixar livres para o sistema.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = automático, &lt;0 = deixar essa quantidade de núcleos livre)</translation>
     </message>
     <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">Isto permite-lhe comunicar a si ou a ferramentas de terceiros com o nó através da linha de comandos e comandos JSON-RPC.</translation>
+    </message>
+    <message>
+        <source>Enable R&amp;PC server</source>
+        <extracomment>An Options window setting to enable the RPC server.</extracomment>
+        <translation type="unfinished">Ativar servidor R&amp;PC</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">C&amp;arteira</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Mostrar a quantia com a taxa já subtraída, por padrão.</translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Subtrair &amp;taxa da quantia por padrão</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -2063,6 +2188,16 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Gastar troco não confirmado</translation>
+    </message>
+    <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation type="unfinished">Ativar os controlos &amp;PSBT</translation>
+    </message>
+    <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">Mostrar os controlos PSBT.</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -2083,6 +2218,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation type="unfinished">Mapear porta usando &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Abrir a porta do cliente bitcoin automaticamente no seu router. Isto só funciona se o seu router suportar NAT-PMP e este se encontrar ligado. A porta externa poderá ser aleatória.</translation>
     </message>
     <message>
         <source>Map port using NA&amp;T-PMP</source>
@@ -2165,6 +2304,14 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Escolha a unidade da subdivisão predefinida para ser mostrada na interface e quando enviar as moedas.</translation>
     </message>
     <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">URLs de outrem (ex. um explorador de blocos) que aparece no separador de transações como itens do menu de contexto. %s do URL é substituído pela hash de transação. Múltiplos URLs são separados pela barra vertical I.</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">URLs de transação de &amp;terceiros</translation>
+    </message>
+    <message>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished">Escolha se deve mostrar as funcionalidades de controlo de moedas ou não.</translation>
     </message>
@@ -2181,8 +2328,12 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Fonte no painel de visualização:</translation>
     </message>
     <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation type="unfinished">As opções nesta janela são substituídas pela linha de comandos ou no ficheiro de configuração:</translation>
+        <source>embedded "%1"</source>
+        <translation type="unfinished">embutido "%1"</translation>
+    </message>
+    <message>
+        <source>closest matching "%1"</source>
+        <translation type="unfinished">resultado mais aproximado "%1"</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -2203,14 +2354,22 @@ A pasta de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">Confirme a reposição das opções</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">É necessário reiniciar o cliente para ativar as alterações.</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">Configuração atuais serão copiadas em "%1".</translation>
+    </message>
+    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">O cliente será desligado. Deseja continuar?</translation>
     </message>
     <message>
@@ -2222,6 +2381,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
         <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">O ficheiro de configuração é usado para especificar opções de utilizador avançado, que sobrescrevem as configurações do interface gráfico. Adicionalmente, qualquer opção da linha de comandos vai sobrescrever este ficheiro de configuração.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -2242,6 +2405,13 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation type="unfinished">O endereço de proxy introduzido é inválido.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation type="unfinished">Não foi possível ler as configurações "%1", %2.</translation>
     </message>
 </context>
 <context>
@@ -2354,6 +2524,10 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation type="unfinished">Falha ao assinar transação: %1</translation>
     </message>
     <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Não é possível assinar entradas enquanto a carteira está trancada.</translation>
+    </message>
+    <message>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Não pode assinar mais nenhuma entrada.</translation>
     </message>
@@ -2428,6 +2602,10 @@ ID transação: %1</translation>
         <translation type="unfinished">Transação continua precisando de assinatura(s).</translation>
     </message>
     <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">(Mas nenhuma carteira está carregada)</translation>
+    </message>
+    <message>
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(Porém esta carteira não pode assinar transações.)</translation>
     </message>
@@ -2463,6 +2641,14 @@ ID transação: %1</translation>
         <translation type="unfinished">'bitcoin://' não é um URI válido. Utilize 'bitcoin:'.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.
+Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
+If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation type="unfinished">Não é possível processar o pagamento pedido porque o BIP70 não é suportado.
+Devido a falhas de segurança no BIP70, é recomendado que todas as instruçōes ao comerciante para mudar de carteiras sejam ignorada.
+Se está a receber este erro, deverá pedir ao comerciante para fornecer um URI compatível com BIP21.</translation>
+    </message>
+    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation type="unfinished">URI não foi lido corretamente! Isto pode ser causado por um endereço Bitcoin inválido ou por parâmetros URI malformados.</translation>
     </message>
@@ -2482,6 +2668,11 @@ ID transação: %1</translation>
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
         <translation type="unfinished">Par</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">idade</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2663,12 +2854,46 @@ ID transação: %1</translation>
         <translation type="unfinished">Blocos Sincronizados</translation>
     </message>
     <message>
+        <source>Last Transaction</source>
+        <translation type="unfinished">Última Transação</translation>
+    </message>
+    <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
         <translation type="unfinished">O sistema autónomo mapeado usado para diversificar a seleção de pares.</translation>
     </message>
     <message>
         <source>Mapped AS</source>
         <translation type="unfinished">Mapeado como</translation>
+    </message>
+    <message>
+        <source>Whether we relay addresses to this peer.</source>
+        <extracomment>Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
+        <translation type="unfinished">Endereços são retransmitidos para este nó.</translation>
+    </message>
+    <message>
+        <source>Address Relay</source>
+        <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
+        <translation type="unfinished">Retransmissão de endereços</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">O número total de endereços recebidos deste peer que foram processados (exclui endereços que foram descartados devido à limitação de taxa).</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation type="unfinished">O número total de endereços recebidos deste peer que não foram processados devido à limitação da taxa.</translation>
+    </message>
+    <message>
+        <source>Addresses Processed</source>
+        <extracomment>Text title for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">Endereços Processados</translation>
+    </message>
+    <message>
+        <source>Addresses Rate-Limited</source>
+        <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation type="unfinished">Endereços com limite de taxa</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -2840,6 +3065,11 @@ ID transação: %1</translation>
     <message>
         <source>1 &amp;year</source>
         <translation type="unfinished">1 &amp;ano</translation>
+    </message>
+    <message>
+        <source>&amp;Copy IP/Netmask</source>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
+        <translation type="unfinished">&amp;Copiar IP/Netmask</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
@@ -3200,6 +3430,14 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <translation type="unfinished">Esconder configurações de taxas de transação</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation type="unfinished">Especifique uma taxa personalizada por kB (1.000 bytes) do tamanho virtual da transação.
+
+Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para um tamanho de transação de 500 bytes virtuais (metade de 1 kvB) resultaria em uma taxa de apenas 50 satoshis.</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation type="unfinished">Quando o volume de transações é maior que o espaço nos blocos, os mineradores, bem como os nós de retransmissão, podem impor uma taxa mínima. Pagar apenas esta taxa mínima é muito bom, mas esteja ciente que isso pode resultar numa transação nunca confirmada, uma vez que há mais pedidos para transações do que a rede pode processar.</translation>
     </message>
@@ -3245,7 +3483,7 @@ Para mais informação acerca da utilização desta consola, escreva %6.
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Copiar quantia</translation>
+        <translation type="unfinished">Copiar valor</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -3279,6 +3517,11 @@ Para mais informação acerca da utilização desta consola, escreva %6.
     <message>
         <source>Connect your hardware wallet first.</source>
         <translation type="unfinished">Por favor conecte a sua wallet física primeiro.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Defina o caminho do script do assinante externo em Opções -&gt; Carteira</translation>
     </message>
     <message>
         <source>Cr&amp;eate Unsigned</source>
@@ -3349,6 +3592,16 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <translation type="unfinished">Por favor, reveja sua proposta de transação. Isto irá produzir uma Transação de Bitcoin parcialmente assinada (PSBT, sigla em inglês) a qual você pode salvar ou copiar e então assinar com por exemplo uma carteira %1 offiline ou uma PSBT compatível com carteira de hardware.</translation>
     </message>
     <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation type="unfinished">Deseja criar esta transação?</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
+        <translation type="unfinished">Por favor, revise sua transação. Você pode assinar e enviar a transação ou criar uma Transação de Bitcoin Parcialmente Assinada (PSBT), que você pode copiar e assinar com, por exemplo, uma carteira %1 offline ou uma carteira física compatível com PSBT.</translation>
+    </message>
+    <message>
         <source>Please, review your transaction.</source>
         <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
         <translation type="unfinished">Por favor, reveja a sua transação.</translation>
@@ -3401,15 +3654,11 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">Uma taxa superior a %1 é considerada uma taxa altamente absurda.</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">Pedido de pagamento expirado.</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Confirmação estimada para iniciar em %n bloco.</numerusform>
+            <numerusform>Confirmação estimada para iniciar em %n blocos.</numerusform>
         </translation>
     </message>
     <message>
@@ -3484,28 +3733,12 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <translation type="unfinished">Mensagem:</translation>
     </message>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">Pedido de pagamento não autenticado.</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">Pedido de pagamento autenticado.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished">Introduza uma etiqueta para este endereço para o adicionar à sua lista de endereços usados</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished">Uma mensagem que estava anexada ao URI bitcoin: que será armazenada com a transação para sua referência. Nota: Esta mensagem não será enviada através da rede Bitcoin.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">Pagar a:</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">Memorando:</translation>
     </message>
 </context>
 <context>
@@ -3663,33 +3896,46 @@ Para mais informação acerca da utilização desta consola, escreva %6.
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <source>(press q to shutdown and continue later)</source>
+        <translation type="unfinished">(tecle q para desligar e continuar mais tarde)</translation>
+    </message>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">Carregue q para desligar</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished">incompatível com uma transação com %1 confirmações</translation>
     </message>
     <message>
-        <source>0/unconfirmed, %1</source>
-        <translation type="unfinished">0/não confirmada, %1</translation>
+        <source>0/unconfirmed, in memory pool</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is in the memory pool.</extracomment>
+        <translation type="unfinished">0/não confirmada, no memory pool</translation>
     </message>
     <message>
-        <source>in memory pool</source>
-        <translation type="unfinished">no banco de memória</translation>
-    </message>
-    <message>
-        <source>not in memory pool</source>
-        <translation type="unfinished">não está no banco de memória</translation>
+        <source>0/unconfirmed, not in memory pool</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is not in the memory pool.</extracomment>
+        <translation type="unfinished">0/não confirmada, ausente no memory pool</translation>
     </message>
     <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">abandonada</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1/não confirmada</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 confirmações</translation>
     </message>
     <message>
@@ -3739,8 +3985,8 @@ Para mais informação acerca da utilização desta consola, escreva %6.
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>pronta em mais %n bloco</numerusform>
+            <numerusform>prontas em mais %n blocos</numerusform>
         </translation>
     </message>
     <message>
@@ -4013,8 +4259,33 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <translation type="unfinished">Copiar Id. da transação</translation>
     </message>
     <message>
+        <source>Copy &amp;raw transaction</source>
+        <translation type="unfinished">Copiar &amp;transação bruta</translation>
+    </message>
+    <message>
+        <source>Copy full transaction &amp;details</source>
+        <translation type="unfinished">Copie toda a transação &amp;details</translation>
+    </message>
+    <message>
+        <source>&amp;Show transaction details</source>
+        <translation type="unfinished">Mo&amp;strar detalhes da transação</translation>
+    </message>
+    <message>
+        <source>Increase transaction &amp;fee</source>
+        <translation type="unfinished">Aumentar &amp;taxa da transação</translation>
+    </message>
+    <message>
+        <source>A&amp;bandon transaction</source>
+        <translation type="unfinished">A&amp;bandonar transação</translation>
+    </message>
+    <message>
         <source>&amp;Edit address label</source>
         <translation type="unfinished">&amp;Editar etiqueta do endereço</translation>
+    </message>
+    <message>
+        <source>Show in %1</source>
+        <extracomment>Transactions table context menu action to show the selected transaction in a third-party block explorer. %1 is a stand-in argument for the URL of the explorer.</extracomment>
+        <translation type="unfinished">Mostrar em %1</translation>
     </message>
     <message>
         <source>Export Transaction History</source>

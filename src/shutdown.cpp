@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +27,7 @@ bool AbortNode(const std::string& strMessage, bilingual_str user_message)
     if (user_message.empty()) {
         user_message = _("A fatal internal error occurred, see debug.log for details");
     }
-    AbortError(user_message);
+    InitError(user_message);
     StartShutdown();
     return false;
 }

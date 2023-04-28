@@ -1,13 +1,15 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparamsbase.h>
+#include <common/args.h>
 #include <external_signer.h>
+#include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
-#include <rpc/protocol.h>
+#include <util/system.h>
 
 #include <string>
 #include <vector>

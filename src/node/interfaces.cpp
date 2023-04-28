@@ -1,29 +1,33 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrdb.h>
 #include <banman.h>
+#include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <common/args.h>
 #include <deploymentstatus.h>
 #include <external_signer.h>
+#include <index/blockfilterindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
+#include <kernel/chain.h>
+#include <kernel/mempool_entry.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
-#include <kernel/chain.h>
 #include <node/coin.h>
 #include <node/context.h>
-#include <node/transaction.h>
 #include <node/interface_ui.h>
+#include <node/transaction.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -40,7 +44,6 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -61,7 +64,7 @@ using interfaces::BlockTip;
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
-using interfaces::MakeHandler;
+using interfaces::MakeSignalHandler;
 using interfaces::Node;
 using interfaces::WalletLoader;
 
@@ -83,14 +86,14 @@ class NodeImpl : public Node
 {
 public:
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
-    void initLogging() override { InitLogging(*Assert(m_context->args)); }
-    void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
+    void initLogging() override { InitLogging(args()); }
+    void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        if (!AppInitBasicSetup(gArgs)) return false;
-        if (!AppInitParameterInteraction(gArgs, /*use_syscall_sandbox=*/false)) return false;
+        if (!AppInitBasicSetup(args())) return false;
+        if (!AppInitParameterInteraction(args(), /*use_syscall_sandbox=*/false)) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
@@ -113,7 +116,7 @@ public:
     {
         StartShutdown();
         // Stop RPC for clean shutdown if any of waitfor* commands is executed.
-        if (gArgs.GetBoolArg("-server", false)) {
+        if (args().GetBoolArg("-server", false)) {
             InterruptRPC();
             StopRPC();
         }
@@ -122,28 +125,28 @@ public:
     bool isSettingIgnored(const std::string& name) override
     {
         bool ignored = false;
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (auto* options = util::FindKey(settings.command_line_options, name)) {
                 ignored = !options->empty();
             }
         });
         return ignored;
     }
-    util::SettingsValue getPersistentSetting(const std::string& name) override { return gArgs.GetPersistentSetting(name); }
+    util::SettingsValue getPersistentSetting(const std::string& name) override { return args().GetPersistentSetting(name); }
     void updateRwSetting(const std::string& name, const util::SettingsValue& value) override
     {
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
                 settings.rw_settings[name] = value;
             }
         });
-        gArgs.WriteSettingsFile();
+        args().WriteSettingsFile();
     }
     void forceSetting(const std::string& name, const util::SettingsValue& value) override
     {
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
                 settings.forced_settings.erase(name);
             } else {
@@ -153,11 +156,11 @@ public:
     }
     void resetSettings() override
     {
-        gArgs.WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
+        args().LockSettings([&](util::Settings& settings) {
             settings.rw_settings.clear();
         });
-        gArgs.WriteSettingsFile();
+        args().WriteSettingsFile();
     }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
     bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
@@ -234,10 +237,11 @@ public:
     {
 #ifdef ENABLE_EXTERNAL_SIGNER
         std::vector<ExternalSigner> signers = {};
-        const std::string command = gArgs.GetArg("-signer", "");
+        const std::string command = args().GetArg("-signer", "");
         if (command == "") return {};
         ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
         std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
+        result.reserve(signers.size());
         for (auto& signer : signers) {
             result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
         }
@@ -292,8 +296,7 @@ public:
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
-    bool getReindex() override { return node::fReindex; }
-    bool getImporting() override { return node::fImporting; }
+    bool isLoadingBlocks() override { return chainman().m_blockman.LoadingBlocks(); }
     void setNetworkActive(bool active) override
     {
         if (m_context->connman) {
@@ -333,50 +336,50 @@ public:
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
-        return MakeHandler(::uiInterface.InitMessage_connect(fn));
+        return MakeSignalHandler(::uiInterface.InitMessage_connect(fn));
     }
     std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) override
     {
-        return MakeHandler(::uiInterface.ThreadSafeMessageBox_connect(fn));
+        return MakeSignalHandler(::uiInterface.ThreadSafeMessageBox_connect(fn));
     }
     std::unique_ptr<Handler> handleQuestion(QuestionFn fn) override
     {
-        return MakeHandler(::uiInterface.ThreadSafeQuestion_connect(fn));
+        return MakeSignalHandler(::uiInterface.ThreadSafeQuestion_connect(fn));
     }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
-        return MakeHandler(::uiInterface.ShowProgress_connect(fn));
+        return MakeSignalHandler(::uiInterface.ShowProgress_connect(fn));
     }
     std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
     {
-        return MakeHandler(::uiInterface.InitWallet_connect(fn));
+        return MakeSignalHandler(::uiInterface.InitWallet_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyNumConnectionsChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyNumConnectionsChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyAlertChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyAlertChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.BannedListChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.BannedListChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyBlockTip_connect([fn](SynchronizationState sync_state, const CBlockIndex* block) {
+        return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn](SynchronizationState sync_state, const CBlockIndex* block) {
             fn(sync_state, BlockTip{block->nHeight, block->GetBlockTime(), block->GetBlockHash()},
                 GuessVerificationProgress(Params().TxData(), block));
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
     {
-        return MakeHandler(
+        return MakeSignalHandler(
             ::uiInterface.NotifyHeaderTip_connect([fn](SynchronizationState sync_state, int64_t height, int64_t timestamp, bool presync) {
                 fn(sync_state, BlockTip{(int)height, timestamp, uint256{}}, presync);
             }));
@@ -386,6 +389,7 @@ public:
     {
         m_context = context;
     }
+    ArgsManager& args() { return *Assert(Assert(m_context)->args); }
     ChainstateManager& chainman() { return *Assert(m_context->chainman); }
     NodeContext* m_context{nullptr};
 };
@@ -417,11 +421,11 @@ public:
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx, mempool_sequence);
+        m_notifications->transactionAddedToMempool(tx);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionRemovedFromMempool(tx, reason, mempool_sequence);
+        m_notifications->transactionRemovedFromMempool(tx, reason);
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
@@ -535,6 +539,20 @@ public:
             return fork->nHeight;
         }
         return std::nullopt;
+    }
+    bool hasBlockFilterIndex(BlockFilterType filter_type) override
+    {
+        return GetBlockFilterIndex(filter_type) != nullptr;
+    }
+    std::optional<bool> blockFilterMatchesAny(BlockFilterType filter_type, const uint256& block_hash, const GCSFilter::ElementSet& filter_set) override
+    {
+        const BlockFilterIndex* block_filter_index{GetBlockFilterIndex(filter_type)};
+        if (!block_filter_index) return std::nullopt;
+
+        BlockFilter filter;
+        const CBlockIndex* index{WITH_LOCK(::cs_main, return chainman().m_blockman.LookupBlockIndex(block_hash))};
+        if (index == nullptr || !block_filter_index->LookupFilter(index, filter)) return std::nullopt;
+        return filter.GetFilter().MatchAny(filter_set);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
@@ -655,13 +673,9 @@ public:
         if (!m_node.mempool) return true;
         LockPoints lp;
         CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
-        CTxMemPool::setEntries ancestors;
         const CTxMemPool::Limits& limits{m_node.mempool->m_limits};
-        std::string unused_error_string;
         LOCK(m_node.mempool->cs);
-        return m_node.mempool->CalculateMemPoolAncestors(
-            entry, ancestors, limits.ancestor_count, limits.ancestor_size_vbytes,
-            limits.descendant_count, limits.descendant_size_vbytes, unused_error_string);
+        return m_node.mempool->CalculateMemPoolAncestors(entry, limits).has_value();
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {
@@ -698,8 +712,9 @@ public:
         LOCK(::cs_main);
         return chainman().m_blockman.m_have_pruned;
     }
-    bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
-    bool isInitialBlockDownload() override {
+    bool isReadyToBroadcast() override { return !chainman().m_blockman.LoadingBlocks() && !isInitialBlockDownload(); }
+    bool isInitialBlockDownload() override
+    {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -731,16 +746,16 @@ public:
     int rpcSerializationFlags() override { return RPCSerializationFlags(); }
     util::SettingsValue getSetting(const std::string& name) override
     {
-        return gArgs.GetSetting(name);
+        return args().GetSetting(name);
     }
     std::vector<util::SettingsValue> getSettingsList(const std::string& name) override
     {
-        return gArgs.GetSettingsList(name);
+        return args().GetSettingsList(name);
     }
     util::SettingsValue getRwSetting(const std::string& name) override
     {
         util::SettingsValue result;
-        gArgs.LockSettings([&](const util::Settings& settings) {
+        args().LockSettings([&](const util::Settings& settings) {
             if (const util::SettingsValue* value = util::FindKey(settings.rw_settings, name)) {
                 result = *value;
             }
@@ -749,21 +764,21 @@ public:
     }
     bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write) override
     {
-        gArgs.LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
                 settings.rw_settings[name] = value;
             }
         });
-        return !write || gArgs.WriteSettingsFile();
+        return !write || args().WriteSettingsFile();
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
-            notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
+            notifications.transactionAddedToMempool(entry.GetSharedTx());
         }
     }
     bool hasAssumedValidChain() override
@@ -772,6 +787,7 @@ public:
     }
 
     NodeContext* context() override { return &m_node; }
+    ArgsManager& args() { return *Assert(m_node.args); }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     NodeContext& m_node;
 };

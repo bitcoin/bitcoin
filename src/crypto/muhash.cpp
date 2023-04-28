@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -299,7 +299,7 @@ Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
     unsigned char tmp[Num3072::BYTE_SIZE];
 
     uint256 hashed_in{(HashWriter{} << in).GetSHA256()};
-    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, Num3072::BYTE_SIZE);
+    ChaCha20Aligned(hashed_in.data()).Keystream64(tmp, Num3072::BYTE_SIZE / 64);
     Num3072 out{tmp};
 
     return out;

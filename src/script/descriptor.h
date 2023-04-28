@@ -35,7 +35,7 @@ public:
     /** Retrieve a cached parent xpub
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
-     * @param[in] xpub The CExtPubKey to get from cache
+     * @param[out] xpub The CExtPubKey to get from cache
      */
     bool GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
     /** Cache an xpub derived at an index
@@ -49,7 +49,7 @@ public:
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
      * @param[in] der_index Derivation index of the xpub
-     * @param[in] xpub The CExtPubKey to get from cache
+     * @param[out] xpub The CExtPubKey to get from cache
      */
     bool GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const;
     /** Cache a last hardened xpub
@@ -61,16 +61,16 @@ public:
     /** Retrieve a cached last hardened xpub
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
-     * @param[in] xpub The CExtPubKey to get from cache
+     * @param[out] xpub The CExtPubKey to get from cache
      */
     bool GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
 
     /** Retrieve all cached parent xpubs */
-    const ExtPubKeyMap GetCachedParentExtPubKeys() const;
+    ExtPubKeyMap GetCachedParentExtPubKeys() const;
     /** Retrieve all cached derived xpubs */
-    const std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
+    std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
     /** Retrieve all cached last hardened xpubs */
-    const ExtPubKeyMap GetCachedLastHardenedExtPubKeys() const;
+    ExtPubKeyMap GetCachedLastHardenedExtPubKeys() const;
 
     /** Combine another DescriptorCache into this one.
      * Returns a cache containing the items from the other cache unknown to current cache

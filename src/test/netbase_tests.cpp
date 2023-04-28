@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -84,12 +84,12 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
 
 }
 
-bool static TestSplitHost(const std::string& test, const std::string& host, uint16_t port)
+bool static TestSplitHost(const std::string& test, const std::string& host, uint16_t port, bool validPort=true)
 {
     std::string hostOut;
     uint16_t portOut{0};
-    SplitHostPort(test, portOut, hostOut);
-    return hostOut == host && port == portOut;
+    bool validPortOut = SplitHostPort(test, portOut, hostOut);
+    return hostOut == host && portOut == port && validPortOut == validPort;
 }
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
@@ -109,12 +109,29 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
     BOOST_CHECK(TestSplitHost(":8333", "", 8333));
     BOOST_CHECK(TestSplitHost("[]:8333", "", 8333));
     BOOST_CHECK(TestSplitHost("", "", 0));
+    BOOST_CHECK(TestSplitHost(":65535", "", 65535));
+    BOOST_CHECK(TestSplitHost(":65536", ":65536", 0, false));
+    BOOST_CHECK(TestSplitHost(":-1", ":-1", 0, false));
+    BOOST_CHECK(TestSplitHost("[]:70001", "[]:70001", 0, false));
+    BOOST_CHECK(TestSplitHost("[]:-1", "[]:-1", 0, false));
+    BOOST_CHECK(TestSplitHost("[]:-0", "[]:-0", 0, false));
+    BOOST_CHECK(TestSplitHost("[]:0", "", 0, false));
+    BOOST_CHECK(TestSplitHost("[]:1/2", "[]:1/2", 0, false));
+    BOOST_CHECK(TestSplitHost("[]:1E2", "[]:1E2", 0, false));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:65536", "127.0.0.1:65536", 0, false));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:0", "127.0.0.1", 0, false));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:", "127.0.0.1:", 0, false));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:1/2", "127.0.0.1:1/2", 0, false));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:1E2", "127.0.0.1:1E2", 0, false));
+    BOOST_CHECK(TestSplitHost("www.bitcoincore.org:65536", "www.bitcoincore.org:65536", 0, false));
+    BOOST_CHECK(TestSplitHost("www.bitcoincore.org:0", "www.bitcoincore.org", 0, false));
+    BOOST_CHECK(TestSplitHost("www.bitcoincore.org:", "www.bitcoincore.org:", 0, false));
 }
 
 bool static TestParse(std::string src, std::string canon)
 {
     CService addr(LookupNumeric(src, 65535));
-    return canon == addr.ToString();
+    return canon == addr.ToStringAddrPort();
 }
 
 BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
@@ -138,7 +155,7 @@ BOOST_AUTO_TEST_CASE(embedded_test)
     CNetAddr addr1(ResolveIP("1.2.3.4"));
     CNetAddr addr2(ResolveIP("::FFFF:0102:0304"));
     BOOST_CHECK(addr2.IsIPv4());
-    BOOST_CHECK_EQUAL(addr1.ToString(), addr2.ToString());
+    BOOST_CHECK_EQUAL(addr1.ToStringAddr(), addr2.ToStringAddr());
 }
 
 BOOST_AUTO_TEST_CASE(subnet_test)
@@ -223,7 +240,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 
     subnet = CSubNet(tor_addr);
     BOOST_CHECK(subnet.IsValid());
-    BOOST_CHECK_EQUAL(subnet.ToString(), tor_addr.ToString());
+    BOOST_CHECK_EQUAL(subnet.ToString(), tor_addr.ToStringAddr());
     BOOST_CHECK(subnet.Match(tor_addr));
     BOOST_CHECK(
         !subnet.Match(ResolveIP("kpgvmscirrdqpekbqjsvw5teanhatztpp2gl6eee4zkowvwfxwenqaid.onion")));

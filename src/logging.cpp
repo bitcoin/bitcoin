@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <logging.h>
+#include <util/fs.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/time.h>
@@ -180,6 +180,8 @@ const CLogCategoryDesc LogCategories[] =
 #endif
     {BCLog::UTIL, "util"},
     {BCLog::BLOCKSTORE, "blockstorage"},
+    {BCLog::TXRECONCILIATION, "txreconciliation"},
+    {BCLog::SCAN, "scan"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
@@ -280,6 +282,10 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "util";
     case BCLog::LogFlags::BLOCKSTORE:
         return "blockstorage";
+    case BCLog::LogFlags::TXRECONCILIATION:
+        return "txreconciliation";
+    case BCLog::LogFlags::SCAN:
+        return "scan";
     case BCLog::LogFlags::ALL:
         return "all";
     }
@@ -343,11 +349,12 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
         return str;
 
     if (m_started_new_line) {
-        int64_t nTimeMicros = GetTimeMicros();
-        strStamped = FormatISO8601DateTime(nTimeMicros/1000000);
-        if (m_log_time_micros) {
+        const auto now{SystemClock::now()};
+        const auto now_seconds{std::chrono::time_point_cast<std::chrono::seconds>(now)};
+        strStamped = FormatISO8601DateTime(TicksSinceEpoch<std::chrono::seconds>(now_seconds));
+        if (m_log_time_micros && !strStamped.empty()) {
             strStamped.pop_back();
-            strStamped += strprintf(".%06dZ", nTimeMicros%1000000);
+            strStamped += strprintf(".%06dZ", Ticks<std::chrono::microseconds>(now - now_seconds));
         }
         std::chrono::seconds mocktime = GetMockTime();
         if (mocktime > 0s) {

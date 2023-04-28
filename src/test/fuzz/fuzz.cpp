@@ -1,14 +1,14 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/fuzz/fuzz.h>
 
-#include <fs.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/time.h>
 

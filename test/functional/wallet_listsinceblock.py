@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsinceblock RPC."""
@@ -20,6 +20,9 @@ from test_framework.wallet_util import bytes_to_wif
 from decimal import Decimal
 
 class ListSinceBlockTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
@@ -45,6 +48,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         if self.options.descriptors:
             self.test_desc()
         self.test_send_to_self()
+        self.test_op_return()
+        self.test_label()
 
     def test_no_blockhash(self):
         self.log.info("Test no blockhash")
@@ -447,6 +452,33 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(len(coins), 2)
         assert any(c["address"] == addr for c in coins)
         assert all(self.nodes[2].getaddressinfo(c["address"])["ischange"] for c in coins)
+
+    def test_op_return(self):
+        """Test if OP_RETURN outputs will be displayed correctly."""
+        block_hash = self.nodes[2].getbestblockhash()
+
+        raw_tx = self.nodes[2].createrawtransaction([], [{'data': 'aa'}])
+        funded_tx = self.nodes[2].fundrawtransaction(raw_tx)
+        signed_tx = self.nodes[2].signrawtransactionwithwallet(funded_tx['hex'])
+        tx_id = self.nodes[2].sendrawtransaction(signed_tx['hex'])
+
+        op_ret_tx = [tx for tx in self.nodes[2].listsinceblock(blockhash=block_hash)["transactions"] if tx['txid'] == tx_id][0]
+
+        assert 'address' not in op_ret_tx
+
+    def test_label(self):
+        self.log.info('Test passing "label" argument fetches incoming transactions having the specified label')
+        new_addr = self.nodes[1].getnewaddress(label="new_addr", address_type="bech32")
+
+        self.nodes[2].sendtoaddress(address=new_addr, amount="0.001")
+        self.generate(self.nodes[2], 1)
+
+        for label in ["new_addr", ""]:
+            new_addr_transactions = self.nodes[1].listsinceblock(label=label)["transactions"]
+            assert_equal(len(new_addr_transactions), 1)
+            assert_equal(new_addr_transactions[0]["label"], label)
+            if label == "new_addr":
+                assert_equal(new_addr_transactions[0]["address"], new_addr)
 
 
 if __name__ == '__main__':

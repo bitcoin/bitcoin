@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 #include <util/result.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
-#include <wallet/ismine.h>
+#include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
@@ -36,7 +36,7 @@ class WalletStorage
 {
 public:
     virtual ~WalletStorage() = default;
-    virtual const std::string GetDisplayName() const = 0;
+    virtual std::string GetDisplayName() const = 0;
     virtual WalletDatabase& GetDatabase() const = 0;
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
@@ -243,7 +243,7 @@ public:
     virtual uint256 GetID() const { return uint256(); }
 
     /** Returns a set of all the scriptPubKeys that this ScriptPubKeyMan watches */
-    virtual const std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const { return {}; };
+    virtual std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const { return {}; };
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template<typename... Params>
@@ -285,6 +285,9 @@ private:
     WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
 
     int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = 0;
+
+    //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
+    int64_t m_keypool_size GUARDED_BY(cs_KeyStore){DEFAULT_KEYPOOL_SIZE};
 
     bool AddKeyPubKeyInner(const CKey& key, const CPubKey &pubkey);
     bool AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
@@ -331,7 +334,7 @@ private:
     std::map<int64_t, CKeyID> m_index_to_reserved_key;
 
     //! Fetches a key from the keypool
-    bool GetKeyFromPool(CPubKey &key, const OutputType type, bool internal = false);
+    bool GetKeyFromPool(CPubKey &key, const OutputType type);
 
     /**
      * Reserves a key from the keypool and sets nIndex to its index
@@ -363,7 +366,7 @@ private:
 
     bool TopUpChain(CHDChain& chain, unsigned int size);
 public:
-    using ScriptPubKeyMan::ScriptPubKeyMan;
+    LegacyScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size) : ScriptPubKeyMan(storage), m_keypool_size(keypool_size) {}
 
     util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
     isminetype IsMine(const CScript& script) const override;
@@ -512,7 +515,7 @@ public:
     const std::map<CKeyID, int64_t>& GetAllReserveKeys() const { return m_pool_key_to_index; }
 
     std::set<CKeyID> GetKeys() const override;
-    const std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
+    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
 
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
      * Does not modify this ScriptPubKeyMan. */
@@ -555,6 +558,9 @@ private:
     //! keeps track of whether Unlock has run a thorough check before
     bool m_decryption_thoroughly_checked = false;
 
+    //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
+    int64_t m_keypool_size GUARDED_BY(cs_desc_man){DEFAULT_KEYPOOL_SIZE};
+
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -572,12 +578,14 @@ protected:
   WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
 public:
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
         :   ScriptPubKeyMan(storage),
+            m_keypool_size(keypool_size),
             m_wallet_descriptor(descriptor)
         {}
-    DescriptorScriptPubKeyMan(WalletStorage& storage)
-        :   ScriptPubKeyMan(storage)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
+        :   ScriptPubKeyMan(storage),
+            m_keypool_size(keypool_size)
         {}
 
     mutable RecursiveMutex cs_desc_man;
@@ -641,8 +649,10 @@ public:
     void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void WriteDescriptor();
 
-    const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
-    const std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
+    WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
+    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
+    int32_t GetEndRange() const;
 
     bool GetDescriptorString(std::string& out, const bool priv) const;
 

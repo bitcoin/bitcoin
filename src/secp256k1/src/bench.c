@@ -11,7 +11,7 @@
 #include "util.h"
 #include "bench.h"
 
-void help(int default_iters) {
+static void help(int default_iters) {
     printf("Benchmarks the following algorithms:\n");
     printf("    - ECDSA signing/verification\n");
 
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
 
 /* Check if the user tries to benchmark optional module without building it */
 #ifndef ENABLE_MODULE_ECDH
-    if (have_flag(argc, argv, "ecdh")) { 
+    if (have_flag(argc, argv, "ecdh")) {
         fprintf(stderr, "./bench: ECDH module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-ecdh.\n\n");
         return 1;
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
 #endif
 
 #ifndef ENABLE_MODULE_RECOVERY
-    if (have_flag(argc, argv, "recover") || have_flag(argc, argv, "ecdsa_recover")) { 
+    if (have_flag(argc, argv, "recover") || have_flag(argc, argv, "ecdsa_recover")) {
         fprintf(stderr, "./bench: Public key recovery module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-recovery.\n\n");
         return 1;
@@ -180,15 +180,15 @@ int main(int argc, char** argv) {
 #endif
 
 #ifndef ENABLE_MODULE_SCHNORRSIG
-    if (have_flag(argc, argv, "schnorrsig") || have_flag(argc, argv, "schnorrsig_sign") || have_flag(argc, argv, "schnorrsig_verify")) { 
+    if (have_flag(argc, argv, "schnorrsig") || have_flag(argc, argv, "schnorrsig_sign") || have_flag(argc, argv, "schnorrsig_verify")) {
         fprintf(stderr, "./bench: Schnorr signatures module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-schnorrsig.\n\n");
         return 1;
     }
 #endif
 
-    /* ECDSA verification benchmark */
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    /* ECDSA benchmark */
+    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 
     for (i = 0; i < 32; i++) {
         data.msg[i] = 1 + i;
@@ -205,11 +205,6 @@ int main(int argc, char** argv) {
 
     print_output_table_header_row();
     if (d || have_flag(argc, argv, "ecdsa") || have_flag(argc, argv, "verify") || have_flag(argc, argv, "ecdsa_verify")) run_benchmark("ecdsa_verify", bench_verify, NULL, NULL, &data, 10, iters);
-
-    secp256k1_context_destroy(data.ctx);
-
-    /* ECDSA signing benchmark */
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
 
     if (d || have_flag(argc, argv, "ecdsa") || have_flag(argc, argv, "sign") || have_flag(argc, argv, "ecdsa_sign")) run_benchmark("ecdsa_sign", bench_sign_run, bench_sign_setup, NULL, &data, 10, iters);
 

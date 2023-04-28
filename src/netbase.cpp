@@ -1,17 +1,17 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netbase.h>
 
 #include <compat/compat.h>
+#include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <atomic>
@@ -304,8 +304,7 @@ enum class IntrRecvError {
  *          read.
  *
  * @see This function can be interrupted by calling InterruptSocks5(bool).
- *      Sockets can be made non-blocking with SetSocketNonBlocking(const
- *      SOCKET&).
+ *      Sockets can be made non-blocking with Sock::SetNonBlocking().
  */
 static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const Sock& sock)
 {
@@ -489,7 +488,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!address_family.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogPrintf("Cannot create socket for %s: unsupported network\n", address_family.ToString());
+        LogPrintf("Cannot create socket for %s: unsupported network\n", address_family.ToStringAddrPort());
         return nullptr;
     }
 
@@ -503,7 +502,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
 
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
-    if (!IsSelectableSocket(sock->Get())) {
+    if (!sock->IsSelectable()) {
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
         return nullptr;
     }
@@ -525,7 +524,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
     }
 
     // Set the non-blocking option on the socket.
-    if (!SetSocketNonBlocking(sock->Get())) {
+    if (!sock->SetNonBlocking()) {
         LogPrintf("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
@@ -550,11 +549,11 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (sock.Get() == INVALID_SOCKET) {
-        LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToString());
+        LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToStringAddrPort());
         return false;
     }
     if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
+        LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToStringAddrPort());
         return false;
     }
 
@@ -571,11 +570,11 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
             Sock::Event occurred;
             if (!sock.Wait(std::chrono::milliseconds{nTimeout}, requested, &occurred)) {
                 LogPrintf("wait for connect to %s failed: %s\n",
-                          addrConnect.ToString(),
+                          addrConnect.ToStringAddrPort(),
                           NetworkErrorString(WSAGetLastError()));
                 return false;
             } else if (occurred == 0) {
-                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", addrConnect.ToString());
+                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", addrConnect.ToStringAddrPort());
                 return false;
             }
 
@@ -587,13 +586,13 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
             socklen_t sockerr_len = sizeof(sockerr);
             if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
-                LogPrintf("getsockopt() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+                LogPrintf("getsockopt() for %s failed: %s\n", addrConnect.ToStringAddrPort(), NetworkErrorString(WSAGetLastError()));
                 return false;
             }
             if (sockerr != 0) {
                 LogConnectFailure(manual_connection,
                                   "connect() to %s failed after wait: %s",
-                                  addrConnect.ToString(),
+                                  addrConnect.ToStringAddrPort(),
                                   NetworkErrorString(sockerr));
                 return false;
             }
@@ -604,7 +603,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
         else
 #endif
         {
-            LogConnectFailure(manual_connection, "connect() to %s failed: %s", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+            LogConnectFailure(manual_connection, "connect() to %s failed: %s", addrConnect.ToStringAddrPort(), NetworkErrorString(WSAGetLastError()));
             return false;
         }
     }
@@ -715,21 +714,6 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
         }
     }
     return false;
-}
-
-bool SetSocketNonBlocking(const SOCKET& hSocket)
-{
-#ifdef WIN32
-    u_long nOne = 1;
-    if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
-#else
-    int fFlags = fcntl(hSocket, F_GETFL, 0);
-    if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
-#endif
-        return false;
-    }
-
-    return true;
 }
 
 void InterruptSocks5(bool interrupt)

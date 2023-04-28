@@ -28,4 +28,3 @@ bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_index, 
     filter = BlockFilter(filter_type, block, block_undo);
     return true;
 }
-

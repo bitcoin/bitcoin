@@ -1,11 +1,11 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
+#include <test/fuzz/util/net.h>
 
 #include <cassert>
 #include <cstdint>
@@ -70,8 +70,7 @@ FUZZ_TARGET(netaddress)
         assert(net_addr.GetNetwork() == Network::NET_ONION);
     }
     (void)net_addr.IsValid();
-    (void)net_addr.ToString();
-    (void)net_addr.ToStringIP();
+    (void)net_addr.ToStringAddr();
 
     const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
     (void)sub_net.IsValid();
@@ -80,9 +79,7 @@ FUZZ_TARGET(netaddress)
     const CService service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     (void)service.GetKey();
     (void)service.GetPort();
-    (void)service.ToString();
-    (void)service.ToStringIPPort();
-    (void)service.ToStringPort();
+    (void)service.ToStringAddrPort();
     (void)CServiceHash()(service);
     (void)CServiceHash(0, 0)(service);
 

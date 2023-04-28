@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,18 +8,20 @@
 
 #include <clientversion.h>
 #include <coins.h>
+#include <common/args.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <key_io.h>
-#include <fs.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <univalue.h>
+#include <util/exception.h>
+#include <util/fs.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
@@ -27,9 +29,9 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <cstdio>
 #include <functional>
 #include <memory>
-#include <stdio.h>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -681,8 +683,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
 class Secp256k1Init
 {
-    ECCVerifyHandle globalVerifyHandle;
-
 public:
     Secp256k1Init() {
         ECC_Start();

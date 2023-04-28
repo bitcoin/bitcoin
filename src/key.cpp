@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -233,7 +233,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     secp256k1_pubkey pk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
     assert(ret);
-    ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
+    ret = secp256k1_ecdsa_verify(secp256k1_context_static, &sig, hash.begin(), &pk);
     assert(ret);
     return true;
 }
@@ -245,8 +245,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     unsigned char rnd[8];
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd);
-    uint256 hash;
-    CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);
+    uint256 hash{Hash(str, rnd)};
     std::vector<unsigned char> vchSig;
     Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);
@@ -268,9 +267,9 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     secp256k1_pubkey epk, rpk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &epk, begin());
     assert(ret);
-    ret = secp256k1_ecdsa_recover(GetVerifyContext(), &rpk, &rsig, hash.begin());
+    ret = secp256k1_ecdsa_recover(secp256k1_context_static, &rpk, &rsig, hash.begin());
     assert(ret);
-    ret = secp256k1_ec_pubkey_cmp(GetVerifyContext(), &epk, &rpk);
+    ret = secp256k1_ec_pubkey_cmp(secp256k1_context_static, &epk, &rpk);
     assert(ret == 0);
     return true;
 }
@@ -286,14 +285,14 @@ bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint2
         unsigned char pubkey_bytes[32];
         if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey)) return false;
         uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
-        if (!secp256k1_keypair_xonly_tweak_add(GetVerifyContext(), &keypair, tweak.data())) return false;
+        if (!secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, &keypair, tweak.data())) return false;
     }
     bool ret = secp256k1_schnorrsig_sign32(secp256k1_context_sign, sig.data(), hash.data(), &keypair, aux.data());
     if (ret) {
         // Additional verification step to prevent using a potentially corrupted signature
         secp256k1_xonly_pubkey pubkey_verify;
-        ret = secp256k1_keypair_xonly_pub(GetVerifyContext(), &pubkey_verify, nullptr, &keypair);
-        ret &= secp256k1_schnorrsig_verify(GetVerifyContext(), sig.data(), hash.begin(), 32, &pubkey_verify);
+        ret = secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubkey_verify, nullptr, &keypair);
+        ret &= secp256k1_schnorrsig_verify(secp256k1_context_static, sig.data(), hash.begin(), 32, &pubkey_verify);
     }
     if (!ret) memory_cleanse(sig.data(), sig.size());
     memory_cleanse(&keypair, sizeof(keypair));
@@ -392,7 +391,7 @@ bool ECC_InitSanityCheck() {
 void ECC_Start() {
     assert(secp256k1_context_sign == nullptr);
 
-    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     assert(ctx != nullptr);
 
     {

@@ -1,10 +1,11 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <streams.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -128,9 +129,9 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 {
-    CDataStream data(SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream data{};
 
-    BitStreamWriter<CDataStream> bit_writer(data);
+    BitStreamWriter bit_writer{data};
     bit_writer.Write(0, 1);
     bit_writer.Write(2, 2);
     bit_writer.Write(6, 3);
@@ -141,15 +142,15 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     bit_writer.Write(30497, 16);
     bit_writer.Flush();
 
-    CDataStream data_copy(data);
+    DataStream data_copy{data};
     uint32_t serialized_int1;
     data >> serialized_int1;
-    BOOST_CHECK_EQUAL(serialized_int1, (uint32_t)0x7700C35A); // NOTE: Serialized as LE
+    BOOST_CHECK_EQUAL(serialized_int1, uint32_t{0x7700C35A}); // NOTE: Serialized as LE
     uint16_t serialized_int2;
     data >> serialized_int2;
-    BOOST_CHECK_EQUAL(serialized_int2, (uint16_t)0x1072); // NOTE: Serialized as LE
+    BOOST_CHECK_EQUAL(serialized_int2, uint16_t{0x1072}); // NOTE: Serialized as LE
 
-    BitStreamReader<CDataStream> bit_reader(data_copy);
+    BitStreamReader bit_reader{data_copy};
     BOOST_CHECK_EQUAL(bit_reader.Read(1), 0U);
     BOOST_CHECK_EQUAL(bit_reader.Read(2), 2U);
     BOOST_CHECK_EQUAL(bit_reader.Read(3), 6U);
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     // Degenerate case
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0x00, 0x00});
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     // Single character key
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0xff});
         BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
     }
@@ -189,7 +190,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     in.push_back(std::byte{0x0f});
 
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0xff, 0x0f});
         BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
     }
@@ -253,7 +254,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "Read attempted past buffer limit") != nullptr);
+                           "Attempt to position past buffer limit") != nullptr);
     }
     // The default argument removes the limit completely.
     BOOST_CHECK(bf.SetLimit());
@@ -322,11 +323,60 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(!bf.SetPos(0));
     // But we should now be positioned at least as far back as allowed
     // by the rewind window (relative to our farthest read position, 40).
-    BOOST_CHECK(bf.GetPos() <= 30);
+    BOOST_CHECK(bf.GetPos() <= 30U);
 
     // We can explicitly close the file, or the destructor will do it.
     bf.fclose();
 
+    fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
+{
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
+    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+    // The value at each offset is the byte offset (e.g. byte 1 in the file has the value 0x01).
+    for (uint8_t j = 0; j < 40; ++j) {
+        fwrite(&j, 1, 1, file);
+    }
+    rewind(file);
+
+    // The buffer is 25 bytes, allow rewinding 10 bytes.
+    CBufferedFile bf(file, 25, 10, 222, 333);
+
+    uint8_t i;
+    // This is like bf >> (7-byte-variable), in that it will cause data
+    // to be read from the file into memory, but it's not copied to us.
+    bf.SkipTo(7);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 7U);
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 7);
+
+    // The bytes in the buffer up to offset 7 are valid and can be read.
+    BOOST_CHECK(bf.SetPos(0));
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 0);
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 1);
+
+    bf.SkipTo(11);
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 11);
+
+    // SkipTo() honors the transfer limit; we can't position beyond the limit.
+    bf.SetLimit(13);
+    try {
+        bf.SkipTo(14);
+        BOOST_CHECK(false);
+    } catch (const std::exception& e) {
+        BOOST_CHECK(strstr(e.what(), "Attempt to position past buffer limit") != nullptr);
+    }
+
+    // We can position exactly to the transfer limit.
+    bf.SkipTo(13);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
+
+    bf.fclose();
     fs::remove(streams_test_filename);
 }
 
@@ -361,7 +411,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             // sizes; the boundaries of the objects can interact arbitrarily
             // with the CBufferFile's internal buffer. These first three
             // cases simulate objects of various sizes (1, 2, 5 bytes).
-            switch (InsecureRandRange(5)) {
+            switch (InsecureRandRange(6)) {
             case 0: {
                 uint8_t a[1];
                 if (currentPos + 1 > fileSize)
@@ -399,6 +449,16 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 break;
             }
             case 3: {
+                // SkipTo is similar to the "read" cases above, except
+                // we don't receive the data.
+                size_t skip_length{static_cast<size_t>(InsecureRandRange(5))};
+                if (currentPos + skip_length > fileSize) continue;
+                bf.SetLimit(currentPos + skip_length);
+                bf.SkipTo(currentPos + skip_length);
+                currentPos += skip_length;
+                break;
+            }
+            case 4: {
                 // Find a byte value (that is at or ahead of the current position).
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
@@ -415,7 +475,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 currentPos++;
                 break;
             }
-            case 4: {
+            case 5: {
                 size_t requestPos = InsecureRandRange(maxPos + 4);
                 bool okay = bf.SetPos(requestPos);
                 // The new position may differ from the requested position
@@ -439,6 +499,20 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(streams_hashed)
+{
+    CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+    HashedSourceWriter hash_writer{stream};
+    const std::string data{"bitcoin"};
+    hash_writer << data;
+
+    CHashVerifier hash_verifier{&stream};
+    std::string result;
+    hash_verifier >> result;
+    BOOST_CHECK_EQUAL(data, result);
+    BOOST_CHECK_EQUAL(hash_writer.GetHash(), hash_verifier.GetHash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

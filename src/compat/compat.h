@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,15 +62,6 @@ typedef unsigned int SOCKET;
 #endif
 #endif
 
-// Windows doesn't define S_IRUSR or S_IWUSR. We define both
-// here, with the same values as glibc (see stat.h).
-#ifdef WIN32
-#ifndef S_IRUSR
-#define S_IRUSR             0400
-#define S_IWUSR             0200
-#endif
-#endif
-
 // Windows defines MAX_PATH as it's maximum path length.
 // We define MAX_PATH for use on non-Windows systems.
 #ifndef WIN32
@@ -108,14 +99,6 @@ typedef char* sockopt_arg_type;
 #if defined(__linux__)
 #define USE_POLL
 #endif
-
-bool static inline IsSelectableSocket(const SOCKET& s) {
-#if defined(USE_POLL) || defined(WIN32)
-    return true;
-#else
-    return (s < FD_SETSIZE);
-#endif
-}
 
 // MSG_NOSIGNAL is not available on some platforms, if it doesn't exist define it as 0
 #if !defined(MSG_NOSIGNAL)

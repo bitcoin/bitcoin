@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -51,9 +51,11 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.supports_cli = False
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
-        # Set -rpcservertimeout=900 to reduce socket disconnects in this
-        # long-running test
-        self.base_args = ["-limitdescendantsize=0", "-maxmempool=0", "-rpcservertimeout=900", "-dbbatchsize=200000"]
+        self.base_args = [
+            "-limitdescendantsize=0",
+            "-maxmempool=0",
+            "-dbbatchsize=200000",
+        ]
 
         # Set different crash ratios and cache sizes.  Note that not all of
         # -dbcache goes to the in-memory coins cache.
@@ -85,7 +87,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 self.nodes[node_index].waitforblock(expected_tip)
                 utxo_hash = self.nodes[node_index].gettxoutsetinfo()['hash_serialized_2']
                 return utxo_hash
-            except:
+            except Exception:
                 # An exception here should mean the node is about to crash.
                 # If bitcoind exits, then try again.  wait_for_node_exit()
                 # should raise an exception if bitcoind doesn't exit.
@@ -202,7 +204,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[3])
-        self.wallet.rescan_utxos()
         initial_height = self.nodes[3].getblockcount()
         self.generate(self.nodes[3], COINBASE_MATURITY, sync_fun=self.no_op)
 

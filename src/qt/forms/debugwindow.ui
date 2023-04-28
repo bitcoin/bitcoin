@@ -1185,10 +1185,10 @@
                <item row="6" column="0">
                 <widget class="QLabel" name="peerRelayTxesLabel">
                  <property name="toolTip">
-                  <string>Whether the peer requested us to relay transactions.</string>
+                  <string>Whether we relay transactions to this peer.</string>
                  </property>
                  <property name="text">
-                  <string>Wants Tx Relay</string>
+                  <string>Transaction Relay</string>
                  </property>
                 </widget>
                </item>

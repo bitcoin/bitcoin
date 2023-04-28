@@ -286,7 +286,7 @@
             <item>
              <widget class="QLineEdit" name="externalSignerPath">
               <property name="toolTip">
-               <string>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</string>
+               <string>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</string>
               </property>
              </widget>
             </item>

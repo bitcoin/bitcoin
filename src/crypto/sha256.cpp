@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -673,7 +673,7 @@ std::string SHA256AutoDetect()
 
 ////// SHA-256
 
-CSHA256::CSHA256() : bytes(0)
+CSHA256::CSHA256()
 {
     sha256::Initialize(s);
 }

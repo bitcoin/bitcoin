@@ -76,7 +76,7 @@ the passed message.
 
 #### Tracepoint `net:outbound_message`
 
-Is called when a message is send to a peer over the P2P network. Passes
+Is called when a message is sent to a peer over the P2P network. Passes
 information about our peer, the connection and the message as arguments.
 
 Arguments passed:
@@ -116,7 +116,7 @@ added to and removed (spent) from the cache when we connect a new block.
 (`chainstate.CoinsTip()`). For example, the RPCs `generateblock` and
 `getblocktemplate` call `TestBlockValidity()`, which applies the UTXO set
 changes to a temporary cache. Similarly, mempool consistency checks, which are
-frequent on regtest, also apply the the UTXO set changes to a temporary cache.
+frequent on regtest, also apply the UTXO set changes to a temporary cache.
 Changes to the _main_ UTXO cache and to temporary caches trigger the tracepoints.
 We can't tell if a temporary cache or the _main_ cache was changed.
 
@@ -211,6 +211,58 @@ Arguments passed:
 4. The expected transaction fee as an `int64`
 5. The position of the change output as an `int32`
 
+### Context `mempool`
+
+#### Tracepoint `mempool:added`
+
+Is called when a transaction is added to the node's mempool. Passes information
+about the transaction.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Transaction virtual size as `uint64`
+3. Transaction fee as `int64`
+
+#### Tracepoint `mempool:removed`
+
+Is called when a transaction is removed from the node's mempool. Passes information
+about the transaction.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Removal reason as `pointer to C-style String` (max. length 9 characters)
+3. Transaction virtual size as `uint64`
+4. Transaction fee as `int64`
+5. Transaction mempool entry time (epoch) as `uint64`
+
+#### Tracepoint `mempool:replaced`
+
+Is called when a transaction in the node's mempool is getting replaced by another.
+Passes information about the replaced and replacement transactions.
+
+Arguments passed:
+1. Replaced transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Replaced transaction virtual size as `uint64`
+3. Replaced transaction fee as `int64`
+4. Replaced transaction mempool entry time (epoch) as `uint64`
+5. Replacement transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+6. Replacement transaction virtual size as `uint64`
+7. Replacement transaction fee as `int64`
+
+Note: In cases where a single replacement transaction replaces multiple
+existing transactions in the mempool, the tracepoint is called once for each
+replaced transaction, with data of the replacement transaction being the same
+in each call.
+
+#### Tracepoint `mempool:rejected`
+
+Is called when a transaction is not permitted to enter the mempool. Passes
+information about the rejected transaction.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Reject reason as `pointer to C-style String` (max. length 118 characters)
+
 ## Adding tracepoints to Bitcoin Core
 
 To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
@@ -253,8 +305,8 @@ TRACE6(net, inbound_message,
 
 ### Guidelines and best practices
 
-#### Clear motivation and use-case
-Tracepoints need a clear motivation and use-case. The motivation should
+#### Clear motivation and use case
+Tracepoints need a clear motivation and use case. The motivation should
 outweigh the impact on, for example, code readability. There is no point in
 adding tracepoints that don't end up being used.
 

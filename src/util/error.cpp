@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2021 The Bitcoin Core developers
+// Copyright (c) 2010-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,6 +33,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Specified sighash value does not match value stored in PSBT");
         case TransactionError::MAX_FEE_EXCEEDED:
             return Untranslated("Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)");
+        case TransactionError::MAX_BURN_EXCEEDED:
+            return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
         case TransactionError::EXTERNAL_SIGNER_NOT_FOUND:
             return Untranslated("External signer not found");
         case TransactionError::EXTERNAL_SIGNER_FAILED:
@@ -47,6 +49,11 @@ bilingual_str TransactionErrorString(const TransactionError err)
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind)
 {
     return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
+}
+
+bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& invalid_value)
+{
+    return strprintf(_("Invalid port specified in %s: '%s'"), optname, invalid_value);
 }
 
 bilingual_str AmountHighWarn(const std::string& optname)

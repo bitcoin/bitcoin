@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -410,7 +410,7 @@ void BitcoinGUI::createActions()
 
                 connect(action, &QAction::triggered, [this, path] {
                     auto activity = new OpenWalletActivity(m_wallet_controller, this);
-                    connect(activity, &OpenWalletActivity::opened, this, &BitcoinGUI::setCurrentWallet);
+                    connect(activity, &OpenWalletActivity::opened, this, &BitcoinGUI::setCurrentWallet, Qt::QueuedConnection);
                     activity->open(path);
                 });
             }
@@ -456,6 +456,7 @@ void BitcoinGUI::createActions()
             m_wallet_controller->closeAllWallets(this);
         });
         connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::setPrivacy);
+        connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::enableHistoryAction);
     }
 #endif // ENABLE_WALLET
 
@@ -512,7 +513,7 @@ void BitcoinGUI::createMenuBar()
     connect(minimize_action, &QAction::triggered, [] {
         QApplication::activeWindow()->showMinimized();
     });
-    connect(qApp, &QApplication::focusWindowChanged, [minimize_action] (QWindow* window) {
+    connect(qApp, &QApplication::focusWindowChanged, this, [minimize_action] (QWindow* window) {
         minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
     });
 
@@ -527,7 +528,7 @@ void BitcoinGUI::createMenuBar()
         }
     });
 
-    connect(qApp, &QApplication::focusWindowChanged, [zoom_action] (QWindow* window) {
+    connect(qApp, &QApplication::focusWindowChanged, this, [zoom_action] (QWindow* window) {
         zoom_action->setEnabled(window != nullptr);
     });
 #endif
@@ -647,6 +648,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             // initialize the disable state of the tray icon with the current value in the model.
             trayIcon->setVisible(optionsModel->getShowTrayIcon());
         }
+
+        m_mask_values_action->setChecked(_clientModel->getOptionsModel()->getOption(OptionsModel::OptionID::MaskValues).toBool());
     } else {
         if(trayIconMenu)
         {
@@ -666,6 +669,12 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 }
 
 #ifdef ENABLE_WALLET
+void BitcoinGUI::enableHistoryAction(bool privacy)
+{
+    historyAction->setEnabled(!privacy);
+    if (historyAction->isChecked()) gotoOverviewPage();
+}
+
 void BitcoinGUI::setWalletController(WalletController* wallet_controller)
 {
     assert(!m_wallet_controller);
@@ -680,6 +689,10 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
 
     GUIUtil::ExceptionSafeConnect(wallet_controller, &WalletController::walletAdded, this, &BitcoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &BitcoinGUI::removeWallet);
+    connect(wallet_controller, &WalletController::destroyed, this, [this] {
+        // wallet_controller gets destroyed manually, but it leaves our member copy dangling
+        m_wallet_controller = nullptr;
+    });
 
     auto activity = new LoadWalletsActivity(m_wallet_controller, this);
     activity->load();
@@ -692,7 +705,7 @@ WalletController* BitcoinGUI::getWalletController()
 
 void BitcoinGUI::addWallet(WalletModel* walletModel)
 {
-    if (!walletFrame) return;
+    if (!walletFrame || !m_wallet_controller) return;
 
     WalletView* wallet_view = new WalletView(walletModel, platformStyle, walletFrame);
     if (!walletFrame->addView(wallet_view)) return;
@@ -714,7 +727,9 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &BitcoinGUI::incomingTransaction);
     connect(this, &BitcoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
-    wallet_view->setPrivacy(isPrivacyModeActivated());
+    const bool privacy = isPrivacyModeActivated();
+    wallet_view->setPrivacy(privacy);
+    enableHistoryAction(privacy);
     const QString display_name = walletModel->getDisplayName();
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
 }
@@ -742,7 +757,7 @@ void BitcoinGUI::removeWallet(WalletModel* walletModel)
 
 void BitcoinGUI::setCurrentWallet(WalletModel* wallet_model)
 {
-    if (!walletFrame) return;
+    if (!walletFrame || !m_wallet_controller) return;
     walletFrame->setCurrentWallet(wallet_model);
     for (int index = 0; index < m_wallet_selector->count(); ++index) {
         if (m_wallet_selector->itemData(index).value<WalletModel*>() == wallet_model) {
@@ -1071,7 +1086,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     statusBar()->clearMessage();
 
     // Acquire current block source
-    enum BlockSource blockSource = clientModel->getBlockSource();
+    BlockSource blockSource{clientModel->getBlockSource()};
     switch (blockSource) {
         case BlockSource::NETWORK:
             if (synctype == SyncType::HEADER_PRESYNC) {
@@ -1090,9 +1105,6 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
             } else {
                 progressBarLabel->setText(tr("Processing blocks on disk…"));
             }
-            break;
-        case BlockSource::REINDEX:
-            progressBarLabel->setText(tr("Reindexing blocks on disk…"));
             break;
         case BlockSource::NONE:
             if (synctype != SyncType::BLOCK_SYNC) {
@@ -1541,10 +1553,8 @@ bool BitcoinGUI::isPrivacyModeActivated() const
     return m_mask_values_action->isChecked();
 }
 
-UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *platformStyle)
-    : optionsModel(nullptr),
-      menu(nullptr),
-      m_platform_style{platformStyle}
+UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle* platformStyle)
+    : m_platform_style{platformStyle}
 {
     createContextMenu();
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));

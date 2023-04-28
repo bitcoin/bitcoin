@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +11,6 @@
 #include <tinyformat.h>
 #include <util/time.h>
 #include <util/check.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -109,11 +107,6 @@ int64_t GetTimeMillis()
     return int64_t{GetSystemTime<std::chrono::milliseconds>().count()};
 }
 
-int64_t GetTimeMicros()
-{
-    return int64_t{GetSystemTime<std::chrono::microseconds>().count()};
-}
-
 int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
 
 std::string FormatISO8601DateTime(int64_t nTime) {
@@ -140,20 +133,6 @@ std::string FormatISO8601Date(int64_t nTime) {
         return {};
     }
     return strprintf("%04i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday);
-}
-
-int64_t ParseISO8601DateTime(const std::string& str)
-{
-    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-    static const std::locale loc(std::locale::classic(),
-        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-    std::istringstream iss(str);
-    iss.imbue(loc);
-    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-    iss >> ptime;
-    if (ptime.is_not_a_date_time() || epoch > ptime)
-        return 0;
-    return (ptime - epoch).total_seconds();
 }
 
 struct timeval MillisToTimeval(int64_t nTimeout)

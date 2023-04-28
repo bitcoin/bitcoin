@@ -232,6 +232,21 @@ static int32_t secp256k1_modinv32_divsteps_30(int32_t zeta, uint32_t f0, uint32_
     return zeta;
 }
 
+/* secp256k1_modinv32_inv256[i] = -(2*i+1)^-1 (mod 256) */
+static const uint8_t secp256k1_modinv32_inv256[128] = {
+    0xFF, 0x55, 0x33, 0x49, 0xC7, 0x5D, 0x3B, 0x11, 0x0F, 0xE5, 0xC3, 0x59,
+    0xD7, 0xED, 0xCB, 0x21, 0x1F, 0x75, 0x53, 0x69, 0xE7, 0x7D, 0x5B, 0x31,
+    0x2F, 0x05, 0xE3, 0x79, 0xF7, 0x0D, 0xEB, 0x41, 0x3F, 0x95, 0x73, 0x89,
+    0x07, 0x9D, 0x7B, 0x51, 0x4F, 0x25, 0x03, 0x99, 0x17, 0x2D, 0x0B, 0x61,
+    0x5F, 0xB5, 0x93, 0xA9, 0x27, 0xBD, 0x9B, 0x71, 0x6F, 0x45, 0x23, 0xB9,
+    0x37, 0x4D, 0x2B, 0x81, 0x7F, 0xD5, 0xB3, 0xC9, 0x47, 0xDD, 0xBB, 0x91,
+    0x8F, 0x65, 0x43, 0xD9, 0x57, 0x6D, 0x4B, 0xA1, 0x9F, 0xF5, 0xD3, 0xE9,
+    0x67, 0xFD, 0xDB, 0xB1, 0xAF, 0x85, 0x63, 0xF9, 0x77, 0x8D, 0x6B, 0xC1,
+    0xBF, 0x15, 0xF3, 0x09, 0x87, 0x1D, 0xFB, 0xD1, 0xCF, 0xA5, 0x83, 0x19,
+    0x97, 0xAD, 0x8B, 0xE1, 0xDF, 0x35, 0x13, 0x29, 0xA7, 0x3D, 0x1B, 0xF1,
+    0xEF, 0xC5, 0xA3, 0x39, 0xB7, 0xCD, 0xAB, 0x01
+};
+
 /* Compute the transition matrix and eta for 30 divsteps (variable time).
  *
  * Input:  eta: initial eta
@@ -243,21 +258,6 @@ static int32_t secp256k1_modinv32_divsteps_30(int32_t zeta, uint32_t f0, uint32_
  * Implements the divsteps_n_matrix_var function from the explanation.
  */
 static int32_t secp256k1_modinv32_divsteps_30_var(int32_t eta, uint32_t f0, uint32_t g0, secp256k1_modinv32_trans2x2 *t) {
-    /* inv256[i] = -(2*i+1)^-1 (mod 256) */
-    static const uint8_t inv256[128] = {
-        0xFF, 0x55, 0x33, 0x49, 0xC7, 0x5D, 0x3B, 0x11, 0x0F, 0xE5, 0xC3, 0x59,
-        0xD7, 0xED, 0xCB, 0x21, 0x1F, 0x75, 0x53, 0x69, 0xE7, 0x7D, 0x5B, 0x31,
-        0x2F, 0x05, 0xE3, 0x79, 0xF7, 0x0D, 0xEB, 0x41, 0x3F, 0x95, 0x73, 0x89,
-        0x07, 0x9D, 0x7B, 0x51, 0x4F, 0x25, 0x03, 0x99, 0x17, 0x2D, 0x0B, 0x61,
-        0x5F, 0xB5, 0x93, 0xA9, 0x27, 0xBD, 0x9B, 0x71, 0x6F, 0x45, 0x23, 0xB9,
-        0x37, 0x4D, 0x2B, 0x81, 0x7F, 0xD5, 0xB3, 0xC9, 0x47, 0xDD, 0xBB, 0x91,
-        0x8F, 0x65, 0x43, 0xD9, 0x57, 0x6D, 0x4B, 0xA1, 0x9F, 0xF5, 0xD3, 0xE9,
-        0x67, 0xFD, 0xDB, 0xB1, 0xAF, 0x85, 0x63, 0xF9, 0x77, 0x8D, 0x6B, 0xC1,
-        0xBF, 0x15, 0xF3, 0x09, 0x87, 0x1D, 0xFB, 0xD1, 0xCF, 0xA5, 0x83, 0x19,
-        0x97, 0xAD, 0x8B, 0xE1, 0xDF, 0x35, 0x13, 0x29, 0xA7, 0x3D, 0x1B, 0xF1,
-        0xEF, 0xC5, 0xA3, 0x39, 0xB7, 0xCD, 0xAB, 0x01
-    };
-
     /* Transformation matrix; see comments in secp256k1_modinv32_divsteps_30. */
     uint32_t u = 1, v = 0, q = 0, r = 1;
     uint32_t f = f0, g = g0, m;
@@ -297,7 +297,7 @@ static int32_t secp256k1_modinv32_divsteps_30_var(int32_t eta, uint32_t f0, uint
         VERIFY_CHECK(limit > 0 && limit <= 30);
         m = (UINT32_MAX >> (32 - limit)) & 255U;
         /* Find what multiple of f must be added to g to cancel its bottom min(limit, 8) bits. */
-        w = (g * inv256[(f >> 1) & 127]) & m;
+        w = (g * secp256k1_modinv32_inv256[(f >> 1) & 127]) & m;
         /* Do so. */
         g += f * w;
         q += u * w;
@@ -314,6 +314,86 @@ static int32_t secp256k1_modinv32_divsteps_30_var(int32_t eta, uint32_t f0, uint
      * will be divided out again). As each divstep's individual matrix has determinant 2, the
      * aggregate of 30 of them will have determinant 2^30. */
     VERIFY_CHECK((int64_t)t->u * t->r - (int64_t)t->v * t->q == ((int64_t)1) << 30);
+    return eta;
+}
+
+/* Compute the transition matrix and eta for 30 posdivsteps (variable time, eta=-delta), and keeps track
+ * of the Jacobi symbol along the way. f0 and g0 must be f and g mod 2^32 rather than 2^30, because
+ * Jacobi tracking requires knowing (f mod 8) rather than just (f mod 2).
+ *
+ * Input:        eta: initial eta
+ *               f0:  bottom limb of initial f
+ *               g0:  bottom limb of initial g
+ * Output:       t: transition matrix
+ * Input/Output: (*jacp & 1) is bitflipped if and only if the Jacobi symbol of (f | g) changes sign
+ *               by applying the returned transformation matrix to it. The other bits of *jacp may
+ *               change, but are meaningless.
+ * Return: final eta
+ */
+static int32_t secp256k1_modinv32_posdivsteps_30_var(int32_t eta, uint32_t f0, uint32_t g0, secp256k1_modinv32_trans2x2 *t, int *jacp) {
+    /* Transformation matrix. */
+    uint32_t u = 1, v = 0, q = 0, r = 1;
+    uint32_t f = f0, g = g0, m;
+    uint16_t w;
+    int i = 30, limit, zeros;
+    int jac = *jacp;
+
+    for (;;) {
+        /* Use a sentinel bit to count zeros only up to i. */
+        zeros = secp256k1_ctz32_var(g | (UINT32_MAX << i));
+        /* Perform zeros divsteps at once; they all just divide g by two. */
+        g >>= zeros;
+        u <<= zeros;
+        v <<= zeros;
+        eta -= zeros;
+        i -= zeros;
+        /* Update the bottom bit of jac: when dividing g by an odd power of 2,
+         * if (f mod 8) is 3 or 5, the Jacobi symbol changes sign. */
+        jac ^= (zeros & ((f >> 1) ^ (f >> 2)));
+        /* We're done once we've done 30 posdivsteps. */
+        if (i == 0) break;
+        VERIFY_CHECK((f & 1) == 1);
+        VERIFY_CHECK((g & 1) == 1);
+        VERIFY_CHECK((u * f0 + v * g0) == f << (30 - i));
+        VERIFY_CHECK((q * f0 + r * g0) == g << (30 - i));
+        /* If eta is negative, negate it and replace f,g with g,f. */
+        if (eta < 0) {
+            uint32_t tmp;
+            eta = -eta;
+            /* Update bottom bit of jac: when swapping f and g, the Jacobi symbol changes sign
+             * if both f and g are 3 mod 4. */
+            jac ^= ((f & g) >> 1);
+            tmp = f; f = g; g = tmp;
+            tmp = u; u = q; q = tmp;
+            tmp = v; v = r; r = tmp;
+        }
+        /* eta is now >= 0. In what follows we're going to cancel out the bottom bits of g. No more
+         * than i can be cancelled out (as we'd be done before that point), and no more than eta+1
+         * can be done as its sign will flip once that happens. */
+        limit = ((int)eta + 1) > i ? i : ((int)eta + 1);
+        /* m is a mask for the bottom min(limit, 8) bits (our table only supports 8 bits). */
+        VERIFY_CHECK(limit > 0 && limit <= 30);
+        m = (UINT32_MAX >> (32 - limit)) & 255U;
+        /* Find what multiple of f must be added to g to cancel its bottom min(limit, 8) bits. */
+        w = (g * secp256k1_modinv32_inv256[(f >> 1) & 127]) & m;
+        /* Do so. */
+        g += f * w;
+        q += u * w;
+        r += v * w;
+        VERIFY_CHECK((g & m) == 0);
+    }
+    /* Return data in t and return value. */
+    t->u = (int32_t)u;
+    t->v = (int32_t)v;
+    t->q = (int32_t)q;
+    t->r = (int32_t)r;
+    /* The determinant of t must be a power of two. This guarantees that multiplication with t
+     * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
+     * will be divided out again). As each divstep's individual matrix has determinant 2 or -2,
+     * the aggregate of 30 of them will have determinant 2^30 or -2^30. */
+    VERIFY_CHECK((int64_t)t->u * t->r - (int64_t)t->v * t->q == ((int64_t)1) << 30 ||
+                 (int64_t)t->u * t->r - (int64_t)t->v * t->q == -(((int64_t)1) << 30));
+    *jacp = jac;
     return eta;
 }
 
@@ -335,10 +415,8 @@ static void secp256k1_modinv32_update_de_30(secp256k1_modinv32_signed30 *d, secp
     VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(d, 9, &modinfo->modulus, 1) < 0);  /* d <    modulus */
     VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(e, 9, &modinfo->modulus, -2) > 0); /* e > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(e, 9, &modinfo->modulus, 1) < 0);  /* e <    modulus */
-    VERIFY_CHECK((labs(u) + labs(v)) >= 0); /* |u|+|v| doesn't overflow */
-    VERIFY_CHECK((labs(q) + labs(r)) >= 0); /* |q|+|r| doesn't overflow */
-    VERIFY_CHECK((labs(u) + labs(v)) <= M30 + 1); /* |u|+|v| <= 2^30 */
-    VERIFY_CHECK((labs(q) + labs(r)) <= M30 + 1); /* |q|+|r| <= 2^30 */
+    VERIFY_CHECK(labs(u) <= (M30 + 1 - labs(v))); /* |u|+|v| <= 2^30 */
+    VERIFY_CHECK(labs(q) <= (M30 + 1 - labs(r))); /* |q|+|r| <= 2^30 */
 #endif
     /* [md,me] start as zero; plus [u,q] if d is negative; plus [v,r] if e is negative. */
     sd = d->v[8] >> 31;
@@ -582,6 +660,76 @@ static void secp256k1_modinv32_var(secp256k1_modinv32_signed30 *x, const secp256
     /* Optionally negate d, normalize to [0,modulus), and return it. */
     secp256k1_modinv32_normalize_30(&d, f.v[len - 1], modinfo);
     *x = d;
+}
+
+/* Do up to 50 iterations of 30 posdivsteps (up to 1500 steps; more is extremely rare) each until f=1.
+ * In VERIFY mode use a lower number of iterations (750, close to the median 756), so failure actually occurs. */
+#ifdef VERIFY
+#define JACOBI32_ITERATIONS 25
+#else
+#define JACOBI32_ITERATIONS 50
+#endif
+
+/* Compute the Jacobi symbol of x modulo modinfo->modulus (variable time). gcd(x,modulus) must be 1. */
+static int secp256k1_jacobi32_maybe_var(const secp256k1_modinv32_signed30 *x, const secp256k1_modinv32_modinfo *modinfo) {
+    /* Start with f=modulus, g=x, eta=-1. */
+    secp256k1_modinv32_signed30 f = modinfo->modulus;
+    secp256k1_modinv32_signed30 g = *x;
+    int j, len = 9;
+    int32_t eta = -1; /* eta = -delta; delta is initially 1 */
+    int32_t cond, fn, gn;
+    int jac = 0;
+    int count;
+
+    /* The input limbs must all be non-negative. */
+    VERIFY_CHECK(g.v[0] >= 0 && g.v[1] >= 0 && g.v[2] >= 0 && g.v[3] >= 0 && g.v[4] >= 0 && g.v[5] >= 0 && g.v[6] >= 0 && g.v[7] >= 0 && g.v[8] >= 0);
+
+    /* If x > 0, then if the loop below converges, it converges to f=g=gcd(x,modulus). Since we
+     * require that gcd(x,modulus)=1 and modulus>=3, x cannot be 0. Thus, we must reach f=1 (or
+     * time out). */
+    VERIFY_CHECK((g.v[0] | g.v[1] | g.v[2] | g.v[3] | g.v[4] | g.v[5] | g.v[6] | g.v[7] | g.v[8]) != 0);
+
+    for (count = 0; count < JACOBI32_ITERATIONS; ++count) {
+        /* Compute transition matrix and new eta after 30 posdivsteps. */
+        secp256k1_modinv32_trans2x2 t;
+        eta = secp256k1_modinv32_posdivsteps_30_var(eta, f.v[0] | ((uint32_t)f.v[1] << 30), g.v[0] | ((uint32_t)g.v[1] << 30), &t, &jac);
+        /* Update f,g using that transition matrix. */
+#ifdef VERIFY
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&f, len, &modinfo->modulus, 0) > 0); /* f > 0 */
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&g, len, &modinfo->modulus, 0) > 0); /* g > 0 */
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&g, len, &modinfo->modulus, 1) < 0);  /* g < modulus */
+#endif
+        secp256k1_modinv32_update_fg_30_var(len, &f, &g, &t);
+        /* If the bottom limb of f is 1, there is a chance that f=1. */
+        if (f.v[0] == 1) {
+            cond = 0;
+            /* Check if the other limbs are also 0. */
+            for (j = 1; j < len; ++j) {
+                cond |= f.v[j];
+            }
+            /* If so, we're done. If f=1, the Jacobi symbol (g | f)=1. */
+            if (cond == 0) return 1 - 2*(jac & 1);
+        }
+
+        /* Determine if len>1 and limb (len-1) of both f and g is 0. */
+        fn = f.v[len - 1];
+        gn = g.v[len - 1];
+        cond = ((int32_t)len - 2) >> 31;
+        cond |= fn;
+        cond |= gn;
+        /* If so, reduce length. */
+        if (cond == 0) --len;
+#ifdef VERIFY
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&f, len, &modinfo->modulus, 0) > 0); /* f > 0 */
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&g, len, &modinfo->modulus, 0) > 0); /* g > 0 */
+        VERIFY_CHECK(secp256k1_modinv32_mul_cmp_30(&g, len, &modinfo->modulus, 1) < 0);  /* g < modulus */
+#endif
+    }
+
+    /* The loop failed to converge to f=g after 1500 iterations. Return 0, indicating unknown result. */
+    return 0;
 }
 
 #endif /* SECP256K1_MODINV32_IMPL_H */

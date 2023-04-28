@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,8 +7,8 @@
 
 #include <span.h>
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 //! The Keccak-f[1600] transform.
 void KeccakF(uint64_t (&st)[25]);

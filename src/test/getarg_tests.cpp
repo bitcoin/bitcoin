@@ -1,12 +1,13 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
+#include <logging.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/settings.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <limits>
 #include <string>
@@ -29,6 +30,7 @@ void ResetArgs(ArgsManager& local_args, const std::string& strArg)
 
     // Convert to char*:
     std::vector<const char*> vecChar;
+    vecChar.reserve(vecArg.size());
     for (const std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
@@ -429,7 +431,7 @@ BOOST_AUTO_TEST_CASE(logargs)
     const auto okaylog = std::make_pair("-okaylog", ArgsManager::ALLOW_ANY);
     const auto dontlog = std::make_pair("-dontlog", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE);
     SetupArgs(local_args, {okaylog_bool, okaylog_negbool, okaylog, dontlog});
-    ResetArgs(local_args, "-okaylog-bool -nookaylog-negbool -okaylog=public -dontlog=private");
+    ResetArgs(local_args, "-okaylog-bool -nookaylog-negbool -okaylog=public -dontlog=private42");
 
     // Everything logged to debug.log will also append to str
     std::string str;
@@ -447,7 +449,7 @@ BOOST_AUTO_TEST_CASE(logargs)
     BOOST_CHECK(str.find("Command-line arg: okaylog-negbool=false") != std::string::npos);
     BOOST_CHECK(str.find("Command-line arg: okaylog=\"public\"") != std::string::npos);
     BOOST_CHECK(str.find("dontlog=****") != std::string::npos);
-    BOOST_CHECK(str.find("private") == std::string::npos);
+    BOOST_CHECK(str.find("private42") == std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

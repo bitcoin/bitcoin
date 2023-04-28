@@ -4,9 +4,9 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
-#include <util/system.h>
 #include <versionbits.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -55,7 +55,7 @@ public:
 
     bool Condition(int32_t version) const
     {
-        uint32_t mask = ((uint32_t)1) << m_bit;
+        uint32_t mask = (uint32_t{1}) << m_bit;
         return (((version & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (version & mask) != 0);
     }
 

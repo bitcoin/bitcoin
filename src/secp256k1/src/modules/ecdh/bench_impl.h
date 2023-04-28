@@ -7,7 +7,7 @@
 #ifndef SECP256K1_MODULE_ECDH_BENCH_H
 #define SECP256K1_MODULE_ECDH_BENCH_H
 
-#include "../include/secp256k1_ecdh.h"
+#include "../../../include/secp256k1_ecdh.h"
 
 typedef struct {
     secp256k1_context *ctx;
@@ -42,7 +42,7 @@ static void bench_ecdh(void* arg, int iters) {
     }
 }
 
-void run_ecdh_bench(int iters, int argc, char** argv) {
+static void run_ecdh_bench(int iters, int argc, char** argv) {
     bench_ecdh_data data;
     int d = argc == 1;
 

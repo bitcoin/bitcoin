@@ -1,14 +1,16 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_WALLET_TRANSACTION_H
 #define BITCOIN_WALLET_TRANSACTION_H
 
+#include <bitset>
+#include <cstdint>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
-#include <wallet/ismine.h>
+#include <wallet/types.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/overloaded.h>
@@ -108,7 +110,28 @@ static inline int TxStateSerializedIndex(const TxState& state)
 }
 
 
+/**
+ * Cachable amount subdivided into watchonly and spendable parts.
+ */
+struct CachableAmount
+{
+    // NO and ALL are never (supposed to be) cached
+    std::bitset<ISMINE_ENUM_ELEMENTS> m_cached;
+    CAmount m_value[ISMINE_ENUM_ELEMENTS];
+    inline void Reset()
+    {
+        m_cached.reset();
+    }
+    void Set(isminefilter filter, CAmount value)
+    {
+        m_cached.set(filter);
+        m_value[filter] = value;
+    }
+};
+
+
 typedef std::map<std::string, std::string> mapValue_t;
+
 
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
@@ -293,6 +316,7 @@ public:
 
     bool isAbandoned() const { return state<TxStateInactive>() && state<TxStateInactive>()->abandoned; }
     bool isConflicted() const { return state<TxStateConflicted>(); }
+    bool isInactive() const { return state<TxStateInactive>(); }
     bool isUnconfirmed() const { return !isAbandoned() && !isConflicted() && !isConfirmed(); }
     bool isConfirmed() const { return state<TxStateConfirmed>(); }
     const uint256& GetHash() const { return tx->GetHash(); }

@@ -109,6 +109,10 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
+  - Use a named cast or functional cast, not a C-Style cast. When casting
+    between integer types, use functional casts such as `int(x)` or `int{x}`
+    instead of `(int) x`. When casting between more complex types, use `static_cast`.
+    Use `reinterpret_cast` and `const_cast` as appropriate.
 
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
@@ -213,10 +217,13 @@ apt install clang-tidy bear clang
 Then, pass clang as compiler to configure, and use bear to produce the `compile_commands.json`:
 
 ```sh
-./autogen.sh && ./configure CC=clang CXX=clang++
-make clean && bear make -j $(nproc)     # For bear 2.x
-make clean && bear -- make -j $(nproc)  # For bear 3.x
+./autogen.sh && ./configure CC=clang CXX=clang++ --enable-suppress-external-warnings
+make clean && bear --config src/.bear-tidy-config -- make -j $(nproc)
 ```
+
+The output is denoised of errors from external dependencies and includes with
+`--enable-suppress-external-warnings` and `--config src/.bear-tidy-config`. Both
+options may be omitted to view the full list of errors.
 
 To run clang-tidy on all source files:
 
@@ -556,8 +563,19 @@ address sanitizer, libtsan for the thread sanitizer, and libubsan for the
 undefined sanitizer. If you are missing required libraries, the configure script
 will fail with a linker error when testing the sanitizer flags.
 
-The test suite should pass cleanly with the `thread` and `undefined` sanitizers,
-but there are a number of known problems when using the `address` sanitizer. The
+The test suite should pass cleanly with the `thread` and `undefined` sanitizers. You
+may need to use a suppressions file, see `test/sanitizer_suppressions`. They may be
+used as follows:
+```bash
+export LSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/lsan"
+export TSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/tsan:halt_on_error=1:second_deadlock_stack=1"
+export UBSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
+```
+
+See the CI config for more examples, and upstream documentation for more information
+about any additional options.
+
+There are a number of known problems when using the `address` sanitizer. The
 address sanitizer is known to fail in
 [sha256_sse4::Transform](/src/crypto/sha256_sse4.cpp) which makes it unusable
 unless you also use `--disable-asm` when running configure. We would like to fix
@@ -842,12 +860,12 @@ Strings and formatting
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
-- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing.
+- Use `ToIntegral` from [`strencodings.h`](/src/util/strencodings.h) for number parsing. In legacy code you might also find `ParseInt*` family of functions, `ParseDouble` or `LocaleIndependentAtoi`.
 
   - *Rationale*: These functions do overflow checking and avoid pesky locale issues.
 
 - Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.sh`](/test/lint/lint-locale-dependence.sh)
+  [`lint-locale-dependence.py`](/test/lint/lint-locale-dependence.py)
   to check for accidental use of locale dependent functions.
 
   - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.

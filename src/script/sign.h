@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
 #include <script/standard.h>
+#include <uint256.h>
 
 class CKey;
 class CKeyID;
@@ -82,6 +83,10 @@ struct SignatureData {
     std::vector<CKeyID> missing_sigs; ///< KeyIDs of pubkeys for signatures which could not be found
     uint160 missing_redeem_script; ///< ScriptID of the missing redeemScript (if any)
     uint256 missing_witness_script; ///< SHA256 of the missing witnessScript (if any)
+    std::map<std::vector<uint8_t>, std::vector<uint8_t>> sha256_preimages; ///< Mapping from a SHA256 hash to its preimage provided to solve a Script
+    std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash256_preimages; ///< Mapping from a HASH256 hash to its preimage provided to solve a Script
+    std::map<std::vector<uint8_t>, std::vector<uint8_t>> ripemd160_preimages; ///< Mapping from a RIPEMD160 hash to its preimage provided to solve a Script
+    std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash160_preimages; ///< Mapping from a HASH160 hash to its preimage provided to solve a Script
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
@@ -91,9 +96,24 @@ struct SignatureData {
 /** Produce a script signature using a generic signature creator. */
 bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata);
 
-/** Produce a script signature for a transaction. */
-bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
-bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
+/**
+ * Produce a satisfying script (scriptSig or witness).
+ *
+ * @param provider   Utility containing the information necessary to solve a script.
+ * @param fromPubKey The script to produce a satisfaction for.
+ * @param txTo       The spending transaction.
+ * @param nIn        The index of the input in `txTo` referring the output being spent.
+ * @param amount     The value of the output being spent.
+ * @param nHashType  Signature hash type.
+ * @param sig_data   Additional data provided to solve a script. Filled with the resulting satisfying
+ *                   script and whether the satisfaction is complete.
+ *
+ * @return           True if the produced script is entirely satisfying `fromPubKey`.
+ **/
+bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo,
+                   unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data);
+bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo,
+                   unsigned int nIn, int nHashType, SignatureData& sig_data);
 
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);

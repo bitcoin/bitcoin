@@ -44,15 +44,15 @@ static bool validNumStr(const std::string& s)
     return (tt == JTOK_NUMBER);
 }
 
-void UniValue::setNumStr(const std::string& val_)
+void UniValue::setNumStr(std::string str)
 {
-    if (!validNumStr(val_)) {
-        throw std::runtime_error{"The string '" + val_ + "' is not a valid JSON number"};
+    if (!validNumStr(str)) {
+        throw std::runtime_error{"The string '" + str + "' is not a valid JSON number"};
     }
 
     clear();
     typ = VNUM;
-    val = val_;
+    val = std::move(str);
 }
 
 void UniValue::setInt(uint64_t val_)
@@ -82,11 +82,11 @@ void UniValue::setFloat(double val_)
     return setNumStr(oss.str());
 }
 
-void UniValue::setStr(const std::string& val_)
+void UniValue::setStr(std::string str)
 {
     clear();
     typ = VSTR;
-    val = val_;
+    val = std::move(str);
 }
 
 void UniValue::setArray()
@@ -210,7 +210,7 @@ const UniValue& UniValue::operator[](size_t index) const
 void UniValue::checkType(const VType& expected) const
 {
     if (typ != expected) {
-        throw std::runtime_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not of expected type " +
+        throw type_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not of expected type " +
                                  std::string{uvTypeName(expected)}};
     }
 }

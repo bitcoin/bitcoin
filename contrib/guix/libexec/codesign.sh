@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 export LC_ALL=C
@@ -77,6 +77,7 @@ mkdir -p "$DISTSRC"
                 osslsigncode attach-signature \
                                  -in "$infile" \
                                  -out "${OUTDIR}/${infile_base/-unsigned}" \
+                                 -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
                                  -sigin codesignatures/win/"$infile_base".pem
             done
             ;;

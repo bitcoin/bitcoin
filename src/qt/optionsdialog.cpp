@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,11 +31,9 @@
 #include <QSystemTrayIcon>
 #include <QTimer>
 
-OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
-    QDialog(parent, GUIUtil::dialog_flags),
-    ui(new Ui::OptionsDialog),
-    model(nullptr),
-    mapper(nullptr)
+OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
+    : QDialog(parent, GUIUtil::dialog_flags),
+      ui(new Ui::OptionsDialog)
 {
     ui->setupUi(this);
 
@@ -91,7 +89,9 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         ui->thirdPartyTxUrls->setVisible(false);
     }
 
-#ifndef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_EXTERNAL_SIGNER
+    ui->externalSignerPath->setToolTip(ui->externalSignerPath->toolTip().arg(PACKAGE_NAME));
+#else
     //: "External signing" means using devices such as hardware wallets.
     ui->externalSignerPath->setToolTip(tr("Compiled without external signing support (required for external signing)"));
     ui->externalSignerPath->setEnabled(false);
@@ -406,24 +406,21 @@ void OptionsDialog::updateProxyValidationState()
 
 void OptionsDialog::updateDefaultProxyNets()
 {
+    CNetAddr ui_proxy_netaddr;
+    LookupHost(ui->proxyIp->text().toStdString(), ui_proxy_netaddr, /*fAllowLookup=*/false);
+    const CService ui_proxy{ui_proxy_netaddr, ui->proxyPort->text().toUShort()};
+
     Proxy proxy;
-    std::string strProxy;
-    QString strDefaultProxyGUI;
+    bool has_proxy;
 
-    model->node().getProxy(NET_IPV4, proxy);
-    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
-    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
+    has_proxy = model->node().getProxy(NET_IPV4, proxy);
+    ui->proxyReachIPv4->setChecked(has_proxy && proxy.proxy == ui_proxy);
 
-    model->node().getProxy(NET_IPV6, proxy);
-    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
-    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
+    has_proxy = model->node().getProxy(NET_IPV6, proxy);
+    ui->proxyReachIPv6->setChecked(has_proxy && proxy.proxy == ui_proxy);
 
-    model->node().getProxy(NET_ONION, proxy);
-    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
-    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+    has_proxy = model->node().getProxy(NET_ONION, proxy);
+    ui->proxyReachTor->setChecked(has_proxy && proxy.proxy == ui_proxy);
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

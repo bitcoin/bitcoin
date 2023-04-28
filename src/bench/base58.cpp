@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,6 +50,6 @@ static void Base58Decode(benchmark::Bench& bench)
 }
 
 
-BENCHMARK(Base58Encode);
-BENCHMARK(Base58CheckEncode);
-BENCHMARK(Base58Decode);
+BENCHMARK(Base58Encode, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Base58CheckEncode, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Base58Decode, benchmark::PriorityLevel::HIGH);

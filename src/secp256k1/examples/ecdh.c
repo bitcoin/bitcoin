@@ -14,8 +14,7 @@
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
 
-#include "random.h"
-
+#include "examples_util.h"
 
 int main(void) {
     unsigned char seckey1[32];
@@ -30,12 +29,8 @@ int main(void) {
     secp256k1_pubkey pubkey1;
     secp256k1_pubkey pubkey2;
 
-    /* The specification in secp256k1.h states that `secp256k1_ec_pubkey_create`
-     * needs a context object initialized for signing, which is why we create
-     * a context with the SECP256K1_CONTEXT_SIGN flag.
-     * (The docs for `secp256k1_ecdh` don't require any special context, just
-     * some initialized context) */
-    secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    /* Before we can call actual API functions, we need to create a "context". */
+    secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     if (!fill_random(randomize, sizeof(randomize))) {
         printf("Failed to generate randomness\n");
         return 1;
@@ -116,12 +111,12 @@ int main(void) {
      * example through "out of bounds" array access (see Heartbleed), Or the OS
      * swapping them to disk. Hence, we overwrite the secret key buffer with zeros.
      *
-     * TODO: Prevent these writes from being optimized out, as any good compiler
+     * Here we are preventing these writes from being optimized out, as any good compiler
      * will remove any writes that aren't used. */
-    memset(seckey1, 0, sizeof(seckey1));
-    memset(seckey2, 0, sizeof(seckey2));
-    memset(shared_secret1, 0, sizeof(shared_secret1));
-    memset(shared_secret2, 0, sizeof(shared_secret2));
+    secure_erase(seckey1, sizeof(seckey1));
+    secure_erase(seckey2, sizeof(seckey2));
+    secure_erase(shared_secret1, sizeof(shared_secret1));
+    secure_erase(shared_secret2, sizeof(shared_secret2));
 
     return 0;
 }

@@ -7,6 +7,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <txorphanage.h>
 
@@ -20,13 +21,15 @@ BOOST_FIXTURE_TEST_SUITE(orphanage_tests, TestingSetup)
 class TxOrphanageTest : public TxOrphanage
 {
 public:
-    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_orphans.size();
     }
 
-    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         std::map<uint256, OrphanTx>::iterator it;
         it = m_orphans.lower_bound(InsecureRand256());
         if (it == m_orphans.end())
@@ -59,8 +62,6 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
-    LOCK(g_cs_orphans);
-
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
     {
@@ -88,7 +89,8 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
-        BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL));
+        SignatureData empty;
+        BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL, empty));
 
         orphanage.AddTx(MakeTransactionRef(tx), i);
     }
@@ -108,7 +110,8 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
             tx.vin[j].prevout.n = j;
             tx.vin[j].prevout.hash = txPrev->GetHash();
         }
-        BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL));
+        SignatureData empty;
+        BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL, empty));
         // Re-use same signature for other inputs
         // (they don't have to be valid for this test)
         for (unsigned int j = 1; j < tx.vin.size(); j++)

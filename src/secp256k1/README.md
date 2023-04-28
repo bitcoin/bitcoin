@@ -2,6 +2,8 @@ libsecp256k1
 ============
 
 [![Build Status](https://api.cirrus-ci.com/github/bitcoin-core/secp256k1.svg?branch=master)](https://cirrus-ci.com/github/bitcoin-core/secp256k1)
+![Dependencies: None](https://img.shields.io/badge/dependencies-none-success)
+[![irc.libera.chat #secp256k1](https://img.shields.io/badge/irc.libera.chat-%23secp256k1-success)](https://web.libera.chat/#secp256k1)
 
 Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1.
 
@@ -15,6 +17,7 @@ Features:
 * Derandomized ECDSA (via RFC6979 or with a caller provided function.)
 * Very efficient implementation.
 * Suitable for embedded systems.
+* No runtime dependencies.
 * Optional module for public key recovery.
 * Optional module for ECDH key exchange.
 * Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki).
@@ -57,10 +60,8 @@ Implementation details
   * Optional runtime blinding which attempts to frustrate differential power analysis.
   * The precomputed tables add and eventually subtract points for which no known scalar (secret key) is known, preventing even an attacker with control over the secret key used to control the data internally.
 
-Build steps
------------
-
-libsecp256k1 is built using autotools:
+Building with Autotools
+-----------------------
 
     $ ./autogen.sh
     $ ./configure
@@ -70,13 +71,51 @@ libsecp256k1 is built using autotools:
 
 To compile optional modules (such as Schnorr signatures), you need to run `./configure` with additional flags (such as `--enable-module-schnorrsig`). Run `./configure --help` to see the full list of available flags.
 
+Building with CMake (experimental)
+----------------------------------
+
+To maintain a pristine source tree, CMake encourages to perform an out-of-source build by using a separate dedicated build tree.
+
+### Building on POSIX systems
+
+    $ mkdir build && cd build
+    $ cmake ..
+    $ make
+    $ make check  # run the test suite
+    $ sudo make install  # optional
+
+To compile optional modules (such as Schnorr signatures), you need to run `cmake` with additional flags (such as `-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON`). Run `cmake .. -LH` to see the full list of available flags.
+
+### Cross compiling
+
+To alleviate issues with cross compiling, preconfigured toolchain files are available in the `cmake` directory.
+For example, to cross compile for Windows:
+
+    $ cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/x86_64-w64-mingw32.toolchain.cmake
+
+To cross compile for Android with [NDK](https://developer.android.com/ndk/guides/cmake) (using NDK's toolchain file, and assuming the `ANDROID_NDK_ROOT` environment variable has been set):
+
+    $ cmake .. -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=28
+
+### Building on Windows
+
+To build on Windows with Visual Studio, a proper [generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#visual-studio-generators) must be specified for a new build tree.
+
+The following example assumes using of Visual Studio 2022 and CMake v3.21+.
+
+In "Developer Command Prompt for VS 2022":
+
+    >cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
+    >cmake --build build --config RelWithDebInfo
+
 Usage examples
 -----------
-  Usage examples can be found in the [examples](examples) directory. To compile them you need to configure with `--enable-examples`.
+Usage examples can be found in the [examples](examples) directory. To compile them you need to configure with `--enable-examples`.
   * [ECDSA example](examples/ecdsa.c)
   * [Schnorr signatures example](examples/schnorr.c)
   * [Deriving a shared secret (ECDH) example](examples/ecdh.c)
-  To compile the Schnorr signature and ECDH examples, you also need to configure with `--enable-module-schnorrsig` and `--enable-module-ecdh`.
+
+To compile the Schnorr signature and ECDH examples, you also need to configure with `--enable-module-schnorrsig` and `--enable-module-ecdh`.
 
 Test coverage
 -----------

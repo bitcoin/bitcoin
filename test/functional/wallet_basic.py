@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
@@ -23,6 +23,9 @@ OUT_OF_RANGE = "Amount out of range"
 
 
 class WalletTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [[
@@ -415,7 +418,7 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
         # This will raise an exception since generate does not accept a string
-        assert_raises_rpc_error(-1, "not of expected type number", self.generate, self.nodes[0], "2")
+        assert_raises_rpc_error(-3, "not of expected type number", self.generate, self.nodes[0], "2")
 
         if not self.options.descriptors:
 
@@ -629,7 +632,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*", 99999)))
 
         # Test getaddressinfo on external address. Note that these addresses are taken from disablewallet.py
-        assert_raises_rpc_error(-5, "Invalid prefix for Base58-encoded address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
+        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
         address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
         assert_equal(address_info['address'], "mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
         assert_equal(address_info["scriptPubKey"], "76a9144e3854046c7bd1594ac904e4793b6a45b36dea0988ac")
@@ -727,6 +730,45 @@ class WalletTest(BitcoinTestFramework):
             coin_b = next(c for c in coins if c["txid"] == txid_b)
             assert_equal(coin_b["parent_descs"][0], multi_b)
             self.nodes[0].unloadwallet("wo")
+
+        self.log.info("Test -spendzeroconfchange")
+        self.restart_node(0, ["-spendzeroconfchange=0"])
+
+        # create new wallet and fund it with a confirmed UTXO
+        self.nodes[0].createwallet(wallet_name="zeroconf", load_on_startup=True)
+        zeroconf_wallet = self.nodes[0].get_wallet_rpc("zeroconf")
+        default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        default_wallet.sendtoaddress(zeroconf_wallet.getnewaddress(), Decimal('1.0'))
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        utxos = zeroconf_wallet.listunspent(minconf=0)
+        assert_equal(len(utxos), 1)
+        assert_equal(utxos[0]['confirmations'], 1)
+
+        # spend confirmed UTXO to ourselves
+        zeroconf_wallet.sendall(recipients=[zeroconf_wallet.getnewaddress()])
+        utxos = zeroconf_wallet.listunspent(minconf=0)
+        assert_equal(len(utxos), 1)
+        assert_equal(utxos[0]['confirmations'], 0)
+        # accounts for untrusted pending balance
+        bal = zeroconf_wallet.getbalances()
+        assert_equal(bal['mine']['trusted'], 0)
+        assert_equal(bal['mine']['untrusted_pending'], utxos[0]['amount'])
+
+        # spending an unconfirmed UTXO sent to ourselves should fail
+        assert_raises_rpc_error(-6, "Insufficient funds", zeroconf_wallet.sendtoaddress, zeroconf_wallet.getnewaddress(), Decimal('0.5'))
+
+        # check that it works again with -spendzeroconfchange set (=default)
+        self.restart_node(0, ["-spendzeroconfchange=1"])
+        zeroconf_wallet = self.nodes[0].get_wallet_rpc("zeroconf")
+        utxos = zeroconf_wallet.listunspent(minconf=0)
+        assert_equal(len(utxos), 1)
+        assert_equal(utxos[0]['confirmations'], 0)
+        # accounts for trusted balance
+        bal = zeroconf_wallet.getbalances()
+        assert_equal(bal['mine']['trusted'], utxos[0]['amount'])
+        assert_equal(bal['mine']['untrusted_pending'], 0)
+
+        zeroconf_wallet.sendtoaddress(zeroconf_wallet.getnewaddress(), Decimal('0.5'))
 
 
 if __name__ == '__main__':

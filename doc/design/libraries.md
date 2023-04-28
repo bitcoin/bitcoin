@@ -35,7 +35,7 @@
 
 ```mermaid
 
-%%{ init : { "flowchart" : { "curve" : "linear" }}}%%
+%%{ init : { "flowchart" : { "curve" : "basis" }}}%%
 
 graph TD;
 
@@ -51,18 +51,18 @@ bitcoin-qt[bitcoin-qt]-->libbitcoin_wallet;
 bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet;
 bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet_tool;
 
-libbitcoin_cli-->libbitcoin_common;
 libbitcoin_cli-->libbitcoin_util;
+libbitcoin_cli-->libbitcoin_common;
 
-libbitcoin_common-->libbitcoin_util;
 libbitcoin_common-->libbitcoin_consensus;
+libbitcoin_common-->libbitcoin_util;
 
 libbitcoin_kernel-->libbitcoin_consensus;
 libbitcoin_kernel-->libbitcoin_util;
 
-libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libbitcoin_consensus;
 libbitcoin_node-->libbitcoin_kernel;
+libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libbitcoin_util;
 
 libbitcoinqt-->libbitcoin_common;
@@ -71,8 +71,8 @@ libbitcoinqt-->libbitcoin_util;
 libbitcoin_wallet-->libbitcoin_common;
 libbitcoin_wallet-->libbitcoin_util;
 
-libbitcoin_wallet_tool-->libbitcoin_util;
 libbitcoin_wallet_tool-->libbitcoin_wallet;
+libbitcoin_wallet_tool-->libbitcoin_util;
 
 classDef bold stroke-width:2px, font-weight:bold, font-size: smaller;
 class bitcoin-qt,bitcoind,bitcoin-cli,bitcoin-wallet bold
@@ -83,7 +83,7 @@ class bitcoin-qt,bitcoind,bitcoin-cli,bitcoin-wallet bold
 
 </td></tr></table>
 
-- The graph shows what _linker symbols_ (functions and variables) from each library other libraries can call and reference directly, but it is not a call graph. For example, there is no arrow connecting *libbitcoin_wallet* and *libbitcoin_node* libraries, because these libraries are intended to be modular and not depend on each other's internal implementation details. But wallet code still is still able to call node code indirectly through the `interfaces::Chain` abstract class in [`interfaces/chain.h`](../../src/interfaces/chain.h) and node code calls wallet code through the `interfaces::ChainClient` and `interfaces::Chain::Notifications` abstract classes in the same file. In general, defining abstract classes in [`src/interfaces/`](../../src/interfaces/) can be a convenient way of avoiding unwanted direct dependencies or circular dependencies between libraries.
+- The graph shows what _linker symbols_ (functions and variables) from each library other libraries can call and reference directly, but it is not a call graph. For example, there is no arrow connecting *libbitcoin_wallet* and *libbitcoin_node* libraries, because these libraries are intended to be modular and not depend on each other's internal implementation details. But wallet code is still able to call node code indirectly through the `interfaces::Chain` abstract class in [`interfaces/chain.h`](../../src/interfaces/chain.h) and node code calls wallet code through the `interfaces::ChainClient` and `interfaces::Chain::Notifications` abstract classes in the same file. In general, defining abstract classes in [`src/interfaces/`](../../src/interfaces/) can be a convenient way of avoiding unwanted direct dependencies or circular dependencies between libraries.
 
 - *libbitcoin_consensus* should be a standalone dependency that any library can depend on, and it should not depend on any other libraries itself.
 

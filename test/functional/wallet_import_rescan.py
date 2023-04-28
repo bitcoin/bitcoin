@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet import RPCs.
@@ -147,6 +147,9 @@ def get_rand_amount():
 
 
 class ImportRescanTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.num_nodes = 2 + len(IMPORT_NODES)
         self.supports_cli = False
@@ -176,7 +179,16 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Create one transaction on node 0 with a unique amount for
         # each possible type of wallet import RPC.
+        last_variants = []
         for i, variant in enumerate(IMPORT_VARIANTS):
+            if i % 10 == 0:
+                blockhash = self.generate(self.nodes[0], 1)[0]
+                conf_height = self.nodes[0].getblockcount()
+                timestamp = self.nodes[0].getblockheader(blockhash)["time"]
+                for var in last_variants:
+                    var.confirmation_height = conf_height
+                    var.timestamp = timestamp
+                last_variants.clear()
             variant.label = "label {} {}".format(i, variant)
             variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(
                 label=variant.label,
@@ -185,9 +197,15 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             variant.initial_amount = get_rand_amount()
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
-            self.generate(self.nodes[0], 1)  # Generate one block for each send
-            variant.confirmation_height = self.nodes[0].getblockcount()
-            variant.timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
+            last_variants.append(variant)
+
+        blockhash = self.generate(self.nodes[0], 1)[0]
+        conf_height = self.nodes[0].getblockcount()
+        timestamp = self.nodes[0].getblockheader(blockhash)["time"]
+        for var in last_variants:
+            var.confirmation_height = conf_height
+            var.timestamp = timestamp
+        last_variants.clear()
 
         # Generate a block further in the future (past the rescan window).
         assert_equal(self.nodes[0].getrawmempool(), [])
@@ -214,11 +232,14 @@ class ImportRescanTest(BitcoinTestFramework):
                 variant.check()
 
         # Create new transactions sending to each address.
-        for variant in IMPORT_VARIANTS:
+        for i, variant in enumerate(IMPORT_VARIANTS):
+            if i % 10 == 0:
+                blockhash = self.generate(self.nodes[0], 1)[0]
+                conf_height = self.nodes[0].getblockcount() + 1
             variant.sent_amount = get_rand_amount()
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
-            self.generate(self.nodes[0], 1)  # Generate one block for each send
-            variant.confirmation_height = self.nodes[0].getblockcount()
+            variant.confirmation_height = conf_height
+        self.generate(self.nodes[0], 1)
 
         assert_equal(self.nodes[0].getrawmempool(), [])
         self.sync_all()

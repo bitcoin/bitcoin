@@ -66,6 +66,7 @@ BITCOIN_TESTS =\
   test/addrman_tests.cpp \
   test/allocator_tests.cpp \
   test/amount_tests.cpp \
+  test/argsman_tests.cpp \
   test/arith_uint256_tests.cpp \
   test/banman_tests.cpp \
   test/base32_tests.cpp \
@@ -77,6 +78,7 @@ BITCOIN_TESTS =\
   test/blockencodings_tests.cpp \
   test/blockfilter_index_tests.cpp \
   test/blockfilter_tests.cpp \
+  test/blockmanager_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
@@ -114,6 +116,7 @@ BITCOIN_TESTS =\
   test/pmt_tests.cpp \
   test/policy_fee_tests.cpp \
   test/policyestimator_tests.cpp \
+  test/pool_tests.cpp \
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
@@ -145,8 +148,10 @@ BITCOIN_TESTS =\
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
+  test/translation_tests.cpp \
   test/txindex_tests.cpp \
   test/txpackage_tests.cpp \
+  test/txreconciliation_tests.cpp \
   test/txrequest_tests.cpp \
   test/txvalidation_tests.cpp \
   test/txvalidationcache_tests.cpp \
@@ -159,7 +164,8 @@ BITCOIN_TESTS =\
   test/validation_flush_tests.cpp \
   test/validation_tests.cpp \
   test/validationinterface_tests.cpp \
-  test/versionbits_tests.cpp
+  test/versionbits_tests.cpp \
+  test/xoroshiro128plusplus_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
@@ -171,11 +177,12 @@ BITCOIN_TESTS += \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/wallet_transaction_tests.cpp \
   wallet/test/coinselector_tests.cpp \
-  wallet/test/availablecoins_tests.cpp \
   wallet/test/init_tests.cpp \
   wallet/test/ismine_tests.cpp \
+  wallet/test/rpc_util_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp \
-  wallet/test/walletload_tests.cpp
+  wallet/test/walletload_tests.cpp \
+  wallet/test/group_outputs_tests.cpp
 
 FUZZ_SUITE_LD_COMMON +=\
  $(SQLITE_LIBS) \
@@ -186,7 +193,8 @@ BITCOIN_TESTS += wallet/test/db_tests.cpp
 endif
 
 FUZZ_WALLET_SRC = \
- wallet/test/fuzz/coinselection.cpp
+ wallet/test/fuzz/coinselection.cpp \
+ wallet/test/fuzz/parse_iso8601.cpp
 
 if USE_SQLITE
 FUZZ_WALLET_SRC += \
@@ -194,8 +202,6 @@ FUZZ_WALLET_SRC += \
 endif # USE_SQLITE
 
 BITCOIN_TEST_SUITE += \
-  wallet/test/util.cpp \
-  wallet/test/util.h \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
@@ -246,6 +252,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/chain.cpp \
  test/fuzz/checkqueue.cpp \
  test/fuzz/coins_view.cpp \
+ test/fuzz/coinscache_sim.cpp \
  test/fuzz/connman.cpp \
  test/fuzz/crypto.cpp \
  test/fuzz/crypto_aes256.cpp \
@@ -266,6 +273,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/flatfile.cpp \
  test/fuzz/float.cpp \
  test/fuzz/golomb_rice.cpp \
+ test/fuzz/headerssync.cpp \
  test/fuzz/hex.cpp \
  test/fuzz/http_request.cpp \
  test/fuzz/i2p.cpp \
@@ -288,12 +296,13 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/node_eviction.cpp \
  test/fuzz/p2p_transport_serialization.cpp \
  test/fuzz/parse_hd_keypath.cpp \
- test/fuzz/parse_iso8601.cpp \
  test/fuzz/parse_numbers.cpp \
  test/fuzz/parse_script.cpp \
  test/fuzz/parse_univalue.cpp \
+ test/fuzz/partially_downloaded_block.cpp \
  test/fuzz/policy_estimator.cpp \
  test/fuzz/policy_estimator_io.cpp \
+ test/fuzz/poolresource.cpp \
  test/fuzz/pow.cpp \
  test/fuzz/prevector.cpp \
  test/fuzz/primitives_transaction.cpp \
@@ -373,8 +382,8 @@ endif
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-	@echo "Running bench/bench_bitcoin (one iteration sanity check)..."
-	$(BENCH_BINARY) --sanity-check > /dev/null
+	@echo "Running bench/bench_bitcoin (one iteration sanity check, only high priority)..."
+	$(BENCH_BINARY) -sanity-check -priority-level=high
 endif
 endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check

@@ -1,14 +1,15 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <map>
 
+#include <common/args.h>
 #include <dbwrapper.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <node/blockstorage.h>
-#include <util/system.h>
+#include <util/fs_helpers.h>
 #include <validation.h>
 
 using node::UndoReadFromDisk;
@@ -157,9 +158,7 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256&
     std::vector<uint8_t> encoded_filter;
     try {
         filein >> block_hash >> encoded_filter;
-        uint256 result;
-        CHash256().Write(encoded_filter).Finalize(result);
-        if (result != hash) return error("Checksum mismatch in filter decode.");
+        if (Hash(encoded_filter) != hash) return error("Checksum mismatch in filter decode.");
         filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter), /*skip_decode_check=*/true);
     }
     catch (const std::exception& e) {

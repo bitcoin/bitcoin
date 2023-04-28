@@ -1,18 +1,20 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <index/base.h>
 #include <interfaces/chain.h>
 #include <kernel/chain.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/database_args.h>
 #include <node/interface_ui.h>
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <util/syscall_sandbox.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
@@ -34,7 +36,7 @@ static void FatalError(const char* fmt, const Args&... args)
     std::string strMessage = tfm::format(fmt, args...);
     SetMiscWarning(Untranslated(strMessage));
     LogPrintf("*** %s\n", strMessage);
-    AbortError(_("A fatal internal error occurred, see debug.log for details"));
+    InitError(_("A fatal internal error occurred, see debug.log for details"));
     StartShutdown();
 }
 
@@ -48,7 +50,13 @@ CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
 }
 
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
-    CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
+    CDBWrapper{DBParams{
+        .path = path,
+        .cache_bytes = n_cache_size,
+        .memory_only = f_memory,
+        .wipe_data = f_wipe,
+        .obfuscate = f_obfuscate,
+        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
 {}
 
 bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
@@ -298,6 +306,10 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     }
     interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block.get());
     if (CustomAppend(block_info)) {
+        // Setting the best block index is intentionally the last step of this
+        // function, so BlockUntilSyncedToCurrentChain callers waiting for the
+        // best block index to be updated can rely on the block being fully
+        // processed, and the index object being safe to delete.
         SetBestBlockIndex(pindex);
     } else {
         FatalError("%s: Failed to write block %s to index",
@@ -411,13 +423,21 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
-void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
-    assert(!node::fPruneMode || AllowPrune());
+void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
+{
+    assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
 
-    m_best_block_index = block;
     if (AllowPrune() && block) {
         node::PruneLockInfo prune_lock;
         prune_lock.height_first = block->nHeight;
         WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));
     }
+
+    // Intentionally set m_best_block_index as the last step in this function,
+    // after updating prune locks above, and after making any other references
+    // to *this, so the BlockUntilSyncedToCurrentChain function (which checks
+    // m_best_block_index as an optimization) can be used to wait for the last
+    // BlockConnected notification and safely assume that prune locks are
+    // updated and that the index object is safe to delete.
+    m_best_block_index = block;
 }

@@ -76,7 +76,7 @@ $(1)_extracted=$$($(1)_extract_dir)/.stamp_extracted
 $(1)_preprocessed=$$($(1)_extract_dir)/.stamp_preprocessed
 $(1)_cleaned=$$($(1)_extract_dir)/.stamp_cleaned
 $(1)_built=$$($(1)_build_dir)/.stamp_built
-$(1)_configured=$$($(1)_build_dir)/.stamp_configured
+$(1)_configured=$(host_prefix)/.$(1)_stamp_configured
 $(1)_staged=$$($(1)_staging_dir)/.stamp_staged
 $(1)_postprocessed=$$($(1)_staging_prefix_dir)/.stamp_postprocessed
 $(1)_download_path_fixed=$(subst :,\:,$$($(1)_download_path))
@@ -87,9 +87,9 @@ $(1)_download_path_fixed=$(subst :,\:,$$($(1)_download_path))
 $(1)_fetch_cmds ?= $(call fetch_file,$(1),$(subst \:,:,$$($(1)_download_path_fixed)),$$($(1)_download_file),$($(1)_file_name),$($(1)_sha256_hash))
 $(1)_extract_cmds ?= mkdir -p $$($(1)_extract_dir) && echo "$$($(1)_sha256_hash)  $$($(1)_source)" > $$($(1)_extract_dir)/.$$($(1)_file_name).hash &&  $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$$($(1)_file_name).hash && $(build_TAR) --no-same-owner --strip-components=1 -xf $$($(1)_source)
 $(1)_preprocess_cmds ?= true
-$(1)_build_cmds ?=
-$(1)_config_cmds ?=
-$(1)_stage_cmds ?=
+$(1)_build_cmds ?= true
+$(1)_config_cmds ?= true
+$(1)_stage_cmds ?= true
 $(1)_set_vars ?=
 
 
@@ -137,6 +137,7 @@ $(1)_config_env+=$($(1)_config_env_$(host_arch)_$(host_os)) $($(1)_config_env_$(
 
 $(1)_config_env+=PKG_CONFIG_LIBDIR=$($($(1)_type)_prefix)/lib/pkgconfig
 $(1)_config_env+=PKG_CONFIG_PATH=$($($(1)_type)_prefix)/share/pkgconfig
+$(1)_config_env+=PKG_CONFIG_SYSROOT_DIR=/
 $(1)_config_env+=CMAKE_MODULE_PATH=$($($(1)_type)_prefix)/lib/cmake
 $(1)_config_env+=PATH=$(build_prefix)/bin:$(PATH)
 $(1)_build_env+=PATH=$(build_prefix)/bin:$(PATH)
@@ -175,7 +176,7 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                CXX="$$($(1)_cxx)" \
                CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
                LDFLAGS="$$($(1)_ldflags)" \
-             cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" $$($(1)_cmake_opts)
+             cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" $$($(1)_config_opts)
 ifeq ($($(1)_type),build)
 $(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
 else
@@ -213,18 +214,18 @@ $($(1)_preprocessed): | $($(1)_extracted)
 $($(1)_configured): | $($(1)_dependencies) $($(1)_preprocessed)
 	echo Configuring $(1)...
 	rm -rf $(host_prefix); mkdir -p $(host_prefix)/lib; cd $(host_prefix); $(foreach package,$($(1)_all_dependencies), $(build_TAR) --no-same-owner -xf $($(package)_cached); )
-	mkdir -p $$(@D)
-	+{ cd $$(@D); $($(1)_config_env) $($(1)_config_cmds); } $$($(1)_logging)
+	mkdir -p $$($(1)_build_dir)
+	+{ cd $$($(1)_build_dir); export $($(1)_config_env); $($(1)_config_cmds); } $$($(1)_logging)
 	touch $$@
 $($(1)_built): | $($(1)_configured)
 	echo Building $(1)...
 	mkdir -p $$(@D)
-	+{ cd $$(@D); $($(1)_build_env) $($(1)_build_cmds); } $$($(1)_logging)
+	+{ cd $$(@D); export $($(1)_build_env); $($(1)_build_cmds); } $$($(1)_logging)
 	touch $$@
 $($(1)_staged): | $($(1)_built)
 	echo Staging $(1)...
 	mkdir -p $($(1)_staging_dir)/$(host_prefix)
-	+{ cd $($(1)_build_dir); $($(1)_stage_env) $($(1)_stage_cmds); } $$($(1)_logging)
+	+{ cd $($(1)_build_dir); export $($(1)_stage_env); $($(1)_stage_cmds); } $$($(1)_logging)
 	rm -rf $($(1)_extract_dir)
 	touch $$@
 $($(1)_postprocessed): | $($(1)_staged)
@@ -233,7 +234,9 @@ $($(1)_postprocessed): | $($(1)_staged)
 	touch $$@
 $($(1)_cached): | $($(1)_dependencies) $($(1)_postprocessed)
 	echo Caching $(1)...
-	cd $$($(1)_staging_dir)/$(host_prefix); find . | sort | $(build_TAR) --no-recursion -czf $$($(1)_staging_dir)/$$(@F) -T -
+	cd $$($(1)_staging_dir)/$(host_prefix); \
+	  find . ! -name '.stamp_postprocessed' -print0 | TZ=UTC xargs -0r touch -h -m -t 200001011200; \
+	  find . ! -name '.stamp_postprocessed' | LC_ALL=C sort | $(build_TAR) --numeric-owner --no-recursion -czf $$($(1)_staging_dir)/$$(@F) -T -
 	mkdir -p $$(@D)
 	rm -rf $$(@D) && mkdir -p $$(@D)
 	mv $$($(1)_staging_dir)/$$(@F) $$(@)

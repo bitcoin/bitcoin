@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,12 +7,13 @@
 #endif
 
 #include <clientversion.h>
-#include <fs.h>
+#include <common/args.h>
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 
@@ -23,7 +24,7 @@
 namespace init {
 void AddLoggingArgs(ArgsManager& argsman)
 {
-    argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (-nodebuglogfile to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file (default: %s). Relative paths will be prefixed by a net-specific datadir location. Pass -nodebuglogfile to disable writing the log to a file.", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-debug=<category>", "Output debug and trace logging (default: -nodebug, supplying <category> is optional). "
         "If <category> is not supplied or if <category> = 1, output all debug and trace logging. <category> can be: " + LogInstance().LogCategoriesString() + ". This option can be specified multiple times to output multiple categories.",
         ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -45,7 +46,7 @@ void AddLoggingArgs(ArgsManager& argsman)
 void SetLoggingOptions(const ArgsManager& args)
 {
     LogInstance().m_print_to_file = !args.IsArgNegated("-debuglogfile");
-    LogInstance().m_file_path = AbsPathForConfigVal(args.GetPathArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+    LogInstance().m_file_path = AbsPathForConfigVal(args, args.GetPathArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
     LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", !args.GetBoolArg("-daemon", false));
     LogInstance().m_log_timestamps = args.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
     LogInstance().m_log_time_micros = args.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
@@ -121,7 +122,7 @@ bool StartLogging(const ArgsManager& args)
     LogPrintf("Using data directory %s\n", fs::PathToString(gArgs.GetDataDirNet()));
 
     // Only log conf file usage message if conf file actually exists.
-    fs::path config_file_path = GetConfigFile(args.GetPathArg("-conf", BITCOIN_CONF_FILENAME));
+    fs::path config_file_path = args.GetConfigFilePath();
     if (fs::exists(config_file_path)) {
         LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {

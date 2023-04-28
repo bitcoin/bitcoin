@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1303,7 +1303,7 @@ public:
         // Serialize the nSequence
         if (nInput != nIn && (fHashSingle || fHashNone))
             // let the others update at will
-            ::Serialize(s, (int)0);
+            ::Serialize(s, int{0});
         else
             ::Serialize(s, txTo.vin[nInput].nSequence);
     }
@@ -1439,7 +1439,7 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
         hashOutputs = SHA256Uint256(m_outputs_single_hash);
         m_bip143_segwit_ready = true;
     }
-    if (uses_bip341_taproot) {
+    if (uses_bip341_taproot && m_spent_outputs_ready) {
         m_spent_amounts_single_hash = GetSpentAmountsSHA256(m_spent_outputs);
         m_spent_scripts_single_hash = GetSpentScriptsSHA256(m_spent_outputs);
         m_bip341_taproot_ready = true;
@@ -1825,9 +1825,20 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
     return true;
 }
 
-uint256 ComputeTapleafHash(uint8_t leaf_version, const CScript& script)
+uint256 ComputeTapleafHash(uint8_t leaf_version, Span<const unsigned char> script)
 {
-    return (HashWriter{HASHER_TAPLEAF} << leaf_version << script).GetSHA256();
+    return (HashWriter{HASHER_TAPLEAF} << leaf_version << CompactSizeWriter(script.size()) << script).GetSHA256();
+}
+
+uint256 ComputeTapbranchHash(Span<const unsigned char> a, Span<const unsigned char> b)
+{
+    HashWriter ss_branch{HASHER_TAPBRANCH};
+    if (std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end())) {
+        ss_branch << a << b;
+    } else {
+        ss_branch << b << a;
+    }
+    return ss_branch.GetSHA256();
 }
 
 uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint256& tapleaf_hash)
@@ -1839,14 +1850,8 @@ uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint25
     const int path_len = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
     uint256 k = tapleaf_hash;
     for (int i = 0; i < path_len; ++i) {
-        HashWriter ss_branch{HASHER_TAPBRANCH};
         Span node{Span{control}.subspan(TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * i, TAPROOT_CONTROL_NODE_SIZE)};
-        if (std::lexicographical_compare(k.begin(), k.end(), node.begin(), node.end())) {
-            ss_branch << k << node;
-        } else {
-            ss_branch << node << k;
-        }
-        k = ss_branch.GetSHA256();
+        k = ComputeTapbranchHash(k, node);
     }
     return k;
 }
@@ -1917,18 +1922,18 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         } else {
             // Script path spending (stack size is >1 after removing optional annex)
             const valtype& control = SpanPopBack(stack);
-            const valtype& script_bytes = SpanPopBack(stack);
-            exec_script = CScript(script_bytes.begin(), script_bytes.end());
+            const valtype& script = SpanPopBack(stack);
             if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE || ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) {
                 return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
             }
-            execdata.m_tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, exec_script);
+            execdata.m_tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, script);
             if (!VerifyTaprootCommitment(control, program, execdata.m_tapleaf_hash)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             execdata.m_tapleaf_hash_init = true;
             if ((control[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                 // Tapscript (leaf version 0xc0)
+                exec_script = CScript(script.begin(), script.end());
                 execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack, PROTOCOL_VERSION) + VALIDATION_WEIGHT_OFFSET;
                 execdata.m_validation_weight_left_init = true;
                 return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);

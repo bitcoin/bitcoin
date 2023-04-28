@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test generate* RPCs."""
@@ -28,10 +28,14 @@ class RPCGenerateTest(BitcoinTestFramework):
     def test_generateblock(self):
         node = self.nodes[0]
         miniwallet = MiniWallet(node)
-        miniwallet.rescan_utxos()
+
+        self.log.info('Mine an empty block to address and return the hex')
+        address = miniwallet.get_address()
+        generated_block = self.generateblock(node, output=address, transactions=[], submit=False)
+        node.submitblock(hexdata=generated_block['hex'])
+        assert_equal(generated_block['hash'], node.getbestblockhash())
 
         self.log.info('Generate an empty block to address')
-        address = miniwallet.get_address()
         hash = self.generateblock(node, output=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)

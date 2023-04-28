@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,22 +6,25 @@
 #define BITCOIN_TEST_UTIL_SETUP_COMMON_H
 
 #include <chainparamsbase.h>
-#include <fs.h>
+#include <common/args.h>
 #include <key.h>
-#include <util/system.h>
 #include <node/caches.h>
 #include <node/context.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <random.h>
 #include <stdexcept>
-#include <txmempool.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/string.h>
 #include <util/vector.h>
 
 #include <functional>
 #include <type_traits>
 #include <vector>
+
+class CFeeRate;
+class Chainstate;
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
@@ -69,12 +72,6 @@ static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
     }
 }
 
-static inline uint32_t InsecureRand32() { return g_insecure_rand_ctx.rand32(); }
-static inline uint256 InsecureRand256() { return g_insecure_rand_ctx.rand256(); }
-static inline uint64_t InsecureRandBits(int bits) { return g_insecure_rand_ctx.randbits(bits); }
-static inline uint64_t InsecureRandRange(uint64_t range) { return g_insecure_rand_ctx.randrange(range); }
-static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
-
 static constexpr CAmount CENT{1000000};
 
 /** Basic testing setup.
@@ -90,9 +87,6 @@ struct BasicTestingSetup {
     ArgsManager m_args;
 };
 
-
-CTxMemPool::Options MemPoolOptionsForTest(const node::NodeContext& node);
-
 /** Testing setup that performs all steps up until right before
  * ChainstateManager gets initialized. Meant for testing ChainstateManager
  * initialization behaviour.
@@ -107,7 +101,16 @@ struct ChainTestingSetup : public BasicTestingSetup {
 /** Testing setup that configures a complete environment.
  */
 struct TestingSetup : public ChainTestingSetup {
-    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    bool m_coins_db_in_memory{true};
+    bool m_block_tree_db_in_memory{true};
+
+    void LoadVerifyActivateChainstate();
+
+    explicit TestingSetup(
+        const std::string& chainName = CBaseChainParams::MAIN,
+        const std::vector<const char*>& extra_args = {},
+        const bool coins_db_in_memory = true,
+        const bool block_tree_db_in_memory = true);
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
@@ -124,8 +127,11 @@ class CScript;
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestingSetup {
-    TestChain100Setup(const std::string& chain_name = CBaseChainParams::REGTEST,
-                      const std::vector<const char*>& extra_args = {});
+    TestChain100Setup(
+        const std::string& chain_name = CBaseChainParams::REGTEST,
+        const std::vector<const char*>& extra_args = {},
+        const bool coins_db_in_memory = true,
+        const bool block_tree_db_in_memory = true);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -180,6 +186,17 @@ struct TestChain100Setup : public TestingSetup {
      */
     std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
 
+    /** Mock the mempool minimum feerate by adding a transaction and calling TrimToSize(0),
+     * simulating the mempool "reaching capacity" and evicting by descendant feerate.  Note that
+     * this clears the mempool, and the new minimum feerate will depend on the maximum feerate of
+     * transactions removed, so this must be called while the mempool is empty.
+     *
+     * @param target_feerate    The new mempool minimum feerate after this function returns.
+     *                          Must be above max(incremental feerate, min relay feerate),
+     *                          or 1sat/vB with default settings.
+     */
+    void MockMempoolMinFee(const CFeeRate& target_feerate);
+
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -200,33 +217,6 @@ std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseCha
 
     return std::make_unique<T>(chain_name, arguments);
 }
-
-class CTxMemPoolEntry;
-
-struct TestMemPoolEntryHelper
-{
-    // Default values
-    CAmount nFee;
-    int64_t nTime;
-    unsigned int nHeight;
-    bool spendsCoinbase;
-    unsigned int sigOpCost;
-    LockPoints lp;
-
-    TestMemPoolEntryHelper() :
-        nFee(0), nTime(0), nHeight(1),
-        spendsCoinbase(false), sigOpCost(4) { }
-
-    CTxMemPoolEntry FromTx(const CMutableTransaction& tx) const;
-    CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
-
-    // Change the default value
-    TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
-    TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
-    TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
-};
 
 CBlock getBlock13b8a();
 

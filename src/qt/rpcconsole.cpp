@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,6 @@
 
 #include <chainparams.h>
 #include <interfaces/node.h>
-#include <netbase.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
@@ -780,8 +779,8 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
 {
     // use name for text and wallet model for internal data object (to allow to move to a wallet id later)
     ui->WalletSelector->addItem(walletModel->getDisplayName(), QVariant::fromValue(walletModel));
-    if (ui->WalletSelector->count() == 2 && !isVisible()) {
-        // First wallet added, set to default so long as the window isn't presently visible (and potentially in use)
+    if (ui->WalletSelector->count() == 2) {
+        // First wallet added, set to default to match wallet RPC behavior
         ui->WalletSelector->setCurrentIndex(1);
     }
     if (ui->WalletSelector->count() > 2) {
@@ -985,10 +984,11 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
 {
     ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));
 
-    if (dynUsage < 1000000)
-        ui->mempoolSize->setText(QString::number(dynUsage/1000.0, 'f', 2) + " KB");
-    else
-        ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
+    if (dynUsage < 1000000) {
+        ui->mempoolSize->setText(QObject::tr("%1 kB").arg(dynUsage / 1000.0, 0, 'f', 2));
+    } else {
+        ui->mempoolSize->setText(QObject::tr("%1 MB").arg(dynUsage / 1000000.0, 0, 'f', 2));
+    }
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
@@ -1178,8 +1178,12 @@ void RPCConsole::updateDetailWidget()
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_time));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
-    ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
-    ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
+    if (stats->nodeStats.nVersion) {
+        ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
+    }
+    if (!stats->nodeStats.cleanSubVer.empty()) {
+        ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
+    }
     ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, /*prepend_direction=*/true));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permission_flags == NetPermissionFlags::None) {
@@ -1304,17 +1308,13 @@ void RPCConsole::unbanSelectedNode()
 
     // Get selected ban addresses
     QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->banlistWidget, BanTableModel::Address);
-    for(int i = 0; i < nodes.count(); i++)
-    {
-        // Get currently selected ban address
-        QString strNode = nodes.at(i).data().toString();
-        CSubNet possibleSubnet;
-
-        LookupSubNet(strNode.toStdString(), possibleSubnet);
-        if (possibleSubnet.IsValid() && m_node.unban(possibleSubnet))
-        {
-            clientModel->getBanTableModel()->refresh();
-        }
+    BanTableModel* ban_table_model{clientModel->getBanTableModel()};
+    bool unbanned{false};
+    for (const auto& node_index : nodes) {
+        unbanned |= ban_table_model->unban(node_index);
+    }
+    if (unbanned) {
+        ban_table_model->refresh();
     }
 }
 

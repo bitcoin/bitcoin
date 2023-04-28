@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,12 +9,16 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(txpackage_tests)
+// A fee amount that is above 1sat/vB but below 5sat/vB for most transactions created within these
+// unit tests.
+static const CAmount low_fee_amt{200};
 
 // Create placeholder transactions that have no meaning.
 inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outputs)
@@ -90,17 +94,21 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /*test_accept=*/true);
     BOOST_CHECK_MESSAGE(result_parent_child.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << result_parent_child.m_state.GetRejectReason());
+    BOOST_CHECK(result_parent_child.m_tx_results.size() == 2);
     auto it_parent = result_parent_child.m_tx_results.find(tx_parent->GetWitnessHash());
     auto it_child = result_parent_child.m_tx_results.find(tx_child->GetWitnessHash());
     BOOST_CHECK(it_parent != result_parent_child.m_tx_results.end());
     BOOST_CHECK_MESSAGE(it_parent->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_parent->second.m_state.GetRejectReason());
+    BOOST_CHECK(it_parent->second.m_effective_feerate.value().GetFee(GetVirtualTransactionSize(*tx_parent)) == COIN);
+    BOOST_CHECK_EQUAL(it_parent->second.m_wtxids_fee_calculations.value().size(), 1);
+    BOOST_CHECK_EQUAL(it_parent->second.m_wtxids_fee_calculations.value().front(), tx_parent->GetWitnessHash());
     BOOST_CHECK(it_child != result_parent_child.m_tx_results.end());
     BOOST_CHECK_MESSAGE(it_child->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_child->second.m_state.GetRejectReason());
-    BOOST_CHECK(result_parent_child.m_package_feerate.has_value());
-    BOOST_CHECK(result_parent_child.m_package_feerate.value() ==
-                CFeeRate(2 * COIN, GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child)));
+    BOOST_CHECK(it_child->second.m_effective_feerate.value().GetFee(GetVirtualTransactionSize(*tx_child)) == COIN);
+    BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().size(), 1);
+    BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().front(), tx_child->GetWitnessHash());
 
     // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
     CTransactionRef giant_ptx = create_placeholder_tx(999, 999);
@@ -109,10 +117,10 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     BOOST_CHECK(result_single_large.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetRejectReason(), "transaction failed");
+    BOOST_CHECK(result_single_large.m_tx_results.size() == 1);
     auto it_giant_tx = result_single_large.m_tx_results.find(giant_ptx->GetWitnessHash());
     BOOST_CHECK(it_giant_tx != result_single_large.m_tx_results.end());
     BOOST_CHECK_EQUAL(it_giant_tx->second.m_state.GetRejectReason(), "tx-size");
-    BOOST_CHECK(result_single_large.m_package_feerate == std::nullopt);
 
     // Check that mempool size hasn't changed.
     BOOST_CHECK_EQUAL(m_node.mempool->size(), initialPoolSize);
@@ -233,7 +241,6 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetRejectReason(), "package-not-child-with-parents");
     BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-    BOOST_CHECK(result_unrelated_submit.m_package_feerate == std::nullopt);
 
     // Parent and Child (and Grandchild) Package
     Package package_parent_child;
@@ -275,7 +282,30 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(result_3gen_submit.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(result_3gen_submit.m_state.GetRejectReason(), "package-not-child-with-parents");
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-        BOOST_CHECK(result_3gen_submit.m_package_feerate == std::nullopt);
+    }
+
+    // Parent and child package where transactions are invalid for reasons other than fee and
+    // missing inputs, so the package validation isn't expected to happen.
+    {
+        CScriptWitness bad_witness;
+        bad_witness.stack.push_back(std::vector<unsigned char>(1));
+        CMutableTransaction mtx_parent_invalid{mtx_parent};
+        mtx_parent_invalid.vin[0].scriptWitness = bad_witness;
+        CTransactionRef tx_parent_invalid = MakeTransactionRef(mtx_parent_invalid);
+        auto result_quit_early = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                   {tx_parent_invalid, tx_child}, /*test_accept=*/ false);
+        BOOST_CHECK(result_quit_early.m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(result_quit_early.m_state.GetResult(), PackageValidationResult::PCKG_TX);
+        BOOST_CHECK(!result_quit_early.m_tx_results.empty());
+        BOOST_CHECK_EQUAL(result_quit_early.m_tx_results.size(), 2);
+        auto it_parent = result_quit_early.m_tx_results.find(tx_parent_invalid->GetWitnessHash());
+        auto it_child = result_quit_early.m_tx_results.find(tx_child->GetWitnessHash());
+        BOOST_CHECK(it_parent != result_quit_early.m_tx_results.end());
+        BOOST_CHECK(it_child != result_quit_early.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_parent->second.m_state.GetResult(), TxValidationResult::TX_WITNESS_MUTATED);
+        BOOST_CHECK_EQUAL(it_parent->second.m_state.GetRejectReason(), "bad-witness-nonstandard");
+        BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MISSING_INPUTS);
+        BOOST_CHECK_EQUAL(it_child->second.m_state.GetRejectReason(), "bad-txns-inputs-missingorspent");
     }
 
     // Child with missing parent.
@@ -290,8 +320,6 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetRejectReason(), "package-not-child-with-unconfirmed-parents");
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-
-        BOOST_CHECK(result_missing_parent.m_package_feerate == std::nullopt);
     }
 
     // Submit package with parent + child.
@@ -301,20 +329,23 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_parent_child.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_parent_child.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_parent_child.m_tx_results.size(), package_parent_child.size());
         auto it_parent = submit_parent_child.m_tx_results.find(tx_parent->GetWitnessHash());
         auto it_child = submit_parent_child.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_parent_child.m_tx_results.end());
         BOOST_CHECK(it_parent->second.m_state.IsValid());
+        BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_parent)));
+        BOOST_CHECK_EQUAL(it_parent->second.m_wtxids_fee_calculations.value().size(), 1);
+        BOOST_CHECK_EQUAL(it_parent->second.m_wtxids_fee_calculations.value().front(), tx_parent->GetWitnessHash());
         BOOST_CHECK(it_child != submit_parent_child.m_tx_results.end());
         BOOST_CHECK(it_child->second.m_state.IsValid());
+        BOOST_CHECK(it_child->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_child)));
+        BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().size(), 1);
+        BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().front(), tx_child->GetWitnessHash());
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent->GetHash())));
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child->GetHash())));
-
-        // Since both transactions have high feerates, they each passed validation individually.
-        // Package validation was unnecessary, so there is no package feerate.
-        BOOST_CHECK(submit_parent_child.m_package_feerate == std::nullopt);
     }
 
     // Already-in-mempool transactions should be detected and de-duplicated.
@@ -323,6 +354,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
                                                       package_parent_child, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_deduped.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_deduped.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_deduped.m_tx_results.size(), package_parent_child.size());
         auto it_parent_deduped = submit_deduped.m_tx_results.find(tx_parent->GetWitnessHash());
         auto it_child_deduped = submit_deduped.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent_deduped != submit_deduped.m_tx_results.end());
@@ -335,8 +367,6 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent->GetHash())));
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child->GetHash())));
-
-        BOOST_CHECK(submit_deduped.m_package_feerate == std::nullopt);
     }
 }
 
@@ -346,6 +376,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 {
     // Mine blocks to mature coinbases.
     mineBlocks(5);
+    MockMempoolMinFee(CFeeRate(5000));
     LOCK(cs_main);
 
     // Transactions with a same-txid-different-witness transaction in the mempool should be ignored,
@@ -399,6 +430,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                        {ptx_parent, ptx_child1}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_witness1.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_witness1.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_witness1.m_tx_results.size(), 2);
         auto it_parent1 = submit_witness1.m_tx_results.find(ptx_parent->GetWitnessHash());
         auto it_child1 = submit_witness1.m_tx_results.find(ptx_child1->GetWitnessHash());
         BOOST_CHECK(it_parent1 != submit_witness1.m_tx_results.end());
@@ -412,13 +444,11 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child1->GetHash())));
 
         // Child2 would have been validated individually.
-        BOOST_CHECK(submit_witness1.m_package_feerate == std::nullopt);
-
         const auto submit_witness2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
                                                        {ptx_parent, ptx_child2}, /*test_accept=*/false);
-        BOOST_CHECK(submit_witness2.m_package_feerate == std::nullopt);
         BOOST_CHECK_MESSAGE(submit_witness2.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_witness2.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_witness2.m_tx_results.size(), 2);
         auto it_parent2_deduped = submit_witness2.m_tx_results.find(ptx_parent->GetWitnessHash());
         auto it_child2 = submit_witness2.m_tx_results.find(ptx_child2->GetWitnessHash());
         BOOST_CHECK(it_parent2_deduped != submit_witness2.m_tx_results.end());
@@ -436,11 +466,11 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                            {ptx_parent, ptx_child1}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_segwit_dedup.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_segwit_dedup.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_segwit_dedup.m_tx_results.size(), 2);
         auto it_parent_dup = submit_segwit_dedup.m_tx_results.find(ptx_parent->GetWitnessHash());
         auto it_child_dup = submit_segwit_dedup.m_tx_results.find(ptx_child1->GetWitnessHash());
         BOOST_CHECK(it_parent_dup->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
         BOOST_CHECK(it_child_dup->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
-        BOOST_CHECK(submit_witness2.m_package_feerate == std::nullopt);
     }
 
     // Try submitting Package1{child2, grandchild} where child2 is same-txid-different-witness as
@@ -465,6 +495,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                             {ptx_child2, ptx_grandchild}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_spend_ignored.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_spend_ignored.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_spend_ignored.m_tx_results.size(), 2);
         auto it_child2_ignored = submit_spend_ignored.m_tx_results.find(ptx_child2->GetWitnessHash());
         auto it_grandchild = submit_spend_ignored.m_tx_results.find(ptx_grandchild->GetWitnessHash());
         BOOST_CHECK(it_child2_ignored != submit_spend_ignored.m_tx_results.end());
@@ -475,9 +506,6 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child2->GetHash())));
         BOOST_CHECK(!m_node.mempool->exists(GenTxid::Wtxid(ptx_child2->GetWitnessHash())));
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Wtxid(ptx_grandchild->GetWitnessHash())));
-
-        // Since child2 is ignored, grandchild would be validated individually.
-        BOOST_CHECK(submit_spend_ignored.m_package_feerate == std::nullopt);
     }
 
     // A package Package{parent1, parent2, parent3, child} where the parents are a mixture of
@@ -536,13 +564,15 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     BOOST_CHECK(parent2_v2_result.m_result_type == MempoolAcceptResult::ResultType::VALID);
     package_mixed.push_back(ptx_parent2_v1);
 
-    // parent3 will be a new transaction. Put 0 fees on it to make it invalid on its own.
+    // parent3 will be a new transaction. Put a low feerate to make it invalid on its own.
     auto mtx_parent3 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[3], /*input_vout=*/0,
                                                      /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                      /*output_destination=*/acs_spk,
-                                                     /*output_amount=*/CAmount(50 * COIN), /*submit=*/false);
+                                                     /*output_amount=*/CAmount(50 * COIN - low_fee_amt), /*submit=*/false);
     CTransactionRef ptx_parent3 = MakeTransactionRef(mtx_parent3);
     package_mixed.push_back(ptx_parent3);
+    BOOST_CHECK(m_node.mempool->GetMinFee().GetFee(GetVirtualTransactionSize(*ptx_parent3)) > low_fee_amt);
+    BOOST_CHECK(m_node.mempool->m_min_relay_feerate.GetFee(GetVirtualTransactionSize(*ptx_parent3)) <= low_fee_amt);
 
     // child spends parent1, parent2, and parent3
     CKey mixed_grandchild_key;
@@ -568,6 +598,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     {
         const auto mixed_result = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package_mixed, false);
         BOOST_CHECK_MESSAGE(mixed_result.m_state.IsValid(), mixed_result.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(mixed_result.m_tx_results.size(), package_mixed.size());
         auto it_parent1 = mixed_result.m_tx_results.find(ptx_parent1->GetWitnessHash());
         auto it_parent2 = mixed_result.m_tx_results.find(ptx_parent2_v1->GetWitnessHash());
         auto it_parent3 = mixed_result.m_tx_results.find(ptx_parent3->GetWitnessHash());
@@ -590,17 +621,19 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_mixed_child->GetHash())));
 
         // package feerate should include parent3 and child. It should not include parent1 or parent2_v1.
-        BOOST_CHECK(mixed_result.m_package_feerate.has_value());
         const CFeeRate expected_feerate(1 * COIN, GetVirtualTransactionSize(*ptx_parent3) + GetVirtualTransactionSize(*ptx_mixed_child));
-        BOOST_CHECK_MESSAGE(mixed_result.m_package_feerate.value() == expected_feerate,
-                            strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
-                                      mixed_result.m_package_feerate.value().ToString()));
+        BOOST_CHECK(it_parent3->second.m_effective_feerate.value() == expected_feerate);
+        BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
+        std::vector<uint256> expected_wtxids({ptx_parent3->GetWitnessHash(), ptx_mixed_child->GetWitnessHash()});
+        BOOST_CHECK(it_parent3->second.m_wtxids_fee_calculations.value() == expected_wtxids);
+        BOOST_CHECK(it_child->second.m_wtxids_fee_calculations.value() == expected_wtxids);
     }
 }
 
 BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
 {
     mineBlocks(5);
+    MockMempoolMinFee(CFeeRate(5000));
     LOCK(::cs_main);
     size_t expected_pool_size = m_node.mempool->size();
     CKey child_key;
@@ -610,9 +643,9 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     grandchild_key.MakeNewKey(true);
     CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(grandchild_key.GetPubKey()));
 
-    // zero-fee parent and high-fee child package
+    // low-fee parent and high-fee child package
     const CAmount coinbase_value{50 * COIN};
-    const CAmount parent_value{coinbase_value - 0};
+    const CAmount parent_value{coinbase_value - low_fee_amt};
     const CAmount child_value{parent_value - COIN};
 
     Package package_cpfp;
@@ -631,30 +664,29 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     package_cpfp.push_back(tx_child);
 
     // Package feerate is calculated using modified fees, and prioritisetransaction accepts negative
-    // fee deltas. This should be taken into account. De-prioritise the parent transaction by -1BTC,
-    // bringing the package feerate to 0.
-    m_node.mempool->PrioritiseTransaction(tx_parent->GetHash(), -1 * COIN);
+    // fee deltas. This should be taken into account. De-prioritise the parent transaction
+    // to bring the package feerate to 0.
+    m_node.mempool->PrioritiseTransaction(tx_parent->GetHash(), child_value - coinbase_value);
     {
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_cpfp_deprio = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
                                                    package_cpfp, /*test_accept=*/ false);
-        BOOST_CHECK_MESSAGE(submit_cpfp_deprio.m_state.IsInvalid(),
-                            "Package validation unexpectedly succeeded: " << submit_cpfp_deprio.m_state.GetRejectReason());
-        BOOST_CHECK(submit_cpfp_deprio.m_tx_results.empty());
+        BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_state.GetResult(), PackageValidationResult::PCKG_TX);
+        BOOST_CHECK(submit_cpfp_deprio.m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetResult(),
+                          TxValidationResult::TX_MEMPOOL_POLICY);
+        BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_child->GetWitnessHash())->second.m_state.GetResult(),
+                          TxValidationResult::TX_MISSING_INPUTS);
+        BOOST_CHECK(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetRejectReason() == "min relay fee not met");
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const CFeeRate expected_feerate(0, GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child));
-        BOOST_CHECK(submit_cpfp_deprio.m_package_feerate.has_value());
-        BOOST_CHECK(submit_cpfp_deprio.m_package_feerate.value() == CFeeRate{0});
-        BOOST_CHECK_MESSAGE(submit_cpfp_deprio.m_package_feerate.value() == expected_feerate,
-                            strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
-                                      submit_cpfp_deprio.m_package_feerate.value().ToString()));
     }
 
     // Clear the prioritisation of the parent transaction.
     WITH_LOCK(m_node.mempool->cs, m_node.mempool->ClearPrioritisation(tx_parent->GetHash()));
 
-    // Package CPFP: Even though the parent pays 0 absolute fees, the child pays 1 BTC which is
-    // enough for the package feerate to meet the threshold.
+    // Package CPFP: Even though the parent's feerate is below the mempool minimum feerate, the
+    // child pays enough for the package feerate to meet the threshold.
     {
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_cpfp = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
@@ -662,11 +694,12 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_cpfp.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_cpfp.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_cpfp.m_tx_results.size(), package_cpfp.size());
         auto it_parent = submit_cpfp.m_tx_results.find(tx_parent->GetWitnessHash());
         auto it_child = submit_cpfp.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_cpfp.m_tx_results.end());
         BOOST_CHECK(it_parent->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
-        BOOST_CHECK(it_parent->second.m_base_fees.value() == 0);
+        BOOST_CHECK(it_parent->second.m_base_fees.value() == coinbase_value - parent_value);
         BOOST_CHECK(it_child != submit_cpfp.m_tx_results.end());
         BOOST_CHECK(it_child->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
         BOOST_CHECK(it_child->second.m_base_fees.value() == COIN);
@@ -677,30 +710,37 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
 
         const CFeeRate expected_feerate(coinbase_value - child_value,
                                         GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child));
+        BOOST_CHECK(it_parent->second.m_effective_feerate.value() == expected_feerate);
+        BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
+        std::vector<uint256> expected_wtxids({tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()});
+        BOOST_CHECK(it_parent->second.m_wtxids_fee_calculations.value() == expected_wtxids);
+        BOOST_CHECK(it_child->second.m_wtxids_fee_calculations.value() == expected_wtxids);
         BOOST_CHECK(expected_feerate.GetFeePerK() > 1000);
-        BOOST_CHECK(submit_cpfp.m_package_feerate.has_value());
-        BOOST_CHECK_MESSAGE(submit_cpfp.m_package_feerate.value() == expected_feerate,
-                            strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
-                                      submit_cpfp.m_package_feerate.value().ToString()));
     }
 
     // Just because we allow low-fee parents doesn't mean we allow low-feerate packages.
-    // This package just pays 200 satoshis total. This would be enough to pay for the child alone,
-    // but isn't enough for the entire package to meet the 1sat/vbyte minimum.
+    // The mempool minimum feerate is 5sat/vB, but this package just pays 800 satoshis total.
+    // The child fees would be able to pay for itself, but isn't enough for the entire package.
     Package package_still_too_low;
+    const CAmount parent_fee{200};
+    const CAmount child_fee{600};
     auto mtx_parent_cheap = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
                                                           /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                           /*output_destination=*/parent_spk,
-                                                          /*output_amount=*/coinbase_value, /*submit=*/false);
+                                                          /*output_amount=*/coinbase_value - parent_fee, /*submit=*/false);
     CTransactionRef tx_parent_cheap = MakeTransactionRef(mtx_parent_cheap);
     package_still_too_low.push_back(tx_parent_cheap);
+    BOOST_CHECK(m_node.mempool->GetMinFee().GetFee(GetVirtualTransactionSize(*tx_parent_cheap)) > parent_fee);
+    BOOST_CHECK(m_node.mempool->m_min_relay_feerate.GetFee(GetVirtualTransactionSize(*tx_parent_cheap)) <= parent_fee);
 
     auto mtx_child_cheap = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent_cheap, /*input_vout=*/0,
                                                          /*input_height=*/101, /*input_signing_key=*/child_key,
                                                          /*output_destination=*/child_spk,
-                                                         /*output_amount=*/coinbase_value - 200, /*submit=*/false);
+                                                         /*output_amount=*/coinbase_value - parent_fee - child_fee, /*submit=*/false);
     CTransactionRef tx_child_cheap = MakeTransactionRef(mtx_child_cheap);
     package_still_too_low.push_back(tx_child_cheap);
+    BOOST_CHECK(m_node.mempool->GetMinFee().GetFee(GetVirtualTransactionSize(*tx_child_cheap)) <= child_fee);
+    BOOST_CHECK(m_node.mempool->GetMinFee().GetFee(GetVirtualTransactionSize(*tx_parent_cheap) + GetVirtualTransactionSize(*tx_child_cheap)) > parent_fee + child_fee);
 
     // Cheap package should fail with package-fee-too-low.
     {
@@ -711,15 +751,6 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(submit_package_too_low.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(submit_package_too_low.m_state.GetRejectReason(), "package-fee-too-low");
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-        const CFeeRate child_feerate(200, GetVirtualTransactionSize(*tx_child_cheap));
-        BOOST_CHECK(child_feerate.GetFeePerK() > 1000);
-        const CFeeRate expected_feerate(200,
-            GetVirtualTransactionSize(*tx_parent_cheap) + GetVirtualTransactionSize(*tx_child_cheap));
-        BOOST_CHECK(expected_feerate.GetFeePerK() < 1000);
-        BOOST_CHECK(submit_package_too_low.m_package_feerate.has_value());
-        BOOST_CHECK_MESSAGE(submit_package_too_low.m_package_feerate.value() == expected_feerate,
-                            strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
-                                      submit_package_too_low.m_package_feerate.value().ToString()));
     }
 
     // Package feerate includes the modified fees of the transactions.
@@ -732,12 +763,22 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_prioritised_package.m_state.IsValid(),
                 "Package validation unexpectedly failed" << submit_prioritised_package.m_state.GetRejectReason());
-        const CFeeRate expected_feerate(1 * COIN + 200,
+        const CFeeRate expected_feerate(1 * COIN + parent_fee + child_fee,
             GetVirtualTransactionSize(*tx_parent_cheap) + GetVirtualTransactionSize(*tx_child_cheap));
-        BOOST_CHECK(submit_prioritised_package.m_package_feerate.has_value());
-        BOOST_CHECK_MESSAGE(submit_prioritised_package.m_package_feerate.value() == expected_feerate,
-                            strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
-                                      submit_prioritised_package.m_package_feerate.value().ToString()));
+        BOOST_CHECK_EQUAL(submit_prioritised_package.m_tx_results.size(), package_still_too_low.size());
+        auto it_parent = submit_prioritised_package.m_tx_results.find(tx_parent_cheap->GetWitnessHash());
+        auto it_child = submit_prioritised_package.m_tx_results.find(tx_child_cheap->GetWitnessHash());
+        BOOST_CHECK(it_parent != submit_prioritised_package.m_tx_results.end());
+        BOOST_CHECK(it_parent->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK(it_parent->second.m_base_fees.value() == parent_fee);
+        BOOST_CHECK(it_parent->second.m_effective_feerate.value() == expected_feerate);
+        BOOST_CHECK(it_child != submit_prioritised_package.m_tx_results.end());
+        BOOST_CHECK(it_child->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK(it_child->second.m_base_fees.value() == child_fee);
+        BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
+        std::vector<uint256> expected_wtxids({tx_parent_cheap->GetWitnessHash(), tx_child_cheap->GetWitnessHash()});
+        BOOST_CHECK(it_parent->second.m_wtxids_fee_calculations.value() == expected_wtxids);
+        BOOST_CHECK(it_child->second.m_wtxids_fee_calculations.value() == expected_wtxids);
     }
 
     // Package feerate is calculated without topology in mind; it's just aggregating fees and sizes.
@@ -770,12 +811,8 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK_MESSAGE(submit_rich_parent.m_state.IsInvalid(), "Package validation unexpectedly succeeded");
 
         // The child would have been validated on its own and failed, then submitted as a "package" of 1.
-        // The package feerate is just the child's feerate, which is 0sat/vb.
-        BOOST_CHECK(submit_rich_parent.m_package_feerate.has_value());
-        BOOST_CHECK_MESSAGE(submit_rich_parent.m_package_feerate.value() == CFeeRate(),
-                            "expected 0, got " << submit_rich_parent.m_package_feerate.value().ToString());
-        BOOST_CHECK_EQUAL(submit_rich_parent.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
-        BOOST_CHECK_EQUAL(submit_rich_parent.m_state.GetRejectReason(), "package-fee-too-low");
+        BOOST_CHECK_EQUAL(submit_rich_parent.m_state.GetResult(), PackageValidationResult::PCKG_TX);
+        BOOST_CHECK_EQUAL(submit_rich_parent.m_state.GetRejectReason(), "transaction failed");
 
         auto it_parent = submit_rich_parent.m_tx_results.find(tx_parent_rich->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_rich_parent.m_tx_results.end());
@@ -783,6 +820,12 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK(it_parent->second.m_state.GetRejectReason() == "");
         BOOST_CHECK_MESSAGE(it_parent->second.m_base_fees.value() == high_parent_fee,
                 strprintf("rich parent: expected fee %s, got %s", high_parent_fee, it_parent->second.m_base_fees.value()));
+        BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(high_parent_fee, GetVirtualTransactionSize(*tx_parent_rich)));
+        auto it_child = submit_rich_parent.m_tx_results.find(tx_child_poor->GetWitnessHash());
+        BOOST_CHECK(it_child != submit_rich_parent.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_child->second.m_result_type, MempoolAcceptResult::ResultType::INVALID);
+        BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MEMPOOL_POLICY);
+        BOOST_CHECK(it_child->second.m_state.GetRejectReason() == "min relay fee not met");
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent_rich->GetHash())));

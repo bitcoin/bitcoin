@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,8 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <common/args.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
 #include <policy/feerate.h>
@@ -18,10 +20,11 @@
 #include <rpc/request.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/exception.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <util/translation.h>
-#include <util/url.h>
 
 #include <algorithm>
 #include <chrono>
@@ -55,7 +58,10 @@ static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 static constexpr int8_t UNKNOWN_NETWORK{-1};
-static constexpr std::array NETWORKS{"ipv4", "ipv6", "onion", "i2p", "cjdns"};
+// See GetNetworkName() in netbase.cpp
+static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "onion", "i2p", "cjdns", "internal"};
+static constexpr std::array NETWORK_SHORT_NAMES{"npr", "ipv4", "ipv6", "onion", "i2p", "cjdns", "int"};
+static constexpr std::array UNREACHABLE_NETWORK_IDS{/*not_publicly_routable*/0, /*internal*/6};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -82,7 +88,7 @@ static void SetupCliArgs(ArgsManager& argsman)
                              DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES),
                    ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the output of -getinfo is the result of multiple non-atomic requests. Some entries in the output may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions(argsman);
@@ -158,7 +164,7 @@ static int AppInitRPC(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
-    if (!CheckDataDirOption()) {
+    if (!CheckDataDirOption(gArgs)) {
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
@@ -289,7 +295,7 @@ public:
         // Prepare result to return to user.
         UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
         uint64_t total{0}; // Total address count
-        for (size_t i = 0; i < NETWORKS.size(); ++i) {
+        for (size_t i = 1; i < NETWORKS.size() - 1; ++i) {
             addresses.pushKV(NETWORKS[i], counts.at(i));
             total += counts.at(i);
         }
@@ -506,7 +512,7 @@ public:
                 const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
                 const bool is_bip152_hb_to{peer["bip152_hb_to"].get_bool()};
-                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
+                m_peers.push_back({addr, sub_version, conn_type, NETWORK_SHORT_NAMES[network_id], age, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_addr_processed_length = std::max(ToString(addr_processed).length(), m_max_addr_processed_length);
                 m_max_addr_rate_limited_length = std::max(ToString(addr_rate_limited).length(), m_max_addr_rate_limited_length);
@@ -571,6 +577,13 @@ public:
                 reachable_networks.push_back(network_id);
             }
         };
+
+        for (const size_t network_id : UNREACHABLE_NETWORK_IDS) {
+            if (m_counts.at(2).at(network_id) == 0) continue;
+            result += strprintf("%8s", NETWORK_SHORT_NAMES.at(network_id)); // column header
+            reachable_networks.push_back(network_id);
+        }
+
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
 
@@ -636,13 +649,13 @@ public:
         "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
         "           \"feeler\" - short-lived connection for testing addresses\n"
         "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
-        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
+        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", \"cjdns\", or \"npr\" (not publicly routable))\n"
         "  mping    Minimum observed ping time, in milliseconds (ms)\n"
         "  ping     Last observed ping time, in milliseconds (ms)\n"
         "  send     Time since last message sent to the peer, in seconds\n"
         "  recv     Time since last message received from the peer, in seconds\n"
         "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
-        "           \"*\" - the peer requested we not relay transactions to it (relaytxes is false)\n"
+        "           \"*\" - we do not relay transactions to this peer (relaytxes is false)\n"
         "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
         "  hb       High-bandwidth BIP152 compact block relay\n"
         "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
@@ -807,7 +820,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
                 "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
-                fs::PathToString(GetConfigFile(gArgs.GetPathArg("-conf", BITCOIN_CONF_FILENAME)))));
+                fs::PathToString(gArgs.GetConfigFilePath())));
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
@@ -822,7 +835,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     UniValue valReply(UniValue::VSTR);
     if (!valReply.read(response.body))
         throw std::runtime_error("couldn't parse reply from server");
-    const UniValue reply = rh->ProcessReply(valReply);
+    UniValue reply = rh->ProcessReply(valReply);
     if (reply.empty())
         throw std::runtime_error("expected reply to have result, error and id properties");
 
@@ -1021,6 +1034,7 @@ static void ParseGetInfoResult(UniValue& result)
     }
 
     std::vector<std::string> formatted_proxies;
+    formatted_proxies.reserve(ordered_proxies.size());
     for (const std::string& proxy : ordered_proxies) {
         formatted_proxies.emplace_back(strprintf("%s (%s)", proxy, Join(proxy_networks.find(proxy)->second, ", ")));
     }
@@ -1216,7 +1230,7 @@ static int CommandLineRPC(int argc, char *argv[])
 MAIN_FUNCTION
 {
 #ifdef WIN32
-    util::WinCmdLineArgs winArgs;
+    common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
     SetupEnvironment();

@@ -144,7 +144,6 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.generate(self.wallet, 101)
 
         self.test_uncache()
         self.test_add_spent()
@@ -357,8 +356,8 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                 "size": event.size
             })
             # sanity checks only
-            assert(event.memory > 0)
-            assert(event.duration > 0)
+            assert event.memory > 0
+            assert event.duration > 0
             handle_flush_succeeds += 1
 
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)

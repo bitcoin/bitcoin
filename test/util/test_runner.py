@@ -54,7 +54,7 @@ def bctester(testDir, input_basename, buildenv):
         try:
             bctest(testDir, testObj, buildenv)
             logging.info("PASSED: " + testObj["description"])
-        except:
+        except Exception:
             logging.info("FAILED: " + testObj["description"])
             failed_testcases.append(testObj["description"])
 
@@ -96,7 +96,7 @@ def bctest(testDir, testObj, buildenv):
         try:
             with open(os.path.join(testDir, outputFn), encoding="utf8") as f:
                 outputData = f.read()
-        except:
+        except Exception:
             logging.error("Output file " + outputFn + " cannot be opened")
             raise
         if not outputData:
@@ -107,7 +107,7 @@ def bctest(testDir, testObj, buildenv):
             raise Exception
 
     # Run the test
-    proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
         outs = proc.communicate(input=inputData)
     except OSError:

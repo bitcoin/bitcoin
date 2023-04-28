@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 #define BITCOIN_WALLET_RECEIVE_H
 
 #include <consensus/amount.h>
-#include <wallet/ismine.h>
 #include <wallet/transaction.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 
 namespace wallet {

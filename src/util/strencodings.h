@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,9 +57,15 @@ enum class ByteUnit : uint64_t {
 * @return           A new string without unsafe chars
 */
 std::string SanitizeString(std::string_view str, int rule = SAFE_CHARS_DEFAULT);
-/** Parse the hex string into bytes (uint8_t or std::byte). Ignores whitespace. */
+/** Parse the hex string into bytes (uint8_t or std::byte). Ignores whitespace. Returns nullopt on invalid input. */
+template <typename Byte = std::byte>
+std::optional<std::vector<Byte>> TryParseHex(std::string_view str);
+/** Like TryParseHex, but returns an empty vector on invalid input. */
 template <typename Byte = uint8_t>
-std::vector<Byte> ParseHex(std::string_view str);
+std::vector<Byte> ParseHex(std::string_view hex_str)
+{
+    return TryParseHex<Byte>(hex_str).value_or(std::vector<Byte>{});
+}
 signed char HexDigit(char c);
 /* Returns true if each character in str is a hex character, and has an even
  * number of hex digits.*/
@@ -88,7 +94,16 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
  */
 std::string EncodeBase32(std::string_view str, bool pad = true);
 
-void SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut);
+/**
+ * Splits socket address string into host string and port value.
+ * Validates port value.
+ *
+ * @param[in] in        The socket address string to split.
+ * @param[out] portOut  Port-portion of the input, if found and parsable.
+ * @param[out] hostOut  Host-portion of the input, if found.
+ * @return              true if port-portion is absent or within its allowed range, otherwise false
+ */
+bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut);
 
 // LocaleIndependentAtoi is provided for backwards compatibility reasons.
 //

@@ -9,6 +9,7 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <coins.h>
+#include <common/args.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
 #include <key.h>
@@ -25,7 +26,6 @@
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
-#include <util/system.h>
 #include <version.h>
 
 #include <exception>
@@ -46,9 +46,6 @@ void initialize_deserialize()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();
-
-    // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const ECCVerifyHandle verify_handle;
 }
 
 #define FUZZ_TARGET_DESERIALIZE(name, code)                \

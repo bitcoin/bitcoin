@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
 
-static void RIPEMD160(benchmark::Bench& bench)
+static void BenchRIPEMD160(benchmark::Bench& bench)
 {
     uint8_t hash[CRIPEMD160::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
@@ -150,19 +150,19 @@ static void MuHashPrecompute(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RIPEMD160);
-BENCHMARK(SHA1);
-BENCHMARK(SHA256);
-BENCHMARK(SHA512);
-BENCHMARK(SHA3_256_1M);
+BENCHMARK(BenchRIPEMD160, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA1, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA512, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA3_256_1M, benchmark::PriorityLevel::HIGH);
 
-BENCHMARK(SHA256_32b);
-BENCHMARK(SipHash_32b);
-BENCHMARK(SHA256D64_1024);
-BENCHMARK(FastRandom_32bit);
-BENCHMARK(FastRandom_1bit);
+BENCHMARK(SHA256_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256D64_1024, benchmark::PriorityLevel::HIGH);
+BENCHMARK(FastRandom_32bit, benchmark::PriorityLevel::HIGH);
+BENCHMARK(FastRandom_1bit, benchmark::PriorityLevel::HIGH);
 
-BENCHMARK(MuHash);
-BENCHMARK(MuHashMul);
-BENCHMARK(MuHashDiv);
-BENCHMARK(MuHashPrecompute);
+BENCHMARK(MuHash, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashMul, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashDiv, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashPrecompute, benchmark::PriorityLevel::HIGH);

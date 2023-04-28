@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,12 @@
 #include <node/miner.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/mempool_utils.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/mempool.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/txmempool.h>
 #include <util/rbf.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -210,7 +211,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
             for (int i = 0; i < num_out; ++i) {
                 tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
             }
-            const auto tx = MakeTransactionRef(tx_mut);
+            auto tx = MakeTransactionRef(tx_mut);
             // Restore previously removed outpoints
             for (const auto& in : tx->vin) {
                 Assert(outpoints_rbf.insert(in.prevout).second);
@@ -310,11 +311,12 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
-    auto& chainstate = node.chainman->ActiveChainstate();
+    auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
 
     MockTime(fuzzed_data_provider, chainstate);
 
     std::vector<uint256> txids;
+    txids.reserve(g_outpoints_coinbase_init_mature.size());
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         txids.push_back(outpoint.hash);
     }
@@ -327,6 +329,8 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
     CTxMemPool tx_pool_{MakeMempool(fuzzed_data_provider, node)};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
+
+    chainstate.SetMempool(&tx_pool);
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
     {

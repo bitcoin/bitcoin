@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,7 +59,7 @@ FUZZ_TARGET(http_request)
     const std::string body = http_request.ReadBody();
     assert(body.empty());
     const CService service = http_request.GetPeer();
-    assert(service.ToString() == "[::]:0");
+    assert(service.ToStringAddrPort() == "[::]:0");
 
     evbuffer_free(evbuf);
     evhttp_request_free(evreq);

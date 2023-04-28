@@ -15,7 +15,13 @@ import sys
 
 DEPS = ['flake8', 'mypy', 'pyzmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
-FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py']
+
+# All .py files, except those in src/ (to exclude subtrees there)
+FLAKE_FILES_ARGS = ['git', 'ls-files', '*.py', ':!:src/*.py']
+
+# Only .py files in test/functional and contrib/devtools have type annotations
+# enforced.
+MYPY_FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py']
 
 ENABLED = (
     'E101,'  # indentation contains mixed spaces and tabs
@@ -47,6 +53,7 @@ ENABLED = (
     'E711,'  # comparison to None should be 'if cond is None:'
     'E714,'  # test for object identity should be "is not"
     'E721,'  # do not compare types, use "isinstance()"
+    'E722,'  # do not use bare 'except'
     'E742,'  # do not define classes named "l", "O", or "I"
     'E743,'  # do not define functions named "l", "O", or "I"
     'E901,'  # SyntaxError: invalid syntax
@@ -106,8 +113,7 @@ def main():
     if len(sys.argv) > 1:
         flake8_files = sys.argv[1:]
     else:
-        files_args = ['git', 'ls-files', '*.py']
-        flake8_files = subprocess.check_output(files_args).decode("utf-8").splitlines()
+        flake8_files = subprocess.check_output(FLAKE_FILES_ARGS).decode("utf-8").splitlines()
 
     flake8_args = ['flake8', '--ignore=B,C,E,F,I,N,W', f'--select={ENABLED}'] + flake8_files
     flake8_env = os.environ.copy()
@@ -118,7 +124,7 @@ def main():
     except subprocess.CalledProcessError:
         exit(1)
 
-    mypy_files = subprocess.check_output(FILES_ARGS).decode("utf-8").splitlines()
+    mypy_files = subprocess.check_output(MYPY_FILES_ARGS).decode("utf-8").splitlines()
     mypy_args = ['mypy', '--show-error-codes'] + mypy_files
 
     try:

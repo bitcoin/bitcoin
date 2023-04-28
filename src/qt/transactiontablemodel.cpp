@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -93,10 +93,7 @@ public:
 
     TransactionTableModel *parent;
 
-    /* Local cache of wallet.
-     * As it is in the same order as the CWallet, by definition
-     * this is sorted by sha256.
-     */
+    //! Local cache of wallet sorted by transaction hash
     QList<TransactionRecord> cachedWallet;
 
     /** True when model finishes loading all wallet transactions on start */
@@ -253,7 +250,6 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle
         QAbstractTableModel(parent),
         walletModel(parent),
         priv(new TransactionTablePriv(this)),
-        fProcessingQueuedTransactions(false),
         platformStyle(_platformStyle)
 {
     subscribeToCoreSignals();

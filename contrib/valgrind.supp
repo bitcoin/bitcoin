@@ -13,19 +13,8 @@
 #
 # Note that suppressions may depend on OS and/or library versions.
 # Tested on:
-# * aarch64 (Ubuntu 22.04 system libs, clang, without gui)
-# * x86_64  (Ubuntu 22.04 system libs, clang, without gui)
-{
-   Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   obj:*/libstdc++.*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   obj:*/ld-*.so
-}
+# * aarch64 (Debian Bookworm system libs, clang, without gui)
+# * x86_64  (Debian Bookworm system libs, clang, without gui)
 {
    Suppress libdb warning - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=662917
    Memcheck:Cond
@@ -71,12 +60,6 @@
    fun:_Z8ShutdownR11NodeContext
 }
 {
-   Ignore GUI warning
-   Memcheck:Leak
-   ...
-   obj:/usr/lib64/libgdk-3.so.0.2404.7
-}
-{
    Suppress leveldb leak
    Memcheck:Leak
    match-leak-kinds: reachable
@@ -97,14 +80,6 @@
    match-leak-kinds: reachable
    fun:_Znwm
    fun:_Z11LogInstancev
-}
-{
-   Suppress secp256k1_context_create still reachable memory warning
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   ...
-   fun:secp256k1_context_create
 }
 {
    Suppress BCLog::Logger::StartLogging() still reachable memory warning

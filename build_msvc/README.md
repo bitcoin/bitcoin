@@ -7,7 +7,9 @@ Visual Studio 2022 is minimum required to build Bitcoin Core.
 
 Solution and project files to build with `msbuild` or Visual Studio can be found in the `build_msvc` directory.
 
-To build Bitcoin Core from the command-line, it is sufficient to only install the Visual Studio Build Tools component.
+To build Bitcoin Core from the command-line, it is sufficient to only install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) component.
+
+The "Desktop development with C++" workload must be installed as well.
 
 Building with Visual Studio is an alternative to the Linux based [cross-compiler build](../doc/build-windows.md).
 
@@ -15,7 +17,7 @@ Building with Visual Studio is an alternative to the Linux based [cross-compiler
 Prerequisites
 ---------------------
 To build [dependencies](../doc/dependencies.md) (except for [Qt](#qt)),
-the default approach is to use the [vcpkg](https://docs.microsoft.com/en-us/cpp/vcpkg) package manager from Microsoft:
+the default approach is to use the [vcpkg](https://vcpkg.io) package manager from Microsoft:
 
 1. [Install](https://vcpkg.io/en/getting-started.html) vcpkg.
 
@@ -67,7 +69,7 @@ Alternatively, open the `build_msvc/bitcoin.sln` file in Visual Studio.
 
 Security
 ---------------------
-[Base address randomization](https://docs.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization?view=msvc-160) is used to make Bitcoin Core more secure. When building Bitcoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
+[Base address randomization](https://learn.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization) is used to make Bitcoin Core more secure. When building Bitcoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
 
 To check if `bitcoind` has `RandomizedBaseAddress` enabled or disabled run
 

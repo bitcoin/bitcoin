@@ -9,6 +9,7 @@ $(package)_patches=gperf_header_regen.patch
 define $(package)_set_vars
   $(package)_config_opts=--disable-docs --disable-static --disable-libxml2 --disable-iconv
   $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
+  $(package)_cflags += -Wno-implicit-function-declaration
 endef
 
 define $(package)_preprocess_cmds
