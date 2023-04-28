@@ -1,0 +1,13 @@
+diff --git a/examples/otool.py b/examples/otool.py
+index 2b8efc0..d797b2e 100755
+--- a/examples/otool.py
++++ b/examples/otool.py
+@@ -342,7 +342,7 @@ if __name__ == '__main__':
+         try:
+             e = macho_init.MACHO(raw,
+                 parseSymbols = False)
+-        except ValueError, err:
++        except ValueError as err:
+             print("%s:" %file)
+             print("    %s" % err)
+             continue
