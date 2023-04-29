@@ -1626,10 +1626,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         else
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
+#if ENABLE_ZMQ
     // SYSCOIN
     fNEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     fNEVMConnection = !fNEVMSub.empty();
-#if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
     if(fNEVMConnection) {
         if(!g_zmq_notification_interface) {
