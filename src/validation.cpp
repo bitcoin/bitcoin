@@ -6588,9 +6588,7 @@ bool CBlockIndexDB::Prune(const uint32_t &nHeight, CDBBatch &batch) {
     uint32_t cutoffHeight = nHeight - MAX_BLOCK_INDEX;
     std::vector<std::pair<uint256,uint32_t> > vecTXIDPairs;
     uint256 nKey;
-    int index = 0;
     while (pcursor->Valid()) {
-        index++;
         try {
             if(pcursor->GetValue(nValue) && nValue < cutoffHeight && pcursor->GetKey(nKey)) {
                 vecTXIDPairs.emplace_back(std::make_pair(nKey, nValue));
@@ -6690,14 +6688,18 @@ std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs
     }
     // Geth should subscribe to our publisher
     cmdLineRet.push_back("--nevmpub");
+#if ENABLE_ZMQ
     cmdLineRet.push_back(fNEVMSub);
+#endif
     return cmdLineRet;
 }
 bool Chainstate::RestartGethNode() {
+#if ENABLE_ZMQ
     if(fNEVMSub.empty()) {
         LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
         return false;
     }
+#endif
     StopGethNode();
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
