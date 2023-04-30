@@ -198,11 +198,6 @@ AC_ARG_ENABLE(bench,
     [use_bench=$enableval],
     [use_bench=yes])
 
-AC_ARG_ENABLE([extended-functional-tests],
-    AS_HELP_STRING([--enable-extended-functional-tests],[enable expensive functional tests when using lcov (default no)]),
-    [use_extended_functional_tests=$enableval],
-    [use_extended_functional_tests=no])
-
 AC_ARG_ENABLE([fuzz],
     AS_HELP_STRING([--enable-fuzz],
     [build for fuzzing (default no). enabling this will disable all other targets and override --{enable,disable}-fuzz-binary]),
@@ -840,10 +835,6 @@ case $host in
      TARGET_OS=linux
      ;;
 esac
-
-if test "$use_extended_functional_tests" != "no"; then
-  AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)
-fi
 
 if test "$use_lcov" = "yes"; then
   if test "$LCOV" = ""; then
