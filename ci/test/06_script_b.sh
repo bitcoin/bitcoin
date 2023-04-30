@@ -173,3 +173,15 @@ fi
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   bash -c "LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN}"
 fi
+
+if [ "$RUN_COVERAGE" = "true" ]; then
+  make cov
+  geninfo . -b src -o coverage.info
+  if [ "$UPLOAD_COVERAGE" = "true" ]; then
+    if [ ! -f codecov ]; then
+      curl -Os https://uploader.codecov.io/latest/linux/codecov
+      chmod +x codecov
+    fi
+    ./codecov -t "$CODECOV_TOKEN"
+  fi
+fi

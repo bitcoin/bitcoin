@@ -317,6 +317,19 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
+  name: 'code coverage [jammy]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    cpu: 4
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
+      FILE_ENV: "./ci/test/00_setup_env_native_coverage.sh"
+  env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    MAKEJOBS: "-j4"
+    CODECOV_TOKEN: ENCRYPTED[!ecde4475f93a3607c87a3abaea30a6692c19c658e1b924130ad15b317e44d5f1abdd596984036eada4eeded24384cbd2!]
+
+task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
