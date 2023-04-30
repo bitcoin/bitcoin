@@ -197,7 +197,6 @@ baseline_filtered.info: baseline.info
 fuzz.info: baseline_filtered.info
 	@TIMEOUT=15 test/fuzz/test_runner.py $(DIR_FUZZ_SEED_CORPUS) -l DEBUG
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t fuzz-tests -o $@
-	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
 fuzz_filtered.info: fuzz.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
@@ -206,7 +205,6 @@ fuzz_filtered.info: fuzz.info
 test_bitcoin.info: baseline_filtered.info
 	$(MAKE) -C src/ check
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_bitcoin -o $@
-	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
 test_bitcoin_filtered.info: test_bitcoin.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
@@ -215,7 +213,6 @@ test_bitcoin_filtered.info: test_bitcoin.info
 functional_test.info: test_bitcoin_filtered.info
 	@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
-	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
 functional_test_filtered.info: functional_test.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
