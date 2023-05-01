@@ -1639,6 +1639,9 @@ bool Chainstate::IsInitialBlockDownload() const
     }
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
+    // Important that this comes *after* the previous line, else we'll wind up in an
+    // infinite recursion.
+    m_chainman.MaybeRebalanceCaches();
     return false;
 }
 
