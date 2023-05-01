@@ -132,6 +132,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.generate(self.wallet, 100)
         self.address = self.wallet.get_address()
 
+        self.test_node_restart()
         self.test_fee_having_parent()
         self.test_multianchor()
         self.test_nonzero_anchor()
@@ -139,6 +140,22 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.test_non_v3()
         self.test_unspent_ephemeral()
         self.test_xor_rbf()
+
+    def test_node_restart(self):
+        self.log.info("Test that an ephemeral package is accepted on restart due to bypass_limits load")
+        node = self.nodes[0]
+        parent_coin = self.coins[-1]
+        del self.coins[-1]
+
+        # Enters mempool
+        package_hex1, package_txns1 = self.create_simple_package(parent_coin=parent_coin, parent_fee=0, child_fee=DEFAULT_FEE)
+        node.submitpackage(package_hex1)
+        self.assert_mempool_contents(expected=package_txns1, unexpected=[])
+
+        self.restart_node(0)
+
+        self.assert_mempool_contents(expected=package_txns1, unexpected=[])
+        self.generate(node, 1)
 
     def test_fee_having_parent(self):
         self.log.info("Test that a transaction with ephemeral anchor may not have base fee")
