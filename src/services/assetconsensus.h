@@ -25,10 +25,14 @@ public:
 };
 
 class CNEVMMintedTxDB : public CDBWrapper {
+    NEVMMintTxMap mapCache;
 public:
     using CDBWrapper::CDBWrapper;
     bool FlushErase(const NEVMMintTxMap &mapMintKeys);
     bool FlushWrite(const NEVMMintTxMap &mapMintKeys);
+    bool FlushCacheToDisk();
+    void FlushDataToCache(const NEVMMintTxMap &mapNEVMTxRoots);
+    bool ExistsTx(const uint256& nTxHash);
 };
 class CNEVMDataDB : public CDBWrapper {
 private:

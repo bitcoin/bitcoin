@@ -3122,6 +3122,9 @@ bool Chainstate::FlushStateToDisk(
             if (pnevmtxrootsdb && !pnevmtxrootsdb->FlushCacheToDisk()) {
                 return AbortNode(state, "Failed to commit to nevm tx roots db");
             }
+            if (pnevmtxmintdb && !pnevmtxmintdb->FlushCacheToDisk()) {
+                return AbortNode(state, "Failed to commit to nevm tx mint db");
+            }
             m_last_write = nNow;
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
@@ -3472,12 +3475,14 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys)) {
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets)) {
             return error("Error flushing to Syscoin DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     }
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, pindexNew->GetMedianTimePast());
+    if(pnevmtxmintdb)
+        pnevmtxmintdb->FlushDataToCache(mapMintKeys);
     if(pblockindexdb)
         pblockindexdb->FlushDataToCache(vecTXIDPairs);
     if(pnevmtxrootsdb)
@@ -5342,16 +5347,22 @@ bool Chainstate::ReplayBlocks()
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect)){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect)){
             return error("RollbackBlock(): Error flushing to Syscoin dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
-    if(pnevmdatadb)
+    if(pnevmdatadb) {
         pnevmdatadb->FlushDataToCache(mapPoDAConnect, pindexNew->GetMedianTimePast());
-    if(pblockindexdb)
+    }
+    if(pnevmdatadb) {
+        pnevmtxmintdb->FlushDataToCache(mapMintKeysConnect);
+    }
+    if(pblockindexdb) {
         pblockindexdb->FlushDataToCache(vecTXIDPairs);
-    if(pnevmtxrootsdb)
+    }
+    if(pnevmtxrootsdb) {
         pnevmtxrootsdb->FlushDataToCache(mapNEVMTxRoots);
+    }
     dbTx->Commit();
     uiInterface.ShowProgress("", 100, false);
     return true;

@@ -150,7 +150,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     // ensure eth tx not already spent in a previous block
-    if(pnevmtxmintdb->Exists(mintSyscoin.nTxHash) && nHeight > nLastKnownHeightOnStart) {
+    if(pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash) && nHeight > nLastKnownHeightOnStart) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // sanity check is set in mempool during m_test_accept and when miner validates block
@@ -170,27 +170,27 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)) {
         return FormatSyscoinErrorMessage(state, "mint-verify-receipt-proof", bSanityCheck);
-    } 
+    }
     // verify transaction proof
     if(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot)) {
         return FormatSyscoinErrorMessage(state, "mint-verify-tx-proof", bSanityCheck);
-    } 
+    }
     if (!rlpTxValue.isList()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-rlp-list", bSanityCheck);
     }
     if (rlpTxValue.itemCount() < 8) {
         return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bSanityCheck);
-    } 
+    }
     const dev::u256& nChainID = rlpTxValue[0].toInt<dev::u256>(dev::RLP::VeryStrict);
     if(nChainID != (dev::u256(Params().GetConsensus().nNEVMChainID))) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-chainid", bSanityCheck);
     }
     if (!rlpTxValue[7].isData()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-array", bSanityCheck);
-    }      
+    }    
     if (rlpTxValue[5].isEmpty()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-invalid-receiver", bSanityCheck);
-    }                  
+    }             
     const dev::Address &address160 = rlpTxValue[5].toHash<dev::Address>(dev::RLP::VeryStrict);
 
     // ensure ERC20Manager is in the "to" field for the contract, meaning the function was called on this contract for freezing supply
@@ -1054,29 +1054,45 @@ bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
 }
 
 // called on connect
-bool CNEVMMintedTxDB::FlushWrite(const NEVMMintTxMap &mapMintKeys) {
-    if(mapMintKeys.empty())
+void CNEVMMintedTxDB::FlushDataToCache(const NEVMMintTxMap &mapNEVMTxRoots) {
+    if(mapNEVMTxRoots.empty()) {
+        return;
+    }
+    for (auto const& [key, val] : mapNEVMTxRoots) {
+        mapCache.try_emplace(key, val);
+    }
+    LogPrint(BCLog::SYS, "Flushing to cache, storing %d nevm tx mints\n", mapNEVMTxRoots.size());
+}
+bool CNEVMMintedTxDB::FlushCacheToDisk() {
+    if(mapCache.empty()) {
+        return true;
+    }
+    CDBBatch batch(*this);    
+    for (auto const& [key, val] : mapCache) {
+        batch.Write(key, val);
+    }
+    LogPrint(BCLog::SYS, "Flushing cache to disk, storing %d nevm tx mints\n", mapCache.size());
+    auto res = WriteBatch(batch, true);
+    mapCache.clear();
+    return res;
+}
+bool CNEVMMintedTxDB::FlushErase(const NEVMMintTxMap &mapNEVMTxRoots) {
+    if(mapNEVMTxRoots.empty())
         return true;
     CDBBatch batch(*this);
-    for (const auto &key : mapMintKeys) {
-        batch.Write(key.first, key.second);
+    for (const auto &key : mapNEVMTxRoots) {
+        batch.Erase(key);
+        auto it = mapCache.find(key.first);
+        if(it != mapCache.end()){
+            mapCache.erase(it);
+        }
     }
-    LogPrint(BCLog::SYS, "Flushing, writing %d nevm tx mints\n", mapMintKeys.size());
-    return WriteBatch(batch);
+    LogPrint(BCLog::SYS, "Flushing, erasing %d nevm tx mints\n", mapNEVMTxRoots.size());
+    return WriteBatch(batch, true);
 }
-
-// called on disconnect
-bool CNEVMMintedTxDB::FlushErase(const NEVMMintTxMap &mapMintKeys) {
-    if(mapMintKeys.empty())
-        return true;
-    CDBBatch batch(*this);
-    for (const auto &key : mapMintKeys) {
-        batch.Erase(key.first);
-    }
-    LogPrint(BCLog::SYS, "Flushing, erasing %d nevm tx mints\n", mapMintKeys.size());
-    return WriteBatch(batch);
+bool CNEVMMintedTxDB::ExistsTx(const uint256& nTxHash) {
+    return (mapCache.find(nTxHash) != mapCache.end()) || Exists(nTxHash);
 }
-
 
 bool CAssetNFTDB::Flush(const AssetMap &mapAssets) {
     if(mapAssets.empty()) {
