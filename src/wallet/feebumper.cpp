@@ -231,6 +231,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // is one). If outputs vector is non-empty, replace original
     // outputs with its contents, otherwise use original outputs.
     std::vector<CRecipient> recipients;
+    CAmount new_outputs_value = 0;
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (const auto& output : txouts) {
         if (!OutputIsChange(wallet, output)) {
@@ -241,6 +242,21 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
         }
+        new_outputs_value += output.nValue;
+    }
+
+    // If no recipients, means that we are sending coins to a change address
+    if (recipients.empty()) {
+        // Just as a sanity check, ensure that the change address exist
+        if (std::get_if<CNoDestination>(&new_coin_control.destChange)) {
+            errors.emplace_back(Untranslated("Unable to create transaction. Transaction must have at least one recipient"));
+            return Result::INVALID_PARAMETER;
+        }
+
+        // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
+        // If the output differs from the original tx output (because the user customized it) a new change output will be created.
+        recipients.emplace_back(CRecipient{GetScriptForDestination(new_coin_control.destChange), new_outputs_value, /*fSubtractFeeFromAmount=*/true});
+        new_coin_control.destChange = CNoDestination();
     }
 
     if (coin_control.m_feerate) {
