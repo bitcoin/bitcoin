@@ -6,7 +6,8 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
-    p2p_port
+    p2p_port,
+    assert_equal,
 )
 
 class SetBanTests(SyscoinTestFramework):
@@ -70,6 +71,11 @@ class SetBanTests(SyscoinTestFramework):
         assert not self.is_banned(node, tor_addr)
         assert not self.is_banned(node, ip_addr)
 
+        self.log.info("Test -bantime")
+        self.restart_node(1, ["-bantime=1234"])
+        self.nodes[1].setban("127.0.0.1", "add")
+        banned = self.nodes[1].listbanned()[0]
+        assert_equal(banned['ban_duration'], 1234)
 
 if __name__ == '__main__':
     SetBanTests().main()
