@@ -152,10 +152,21 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         node.submitpackage(package_hex1)
         self.assert_mempool_contents(expected=package_txns1, unexpected=[])
 
+        # Raise minrelay fee to orphan the child, with parent prioritised to safety
         self.restart_node(0)
 
         self.assert_mempool_contents(expected=package_txns1, unexpected=[])
+
+        # Raise minrelay fee to orphan the child, with parent prioritised to safety
+        node.prioritisetransaction(node.decoderawtransaction(package_hex1[0])["txid"], 0, COIN)
+        self.restart_node(0, extra_args=["-minrelaytxfee=0.01"])
+
+        self.assert_mempool_contents(expected=[package_txns1[0]], unexpected=[package_txns1[1]])
+
         self.generate(node, 1)
+
+        # Set node back to default settings
+        self.restart_node(0)
 
     def test_fee_having_parent(self):
         self.log.info("Test that a transaction with ephemeral anchor may not have base fee")
