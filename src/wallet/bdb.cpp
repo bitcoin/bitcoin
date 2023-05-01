@@ -713,7 +713,7 @@ BerkeleyCursor::~BerkeleyCursor()
 std::unique_ptr<DatabaseCursor> BerkeleyBatch::GetNewCursor()
 {
     if (!pdb) return nullptr;
-    return std::make_unique<BerkeleyCursor>(m_database);
+    return std::make_unique<BerkeleyCursor>(m_database, this);
 }
 
 bool BerkeleyBatch::TxnBegin()
