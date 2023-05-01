@@ -668,14 +668,14 @@ void BerkeleyDatabase::ReloadDbEnv()
     env->ReloadDbEnv();
 }
 
-BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database, BerkeleyBatch* batch)
+BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database, const BerkeleyBatch& batch)
 {
     if (!database.m_db.get()) {
         throw std::runtime_error(STR_INTERNAL_BUG("BerkeleyDatabase does not exist"));
     }
     // Transaction argument to cursor is only needed when using the cursor to
     // write to the database. Read-only cursors do not need a txn pointer.
-    int ret = database.m_db->cursor(batch ? batch->txn() : nullptr, &m_cursor, 0);
+    int ret = database.m_db->cursor(batch.txn(), &m_cursor, 0);
     if (ret != 0) {
         throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret)));
     }
@@ -713,7 +713,7 @@ BerkeleyCursor::~BerkeleyCursor()
 std::unique_ptr<DatabaseCursor> BerkeleyBatch::GetNewCursor()
 {
     if (!pdb) return nullptr;
-    return std::make_unique<BerkeleyCursor>(m_database);
+    return std::make_unique<BerkeleyCursor>(m_database, *this);
 }
 
 bool BerkeleyBatch::TxnBegin()
@@ -825,7 +825,7 @@ bool BerkeleyBatch::HasKey(DataStream&& key)
 bool BerkeleyBatch::ErasePrefix(Span<const std::byte> prefix)
 {
     if (!TxnBegin()) return false;
-    auto cursor{std::make_unique<BerkeleyCursor>(m_database, this)};
+    auto cursor{std::make_unique<BerkeleyCursor>(m_database, *this)};
     // const_cast is safe below even though prefix_key is an in/out parameter,
     // because we are not using the DB_DBT_USERMEM flag, so BDB will allocate
     // and return a different output data pointer
