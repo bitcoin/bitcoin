@@ -49,6 +49,7 @@ class ScanblocksTest(BitcoinTestFramework):
         assert blockhash in out['relevant_blocks']
         assert_equal(height, out['to_height'])
         assert_equal(0, out['from_height'])
+        assert_equal(True, out['completed'])
 
         # mine another block
         blockhash_new = self.generate(node, 1)[0]
