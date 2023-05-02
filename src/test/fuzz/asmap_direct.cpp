@@ -12,7 +12,7 @@
 
 #include <assert.h>
 
-FUZZ_TARGET(asmap_direct)
+FUZZ_PARTIAL_TARGET(asmap_direct)
 {
     // Encoding: [asmap using 1 bit / byte] 0xFF [addr using 1 bit / byte]
     std::optional<size_t> sep_pos_opt;
@@ -20,15 +20,15 @@ FUZZ_TARGET(asmap_direct)
         uint8_t x = buffer[pos];
         if ((x & 0xFE) == 0) continue;
         if (x == 0xFF) {
-            if (sep_pos_opt) return;
+            if (sep_pos_opt) return FuzzResult::UNINTERESTING;
             sep_pos_opt = pos;
         } else {
-            return;
+            return FuzzResult::UNINTERESTING;
         }
     }
-    if (!sep_pos_opt) return; // Needs exactly 1 separator
+    if (!sep_pos_opt) return FuzzResult::UNINTERESTING; // Needs exactly 1 separator
     const size_t sep_pos{sep_pos_opt.value()};
-    if (buffer.size() - sep_pos - 1 > 128) return; // At most 128 bits in IP address
+    if (buffer.size() - sep_pos - 1 > 128) return FuzzResult::UNINTERESTING; // At most 128 bits in IP address
 
     // Checks on asmap
     std::vector<bool> asmap(buffer.begin(), buffer.begin() + sep_pos);
@@ -46,4 +46,6 @@ FUZZ_TARGET(asmap_direct)
         std::vector<bool> addr(buffer.begin() + sep_pos + 1, buffer.end());
         (void)Interpret(asmap, addr);
     }
+
+    return FuzzResult::MAYBE_INTERESTING;
 }
