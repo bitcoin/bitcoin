@@ -20,7 +20,19 @@
 
 using FuzzBufferType = Span<const uint8_t>;
 
-using TypeTestOneInput = std::function<void(FuzzBufferType)>;
+enum class FuzzResult
+{
+    /** Normal fuzzing result. */
+    MAYBE_INTERESTING,
+
+    /** This value can be returned by fuzz tests to indicate the input was uninteresting.
+     *
+     * libfuzzer can make use of this and will not insert the input in its corpus, even when it
+     * appears to increase coverage. */
+    UNINTERESTING
+};
+
+using TypeTestOneInput = std::function<FuzzResult(FuzzBufferType)>;
 using TypeInitialize = std::function<void()>;
 using TypeHidden = bool;
 
@@ -35,13 +47,19 @@ inline void FuzzFrameworkEmptyInitFun() {}
     FUZZ_TARGET_INIT_HIDDEN(name, init_fun, false)
 
 #define FUZZ_TARGET_INIT_HIDDEN(name, init_fun, hidden)                               \
-    void name##_fuzz_target(FuzzBufferType);                                          \
+    FuzzResult name##_fuzz_target(FuzzBufferType);                                    \
+    void name##_fuzz_target_complete(FuzzBufferType);                                 \
     struct name##_Before_Main {                                                       \
         name##_Before_Main()                                                          \
         {                                                                             \
             FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, init_fun, hidden); \
         }                                                                             \
     } const static g_##name##_before_main;                                            \
-    void name##_fuzz_target(FuzzBufferType buffer)
+    FuzzResult name##_fuzz_target(FuzzBufferType buffer)                              \
+    {                                                                                 \
+        name##_fuzz_target_complete(buffer);                                          \
+        return FuzzResult::MAYBE_INTERESTING;                                         \
+    }                                                                                 \
+    void name##_fuzz_target_complete(FuzzBufferType buffer)
 
 #endif // BITCOIN_TEST_FUZZ_FUZZ_H
