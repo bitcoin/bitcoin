@@ -269,8 +269,9 @@ task:
   # Images can be found here: https://cloud.google.com/compute/docs/images/os-details
   compute_engine_instance:
     image_project: ubuntu-os-cloud
-    image: family/ubuntu-2204-lts # when upgrading, check if we can drop "ADD_UNTRUSTED_BPFCC_PPA"
+    image: family/ubuntu-2304-amd64 # https://cirrus-ci.org/guide/custom-vms/#custom-compute-engine-vms
     cpu: 4
+    disk: 100
     memory: 12G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
