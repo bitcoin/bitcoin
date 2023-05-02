@@ -813,8 +813,8 @@ private:
             case Fragment::JUST_1:
             case Fragment::OLDER:
             case Fragment::AFTER: return {0, {}};
-            case Fragment::PK_K: return {1, 1};
-            case Fragment::PK_H: return {2, 2};
+            case Fragment::PK_K: return {0, 0};
+            case Fragment::PK_H: return {1, 1};
             case Fragment::SHA256:
             case Fragment::RIPEMD160:
             case Fragment::HASH256:
@@ -837,8 +837,8 @@ private:
             case Fragment::MULTI: return {k + 1, k + 1};
             case Fragment::WRAP_A:
             case Fragment::WRAP_N:
-            case Fragment::WRAP_S:
-            case Fragment::WRAP_C: return subs[0]->ss;
+            case Fragment::WRAP_S: return subs[0]->ss;
+            case Fragment::WRAP_C: return {subs[0]->ss.sat + 1, subs[0]->ss.dsat + 1};
             case Fragment::WRAP_D: return {1 + subs[0]->ss.sat, 1};
             case Fragment::WRAP_V: return {subs[0]->ss.sat, {}};
             case Fragment::WRAP_J: return {subs[0]->ss.sat, 1};
