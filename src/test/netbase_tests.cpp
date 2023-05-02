@@ -156,6 +156,41 @@ BOOST_AUTO_TEST_CASE(embedded_test)
     BOOST_CHECK_EQUAL(addr1.ToStringAddr(), addr2.ToStringAddr());
 }
 
+BOOST_AUTO_TEST_CASE(dns_lookup)
+{
+    // Non-numeric lookup that does not require actual DNS service
+    BOOST_CHECK(LookupHost("localhost", /*fAllowLookup=*/true).has_value());
+
+    // Numeric lookups
+    BOOST_CHECK(Lookup("127.0.0.1:12345", 9050, true).has_value());
+
+    // Check for IPv6 support before testing
+    addrinfo* ai_res{nullptr};
+    if (getaddrinfo("::1", nullptr, nullptr, &ai_res) == 0) {
+        BOOST_CHECK(Lookup("[::1]:12345", 9050, true).has_value());
+    } else {
+        BOOST_WARN_MESSAGE(false, "Skipping IPv6 check");
+    }
+    freeaddrinfo(ai_res);
+
+    // Back up current fn
+    AsyncGAIFn saved_fn{g_async_gai};
+    // Replace with a 1-minute black hole
+    g_async_gai = [](std::shared_ptr<GAIRequest> req) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+    };
+    // Lookups should timeout after 2 seconds
+    auto start = std::chrono::steady_clock::now();
+    BOOST_CHECK(!LookupHost("fail.doesnotexist", /*fAllowLookup=*/true).has_value());
+    auto stop = std::chrono::steady_clock::now();
+    auto dur{stop - start};
+    auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur);
+    BOOST_CHECK(dur_ms.count() > 2000);
+    BOOST_CHECK(dur_ms.count() < 3000);
+    // Clean up
+    g_async_gai = saved_fn;
+}
+
 BOOST_AUTO_TEST_CASE(subnet_test)
 {
 

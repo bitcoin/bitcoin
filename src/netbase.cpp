@@ -32,7 +32,7 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 std::chrono::milliseconds g_socks5_recv_timeout = 20s;
 static std::atomic<bool> interruptSocks5Recv(false);
 
-std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup)
+void AsyncGetAddrInfo(std::shared_ptr<GAIRequest> req)
 {
     addrinfo ai_hint{};
     // We want a TCP port, which is a streaming socket type
@@ -46,30 +46,68 @@ std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_loo
     // If we don't allow lookups, then use the AI_NUMERICHOST flag for
     // getaddrinfo to only decode numerical network addresses and suppress
     // hostname lookups.
-    ai_hint.ai_flags = allow_lookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
+    ai_hint.ai_flags = req->allow_lookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
 
     addrinfo* ai_res{nullptr};
-    const int n_err{getaddrinfo(name.c_str(), nullptr, &ai_hint, &ai_res)};
+    const int n_err{getaddrinfo(req->name.c_str(), nullptr, &ai_hint, &ai_res)};
+
     if (n_err != 0) {
-        return {};
+        req->complete = true;
+        return;
     }
 
     // Traverse the linked list starting with ai_trav.
     addrinfo* ai_trav{ai_res};
-    std::vector<CNetAddr> resolved_addresses;
     while (ai_trav != nullptr) {
         if (ai_trav->ai_family == AF_INET) {
             assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in));
-            resolved_addresses.emplace_back(reinterpret_cast<sockaddr_in*>(ai_trav->ai_addr)->sin_addr);
+            req->vAddr->emplace_back(reinterpret_cast<sockaddr_in*>(ai_trav->ai_addr)->sin_addr);
         }
         if (ai_trav->ai_family == AF_INET6) {
             assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in6));
             const sockaddr_in6* s6{reinterpret_cast<sockaddr_in6*>(ai_trav->ai_addr)};
-            resolved_addresses.emplace_back(s6->sin6_addr, s6->sin6_scope_id);
+            req->vAddr->emplace_back(s6->sin6_addr, s6->sin6_scope_id);
         }
         ai_trav = ai_trav->ai_next;
     }
     freeaddrinfo(ai_res);
+
+    req->complete = true;
+}
+
+AsyncGAIFn g_async_gai{AsyncGetAddrInfo};
+
+std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup)
+{
+    std::vector<CNetAddr> resolved_addresses;
+    std::shared_ptr<GAIRequest> req = std::make_shared<struct GAIRequest>(allow_lookup, name, &resolved_addresses);
+
+    if (allow_lookup) {
+        // Execute the DNS lookup in another thread and check it periodically for completion.
+        // After sufficiently waiting, abandon the thread entirely. The user's system
+        // may wait forever for a DNS response that never returns.
+        std::thread thread(g_async_gai, req);
+        int checks{0};
+        while (true) {
+            if (req->complete) {
+                // Success, clean up
+                thread.join();
+                break;
+            };
+            // Check every 100ms for 2 seconds
+            if (++checks > 20) {
+                // Timeout, abandon getaddrinfo thread
+                LogPrint(BCLog::NET, "getaddrinfo() took too long to respond, detaching thread\n");
+                thread.detach();
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    } else {
+        // Numeric hostnames don't require an actual DNS lookup
+        // and can be executed synchronously.
+        g_async_gai(req);
+    }
 
     return resolved_addresses;
 }

@@ -96,6 +96,20 @@ bool SetNameProxy(const Proxy &addrProxy);
 bool HaveNameProxy();
 bool GetNameProxy(Proxy &nameProxyOut);
 
+struct GAIRequest
+{
+    std::atomic<bool> complete{false};
+    bool allow_lookup{false};
+    const std::string name;
+    std::vector<CNetAddr>* vAddr;
+
+    GAIRequest(bool allow_lookup, const std::string name, std::vector<CNetAddr>* vAddr) :
+        allow_lookup(allow_lookup), name(name), vAddr(vAddr) {}
+};
+
+using AsyncGAIFn = std::function<void(std::shared_ptr<GAIRequest> req)>;
+extern AsyncGAIFn g_async_gai;
+
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;
 
