@@ -909,9 +909,9 @@ NodeRef GenNode(F ConsumeNode, Type root_type, bool strict_valid = false) {
 }
 
 /** Perform various applicable tests on a miniscript Node. */
-void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
+FuzzResult TestNode(const NodeRef& node, FuzzedDataProvider& provider)
 {
-    if (!node) return;
+    if (!node) return FuzzResult::UNINTERESTING;
 
     // Check that it roundtrips to text representation
     std::optional<std::string> str{node->ToString(PARSER_CTX)};
@@ -932,7 +932,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
     }
 
     // The rest of the checks only apply when testing a valid top-level script.
-    if (!node->IsValidTopLevel()) return;
+    if (!node->IsValidTopLevel()) return FuzzResult::MAYBE_INTERESTING;
 
     // Check roundtrip to script
     auto decoded = miniscript::FromScript(script, PARSER_CTX);
@@ -1041,6 +1041,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
         return false;
     });
     assert(mal_success == satisfiable);
+    return FuzzResult::MAYBE_INTERESTING;
 }
 
 } // namespace
@@ -1058,50 +1059,52 @@ void FuzzInitSmart()
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeStable. */
-FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
+FUZZ_PARTIAL_TARGET_INIT(miniscript_stable, FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    TestNode(GenNode([&](Type needed_type) {
+    return TestNode(GenNode([&](Type needed_type) {
         return ConsumeNodeStable(provider, needed_type);
     }, ""_mst), provider);
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeSmart. */
-FUZZ_TARGET_INIT(miniscript_smart, FuzzInitSmart)
+FUZZ_PARTIAL_TARGET_INIT(miniscript_smart, FuzzInitSmart)
 {
     /** The set of types we aim to construct nodes for. Together they cover all. */
     static constexpr std::array<Type, 4> BASE_TYPES{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
 
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    TestNode(GenNode([&](Type needed_type) {
+    return TestNode(GenNode([&](Type needed_type) {
         return ConsumeNodeSmart(provider, needed_type);
     }, PickValue(provider, BASE_TYPES), true), provider);
 }
 
 /* Fuzz tests that test parsing from a string, and roundtripping via string. */
-FUZZ_TARGET_INIT(miniscript_string, FuzzInit)
+FUZZ_PARTIAL_TARGET_INIT(miniscript_string, FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     auto str = provider.ConsumeRemainingBytesAsString();
     auto parsed = miniscript::FromString(str, PARSER_CTX);
-    if (!parsed) return;
+    if (!parsed) return FuzzResult::UNINTERESTING;
 
     const auto str2 = parsed->ToString(PARSER_CTX);
     assert(str2);
     auto parsed2 = miniscript::FromString(*str2, PARSER_CTX);
     assert(parsed2);
     assert(*parsed == *parsed2);
+    return FuzzResult::MAYBE_INTERESTING;
 }
 
 /* Fuzz tests that test parsing from a script, and roundtripping via script. */
-FUZZ_TARGET(miniscript_script)
+FUZZ_PARTIAL_TARGET(miniscript_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::optional<CScript> script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
-    if (!script) return;
+    if (!script) return FuzzResult::UNINTERESTING;
 
     const auto ms = miniscript::FromScript(*script, SCRIPT_PARSER_CONTEXT);
-    if (!ms) return;
+    if (!ms) return FuzzResult::UNINTERESTING;
 
     assert(ms->ToScript(SCRIPT_PARSER_CONTEXT) == *script);
+    return FuzzResult::MAYBE_INTERESTING;
 }
