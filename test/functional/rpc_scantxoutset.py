@@ -123,6 +123,9 @@ class ScantxoutsetTest(BitcoinTestFramework):
         # Check that second arg is needed for start
         assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", self.nodes[0].scantxoutset, "start")
 
+        # Check that invalid command give error
+        assert_raises_rpc_error(-8, "Invalid action 'invalid_command'", self.nodes[0].scantxoutset, "invalid_command")
+
 
 if __name__ == "__main__":
     ScantxoutsetTest().main()
