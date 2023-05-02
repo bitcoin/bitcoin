@@ -40,22 +40,37 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 
 inline void FuzzFrameworkEmptyInitFun() {}
 
+/** Fuzz target without initialization function that always succeeds. */
 #define FUZZ_TARGET(name) \
     FUZZ_TARGET_INIT(name, FuzzFrameworkEmptyInitFun)
 
+/** Fuzz target without initialization function that returns FuzzResult. */
+#define FUZZ_PARTIAL_TARGET(name) \
+    FUZZ_PARTIAL_TARGET_INIT(name, FuzzFrameworkEmptyInitFun)
+
+/** Fuzz target with initialization function that always returns MAYBE_INTERESTING. */
 #define FUZZ_TARGET_INIT(name, init_fun) \
     FUZZ_TARGET_INIT_HIDDEN(name, init_fun, false)
 
-#define FUZZ_TARGET_INIT_HIDDEN(name, init_fun, hidden)                               \
+/** Fuzz target with initialization function that returns FuzzResult. */
+#define FUZZ_PARTIAL_TARGET_INIT(name, init_fun) \
+    FUZZ_PARTIAL_TARGET_INIT_HIDDEN(name, init_fun, false)
+
+/** Potentially hidden fuzz target with initialization that returns FuzzResult. */
+#define FUZZ_PARTIAL_TARGET_INIT_HIDDEN(name, init_fun, hidden)                       \
     FuzzResult name##_fuzz_target(FuzzBufferType);                                    \
-    void name##_fuzz_target_complete(FuzzBufferType);                                 \
     struct name##_Before_Main {                                                       \
         name##_Before_Main()                                                          \
         {                                                                             \
             FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, init_fun, hidden); \
         }                                                                             \
     } const static g_##name##_before_main;                                            \
-    FuzzResult name##_fuzz_target(FuzzBufferType buffer)                              \
+    FuzzResult name##_fuzz_target(FuzzBufferType buffer)
+
+/** Potentially hidden fuzz target with initialization that always returns MAYBE_INTERESTING. */
+#define FUZZ_TARGET_INIT_HIDDEN(name, init_fun, hidden)                               \
+    void name##_fuzz_target_complete(FuzzBufferType);                                 \
+    FUZZ_PARTIAL_TARGET_INIT_HIDDEN(name, init_fun, hidden)                           \
     {                                                                                 \
         name##_fuzz_target_complete(buffer);                                          \
         return FuzzResult::MAYBE_INTERESTING;                                         \
