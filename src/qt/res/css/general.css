@@ -1316,6 +1316,10 @@ QWidget#OverviewPage QLabel#labelAlerts {
      padding: 5px;
  }
 
+QWidget#no_wallet_group {
+    border: 0;
+}
+
 /******************************************************
 OverviewPage Balances
 ******************************************************/

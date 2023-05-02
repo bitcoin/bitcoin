@@ -590,7 +590,7 @@ QSlider::add-page:horizontal {
 QStatusBar
 ******************************************************/
 
-QStatusBar {
+QStatusBar::item {
     background-color: #f2f2f4;
     color: #555;
 }
@@ -852,6 +852,14 @@ OptionsDialog
 QDialog#OptionsDialog #line,
 QDialog#OptionsDialog #frame {
     border-color: #dcdcdc;
+}
+
+/******************************************************
+ OverviewPage
+ ******************************************************/
+
+QWidget#no_wallet_group {
+    background-color: #f2f2f4;
 }
 
 /******************************************************

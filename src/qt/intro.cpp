@@ -286,10 +286,10 @@ void Intro::UpdateFreeSpaceLabel()
     QString freeString = tr("%n GB of free space available", "", m_bytes_available / GB_BYTES);
     if (m_bytes_available < m_required_space_gb * GB_BYTES) {
         freeString += " " + tr("(of %n GB needed)", "", m_required_space_gb);
-        ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
+        ui->freeSpace->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
     } else if (m_bytes_available / GB_BYTES - m_required_space_gb < 10) {
         freeString += " " + tr("(%n GB needed for full chain)", "", m_required_space_gb);
-        ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
+        ui->freeSpace->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_WARNING));
     } else {
         ui->freeSpace->setStyleSheet("");
     }

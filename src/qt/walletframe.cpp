@@ -32,6 +32,7 @@ WalletFrame::WalletFrame(BitcoinGUI* _gui) :
 
     // hbox for no wallet
     no_wallet_group = new QGroupBox(walletStack);
+    no_wallet_group->setObjectName("no_wallet_group");
     QVBoxLayout* no_wallet_layout = new QVBoxLayout(no_wallet_group);
 
     QLabel *noWallet = new QLabel(tr("No wallet has been loaded.\nGo to File > Open Wallet to load a wallet.\n- OR -"));
