@@ -29,14 +29,14 @@ static const std::vector<bool> IPV4_PREFIX_ASMAP = {
     true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true          // Match 0xFF
 };
 
-FUZZ_TARGET(asmap)
+FUZZ_PARTIAL_TARGET(asmap)
 {
     // Encoding: [7 bits: asmap size] [1 bit: ipv6?] [3-130 bytes: asmap] [4 or 16 bytes: addr]
-    if (buffer.size() < 1 + 3 + 4) return;
+    if (buffer.size() < 1 + 3 + 4) return FuzzResult::UNINTERESTING;
     int asmap_size = 3 + (buffer[0] & 127);
     bool ipv6 = buffer[0] & 128;
     const size_t addr_size = ipv6 ? ADDR_IPV6_SIZE : ADDR_IPV4_SIZE;
-    if (buffer.size() < size_t(1 + asmap_size + addr_size)) return;
+    if (buffer.size() < size_t(1 + asmap_size + addr_size)) return FuzzResult::UNINTERESTING;
     std::vector<bool> asmap = ipv6 ? IPV6_PREFIX_ASMAP : IPV4_PREFIX_ASMAP;
     asmap.reserve(asmap.size() + 8 * asmap_size);
     for (int i = 0; i < asmap_size; ++i) {
@@ -44,7 +44,7 @@ FUZZ_TARGET(asmap)
             asmap.push_back((buffer[1 + i] >> j) & 1);
         }
     }
-    if (!SanityCheckASMap(asmap, 128)) return;
+    if (!SanityCheckASMap(asmap, 128)) return FuzzResult::MAYBE_INTERESTING;
 
     const uint8_t* addr_data = buffer.data() + 1 + asmap_size;
     CNetAddr net_addr;
@@ -59,4 +59,5 @@ FUZZ_TARGET(asmap)
     }
     NetGroupManager netgroupman{asmap};
     (void)netgroupman.GetMappedAS(net_addr);
+    return FuzzResult::MAYBE_INTERESTING;
 }
