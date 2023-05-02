@@ -44,7 +44,6 @@ void generateFakeBlock(const CChainParams& params,
     CBlock block;
     CMutableTransaction coinbase_tx;
     coinbase_tx.vin.resize(1);
-    coinbase_tx.vin[0].prevout.SetNull();
     coinbase_tx.vout.resize(2);
     coinbase_tx.vout[0].scriptPubKey = coinbase_out_script;
     coinbase_tx.vout[0].nValue = 49 * COIN;

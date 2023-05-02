@@ -76,7 +76,7 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
-    leaves[0].SetNull(); // The witness hash of the coinbase is 0.
+    // The witness hash of the coinbase (leaves[0]) is 0.
     for (size_t s = 1; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetWitnessHash();
     }

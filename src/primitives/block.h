@@ -22,17 +22,14 @@ class CBlockHeader
 {
 public:
     // header
-    int32_t nVersion;
+    int32_t nVersion{};
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    uint32_t nTime{};
+    uint32_t nBits{};
+    uint32_t nNonce{};
 
-    CBlockHeader()
-    {
-        SetNull();
-    }
+    CBlockHeader() = default;
 
     SERIALIZE_METHODS(CBlockHeader, obj) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
 
@@ -72,16 +69,12 @@ public:
     std::vector<CTransactionRef> vtx;
 
     // memory only
-    mutable bool fChecked;
+    mutable bool fChecked{};
 
-    CBlock()
-    {
-        SetNull();
-    }
+    CBlock() = default;
 
     CBlock(const CBlockHeader &header)
     {
-        SetNull();
         *(static_cast<CBlockHeader*>(this)) = header;
     }
 

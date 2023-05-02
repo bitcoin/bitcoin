@@ -22,12 +22,12 @@ class base_blob
 {
 protected:
     static constexpr int WIDTH = BITS / 8;
-    std::array<uint8_t, WIDTH> m_data;
+    std::array<uint8_t, WIDTH> m_data{};
     static_assert(WIDTH == sizeof(m_data), "Sanity check");
 
 public:
-    /* construct 0 value by default */
-    constexpr base_blob() : m_data() {}
+    /* construct by default */
+    constexpr base_blob() = default;
 
     /* constructor for constants between 1 and 255 */
     constexpr explicit base_blob(uint8_t v) : m_data{v} {}

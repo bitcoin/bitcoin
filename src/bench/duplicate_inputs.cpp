@@ -33,7 +33,6 @@ static void DuplicateInputs(benchmark::Bench& bench)
 
     // Make a coinbase TX
     coinbaseTx.vin.resize(1);
-    coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = SCRIPT_PUB;
     coinbaseTx.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams.GetConsensus());

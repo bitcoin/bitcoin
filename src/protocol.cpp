@@ -139,12 +139,6 @@ void SetServiceFlagsIBDCache(bool state) {
     g_initial_block_download_completed = state;
 }
 
-CInv::CInv()
-{
-    type = 0;
-    hash.SetNull();
-}
-
 CInv::CInv(uint32_t typeIn, const uint256& hashIn) : type(typeIn), hash(hashIn) {}
 
 bool operator<(const CInv& a, const CInv& b)

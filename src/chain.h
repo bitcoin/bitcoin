@@ -42,13 +42,13 @@ static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
 class CBlockFileInfo
 {
 public:
-    unsigned int nBlocks;      //!< number of blocks stored in file
-    unsigned int nSize;        //!< number of used bytes of block file
-    unsigned int nUndoSize;    //!< number of used bytes in the undo file
-    unsigned int nHeightFirst; //!< lowest height of block in file
-    unsigned int nHeightLast;  //!< highest height of block in file
-    uint64_t nTimeFirst;       //!< earliest time of block in file
-    uint64_t nTimeLast;        //!< latest time of block in file
+    unsigned int nBlocks{};      //!< number of blocks stored in file
+    unsigned int nSize{};        //!< number of used bytes of block file
+    unsigned int nUndoSize{};    //!< number of used bytes in the undo file
+    unsigned int nHeightFirst{}; //!< lowest height of block in file
+    unsigned int nHeightLast{};  //!< highest height of block in file
+    uint64_t nTimeFirst{};       //!< earliest time of block in file
+    uint64_t nTimeLast{};        //!< latest time of block in file
 
     SERIALIZE_METHODS(CBlockFileInfo, obj)
     {
@@ -72,10 +72,7 @@ public:
         nTimeLast = 0;
     }
 
-    CBlockFileInfo()
-    {
-        SetNull();
-    }
+    CBlockFileInfo() = default;
 
     std::string ToString() const;
 

@@ -55,10 +55,8 @@ static void MempoolEviction(benchmark::Bench& bench)
 
     CMutableTransaction tx4 = CMutableTransaction();
     tx4.vin.resize(2);
-    tx4.vin[0].prevout.SetNull();
     tx4.vin[0].scriptSig = CScript() << OP_4;
     tx4.vin[0].scriptWitness.stack.push_back({4});
-    tx4.vin[1].prevout.SetNull();
     tx4.vin[1].scriptSig = CScript() << OP_4;
     tx4.vin[1].scriptWitness.stack.push_back({4});
     tx4.vout.resize(2);
@@ -72,7 +70,6 @@ static void MempoolEviction(benchmark::Bench& bench)
     tx5.vin[0].prevout = COutPoint(tx4.GetHash(), 0);
     tx5.vin[0].scriptSig = CScript() << OP_4;
     tx5.vin[0].scriptWitness.stack.push_back({4});
-    tx5.vin[1].prevout.SetNull();
     tx5.vin[1].scriptSig = CScript() << OP_5;
     tx5.vin[1].scriptWitness.stack.push_back({5});
     tx5.vout.resize(2);
@@ -86,7 +83,6 @@ static void MempoolEviction(benchmark::Bench& bench)
     tx6.vin[0].prevout = COutPoint(tx4.GetHash(), 1);
     tx6.vin[0].scriptSig = CScript() << OP_4;
     tx6.vin[0].scriptWitness.stack.push_back({4});
-    tx6.vin[1].prevout.SetNull();
     tx6.vin[1].scriptSig = CScript() << OP_6;
     tx6.vin[1].scriptWitness.stack.push_back({6});
     tx6.vout.resize(2);

@@ -413,7 +413,6 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     CMutableTransaction outputm;
     outputm.nVersion = 1;
     outputm.vin.resize(1);
-    outputm.vin[0].prevout.SetNull();
     outputm.vin[0].scriptSig = CScript();
     outputm.vout.resize(1);
     outputm.vout[0].nValue = 1;
