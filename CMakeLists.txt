@@ -406,6 +406,42 @@ if(MINGW AND TARGET bitcoin-qt AND TARGET bitcoind AND TARGET bitcoin-cli AND TA
   )
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_CROSSCOMPILING AND TARGET bitcoin-qt)
+  set(macos_app "Bitcoin-Qt.app")
+  string(REPLACE " " "-" OSX_VOLNAME ${PROJECT_NAME})
+  configure_file(cmake/macdeploy/osx_volname.in osx_volname @ONLY)
+  configure_file(cmake/macdeploy/InfoPlist.strings.in ${macos_app}/Contents/Resources/Base.lproj/InfoPlist.strings @ONLY)
+  configure_file(cmake/macdeploy/PkgInfo ${macos_app}/Contents/PkgInfo COPYONLY)
+  configure_file(contrib/macdeploy/background.tiff contrib/macdeploy/background.tiff COPYONLY)
+  configure_file(share/qt/Info.plist.in ${macos_app}/Contents/Info.plist @ONLY)
+  configure_file(src/qt/res/icons/bitcoin.icns ${macos_app}/Contents/Resources/bitcoin.icns COPYONLY)
+
+  add_custom_command(
+    OUTPUT dist/${macos_app}/Contents/MacOS/Bitcoin-Qt
+    COMMAND "${CMAKE_COMMAND}" -E touch "${CMAKE_BINARY_DIR}/${macos_app}/Contents/Resources/empty.lproj"
+    COMMAND "${CMAKE_COMMAND}" --install "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --component GUI --prefix "${CMAKE_BINARY_DIR}/release" --strip
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${macos_app}/Contents/MacOS"
+    COMMAND "${CMAKE_COMMAND}" -E rename "${CMAKE_BINARY_DIR}/release/bin/$<TARGET_FILE_NAME:bitcoin-qt>" "${CMAKE_BINARY_DIR}/${macos_app}/Contents/MacOS/Bitcoin-Qt"
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_BINARY_DIR}/release"
+    COMMAND PYTHONPATH=${PYTHONPATH} INSTALL_NAME_TOOL=${CMAKE_INSTALL_NAME_TOOL} OTOOL=${OTOOL} STRIP=${CMAKE_STRIP} ${PYTHON_COMMAND} ${CMAKE_SOURCE_DIR}/contrib/macdeploy/macdeployqtplus ${macos_app} ${OSX_VOLNAME} -translations-dir=${QT_TRANSLATIONS_DIR}
+    VERBATIM
+  )
+
+  add_custom_target(deploydir
+    DEPENDS dist/${macos_app}/Contents/MacOS/Bitcoin-Qt
+  )
+
+  set(xorrisofs_options)
+  if(DEFINED ENV{SOURCE_DATE_EPOCH})
+    set(xorrisofs_options -volume_date all_file_dates =$ENV{SOURCE_DATE_EPOCH})
+  endif()
+  add_custom_target(deploy
+    COMMAND xorrisofs -D -l -V "${OSX_VOLNAME}" -no-pad -r -dir-mode 0755 -o ${OSX_VOLNAME}.dmg ${CMAKE_BINARY_DIR}/dist -- ${xorrisofs_options}
+    VERBATIM
+  )
+  add_dependencies(deploy deploydir)
+endif()
+
 get_directory_property(definitions COMPILE_DEFINITIONS)
 include(SeparateConfigs)
 separate_configs(definitions)
