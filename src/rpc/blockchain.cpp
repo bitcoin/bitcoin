@@ -40,6 +40,7 @@
 #include <univalue.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -50,6 +51,7 @@
 #include <stdint.h>
 
 #include <condition_variable>
+#include <fstream>
 #include <memory>
 #include <mutex>
 
@@ -1016,6 +1018,201 @@ static RPCHelpMan gettxoutsetinfo()
     }
     return ret;
 },
+    };
+}
+
+static RPCHelpMan dumpcoinstats()
+{
+    return RPCHelpMan{"dumpcoinstats",
+        "Dumps content of coinstats index to a CSV file with a new line for each block. The resulting file contains the following columns:\n"
+        "- height\n"
+        "- block_hash\n"
+        "- timestamp\n"
+        "- mediantime\n"
+        "- version\n"
+        "- (total_)txs - Number of transactions included\n"
+        "- (total_)txouts - Number of transaction outputs added\n"
+        "- (total_)coinbase_amount - Amount claimed in coinbase transaction\n"
+        "- (total_)subsidy - Maximum subsidy\n"
+        "- (total_)amount_generated - Amount of coins added to the UTXO set\n"
+        "- (total_)unclaimed_rewards - Fee rewards that miners did not claim in their coinbase transaction\n"
+        "- (total_)amount_spent - Amount of inputs spent\n"
+        "- (total_)new_outputs_ex_coinbase_amount - Amount of new outputs created by this block\n"
+        "- (total_)unspendable_scripts - Amounts sent to scripts that are unspendable, e.g. OP_RETURN outputs\n"
+        "- (total_)unspendable_amount - Sum of unspendable coins and unclaimed rewards\n"
+        "- (total_)genesis_block - The unspendable amount of the Genesis block subsidy\n"
+        "- (total_)bip30 - Transactions overridden by duplicates (no longer possible with BIP30)\n"
+        "- (total_)chainwork - Expected number of hashes required to produce the current chain\n"
+        "- muhash - The serialized hash of the UTXO set at that height\n"
+        "- (total_)bogo_size - Database-independent approximate metric of UTXO set size. It counts every UTXO entry as 50 + the length of its scriptPubKey\n\n"
+        "The total_ prefix is applied if the values in the file are cumulative",
+        {
+            {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The filename with path (absolute path recommended)"},
+            {"cumulative", RPCArg::Type::BOOL, RPCArg::Default{false}, "The numbers coming out of coinstatsindex will be cumulative"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "filename", "The filename with full absolute path"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("dumpcoinstats", "\"test\"") +
+            HelpExampleRpc("dumpcoinstats", "\"test\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            if (!g_coin_stats_index) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Coinstats index is not enabled");
+            }
+
+            const auto summary{g_coin_stats_index->GetSummary()};
+            if (!summary.synced) {
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("coinstatsindex is not synced. Current best block height: %d", summary.best_block_height));
+            }
+
+            fs::path filepath = fs::u8path(request.params[0].get_str());
+            filepath = fs::absolute(filepath);
+
+            if (fs::exists(filepath)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
+            }
+
+            std::ofstream file;
+            file.open(filepath);
+            if (!file.is_open()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open dump file");
+            }
+
+            const bool cumulative{request.params[1].isNull() ? false : request.params[1].get_bool()};
+
+            file << strprintf("height,"
+                              "block_hash,"
+                              "timestamp,"
+                              "mediantime,"
+                              "version,"
+                              );
+
+            if (cumulative) {
+                file << strprintf("total_txs,"
+                                  "total_txouts,"
+                                  "total_coinbase_amount,"
+                                  "total_subsidy,"
+                                  "total_amount_generated,"
+                                  "total_unclaimed_rewards,"
+                                  "total_amount_spent,"
+                                  "total_new_outputs_ex_coinbase_amount,"
+                                  "total_unspendable_scripts,"
+                                  "total_unspendable_amount,"
+                                  "total_genesis_block,"
+                                  "total_bip30,"
+                                  "total_chainwork,"
+                                  "muhash,"
+                                  "total_bogosize\n");
+            } else {
+                file << strprintf("txs,"
+                                  "txouts,"
+                                  "coinbase_amount,"
+                                  "subsidy,"
+                                  "amount_generated,"
+                                  "unclaimed_rewards,"
+                                  "amount_spent,"
+                                  "new_outputs_ex_coinbase_amount,"
+                                  "unspendable_scripts,"
+                                  "unspendable_amount,"
+                                  "genesis_block,"
+                                  "bip30,"
+                                  "chainwork,"
+                                  "muhash,"
+                                  "bogosize\n");
+            }
+
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            ChainstateManager& chainman = EnsureChainman(node);
+            Chainstate& active_chainstate = chainman.ActiveChainstate();
+            CBlockIndex *pindex = active_chainstate.m_chain.Genesis();
+
+            // Both coins_view and blockman are not actually needed in GetUTXOStats
+            // since the stats will have to come out of coinstatsindex.
+            CCoinsView* coins_view{nullptr};
+            BlockManager blockman{{}};
+
+            CCoinsStats prev_stats{};
+            uint64_t num_tx_sum = 0;
+
+            for (; pindex; pindex = active_chainstate.m_chain.Next(pindex)) {
+                const std::optional<CCoinsStats> maybe_stats{GetUTXOStats(coins_view, blockman, CoinStatsHashType::MUHASH, node.rpc_interruption_point, pindex, true)};
+
+                if (!maybe_stats) {
+                    throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Failed to get coins stats at height %d. You may have to remove an incomplete dump file before running this command again.", pindex->nHeight));
+                }
+
+                const CCoinsStats& stats{maybe_stats.value()};
+
+                file << strprintf("%d,", static_cast<int64_t>(stats.nHeight));
+                file << strprintf("%s,", stats.hashBlock.GetHex());
+                file << strprintf("%d,", pindex->nTime);
+                file << strprintf("%d,", pindex->GetMedianTimePast());
+                file << strprintf("%s,", pindex->nVersion);
+
+                num_tx_sum += pindex->nTx;
+                const int num_tx = cumulative ? num_tx_sum : pindex->nTx;
+                file << strprintf("%d,", num_tx);
+
+                const uint64_t tx_outs = cumulative ? stats.nTransactionOutputs : stats.nTransactionOutputs - prev_stats.nTransactionOutputs;
+                file << strprintf("%d,", static_cast<int64_t>(tx_outs));
+
+                const CAmount coinbase_amount = cumulative ? stats.total_coinbase_amount : stats.total_coinbase_amount - prev_stats.total_coinbase_amount;
+                file << strprintf("%s,", FormatMoney(coinbase_amount));
+
+                const CAmount subsidy = cumulative ? stats.total_subsidy : stats.total_subsidy - prev_stats.total_subsidy;
+                file << strprintf("%s,", FormatMoney(subsidy));
+
+                CHECK_NONFATAL(stats.total_amount.has_value());
+                const CAmount amount = cumulative ? stats.total_amount.value() : stats.total_amount.value() - prev_stats.total_amount.value();
+                file << strprintf("%s,", FormatMoney(amount));
+
+                const CAmount unspendables_unclaimed_rewards = cumulative ? stats.total_unspendables_unclaimed_rewards : stats.total_unspendables_unclaimed_rewards - prev_stats.total_unspendables_unclaimed_rewards;
+                file << strprintf("%s,", FormatMoney(unspendables_unclaimed_rewards));
+
+                const CAmount prevout_spent_amount = cumulative ? stats.total_prevout_spent_amount : stats.total_prevout_spent_amount - prev_stats.total_prevout_spent_amount;
+                file << strprintf("%s,", FormatMoney(prevout_spent_amount));
+
+                const CAmount new_outputs_ex_coinbase_amount = cumulative ? stats.total_new_outputs_ex_coinbase_amount : stats.total_new_outputs_ex_coinbase_amount - prev_stats.total_new_outputs_ex_coinbase_amount;
+                file << strprintf("%s,", FormatMoney(new_outputs_ex_coinbase_amount));
+
+                const CAmount unspendables_scripts = cumulative ? stats.total_unspendables_scripts : stats.total_unspendables_scripts - prev_stats.total_unspendables_scripts;
+                file << strprintf("%s,", FormatMoney(unspendables_scripts));
+
+                const CAmount unspendable_amount = cumulative ? stats.total_unspendable_amount : stats.total_unspendable_amount - prev_stats.total_unspendable_amount;
+                file << strprintf("%s,", FormatMoney(unspendable_amount));
+
+                const CAmount unspendables_genesis_block = cumulative ? stats.total_unspendables_genesis_block : stats.total_unspendables_genesis_block - prev_stats.total_unspendables_genesis_block;
+                file << strprintf("%s,", FormatMoney(unspendables_genesis_block));
+
+                const CAmount unspendables_bip30 = cumulative ? stats.total_unspendables_bip30 : stats.total_unspendables_bip30 - prev_stats.total_unspendables_bip30;
+                file << strprintf("%s,", FormatMoney(unspendables_bip30));
+
+                const arith_uint256 chain_work = cumulative ? pindex->nChainWork : pindex->nChainWork - (pindex->pprev ? pindex->pprev->nChainWork : 0);
+                file << strprintf("%s,", chain_work.GetHex());
+
+                file << strprintf("%d,", stats.hashSerialized.GetHex());
+
+                const uint64_t bogo_size = cumulative ? stats.nBogoSize : stats.nBogoSize - prev_stats.nBogoSize;
+                file << strprintf("%d\n", static_cast<int64_t>(bogo_size));
+
+                prev_stats = stats;
+
+                if (pindex->nHeight >= g_coin_stats_index->GetSummary().best_block_height) break;
+            }
+
+            file.close();
+
+            UniValue response(UniValue::VOBJ);
+            response.pushKV("filename", filepath.u8string());
+
+            return response;
+        },
     };
 }
 
@@ -2719,6 +2916,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getdeploymentinfo},
         {"blockchain", &gettxout},
         {"blockchain", &gettxoutsetinfo},
+        {"blockchain", &dumpcoinstats},
         {"blockchain", &pruneblockchain},
         {"blockchain", &verifychain},
         {"blockchain", &preciousblock},

@@ -173,6 +173,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblockstats", 0, "hash_or_height" },
     { "getblockstats", 1, "stats" },
     { "pruneblockchain", 0, "height" },
+    { "dumpcoinstats", 1, "cumulative"},
     { "keypoolrefill", 0, "newsize" },
     { "getrawmempool", 0, "verbose" },
     { "getrawmempool", 1, "mempool_sequence" },
