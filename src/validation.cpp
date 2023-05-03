@@ -5111,7 +5111,7 @@ const AssumeutxoData* ExpectedAssumeutxo(
     return nullptr;
 }
 
-static bool DeleteCoinsDBFromDisk(const fs::path db_path, bool is_snapshot)
+[[nodiscard]] static bool DeleteCoinsDBFromDisk(const fs::path db_path, bool is_snapshot)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(::cs_main);
@@ -5750,15 +5750,20 @@ bool IsBIP30Unspendable(const CBlockIndex& block_index)
            (block_index.nHeight==91812 && block_index.GetBlockHash() == uint256S("0x00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"));
 }
 
-util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
+static fs::path GetSnapshotCoinsDBPath(Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(::cs_main);
     // Should never be called on a non-snapshot chainstate.
-    assert(m_from_snapshot_blockhash);
-    auto storage_path_maybe = this->CoinsDB().StoragePath();
+    assert(cs.m_from_snapshot_blockhash);
+    auto storage_path_maybe = cs.CoinsDB().StoragePath();
     // Should never be called with a non-existent storage path.
     assert(storage_path_maybe);
-    fs::path snapshot_datadir = *storage_path_maybe;
+    return *storage_path_maybe;
+}
+
+util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
+{
+    fs::path snapshot_datadir = GetSnapshotCoinsDBPath(*this);
 
     // Coins views no longer usable.
     m_coins_views.reset();
@@ -5787,6 +5792,23 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
             src_str, dest_str, src_str)};
     }
     return {};
+}
+
+bool ChainstateManager::DeleteSnapshotChainstate()
+{
+    AssertLockHeld(::cs_main);
+    Assert(m_snapshot_chainstate);
+    Assert(m_ibd_chainstate);
+
+    fs::path snapshot_datadir = GetSnapshotCoinsDBPath(*m_snapshot_chainstate);
+    if (!DeleteCoinsDBFromDisk(snapshot_datadir, /*is_snapshot=*/ true)) {
+        LogPrintf("Deletion of %s failed. Please remove it manually to continue reindexing.\n",
+                  fs::PathToString(snapshot_datadir));
+        return false;
+    }
+    m_active_chainstate = m_ibd_chainstate.get();
+    m_snapshot_chainstate.reset();
+    return true;
 }
 
 const CBlockIndex* ChainstateManager::GetSnapshotBaseBlock() const
