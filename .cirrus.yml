@@ -194,13 +194,14 @@ task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
-    image: debian:bullseye
     cpu: 2
     memory: 8G
-    # docker_arguments:  # Can use dockerfile after https://github.com/cirruslabs/cirrus-ci-docs/issues/1154
+    dockerfile: ci/test_imagefile
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: debian:bullseye
+      FILE_ENV: "./ci/test/00_setup_env_arm.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
 
 task:
