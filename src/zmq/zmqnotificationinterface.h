@@ -9,6 +9,7 @@
 #include <validationinterface.h>
 
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <memory>
 
@@ -23,7 +24,7 @@ public:
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static std::unique_ptr<CZMQNotificationInterface> Create();
+    static std::unique_ptr<CZMQNotificationInterface> Create(std::function<bool(CBlock&, const CBlockIndex&)> get_block_by_index);
 
 protected:
     bool Initialize();
