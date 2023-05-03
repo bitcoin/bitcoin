@@ -1523,7 +1523,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
 
-        if (status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB || status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE) {
+        if (status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB ||
+                status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE ||
+                status == node::ChainstateLoadStatus::FAILURE_NO_REINDEX) {
             return InitError(error);
         }
 

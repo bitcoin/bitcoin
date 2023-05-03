@@ -185,7 +185,14 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     chainman.InitializeChainstate(options.mempool);
 
     // Load a chain created from a UTXO snapshot, if any exist.
-    chainman.DetectSnapshotChainstate(options.mempool);
+    bool has_snapshot = chainman.DetectSnapshotChainstate(options.mempool);
+
+    if (has_snapshot && (options.reindex || options.reindex_chainstate)) {
+        return {ChainstateLoadStatus::FAILURE_NO_REINDEX, _(
+            "Reindex cannot be performed while background validation is in progress. "
+            "Please wait for background sync to complete, or delete data directory "
+            "contents and restart bitcoind.")};
+    }
 
     auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
     if (init_status != ChainstateLoadStatus::SUCCESS) {

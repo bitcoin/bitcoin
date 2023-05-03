@@ -45,6 +45,7 @@ enum class ChainstateLoadStatus {
     FAILURE,
     FAILURE_INCOMPATIBLE_DB,
     FAILURE_INSUFFICIENT_DBCACHE,
+    FAILURE_NO_REINDEX,
     INTERRUPTED,
 };
 
