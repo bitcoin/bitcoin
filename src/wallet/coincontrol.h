@@ -13,9 +13,9 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
-#include <optional>
 #include <algorithm>
 #include <map>
+#include <optional>
 #include <set>
 
 namespace wallet {
@@ -63,76 +63,62 @@ public:
 
     CCoinControl();
 
-    bool HasSelected() const
-    {
-        return (setSelected.size() > 0);
-    }
-
-    bool IsSelected(const COutPoint& output) const
-    {
-        return (setSelected.count(output) > 0);
-    }
-
-    bool IsExternalSelected(const COutPoint& output) const
-    {
-        return (m_external_txouts.count(output) > 0);
-    }
-
-    bool GetExternalOutput(const COutPoint& outpoint, CTxOut& txout) const
-    {
-        const auto ext_it = m_external_txouts.find(outpoint);
-        if (ext_it == m_external_txouts.end()) {
-            return false;
-        }
-        txout = ext_it->second;
-        return true;
-    }
-
-    void Select(const COutPoint& output)
-    {
-        setSelected.insert(output);
-    }
-
-    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
-    {
-        setSelected.insert(outpoint);
-        m_external_txouts.emplace(outpoint, txout);
-    }
-
-    void UnSelect(const COutPoint& output)
-    {
-        setSelected.erase(output);
-    }
-
-    void UnSelectAll()
-    {
-        setSelected.clear();
-    }
-
-    void ListSelected(std::vector<COutPoint>& vOutpoints) const
-    {
-        vOutpoints.assign(setSelected.begin(), setSelected.end());
-    }
-
-    void SetInputWeight(const COutPoint& outpoint, int64_t weight)
-    {
-        m_input_weights[outpoint] = weight;
-    }
-
-    bool HasInputWeight(const COutPoint& outpoint) const
-    {
-        return m_input_weights.count(outpoint) > 0;
-    }
-
-    int64_t GetInputWeight(const COutPoint& outpoint) const
-    {
-        auto it = m_input_weights.find(outpoint);
-        assert(it != m_input_weights.end());
-        return it->second;
-    }
+    /**
+     * Returns true if there are pre-selected inputs.
+     */
+    bool HasSelected() const;
+    /**
+     * Returns true if the given output is pre-selected.
+     */
+    bool IsSelected(const COutPoint& output) const;
+    /**
+     * Returns true if the given output is selected as an external input.
+     */
+    bool IsExternalSelected(const COutPoint& output) const;
+    /**
+     * Returns the external output for the given outpoint if it exists.
+     */
+    std::optional<CTxOut> GetExternalOutput(const COutPoint& outpoint) const;
+    /**
+     * Lock-in the given output for spending.
+     * The output will be included in the transaction even if it's not the most optimal choice.
+     */
+    void Select(const COutPoint& output);
+    /**
+     * Lock-in the given output as an external input for spending because it is not in the wallet.
+     * The output will be included in the transaction even if it's not the most optimal choice.
+     */
+    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout);
+    /**
+     * Unselects the given output.
+     */
+    void UnSelect(const COutPoint& output);
+    /**
+     * Unselects all outputs.
+     */
+    void UnSelectAll();
+    /**
+     * List the selected inputs.
+     */
+    std::vector<COutPoint> ListSelected() const;
+    /**
+     * Set an input's weight.
+     */
+    void SetInputWeight(const COutPoint& outpoint, int64_t weight);
+    /**
+     * Returns true if the input weight is set.
+     */
+    bool HasInputWeight(const COutPoint& outpoint) const;
+    /**
+     * Returns the input weight.
+     */
+    int64_t GetInputWeight(const COutPoint& outpoint) const;
 
 private:
-    std::set<COutPoint> setSelected;
+    //! Selected inputs (inputs that will be used, regardless of whether they're optimal or not)
+    std::set<COutPoint> m_selected_inputs;
+    //! Map of external inputs to include in the transaction
+    //! These are not in the wallet, so we need to track them separately
     std::map<COutPoint, CTxOut> m_external_txouts;
     //! Map of COutPoints to the maximum weight for that input
     std::map<COutPoint, int64_t> m_input_weights;
