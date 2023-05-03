@@ -2594,7 +2594,7 @@ bool Chainstate::FlushStateToDisk(
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
 
                 // First make sure all block and undo data is flushed to disk.
-                m_blockman.FlushBlockFile();
+                m_blockman.FlushChainstateBlockFile(m_chain.Height());
             }
 
             // Then update all block file information (which may refer to block and undo files).
@@ -5266,6 +5266,7 @@ bool ChainstateManager::ActivateSnapshot(
         assert(chaintip_loaded);
 
         m_active_chainstate = m_snapshot_chainstate.get();
+        m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
 
         LogPrintf("[snapshot] successfully activated snapshot %s\n", base_blockhash.ToString());
         LogPrintf("[snapshot] (%.2f MB)\n",
