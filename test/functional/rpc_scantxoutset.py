@@ -120,6 +120,9 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].scantxoutset("status"), None)
         assert_equal(self.nodes[0].scantxoutset("abort"), False)
 
+        # check that first arg is needed
+        assert_raises_rpc_error(-1, "scantxoutset \"action\" ( [scanobjects,...] )", self.nodes[0].scantxoutset)
+
         # Check that second arg is needed for start
         assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", self.nodes[0].scantxoutset, "start")
 
