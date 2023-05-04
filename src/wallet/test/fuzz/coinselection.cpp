@@ -45,6 +45,24 @@ static void GroupCoins(FuzzedDataProvider& fuzzed_data_provider, const std::vect
     if (valid_outputgroup) output_groups.push_back(output_group);
 }
 
+static CAmount CreateCoins(FuzzedDataProvider& fuzzed_data_provider, std::vector<COutput>& utxo_pool, CoinSelectionParams& coin_params, int& next_locktime)
+{
+    CAmount total_balance{0};
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        const int n_input{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)};
+        const int n_input_bytes{fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 10000)};
+        const CAmount amount{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+        if (total_balance + amount >= MAX_MONEY) {
+            break;
+        }
+        AddCoin(amount, n_input, n_input_bytes, ++next_locktime, utxo_pool, coin_params.m_effective_feerate);
+        total_balance += amount;
+    }
+
+    return total_balance;
+}
+
 // Returns true if the result contains an error and the message is not empty
 static bool HasErrorMsg(const util::Result<SelectionResult>& res) { return !util::ErrorString(res).empty(); }
 
@@ -67,20 +85,8 @@ FUZZ_TARGET(coinselection)
     coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
     coin_params.m_change_fee = effective_fee_rate.GetFee(coin_params.change_output_size);
 
-    // Create some coins
-    CAmount total_balance{0};
     int next_locktime{0};
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
-    {
-        const int n_input{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)};
-        const int n_input_bytes{fuzzed_data_provider.ConsumeIntegralInRange<int>(100, 10000)};
-        const CAmount amount{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
-        if (total_balance + amount >= MAX_MONEY) {
-            break;
-        }
-        AddCoin(amount, n_input, n_input_bytes, ++next_locktime, utxo_pool, coin_params.m_effective_feerate);
-        total_balance += amount;
-    }
+    CAmount total_balance{CreateCoins(fuzzed_data_provider, utxo_pool, coin_params, next_locktime)};
 
     std::vector<OutputGroup> group_pos;
     GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/true, group_pos);
