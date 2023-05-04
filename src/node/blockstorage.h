@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <protocol.h>
 #include <sync.h>
@@ -81,6 +82,8 @@ class BlockManager
     friend ChainstateManager;
 
 private:
+    const CChainParams& GetParams() const { return m_opts.chainparams; }
+    const Consensus::Params& GetConsensus() const { return m_opts.chainparams.GetConsensus(); }
     /**
      * Load the blocktree off disk and into memory. Populate certain metadata
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
