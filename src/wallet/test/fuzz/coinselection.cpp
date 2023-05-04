@@ -100,16 +100,26 @@ FUZZ_TARGET(coinselection)
 
     // Run coinselection algorithms
     auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change, MAX_STANDARD_TX_WEIGHT);
+    if (result_bnb) {
+        (void)result_bnb->GetShuffledInputVector();
+        (void)result_bnb->GetInputSet();
+    }
 
     auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_srd) {
         assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0); // Demonstrate that SRD creates change of at least CHANGE_LOWER
         result_srd->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
+        (void)result_srd->GetShuffledInputVector();
+        (void)result_srd->GetInputSet();
     }
 
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
     auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
-    if (result_knapsack) result_knapsack->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
+    if (result_knapsack) {
+        result_knapsack->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
+        (void)result_knapsack->GetShuffledInputVector();
+        (void)result_knapsack->GetInputSet();
+    }
 
     // If the total balance is sufficient for the target and we are not using
     // effective values, Knapsack should always find a solution (unless the selection exceeded the max tx weight).
