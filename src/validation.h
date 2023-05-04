@@ -881,9 +881,6 @@ private:
     /** Most recent headers presync progress update, for rate-limiting. */
     std::chrono::time_point<std::chrono::steady_clock> m_last_presync_update GUARDED_BY(::cs_main) {};
 
-    //! Returns nullptr if no snapshot has been loaded.
-    const CBlockIndex* GetSnapshotBaseBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Return the height of the base block of the snapshot in use, if one exists, else
     //! nullopt.
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -1034,11 +1031,24 @@ public:
     //! Otherwise, revert to using the ibd chainstate and shutdown.
     SnapshotCompletionResult MaybeCompleteSnapshotValidation() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Returns nullptr if no snapshot has been loaded.
+    const CBlockIndex* GetSnapshotBaseBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     //! The most-work chain.
     Chainstate& ActiveChainstate() const;
     CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
     int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
     CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
+
+    //! The state of a background sync (for net processing)
+    bool BackgroundSyncInProgress() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return IsUsable(m_snapshot_chainstate.get()) && IsUsable(m_ibd_chainstate.get());
+    }
+
+    //! The tip of the background sync chain
+    const CBlockIndex* GetBackgroundSyncTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return BackgroundSyncInProgress() ? m_ibd_chainstate->m_chain.Tip() : nullptr;
+    }
 
     node::BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
