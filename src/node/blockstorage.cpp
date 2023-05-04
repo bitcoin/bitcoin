@@ -19,7 +19,6 @@
 #include <undo.h>
 #include <util/batchpriority.h>
 #include <util/fs.h>
-#include <util/syscall_sandbox.h>
 #include <validation.h>
 
 #include <map>
@@ -869,7 +868,6 @@ public:
 
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const fs::path& mempool_path)
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_LOAD_BLOCKS);
     ScheduleBatchPriority();
 
     {

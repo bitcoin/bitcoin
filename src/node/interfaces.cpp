@@ -94,7 +94,7 @@ public:
     bool baseInitialize() override
     {
         if (!AppInitBasicSetup(args(), Assert(context())->exit_status)) return false;
-        if (!AppInitParameterInteraction(args(), /*use_syscall_sandbox=*/false)) return false;
+        if (!AppInitParameterInteraction(args())) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;

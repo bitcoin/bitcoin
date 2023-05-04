@@ -30,7 +30,6 @@
 #include <util/fs.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
-#include <util/syscall_sandbox.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 #include <util/trace.h>
@@ -1381,7 +1380,6 @@ void CConnman::ThreadSocketHandler()
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET);
     while (!interruptNet)
     {
         DisconnectNodes();
@@ -1401,7 +1399,6 @@ void CConnman::WakeMessageHandler()
 
 void CConnman::ThreadDNSAddressSeed()
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_DNS_SEED);
     FastRandomContext rng;
     std::vector<std::string> seeds = Params().DNSSeeds();
     Shuffle(seeds.begin(), seeds.end(), rng);
@@ -1607,7 +1604,6 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_OPEN_CONNECTION);
     FastRandomContext rng;
     // Connect to specific addresses
     if (!connect.empty())
@@ -1975,7 +1971,6 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
 void CConnman::ThreadOpenAddedConnections()
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_ADD_CONNECTION);
     while (true)
     {
         CSemaphoreGrant grant(*semAddnode);
@@ -2044,7 +2039,6 @@ void CConnman::ThreadMessageHandler()
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::MESSAGE_HANDLER);
     while (!flagInterruptMsgProc)
     {
         bool fMoreWork = false;

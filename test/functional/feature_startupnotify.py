@@ -18,7 +18,6 @@ FILE_NAME = "test.txt"
 class StartupNotifyTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.disable_syscall_sandbox = True
 
     def run_test(self):
         tmpdir_file = os.path.join(self.options.tmpdir, NODE_DIR, FILE_NAME)
