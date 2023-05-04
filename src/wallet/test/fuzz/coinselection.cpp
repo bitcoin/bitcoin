@@ -99,7 +99,7 @@ FUZZ_TARGET(coinselection)
     }
 
     // Run coinselection algorithms
-    const auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change, MAX_STANDARD_TX_WEIGHT);
+    auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change, MAX_STANDARD_TX_WEIGHT);
 
     auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_srd) {
@@ -115,6 +115,22 @@ FUZZ_TARGET(coinselection)
     // effective values, Knapsack should always find a solution (unless the selection exceeded the max tx weight).
     if (total_balance >= target && subtract_fee_outputs && !HasErrorMsg(result_knapsack)) {
         assert(result_knapsack);
+    }
+
+    std::vector<COutput> utxos;
+    std::vector<util::Result<SelectionResult>> results{result_srd, result_knapsack, result_bnb};
+    CAmount new_total_balance{CreateCoins(fuzzed_data_provider, utxos, coin_params, next_locktime)};
+    if (new_total_balance > 0) {
+        std::set<std::shared_ptr<COutput>> new_utxo_pool;
+        for (const auto& utxo : utxos) {
+            new_utxo_pool.insert(std::make_shared<COutput>(utxo));
+        }
+        for (auto& result : results) {
+            if (!result) continue;
+            const auto weight{result->GetWeight()};
+            result->AddInputs(new_utxo_pool, subtract_fee_outputs);
+            assert(result->GetWeight() > weight);
+        }
     }
 }
 
