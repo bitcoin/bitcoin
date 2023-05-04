@@ -93,6 +93,11 @@ FUZZ_TARGET(coinselection)
     std::vector<OutputGroup> group_all;
     GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/false, group_all);
 
+    for (const OutputGroup& group : group_all) {
+        const CoinEligibilityFilter filter(fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+        (void)group.EligibleForSpending(filter);
+    }
+
     // Run coinselection algorithms
     const auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change, MAX_STANDARD_TX_WEIGHT);
 
