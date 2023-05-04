@@ -15,8 +15,6 @@
 #
 # USAGE:
 #     continue-mining-local.sh
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 

@@ -56,8 +56,6 @@
 #         --rm \
 #         arthub.azurecr.io/itcoin-core:git-abcdef \
 #         create-initdata.sh
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 shopt -s inherit_errexit

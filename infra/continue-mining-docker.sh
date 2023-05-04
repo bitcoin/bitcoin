@@ -21,8 +21,6 @@
 #
 # USAGE:
 #     continue-mining-docker.sh <BLOCKSCRIPT>
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 

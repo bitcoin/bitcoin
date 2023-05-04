@@ -14,8 +14,6 @@
 #
 # USAGE:
 #     build-and-tag-image.sh
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 

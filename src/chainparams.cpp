@@ -355,12 +355,12 @@ public:
         consensus.fPowNoRetargeting = true; // ITCOIN_SPECIFIC
         consensus.nRuleChangeActivationThreshold = 1815; // 90% of 2016
 
-        // ITCOIN_SPECIFIC
-        /*
-         * GGALANO, MUXATOR 2020-12-02: we'll continue to use 2016 for
-         * nMinerConfirmationWindow and 1916 for nRuleChangeActivationThreshold
-         * (the same value used in the bitcoin codebase), even if the formulae
-         * in the comments are no longer valid.
+        /* ITCOIN_SPECIFIC
+         *
+         * 2020-12-02: we'll continue to use 2016 for nMinerConfirmationWindow
+         * and 1916 for nRuleChangeActivationThreshold (the same value used in
+         * the bitcoin codebase), even if the formulae in the comments are no
+         * longer valid.
          *
          * nMinerConfirmationWindow is used in soft-fork consensus updates [0]:
          * nodes need to wait 1916 blocks (nRuleChangeActivationThreshold) out

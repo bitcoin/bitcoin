@@ -25,8 +25,6 @@
 #    docker run --rm arthub.azurecr.io/itcoin-core:git-2a43646f76e4 --help
 #    docker run --rm --env BLOCKSCRIPT=XXX <more variables...> arthub.azurecr.io/itcoin-core:git-2a43646f76e4 bitcoin-cli -help
 #    docker run --rm arthub.azurecr.io/itcoin-core:git-2a43646f76e4 cat /etc/passwd
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 

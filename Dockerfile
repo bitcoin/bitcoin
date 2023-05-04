@@ -1,14 +1,11 @@
 # Itcoin
 #
 # Dockerfile for building itcoin-core in a container
-#
-# Author: Antonio Muci <antonio.muci@bancaditalia.it>
 
 FROM ubuntu:22.04 as build-stage
 
 LABEL \
-    maintainer.0="Antonio Muci <antonio.muci@bancaditalia.it>" \
-    maintainer.1="Giuseppe Galano <giuseppe.galano2@bancaditalia.it>"
+    maintainer="Applied Research Team <appliedresearchteam@bancaditalia.it>"
 
 ENV TZ=Europe/Rome
 RUN ln --symbolic --no-dereference --force /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -73,8 +70,7 @@ RUN make install-strip
 FROM ubuntu:22.04
 
 LABEL \
-    maintainer.0="Antonio Muci <antonio.muci@bancaditalia.it>" \
-    maintainer.1="Giuseppe Galano <giuseppe.galano2@bancaditalia.it>"
+    maintainer="Applied Research Team <appliedresearchteam@bancaditalia.it>"
 
 RUN mkdir /opt/itcoin-core
 

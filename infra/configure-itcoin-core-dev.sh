@@ -17,8 +17,6 @@
 #     $ export CC=/path/to/c-compiler
 #     $ export CXX=/path/to/c++-compiler
 #     $ ./configure-itcoin-core-dev.sh
-#
-# Author: Antonio Muci <antonio.muci@bancaditalia.it>
 
 set -eu
 

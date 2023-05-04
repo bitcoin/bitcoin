@@ -24,8 +24,6 @@
 #
 #     $ render-template.sh VAR_NAME < inputfile.tmpl
 #     keyname=somevalue
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 

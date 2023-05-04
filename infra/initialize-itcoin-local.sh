@@ -20,8 +20,6 @@
 #     TIME_SHIFT: how many minutes in the past should the first block date be.
 #                 If you want to use the current time, set this to 0.
 #                 Default: 10 minutes.
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 

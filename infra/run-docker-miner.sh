@@ -12,8 +12,6 @@
 
 # USAGE:
 #     ./run-miner.sh ADDRESS < --set-block-time -1 | --ongoing >
-#
-# Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
 
