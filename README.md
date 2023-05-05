@@ -34,7 +34,7 @@ repositories. Release branches and tags do not exist, so please do not fork
 that repository unless it is for development reasons.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+and useful hints for developers can be found [here](doc/developer-notes.md).
 
 Testing
 -------
@@ -49,7 +49,7 @@ lots of money.
 Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
 submit new unit tests for old code. Unit tests can be compiled and run
 (assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+and extending unit tests can be found [here](/src/test/README.md).
 
 There are also [regression and integration tests](/test), written
 in Python.
