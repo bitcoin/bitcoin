@@ -5,6 +5,8 @@
 #ifndef SYSCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 #define SYSCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 
+class CChainParams;
+
 namespace kernel {
 
 /**
@@ -12,6 +14,7 @@ namespace kernel {
  * `BlockManager::Options` due to the using-declaration in `BlockManager`.
  */
 struct BlockManagerOpts {
+    const CChainParams& chainparams;
     uint64_t prune_target{0};
 };
 
