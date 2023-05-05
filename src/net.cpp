@@ -3305,6 +3305,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpAddresses(); }, DUMP_PEERS_INTERVAL);
 
+    // Run the ASMap Health check once and then schedule it to run every 24h.
+    if (m_netgroupman.UsingASMap()) {
+        ASMapHealthCheck();
+        scheduler.scheduleEvery([this] { ASMapHealthCheck(); }, ASMAP_HEALTH_CHECK_INTERVAL);
+    }
+
     return true;
 }
 
@@ -3851,6 +3857,19 @@ void CConnman::PerformReconnections()
                               item.conn_type,
                               item.use_v2transport);
     }
+}
+
+void CConnman::ASMapHealthCheck()
+{
+    const std::vector<CAddress> v4_addrs{GetAddresses(/*max_addresses=*/ 0, /*max_pct=*/ 0, Network::NET_IPV4, /*filtered=*/ false)};
+    const std::vector<CAddress> v6_addrs{GetAddresses(/*max_addresses=*/ 0, /*max_pct=*/ 0, Network::NET_IPV6, /*filtered=*/ false)};
+    std::vector<CNetAddr> clearnet_addrs;
+    clearnet_addrs.reserve(v4_addrs.size() + v6_addrs.size());
+    std::transform(v4_addrs.begin(), v4_addrs.end(), std::back_inserter(clearnet_addrs),
+        [](const CAddress& addr) { return static_cast<CNetAddr>(addr); });
+    std::transform(v6_addrs.begin(), v6_addrs.end(), std::back_inserter(clearnet_addrs),
+        [](const CAddress& addr) { return static_cast<CNetAddr>(addr); });
+    m_netgroupman.ASMapHealthCheck(clearnet_addrs);
 }
 
 // Dump binary message to file, with timestamp.
