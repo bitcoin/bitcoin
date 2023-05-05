@@ -4482,6 +4482,8 @@ bool ChainstateManager::LoadBlockIndex()
             }
         }
 
+        int snapshot_base_height = this->GetSnapshotBaseHeight().value_or(0);
+
         for (CBlockIndex* pindex : vSortedByHeight) {
             if (ShutdownRequested()) return false;
             if (pindex->IsAssumedValid() ||
@@ -4515,6 +4517,21 @@ bool ChainstateManager::LoadBlockIndex()
                     if (chainstate->reliesOnAssumedValid() ||
                             pindex->nHeight < first_assumed_valid_height) {
                         chainstate->setBlockIndexCandidates.insert(pindex);
+                    }
+                }
+
+                // Since nChainTx (responsible for estiamted progress) isn't persisted
+                // to disk, we must bootstrap the value for assumedvalid chainstates
+                // from the hardcoded assumeutxo chainparams.
+                if (snapshot_base_height > 0 && pindex->nHeight >= snapshot_base_height) {
+                    const auto prev_nchaintx = pindex->pprev->nChainTx;
+
+                    if (pindex->nHeight == snapshot_base_height) {
+                        const auto au_data = *Assert(ExpectedAssumeutxo(snapshot_base_height, GetParams()));
+                        // fill in empty nChainTx value.
+                        pindex->nChainTx = au_data.nChainTx;
+                    } else if (prev_nchaintx > 0 && pindex->nHeight > snapshot_base_height) {
+                        pindex->nChainTx = prev_nchaintx + pindex->nTx;
                     }
                 }
             }
