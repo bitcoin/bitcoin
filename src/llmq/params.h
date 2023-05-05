@@ -19,7 +19,7 @@ enum class LLMQType : uint8_t {
     LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
     LLMQ_100_67 = 4, // 100 members, 67 (67%) threshold, one per hour
     LLMQ_60_75 = 5,  // 60 members, 45 (75%) threshold, one every 12 hours
-    LLMQ_25_67 = 6, // 25 members, 67 (67%) threshold, one per hour
+    LLMQ_25_67 = 6, // 25 members, 17 (67%) threshold, one per hour
 
     // for testing only
     LLMQ_TEST = 100, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
