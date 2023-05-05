@@ -60,6 +60,8 @@ Release Process
 - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 - Translations on Transifex
     - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/bitcoin/bitcoin/<branch>/src/qt/locale/bitcoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
+- Prune inputs from the qa-assets repo (See [pruning
+  inputs](https://github.com/bitcoin-core/qa-assets#pruning-inputs)).
 
 #### Before final release
 
