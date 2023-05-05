@@ -262,7 +262,7 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use due to MSan
 
 task:
-  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [jammy]'
+  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   # We can't use a 'container' for the USDT interface tests as the CirrusCI
   # containers don't have privileges to hook into bitcoind. CirrusCI uses
