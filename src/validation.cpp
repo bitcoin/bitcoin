@@ -5229,6 +5229,9 @@ bool ChainstateManager::ActivateSnapshot(
         const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip();
         assert(chaintip_loaded);
 
+        // Transfer possession of the mempool to the snapshot chianstate.
+        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+        m_active_chainstate->m_mempool = nullptr;
         m_active_chainstate = m_snapshot_chainstate.get();
 
         LogPrintf("[snapshot] successfully activated snapshot %s\n", base_blockhash.ToString());
