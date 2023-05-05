@@ -63,6 +63,17 @@ static CAmount CreateCoins(FuzzedDataProvider& fuzzed_data_provider, std::vector
     return total_balance;
 }
 
+static SelectionResult ManualSelection(std::vector<COutput>& utxos, const CAmount& total_amount, const bool& subtract_fee_outputs)
+{
+    SelectionResult result(total_amount, SelectionAlgorithm::MANUAL);
+    std::set<std::shared_ptr<COutput>> utxo_pool;
+    for (const auto& utxo : utxos) {
+        utxo_pool.insert(std::make_shared<COutput>(utxo));
+    }
+    result.AddInputs(utxo_pool, subtract_fee_outputs);
+    return result;
+}
+
 // Returns true if the result contains an error and the message is not empty
 static bool HasErrorMsg(const util::Result<SelectionResult>& res) { return !util::ErrorString(res).empty(); }
 
@@ -141,6 +152,21 @@ FUZZ_TARGET(coinselection)
             result->AddInputs(new_utxo_pool, subtract_fee_outputs);
             assert(result->GetWeight() > weight);
         }
+    }
+
+    std::vector<COutput> manual_inputs;
+    CAmount manual_balance{CreateCoins(fuzzed_data_provider, manual_inputs, coin_params, next_locktime)};
+    if (manual_balance == 0) return;
+    auto manual_selection{ManualSelection(manual_inputs, manual_balance, coin_params.m_subtract_fee_outputs)};
+    for (auto& result : results) {
+        if (!result) continue;
+        const CAmount old_target{result->GetTarget()};
+        const std::set<std::shared_ptr<COutput>> input_set{result->GetInputSet()};
+        const int old_weight{result->GetWeight()};
+        result->Merge(manual_selection);
+        assert(result->GetInputSet().size() == input_set.size() + manual_inputs.size());
+        assert(result->GetTarget() == old_target + manual_selection.GetTarget());
+        assert(result->GetWeight() == old_weight + manual_selection.GetWeight());
     }
 }
 
