@@ -4542,7 +4542,7 @@ bool ChainstateManager::LoadBlockIndex()
     // Load block index from databases
     bool needs_init = fReindex;
     if (!fReindex) {
-        bool ret{m_blockman.LoadBlockIndexDB()};
+        bool ret{m_blockman.LoadBlockIndexDB(SnapshotBlockhash())};
         if (!ret) return false;
 
         m_blockman.ScanAndUnlinkAlreadyPrunedFiles();
@@ -4838,6 +4838,10 @@ void ChainstateManager::CheckBlockIndex()
     CBlockIndex* pindexFirstAssumeValid = nullptr; // Oldest ancestor of pindex which has BLOCK_ASSUMED_VALID
     while (pindex != nullptr) {
         nNodes++;
+        if (pindex->pprev && pindex->nTx > 0) {
+            // nChainTx should increase monotonically
+            assert(pindex->pprev->nChainTx <= pindex->nChainTx);
+        }
         if (pindexFirstAssumeValid == nullptr && pindex->nStatus & BLOCK_ASSUMED_VALID) pindexFirstAssumeValid = pindex;
         if (pindexFirstInvalid == nullptr && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;
         if (pindexFirstMissing == nullptr && !(pindex->nStatus & BLOCK_HAVE_DATA)) {

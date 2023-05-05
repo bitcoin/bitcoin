@@ -378,11 +378,24 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
     return pindex;
 }
 
-bool BlockManager::LoadBlockIndex()
+bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
 {
     if (!m_block_tree_db->LoadBlockIndexGuts(
             GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
         return false;
+    }
+
+    int snapshot_height = -1;
+    if (snapshot_blockhash) {
+        const AssumeutxoData au_data = *Assert(GetParams().AssumeutxoForBlockhash(*snapshot_blockhash));
+        snapshot_height = au_data.height;
+        CBlockIndex* base{LookupBlockIndex(*snapshot_blockhash)};
+
+        // Since nChainTx (responsible for estiamted progress) isn't persisted
+        // to disk, we must bootstrap the value for assumedvalid chainstates
+        // from the hardcoded assumeutxo chainparams.
+        base->nChainTx = au_data.nChainTx;
+        LogPrintf("[snapshot] set nChainTx=%d for %s\n", au_data.nChainTx, snapshot_blockhash->ToString());
     }
 
     // Calculate nChainWork
@@ -401,7 +414,11 @@ bool BlockManager::LoadBlockIndex()
         // Pruned nodes may have deleted the block.
         if (pindex->nTx > 0) {
             if (pindex->pprev) {
-                if (pindex->pprev->nChainTx > 0) {
+                if (snapshot_blockhash && pindex->nHeight == snapshot_height &&
+                        pindex->GetBlockHash() == *snapshot_blockhash) {
+                    // Should have been set above; don't disturb it with code below.
+                    Assert(pindex->nChainTx > 0);
+                } else if (pindex->pprev->nChainTx > 0) {
                     pindex->nChainTx = pindex->pprev->nChainTx + pindex->nTx;
                 } else {
                     pindex->nChainTx = 0;
@@ -444,9 +461,9 @@ bool BlockManager::WriteBlockIndexDB()
     return true;
 }
 
-bool BlockManager::LoadBlockIndexDB()
+bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
 {
-    if (!LoadBlockIndex()) {
+    if (!LoadBlockIndex(snapshot_blockhash)) {
         return false;
     }
 
