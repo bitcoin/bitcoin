@@ -5268,6 +5268,12 @@ bool ChainstateManager::ActivateSnapshot(
         const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip();
         assert(chaintip_loaded);
 
+        // Transfer possession of the mempool to the snapshot chianstate.
+        // Mempool is empty at this point because we're still in IBD.
+        Assert(m_active_chainstate->m_mempool->size() == 0);
+        Assert(!m_snapshot_chainstate->m_mempool);
+        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+        m_active_chainstate->m_mempool = nullptr;
         m_active_chainstate = m_snapshot_chainstate.get();
         m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
 
@@ -5747,16 +5753,22 @@ bool ChainstateManager::DetectSnapshotChainstate(CTxMemPool* mempool)
     LogPrintf("[snapshot] detected active snapshot chainstate (%s) - loading\n",
         fs::PathToString(*path));
 
-    this->ActivateExistingSnapshot(mempool, *base_blockhash);
+    this->ActivateExistingSnapshot(*base_blockhash);
     return true;
 }
 
-Chainstate& ChainstateManager::ActivateExistingSnapshot(CTxMemPool* mempool, uint256 base_blockhash)
+Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
 {
     assert(!m_snapshot_chainstate);
     m_snapshot_chainstate =
-        std::make_unique<Chainstate>(mempool, m_blockman, *this, base_blockhash);
+        std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash);
     LogPrintf("[snapshot] switching active chainstate to %s\n", m_snapshot_chainstate->ToString());
+
+    // Mempool is empty at this point because we're still in IBD.
+    Assert(m_active_chainstate->m_mempool->size() == 0);
+    Assert(!m_snapshot_chainstate->m_mempool);
+    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+    m_active_chainstate->m_mempool = nullptr;
     m_active_chainstate = m_snapshot_chainstate.get();
     return *m_snapshot_chainstate;
 }

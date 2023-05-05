@@ -1213,8 +1213,7 @@ public:
 
     //! Switch the active chainstate to one based on a UTXO snapshot that was loaded
     //! previously.
-    Chainstate& ActivateExistingSnapshot(CTxMemPool* mempool, uint256 base_blockhash)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    Chainstate& ActivateExistingSnapshot(uint256 base_blockhash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! If we have validated a snapshot chain during this runtime, copy its
     //! chainstate directory over to the main `chainstate` location, completing
