@@ -211,7 +211,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.chainman.reset();
 }
 
-void TestingSetup::LoadVerifyActivateChainstate()
+void ChainTestingSetup::LoadVerifyActivateChainstate()
 {
     auto& chainman{*Assert(m_node.chainman)};
     node::ChainstateLoadOptions options;
@@ -241,10 +241,10 @@ TestingSetup::TestingSetup(
     const std::vector<const char*>& extra_args,
     const bool coins_db_in_memory,
     const bool block_tree_db_in_memory)
-    : ChainTestingSetup(chainName, extra_args),
-      m_coins_db_in_memory(coins_db_in_memory),
-      m_block_tree_db_in_memory(block_tree_db_in_memory)
+    : ChainTestingSetup(chainName, extra_args)
 {
+    m_coins_db_in_memory = coins_db_in_memory;
+    m_block_tree_db_in_memory = block_tree_db_in_memory;
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
