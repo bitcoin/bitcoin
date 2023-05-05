@@ -235,6 +235,23 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
+    def set_binary_paths(self):
+        """Update self.options with the paths of all binaries from environment variables or their default values"""
+
+        binaries = {
+            "syscoind": ("syscoind", "SYSCOIND"),
+            "syscoin-cli": ("syscoincli", "SYSCOINCLI"),
+            "syscoin-util": ("syscoinutil", "SYSCOINUTIL"),
+            "syscoin-wallet": ("syscoinwallet", "SYSCOINWALLET"),
+        }
+        for binary, [attribute_name, env_variable_name] in binaries.items():
+            default_filename = os.path.join(
+                self.config["environment"]["BUILDDIR"],
+                "src",
+                binary + self.config["environment"]["EXEEXT"],
+            )
+            setattr(self.options, attribute_name, os.getenv(env_variable_name, default=default_filename))
+
     def setup(self):
         """Call this method to start up the test framework object with options set."""
 
@@ -244,24 +261,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
         config = self.config
 
-        fname_syscoind = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "syscoind" + config["environment"]["EXEEXT"],
-        )
-        fname_syscoincli = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "syscoin-cli" + config["environment"]["EXEEXT"],
-        )
-        fname_syscoinutil = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "syscoin-util" + config["environment"]["EXEEXT"],
-        )
-        self.options.syscoind = os.getenv("SYSCOIND", default=fname_syscoind)
-        self.options.syscoincli = os.getenv("SYSCOINCLI", default=fname_syscoincli)
-        self.options.syscoinutil = os.getenv("SYSCOINUTIL", default=fname_syscoinutil)
+        self.set_binary_paths()
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
