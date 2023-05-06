@@ -36,13 +36,6 @@ void runCommand(const std::string& strCommand);
  */
 int GetNumCores();
 
-/**
- * On platforms that support it, tell the kernel the calling thread is
- * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
- *
- */
-void ScheduleBatchPriority();
-
 namespace util {
 
 //! Simplification of std insertion
