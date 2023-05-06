@@ -843,22 +843,12 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;
 
-    CAmount recipients_sum = 0;
-    const OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
-    ReserveDestination reservedest(&wallet, change_type);
-    unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
-    for (const auto& recipient : vecSend) {
-        recipients_sum += recipient.nAmount;
-
-        if (recipient.fSubtractFeeFromAmount) {
-            outputs_to_subtract_fee_from++;
-            coin_selection_params.m_subtract_fee_outputs = true;
-        }
-    }
-
     // Create change script that will be used if we need change
     CScript scriptChange;
     bilingual_str error; // possible error str
+
+    const OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
+    ReserveDestination reservedest(&wallet, change_type);
 
     // coin control: send change to custom address
     if (!std::get_if<CNoDestination>(&coin_control.destChange)) {
@@ -886,6 +876,19 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         // change keypool ran out, but change is required.
         CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
     }
+
+    // Gather sum of recipient output amounts and count number of outputs to subtract fees from
+    CAmount recipients_sum = 0;
+    unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
+    for (const auto& recipient : vecSend) {
+        recipients_sum += recipient.nAmount;
+
+        if (recipient.fSubtractFeeFromAmount) {
+            outputs_to_subtract_fee_from++;
+            coin_selection_params.m_subtract_fee_outputs = true;
+        }
+    }
+
     CTxOut change_prototype_txout(0, scriptChange);
     coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
