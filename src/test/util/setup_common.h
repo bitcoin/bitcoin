@@ -93,19 +93,19 @@ struct BasicTestingSetup {
  */
 struct ChainTestingSetup : public BasicTestingSetup {
     node::CacheSizes m_cache_sizes{};
+    bool m_coins_db_in_memory{true};
+    bool m_block_tree_db_in_memory{true};
 
     explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~ChainTestingSetup();
+
+    // Supplies a chainstate, if one is needed
+    void LoadVerifyActivateChainstate();
 };
 
 /** Testing setup that configures a complete environment.
  */
 struct TestingSetup : public ChainTestingSetup {
-    bool m_coins_db_in_memory{true};
-    bool m_block_tree_db_in_memory{true};
-
-    void LoadVerifyActivateChainstate();
-
     explicit TestingSetup(
         const std::string& chainName = CBaseChainParams::MAIN,
         const std::vector<const char*>& extra_args = {},
