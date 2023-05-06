@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from getpass import getpass
 from secrets import token_hex, token_urlsafe
 import hmac
+import sys
 
 def generate_salt(size):
     """Create size byte hex salt"""
@@ -35,9 +36,9 @@ def main():
     salt = generate_salt(16)
     password_hmac = password_to_hmac(salt, args.password)
 
-    print('String to be appended to bitcoin.conf:')
+    print('#String to be appended to bitcoin.conf:')
     print(f'rpcauth={args.username}:{salt}${password_hmac}')
-    print(f'Your password:\n{args.password}')
+    print(f'Your password:\n{args.password}', file=sys.stderr)
 
 if __name__ == '__main__':
     main()
