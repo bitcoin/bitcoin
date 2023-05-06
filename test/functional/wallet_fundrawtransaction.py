@@ -124,6 +124,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_invalid_change_address()
         self.test_valid_change_address()
         self.test_change_type()
+        self.test_double_change()
         self.test_coin_selection()
         self.test_two_vin()
         self.test_two_vin_two_vout()
@@ -307,6 +308,82 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = self.nodes[2].fundrawtransaction(rawtx, change_type='bech32')
         dec_tx = self.nodes[2].decoderawtransaction(rawtx['hex'])
         assert_equal('witness_v0_keyhash', dec_tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
+
+    def test_double_change(self):
+        self.log.info("Test fundrawtxn funding a tx with an existent change output and the same custom change addr")
+        wallet = self.nodes[0]
+        wallet.syncwithvalidationinterfacequeue()  # up-to-date wallet
+
+        # 1) fundrawtxn shouldn't create a second change output if there is one already going to that address
+        change_addr = wallet.getrawchangeaddress()
+        external_addr = wallet.getnewaddress()
+
+        outputs = {external_addr: Decimal(45.0), change_addr: Decimal(3)}
+        rawtx = wallet.createrawtransaction([], outputs)
+        funded_tx = wallet.fundrawtransaction(hexstring=rawtx, options={'changeAddress': change_addr})
+
+        # Verify change output existence
+        change_pos = funded_tx['changepos']
+        assert change_pos != -1
+
+        # Instead of creating a new change value, the wallet should have increased the existing one
+        desc_tx = wallet.decoderawtransaction(funded_tx['hex'])
+        assert_equal(wallet.gettransaction(desc_tx['vin'][0]['txid'])['amount'], Decimal(50))  # assert input value
+        assert_equal(len(desc_tx['vout']), 2)
+
+        # Change must have increased its value, change = input - outputs - fee.
+        out = desc_tx['vout'][change_pos]
+        assert_equal(out['value'], Decimal(50) - outputs[external_addr] - funded_tx['fee'])
+        assert_equal(out['scriptPubKey']['address'], change_addr)
+
+        # Non-change output must remain the same
+        out = desc_tx['vout'][change_pos ^ 1]
+        assert_equal(out['value'], outputs[external_addr])
+        assert_equal(out['scriptPubKey']['address'], external_addr)
+
+        # Verify fee and change output amount correctness.
+        # Create another tx looking exactly the same as the previous one (same inputs, same outputs) but without
+        # manually setting the change output (the wallet will automatically set it).
+        rawtx2 = wallet.createrawtransaction(inputs=[desc_tx['vin'][0]], outputs={external_addr: Decimal(45.0)})
+        funded_tx2 = wallet.fundrawtransaction(hexstring=rawtx2, options={'changeAddress': change_addr, 'add_inputs': False})
+        assert_equal(len(desc_tx['vout']), 2)
+        # Fee must be the same
+        assert_equal(funded_tx['fee'], funded_tx2['fee'])
+        # And change amount must also be the same
+        def get_change_value(desc, change_pos): return desc['vout'][change_pos]['value']
+        desc_tx2 = wallet.decoderawtransaction(funded_tx2['hex'])
+        assert_equal(get_change_value(desc_tx, funded_tx['changepos']), get_change_value(desc_tx2, funded_tx2['changepos']))
+
+        #############################################################################################################
+        # 2) Fund tx and verify that the second output going to the change address is not discarded by the wallet
+        #    changeless txs predilection. Even when the output is "change" under the wallet perspective, the user has
+        #    set it manually, so it must not be discarded.
+        outputs = {external_addr: Decimal("49.998"), change_addr: Decimal(3)}
+        rawtx = wallet.createrawtransaction([], outputs)
+        funded_tx = wallet.fundrawtransaction(hexstring=rawtx, options={'changeAddress': change_addr})
+
+        # Verify change output existence
+        change_pos = funded_tx['changepos']
+        assert change_pos != -1
+
+        # Verify outputs once more; the wallet must have increased the existent change out value instead of removing it
+        # in favor of a changeless solution
+        desc_tx = wallet.decoderawtransaction(funded_tx['hex'])
+        # assert inputs value
+        assert_equal(len(desc_tx['vin']), 2)
+        for input in desc_tx['vin']:
+            assert_equal(wallet.gettransaction(input['txid'])['amount'], Decimal(50))
+
+        assert_equal(len(desc_tx['vout']), 2)
+        # Change must have increased its value, change = input - outputs - fee.
+        out = desc_tx['vout'][change_pos]
+        assert_equal(out['value'], Decimal(100) - outputs[external_addr] - funded_tx['fee'])
+        assert_equal(out['scriptPubKey']['address'], change_addr)
+
+        # Non-change output must remain the same
+        out = desc_tx['vout'][change_pos ^ 1]
+        assert_equal(out['value'], outputs[external_addr])
+        assert_equal(out['scriptPubKey']['address'], external_addr)
 
     def test_coin_selection(self):
         self.log.info("Test fundrawtxn with a vin < required amount")
