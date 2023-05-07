@@ -85,7 +85,7 @@ protected:
     }
 };
 
-COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
+COutPoint MineBlock(const node::NodeContext& node, std::shared_ptr<CBlock>& block)
 {
     while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
         ++block->nNonce;
