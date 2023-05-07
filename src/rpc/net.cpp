@@ -142,6 +142,7 @@ static RPCHelpMan getpeerinfo()
                         {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
                     }},
                     {RPCResult::Type::BOOL, "relaytxes", "Whether we relay transactions to this peer"},
+                    {RPCResult::Type::NUM, "inv_to_send", "How many txs we have queued to announce to this peer"},
                     {RPCResult::Type::NUM_TIME, "lastsend", "The " + UNIX_EPOCH_TIME + " of the last send"},
                     {RPCResult::Type::NUM_TIME, "lastrecv", "The " + UNIX_EPOCH_TIME + " of the last receive"},
                     {RPCResult::Type::NUM_TIME, "last_transaction", "The " + UNIX_EPOCH_TIME + " of the last valid transaction received from this peer"},
@@ -238,6 +239,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("services", strprintf("%016x", services));
         obj.pushKV("servicesnames", GetServicesNames(services));
         obj.pushKV("relaytxes", statestats.m_relay_txs);
+        obj.pushKV("inv_to_send", statestats.m_inv_to_send);
         obj.pushKV("lastsend", count_seconds(stats.m_last_send));
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
