@@ -349,13 +349,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         request_id = hash256(request_id_buf)[::-1].hex()
         message_hash = block.hash
 
-        quorum_member = None
-        for mn in self.mninfo:
-            res = mn.node.quorum('sign', 100, request_id, message_hash)
-            if res and quorum_member is None:
-                quorum_member = mn
-
-        recSig = self.get_recovered_sig(request_id, message_hash, node=quorum_member.node)
+        recSig = self.get_recovered_sig(request_id, message_hash)
         clsig = msg_clsig(height, block.sha256, hex_str_to_bytes(recSig['sig']))
         return clsig
 

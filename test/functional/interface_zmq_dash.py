@@ -190,7 +190,8 @@ class DashZMQTest (DashTestFramework):
 
         def validate_recovered_sig(request_id, msg_hash):
             # Make sure the recovered sig exists by RPC
-            rpc_recovered_sig = self.get_recovered_sig(request_id, msg_hash)
+            self.wait_for_recovered_sig(request_id, msg_hash)
+            rpc_recovered_sig = self.mninfo[0].node.quorum('getrecsig', 100, request_id, msg_hash)
             # Validate hashrecoveredsig
             zmq_recovered_sig_hash = self.subscribers[ZMQPublisher.hash_recovered_sig].receive().read(32).hex()
             assert_equal(zmq_recovered_sig_hash, msg_hash)
