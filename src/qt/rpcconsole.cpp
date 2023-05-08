@@ -10,6 +10,7 @@
 #include <qt/forms/ui_debugwindow.h>
 
 #include <chainparams.h>
+#include <common/system.h>
 #include <interfaces/node.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
@@ -21,7 +22,6 @@
 #include <rpc/server.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 
 #include <univalue.h>

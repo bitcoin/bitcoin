@@ -4,9 +4,9 @@
 
 #include <wallet/crypter.h>
 
+#include <common/system.h>
 #include <crypto/aes.h>
 #include <crypto/sha512.h>
-#include <util/system.h>
 
 #include <vector>
 

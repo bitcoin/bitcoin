@@ -20,6 +20,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <hash.h>
@@ -80,7 +81,6 @@
 #include <util/string.h>
 #include <util/syscall_sandbox.h>
 #include <util/syserror.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/translation.h>

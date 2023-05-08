@@ -9,6 +9,7 @@
 #include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
+#include <common/system.h>
 #include <common/url.h>
 #include <consensus/consensus.h>
 #include <consensus/params.h>
@@ -46,7 +47,6 @@
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/time.h>

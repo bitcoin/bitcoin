@@ -11,6 +11,7 @@
 #include <chainparams.h>
 #include <common/args.h>
 #include <common/init.h>
+#include <common/system.h>
 #include <init.h>
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
@@ -32,7 +33,6 @@
 #include <uint256.h>
 #include <util/exception.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>

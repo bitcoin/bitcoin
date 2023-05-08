@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <node/mini_miner.h>
 #include <txmempool.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <test/util/setup_common.h>

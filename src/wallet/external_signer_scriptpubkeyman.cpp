@@ -4,8 +4,8 @@
 
 #include <chainparams.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <external_signer.h>
-#include <util/system.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <iostream>

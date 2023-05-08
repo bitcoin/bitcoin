@@ -10,6 +10,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
@@ -23,7 +24,6 @@
 #include <util/chaintype.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 

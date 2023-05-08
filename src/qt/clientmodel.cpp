@@ -12,11 +12,11 @@
 
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <net.h>
 #include <netbase.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 #include <validation.h>

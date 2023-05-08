@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <common/args.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
@@ -15,7 +16,6 @@
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
-#include <util/system.h>
 #include <util/trace.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
