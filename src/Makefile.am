@@ -224,6 +224,7 @@ BITCOIN_CORE_H = \
   node/mini_miner.h \
   node/minisketchwrapper.h \
   node/psbt.h \
+  node/sv2_messages.h \
   node/transaction.h \
   node/txreconciliation.h \
   node/utxo_snapshot.h \
@@ -420,6 +421,7 @@ libbitcoin_node_a_SOURCES = \
   node/mini_miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
+  node/sv2_messages.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
   node/utxo_snapshot.cpp \
