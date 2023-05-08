@@ -99,6 +99,10 @@ int main(int argc, char* argv[])
         {
             std::cout << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
         }
+        void warning(const bilingual_str& warning) override
+        {
+            std::cout << "Warning: " << warning.original << std::endl;
+        }
     };
     auto notifications = std::make_unique<KernelNotifications>();
 
