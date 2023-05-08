@@ -6,12 +6,14 @@
 Test BIP 37
 """
 
+import time
 from test_framework.messages import (
     CInv,
     COIN,
     MAX_BLOOM_FILTER_SIZE,
     MAX_BLOOM_HASH_FUNCS,
     MSG_BLOCK,
+    MSG_WTX,
     MSG_FILTERED_BLOCK,
     msg_filteradd,
     msg_filterclear,
@@ -135,14 +137,41 @@ class FilterTest(BitcoinTestFramework):
         self.log.info("Check that a node with bloom filters enabled services p2p mempool messages")
         filter_peer = P2PBloomFilter()
 
-        self.log.debug("Create a tx relevant to the peer before connecting")
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)["txid"]
+        self.log.info("Create two tx before connecting, one relevant to the node another that is not")
+        rel_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=1 * COIN)["txid"]
+        rel_wtxid = self.nodes[0].getmempoolentry(rel_txid)["wtxid"]
+        irr_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=2 * COIN)["txid"]
+        irr_wtxid = self.nodes[0].getmempoolentry(irr_txid)["wtxid"]
 
-        self.log.debug("Send a mempool msg after connecting and check that the tx is received")
+        self.log.info("Send a mempool msg after connecting and check that the relevant tx is received")
         self.nodes[0].add_p2p_connection(filter_peer)
-        filter_peer.send_and_ping(filter_peer.watch_filter_init)
-        filter_peer.send_message(msg_mempool())
-        filter_peer.wait_for_tx(txid)
+        filter_peer.send_message(filter_peer.watch_filter_init)
+        filter_peer.send_and_ping(msg_mempool())
+        filter_peer.wait_for_tx(rel_txid)
+
+        self.log.info("Request the irrelevant transaction even though it has not being offered to us")
+        filter_peer.tx_received = False
+        filter_peer.send_and_ping(msg_getdata([CInv(t=MSG_WTX, h=int(irr_wtxid, 16))]))
+        assert not filter_peer.tx_received
+
+        # We need to let one second pass here (at least) so the MEMPOOL and the second GETDATA message are not processed within
+        # the same second. This is due to the granularity used in the codebase to check when a MEMPOOL messaged was received
+        self.nodes[0].setmocktime(int(time.time()) + 1)
+        self.log.info("Create a third transaction (that was therefore not part of the mempool message) and try to retrieve it")
+        filter_peer.tx_received = False
+        add_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=3 * COIN)["txid"]
+        filter_peer.send_and_ping(msg_getdata([CInv(t=MSG_WTX, h=int(self.nodes[0].getmempoolentry(add_txid)["wtxid"], 16))]))
+        assert not filter_peer.tx_received
+
+        self.log.info("Check all transactions are returned by the match-all filter")
+        unfilter_peer = P2PBloomFilter()
+        self.nodes[0].add_p2p_connection(unfilter_peer)
+        unfilter_peer.send_and_ping(msg_mempool())
+
+        unfilter_peer.send_and_ping(msg_getdata([CInv(t=MSG_WTX, h=int(rel_wtxid, 16))]))
+        filter_peer.wait_for_tx(rel_txid)
+        unfilter_peer.send_and_ping(msg_getdata([CInv(t=MSG_WTX, h=int(irr_wtxid, 16))]))
+        filter_peer.wait_for_tx(irr_txid)
 
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
