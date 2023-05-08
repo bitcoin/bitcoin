@@ -122,6 +122,40 @@ class P2PEvict(BitcoinTestFramework):
         self.log.debug("{} protected peers: {}".format(len(protected_peers), protected_peers))
         assert evicted_peers[0] not in protected_peers
 
+        self.log.info("Test that whitebind inbounds get extra eviction power")
+        # Only allow 1 inbound connection, but set whitebind
+        self.restart_node(0, extra_args=['-maxconnections=12', '-whitebind=127.0.0.1:30201', '-whitebind=forceinbound@127.0.0.1:30202'])
+        self.log.debug("Connect 1 peer")
+        node.add_p2p_connection(P2PInterface())
+
+        # Create a peer that expects to be rejected
+        class RejectedPeer(P2PInterface):
+            def connection_lost(self, exc):
+                return
+
+        self.log.debug("Generic inbound gets rejected when full")
+        with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
+            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False)
+
+        self.log.debug("Default whitebind inbound gets rejected, even when full")
+        with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
+            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False, dstport=30201)
+
+        self.log.debug("ForceInbound whitebind inbound gets connected, even when full")
+        allowed_peer = node.add_p2p_connection(P2PInterface(), dstport=30202)
+
+        assert_equal(len(node.getpeerinfo()), 1)
+
+        self.log.debug("Generic inbound gets rejected when whitebind peer is filling inbound slot")
+        with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
+            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False)
+
+        self.log.debug("ForceInbound whitebind inbound gets rejected when another whitebind peer is filling inbound slot")
+        with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
+            node.add_p2p_connection(RejectedPeer(), dstport=30202, wait_for_verack=False)
+
+        assert_equal(len(node.getpeerinfo()), 1)
+        assert allowed_peer.is_connected
 
 if __name__ == '__main__':
     P2PEvict().main()
