@@ -9,12 +9,11 @@ $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_linguist_tools = lrelease lupdate lconvert
 $(package)_patches = qt.pro qttools_src.pro
 $(package)_patches += fix_qt_pkgconfig.patch mac-qmake.conf fix_no_printer.patch no-xlib.patch
-$(package)_patches+= support_new_android_ndks.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
+$(package)_patches += support_new_android_ndks.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches += dont_hardcode_x86_64.patch
-$(package)_patches+= fix_lib_paths.patch fix_android_pch.patch
-$(package)_patches+= fix_limits_header.patch
-$(package)_patches+= fix_montery_include.patch
-$(package)_patches+= qtbase-moc-ignore-gcc-macro.patch
+$(package)_patches += fix_lib_paths.patch fix_android_pch.patch
+$(package)_patches += qtbase-moc-ignore-gcc-macro.patch fix_limits_header.patch
+$(package)_patches += fix_montery_include.patch
 $(package)_patches += fast_fixed_dtoa_no_optimize.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
