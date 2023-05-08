@@ -27,11 +27,12 @@ extern CCriticalSection cs_main;
 
 static constexpr double GOVERNANCE_FILTER_FP_RATE = 0.001;
 
-enum class GovernanceObject {
+enum class GovernanceObject : int {
     UNKNOWN = 0,
     PROPOSAL,
     TRIGGER
 };
+template<> struct is_serializable_enum<GovernanceObject> : std::true_type {};
 
 
 static constexpr CAmount GOVERNANCE_PROPOSAL_FEE_TX = (1 * COIN);
@@ -301,7 +302,7 @@ public:
                 obj.nTime,
                 obj.nCollateralHash,
                 obj.vchData,
-                ToUnderlying(obj.nObjectType),
+                obj.nObjectType,
                 obj.masternodeOutpoint
                 );
         if (!(s.GetType() & SER_GETHASH)) {
