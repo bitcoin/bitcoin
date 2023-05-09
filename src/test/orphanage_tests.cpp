@@ -67,6 +67,22 @@ static CTransactionRef MakeLargeOrphan()
     return MakeTransactionRef(tx);
 }
 
+static CTransactionRef MakeSmallOrphan()
+{
+    CKey key;
+    MakeNewKeyWithFastRandomContext(key);
+    CMutableTransaction tx;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = CENT;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    tx.vin.resize(1);
+    tx.vin[0].prevout.n = 2;
+    tx.vin[0].prevout.hash = GetRandHash();
+    tx.vin[0].scriptWitness.stack.reserve(1);
+    tx.vin[0].scriptWitness.stack.push_back(std::vector<unsigned char>(2));
+    return MakeTransactionRef(tx);
+}
+
 BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 {
     // This test had non-deterministic coverage due to
@@ -265,6 +281,40 @@ BOOST_AUTO_TEST_CASE(multiple_announcers)
         BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node0), expected_node0_size);
         BOOST_CHECK_EQUAL(orphanage.BytesFromPeer(node1), expected_node1_size);
     }
+}
+BOOST_AUTO_TEST_CASE(protection)
+{
+    FastRandomContext det_rand{true};
+    TxOrphanage orphanage;
+    std::vector<CTransactionRef> protected_txns;
+    for (auto i{0}; i < 100; ++i) {
+        const auto tx{MakeSmallOrphan()};
+        orphanage.AddTx(tx, i);
+        if (i % 10 == 0) {
+            orphanage.ProtectOrphan(tx->GetWitnessHash());
+            protected_txns.push_back(tx);
+        }
+    }
+    BOOST_CHECK_EQUAL(orphanage.Size(), 100);
+    BOOST_CHECK_EQUAL(orphanage.NumProtected(), 10);
+    orphanage.LimitOrphans(/*max_orphans=*/5);
+    BOOST_CHECK_EQUAL(orphanage.Size(), 15);
+    BOOST_CHECK_EQUAL(orphanage.NumProtected(), 10);
+    // Add an extra protection to one special transaction.
+    const auto special_wtxid{protected_txns.front()->GetWitnessHash()};
+    orphanage.ProtectOrphan(special_wtxid);
+    BOOST_CHECK_EQUAL(orphanage.NumProtected(), 10);
+    for (const auto& tx : protected_txns) {
+        BOOST_CHECK(orphanage.HaveTx(GenTxid::Wtxid(tx->GetWitnessHash())));
+        BOOST_CHECK(orphanage.HaveTx(GenTxid::Txid(tx->GetHash())));
+        orphanage.UndoProtectOrphan(tx->GetWitnessHash());
+    }
+    BOOST_CHECK_EQUAL(orphanage.NumProtected(), 1);
+    orphanage.LimitOrphans(/*max_orphans=*/0);
+    BOOST_CHECK_EQUAL(orphanage.Size(), 1);
+    orphanage.UndoProtectOrphan(special_wtxid);
+    orphanage.LimitOrphans(/*max_orphans=*/0);
+    BOOST_CHECK_EQUAL(orphanage.Size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
