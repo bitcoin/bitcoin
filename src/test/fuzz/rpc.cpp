@@ -23,6 +23,7 @@
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -37,7 +38,7 @@
 
 namespace {
 struct RPCFuzzTestingSetup : public TestingSetup {
-    RPCFuzzTestingSetup(const std::string& chain_name, const std::vector<const char*>& extra_args) : TestingSetup{chain_name, extra_args}
+    RPCFuzzTestingSetup(const ChainType chain_type, const std::vector<const char*>& extra_args) : TestingSetup{chain_type, extra_args}
     {
     }
 

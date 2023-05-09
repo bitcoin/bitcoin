@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <chainparamsbase.h>
 #include <key.h>
 #include <psbt.h>
 #include <pubkey.h>
@@ -14,6 +13,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/chaintype.h>
 #include <util/translation.h>
 
 #include <cassert>
@@ -27,7 +27,7 @@
 void initialize_script_sign()
 {
     ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(script_sign, initialize_script_sign)

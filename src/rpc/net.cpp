@@ -21,6 +21,7 @@
 #include <rpc/util.h>
 #include <sync.h>
 #include <timedata.h>
+#include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -354,7 +355,7 @@ static RPCHelpMan addconnection()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if (Params().GetChainType() != ChainType::REGTEST) {
         throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
     }
 

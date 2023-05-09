@@ -18,6 +18,7 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <chainparamsbase.h>
 #include <common/args.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
@@ -69,6 +70,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/asmap.h>
+#include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -408,14 +410,14 @@ void SetupServerArgs(ArgsManager& argsman)
 
     init::AddLoggingArgs(argsman);
 
-    const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
-    const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
-    const auto signetBaseParams = CreateBaseChainParams(CBaseChainParams::SIGNET);
-    const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
-    const auto defaultChainParams = CreateChainParams(argsman, CBaseChainParams::MAIN);
-    const auto testnetChainParams = CreateChainParams(argsman, CBaseChainParams::TESTNET);
-    const auto signetChainParams = CreateChainParams(argsman, CBaseChainParams::SIGNET);
-    const auto regtestChainParams = CreateChainParams(argsman, CBaseChainParams::REGTEST);
+    const auto defaultBaseParams = CreateBaseChainParams(ChainType::MAIN);
+    const auto testnetBaseParams = CreateBaseChainParams(ChainType::TESTNET);
+    const auto signetBaseParams = CreateBaseChainParams(ChainType::SIGNET);
+    const auto regtestBaseParams = CreateBaseChainParams(ChainType::REGTEST);
+    const auto defaultChainParams = CreateChainParams(argsman, ChainType::MAIN);
+    const auto testnetChainParams = CreateChainParams(argsman, ChainType::TESTNET);
+    const auto signetChainParams = CreateChainParams(argsman, ChainType::SIGNET);
+    const auto regtestChainParams = CreateChainParams(argsman, ChainType::REGTEST);
 
     // Hidden Options
     std::vector<std::string> hidden_args = {
@@ -844,14 +846,14 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
 
     // Error if network-specific options (-addnode, -connect, etc) are
     // specified in default section of config file, but not overridden
-    // on the command line or in this network's section of the config file.
-    std::string network = args.GetChainName();
-    if (network == CBaseChainParams::SIGNET) {
+    // on the command line or in this chain's section of the config file.
+    ChainType chain = args.GetChainType();
+    if (chain == ChainType::SIGNET) {
         LogPrintf("Signet derived magic (message start): %s\n", HexStr(chainparams.MessageStart()));
     }
     bilingual_str errors;
     for (const auto& arg : args.GetUnsuitableSectionOnlyArgs()) {
-        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section.") + Untranslated("\n"), arg, network, network);
+        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section.") + Untranslated("\n"), arg, ChainTypeToString(chain), ChainTypeToString(chain));
     }
 
     if (!errors.empty()) {
