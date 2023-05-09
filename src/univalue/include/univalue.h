@@ -201,6 +201,4 @@ static inline bool json_isspace(int ch)
 
 extern const UniValue NullUniValue;
 
-inline const UniValue& find_value(const UniValue& obj, const std::string& name) { return obj.find_value(name); }
-
 #endif // BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_H
