@@ -943,7 +943,7 @@ void CSigningManager::Clear()
 }
 void CSigningManager::Cleanup()
 {
-    int64_t now = GetTimeMillis();
+    int64_t now = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
     if (now - lastCleanupTime < 5000) {
         return;
     }
@@ -953,7 +953,7 @@ void CSigningManager::Cleanup()
     db.CleanupOldRecoveredSigs(maxAge);
     db.CleanupOldVotes(maxAge);
 
-    lastCleanupTime = GetTimeMillis();
+    lastCleanupTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
 }
 
 void CSigningManager::RegisterRecoveredSigsListener(CRecoveredSigsListener* l)

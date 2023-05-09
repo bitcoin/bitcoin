@@ -341,7 +341,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     bool bReturn = false;
     {
         LOCK(cs);
-        if (!seenChainLocks.emplace(hash, GetTimeMillis()).second) {
+        if (!seenChainLocks.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now())).second) {
             bReturn = true;
         }
 
@@ -909,7 +909,7 @@ void CChainLocksHandler::Cleanup()
 
     {
         LOCK(cs);
-        if (GetTimeMillis() - lastCleanupTime < CLEANUP_INTERVAL) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastCleanupTime < CLEANUP_INTERVAL) {
             return;
         }
     }
@@ -917,7 +917,7 @@ void CChainLocksHandler::Cleanup()
     LOCK(cs);
 
     for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
-        if (GetTimeMillis() - it->second >= CLEANUP_SEEN_TIMEOUT) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
             it = seenChainLocks.erase(it);
         } else {
             ++it;
@@ -940,7 +940,7 @@ void CChainLocksHandler::Cleanup()
             }
         }
     }
-    lastCleanupTime = GetTimeMillis();
+    lastCleanupTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
 }
 
 bool AreChainLocksEnabled()

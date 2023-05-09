@@ -1471,9 +1471,9 @@ void CSigSharesManager::WorkThreadMain()
         fMoreWork |= ProcessPendingSigShares();
         SignPendingSigShares();
 
-        if (GetTimeMillis() - lastSendTime > 100) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastSendTime > 100) {
             SendMessages();
-            lastSendTime = GetTimeMillis();
+            lastSendTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         }
 
         Cleanup();

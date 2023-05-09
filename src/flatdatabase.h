@@ -39,7 +39,7 @@ private:
     {
         // LOCK(objToSave.cs);
 
-        int64_t nStart = GetTimeMillis();
+        int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
 
         // serialize, checksum data up to that point, then append checksum
         CDataStream ssObj(SER_DISK, CLIENT_VERSION);
@@ -64,7 +64,7 @@ private:
         }
         fileout.fclose();
 
-        LogPrintf("Written info to %s  %dms\n", strFilename, GetTimeMillis() - nStart);
+        LogPrintf("Written info to %s  %dms\n", strFilename, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nStart);
         LogPrintf("     %s\n", objToSave.ToString());
 
         return true;
@@ -74,7 +74,7 @@ private:
     {
         //LOCK(objToLoad.cs);
 
-        int64_t nStart = GetTimeMillis();
+        int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         // open input file, and associate with CAutoFile
         FILE *file = fopen(fs::PathToString(pathDB).c_str(), "rb");
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
@@ -149,7 +149,7 @@ private:
             return IncorrectFormat;
         }
 
-        LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
+        LogPrintf("Loaded info from %s  %dms\n", strFilename, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
         if(!fDryRun) {
             LogPrintf("%s: Cleaning....\n", __func__);
@@ -193,7 +193,7 @@ public:
 
     bool Dump(T& objToSave, T &tmpObjToLoad)
     {
-        int64_t nStart = GetTimeMillis();
+        int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
 
         LogPrintf("Verifying %s format...\n", strFilename);
         ReadResult readResult = Read(tmpObjToLoad, true);
@@ -215,7 +215,7 @@ public:
 
         LogPrintf("Writing info to %s...\n", strFilename);
         Write(objToSave);
-        LogPrintf("%s dump finished  %dms\n", strFilename, GetTimeMillis() - nStart);
+        LogPrintf("%s dump finished  %dms\n", strFilename, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nStart);
 
         return true;
     }

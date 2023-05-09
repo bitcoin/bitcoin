@@ -2395,9 +2395,9 @@ void CConnman::ThreadMessageHandler()
         bool fMoreWork = false;
         // SYSCOIN
         bool fSkipSendMessagesForMasternodes = true;
-        if (GetTimeMillis() - nLastSendMessagesTimeMasternodes >= 100) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nLastSendMessagesTimeMasternodes >= 100) {
             fSkipSendMessagesForMasternodes = false;
-            nLastSendMessagesTimeMasternodes = GetTimeMillis();
+            nLastSendMessagesTimeMasternodes = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         }
 
         {

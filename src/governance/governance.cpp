@@ -1111,11 +1111,11 @@ void CGovernanceManager::AddCachedTriggers()
 void CGovernanceManager::InitOnLoad()
 {
     LOCK(cs);
-    int64_t nStart = GetTimeMillis();
+    int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
     LogPrint(BCLog::GOBJECT, "Preparing masternode indexes and governance triggers...\n");
     RebuildIndexes();
     AddCachedTriggers();
-    LogPrint(BCLog::GOBJECT, "Masternode indexes and governance triggers prepared  %dms\n", GetTimeMillis() - nStart);
+    LogPrint(BCLog::GOBJECT, "Masternode indexes and governance triggers prepared  %dms\n", TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nStart);
     LogPrint(BCLog::GOBJECT, "     %s\n", ToString());
 }
 
