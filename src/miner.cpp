@@ -197,8 +197,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
 
         CCbTx cbTx;
 
-        if (fDIP0008Active_context) {
-            cbTx.nVersion = 2;
+        if (llmq::utils::IsV20Active(pindexPrev)) {
+            cbTx.nVersion = CCbTx::CB_V20_VERSION;
+        } else if (fDIP0008Active_context) {
+            cbTx.nVersion = CCbTx::CB_V19_VERSION;
         } else {
             cbTx.nVersion = 1;
         }
@@ -212,6 +214,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
         if (fDIP0008Active_context) {
             if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, quorum_block_processor, cbTx.merkleRootQuorums, state)) {
                 throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
+            }
+            if (llmq::utils::IsV20Active(pindexPrev)) {
+                if (CalcCbTxBestChainlock(m_clhandler, pindexPrev, cbTx.bestCLHeightDiff, cbTx.bestCLSignature)) {
+                    LogPrintf("CreateNewBlock() h[%d] CbTx bestCLHeightDiff[%d] CLSig[%s]\n", nHeight, cbTx.bestCLHeightDiff, cbTx.bestCLSignature.ToString());
+                }
+                else {
+                    // not an error
+                    LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
+                }
             }
         }
 

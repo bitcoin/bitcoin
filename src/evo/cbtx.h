@@ -5,6 +5,7 @@
 #ifndef BITCOIN_EVO_CBTX_H
 #define BITCOIN_EVO_CBTX_H
 
+#include <bls/bls.h>
 #include <primitives/transaction.h>
 #include <univalue.h>
 
@@ -16,6 +17,7 @@ class TxValidationState;
 
 namespace llmq {
 class CQuorumBlockProcessor;
+class CChainLocksHandler;
 }// namespace llmq
 
 // coinbase transaction
@@ -23,19 +25,26 @@ class CCbTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_COINBASE;
-    static constexpr uint16_t CURRENT_VERSION = 2;
+    static constexpr uint16_t CB_V19_VERSION = 2;
+    static constexpr uint16_t CB_V20_VERSION = 3;
 
-    uint16_t nVersion{CURRENT_VERSION};
+    uint16_t nVersion{CB_V19_VERSION};
     int32_t nHeight{0};
     uint256 merkleRootMNList;
     uint256 merkleRootQuorums;
+    uint32_t bestCLHeightDiff;
+    CBLSSignature bestCLSignature;
 
     SERIALIZE_METHODS(CCbTx, obj)
     {
         READWRITE(obj.nVersion, obj.nHeight, obj.merkleRootMNList);
 
-        if (obj.nVersion >= 2) {
+        if (obj.nVersion >= CB_V19_VERSION) {
             READWRITE(obj.merkleRootQuorums);
+            if (obj.nVersion >= CB_V20_VERSION) {
+                READWRITE(COMPACTSIZE(obj.bestCLHeightDiff));
+                READWRITE(obj.bestCLSignature);
+            }
         }
     }
 
@@ -48,8 +57,12 @@ public:
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("height", nHeight);
         obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
-        if (nVersion >= 2) {
+        if (nVersion >= CB_V19_VERSION) {
             obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
+            if (nVersion >= CB_V20_VERSION) {
+                obj.pushKV("bestCLHeightDiff", static_cast<int>(bestCLHeightDiff));
+                obj.pushKV("bestCLSignature", bestCLSignature.ToString());
+            }
         }
     }
 };
@@ -60,4 +73,9 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const 
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const CCoinsViewCache& view);
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet, BlockValidationState& state);
 
+bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindexPrev, const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state);
+bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev, uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature);
+
+std::optional<CCbTx> GetCoinbaseTx(const CBlockIndex* pindex);
+std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 #endif // BITCOIN_EVO_CBTX_H

@@ -46,6 +46,7 @@ private:
     CSporkManager& spork_manager;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
+    CQuorumManager& qman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
@@ -79,7 +80,7 @@ private:
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
-    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, const std::unique_ptr<CMasternodeSync>& mn_sync);
+    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CChainLocksHandler();
 
     void Start();
@@ -103,6 +104,7 @@ public:
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
+    bool VerifyChainLock(const CChainLockSig& clsig) const;
 
     bool IsTxSafeForMining(const CInstantSendManager& isman, const uint256& txid) const LOCKS_EXCLUDED(cs);
 

@@ -13,7 +13,7 @@ Checks LLMQs based ChainLocks
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync
+from test_framework.util import force_finish_mnsync, assert_equal
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -31,6 +31,14 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.activate_dip8()
 
+        self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
+
+        self.activate_v20(expected_activation_height=904)
+        self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
+
+        # no quorums, no CLs - null CL in CbTx
+        self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=True, expected_null_cl=True)
+
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -41,11 +49,13 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        self.test_coinbase_best_cl(self.nodes[0])
 
         self.log.info("Mine many blocks, wait for chainlock")
         self.nodes[0].generate(20)
         # We need more time here due to 20 blocks being generated at once
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
+        self.test_coinbase_best_cl(self.nodes[0])
 
         self.log.info("Assert that all blocks up until the tip are chainlocked")
         for h in range(1, self.nodes[0].getblockcount()):
@@ -58,10 +68,12 @@ class LLMQChainLocksTest(DashTestFramework):
         node0_tip = self.nodes[0].getbestblockhash()
         self.nodes[1].generatetoaddress(5, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
+        self.test_coinbase_best_cl(self.nodes[0])
         assert self.nodes[0].getbestblockhash() == node0_tip
         self.reconnect_isolated_node(0, 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash())
+        self.test_coinbase_best_cl(self.nodes[0])
 
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         self.isolate_node(0)
@@ -73,6 +85,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.reconnect_isolated_node(0, 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash())
+        self.test_coinbase_best_cl(self.nodes[0])
         assert self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip
         assert self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip
 
@@ -107,6 +120,7 @@ class LLMQChainLocksTest(DashTestFramework):
         good_fork = good_tip
         good_tip = self.nodes[1].generatetoaddress(1, node0_mining_addr)[-1]  # this should mark bad_tip as conflicting
         self.wait_for_chainlocked_block_all_nodes(good_tip)
+        self.test_coinbase_best_cl(self.nodes[0])
         assert self.nodes[0].getbestblockhash() == good_tip
         found = False
         for tip in self.nodes[0].getchaintips(2):
@@ -172,6 +186,29 @@ class LLMQChainLocksTest(DashTestFramework):
         rawtxid = node.sendrawtransaction(rawtx["hex"])
 
         return [txid, rawtxid]
+
+    def test_coinbase_best_cl(self, node, expected_cl_in_cb=True, expected_null_cl=False):
+        block_hash = node.getbestblockhash()
+        block = node.getblock(block_hash, 2)
+        cbtx = block["cbTx"]
+        assert_equal(int(cbtx["version"]) > 2, expected_cl_in_cb)
+        if expected_cl_in_cb:
+            cb_height = int(cbtx["height"])
+            best_cl_height_diff = int(cbtx["bestCLHeightDiff"])
+            best_cl_signature = cbtx["bestCLSignature"]
+            assert_equal(expected_null_cl, int(best_cl_signature, 16) == 0)
+            if expected_null_cl:
+                # Null bestCLSignature is allowed.
+                # bestCLHeightDiff must be 0 if bestCLSignature is null
+                assert_equal(best_cl_height_diff, 0)
+                # Returning as no more tests can be conducted
+                return
+            best_cl_height = cb_height - best_cl_height_diff - 1
+            target_block_hash = node.getblockhash(best_cl_height)
+            # Verify CL signature
+            assert node.verifychainlock(target_block_hash, best_cl_signature, best_cl_height)
+        else:
+            assert "bestCLHeightDiff" not in cbtx and "bestCLSignature" not in cbtx
 
 
 if __name__ == '__main__':

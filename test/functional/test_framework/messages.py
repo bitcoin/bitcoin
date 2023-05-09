@@ -1046,9 +1046,9 @@ class CMerkleBlock:
 
 
 class CCbTx:
-    __slots__ = ("version", "height", "merkleRootMNList", "merkleRootQuorums")
+    __slots__ = ("version", "height", "merkleRootMNList", "merkleRootQuorums", "bestCLHeightDiff", "bestCLSignature")
 
-    def __init__(self, version=None, height=None, merkleRootMNList=None, merkleRootQuorums=None):
+    def __init__(self, version=None, height=None, merkleRootMNList=None, merkleRootQuorums=None, bestCLHeightDiff=None, bestCLSignature=None):
         self.set_null()
         if version is not None:
             self.version = version
@@ -1058,11 +1058,17 @@ class CCbTx:
             self.merkleRootMNList = merkleRootMNList
         if merkleRootQuorums is not None:
             self.merkleRootQuorums = merkleRootQuorums
+        if bestCLHeightDiff is not None:
+            self.bestCLHeightDiff = bestCLHeightDiff
+        if bestCLSignature is not None:
+            self.bestCLSignature = bestCLSignature
 
     def set_null(self):
         self.version = 0
         self.height = 0
         self.merkleRootMNList = None
+        self.bestCLHeightDiff = 0
+        self.bestCLSignature = b'\x00' * 96
 
     def deserialize(self, f):
         self.version = struct.unpack("<H", f.read(2))[0]
@@ -1070,6 +1076,10 @@ class CCbTx:
         self.merkleRootMNList = deser_uint256(f)
         if self.version >= 2:
             self.merkleRootQuorums = deser_uint256(f)
+            if self.version >= 3:
+                self.bestCLHeightDiff = deser_compact_size(f)
+                self.bestCLSignature = f.read(96)
+
 
     def serialize(self):
         r = b""
@@ -1078,6 +1088,9 @@ class CCbTx:
         r += ser_uint256(self.merkleRootMNList)
         if self.version >= 2:
             r += ser_uint256(self.merkleRootQuorums)
+            if self.version >= 3:
+                r += ser_compact_size(self.bestCLHeightDiff)
+                r += self.bestCLSignature
         return r
 
 

@@ -14,6 +14,7 @@
 #include <evo/deterministicmns.h>
 
 #include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/context.h>
 #include <llmq/debug.h>
@@ -873,8 +874,8 @@ static UniValue verifychainlock(const JSONRPCRequest& request)
 
     const uint256 nBlockHash(ParseHashV(request.params[0], "blockHash"));
 
-    CBLSSignature chainLockSig;
-    if (!chainLockSig.SetHexStr(request.params[1].get_str())) {
+    CBLSSignature sig;
+    if (!sig.SetHexStr(request.params[1].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
 
@@ -891,9 +892,7 @@ static UniValue verifychainlock(const JSONRPCRequest& request)
 
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
 
-    const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
-    const uint256 nRequestId = ::SerializeHash(std::make_pair(llmq::CLSIG_REQUESTID_PREFIX, nBlockHeight));
-    return llmq::CSigningManager::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, nBlockHeight, nRequestId, nBlockHash, chainLockSig);
+    return llmq_ctx.clhandler->VerifyChainLock(llmq::CChainLockSig(nBlockHeight, nBlockHash, sig));
 }
 
 static void verifyislock_help(const JSONRPCRequest& request)

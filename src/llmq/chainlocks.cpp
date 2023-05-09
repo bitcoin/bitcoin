@@ -24,12 +24,13 @@ namespace llmq
 {
 std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
-CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
     connman(_connman),
     mempool(_mempool),
     spork_manager(sporkManager),
     sigman(_sigman),
     shareman(_shareman),
+    qman(_qman),
     m_mn_sync(mn_sync),
     scheduler(std::make_unique<CScheduler>()),
     scheduler_thread(std::make_unique<std::thread>([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); }))
@@ -121,8 +122,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         }
     }
 
-    const uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.getHeight()));
-    if (!llmq::CSigningManager::VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, *llmq::quorumManager, clsig.getHeight(), requestId, clsig.getBlockHash(), clsig.getSig())) {
+    if (!VerifyChainLock(clsig)) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
             Misbehaving(from, 10);
@@ -555,6 +555,13 @@ bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash) con
 {
     LOCK(cs);
     return InternalHasChainLock(nHeight, blockHash);
+}
+
+bool CChainLocksHandler::VerifyChainLock(const CChainLockSig& clsig) const
+{
+    const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
+    const uint256 nRequestId = ::SerializeHash(std::make_pair(llmq::CLSIG_REQUESTID_PREFIX, clsig.getHeight()));
+    return llmq::CSigningManager::VerifyRecoveredSig(llmqType, qman, clsig.getHeight(), nRequestId, clsig.getBlockHash(), clsig.getSig());
 }
 
 bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockHash) const

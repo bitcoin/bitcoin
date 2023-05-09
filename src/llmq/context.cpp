@@ -47,7 +47,7 @@ void LLMQContext::Create(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, 
     llmq::quorumManager = std::make_unique<llmq::CQuorumManager>(evoDb, connman, *bls_worker, *llmq::quorumBlockProcessor, *qdkgsman, ::masternodeSync);
     sigman = std::make_unique<llmq::CSigningManager>(connman, *llmq::quorumManager, unitTests, fWipe);
     shareman = std::make_unique<llmq::CSigSharesManager>(connman, *llmq::quorumManager, *sigman);
-    llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(mempool, connman, sporkManager, *sigman, *shareman, ::masternodeSync);
+    llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(mempool, connman, sporkManager, *sigman, *shareman, *llmq::quorumManager, ::masternodeSync);
     llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(mempool, connman, sporkManager, *llmq::quorumManager, *sigman, *shareman, *llmq::chainLocksHandler, ::masternodeSync, unitTests, fWipe);
 
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
