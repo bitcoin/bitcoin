@@ -16,9 +16,20 @@ namespace node {
      * Same as GETDATA_TX_INTERVAL. */
     static constexpr auto ORPHAN_ANCESTOR_GETDATA_INTERVAL{60s};
 
-    /** Delay to add if an orphan resolution candidate is already using a lot of memory in the
+    /** Delay to add if an orphan resolution candidate is protecting a lot of memory in the
      * orphanage. */
     static constexpr auto ORPHANAGE_OVERLOAD_DELAY{1s};
+
+    /** Maximum amount of orphans we may protect for an inbound peer when they first connect.
+     * The number of "protection tokens" an inbound peer starts with. */
+    static constexpr size_t MAX_ORPHANAGE_PROTECTION_INBOUND{50000};
+    /** Maximum amount of orphans we may protect for an outbound peer when they first connect.
+     * The number of "protection tokens" an inbound peer starts with. Equal to one maximum-size orphan. */
+    static constexpr size_t MAX_ORPHANAGE_PROTECTION_OUTBOUND{400000};
+
+    /** Number of orphanage bytes a peer may use before we start dropping their requests. */
+    static constexpr size_t MAX_ORPHANAGE_USAGE{10*MAX_ORPHANAGE_PROTECTION_OUTBOUND};
+
 
 class TxPackageTracker::Impl {
     /** Manages unvalidated tx data (orphan transactions for which we are downloading ancestors). */
@@ -115,14 +126,29 @@ class TxPackageTracker::Impl {
         bool m_is_inbound;
         // What package versions we agreed to relay.
         PackageRelayVersions m_versions_supported;
+        /** Amount of orphans protected for this peer, in bytes. */
+        size_t m_protected_orphans_size{0};
+        /** Maximum amount of orphans that can be protected for this peer, in bytes. */
+        size_t m_max_orphans_to_protect{0};
+        /** Wtxids and sizes of the orphans in the orphanage who are protected for this peer. */
+        std::map<uint256, size_t> m_protected_orphan_map;
+
+        /** Iterators to items in pending_package_info originating from this peer. */
+        std::set<PendingMap::iterator, IteratorComparator> m_package_info_provided;
 
         PeerInfo(bool is_inbound, PackageRelayVersions versions) :
             m_is_inbound{is_inbound},
-            m_versions_supported{versions}
+            m_versions_supported{versions},
+            m_max_orphans_to_protect{is_inbound ? MAX_ORPHANAGE_PROTECTION_INBOUND : MAX_ORPHANAGE_PROTECTION_OUTBOUND}
         {}
         bool SupportsVersion(PackageRelayVersions version) { return m_versions_supported & version; }
-
-        std::set<PendingMap::iterator, IteratorComparator> m_package_info_provided;
+        size_t AvailableProtectionTokens() {
+            if (m_max_orphans_to_protect < m_protected_orphans_size) {
+                Assume(false);
+                return 0;
+            }
+            return m_max_orphans_to_protect - m_protected_orphans_size;
+        }
     };
 
     /** Stores relevant information about the peer prior to verack. Upon completion of version
@@ -240,12 +266,22 @@ public:
         LOCK(m_mutex);
         // Skip if we weren't provided the tx and can't find the wtxid in the orphanage.
         if (tx == nullptr && !m_orphanage.HaveTx(GenTxid::Wtxid(wtxid))) return;
+        CTransactionRef ptx = tx ? tx : m_orphanage.GetTx(wtxid);
 
         // Skip if already requested in the (recent-ish) past.
         if (packageinfo_requested.contains(GetPackageInfoRequestId(nodeid, wtxid, PKG_RELAY_ANCPKG))) return;
 
+        // Skip if this peer is already using a lot of space in the orphanage.
+        if (m_orphanage.BytesFromPeer(nodeid) > MAX_ORPHANAGE_USAGE) return;
+
         auto it_peer_info = info_per_peer.find(nodeid);
         if (it_peer_info != info_per_peer.end() && it_peer_info->second.SupportsVersion(PKG_RELAY_ANCPKG)) {
+            // If we cannot protect this transaction, delay the request to use other peers'
+            // protection tokens.
+            Assume(it_peer_info->second.m_protected_orphan_map.count(wtxid) == 0);
+            if (it_peer_info->second.AvailableProtectionTokens() < ptx->GetTotalSize()) {
+                reqtime += ORPHANAGE_OVERLOAD_DELAY;
+            }
             // Package relay peer: is_wtxid=true because we will be requesting via ancpkginfo.
             LogPrint(BCLog::TXPACKAGES, "\nPotential orphan resolution for %s from package relay peer=%d\n", wtxid.ToString(), nodeid);
             orphan_request_tracker.ReceivedInv(nodeid, GenTxid::Wtxid(wtxid), is_preferred, reqtime);
@@ -255,12 +291,49 @@ public:
             orphan_request_tracker.ReceivedInv(nodeid, GenTxid::Txid(wtxid), is_preferred, reqtime);
         }
 
-        if (tx != nullptr) {
-            m_orphanage.AddTx(tx, nodeid);
-        } else {
-            m_orphanage.AddTx(m_orphanage.GetTx(wtxid), nodeid);
-        }
+        m_orphanage.AddTx(ptx, nodeid);
+        // Protection may or may not be possible. If the orphan is unprotected, it's possible it
+        // will be evicted by the time we try to download ancestors. If we cannot protect now but
+        // still have it later, we will attempt to protect it again.
+        MaybeProtectOrphan(nodeid, wtxid);
+    }
+    void MaybeProtectOrphan(NodeId nodeid, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
+    {
+        AssertLockHeld(m_mutex);
+        auto peer_info_it = info_per_peer.find(nodeid);
+        // Skip if this isn't a package relay peer.
+        if (peer_info_it == info_per_peer.end()) return;
+        const auto orphan_tx = m_orphanage.GetTx(wtxid);
+        // Skip if the orphanage doesn't have this transaction.
+        if (!orphan_tx) return;
+        const auto orphan_size{orphan_tx->GetTotalSize()};
+        // Skip if this peer is already protecting this orphan.
+        if (peer_info_it->second.m_protected_orphan_map.count(wtxid) > 0) return;
+        // Skip if this peer is already protecting too many orphans.
+        if (peer_info_it->second.AvailableProtectionTokens() < orphan_size) return;
 
+        // Protect this orphan.
+        LogPrint(BCLog::TXPACKAGES, "\nProtecting orphan %s for peer=%d\n", wtxid.ToString(), nodeid);
+        m_orphanage.ProtectOrphan(wtxid);
+        peer_info_it->second.m_protected_orphans_size += orphan_tx->GetTotalSize();
+        peer_info_it->second.m_protected_orphan_map.emplace(wtxid, orphan_size);
+    }
+    void MaybeUnprotectOrphan(NodeId nodeid, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
+    {
+        AssertLockHeld(m_mutex);
+        auto peer_info_it = info_per_peer.find(nodeid);
+        if (peer_info_it == info_per_peer.end()) return;
+        auto orphan_map_it = peer_info_it->second.m_protected_orphan_map.find(wtxid);
+        // Skip if this peer isn't protecting this orphan.
+        if (orphan_map_it == peer_info_it->second.m_protected_orphan_map.end()) return;
+        const auto orphan_size = orphan_map_it->second;
+
+        // Unprotect this orphan.
+        LogPrint(BCLog::TXPACKAGES, "\nUndoing protection for orphan %s for peer=%d\n", wtxid.ToString(), nodeid);
+        m_orphanage.UndoProtectOrphan(wtxid);
+        Assume(peer_info_it->second.m_protected_orphans_size >= orphan_size);
+        peer_info_it->second.m_protected_orphans_size -= orphan_size;
+        peer_info_it->second.m_protected_orphan_map.erase(wtxid);
     }
     size_t CountInFlight(NodeId nodeid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
@@ -302,6 +375,9 @@ public:
             auto pending_iter = pending_package_info.find(packageid);
             Assume(pending_iter != pending_package_info.end());
             if (pending_iter != pending_package_info.end()) {
+                for (const auto& [wtxid, missing] : pending_iter->second.m_txdata_status) {
+                    if (!missing) MaybeUnprotectOrphan(nodeid, wtxid);
+                }
                 peer_info_it->second.m_package_info_provided.erase(pending_iter);
                 pending_package_info.erase(pending_iter);
             }
@@ -330,6 +406,7 @@ public:
                 results.emplace_back(gtxid);
                 packageinfo_requested.insert(GetPackageInfoRequestId(nodeid, gtxid.GetHash(), PKG_RELAY_ANCPKG));
                 orphan_request_tracker.RequestedTx(nodeid, gtxid.GetHash(), current_time + ORPHAN_ANCESTOR_GETDATA_INTERVAL);
+                MaybeProtectOrphan(nodeid, gtxid.GetHash());
             } else {
                 LogPrint(BCLog::TXPACKAGES, "\nResolving orphan %s, requesting by txids of parents from peer=%d\n", gtxid.GetHash().ToString(), nodeid);
                 const auto ptx = m_orphanage.GetTx(gtxid.GetHash());
@@ -381,6 +458,7 @@ public:
                 // There is no need to request more information from other peers.
                 to_erase.insert(packageid);
                 orphan_request_tracker.ForgetTxHash(rep_wtxid);
+                MaybeUnprotectOrphan(packageinfo.m_pkginfo_provider, rep_wtxid);
             } else if (packageinfo.HasTransactionIn(invalid)) {
                 // This package info is known to contain an invalid transaction; don't continue
                 // trying to download or validate it.
@@ -402,6 +480,9 @@ public:
                 auto peer_info_it = info_per_peer.find(pending_iter->second.m_pkginfo_provider);
                 Assume(peer_info_it != info_per_peer.end());
                 if (peer_info_it != info_per_peer.end()) {
+                    for (const auto& [wtxid, missing] : pending_iter->second.m_txdata_status) {
+                        if (!missing) MaybeUnprotectOrphan(pending_iter->second.m_pkginfo_provider, wtxid);
+                    }
                     peer_info_it->second.m_package_info_provided.erase(pending_iter);
                 }
                 pending_package_info.erase(pending_iter);
@@ -435,6 +516,7 @@ public:
         LOCK(m_mutex);
         if (pkginfo_version == PKG_RELAY_ANCPKG) {
             orphan_request_tracker.ReceivedResponse(nodeid, rep_wtxid);
+            MaybeUnprotectOrphan(nodeid, rep_wtxid);
         }
     }
 
@@ -458,10 +540,17 @@ public:
         // orphan_request_tracker will select additional candidate peers for orphan resolution.
         orphan_request_tracker.ResetRequestTimeout(nodeid, rep_wtxid, ORPHAN_ANCESTOR_GETDATA_INTERVAL);
         for (const auto& [wtxid, missing] : txdata_status) {
+            if (missing && m_orphanage.HaveTx(GenTxid::Wtxid(wtxid))) {
+                // Try to protect all transactions in our orphanage if we haven't already. Do this
+                // before we decide whether or not we want to request this transaction. We don't
+                // need to redownload orphans we are protecting.
+                MaybeProtectOrphan(nodeid, wtxid);
+            }
             // All missing transactions and unprotected orphans must be requested again. We cannot
             // guarantee that an unprotected orphan will remain in our orphanage, and it won't make
             // sense to try to download something a third time.
-            if (missing) {
+            if ((missing && !m_orphanage.HaveTx(GenTxid::Wtxid(wtxid))) ||
+                 peer_info_it->second.m_protected_orphan_map.count(wtxid) == 0) {
                 wtxids_to_request.push_back(wtxid);
             }
         }
@@ -493,6 +582,12 @@ public:
         if (pending_iter != pending_package_info.end()) {
             auto& pendingpackage{pending_iter->second};
             LogPrint(BCLog::TXPACKAGES, "\nReceived notfound for package (tx %s) from peer=%d\n", pendingpackage.RepresentativeWtxid().ToString(), nodeid);
+            // Give up on downloading this package
+            for (const auto& [wtxid, missing] : pendingpackage.m_txdata_status) {
+                if (!missing) MaybeUnprotectOrphan(nodeid, wtxid);
+            }
+            peer_info_it->second.m_package_info_provided.erase(pending_iter);
+            pending_package_info.erase(pending_iter);
         }
     }
     std::optional<PackageToValidate> ReceivedPkgTxns(NodeId nodeid, const std::vector<CTransactionRef>& package_txns)
@@ -517,10 +612,8 @@ public:
             if (m_orphanage.HaveTx(GenTxid::Wtxid(wtxid))) {
                 unvalidated_txdata.push_back(m_orphanage.GetTx(wtxid));
             }
+            MaybeUnprotectOrphan(nodeid, wtxid);
         }
-        // It's possible we are actually missing something because m_txdata_status map does not
-        // update if the orphanage evicts our orphan.  However, we should have requested (and now
-        // received) all of the transactions we were missing.
         return PackageToValidate{pendingpackage.m_pkginfo_provider, pendingpackage.RepresentativeWtxid(),
                                  pendingpackage.GetPackageHash(), unvalidated_txdata};
     }

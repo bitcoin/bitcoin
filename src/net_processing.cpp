@@ -1516,6 +1516,7 @@ void PeerManagerImpl::AddOrphanAnnouncer(NodeId nodeid, const uint256& orphan_wt
     if (!peer_ref) return;
     if (!peer_ref->m_package_relay && m_package_relay_peers > 0) delay += TXID_RELAY_DELAY;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
+    // Note that TxPackageTracker may also decide to delay or drop this request.
     m_txpackagetracker->AddOrphanTx(nodeid, orphan_wtxid, tx, preferred, current_time + delay);
 }
 void PeerManagerImpl::AddOrphanResolutionCandidates(const CTransactionRef& orphan, NodeId originator)
