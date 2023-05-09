@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">Sabontawa</translation>
+        <translation type="unfinished">&amp;Sabontawa</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">C&amp;Rasa</translation>
+        <translation type="unfinished">C&amp;Rufe</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -85,7 +85,7 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Fitarwar Jerin Adreshi</translation>
+        <translation type="unfinished">Fitarwar Jerin Adireshi</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -95,7 +95,7 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">An sami kuskure wajen ƙoƙarin ajiye jerin adireshi zuwa 1 %1. Da fatan za a sake gwadawa.</translation>
+        <translation type="unfinished">An sami kuskure wajen ƙoƙarin ajiye jerin adireshi zuwa %1. Da fatan za a sake gwadawa. </translation>
     </message>
     <message>
         <source>Exporting Failed</source>

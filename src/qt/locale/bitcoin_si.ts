@@ -300,61 +300,10 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">සැකසීම් ගොනුව කියවිය නොහැක</translation>
-    </message>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">%s සංවර්ධකයින්</translation>
-    </message>
-    <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">%s සෑදීමේ දෝෂයකි</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">%s පූරණය වීමේ දෝෂයකි</translation>
-    </message>
-    <message>
-        <source>Error: Unable to make a backup of your wallet</source>
-        <translation type="unfinished">දෝෂය: ඔබගේ පසුම්බිය ප්‍රතිස්ථාපනය කල නොහැකි විය.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">ආයාත වෙමින්…</translation>
-    </message>
-    <message>
-        <source>Loading wallet…</source>
-        <translation type="unfinished">පසුම්බිය පූරණය වෙමින්…</translation>
-    </message>
-    <message>
-        <source>Rescanning…</source>
-        <translation type="unfinished">යළි සුපිරික්සමින්…</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">මෙය පර්යේෂණාත්මක මෘදුකාංගයකි.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">'%s' නොදන්නා ලිපින වර්ගයකි</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;දළ විශ්ලේෂණය</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation type="unfinished">පසුම්බිය පිළිබඳ සාමාන්‍ය දළ විශ්ලේෂණය පෙන්වන්න</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation type="unfinished">&amp;ගනුදෙනු</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -477,10 +426,6 @@
         <translation type="unfinished">තොරතුර</translation>
     </message>
     <message>
-        <source>Up to date</source>
-        <translation type="unfinished">යාවත්කාලීනයි</translation>
-    </message>
-    <message>
         <source>&amp;Sending addresses</source>
         <translation type="unfinished">&amp;යවන ලිපින</translation>
     </message>
@@ -490,11 +435,11 @@
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බිය බලන්න</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation type="unfinished">පසුම්බියක් විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බියක් බලන්න</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -704,7 +649,7 @@
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බිය බලන්න</translation>
     </message>
     </context>
 <context>
@@ -1334,4 +1279,47 @@
         <translation type="unfinished">අවලංගු</translation>
     </message>
 </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">%s සංවර්ධකයින්</translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">%s සෑදීමේ දෝෂයකි</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">%s පූරණය වීමේ දෝෂයකි</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">දෝෂය: ඔබගේ පසුම්බිය ප්‍රතිස්ථාපනය කල නොහැකි විය.</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">ආයාත වෙමින්…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">පසුම්බිය පූරණය වෙමින්…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">යළි සුපිරික්සමින්…</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">මෙය පර්යේෂණාත්මක මෘදුකාංගයකි.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">'%s' නොදන්නා ලිපින වර්ගයකි</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">සැකසීම් ගොනුව කියවිය නොහැක</translation>
+    </message>
+    </context>
 </TS>

@@ -271,14 +271,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Ýowuz ýalňyşlyk ýüze çykdy. Sazlamalar faýlyna ýazmak mümkinçiliginiň bardygyny ýa-da ýokdugyny barla, bolmasa -nosettings bilen işletmäge çalyş.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Ýalňyşlyk: Görkezilen maglumatlar katalogy "%1" ýok.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Ýalňyşlyk: %1 konfigurasiýa faýlyny derňäp bolanok.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Ýalňyşlyk: %1</translation>
     </message>
@@ -334,17 +326,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">Sazlamalar faýlyny okap bolanok</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">Sazlamalar faýlyny ýazdyryp bolanok</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -356,11 +337,11 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation type="unfinished">&amp;Geleşikler</translation>
+        <translation type="unfinished">&amp;Amallar</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation type="unfinished">Geleşikleriň geçmişine göz aýla</translation>
+        <translation type="unfinished">Amallaryň geçmişine göz aýla</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -405,7 +386,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">Ulgamyň işleýşi ýapyk.</translation>
+        <translation type="unfinished">Tor işleýşi ýapyk.</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
@@ -509,7 +490,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
-        <translation type="unfinished">Ulgam bilen utgaşdyrmak...</translation>
+        <translation type="unfinished">Tor bilen sinhronlaşdyrmak...</translation>
     </message>
     <message>
         <source>Indexing blocks on disk…</source>
@@ -518,10 +499,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Diskde bloklar işlenýär...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Diskde bloklar gaýtadan indekslenýär...</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -584,7 +561,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin geleşigini ýükle</translation>
+        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin amalyny (BGÇBA) ýükle</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -592,7 +569,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Bölekleýin gol çekilen bitkoin geleşigini alyş-çalyş panelinden ýükle</translation>
+        <translation type="unfinished">Bölekleýin gol çekilen bitkoin amalyny alyş-çalyş panelinden ýükle</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -1574,4 +1551,15 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Häzirki bellikdäki maglumaty faýla geçir</translation>
     </message>
     </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Sazlamalar faýlyny okap bolanok</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Sazlamalar faýlyny ýazdyryp bolanok</translation>
+    </message>
+</context>
 </TS>

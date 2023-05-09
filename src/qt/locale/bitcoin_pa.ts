@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">bhejan wale pate</translation>
+        <translation type="unfinished">ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਲੇ ਪਤੇ </translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -94,6 +94,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">ਕਾਮੇ ਨਾਲ ਵੱਖ ਕੀਤੀ ਫਾਈਲ</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished"> %1 ਤੇ ਪਤੇ ਦੀ ਲਿਸਟ ਸੇਵ ਕਰਨੀ ਅਸਫਲ ਹੋਈ। ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ। </translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -256,17 +261,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">ਸੈਟਿੰਗ ਫਾਈਲ ਨੂੰ ਪੜ੍ਹਨ ਵਿੱਚ ਅਸਫਲ</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">ਸੈਟਿੰਗ ਫਾਈਲ ਲਿਖਣ ਵਿੱਚ ਅਸਫਲ</translation>
     </message>
     </context>
 <context>
@@ -489,4 +483,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ਮੌਜੂਦਾ ਟੈਬ ਵਿੱਚ ਡੇਟਾ ਨੂੰ ਫਾਈਲ ਵਿੱਚ ਐਕਸਪੋਰਟ ਕਰੋ</translation>
     </message>
     </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">ਸੈਟਿੰਗ ਫਾਈਲ ਨੂੰ ਪੜ੍ਹਨ ਵਿੱਚ ਅਸਫਲ</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">ਸੈਟਿੰਗ ਫਾਈਲ ਲਿਖਣ ਵਿੱਚ ਅਸਫਲ</translation>
+    </message>
+</context>
 </TS>
