@@ -389,6 +389,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             const BlockManager::Options blockman_opts{
                 .chainparams = chainman_opts.chainparams,
                 .blocks_dir = m_args.GetBlocksDirPath(),
+                .notifications = chainman_opts.notifications,
             };
             // For robustness, ensure the old manager is destroyed before creating a
             // new one.
@@ -563,7 +564,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     auto db_cache_before_complete = active_cs.m_coinsdb_cache_size_bytes;
 
     SnapshotCompletionResult res;
-    auto mock_shutdown = [](bilingual_str msg) {};
+    chainman.m_options.interrupt_on_fatal_error = false;
 
     fs::path snapshot_chainstate_dir = *node::FindSnapshotChainstateDir();
     BOOST_CHECK(fs::exists(snapshot_chainstate_dir));
@@ -573,8 +574,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
-    res = WITH_LOCK(::cs_main,
-        return chainman.MaybeCompleteSnapshotValidation(mock_shutdown));
+    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
 
     WITH_LOCK(::cs_main, BOOST_CHECK(chainman.IsSnapshotValidated()));
@@ -590,8 +590,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     BOOST_CHECK_EQUAL(all_chainstates[0], &active_cs);
 
     // Trying completion again should return false.
-    res = WITH_LOCK(::cs_main,
-        return chainman.MaybeCompleteSnapshotValidation(mock_shutdown));
+    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SKIPPED);
 
     // The invalid snapshot path should not have been used.
@@ -644,7 +643,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     Chainstate& validation_chainstate = *std::get<0>(chainstates);
     ChainstateManager& chainman = *Assert(m_node.chainman);
     SnapshotCompletionResult res;
-    auto mock_shutdown = [](bilingual_str msg) {};
+    chainman.m_options.interrupt_on_fatal_error = false;
 
     // Test tampering with the IBD UTXO set with an extra coin to ensure it causes
     // snapshot completion to fail.
@@ -660,8 +659,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     fs::path snapshot_chainstate_dir = gArgs.GetDataDirNet() / "chainstate_snapshot";
     BOOST_CHECK(fs::exists(snapshot_chainstate_dir));
 
-    res = WITH_LOCK(::cs_main,
-        return chainman.MaybeCompleteSnapshotValidation(mock_shutdown));
+    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
 
     auto all_chainstates = chainman.GetAll();
