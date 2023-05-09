@@ -58,8 +58,8 @@ static bool CheckService(const ProTx& proTx, TxValidationState& state, bool fJus
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
     }
     ArgsManager args;
-    static int mainnetDefaultPort = CreateChainParams(args, CBaseChainParams::MAIN)->GetDefaultPort();
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+    static int mainnetDefaultPort = CreateChainParams(args, ChainType::MAIN)->GetDefaultPort();
+    if (Params().GetChainType() == ChainType::MAIN) {
         if (proTx.addr.GetPort() != mainnetDefaultPort) {
             return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
         }

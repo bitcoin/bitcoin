@@ -20,7 +20,7 @@
 BOOST_FIXTURE_TEST_SUITE(nevm_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(seniority_test)
 {
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto consensusParams = chainParams->GetConsensus();
     const int oldSr1Height = 525600;
     const int oldSr2Height = oldSr1Height*2.5;
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(seniority_test)
 }
 BOOST_AUTO_TEST_CASE(halving_test)
 {
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto consensusParams = chainParams->GetConsensus();
     BOOST_CHECK_EQUAL(consensusParams.SubsidyHalvingIntervals(100000), 0);
     BOOST_CHECK_EQUAL(consensusParams.SubsidyHalvingIntervals(consensusParams.nSubsidyHalvingInterval), 0);

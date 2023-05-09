@@ -16,6 +16,7 @@
 #include <test/util/setup_common.h>
 #include <time.h>
 #include <util/asmap.h>
+#include <util/chaintype.h>
 
 #include <cassert>
 #include <cstdint>
@@ -34,7 +35,7 @@ int32_t GetCheckRatio()
 
 void initialize_addrman()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::REGTEST);
+    static const auto testing_setup = MakeNoLogFileContext<>(ChainType::REGTEST);
     g_setup = testing_setup.get();
 }
 

@@ -967,7 +967,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CC
     // On mainnet nMaxObjRequestsPerNode is always set to 1.
     int nMaxObjRequestsPerNode = 1;
     size_t nProjectedVotes = 2000;
-    if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
+    if (Params().GetChainType() != ChainType::MAIN) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)mnList.GetValidMNsCount())));
     }

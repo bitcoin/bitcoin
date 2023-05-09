@@ -421,7 +421,7 @@ mineBlock (CBlockHeader& block, bool ok, int nBits = -1)
 BOOST_FIXTURE_TEST_CASE (auxpow_pow, BasicTestingSetup)
 {
   /* Use regtest parameters to allow mining with easy difficulty.  */
-  SelectParams (CBaseChainParams::REGTEST);
+  SelectParams (ChainType::REGTEST);
   const Consensus::Params& params = Params ().GetConsensus ();
 
   const arith_uint256 target = (~arith_uint256 (0) >> 1);

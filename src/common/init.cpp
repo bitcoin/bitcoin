@@ -26,7 +26,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         }
 
         // Check for chain settings (Params() calls are only valid after this clause)
-        SelectParams(args.GetChainName());
+        SelectParams(args.GetChainType());
 
         // Create datadir if it does not exist.
         const auto base_path{args.GetDataDirBase()};

@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <chainparamsbase.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>

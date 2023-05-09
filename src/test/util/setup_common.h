@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_TEST_UTIL_SETUP_COMMON_H
 #define SYSCOIN_TEST_UTIL_SETUP_COMMON_H
 
-#include <chainparamsbase.h>
 #include <common/args.h>
 #include <key.h>
 #include <node/caches.h>
@@ -14,6 +13,7 @@
 #include <pubkey.h>
 #include <random.h>
 #include <stdexcept>
+#include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
@@ -82,7 +82,7 @@ static constexpr CAmount CENT{1000000};
 struct BasicTestingSetup {
     node::NodeContext m_node; // keep as first member to be destructed last
 
-    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
 
     const fs::path m_path_root;
@@ -98,7 +98,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
     bool m_coins_db_in_memory{true};
     bool m_block_tree_db_in_memory{true};
 
-    explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit ChainTestingSetup(const ChainType chainType = ChainType::MAIN, const std::vector<const char*>& extra_args = {});
     ~ChainTestingSetup();
 
     // Supplies a chainstate, if one is needed
@@ -109,7 +109,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
  */
 struct TestingSetup : public ChainTestingSetup {
     explicit TestingSetup(
-        const std::string& chainName = CBaseChainParams::MAIN,
+        const ChainType chainType = ChainType::MAIN,
         const std::vector<const char*>& extra_args = {},
         const bool coins_db_in_memory = true,
         const bool block_tree_db_in_memory = true);
@@ -118,7 +118,7 @@ struct TestingSetup : public ChainTestingSetup {
 /** Identical to TestingSetup, but chain set to regtest */
 struct RegTestingSetup : public TestingSetup {
     RegTestingSetup()
-        : TestingSetup{CBaseChainParams::REGTEST} {}
+        : TestingSetup{ChainType::REGTEST} {}
 };
 
 
@@ -131,7 +131,7 @@ class CScript;
  */
 struct TestChain100Setup : public TestingSetup {
     TestChain100Setup(
-        const std::string& chain_name = CBaseChainParams::REGTEST,
+        const ChainType chain_type = ChainType::REGTEST,
         const std::vector<const char*>& extra_args = {},
         // SYSCOIN
         int count = COINBASE_MATURITY,
@@ -212,17 +212,17 @@ struct TestChain100Setup : public TestingSetup {
 //
 struct TestChainDIP3Setup : public TestChain100Setup
 {
-    TestChainDIP3Setup() : TestChain100Setup(CBaseChainParams::REGTEST, {}, 549) {}
+    TestChainDIP3Setup() : TestChain100Setup(ChainType::REGTEST, {}, 549) {}
 };
 
 struct TestChainDIP3V19Setup : public TestChain100Setup
 {
-    TestChainDIP3V19Setup() :TestChain100Setup(CBaseChainParams::REGTEST, {}, 1000) {}
+    TestChainDIP3V19Setup() :TestChain100Setup(ChainType::REGTEST, {}, 1000) {}
 };
 
 struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
 {
-    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(CBaseChainParams::REGTEST, {}, 548) {}
+    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(ChainType::REGTEST, {}, 548) {}
 };
 
 /**
@@ -230,7 +230,7 @@ struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
  * be used in "hot loops", for example fuzzing or benchmarking.
  */
 template <class T = const BasicTestingSetup>
-std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseChainParams::REGTEST, const std::vector<const char*>& extra_args = {})
+std::unique_ptr<T> MakeNoLogFileContext(const ChainType chain_type = ChainType::REGTEST, const std::vector<const char*>& extra_args = {})
 {
     const std::vector<const char*> arguments = Cat(
         {
@@ -239,7 +239,7 @@ std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseCha
         },
         extra_args);
 
-    return std::make_unique<T>(chain_name, arguments);
+    return std::make_unique<T>(chain_type, arguments);
 }
 
 CBlock getBlock13b8a();

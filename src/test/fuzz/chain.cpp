@@ -14,7 +14,7 @@
 #include <chainparams.h>
 void initialize_chain()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(chain, initialize_chain)

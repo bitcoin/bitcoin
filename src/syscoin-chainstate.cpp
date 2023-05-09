@@ -25,6 +25,7 @@
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
+#include <util/chaintype.h>
 #include <util/thread.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Misc Globals
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(ChainType::MAIN);
     auto chainparams = CChainParams::Main();
 
     kernel::Context kernel_context{};
