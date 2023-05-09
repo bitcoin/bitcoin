@@ -261,7 +261,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                                     subelement = lastResult[parsed.value()];
                                 }
                                 else if (lastResult.isObject())
-                                    subelement = find_value(lastResult, curarg);
+                                    subelement = lastResult.find_value(curarg);
                                 else
                                     throw std::runtime_error("Invalid result query"); //no array or object: abort
                                 lastResult = subelement;
@@ -460,8 +460,8 @@ void RPCExecutor::request(const QString &command, const WalletModel* wallet_mode
     {
         try // Nice formatting for standard-format error
         {
-            int code = find_value(objError, "code").getInt<int>();
-            std::string message = find_value(objError, "message").get_str();
+            int code = objError.find_value("code").getInt<int>();
+            std::string message = objError.find_value("message").get_str();
             Q_EMIT reply(RPCConsole::CMD_ERROR, QString::fromStdString(message) + " (code " + QString::number(code) + ")");
         }
         catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message

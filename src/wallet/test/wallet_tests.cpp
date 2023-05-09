@@ -919,15 +919,15 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     request.params.push_back(addr);
     BOOST_CHECK_NO_THROW(response = wallet::getaddressinfo().HandleRequest(request).get_obj());
 
-    BOOST_CHECK_EQUAL(find_value(response, "ismine").get_bool(), true);
-    BOOST_CHECK_EQUAL(find_value(response, "solvable").get_bool(), true);
-    BOOST_CHECK_EQUAL(find_value(response, "iswatchonly").get_bool(), false);
-    BOOST_CHECK_EQUAL(find_value(response, "isscript").get_bool(), false);
-    BOOST_CHECK_EQUAL(find_value(response, "ischange").get_bool(), true);
-    BOOST_CHECK(find_value(response, "pubkeys").isNull());
-    BOOST_CHECK(find_value(response, "addresses").isNull());
-    BOOST_CHECK(find_value(response, "sigsrequired").isNull());
-    BOOST_CHECK(find_value(response, "label").isNull());
+    BOOST_CHECK_EQUAL(response.find_value("ismine").get_bool(), true);
+    BOOST_CHECK_EQUAL(response.find_value("solvable").get_bool(), true);
+    BOOST_CHECK_EQUAL(response.find_value("iswatchonly").get_bool(), false);
+    BOOST_CHECK_EQUAL(response.find_value("isscript").get_bool(), false);
+    BOOST_CHECK_EQUAL(response.find_value("ischange").get_bool(), true);
+    BOOST_CHECK(response.find_value("pubkeys").isNull());
+    BOOST_CHECK(response.find_value("addresses").isNull());
+    BOOST_CHECK(response.find_value("sigsrequired").isNull());
+    BOOST_CHECK(response.find_value("label").isNull());
 
     // test p2sh/multisig
     std::string addr1;
@@ -947,24 +947,24 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 
     BOOST_CHECK_NO_THROW(response = wallet::addmultisigaddress().HandleRequest(request));
 
-    std::string multisig = find_value(response.get_obj(), "address").get_str();
+    std::string multisig = response.get_obj().find_value("address").get_str();
 
     request.params.clear();
     request.params.setArray();
     request.params.push_back(multisig);
     BOOST_CHECK_NO_THROW(response = wallet::getaddressinfo().HandleRequest(request).get_obj());
 
-    BOOST_CHECK_EQUAL(find_value(response, "ismine").get_bool(), true);
-    BOOST_CHECK_EQUAL(find_value(response, "solvable").get_bool(), true);
-    BOOST_CHECK_EQUAL(find_value(response, "iswatchonly").get_bool(), false);
-    BOOST_CHECK_EQUAL(find_value(response, "isscript").get_bool(), true);
-    BOOST_CHECK_EQUAL(find_value(response, "ischange").get_bool(), false);
-    BOOST_CHECK_EQUAL(find_value(response, "sigsrequired").getInt<int>(), 2);
-    BOOST_CHECK(find_value(response, "label").isNull());
+    BOOST_CHECK_EQUAL(response.find_value("ismine").get_bool(), true);
+    BOOST_CHECK_EQUAL(response.find_value("solvable").get_bool(), true);
+    BOOST_CHECK_EQUAL(response.find_value("iswatchonly").get_bool(), false);
+    BOOST_CHECK_EQUAL(response.find_value("isscript").get_bool(), true);
+    BOOST_CHECK_EQUAL(response.find_value("ischange").get_bool(), false);
+    BOOST_CHECK_EQUAL(response.find_value("sigsrequired").getInt<int>(), 2);
+    BOOST_CHECK(response.find_value("label").isNull());
 
-    UniValue labels = find_value(response, "labels").get_array();
-    UniValue pubkeys = find_value(response, "pubkeys").get_array();
-    UniValue addresses = find_value(response, "addresses").get_array();
+    UniValue labels = response.find_value("labels").get_array();
+    UniValue pubkeys = response.find_value("pubkeys").get_array();
+    UniValue addresses = response.find_value("addresses").get_array();
 
     BOOST_CHECK_EQUAL(labels.size(), 1);
     BOOST_CHECK_EQUAL(labels[0].get_str(), "");

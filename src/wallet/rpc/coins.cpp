@@ -329,7 +329,7 @@ RPCHelpMan lockunspent()
             });
 
         const uint256 txid(ParseHashO(o, "txid"));
-        const int nOutput{find_value(o, "vout").getInt<int>()};
+        const int nOutput{o.find_value("vout").getInt<int>()};
         if (nOutput < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }

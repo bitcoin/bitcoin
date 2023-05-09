@@ -357,7 +357,7 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
         addresses.push_back(std::make_pair(hashBytes, type));
     } else if (params[0].isObject()) {
 
-        UniValue addressValues = find_value(params[0].get_obj(), "addresses");
+        UniValue addressValues = params[0].get_obj().find_value("addresses");
         if (!addressValues.isArray()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Addresses is expected to be an array");
         }
@@ -551,8 +551,8 @@ static RPCHelpMan getaddressdeltas()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue startValue = find_value(request.params[0].get_obj(), "start");
-    UniValue endValue = find_value(request.params[0].get_obj(), "end");
+    UniValue startValue = request.params[0].get_obj().find_value("start");
+    UniValue endValue = request.params[0].get_obj().find_value("end");
 
     int start = 0;
     int end = 0;
@@ -715,8 +715,8 @@ static RPCHelpMan getaddresstxids()
     int start = 0;
     int end = 0;
     if (request.params[0].isObject()) {
-        UniValue startValue = find_value(request.params[0].get_obj(), "start");
-        UniValue endValue = find_value(request.params[0].get_obj(), "end");
+        UniValue startValue = request.params[0].get_obj().find_value("start");
+        UniValue endValue = request.params[0].get_obj().find_value("end");
         if (startValue.isNum() && endValue.isNum()) {
             start = startValue.getInt<int>();
             end = endValue.getInt<int>();
@@ -789,8 +789,8 @@ static RPCHelpMan getspentinfo()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue txidValue = find_value(request.params[0].get_obj(), "txid");
-    UniValue indexValue = find_value(request.params[0].get_obj(), "index");
+    UniValue txidValue = request.params[0].get_obj().find_value("txid");
+    UniValue indexValue = request.params[0].get_obj().find_value("index");
 
     if (!txidValue.isStr() || !indexValue.isNum()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid txid or index");
