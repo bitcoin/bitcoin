@@ -13,7 +13,7 @@ $(package)_patches += dont_hardcode_x86_64.patch fix_montery_include.patch
 $(package)_patches += fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch fix_limits_header.patch
 $(package)_patches += fix_bigsur_style.patch use_android_ndk23.patch
-$(package)_patches += rcc_hardcode_timestamp.patch
+$(package)_patches += rcc_hardcode_timestamp.patch duplicate_lcqpafonts.patch
 $(package)_patches += fast_fixed_dtoa_no_optimize.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -241,6 +241,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_bigsur_style.patch && \
   patch -p1 -i $($(package)_patch_dir)/use_android_ndk23.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
+  patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
