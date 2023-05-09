@@ -121,9 +121,10 @@ class PruneTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:5])
 
     def test_invalid_command_line_options(self):
+        self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Prune cannot be configured with a negative value.',
-            extra_args=['-prune=-1'],
+            extra_args=['-prune=-1', '-txindex=0', '-disablegovernance'],
         )
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Prune configured below the minimum of 550 MiB.  Please use a higher number.',
@@ -133,9 +134,17 @@ class PruneTest(BitcoinTestFramework):
             expected_msg='Error: Prune mode is incompatible with -txindex.',
             extra_args=['-prune=550', '-txindex'],
         )
+        # self.nodes[0].assert_start_raises_init_error(
+        #     expected_msg='Error: Prune mode is incompatible with -coinstatsindex.',
+        #     extra_args=['-prune=550', '-coinstatsindex'],
+        # )
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: Prune mode is incompatible with -coinstatsindex.',
-            extra_args=['-prune=550', '-coinstatsindex'],
+            expected_msg='Error: Prune mode is incompatible with -blockfilterindex.',
+            extra_args=['-prune=550', '-blockfilterindex'],
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Prune mode is incompatible with -disablegovernance=false.',
+            extra_args=['-prune=550', '-disablegovernance=false'],
         )
 
     def test_height_min(self):
@@ -474,13 +483,14 @@ class PruneTest(BitcoinTestFramework):
             self.log.info("Test wallet re-scan")
             self.wallet_test()
 
+        self.log.info("Test invalid pruning command line options")
+        self.test_invalid_command_line_options()
+
+        # NOTE: this is a Dash-specific part, it should be the very last one before "Done"
         self.log.info("Stopping pruned nodes manually")
         for i in range(2, 6):
             self.log.info("Stopping pruned node%d" % i)
             self.stop_node(i, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
-
-        self.log.info("Test invalid pruning command line options")
-        self.test_invalid_command_line_options()
 
         self.log.info("Done")
 
