@@ -1133,10 +1133,10 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     if (scanobject.isStr()) {
         desc_str = scanobject.get_str();
     } else if (scanobject.isObject()) {
-        UniValue desc_uni = scanobject.find_value("desc");
+        const UniValue& desc_uni{scanobject.find_value("desc")};
         if (desc_uni.isNull()) throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor needs to be provided in scan object");
         desc_str = desc_uni.get_str();
-        UniValue range_uni = scanobject.find_value("range");
+        const UniValue& range_uni{scanobject.find_value("range")};
         if (!range_uni.isNull()) {
             range = ParseDescriptorRange(range_uni);
         }

@@ -42,7 +42,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
         if (fingerprint.isNull()) {
             throw std::runtime_error(strprintf("'%s' received invalid response, missing signer fingerprint", command));
         }
-        const std::string fingerprintStr = fingerprint.get_str();
+        const std::string& fingerprintStr{fingerprint.get_str()};
         // Skip duplicate signer
         bool duplicate = false;
         for (const ExternalSigner& signer : signers) {
