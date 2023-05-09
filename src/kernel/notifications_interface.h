@@ -5,12 +5,13 @@
 #ifndef BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 #define BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 
+#include <util/translation.h>
+
 #include <cstdint>
 #include <string>
 
 class CBlockIndex;
 enum class SynchronizationState;
-struct bilingual_str;
 
 namespace kernel {
 
@@ -35,6 +36,15 @@ public:
     //! by logging the error, or notifying the user, or triggering an early
     //! shutdown as a precaution against causing more errors.
     virtual void flushError(const std::string& debug_message) {}
+
+    //! The fatal error notification is sent to notify the user when an error
+    //! occurs in kernel code that can't be recovered from. After this
+    //! notification is sent, whatever function triggered the error should also
+    //! return an error code or raise an exception. Applications can choose to
+    //! handle the fatal error notification by logging the error, or notifying
+    //! the user, or triggering an early shutdown as a precaution against
+    //! causing more errors.
+    virtual void fatalError(const std::string& debug_message, const bilingual_str& user_message = {}) {}
 };
 } // namespace kernel
 

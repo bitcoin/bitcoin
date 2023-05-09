@@ -101,7 +101,11 @@ int main(int argc, char* argv[])
         {
             std::cerr << "Error flushing block data to disk: " << debug_message << std::endl;
         }
-
+        void fatalError(const std::string& debug_message, const bilingual_str& user_message) override
+        {
+            std::cerr << "Error: " << debug_message << std::endl;
+            std::cerr << (user_message.empty() ? "A fatal internal error occurred." : user_message.original) << std::endl;
+        }
     };
     auto notifications = std::make_unique<KernelNotifications>();
 
