@@ -15,7 +15,7 @@ when we being using newer versions of glibc.
  CFLAGS-.o = $(filter %frame-pointer,$(+cflags)) $(pie-default)
 +
 +# Map Guix store paths to /usr
-+CFLAGS-.o += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -fdebug-prefix-map={}=/usr" \;`
++CFLAGS-.o += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;`
 +
  libtype.o := lib%.a
  object-suffixes += .o
