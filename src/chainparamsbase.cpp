@@ -48,7 +48,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443, 18445);
     }
-    throw std::invalid_argument(strprintf("%s: Invalid ChainType value", __func__));
+    assert(false);
 }
 
 void SelectBaseParams(const ChainType chain)

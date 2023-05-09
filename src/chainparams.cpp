@@ -117,7 +117,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         return CChainParams::RegTest(opts);
     }
     }
-    throw std::invalid_argument(strprintf("%s: Invalid ChainType value", __func__));
+    assert(false);
 }
 
 void SelectParams(const ChainType chain)
