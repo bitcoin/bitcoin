@@ -223,8 +223,8 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                         {"redeemScript", UniValueType(UniValue::VSTR)},
                         {"witnessScript", UniValueType(UniValue::VSTR)},
                     }, true);
-                UniValue rs = prevOut.find_value("redeemScript");
-                UniValue ws = prevOut.find_value("witnessScript");
+                const UniValue& rs{prevOut.find_value("redeemScript")};
+                const UniValue& ws{prevOut.find_value("witnessScript")};
                 if (rs.isNull() && ws.isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing redeemScript/witnessScript");
                 }
