@@ -183,7 +183,7 @@ install:
     - ls -lah $HOST_CACHE_DIR && ls -lah $HOST_CACHE_DIR/depends && ls -lah $HOST_CACHE_DIR/ccache && ls -lah $HOST_CACHE_DIR/docker
     # Load cached builder image
     - if [ -f $HOST_CACHE_DIR/docker/dash-builder-$BUILD_TARGET.tar.gz ]; then zcat $HOST_CACHE_DIR/docker/dash-builder-$BUILD_TARGET.tar.gz | docker load || true; fi
-    - travis_retry docker pull ubuntu:bionic
+    - travis_retry docker pull ubuntu:focal
     - travis_retry docker build -t $BUILDER_IMAGE_NAME --build-arg=USER_ID=$UID --build-arg=GROUP_ID=$UID --build-arg=BUILD_TARGET=$BUILD_TARGET -f contrib/containers/ci/Dockerfile ci
 before_script:
     # Make sure stdout is in blocking mode. Otherwise builds will fail due to large writes to stdout
@@ -213,14 +213,14 @@ after_success:
         - set -o errexit; source ./ci/lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [bionic]  [unit tests, functional tests]'
+      name: 'ARM  [GOAL: install]  [focal]  [unit tests, functional tests]'
       arch: arm64
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
-      name: 'S390x  [GOAL: install]  [bionic]  [unit tests, functional tests]'
+      name: 'S390x  [GOAL: install]  [focal]  [unit tests, functional tests]'
       arch: s390x
       env: >-
         FILE_ENV="./ci/test/00_setup_env_s390x.sh"
@@ -242,7 +242,7 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 # x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
@@ -253,17 +253,17 @@ after_success:
         TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
 # x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, fuzzers under valgrind]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
 

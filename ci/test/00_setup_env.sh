@@ -39,7 +39,7 @@ export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_INTEGRATION_TESTS=${RUN_INTEGRATION_TESTS:-true}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
-export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:18.04}
+export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:focal}
 # Randomize test order.
 # See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
 export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
