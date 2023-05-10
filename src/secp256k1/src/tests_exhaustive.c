@@ -59,6 +59,19 @@ static void random_fe(secp256k1_fe *x) {
         }
     } while(1);
 }
+
+static void random_fe_non_zero(secp256k1_fe *nz) {
+    int tries = 10;
+    while (--tries >= 0) {
+        random_fe(nz);
+        secp256k1_fe_normalize(nz);
+        if (!secp256k1_fe_is_zero(nz)) {
+            break;
+        }
+    }
+    /* Infinitesimal probability of spurious failure here */
+    CHECK(tries >= 0);
+}
 /** END stolen from tests.c */
 
 static uint32_t num_cores = 1;
@@ -174,10 +187,37 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
                 secp256k1_ecmult(&tmp, &groupj[r_log], &na, &ng);
                 ge_equals_gej(&group[(i * r_log + j) % EXHAUSTIVE_TEST_ORDER], &tmp);
 
-                if (i > 0) {
-                    secp256k1_ecmult_const(&tmp, &group[i], &ng, 256);
-                    ge_equals_gej(&group[(i * j) % EXHAUSTIVE_TEST_ORDER], &tmp);
-                }
+            }
+        }
+    }
+
+    for (j = 0; j < EXHAUSTIVE_TEST_ORDER; j++) {
+        for (i = 1; i < EXHAUSTIVE_TEST_ORDER; i++) {
+            int ret;
+            secp256k1_gej tmp;
+            secp256k1_fe xn, xd, tmpf;
+            secp256k1_scalar ng;
+
+            if (skip_section(&iter)) continue;
+
+            secp256k1_scalar_set_int(&ng, j);
+
+            /* Test secp256k1_ecmult_const. */
+            secp256k1_ecmult_const(&tmp, &group[i], &ng, 256);
+            ge_equals_gej(&group[(i * j) % EXHAUSTIVE_TEST_ORDER], &tmp);
+
+            if (j != 0) {
+                /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, and xd=NULL. */
+                ret = secp256k1_ecmult_const_xonly(&tmpf, &group[i].x, NULL, &ng, 256, 0);
+                CHECK(ret);
+                CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
+
+                /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, with random xd. */
+                random_fe_non_zero(&xd);
+                secp256k1_fe_mul(&xn, &xd, &group[i].x);
+                ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 256, 0);
+                CHECK(ret);
+                CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
             }
         }
     }

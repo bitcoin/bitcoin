@@ -228,6 +228,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
+    def set_binary_paths(self):
+        """Update self.options with the paths of all binaries from environment variables or their default values"""
+
+        binaries = {
+            "navcoind": ("navcoind", "BITCOIND"),
+            "navcoin-cli": ("navcoincli", "BITCOINCLI"),
+            "navcoin-util": ("navcoinutil", "BITCOINUTIL"),
+            "navcoin-wallet": ("navcoinwallet", "BITCOINWALLET"),
+        }
+        for binary, [attribute_name, env_variable_name] in binaries.items():
+            default_filename = os.path.join(
+                self.config["environment"]["BUILDDIR"],
+                "src",
+                binary + self.config["environment"]["EXEEXT"],
+            )
+            setattr(self.options, attribute_name, os.getenv(env_variable_name, default=default_filename))
+
     def setup(self):
         """Call this method to start up the test framework object with options set."""
 
@@ -237,24 +254,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         config = self.config
 
-        fname_navcoind = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "navcoind" + config["environment"]["EXEEXT"],
-        )
-        fname_bitcoincli = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "navcoin-cli" + config["environment"]["EXEEXT"],
-        )
-        fname_bitcoinutil = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "navcoin-util" + config["environment"]["EXEEXT"],
-        )
-        self.options.navcoind = os.getenv("BITCOIND", default=fname_navcoind)
-        self.options.bitcoincli = os.getenv("BITCOINCLI", default=fname_bitcoincli)
-        self.options.bitcoinutil = os.getenv("BITCOINUTIL", default=fname_bitcoinutil)
+        self.set_binary_paths()
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -505,7 +505,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if binary is None:
             binary = [get_bin_from_version(v, 'navcoind', self.options.navcoind) for v in versions]
         if binary_cli is None:
-            binary_cli = [get_bin_from_version(v, 'navcoin-cli', self.options.bitcoincli) for v in versions]
+            binary_cli = [get_bin_from_version(v, 'navcoin-cli', self.options.navcoincli) for v in versions]
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
@@ -520,7 +520,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
                 navcoind=binary[i],
-                bitcoin_cli=binary_cli[i],
+                navcoin_cli=binary_cli[i],
                 version=versions[i],
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
@@ -787,7 +787,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     timewait=self.rpc_timeout,
                     timeout_factor=self.options.timeout_factor,
                     navcoind=self.options.navcoind,
-                    bitcoin_cli=self.options.bitcoincli,
+                    navcoin_cli=self.options.navcoincli,
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
                     descriptors=self.options.descriptors,

@@ -92,6 +92,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
         txid = tx_data['txid']
         vout = 1
 
+        self.nodes[0].syncwithvalidationinterfacequeue()
         options = {"change_position": 0, "add_inputs": False}
         for i in range(1, 25):
             options['inputs'] = [{'txid': txid, 'vout': vout}]

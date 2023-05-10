@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
                     find = fileSize - 1;
-                bf.FindByte(uint8_t(find));
+                bf.FindByte(std::byte(find));
                 // The value at each offset is the offset.
                 BOOST_CHECK_EQUAL(bf.GetPos(), find);
                 currentPos = find;

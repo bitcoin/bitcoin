@@ -8,6 +8,7 @@ from test_framework.blocktools import (
     COINBASE_MATURITY,
 )
 from test_framework.address import (
+    address_to_scriptpubkey,
     script_to_p2sh,
 )
 from test_framework.key import ECKey
@@ -118,7 +119,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         }.get(tx_type, "Invalid tx_type")
         redeem_script = script_to_p2wsh_script(witness_script).hex()
         addr = script_to_p2sh(redeem_script)
-        script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
+        script_pub_key = address_to_scriptpubkey(addr).hex()
         # Fund that address
         txid = self.send_to_address(addr, 10)
         vout = find_vout_for_address(self.nodes[0], txid, addr)

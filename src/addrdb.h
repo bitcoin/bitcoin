@@ -6,9 +6,9 @@
 #ifndef BITCOIN_ADDRDB_H
 #define BITCOIN_ADDRDB_H
 
-#include <fs.h>
 #include <net_types.h> // For banmap_t
 #include <univalue.h>
+#include <util/fs.h>
 
 #include <optional>
 #include <vector>

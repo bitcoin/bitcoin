@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 
 #include <cstdint>
 #include <string>
@@ -108,7 +108,7 @@ FUZZ_TARGET_INIT(system, initialize_system)
     (void)args_manager.GetArgs(s1);
     (void)args_manager.GetBoolArg(s1, b);
     try {
-        (void)args_manager.GetChainName();
+        (void)args_manager.GetChainTypeString();
     } catch (const std::runtime_error&) {
     }
     (void)args_manager.GetHelpMessage();

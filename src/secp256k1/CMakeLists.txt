@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.13)
 
 if(CMAKE_VERSION VERSION_GREATER 3.14)
   # MSVC runtime library flags are selected by the CMAKE_MSVC_RUNTIME_LIBRARY abstraction.
@@ -10,7 +10,7 @@ endif()
 # The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
 # the API. All changes in experimental modules are treated as
 # backwards-compatible and therefore at most increase the minor version.
-project(libsecp256k1 VERSION 0.3.0 LANGUAGES C)
+project(libsecp256k1 VERSION 0.3.2 LANGUAGES C)
 
 # The library version is based on libtool versioning of the ABI. The set of
 # rules for updating the version can be found here:
@@ -18,7 +18,7 @@ project(libsecp256k1 VERSION 0.3.0 LANGUAGES C)
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 set(${PROJECT_NAME}_LIB_VERSION_CURRENT 2)
-set(${PROJECT_NAME}_LIB_VERSION_REVISION 0)
+set(${PROJECT_NAME}_LIB_VERSION_REVISION 2)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 0)
 
 set(CMAKE_C_STANDARD 90)
@@ -147,7 +147,7 @@ else()
 endif()
 
 # Define custom "Coverage" build type.
-set(CMAKE_C_FLAGS_COVERAGE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O0 -DCOVERAGE=1 --coverage -Wno-unused-parameter" CACHE STRING
+set(CMAKE_C_FLAGS_COVERAGE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O0 -DCOVERAGE=1 --coverage" CACHE STRING
   "Flags used by the C compiler during \"Coverage\" builds."
   FORCE
 )
@@ -203,11 +203,6 @@ else()
   try_add_compile_option(-Wundef)
 endif()
 
-if(CMAKE_VERSION VERSION_GREATER 3.2)
-  # Honor visibility properties for all target types.
-  # See: https://cmake.org/cmake/help/latest/policy/CMP0063.html
-  cmake_policy(SET CMP0063 NEW)
-endif()
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
 # Ask CTest to create a "check" target (e.g., make check) as alias for the "test" target.

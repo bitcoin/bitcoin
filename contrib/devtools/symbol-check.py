@@ -72,6 +72,25 @@ ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
     },
 }
 
+ELF_ABIS: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, List[int]]] = {
+    lief.ELF.ARCH.x86_64: {
+        lief.ENDIANNESS.LITTLE: [3,2,0],
+    },
+    lief.ELF.ARCH.ARM: {
+        lief.ENDIANNESS.LITTLE: [3,2,0],
+    },
+    lief.ELF.ARCH.AARCH64: {
+        lief.ENDIANNESS.LITTLE: [3,7,0],
+    },
+    lief.ELF.ARCH.PPC64: {
+        lief.ENDIANNESS.LITTLE: [3,10,0],
+        lief.ENDIANNESS.BIG: [3,2,0],
+    },
+    lief.ELF.ARCH.RISCV: {
+        lief.ENDIANNESS.LITTLE: [4,15,0],
+    },
+}
+
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
 # bitcoind and bitcoin-qt
@@ -242,12 +261,19 @@ def check_ELF_interpreter(binary) -> bool:
 
     return binary.concrete.interpreter == expected_interpreter
 
+def check_ELF_ABI(binary) -> bool:
+    expected_abi = ELF_ABIS[binary.header.machine_type][binary.abstract.header.endianness]
+    note = binary.concrete.get(lief.ELF.NOTE_TYPES.ABI_TAG)
+    assert note.details.abi == lief.ELF.NOTE_ABIS.LINUX
+    return note.details.version == expected_abi
+
 CHECKS = {
 lief.EXE_FORMATS.ELF: [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
     ('EXPORTED_SYMBOLS', check_exported_symbols),
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries),
     ('INTERPRETER_NAME', check_ELF_interpreter),
+    ('ABI', check_ELF_ABI),
 ],
 lief.EXE_FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),

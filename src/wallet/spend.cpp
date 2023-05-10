@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <algorithm>
+#include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
@@ -14,6 +15,7 @@
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/system.h>
 #include <util/trace.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
@@ -50,9 +52,7 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, 
 TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
 {
     CMutableTransaction txNew(tx);
-    if (!wallet->DummySignTx(txNew, txouts, coin_control)) {
-        return TxSize{-1, -1};
-    }
+    if (!wallet->DummySignTx(txNew, txouts, coin_control)) return TxSize{-1, -1};
     CTransaction ctx(txNew);
     int64_t vsize = GetVirtualTransactionSize(ctx);
     int64_t weight = GetTransactionWeight(ctx);
@@ -70,11 +70,9 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
             assert(input.prevout.n < mi->second.tx->vout.size());
             txouts.emplace_back(mi->second.tx->vout.at(input.prevout.n));
         } else if (coin_control) {
-            CTxOut txout;
-            if (!coin_control->GetExternalOutput(input.prevout, txout)) {
-                return TxSize{-1, -1};
-            }
-            txouts.emplace_back(txout);
+            const auto& txout{coin_control->GetExternalOutput(input.prevout)};
+            if (!txout) return TxSize{-1, -1};
+            txouts.emplace_back(*txout);
         } else {
             return TxSize{-1, -1};
         }
@@ -161,10 +159,8 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
                                             const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     PreSelectedInputs result;
-    std::vector<COutPoint> vPresetInputs;
-    coin_control.ListSelected(vPresetInputs);
     const bool can_grind_r = wallet.CanGrindR();
-    for (const COutPoint& outpoint : vPresetInputs) {
+    for (const COutPoint& outpoint : coin_control.ListSelected()) {
         int input_bytes = -1;
         CTxOut txout;
         if (auto ptr_wtx = wallet.GetWalletTx(outpoint.hash)) {
@@ -176,9 +172,12 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
         } else {
             // The input is external. We did not find the tx in mapWallet.
-            if (!coin_control.GetExternalOutput(outpoint, txout)) {
+            const auto out{coin_control.GetExternalOutput(outpoint)};
+            if (!out) {
                 return util::Error{strprintf(_("Not found pre-selected input %s"), outpoint.ToString())};
             }
+
+            txout = *out;
         }
 
         if (input_bytes == -1) {
@@ -354,12 +353,6 @@ CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl*
 {
     params.only_spendable = false;
     return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, params);
-}
-
-CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl)
-{
-    LOCK(wallet.cs_wallet);
-    return AvailableCoins(wallet, coinControl).GetTotalAmount();
 }
 
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
@@ -565,42 +558,45 @@ util::Result<SelectionResult> ChooseSelectionResult(const CAmount& nTargetValue,
 {
     // Vector of results. We will choose the best one based on waste.
     std::vector<SelectionResult> results;
+    std::vector<util::Result<SelectionResult>> errors;
+    auto append_error = [&] (const util::Result<SelectionResult>& result) {
+        // If any specific error message appears here, then something different from a simple "no selection found" happened.
+        // Let's save it, so it can be retrieved to the user if no other selection algorithm succeeded.
+        if (HasErrorMsg(result)) {
+            errors.emplace_back(result);
+        }
+    };
 
-    if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change)}) {
+    // Maximum allowed weight
+    int max_inputs_weight = MAX_STANDARD_TX_WEIGHT - (coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR);
+
+    if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_inputs_weight)}) {
         results.push_back(*bnb_result);
-    }
+    } else append_error(bnb_result);
+
+    // As Knapsack and SRD can create change, also deduce change weight.
+    max_inputs_weight -= (coin_selection_params.change_output_size * WITNESS_SCALE_FACTOR);
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
-    if (auto knapsack_result{KnapsackSolver(groups.mixed_group, nTargetValue, coin_selection_params.m_min_change_target, coin_selection_params.rng_fast)}) {
+    if (auto knapsack_result{KnapsackSolver(groups.mixed_group, nTargetValue, coin_selection_params.m_min_change_target, coin_selection_params.rng_fast, max_inputs_weight)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*knapsack_result);
-    }
+    } else append_error(knapsack_result);
 
-    if (auto srd_result{SelectCoinsSRD(groups.positive_group, nTargetValue, coin_selection_params.rng_fast)}) {
+    if (auto srd_result{SelectCoinsSRD(groups.positive_group, nTargetValue, coin_selection_params.rng_fast, max_inputs_weight)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*srd_result);
-    }
+    } else append_error(srd_result);
 
     if (results.empty()) {
-        // No solution found
-        return util::Error();
-    }
-
-    std::vector<SelectionResult> eligible_results;
-    std::copy_if(results.begin(), results.end(), std::back_inserter(eligible_results), [coin_selection_params](const SelectionResult& result) {
-        const auto initWeight{coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR};
-        return initWeight + result.GetWeight() <= static_cast<int>(MAX_STANDARD_TX_WEIGHT);
-    });
-
-    if (eligible_results.empty()) {
-        return util::Error{_("The inputs size exceeds the maximum weight. "
-                             "Please try sending a smaller amount or manually consolidating your wallet's UTXOs")};
+        // No solution found, retrieve the first explicit error (if any).
+        // future: add 'severity level' to errors so the worst one can be retrieved instead of the first one.
+        return errors.empty() ? util::Error() : errors.front();
     }
 
     // Choose the result with the least waste
     // If the waste is the same, choose the one which spends more inputs.
-    auto& best_result = *std::min_element(eligible_results.begin(), eligible_results.end());
-    return best_result;
+    return *std::min_element(results.begin(), results.end());
 }
 
 util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const PreSelectedInputs& pre_set_inputs,

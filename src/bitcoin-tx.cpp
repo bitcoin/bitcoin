@@ -7,13 +7,14 @@
 #endif
 
 #include <blsct/arith/mcl/mcl_init.h>
+#include <chainparamsbase.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <common/args.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <core_io.h>
-#include <fs.h>
 #include <key_io.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -22,6 +23,7 @@
 #include <script/signingprovider.h>
 #include <univalue.h>
 #include <util/exception.h>
+#include <util/fs.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
@@ -95,7 +97,7 @@ static int AppInitRawTx(int argc, char* argv[])
 
     // Check for chain settings (Params() calls are only valid after this clause)
     try {
-        SelectParams(gArgs.GetChainName());
+        SelectParams(gArgs.GetChainType());
     } catch (const std::exception& e) {
         tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;

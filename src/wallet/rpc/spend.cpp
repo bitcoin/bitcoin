@@ -673,7 +673,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         for (const UniValue& input : options["input_weights"].get_array().getValues()) {
             uint256 txid = ParseHashO(input, "txid");
 
-            const UniValue& vout_v = find_value(input, "vout");
+            const UniValue& vout_v = input.find_value("vout");
             if (!vout_v.isNum()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
             }
@@ -682,7 +682,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
             }
 
-            const UniValue& weight_v = find_value(input, "weight");
+            const UniValue& weight_v = input.find_value("weight");
             if (!weight_v.isNum()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing weight key");
             }

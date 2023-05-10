@@ -102,7 +102,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     }
 
     // Check available balance
-    auto bal = wallet::GetAvailableBalance(wallet); // Cache
+    auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
     assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
 
     wallet::CCoinControl coin_control;
@@ -146,6 +146,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 
     // Generate destinations
     std::vector<CScript> dest_wallet;
+    dest_wallet.reserve(output_type.size());
     for (auto type : output_type) {
         dest_wallet.emplace_back(GetScriptForDestination(getNewDestination(wallet, type)));
     }
@@ -160,7 +161,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
     }
 
     // Check available balance
-    auto bal = wallet::GetAvailableBalance(wallet); // Cache
+    auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
     assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
 
     bench.epochIterations(2).run([&] {

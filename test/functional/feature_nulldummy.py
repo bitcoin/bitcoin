@@ -14,6 +14,7 @@ Generate COINBASE_MATURITY (CB) more blocks to ensure the coinbases are mature.
 """
 import time
 
+from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import (
     COINBASE_MATURITY,
     NORMAL_GBT_REQUEST_PARAMS,
@@ -77,7 +78,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         cms = self.nodes[0].createmultisig(1, [self.pubkey])
         wms = self.nodes[0].createmultisig(1, [self.pubkey], 'p2sh-segwit')
         self.ms_address = cms["address"]
-        ms_unlock_details = {"scriptPubKey": self.nodes[0].validateaddress(self.ms_address)["scriptPubKey"],
+        ms_unlock_details = {"scriptPubKey": address_to_scriptpubkey(self.ms_address).hex(),
                              "redeemScript": cms["redeemScript"]}
         self.wit_ms_address = wms['address']
 

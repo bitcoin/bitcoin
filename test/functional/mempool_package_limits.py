@@ -3,19 +3,40 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for limiting mempool and package ancestors/descendants."""
-
-from decimal import Decimal
-
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
-    COIN,
     WITNESS_SCALE_FACTOR,
 )
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
 from test_framework.wallet import MiniWallet
+
+# Decorator to
+# 1) check that mempool is empty at the start of a subtest
+# 2) run the subtest, which may submit some transaction(s) to the mempool and
+#    create a list of hex transactions
+# 3) testmempoolaccept the package hex and check that it fails with the error
+#    "package-mempool-limits" for each tx
+# 4) after mining a block, clearing the pre-submitted transactions from mempool,
+#    check that submitting the created package succeeds
+def check_package_limits(func):
+    def func_wrapper(self, *args, **kwargs):
+        node = self.nodes[0]
+        assert_equal(0, node.getmempoolinfo()["size"])
+        package_hex = func(self, *args, **kwargs)
+        testres_error_expected = node.testmempoolaccept(rawtxs=package_hex)
+        assert_equal(len(testres_error_expected), len(package_hex))
+        for txres in testres_error_expected:
+            assert_equal(txres["package-error"], "package-mempool-limits")
+
+        # Clear mempool and check that the package passes now
+        self.generate(node, 1)
+        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
+
+    return func_wrapper
+
 
 class MempoolPackageLimitsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -40,9 +61,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         self.test_anc_size_limits()
         self.test_desc_size_limits()
 
+    @check_package_limits
     def test_chain_limits_helper(self, mempool_count, package_count):
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
         chain_hex = []
 
         chaintip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=mempool_count)[-1]["new_utxo"]
@@ -51,13 +72,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             tx = self.wallet.create_self_transfer(utxo_to_spend=chaintip_utxo)
             chaintip_utxo = tx["new_utxo"]
             chain_hex.append(tx["hex"])
-        testres_too_long = node.testmempoolaccept(rawtxs=chain_hex)
-        for txres in testres_too_long:
-            assert_equal(txres["package-error"], "package-mempool-limits")
-
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=chain_hex)])
+        return chain_hex
 
     def test_chain_limits(self):
         """Create chains from mempool and package transactions that are longer than 25,
@@ -76,6 +91,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         # 13 transactions in the mempool and 13 in the package.
         self.test_chain_limits_helper(13, 13)
 
+    @check_package_limits
     def test_desc_count_limits(self):
         """Create an 'A' shaped package with 24 transactions in the mempool and 2 in the package:
                     M1
@@ -93,7 +109,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         package transactions).
         """
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
         self.log.info("Check that in-mempool and in-package descendants are calculated properly in packages")
         # Top parent in mempool, M1
         m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
@@ -113,14 +128,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
-        testres_too_long = node.testmempoolaccept(rawtxs=package_hex)
-        for txres in testres_too_long:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return package_hex
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
-
+    @check_package_limits
     def test_desc_count_limits_2(self):
         """Create a Package with 24 transaction in mempool and 2 transaction in package:
                       M1
@@ -157,15 +167,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
-        testres = node.testmempoolaccept(rawtxs=package_hex)
-        assert_equal(len(testres), len(package_hex))
-        for txres in testres:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return package_hex
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
-
+    @check_package_limits
     def test_anc_count_limits(self):
         """Create a 'V' shaped chain with 24 transactions in the mempool and 3 in the package:
         M1a                    M1b
@@ -183,7 +187,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         and in-package ancestors are all considered together.
         """
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
         package_hex = []
         pc_parent_utxos = []
 
@@ -203,14 +206,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(3, len(package_hex))
-        testres_too_long = node.testmempoolaccept(rawtxs=package_hex)
-        for txres in testres_too_long:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return package_hex
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
-
+    @check_package_limits
     def test_anc_count_limits_2(self):
         """Create a 'Y' shaped chain with 24 transactions in the mempool and 2 in the package:
         M1a                M1b
@@ -228,7 +226,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         and in-package ancestors are all considered together.
         """
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
         pc_parent_utxos = []
 
         self.log.info("Check that in-mempool and in-package ancestors are calculated properly in packages")
@@ -245,14 +242,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         pd_tx = self.wallet.create_self_transfer(utxo_to_spend=pc_tx["new_utxos"][0])
 
         assert_equal(24, node.getmempoolinfo()["size"])
-        testres_too_long = node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])
-        for txres in testres_too_long:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return [pc_tx["hex"], pd_tx["hex"]]
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])])
-
+    @check_package_limits
     def test_anc_count_limits_bushy(self):
         """Create a tree with 20 transactions in the mempool and 6 in the package:
         M1...M4 M5...M8 M9...M12 M13...M16 M17...M20
@@ -265,7 +257,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         combined, PC has 25 in-mempool and in-package parents.
         """
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
         package_hex = []
         pc_parent_utxos = []
         for _ in range(5): # Make package transactions P0 ... P4
@@ -282,14 +273,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         assert_equal(20, node.getmempoolinfo()["size"])
         assert_equal(6, len(package_hex))
-        testres = node.testmempoolaccept(rawtxs=package_hex)
-        for txres in testres:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return package_hex
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
-
+    @check_package_limits
     def test_anc_size_limits(self):
         """Test Case with 2 independent transactions in the mempool and a parent + child in the
         package, where the package parent is the child of both mempool transactions (30KvB each):
@@ -302,10 +288,10 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         and in-package ancestors are all considered together.
         """
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
         parent_utxos = []
-        target_weight = WITNESS_SCALE_FACTOR * 1000 * 30 # 30KvB
-        high_fee = Decimal("0.003") # 10 sats/vB
+        target_vsize = 30_000
+        high_fee = 10 * target_vsize  # 10 sats/vB
+        target_weight = target_vsize * WITNESS_SCALE_FACTOR
         self.log.info("Check that in-mempool and in-package ancestor size limits are calculated properly in packages")
         # Mempool transactions A and B
         for _ in range(2):
@@ -314,22 +300,17 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             parent_utxos.append(bulked_tx["new_utxo"])
 
         # Package transaction C
-        pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=int(high_fee * COIN), target_weight=target_weight)
+        pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=high_fee, target_weight=target_weight)
 
         # Package transaction D
         pd_tx = self.wallet.create_self_transfer(utxo_to_spend=pc_tx["new_utxos"][0], target_weight=target_weight)
 
         assert_equal(2, node.getmempoolinfo()["size"])
-        testres_too_heavy = node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])
-        for txres in testres_too_heavy:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return [pc_tx["hex"], pd_tx["hex"]]
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])])
-
+    @check_package_limits
     def test_desc_size_limits(self):
-        """Create 3 mempool transactions and 2 package transactions (25KvB each):
+        """Create 3 mempool transactions and 2 package transactions (21KvB each):
               Ma
              ^ ^
             Mb  Mc
@@ -339,12 +320,12 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         and in-package descendants are all considered together.
         """
         node = self.nodes[0]
-        assert_equal(0, node.getmempoolinfo()["size"])
-        target_weight = 21 * 1000 * WITNESS_SCALE_FACTOR
-        high_fee = Decimal("0.0021") # 10 sats/vB
+        target_vsize = 21_000
+        high_fee = 10 * target_vsize  # 10 sats/vB
+        target_weight = target_vsize * WITNESS_SCALE_FACTOR
         self.log.info("Check that in-mempool and in-package descendant sizes are calculated properly in packages")
         # Top parent in mempool, Ma
-        ma_tx = self.wallet.create_self_transfer_multi(num_outputs=2, fee_per_output=int(high_fee / 2 * COIN), target_weight=target_weight)
+        ma_tx = self.wallet.create_self_transfer_multi(num_outputs=2, fee_per_output=high_fee // 2, target_weight=target_weight)
         self.wallet.sendrawtransaction(from_node=node, tx_hex=ma_tx["hex"])
 
         package_hex = []
@@ -359,13 +340,8 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         assert_equal(3, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
-        testres_too_heavy = node.testmempoolaccept(rawtxs=package_hex)
-        for txres in testres_too_heavy:
-            assert_equal(txres["package-error"], "package-mempool-limits")
+        return package_hex
 
-        # Clear mempool and check that the package passes now
-        self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
 
 if __name__ == "__main__":
     MempoolPackageLimitsTest().main()

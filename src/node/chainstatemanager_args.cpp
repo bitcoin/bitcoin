@@ -5,13 +5,13 @@
 #include <node/chainstatemanager_args.h>
 
 #include <arith_uint256.h>
+#include <common/args.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <node/coins_view_args.h>
 #include <node/database_args.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 

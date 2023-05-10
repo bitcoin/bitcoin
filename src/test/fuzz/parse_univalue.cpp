@@ -7,13 +7,14 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chaintype.h>
 
 #include <limits>
 #include <string>
 
 void initialize_parse_univalue()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(parse_univalue, initialize_parse_univalue)

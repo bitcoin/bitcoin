@@ -42,12 +42,12 @@ void initialize_tx_pool()
     g_setup = testing_setup.get();
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        CTxIn in = MineBlock(g_setup->m_node, P2WSH_OP_TRUE);
+        COutPoint prevout{MineBlock(g_setup->m_node, P2WSH_OP_TRUE)};
         // Remember the txids to avoid expensive disk access later on
         auto& outpoints = i < COINBASE_MATURITY ?
                               g_outpoints_coinbase_init_mature :
                               g_outpoints_coinbase_init_immature;
-        outpoints.push_back(in.prevout);
+        outpoints.push_back(prevout);
     }
     SyncWithValidationInterfaceQueue();
 }
@@ -318,6 +318,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
     MockTime(fuzzed_data_provider, chainstate);
 
     std::vector<uint256> txids;
+    txids.reserve(g_outpoints_coinbase_init_mature.size());
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         txids.push_back(outpoint.hash);
     }

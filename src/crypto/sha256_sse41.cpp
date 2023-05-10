@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <immintrin.h>
 
+#include <attributes.h>
 #include <crypto/common.h>
 
 namespace sha256d64_sse41 {
@@ -36,7 +37,7 @@ __m128i inline sigma0(__m128i x) { return Xor(Or(ShR(x, 7), ShL(x, 25)), Or(ShR(
 __m128i inline sigma1(__m128i x) { return Xor(Or(ShR(x, 17), ShL(x, 15)), Or(ShR(x, 19), ShL(x, 13)), ShR(x, 10)); }
 
 /** One round of SHA-256. */
-void inline __attribute__((always_inline)) Round(__m128i a, __m128i b, __m128i c, __m128i& d, __m128i e, __m128i f, __m128i g, __m128i& h, __m128i k)
+void ALWAYS_INLINE Round(__m128i a, __m128i b, __m128i c, __m128i& d, __m128i e, __m128i f, __m128i g, __m128i& h, __m128i k)
 {
     __m128i t1 = Add(h, Sigma1(e), Ch(e, f, g), k);
     __m128i t2 = Add(Sigma0(a), Maj(a, b, c));

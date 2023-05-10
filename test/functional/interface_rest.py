@@ -7,9 +7,7 @@
 from decimal import Decimal
 from enum import Enum
 import http.client
-from io import BytesIO
 import json
-from struct import pack, unpack
 import typing
 import urllib.parse
 
@@ -160,12 +158,11 @@ class RESTTest (BitcoinTestFramework):
         bin_request = b'\x01\x02'
         for txid, n in [spending, spent]:
             bin_request += bytes.fromhex(txid)
-            bin_request += pack("i", n)
+            bin_request += n.to_bytes(4, 'little')
 
         bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
-        output = BytesIO(bin_response)
-        chain_height, = unpack("<i", output.read(4))
-        response_hash = output.read(32)[::-1].hex()
+        chain_height = int.from_bytes(bin_response[0:4], 'little')
+        response_hash = bin_response[4:36][::-1].hex()
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
         assert_equal(chain_height, 201)  # chain height must be 201 (pre-mined chain [200] + generated block [1])
@@ -279,6 +276,11 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1})
         assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
+
+        # Check invalid uri (% symbol at the end of the request)
+        for invalid_uri in [f"/headers/{bb_hash}%", f"/blockfilterheaders/basic/{bb_hash}%", "/mempool/contents.json?%"]:
+            resp = self.test_rest_request(invalid_uri, ret_type=RetType.OBJ, status=400)
+            assert_equal(resp.read().decode('utf-8').rstrip(), "URI parsing failed, it likely contained RFC 3986 invalid characters")
 
         # Compare with normal RPC block response
         rpc_block_json = self.nodes[0].getblock(bb_hash)

@@ -65,7 +65,10 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), orig_chain_tip)
         self.generate(self.nodes[0], 3)
 
-        assert_equal(self.nodes[1].getbalances(), pre_reorg_conf_bals)
+        balances = self.nodes[1].getbalances()
+        del balances["lastprocessedblock"]
+        del pre_reorg_conf_bals["lastprocessedblock"]
+        assert_equal(balances, pre_reorg_conf_bals)
         assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
 
 

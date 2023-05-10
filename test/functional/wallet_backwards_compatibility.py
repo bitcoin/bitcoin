@@ -253,7 +253,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         wallet = node_v17.get_wallet_rpc("u1_v17")
         address = wallet.getnewaddress("bech32")
         v17_info = wallet.getaddressinfo(address)
-        hdkeypath = v17_info["hdkeypath"]
+        hdkeypath = v17_info["hdkeypath"].replace("'", "h")
         pubkey = v17_info["pubkey"]
 
         if self.is_bdb_compiled():
@@ -265,7 +265,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             )
             load_res = node_master.loadwallet("u1_v16")
             # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
-            assert_equal(load_res['warning'], '')
+            if int(node_master.getnetworkinfo()["version"]) >= 249900:
+                # loadwallet#warnings (added in v25) -- only present if there is a warning
+                assert "warnings" not in load_res
+            else:
+                # loadwallet#warning (deprecated in v25) -- always present, but empty string if no warning
+                assert_equal(load_res["warning"], '')
             wallet = node_master.get_wallet_rpc("u1_v16")
             info = wallet.getaddressinfo(v16_addr)
             descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{v16_pubkey})"

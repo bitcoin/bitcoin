@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(run_command)
         const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
 #endif
         BOOST_CHECK(result.isObject());
-        const UniValue& success = find_value(result, "success");
+        const UniValue& success = result.find_value("success");
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(run_command)
     {
         const UniValue result = RunCommandParseJSON("cat", "{\"success\": true}");
         BOOST_CHECK(result.isObject());
-        const UniValue& success = find_value(result, "success");
+        const UniValue& success = result.find_value("success");
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }

@@ -5,12 +5,12 @@
 
 #include <wallet/walletdb.h>
 
-#include <fs.h>
 #include <key_io.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
 #include <util/bip32.h>
+#include <util/fs.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -347,7 +347,13 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::PURPOSE) {
             std::string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->m_address_book[DecodeDestination(strAddress)].purpose;
+            std::string purpose_str;
+            ssValue >> purpose_str;
+            std::optional<AddressPurpose> purpose{PurposeFromString(purpose_str)};
+            if (!purpose) {
+                pwallet->WalletLogPrintf("Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
+            }
+            pwallet->m_address_book[DecodeDestination(strAddress)].purpose = purpose;
         } else if (strType == DBKeys::TX) {
             uint256 hash;
             ssKey >> hash;
@@ -609,7 +615,20 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             ssKey >> strAddress;
             ssKey >> strKey;
             ssValue >> strValue;
-            pwallet->LoadDestData(DecodeDestination(strAddress), strKey, strValue);
+            const CTxDestination& dest{DecodeDestination(strAddress)};
+            if (strKey.compare("used") == 0) {
+                // Load "used" key indicating if an IsMine address has
+                // previously been spent from with avoid_reuse option enabled.
+                // The strValue is not used for anything currently, but could
+                // hold more information in the future. Current values are just
+                // "1" or "p" for present (which was written prior to
+                // f5ba424cd44619d9b9be88b8593d69a7ba96db26).
+                pwallet->LoadAddressPreviouslySpent(dest);
+            } else if (strKey.compare(0, 2, "rr") == 0) {
+                // Load "rr##" keys where ## is a decimal number, and strValue
+                // is a serialized RecentRequestEntry object.
+                pwallet->LoadAddressReceiveRequest(dest, strKey.substr(2), strValue);
+            }
         } else if (strType == DBKeys::HDCHAIN) {
             CHDChain chain;
             ssValue >> chain;
@@ -1082,16 +1101,28 @@ void MaybeCompactWalletDB(WalletContext& context)
     fOneThread = false;
 }
 
-bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
+bool WalletBatch::WriteAddressPreviouslySpent(const CTxDestination& dest, bool previously_spent)
 {
-    return WriteIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(address, key)), value);
+    auto key{std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), std::string("used")))};
+    return previously_spent ? WriteIC(key, std::string("1")) : EraseIC(key);
 }
 
-bool WalletBatch::EraseDestData(const std::string &address, const std::string &key)
+bool WalletBatch::WriteAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request)
 {
-    return EraseIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(address, key)));
+    return WriteIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + id)), receive_request);
 }
 
+bool WalletBatch::EraseAddressReceiveRequest(const CTxDestination& dest, const std::string& id)
+{
+    return EraseIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + id)));
+}
+
+bool WalletBatch::EraseAddressData(const CTxDestination& dest)
+{
+    DataStream prefix;
+    prefix << DBKeys::DESTDATA << EncodeDestination(dest);
+    return m_batch->ErasePrefix(prefix);
+}
 
 bool WalletBatch::WriteHDChain(const CHDChain& chain)
 {
