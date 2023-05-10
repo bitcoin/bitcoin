@@ -364,7 +364,7 @@ FUZZ_TARGET_INIT(rpc, initialize_rpc)
     try {
         rpc_testing_setup->CallRPC(rpc_command, arguments);
     } catch (const UniValue& json_rpc_error) {
-        const std::string error_msg{find_value(json_rpc_error, "message").get_str()};
+        const std::string error_msg{json_rpc_error.find_value("message").get_str()};
         // Once c++20 is allowed, starts_with can be used.
         // if (error_msg.starts_with("Internal bug detected")) {
         if (0 == error_msg.rfind("Internal bug detected", 0)) {
