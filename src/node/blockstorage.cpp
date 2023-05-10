@@ -17,6 +17,7 @@
 #include <pow.h>
 #include <reverse_iterator.h>
 #include <signet.h>
+#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <undo.h>
@@ -40,6 +41,9 @@ static constexpr uint8_t DB_LAST_BLOCK{'l'};
 // BlockTreeDB::DB_TXINDEX_BLOCK{'T'};
 // BlockTreeDB::DB_TXINDEX{'t'}
 // BlockTreeDB::ReadFlag("txindex")
+
+// Before v0.15.0, this was used for chainstate, but now it is used for versioning
+static constexpr uint8_t DB_COINS{'c'};
 
 bool BlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo& info)
 {
@@ -78,9 +82,22 @@ bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFi
     return WriteBatch(batch, true);
 }
 
-bool BlockTreeDB::WriteFlag(const std::string& name, bool fValue)
+bool BlockTreeDB::WriteFlag(const std::string& name, bool fValue, bool allow_ignore)
 {
-    return Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
+    if (!allow_ignore) {
+        // Ensure old versions will not attempt to load without understanding this
+
+        // NOTE: Key must include correct 256-bit length to avoid old versions simply moving on
+        uint256 flag_as_u256{};
+        assert(name.size() <= flag_as_u256.size());
+        std::copy(name.begin(), name.end(), flag_as_u256.begin());
+
+        // NOTE: Value is null-length to ensure DB_COINS-supporting versions fail to load/upgrade
+        batch.Write(std::make_pair(DB_COINS, flag_as_u256), Span<const unsigned char>());
+    }
+    return WriteBatch(batch, true);
 }
 
 bool BlockTreeDB::ReadFlag(const std::string& name, bool& fValue)

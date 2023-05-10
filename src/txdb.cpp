@@ -22,7 +22,8 @@
 static constexpr uint8_t DB_COIN{'C'};
 static constexpr uint8_t DB_BEST_BLOCK{'B'};
 static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
-// Keys used in previous version that might still be found in the DB:
+
+// Before v0.15.0, this was used for chainstate, but now it is used for versioning
 static constexpr uint8_t DB_COINS{'c'};
 
 bool CCoinsViewDB::NeedsUpgrade()
@@ -31,7 +32,15 @@ bool CCoinsViewDB::NeedsUpgrade()
     // DB_COINS was deprecated in v0.15.0, commit
     // 1088b02f0ccd7358d2b7076bb9e122d59d502d02
     cursor->Seek(std::make_pair(DB_COINS, uint256{}));
-    return cursor->Valid();
+    while (cursor->Valid()) {
+        std::pair<unsigned char, uint256> key;
+        if (cursor->GetKey(key) && key.first == DB_COINS && cursor->GetValueSize() == 0) {
+            // Versioning entry
+            // TODO: if (key.second == SUPPORTED) { cursor->Next(); continue; }
+        }
+        return true;
+    }
+    return false;
 }
 
 namespace {
