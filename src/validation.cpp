@@ -1282,6 +1282,12 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         !CheckFeeRate(m_total_vsize, m_total_modified_fees, placeholder_state)) {
         package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-fee-too-low");
         return PackageMempoolAcceptResult(package_state, {});
+    } else if (args.m_package_feerates &&
+               workspaces.back().m_modified_fees * m_total_vsize < m_total_modified_fees * workspaces.back().m_vsize) {
+        // The package feerate is high enough, but the child's feerate is lower than the package
+        // feerate. This should fail, otherwise we're allowing "parent pay for child."
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-cpfp");
+        return PackageMempoolAcceptResult(package_state, {});
     }
 
     // Apply package mempool ancestor/descendant limits. Skip if there is only one transaction,
