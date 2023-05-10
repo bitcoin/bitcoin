@@ -36,6 +36,7 @@ public:
     std::string ToString() const;
 
     bool operator==(const PublicKey& rhs) const;
+    bool operator!=(const PublicKey& rhs) const;
 
     bool IsValid() const;
 

@@ -78,4 +78,8 @@ Signature PrivateKey::Sign(const Message& msg) const
     return sig;
 }
 
+bool PrivateKey::VerifyPubKey(const PublicKey& pk) const {
+    return GetPublicKey() == pk;
+}
+
 }  // namespace blsct

@@ -175,6 +175,9 @@ BITCOIN_CORE_H = \
   blsct/range_proof/range_proof_with_transcript.h \
   blsct/range_proof/range_proof.h \
   blsct/signature.h \
+  blsct/wallet/keyman.h \
+  blsct/wallet/keyring.h \
+  blsct/wallet/hdchain.h \
   dandelion.h \
   chain.h \
   chainparams.h \
@@ -538,6 +541,11 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(BDB_CPPFLAGS) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/wallet/keyman.cpp \
+  blsct/wallet/keyring.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include <blsct/wallet/keyman.h>
 #include <consensus/amount.h>
 #include <fs.h>
 #include <interfaces/chain.h>
@@ -335,6 +336,7 @@ private:
 
     std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
+    std::unique_ptr<blsct::KeyMan> m_blsct_key_manager = nullptr;;
 
     // Indexed by a unique identifier produced by each ScriptPubKeyMan using
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
@@ -862,8 +864,15 @@ public:
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
     LegacyScriptPubKeyMan* GetOrCreateLegacyScriptPubKeyMan();
 
+    //! Get the LegacyScriptPubKeyMan which is used for all types, internal, and external.
+    blsct::KeyMan* GetBLSCTKeyMan() const;
+    blsct::KeyMan* GetOrCreateBLSCTKeyMan();
+
     //! Make a LegacyScriptPubKeyMan and set it for all types, internal, and external.
     void SetupLegacyScriptPubKeyMan();
+
+    //! Make a BLSCTKeyMan and set it for all types, internal, and external.
+    void SetupBLSCTKeyMan();
 
     const CKeyingMaterial& GetEncryptionKey() const override;
     bool HasEncryptionKeys() const override;

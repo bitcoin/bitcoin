@@ -410,6 +410,8 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
                 LOCK(wallet->cs_wallet);
                 if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                     wallet->SetupDescriptorScriptPubKeyMans();
+                } else if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+                    wallet->SetupBLSCTKeyMan();
                 } else {
                     for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
                         if (!spk_man->SetupGeneration()) {
@@ -829,6 +831,11 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // If we are using descriptors, make new descriptors with a new seed
         if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
             SetupDescriptorScriptPubKeyMans();
+        } else if (IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+            auto spk_man = GetBLSCTKeyMan();
+            if (!spk_man || !spk_man->SetupGeneration(true)) {
+                return false;
+            }
         } else if (auto spk_man = GetLegacyScriptPubKeyMan()) {
             // if we are using HD, replace the HD seed with a new one
             if (spk_man->IsHDEnabled()) {
@@ -2977,11 +2984,14 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->InitWalletFlags(wallet_creation_flags);
 
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
-        if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        if (walletInstance->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+            walletInstance->SetupBLSCTKeyMan();
+        } else if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
             walletInstance->SetupLegacyScriptPubKeyMan();
         }
 
-        if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
+        if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_BLSCT) &&
+            ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET)))) {
             LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 walletInstance->SetupDescriptorScriptPubKeyMans();
@@ -3550,6 +3560,30 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         m_external_spk_managers[type] = spk_manager.get();
     }
     m_spk_managers[spk_manager->GetID()] = std::move(spk_manager);
+}
+
+blsct::KeyMan* CWallet::GetBLSCTKeyMan() const
+{
+    if (IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+        return nullptr;
+    }
+    return dynamic_cast<blsct::KeyMan*>(m_blsct_key_manager.get());
+}
+
+blsct::KeyMan* CWallet::GetOrCreateBLSCTKeyMan()
+{
+    SetupBLSCTKeyMan();
+    return GetBLSCTKeyMan();
+}
+
+void CWallet::SetupBLSCTKeyMan()
+{
+    if (!IsWalletFlagSet(WALLET_FLAG_BLSCT) || m_blsct_key_manager != nullptr) {
+        return;
+    }
+
+    auto spk_manager = std::unique_ptr<blsct::KeyMan>(new blsct::KeyMan(*this, m_keypool_size));
+    m_blsct_key_manager = std::move(spk_manager);
 }
 
 const CKeyingMaterial& CWallet::GetEncryptionKey() const

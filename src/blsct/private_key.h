@@ -38,6 +38,7 @@ public:
     Scalar GetScalar() const;
     bool IsValid() const;
     void SetToZero();
+    bool VerifyPubKey(const PublicKey& pk) const;
 
     // Basic scheme
     Signature SignBalance() const;
