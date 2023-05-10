@@ -572,7 +572,7 @@ public:
      * Handle any list of transactions sensibly, even if unsorted. If not a well-formed
      * AncestorPackage, transactions will not be validated or submitted.
      */
-    PackageMempoolAcceptResult AcceptPackage(const Package& package, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    PackageMempoolAcceptResult AcceptAncestorPackage(const Package& package, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     // All the intermediate state that gets passed between the various levels
@@ -1378,7 +1378,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackageWrappingSingle(const std:
     return PackageMempoolAcceptResult(package_state_wrapped, {{tx->GetWitnessHash(), single_res}});
 }
 
-PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, ATMPArgs& args)
+PackageMempoolAcceptResult MemPoolAccept::AcceptAncestorPackage(const Package& package, ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
     // Used if returning a PackageMempoolAcceptResult directly from this function.
@@ -1579,7 +1579,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
             return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
         } else {
             auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(chainparams, GetTime(), coins_to_uncache);
-            return MemPoolAccept(pool, active_chainstate).AcceptPackage(package, args);
+            return MemPoolAccept(pool, active_chainstate).AcceptAncestorPackage(package, args);
         }
     }();
 
