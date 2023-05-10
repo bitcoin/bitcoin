@@ -53,11 +53,11 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	std::string strTxid;
     uint32_t nBaseAsset = 0;
 	if (!oOptions.isNull()) {
-		const UniValue &txid = find_value(oOptions, "txid");
+		const UniValue &txid = oOptions.find_value("txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		const UniValue &assetObj = find_value(oOptions, "asset_guid");
+		const UniValue &assetObj = oOptions.find_value("asset_guid");
 		if (assetObj.isStr()) {
             uint64_t nAsset;
             if(!ParseUInt64(assetObj.get_str(), &nAsset))
@@ -105,7 +105,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
 	bool getdata = false;
 	if (!oOptions.isNull()) {
-		const UniValue &getdataObj = find_value(oOptions, "getdata");
+		const UniValue &getdataObj = oOptions.find_value("getdata");
 		if (getdataObj.isBool()) {
 			getdata = getdataObj.get_bool();
 		}
