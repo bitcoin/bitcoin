@@ -29,9 +29,9 @@ task:
   functional_test_script:
     - ./test/functional/test_runner.py --jobs 9 --ci --extended --exclude feature_dbcrash --combinedlogslen=1000 --quiet --failfast
 task:
-  name: "x86_64 Linux  [GOAL: install]  [bionic]  [Using ./ci/ system]"
+  name: "x86_64 Linux  [GOAL: install]  [buster]  [Using ./ci/ system]"
   container:
-    image: ubuntu:18.04
+    image: debian:buster
     cpu: 8
     memory: 8G
   timeout_in: 60m

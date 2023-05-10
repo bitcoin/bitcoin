@@ -204,7 +204,7 @@ after_success:
       env:
       cache: false
       language: python
-      python: '3.6' # Oldest supported version according to doc/dependencies.md
+      python: '3.7' # Oldest supported version according to doc/dependencies.md
       install:
         - set -o errexit; source ./ci/lint/04_install.sh
       before_script:
