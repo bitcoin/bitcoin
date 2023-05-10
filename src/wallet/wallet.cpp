@@ -336,6 +336,12 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
             }
             // end TODO
 
+            // backup the wallet we just encrypted
+            if (!wallet->AutoBackupWallet("", error, warnings) && !error.original.empty()) {
+                status = DatabaseStatus::FAILED_ENCRYPT;
+                return nullptr;
+            }
+
             // Relock the wallet
             wallet->Lock();
         }
@@ -4864,8 +4870,13 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         strWalletName = "wallet.dat";
     }
 
-    if (!IsBDBFile(BDBDataFile(wallet_path))) {
+    if (!wallet_path.empty() && !IsBDBFile(BDBDataFile(wallet_path))) {
         WalletLogPrintf("Automatic wallet backups are currently only supported with Berkeley DB!\n");
+        return false;
+    }
+
+    if (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
+        WalletLogPrintf("Wallet is blank, won't create new backup for it!\n");
         return false;
     }
 
