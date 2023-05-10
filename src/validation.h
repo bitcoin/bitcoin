@@ -364,9 +364,13 @@ enum class VerifyDBResult {
 };
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
-class CVerifyDB {
+class CVerifyDB
+{
+private:
+    kernel::Notifications& m_notifications;
+
 public:
-    CVerifyDB();
+    explicit CVerifyDB(kernel::Notifications& notifications);
     ~CVerifyDB();
     [[nodiscard]] VerifyDBResult VerifyDB(
         Chainstate& chainstate,

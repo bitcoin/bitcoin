@@ -5,6 +5,7 @@
 #include <node/kernel_notifications.h>
 
 #include <node/interface_ui.h>
+#include <util/translation.h>
 
 namespace node {
 
@@ -16,6 +17,11 @@ void KernelNotifications::blockTip(SynchronizationState state, CBlockIndex& inde
 void KernelNotifications::headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync)
 {
     uiInterface.NotifyHeaderTip(state, height, timestamp, presync);
+}
+
+void KernelNotifications::progress(const bilingual_str& title, int progress_percent, bool resume_possible)
+{
+    uiInterface.ShowProgress(title.translated, progress_percent, resume_possible);
 }
 
 } // namespace node

@@ -37,6 +37,7 @@
 #include <functional>
 #include <iosfwd>
 #include <memory>
+#include <string>
 
 int main(int argc, char* argv[])
 {
@@ -93,6 +94,10 @@ int main(int argc, char* argv[])
         void headerTip(SynchronizationState, int64_t height, int64_t timestamp, bool presync) override
         {
             std::cout << "Header tip changed: " << height << ", " << timestamp << ", " << presync << std::endl;
+        }
+        void progress(const bilingual_str& title, int progress_percent, bool resume_possible) override
+        {
+            std::cout << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
         }
     };
     auto notifications = std::make_unique<KernelNotifications>();

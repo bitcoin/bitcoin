@@ -8,9 +8,11 @@
 #include <kernel/notifications_interface.h>
 
 #include <cstdint>
+#include <string>
 
 class CBlockIndex;
 enum class SynchronizationState;
+struct bilingual_str;
 
 namespace node {
 class KernelNotifications : public kernel::Notifications
@@ -19,6 +21,8 @@ public:
     void blockTip(SynchronizationState state, CBlockIndex& index) override;
 
     void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override;
+
+    void progress(const bilingual_str& title, int progress_percent, bool resume_possible) override;
 };
 } // namespace node
 
