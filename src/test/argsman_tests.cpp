@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(util_ParseInvalidParameters)
     BOOST_CHECK(!test.ParseParameters(2, (char**)argv, error));
     BOOST_CHECK_EQUAL(error, "Invalid parameter -unregistered");
 
-    // Make sure registered parameters prefixed with a chain name trigger errors.
+    // Make sure registered parameters prefixed with a chain type trigger errors.
     // (Previously, they were accepted and ignored.)
     argv[1] = "-test.registered";
     BOOST_CHECK(!test.ParseParameters(2, (char**)argv, error));

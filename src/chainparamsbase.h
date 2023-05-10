@@ -35,8 +35,6 @@ private:
 
 /**
  * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
- * @returns a CBaseChainParams* of the chosen chain.
- * @throws a std::runtime_error if the chain is not supported.
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain);
 
