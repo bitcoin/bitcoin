@@ -10,21 +10,21 @@
 #include <util/trace.h>
 #include <version.h>
 
-bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
+bool CCoinsView::GetCoinRaw(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
 bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase) { return false; }
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
 
-bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
+bool CCoinsView::HaveCoinRaw(const COutPoint &outpoint) const
 {
     Coin coin;
-    return GetCoin(outpoint, coin);
+    return GetCoinRaw(outpoint, coin);
 }
 
 CCoinsViewBacked::CCoinsViewBacked(CCoinsView *viewIn) : base(viewIn) { }
-bool CCoinsViewBacked::GetCoin(const COutPoint &outpoint, Coin &coin) const { return base->GetCoin(outpoint, coin); }
-bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->HaveCoin(outpoint); }
+bool CCoinsViewBacked::GetCoinRaw(const COutPoint &outpoint, Coin &coin) const { return base->GetCoinRaw(outpoint, coin); }
+bool CCoinsViewBacked::HaveCoinRaw(const COutPoint &outpoint) const { return base->HaveCoinRaw(outpoint); }
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
@@ -46,7 +46,7 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     if (it != cacheCoins.end())
         return it;
     Coin tmp;
-    if (!base->GetCoin(outpoint, tmp))
+    if (!base->GetCoinRaw(outpoint, tmp))
         return cacheCoins.end();
     CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
     if (ret->second.coin.IsSpent()) {
@@ -58,7 +58,7 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     return ret;
 }
 
-bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const {
+bool CCoinsViewCache::GetCoinRaw(const COutPoint &outpoint, Coin &coin) const {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     if (it != cacheCoins.end()) {
         coin = it->second.coin;
@@ -119,7 +119,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
-        bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
+        bool overwrite = check_for_overwrite ? cache.HaveCoinRaw(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
@@ -159,7 +159,7 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
-bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoinRaw(const COutPoint &outpoint) const {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
@@ -371,10 +371,10 @@ static bool ExecuteBackedWrapper(Func func, const std::vector<std::function<void
     }
 }
 
-bool CCoinsViewErrorCatcher::GetCoin(const COutPoint &outpoint, Coin &coin) const {
-    return ExecuteBackedWrapper([&]() { return CCoinsViewBacked::GetCoin(outpoint, coin); }, m_err_callbacks);
+bool CCoinsViewErrorCatcher::GetCoinRaw(const COutPoint &outpoint, Coin &coin) const {
+    return ExecuteBackedWrapper([&]() { return CCoinsViewBacked::GetCoinRaw(outpoint, coin); }, m_err_callbacks);
 }
 
-bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint &outpoint) const {
-    return ExecuteBackedWrapper([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
+bool CCoinsViewErrorCatcher::HaveCoinRaw(const COutPoint &outpoint) const {
+    return ExecuteBackedWrapper([&]() { return CCoinsViewBacked::HaveCoinRaw(outpoint); }, m_err_callbacks);
 }

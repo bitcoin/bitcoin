@@ -145,7 +145,7 @@ class CoinsViewBottom final : public CCoinsView
     std::map<COutPoint, Coin> m_data;
 
 public:
-    bool GetCoin(const COutPoint& outpoint, Coin& coin) const final
+    bool GetCoinRaw(const COutPoint& outpoint, Coin& coin) const final
     {
         auto it = m_data.find(outpoint);
         if (it == m_data.end()) {
@@ -160,7 +160,7 @@ public:
         }
     }
 
-    bool HaveCoin(const COutPoint& outpoint) const final
+    bool HaveCoinRaw(const COutPoint& outpoint) const final
     {
         return m_data.count(outpoint);
     }
@@ -269,7 +269,7 @@ FUZZ_TARGET(coinscache_sim)
                 auto sim = lookup(outpointidx);
                 // Look up in real caches.
                 Coin realcoin;
-                auto real = caches.back()->GetCoin(data.outpoints[outpointidx], realcoin);
+                auto real = caches.back()->GetCoinRaw(data.outpoints[outpointidx], realcoin);
                 // Compare results.
                 if (!sim.has_value()) {
                     assert(!real || realcoin.IsSpent());
@@ -287,7 +287,7 @@ FUZZ_TARGET(coinscache_sim)
                 // Look up in simulation data.
                 auto sim = lookup(outpointidx);
                 // Look up in real caches.
-                auto real = caches.back()->HaveCoin(data.outpoints[outpointidx]);
+                auto real = caches.back()->HaveCoinRaw(data.outpoints[outpointidx]);
                 // Compare results.
                 assert(sim.has_value() == real);
             },
@@ -464,7 +464,7 @@ FUZZ_TARGET(coinscache_sim)
     // Compare the bottom coinsview (not a CCoinsViewCache) with sim_cache[0].
     for (uint32_t outpointidx = 0; outpointidx < NUM_OUTPOINTS; ++outpointidx) {
         Coin realcoin;
-        bool real = bottom.GetCoin(data.outpoints[outpointidx], realcoin);
+        bool real = bottom.GetCoinRaw(data.outpoints[outpointidx], realcoin);
         auto sim = lookup(outpointidx, 0);
         if (!sim.has_value()) {
             assert(!real || realcoin.IsSpent());

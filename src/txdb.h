@@ -59,8 +59,8 @@ protected:
 public:
     explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
 
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool GetCoinRaw(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoinRaw(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;

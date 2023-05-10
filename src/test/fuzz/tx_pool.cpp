@@ -161,7 +161,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
     const auto GetAmount = [&](const COutPoint& outpoint) {
         Coin c;
-        Assert(amount_view.GetCoin(outpoint, c));
+        Assert(amount_view.GetCoinRaw(outpoint, c));
         return c.out.nValue;
     };
 

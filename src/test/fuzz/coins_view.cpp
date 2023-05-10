@@ -146,22 +146,28 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
     {
         const Coin& coin_using_access_coin = coins_view_cache.AccessCoin(random_out_point);
         const bool exists_using_access_coin = !(coin_using_access_coin == EMPTY_COIN);
-        const bool exists_using_have_coin = coins_view_cache.HaveCoin(random_out_point);
+        const bool exists_using_have_coin = coins_view_cache.HaveCoinRaw(random_out_point);
         const bool exists_using_have_coin_in_cache = coins_view_cache.HaveCoinInCache(random_out_point);
         Coin coin_using_get_coin;
-        const bool exists_using_get_coin = coins_view_cache.GetCoin(random_out_point, coin_using_get_coin);
+        const bool exists_using_get_coin = coins_view_cache.GetCoinRaw(random_out_point, coin_using_get_coin);
         if (exists_using_get_coin) {
             assert(coin_using_get_coin == coin_using_access_coin);
         }
         assert((exists_using_access_coin && exists_using_have_coin_in_cache && exists_using_have_coin && exists_using_get_coin) ||
                (!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin && !exists_using_get_coin));
+        if (exists_using_have_coin && random_out_point.n > 0x00ffffff) {
+            assert(!coins_view_cache.HaveCoin(random_out_point));
+        }
         // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
-        const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoin(random_out_point);
+        const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoinRaw(random_out_point);
         if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
+            if (random_out_point.n > 0x00ffffff) {
+                assert(!backend_coins_view.HaveCoin(random_out_point));
+            }
         }
         Coin coin_using_backend_get_coin;
-        if (backend_coins_view.GetCoin(random_out_point, coin_using_backend_get_coin)) {
+        if (backend_coins_view.GetCoinRaw(random_out_point, coin_using_backend_get_coin)) {
             assert(exists_using_have_coin_in_backend);
             // Note we can't assert that `coin_using_get_coin == coin_using_backend_get_coin` because the coin in
             // the cache may have been modified but not yet flushed.

@@ -2005,6 +2005,7 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
         COutPoint key;
         Coin coin;
         if (!cursor->GetKey(key) || !cursor->GetValue(coin)) return false;
+        if (key.n > COutPoint::MAX_INDEX) continue;
         if (++count % 8192 == 0) {
             interruption_point();
             if (should_abort) {

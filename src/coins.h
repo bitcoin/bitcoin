@@ -177,10 +177,22 @@ public:
      *  Returns true only when an unspent coin was found, which is returned in coin.
      *  When false is returned, coin's value is unspecified.
      */
-    virtual bool GetCoin(const COutPoint &outpoint, Coin &coin) const;
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const {
+        if (outpoint.n > COutPoint::MAX_INDEX) {
+            return false;
+        }
+        return GetCoinRaw(outpoint, coin);
+    }
+    virtual bool GetCoinRaw(const COutPoint &outpoint, Coin &coin) const;
 
     //! Just check whether a given outpoint is unspent.
-    virtual bool HaveCoin(const COutPoint &outpoint) const;
+    bool HaveCoin(const COutPoint &outpoint) const {
+        if (outpoint.n > COutPoint::MAX_INDEX) {
+            return false;
+        }
+        return HaveCoinRaw(outpoint);
+    }
+    virtual bool HaveCoinRaw(const COutPoint &outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
@@ -214,8 +226,8 @@ protected:
 
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool GetCoinRaw(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoinRaw(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
@@ -252,8 +264,8 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool GetCoinRaw(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoinRaw(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
@@ -382,8 +394,8 @@ public:
         m_err_callbacks.emplace_back(std::move(f));
     }
 
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool GetCoinRaw(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoinRaw(const COutPoint &outpoint) const override;
 
 private:
     /** A list of callbacks to execute upon leveldb read error. */

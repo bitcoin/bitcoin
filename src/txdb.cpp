@@ -74,11 +74,11 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
     }
 }
 
-bool CCoinsViewDB::GetCoin(const COutPoint &outpoint, Coin &coin) const {
+bool CCoinsViewDB::GetCoinRaw(const COutPoint &outpoint, Coin &coin) const {
     return m_db->Read(CoinEntry(&outpoint), coin);
 }
 
-bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
+bool CCoinsViewDB::HaveCoinRaw(const COutPoint &outpoint) const {
     return m_db->Exists(CoinEntry(&outpoint));
 }
 

@@ -39,7 +39,7 @@ class CCoinsViewTest : public CCoinsView
     std::map<COutPoint, Coin> map_;
 
 public:
-    [[nodiscard]] bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
+    [[nodiscard]] bool GetCoinRaw(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
@@ -927,11 +927,11 @@ void TestFlushBehavior(
     };
 
     uint256 txid = InsecureRand256();
-    COutPoint outp = COutPoint(txid, 0);
+    COutPoint outp = COutPoint(txid, 0xff000000);
     Coin coin = MakeCoin();
     // Ensure the coins views haven't seen this coin before.
-    BOOST_CHECK(!base.HaveCoin(outp));
-    BOOST_CHECK(!view->HaveCoin(outp));
+    BOOST_CHECK(!base.HaveCoinRaw(outp));
+    BOOST_CHECK(!view->HaveCoinRaw(outp));
 
     // --- 1. Adding a random coin to the child cache
     //
@@ -941,8 +941,11 @@ void TestFlushBehavior(
     cache_size = view->map().size();
 
     // `base` shouldn't have coin (no flush yet) but `view` should have cached it.
-    BOOST_CHECK(!base.HaveCoin(outp));
-    BOOST_CHECK(view->HaveCoin(outp));
+    BOOST_CHECK(!base.HaveCoinRaw(outp));
+    BOOST_CHECK(view->HaveCoinRaw(outp));
+
+    // since n is >0x00ffffff, it shouldn't be visible to normal HaveCoin.
+    BOOST_CHECK(!view->HaveCoin(outp));
 
     GetCoinsMapEntry(view->map(), value, flags, outp);
     BOOST_CHECK_EQUAL(value, coin.out.nValue);
@@ -963,8 +966,10 @@ void TestFlushBehavior(
     BOOST_CHECK_EQUAL(flags, 0);  // Flags should have been wiped.
 
     // Both views should now have the coin.
-    BOOST_CHECK(base.HaveCoin(outp));
-    BOOST_CHECK(view->HaveCoin(outp));
+    BOOST_CHECK(base.HaveCoinRaw(outp));
+    BOOST_CHECK(view->HaveCoinRaw(outp));
+    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!view->HaveCoin(outp));
 
     if (do_erasing_flush) {
         // --- 4. Flushing the caches again (with erasing)
@@ -1002,14 +1007,14 @@ void TestFlushBehavior(
     GetCoinsMapEntry(view->map(), value, flags, outp);
     BOOST_CHECK_EQUAL(value, SPENT);
     BOOST_CHECK_EQUAL(flags, DIRTY);
-    BOOST_CHECK(!view->HaveCoin(outp)); // Coin should be considered spent in `view`.
-    BOOST_CHECK(base.HaveCoin(outp));  // But coin should still be unspent in `base`.
+    BOOST_CHECK(!view->HaveCoinRaw(outp)); // Coin should be considered spent in `view`.
+    BOOST_CHECK(base.HaveCoinRaw(outp));  // But coin should still be unspent in `base`.
 
     flush_all(/*erase=*/ false);
 
     // Coin should be considered spent in both views.
-    BOOST_CHECK(!view->HaveCoin(outp));
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!view->HaveCoinRaw(outp));
+    BOOST_CHECK(!base.HaveCoinRaw(outp));
 
     // Spent coin should not be spendable.
     BOOST_CHECK(!view->SpendCoin(outp));

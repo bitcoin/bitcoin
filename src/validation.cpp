@@ -1956,7 +1956,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 {
     bool fClean = true;
 
-    if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
+    if (view.HaveCoinRaw(out)) fClean = false; // overwriting transaction output
 
     if (undo.nHeight == 0) {
         // Missing undo metadata (height and coinbase). Older versions included this

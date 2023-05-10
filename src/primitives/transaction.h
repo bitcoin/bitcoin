@@ -38,6 +38,7 @@ public:
     uint256 hash;
     uint32_t n;
 
+    static constexpr uint32_t MAX_INDEX = 0x00ffffff;
     static constexpr uint32_t NULL_INDEX = std::numeric_limits<uint32_t>::max();
 
     COutPoint(): n(NULL_INDEX) { }
