@@ -35,7 +35,7 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optio
 
         uint256 txid = ParseHashO(o, "txid");
 
-        const UniValue& vout_v = find_value(o, "vout");
+        const UniValue& vout_v = o.find_value("vout");
         if (!vout_v.isNum())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
         int nOutput = vout_v.getInt<int>();
@@ -53,7 +53,7 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optio
         }
 
         // set the sequence number if passed in the parameters object
-        const UniValue& sequenceObj = find_value(o, "sequence");
+        const UniValue& sequenceObj = o.find_value("sequence");
         if (sequenceObj.isNum()) {
             int64_t seqNr64 = sequenceObj.getInt<int64_t>();
             if (seqNr64 < 0 || seqNr64 > CTxIn::SEQUENCE_FINAL) {
@@ -191,7 +191,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
 
             uint256 txid = ParseHashO(prevOut, "txid");
 
-            int nOut = find_value(prevOut, "vout").getInt<int>();
+            int nOut = prevOut.find_value("vout").getInt<int>();
             if (nOut < 0) {
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "vout cannot be negative");
             }
@@ -212,7 +212,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 newcoin.out.scriptPubKey = scriptPubKey;
                 newcoin.out.nValue = MAX_MONEY;
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
+                    newcoin.out.nValue = AmountFromValue(prevOut.find_value("amount"));
                 }
                 newcoin.nHeight = 1;
                 coins[out] = std::move(newcoin);
@@ -227,8 +227,8 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                         {"redeemScript", UniValueType(UniValue::VSTR)},
                         {"witnessScript", UniValueType(UniValue::VSTR)},
                     }, true);
-                UniValue rs = find_value(prevOut, "redeemScript");
-                UniValue ws = find_value(prevOut, "witnessScript");
+                const UniValue& rs{prevOut.find_value("redeemScript")};
+                const UniValue& ws{prevOut.find_value("witnessScript")};
                 if (rs.isNull() && ws.isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing redeemScript/witnessScript");
                 }

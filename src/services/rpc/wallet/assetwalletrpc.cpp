@@ -275,7 +275,7 @@ static RPCHelpMan syscoincreatenevmblob()
     requestSend.URI = request.URI;
     UniValue resObj = syscoincreaterawnevmblob().HandleRequest(requestSend);
     if(!resObj.isNull()) {
-        if(!find_value(resObj, "txid").isNull()) {
+        if(!resObj.find_value("txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
             resObj.__pushKV("versionhash", HexStr(vchVersionHash));
             resObj.__pushKV("datasize", vchData.size());
