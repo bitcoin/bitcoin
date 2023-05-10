@@ -44,9 +44,6 @@
 /* define if external signer support is enabled (requires Boost::Process) */
 #define ENABLE_EXTERNAL_SIGNER /**/
 
-/* Define this symbol if the consensus lib has been built */
-#define HAVE_CONSENSUS_LIB 1
-
 /* Define to 1 if you have the declaration of `be16toh', and to 0 if you
    don't. */
 #define HAVE_DECL_BE16TOH 0
