@@ -5,6 +5,8 @@
 #ifndef BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 #define BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 
+#include <cstdint>
+
 class CBlockIndex;
 enum class SynchronizationState;
 
@@ -20,6 +22,7 @@ public:
     virtual ~Notifications(){};
 
     virtual void blockTip(SynchronizationState state, CBlockIndex& index) {}
+    virtual void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) {}
 };
 } // namespace kernel
 

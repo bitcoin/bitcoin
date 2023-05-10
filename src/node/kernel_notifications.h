@@ -7,6 +7,8 @@
 
 #include <kernel/notifications_interface.h>
 
+#include <cstdint>
+
 class CBlockIndex;
 enum class SynchronizationState;
 
@@ -15,6 +17,8 @@ class KernelNotifications : public kernel::Notifications
 {
 public:
     void blockTip(SynchronizationState state, CBlockIndex& index) override;
+
+    void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override;
 };
 } // namespace node
 
