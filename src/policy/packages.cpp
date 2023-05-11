@@ -88,3 +88,18 @@ bool IsChildWithParents(const Package& package)
     return std::all_of(package.cbegin(), package.cend() - 1,
                        [&input_txids](const auto& ptx) { return input_txids.count(ptx->GetHash()) > 0; });
 }
+
+bool IsChildWithParentsTree(const Package& package)
+{
+    if (!IsChildWithParents(package)) return false;
+    std::unordered_set<uint256, SaltedTxidHasher> parent_txids;
+    std::transform(package.cbegin(), package.cend() - 1, std::inserter(parent_txids, parent_txids.end()),
+                   [](const auto& ptx) { return ptx->GetHash(); });
+    // Each parent must not have an input who is one of the other parents.
+    return std::all_of(package.cbegin(), package.cend() - 1, [&](const auto& ptx) {
+        for (const auto& input : ptx->vin) {
+            if (parent_txids.count(input.prevout.hash) > 0) return false;
+        }
+        return true;
+    });
+}
