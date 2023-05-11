@@ -13,6 +13,7 @@
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/result.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -78,7 +79,7 @@ void SetLoggingLevel(const ArgsManager& args)
     }
 }
 
-void SetLoggingCategories(const ArgsManager& args)
+util::Result<void> SetLoggingCategories(const ArgsManager& args)
 {
     if (args.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
@@ -88,7 +89,7 @@ void SetLoggingCategories(const ArgsManager& args)
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
                 if (!LogInstance().EnableCategory(cat)) {
-                    InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
+                    return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
                 }
             }
         }
@@ -97,9 +98,10 @@ void SetLoggingCategories(const ArgsManager& args)
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
-            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
+            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
     }
+    return {};
 }
 
 bool StartLogging(const ArgsManager& args)
