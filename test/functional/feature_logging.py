@@ -69,6 +69,19 @@ class LoggingTest(BitcoinTestFramework):
         # just sanity check no crash here
         self.restart_node(0, [f"-debuglogfile={os.devnull}"])
 
+        self.log.info("Test -debug and -debugexclude raise when invalid values are passed")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-debug=abc"],
+            expected_msg="Error: Unsupported logging category -debug=abc.",
+            match=ErrorMatch.FULL_REGEX,
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-debugexclude=abc"],
+            expected_msg="Error: Unsupported logging category -debugexclude=abc.",
+            match=ErrorMatch.FULL_REGEX,
+        )
+
 
 if __name__ == '__main__':
     LoggingTest().main()
