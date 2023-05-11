@@ -738,7 +738,11 @@ def spenders_taproot_active():
         scripts = [
             ("pk_codesep", CScript(random_checksig_style(pubs[1]) + bytes([OP_CODESEPARATOR]))),  # codesep after checksig
             ("codesep_pk", CScript(bytes([OP_CODESEPARATOR]) + random_checksig_style(pubs[1]))),  # codesep before checksig
-            ("branched_codesep", CScript([random_bytes(random.randrange(511)), OP_DROP, OP_IF, OP_CODESEPARATOR, pubs[0], OP_ELSE, OP_CODESEPARATOR, pubs[1], OP_ENDIF, OP_CHECKSIG])),  # branch dependent codesep
+            ("branched_codesep", CScript([random_bytes(random.randrange(2, 511)), OP_DROP, OP_IF, OP_CODESEPARATOR, pubs[0], OP_ELSE, OP_CODESEPARATOR, pubs[1], OP_ENDIF, OP_CHECKSIG])),  # branch dependent codesep
+            # Note that the first data push in the "branched_codesep" script has the purpose of
+            # randomizing the sighash, both by varying script size and content. In order to
+            # avoid MINIMALDATA script verification errors caused by not-minimal-encoded data
+            # pushes (e.g. `OP_PUSH1 1` instead of `OP_1`), we set a minimum data size of 2 bytes.
         ]
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
