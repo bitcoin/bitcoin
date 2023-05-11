@@ -30,6 +30,10 @@
         <translation type="unfinished">አሁን የተመረጠውን አድራሻ ከዝርዝሩ ውስጥ ሰርዝ</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">ለመፈለግ አድራሻ ወይም መለያ ያስገቡ</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
     </message>
@@ -62,10 +66,6 @@
         <translation type="unfinished">የመቀበያ አድራሻዎች</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">እነኚ የቢትኮይን ክፍያ የመላኪያ አድራሻዎችዎ ናቸው:: ገንዘብ/ኮይኖች ከመላክዎ በፊት መጠኑን እና የመቀበያ አድራሻውን ሁልጊዜ ያረጋግጡ::</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">&amp;አድራሻ ቅዳ</translation>
     </message>
@@ -82,9 +82,9 @@
         <translation type="unfinished">የአድራሻ ዝርዝር ላክ</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">የአድራሻ ዝርዝሩን ወደ %1 ለማስቀመጥ ሲሞከር ስህተት አጋጥሟል:: እባክዎ መልሰው ይሞክሩ::</translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">በንዑስ ሰረዝ የተለዩ ፋይሎች</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -125,6 +125,10 @@
         <translation type="unfinished">አዲስ የይለፍ-ሐረጉን ይድገሙት</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">የይለፍ-ሀረጉን አሳይ</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation type="unfinished">የቢትኮይን ቦርሳውን አመስጥር</translation>
     </message>
@@ -145,10 +149,6 @@
         <translation type="unfinished">የቢትኮይን ቦርሳዎን ማመስጠር ያረጋግጡ</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">ማስጠንቀቂያ: የቢትኮይን ቦርሳዎን አመስጥረው የይለፍ-ሐረግዎን ካጡት&lt;b&gt;ቢትኮይኖቾን በሙሉ ያጣሉ&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished">እርግጠኛ ነዎት ቦርሳዎን ማመስጠር ይፈልጋሉ?</translation>
     </message>
@@ -157,16 +157,16 @@
         <translation type="unfinished">ቦርሳዎ ምስጢር ተደርጓል</translation>
     </message>
     <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished">አስፈላጊ: ከ ቦርሳ ፋይልዎ ያከናወኗቸው ቀደም ያሉ ምትኬዎች በአዲስ በተፈጠረ የማመስጠሪያ ፋይል ውስጥ መተካት አለባቸው. ለደህንነት ሲባል, አዲሱን የተመሰጠ የቦርሳ ፋይል መጠቀም ሲጀመሩ ወዲያውኑ ቀደም ሲል ያልተመሰጠሩ የቦርሳ ፋይል ቅጂዎች ዋጋ ቢስ ይሆናሉ::</translation>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">ለመመስጠር የተዘጋጀ ዋሌት</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">ቦርሳዎ አሁን ተመስጥሯል። </translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
         <translation type="unfinished">የቦርሳ ማመስጠር አልተሳካም</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">የቦርሳ ማመስጠር በውስጣዊ ስህተት ምክንያት አልተሳካም:: ቦርሳዎ አልተመሰጠረም::</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -201,7 +201,23 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">ውስጣዊ ስህተት</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">ውስጣዊ ችግር ተፈጥሯል።  %1 ደህንነቱን ጠብቆ ለመቀጠል ይሞክራል። ይህ ችግር ያልተጠበቀ ሲሆን ከታች በተገለፀው መሰረት ችግሩን ማመልከት ይቻላል። </translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">ቅንብሩን መጀመሪያ ወደነበረው ነባሪ ዋጋ መመለስ ይፈልጋሉ? ወይስ ምንም አይነት ለውጥ ሳያደርጉ እንዲከሽፍ ይፈልጋሉ?</translation>
+    </message>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">ስህተት፥ %1</translation>
@@ -213,43 +229,43 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n second(s)</numerusform>
+            <numerusform>%n second(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minute(s)</numerusform>
+            <numerusform>%n minute(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hour(s)</numerusform>
+            <numerusform>%n hour(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n day(s)</numerusform>
+            <numerusform>%n day(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n week(s)</numerusform>
+            <numerusform>%n week(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n year(s)</numerusform>
+            <numerusform>%n year(s)</numerusform>
         </translation>
     </message>
     </context>
@@ -284,18 +300,6 @@
         <translation type="unfinished">&amp;ስለ %1</translation>
     </message>
     <message>
-        <source>Show information about %1</source>
-        <translation type="unfinished">ስለ %1 መረጃ አሳይ</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation type="unfinished">ስለ &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation type="unfinished">ስለ Qt መረጃ አሳይ</translation>
-    </message>
-    <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">አዲስ ዋሌት ፍጠር</translation>
     </message>
@@ -326,8 +330,8 @@
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -371,8 +375,8 @@
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -423,10 +427,6 @@
     <message>
         <source>Date</source>
         <translation type="unfinished">ቀን</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation type="unfinished">መጠኑ ገልብጥ</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -491,30 +491,30 @@
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n GB of space available</numerusform>
+            <numerusform>%n GB of space available</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(of %n GB needed)</numerusform>
+            <numerusform>(of %n GB needed)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB needed for full chain)</numerusform>
+            <numerusform>(%n GB needed for full chain)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
     <message>
@@ -619,18 +619,14 @@
         <translation type="unfinished">ደብቅ</translation>
     </message>
     <message>
-        <source>Copy amount</source>
-        <translation type="unfinished">መጠኑ ገልብጥ</translation>
-    </message>
-    <message>
         <source>Copy fee</source>
         <translation type="unfinished">ክፍያው ቅዳ</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
         </translation>
     </message>
     <message>
@@ -647,8 +643,8 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>matures in %n more block(s)</numerusform>
+            <numerusform>matures in %n more block(s)</numerusform>
         </translation>
     </message>
     <message>
@@ -673,6 +669,11 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">በንዑስ ሰረዝ የተለዩ ፋይሎች</translation>
+    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">ቀን</translation>

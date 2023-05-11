@@ -130,12 +130,28 @@
         <translation type="unfinished">नयाँ पासफ्रेज दोहोर्याउनुहोस्</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">पासफ्रेज देखाउनुहोस्</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation type="unfinished">वालेट इन्क्रिप्ट गर्नुहोस् </translation>
     </message>
     <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">वालेट अनलक गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation type="unfinished">पासफ्रेज परिवर्तन गर्नुहोस्</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation type="unfinished">वालेट इन्क्रिप्सन सुनिश्चित गर्नुहोस</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">के तपाइँ तपाइँको वालेट ईन्क्रिप्ट गर्न निश्चित हुनुहुन्छ?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -153,7 +169,11 @@
         <source>Wallet unlock failed</source>
         <translation type="unfinished">वालेट अनलक असफल </translation>
     </message>
-    </context>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished">चेतावनी: क्याप्स लक कीप्याड अन छ!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -171,9 +191,17 @@
         <source>Runaway exception</source>
         <translation type="unfinished">रनअवे अपवाद</translation>
     </message>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">आन्तरिक दोष</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">थाहा नभयेको</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation type="unfinished">रकम</translation>
@@ -227,6 +255,14 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">सेटिङ फाइल पढ्न सकिएन</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">सेटिङ फाइल लेख्न सकिएन</translation>
+    </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation type="unfinished">maxtxfee=&amp;lt;रकम&amp;gt;: का लागि अमान्य रकम &amp;apos;%s&amp;apos; (कारोबारलाई अड्कन नदिन अनिवार्य रूपमा कम्तिमा %s को न्यूनतम रिले शुल्क हुनु पर्छ)</translation>
@@ -331,6 +367,23 @@
         <translation type="unfinished">%1 का लागि कन्फिगुरेसनको विकल्प परिमार्जन गर्नुहोस</translation>
     </message>
     <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">नयाँ वालेट सिर्जना गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;घटाउनु</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">वालेट:</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">नेटवर्क गतिविधि अशक्त</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation type="unfinished">बिटकोइन ठेगानामा सिक्का पठाउनुहोस्</translation>
     </message>
@@ -342,12 +395,81 @@
         <source>Change the passphrase used for wallet encryption</source>
         <translation type="unfinished">वालेट इन्क्रिप्सनमा प्रयोग हुने इन्क्रिप्सन पासफ्रेज परिवर्तन गर्नुहोस्</translation>
     </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation type="unfinished">&amp;पठाउनु</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">प्राप्त गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;विकल्पहरू</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">सहायता वालेट</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;पासफ्रेज परिवर्तन गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">हस्ताक्षर &amp;सन्देश...</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;प्रमाणित सन्देश...</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">वालेट बन्द गर्नुहोस्...</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">वालेट सिर्जना गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">सबै वालेट बन्द गर्नुहोस्...</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation type="unfinished">&amp;फाइल</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation type="unfinished">&amp;सेटिङ</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation type="unfinished">&amp;मद्दत</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation type="unfinished">%1 पछाडि</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">चेतावनी</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">जानकारी</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">वालेट को नाम</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -364,9 +486,66 @@
         <source>Amount</source>
         <translation type="unfinished">रकम</translation>
     </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">मिति</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation type="unfinished">पुष्टिकरणहरू</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">पुष्टि भयो</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation type="unfinished">हो</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation type="unfinished">होइन</translation>
+    </message>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet Name</source>
+        <translation type="unfinished">वालेट को नाम</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished">सिर्जना गर्नुहोस्</translation>
+    </message>
+    </context>
+<context>
+    <name>EditAddressDialog</name>
+    <message>
+        <source>Edit Address</source>
+        <translation type="unfinished">ठेगाना जाँच गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation type="unfinished">&amp;ठेगाना</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">वालेट अनलक गर्न सकेन</translation>
+    </message>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation type="unfinished">नाम</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation type="unfinished">बिटकोइन</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -396,16 +575,75 @@
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">स्वागत छ</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">स्वागत छ %1 .</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">फारम</translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation type="unfinished">बाँकी ब्लकहरूको संख्या</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">थाहा नभाको...</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">हिसाब...</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation type="unfinished">प्रगति</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation type="unfinished">प्रति घण्टा प्रगति वृद्धि</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">लुकाउनुहोस्</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
+        <source>Options</source>
+        <translation type="unfinished">विकल्प</translation>
+    </message>
+    <message>
+        <source>&amp;Main</source>
+        <translation type="unfinished">&amp;मुख्य</translation>
+    </message>
+    <message>
+        <source>&amp;Network</source>
+        <translation type="unfinished">&amp;नेटवर्क</translation>
+    </message>
+    <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation type="unfinished">इन्टरफेसमा र सिक्का पठाउँदा देखिने डिफल्ट उपविभाजन एकाइ चयन गर्नुहोस् ।</translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation type="unfinished">&amp;ठिक छ</translation>
     </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">फारम</translation>
+    </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">देखाइएको सूचना पूरानो हुन सक्छ । कनेक्सन स्थापित भएपछि, तपाईंको वालेट बिटकोइन नेटवर्कमा स्वचालित रूपमा समिकरण हुन्छ , तर यो प्रक्रिया अहिले सम्म पूरा भएको छैन ।</translation>
@@ -443,12 +681,39 @@
         <translation type="unfinished">ब्यालेन्सहरु</translation>
     </message>
     <message>
+        <source>Total:</source>
+        <translation type="unfinished">सम्पूर्ण:</translation>
+    </message>
+    <message>
+        <source>Your current total balance</source>
+        <translation type="unfinished">तपाईंको हालको सम्पूर्ण ब्यालेन्स</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation type="unfinished">खर्च उपलब्ध:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation type="unfinished">भर्खरको ट्राजेक्शनहरू</translation>
+    </message>
+    <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
         <translation type="unfinished">अहिलेसम्म परिपक्व नभएको खनन गरिएको, हेर्ने-मात्र ठेगानामा रहेको ब्यालेन्स</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation type="unfinished">हेर्ने-मात्र ठेगानामा रहेको हालको जम्मा ब्यालेन्स</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Save…</source>
+        <translation type="unfinished">राख्नुहोस्...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">बन्द गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -476,7 +741,25 @@
     </message>
     </context>
 <context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">वालेट अनलक गर्न सकेन</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">वालेट:</translation>
+    </message>
+    </context>
+<context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">मिति</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">लेबल</translation>
@@ -484,6 +767,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">लुकाउनुहोस्</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -532,6 +819,14 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">मिति</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">थाहा नभयेको</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -547,6 +842,10 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">मिति</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">लेबल</translation>
     </message>
@@ -559,6 +858,14 @@
         <translation type="unfinished">अल्पविरामले छुट्टिएको फाइल</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">पुष्टि भयो</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">मिति</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">लेबल</translation>
     </message>
@@ -569,6 +876,13 @@
     <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">निर्यात असफल</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">नयाँ वालेट सिर्जना गर्नुहोस्</translation>
     </message>
     </context>
 <context>

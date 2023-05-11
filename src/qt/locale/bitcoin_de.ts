@@ -531,6 +531,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">Kürzungsmodus wurde kleiner als das Minimum in Höhe von %d MiB konfiguriert. Bitte verwenden Sie einen größeren Wert.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
+        <translation type="unfinished">Der Prune-Modus ist mit -reindex-chainstate nicht kompatibel. Verwende stattdessen den vollen -reindex.</translation>
+    </message>
+    <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
         <translation type="unfinished">Prune (Kürzung): Die letzte Synchronisation der Wallet liegt vor gekürzten (gelöschten) Blöcken. Es ist ein -reindex (erneuter Download der gesamten Blockchain im Fall eines gekürzten Knotens) notwendig.</translation>
     </message>
@@ -652,6 +656,10 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">Die Option -reindex-chainstate ist nicht mit -txindex kompatibel. Bitte deaktiviere txindex vorübergehend, während du -reindex-chainstate verwendest oder ersetze -reindex-chainstate durch -reindex, um alle Indexe vollständig neu zu erstellen.</translation>
     </message>
     <message>
+        <source>Assumed-valid: last wallet synchronisation goes beyond available block data. You need to wait for the background validation chain to download more blocks.</source>
+        <translation type="unfinished">Angenommen gültig: Die letzte Wallet-Synchronisation geht über die verfügbaren Blockdaten hinaus. Sie müssen warten, bis die Hintergrundvalidierungskette weitere Blöcke herunterlädt.</translation>
+    </message>
+    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
         <translation type="unfinished">Es ist nicht möglich, bestimmte Verbindungen anzubieten und gleichzeitig addrman ausgehende Verbindungen finden zu lassen.</translation>
     </message>
@@ -660,12 +668,64 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">Fehler beim Laden von %s: Externe Unterzeichner-Brieftasche wird geladen, ohne dass die Unterstützung für externe Unterzeichner kompiliert wurde</translation>
     </message>
     <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fehler: Adressbuchdaten im Wallet können nicht als zum migrierten Wallet gehörend identifiziert werden</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Fehler: Doppelte Deskriptoren, die während der Migration erstellt wurden. Diese Wallet ist möglicherweise beschädigt.</translation>
+    </message>
+    <message>
+        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fehler: Transaktion in\m Wallet %s kann nicht als zu migrierten Wallet gehörend identifiziert werden</translation>
+    </message>
+    <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first</source>
+        <translation type="unfinished">Fehler: Es können keine Deskriptoren für diese Legacy-Wallet erstellt werden. Stellen Sie sicher, dass das Wallet zuerst entsperrt ist</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Kann ungültige Datei peers.dat nicht umbenennen. Bitte Verschieben oder Löschen und noch einmal versuchen.</translation>
     </message>
     <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation type="unfinished">Inkompatible Optionen: -dnsseed=1 wurde explizit angegeben, aber -onlynet verbietet Verbindungen zu IPv4/IPv6</translation>
+    </message>
+    <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
         <translation type="unfinished">Ausgehende Verbindungen sind eingeschränkt auf Tor (-onlynet=onion), aber der Proxy, um das Tor-Netzwerk zu erreichen ist nicht vorhanden (no -proxy= and no -onion= given) oder ausdrücklich verboten (-onion=0)</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
+        <translation type="unfinished">Ausgehende Verbindungen sind eingeschränkt auf Tor (-onlynet=onion), aber der Proxy, um das Tor-Netzwerk zu erreichen ist nicht vorhanden. Kein -proxy, -onion oder -listenonion ist angegeben.</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might had been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">Nicht erkannter Deskriptor gefunden. Beim Laden vom Wallet %s 
+
+Die Wallet wurde möglicherweise in einer neueren Version erstellt.
+Bitte mit der neuesten Softwareversion versuchen.
+</translation>
+    </message>
+    <message>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation type="unfinished">Nicht unterstützter kategoriespezifischer logging level -loglevel=%s. Erwarteter -loglevel=&lt;category&gt; :&lt;loglevel&gt;. Gültige Kategorien:%s. Gültige Log-Ebenen:%s.</translation>
+    </message>
+    <message>
+        <source>
+Unable to cleanup failed migration</source>
+        <translation type="unfinished">
+Fehlgeschlagene Migration kann nicht bereinigt werden</translation>
+    </message>
+    <message>
+        <source>
+Unable to restore backup of wallet.</source>
+        <translation type="unfinished">
+Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -717,8 +777,7 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     </message>
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Fehler beim Laden von %s: Private Schlüssel können nur bei der Erstellung deaktiviert werden
-</translation>
+        <translation type="unfinished">Fehler beim Laden von %s: Private Schlüssel können nur bei der Erstellung deaktiviert werden</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -745,6 +804,14 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">Fehler beim Lesen des nächsten Eintrags aus der Wallet Datenbank</translation>
     </message>
     <message>
+        <source>Error: Could not add watchonly tx to watchonly wallet</source>
+        <translation type="unfinished">Fehler: watchonly tx konnte nicht zu watchonly Wallet hinzugefügt werden</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions</source>
+        <translation type="unfinished">Fehler: Watchonly-Transaktionen konnten nicht gelöscht werden</translation>
+    </message>
+    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">Fehler: Konnte den Cursor in der Datenbank nicht erzeugen</translation>
     </message>
@@ -756,6 +823,10 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
         <translation type="unfinished">Fehler: Prüfsumme der Speicherauszugsdatei stimmt nicht überein.
 Berechnet: %s, erwartet: %s</translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished">Fehler: Fehler beim Erstellen einer neuen watchonly Wallet</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
@@ -778,12 +849,36 @@ Berechnet: %s, erwartet: %s</translation>
         <translation type="unfinished">Fehler: Keine %s Adressen verfügbar..</translation>
     </message>
     <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Fehler: Nicht alle watchonly txs konnten gelöscht werden</translation>
+    </message>
+    <message>
+        <source>Error: This wallet already uses SQLite</source>
+        <translation type="unfinished">Fehler: Diese Wallet verwendet bereits SQLite</translation>
+    </message>
+    <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Fehler: Diese Wallet ist bereits eine Deskriptor-Brieftasche</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Fehler: Lesen aller Datensätze in der Datenbank nicht möglich</translation>
+    </message>
+    <message>
         <source>Error: Unable to make a backup of your wallet</source>
         <translation type="unfinished">Fehler: Kann neuen Eintrag nicht in Wallet schreiben</translation>
     </message>
     <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
         <translation type="unfinished">Fehler: Kann Version %u nicht als uint32_t lesen.</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Fehler: Alle Datensätze in der Datenbank können nicht gelesen werden</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Fehler: Watchonly-Adressbuchdaten können nicht entfernt werden</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -1047,6 +1142,10 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Erstellung der PID-Datei '%s': %s ist nicht möglich</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">UTXO für externe Eingabe konnte nicht gefunden werden</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation type="unfinished">Initialschlüssel können nicht generiert werden</translation>
     </message>
@@ -1067,6 +1166,10 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Kann HTTP-Server nicht starten. Siehe Debug-Log für Details.</translation>
     </message>
     <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Die Wallet kann vor der Migration nicht entladen werden</translation>
+    </message>
+    <message>
         <source>Unknown -blockfilterindex value %s.</source>
         <translation type="unfinished">Unbekannter -blockfilterindex Wert %s.</translation>
     </message>
@@ -1085,6 +1188,10 @@ Verifikations-Error: %s</translation>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">Unbekannte neue Regeln aktiviert (Versionsbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">Nicht unterstützter globaler Protokolliergrad -loglevel=%s. Gültige Werte:%s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -1331,7 +1438,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Hinweis</translation>
+        <translation type="unfinished">Informationen</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -1425,6 +1532,11 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Wallet-Daten</translation>
     </message>
     <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Wallet-Backup laden</translation>
+    </message>
+    <message>
         <source>Restore Wallet</source>
         <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
         <translation type="unfinished">Wallet wiederherstellen...</translation>
@@ -1451,15 +1563,23 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Hauptfenster</translation>
     </message>
     <message>
+        <source>%1 client</source>
+        <translation type="unfinished">%1 Client</translation>
+    </message>
+    <message>
         <source>&amp;Hide</source>
         <translation type="unfinished">&amp;Ausblenden</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">&amp;Anzeigen</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>%n aktive Verbindung zum Bitcoin-Netzwerk</numerusform>
-            <numerusform>%n aktive Verbindungen zum Bitcoin-Netzwerk</numerusform>
+            <numerusform>%n aktive Verbindung(en) zum Bitcoin-Netzwerk</numerusform>
         </translation>
     </message>
     <message>
@@ -2590,6 +2710,10 @@ Verifikations-Error: %s</translation>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="unfinished">Dialogfeld</translation>
+    </message>
     <message>
         <source>Sign Tx</source>
         <translation type="unfinished">Signiere Tx</translation>

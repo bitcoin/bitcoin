@@ -268,6 +268,21 @@
         <translation type="unfinished">ខាងក្នុង</translation>
     </message>
     <message>
+        <source>Full Relay</source>
+        <extracomment>Peer connection type that relays all network information.</extracomment>
+        <translation type="unfinished">ការបញ្ជូនតពេញ</translation>
+    </message>
+    <message>
+        <source>Block Relay</source>
+        <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
+        <translation type="unfinished">ប្លុកបញ្ជូនត</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <extracomment>Peer connection type established manually through one of several methods.</extracomment>
+        <translation type="unfinished">ហត្ថកម្ម</translation>
+    </message>
+    <message>
         <source>Address Fetch</source>
         <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
         <translation type="unfinished">ទាញអាសយដ្ឋាន</translation>
@@ -1370,6 +1385,10 @@
         <translation type="unfinished">URL ភាគីទីបី (ឧ. ប្លុករុករក) ដែលបង្ហាញក្នុងផ្ទាំងប្រតិបត្តិការជាធាតុម៉ឺនុយបរិបទ។ %sនៅក្នុង URL ត្រូវបានជំនួសដោយhashប្រតិបត្តិការ។ URLs ច្រើនត្រូវបានបំបែកដោយរបារបញ្ឈរ |។</translation>
     </message>
     <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">URLs ប្រតិបត្តិការភាគីទីបី(&amp;T)</translation>
+    </message>
+    <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
         <translation type="unfinished">ចងក្រងដោយមិនមានការគាំទ្រការចុះហត្ថលេខាខាងក្រៅ (ទាមទារសម្រាប់ការចុះហត្ថលេខាខាងក្រៅ)</translation>
@@ -1544,6 +1563,10 @@
     <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">ប្រត្តិបត្តិការត្រូវការហត្ថលេខាមួយ (ឬ​ ច្រើន)។</translation>
+    </message>
+    <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">(ប៉ុន្តែគ្មានកាបូបត្រូវបានទាញទេ។ )</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
@@ -1731,6 +1754,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">ថាតើយើងបញ្ជូនអាសយដ្ឋានទៅpeerនេះឬអត់។</translation>
     </message>
     <message>
+        <source>Address Relay</source>
+        <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
+        <translation type="unfinished">អាសយដ្ឋានបញ្ជូនបន្ត</translation>
+    </message>
+    <message>
         <source>Addresses Processed</source>
         <extracomment>Text title for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
         <translation type="unfinished">អាសយដ្ឋានត្រូវបានដំណើរការ</translation>
@@ -1762,6 +1790,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Connection Time</source>
         <translation type="unfinished">ពេលវាលាតភ្ជាប់</translation>
+    </message>
+    <message>
+        <source>Last Block</source>
+        <translation type="unfinished">ប្លុកចុងក្រោយ</translation>
     </message>
     <message>
         <source>Last Send</source>

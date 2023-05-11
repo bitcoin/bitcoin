@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">Es Nuevo</translation>
+        <translation type="unfinished">Es nuevo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>

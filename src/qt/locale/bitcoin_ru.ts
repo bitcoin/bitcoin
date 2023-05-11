@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Нажмите правой кнопкой мыши, чтобы изменить адрес или метку</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation type="unfinished">Создать новый адрес</translation>
     </message>
@@ -56,10 +52,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">&amp;Выбрать</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Адреса отправки</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -1968,12 +1960,7 @@ Unable to restore backup of wallet.</source>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
         <translation type="unfinished">Предупреждение при восстановлении кошелька</translation>
     </message>
-    <message>
-        <source>Restore wallet message</source>
-        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
-        <translation type="unfinished">Сообщение при восстановлении кошелька</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletController</name>
     <message>
@@ -2666,11 +2653,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Для активации изменений необходим перезапуск клиента.</translation>
     </message>
     <message>
-        <source>Current settings will be backed up at "%1".</source>
-        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
-        <translation type="unfinished">Резервная копия текущих настроек будет сохранена в "%1".</translation>
-    </message>
-    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">Клиент будет закрыт. Продолжить?</translation>
@@ -3265,10 +3247,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Wants Tx Relay</source>
         <translation type="unfinished">Желает передавать транзакции</translation>
-    </message>
-    <message>
-        <source>High bandwidth BIP152 compact block relay: %1</source>
-        <translation type="unfinished">Широкополосный ретранслятор компактных блоков BIP152: %1</translation>
     </message>
     <message>
         <source>High Bandwidth</source>
