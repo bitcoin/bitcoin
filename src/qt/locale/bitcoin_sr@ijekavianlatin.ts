@@ -1,4 +1,4 @@
-<TS version="2.1" language="sr@latin">
+<TS version="2.1" language="sr@ijekavianlatin">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -11,11 +11,11 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Novi</translation>
+        <translation type="unfinished">&amp;Ново</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopiraj selektovanu adresu u sistemski klipbord</translation>
+        <translation type="unfinished">Копирај тренутно одабрану адресу</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,15 +27,15 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Briše trenutno izabranu adresu sa liste</translation>
+        <translation type="unfinished">Обриши тренутно одабрану адресу са листе</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Unesite adresu ili oznaku za pretragu</translation>
+        <translation type="unfinished">Унеси адресу или назив ознаке за претрагу</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Izvoz podataka iz trenutne kartice u datoteku</translation>
+        <translation type="unfinished">Извези податке из одабране картице у датотеку</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -43,15 +43,15 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Izbrisati</translation>
+        <translation type="unfinished">&amp;Обриши</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Izaberite adresu za slanje novčića</translation>
+        <translation type="unfinished">Одабери адресу за слање</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Izaberite adresu za prijem novčića</translation>
+        <translation type="unfinished">Одабери адресу за примање</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Adresa na koju se šalje</translation>
+        <translation type="unfinished">Адресе за слање</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Ovo su Vaše Bitcoin adrese na koju se vrše uplate. Uvek proverite iznos i prijemnu adresu pre slanja novčića.</translation>
+        <translation type="unfinished">Ово су твоје Биткоин адресе за слање уплата. Увек добро провери износ и адресу на коју шаљеш пре него што пошаљеш уплату.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -77,7 +77,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Kopiraj Adresu</translation>
+        <translation type="unfinished">&amp;Копирај Адресу</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -89,7 +89,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Izvezi Listu Adresa</translation>
+        <translation type="unfinished">Извези Листу Адреса</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -99,11 +99,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Desila se greška prilikom čuvanja liste adresa u %1. Molimo pokusajte ponovo.</translation>
+        <translation type="unfinished">Десила се грешка приликом покушаја да се листа адреса сачува на  %1. Молимо покушајте поново.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Izvoz Neuspeo</translation>
+        <translation type="unfinished">Извоз Неуспешан</translation>
     </message>
 </context>
 <context>
@@ -114,7 +114,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresa</translation>
+        <translation type="unfinished">Адреса</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -125,7 +125,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished">Dialog pristupne fraze</translation>
+        <translation type="unfinished">Прозор за унос лозинке</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -133,11 +133,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation type="unfinished">Nova pristupna fraza</translation>
+        <translation type="unfinished">Нова лозинка</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished">Ponovo unesite pristupnu frazu</translation>
+        <translation type="unfinished">Понови нову лозинку</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -149,7 +149,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Da biste otključali novčanik potrebno je da unesete svoju pristupnu frazu.</translation>
+        <translation type="unfinished">Ова операција захтева да унесеш лозинку новчаника како би се новчаник откључао.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -157,11 +157,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">Promenite pristupnu frazu</translation>
+        <translation type="unfinished">Измени лозинку</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Potvrdite šifrovanje novčanika</translation>
+        <translation type="unfinished">Потврди шифрирање новчаника</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -177,11 +177,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Unesite lozinku u novčanik. &lt;br/&gt;Molimo, koristite lozinku koja ima &lt;b&gt; deset ili više nasumičnih znakova&lt;/b&gt;, ili &lt;b&gt;osam ili više reči&lt;/b&gt;.</translation>
+        <translation type="unfinished">Унеси нову приступну фразу за новчаник&lt;br/&gt;Молимо користи приступну фразу од десет или више насумичних карактера&lt;b&gt;,или&lt;b&gt;осам или више речи&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Unesite u novčanik staru lozinku i novu lozinku.</translation>
+        <translation type="unfinished">Унеси стару лозинку и нову лозинку новчаника.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -197,7 +197,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">Vaš novčanik je sada šifrovan.</translation>
+        <translation type="unfinished">Твој новчаник сада је шифриран.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -205,15 +205,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">Enkripcija novčanika neuspešna</translation>
+        <translation type="unfinished">Шифрирање новчаника неуспешно.</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Enkripcija novčanika nije uspela zbog greške u programu. Vaš novčanik nije enkriptovan.</translation>
+        <translation type="unfinished">Шифрирање новчаника није успело због интерне грешке. Ваш новчаник није шифриран.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">Unete pristupne fraze nisu tačne.</translation>
+        <translation type="unfinished">Лозинке које сте унели нису исте.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -221,7 +221,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished">Pristupna fraza za dekriptovanje novčanika nije tačna.</translation>
+        <translation type="unfinished">Лозинка коју сте унели за дешифровање новчаника је погрешна.</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -236,7 +236,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>BanTableModel</name>
     <message>
         <source>Banned Until</source>
-        <translation type="unfinished">Banovani ste do</translation>
+        <translation type="unfinished">Забрањен до</translation>
     </message>
 </context>
 <context>
@@ -278,7 +278,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Kolicina</translation>
+        <translation type="unfinished">Износ</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
@@ -592,7 +592,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">Nedovoljno sredstava</translation>
+        <translation type="unfinished">Недовољно средстава</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -779,7 +779,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation type="unfinished">&amp;Transakcije</translation>
+        <translation type="unfinished">&amp;Трансакције</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -787,7 +787,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation type="unfinished">I&amp;zađi</translation>
+        <translation type="unfinished">И&amp;злаз</translation>
     </message>
     <message>
         <source>Quit application</source>
@@ -795,7 +795,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;Otprilike %1</translation>
+        <translation type="unfinished">&amp;О %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
@@ -811,7 +811,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished">Izmeni podešavanja za %1</translation>
+        <translation type="unfinished">Измени конфигурацију поставки за %1</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -828,7 +828,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">Aktivnost na mreži je prekinuta.</translation>
+        <translation type="unfinished">Активност на мрежи искључена.</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
@@ -836,19 +836,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Pošalji novčiće na Bitcoin adresu</translation>
+        <translation type="unfinished">Пошаљи новац на Биткоин адресу</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished">Napravite rezervnu kopiju novčanika na drugom mestu</translation>
+        <translation type="unfinished">Направи резервну копију новчаника на другој локацији</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished">Promenite pristupnu frazu za enkiptovanje novčanika</translation>
+        <translation type="unfinished">Мењање лозинке којом се шифрује новчаник</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished">&amp;Pošalji</translation>
+        <translation type="unfinished">&amp;Пошаљи</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -864,7 +864,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished">Enkriptuj privatne ključeve novčanika</translation>
+        <translation type="unfinished">Шифрирај приватни клуљ који припада новчанику.</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
@@ -888,7 +888,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Proverite poruke da biste utvrdili sa kojim Bitcoin adresama su potpisane</translation>
+        <translation type="unfinished">Верификуј поруке и утврди да ли су потписане од стране спецификованих Биткоин адреса</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -916,11 +916,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;Podešavanja</translation>
+        <translation type="unfinished">&amp;Подешавања</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">&amp;Pomoć</translation>
+        <translation type="unfinished">&amp;Помоћ</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -948,7 +948,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Zatražite plaćanje (generiše QR kodove i bitcoin: URI-e)</translation>
+        <translation type="unfinished">Затражи плаћање (генерише QR кодове и биткоин: URI-е)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -996,7 +996,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Informacije</translation>
+        <translation type="unfinished">Информације</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -1081,7 +1081,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 client</source>
-        <translation type="unfinished">%1 klijent</translation>
+        <translation type="unfinished">%1 клијент</translation>
     </message>
     <message>
         <source>&amp;Hide</source>
@@ -1131,13 +1131,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">Datum: %1
+        <translation type="unfinished">Датум: %1
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">Iznos: %1
+        <translation type="unfinished">Износ: %1
 </translation>
     </message>
     <message>
@@ -1149,19 +1149,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Type: %1
 </source>
-        <translation type="unfinished">Tip: %1
+        <translation type="unfinished">Тип: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">Oznaka: %1
+        <translation type="unfinished">Ознака: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation type="unfinished">Adresa: %1
+        <translation type="unfinished">Адреса: %1
 </translation>
     </message>
     <message>
@@ -1212,7 +1212,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Količina:</translation>
+        <translation type="unfinished">Количина:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -1232,7 +1232,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">Nakon Naknade:</translation>
+        <translation type="unfinished">Након накнаде:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -1252,7 +1252,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Kolicina</translation>
+        <translation type="unfinished">Износ</translation>
     </message>
     <message>
         <source>Received with label</source>
@@ -1264,7 +1264,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Datum</translation>
+        <translation type="unfinished">Датум</translation>
     </message>
     <message>
         <source>Confirmations</source>
@@ -1448,7 +1448,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Novčanik</translation>
+        <translation type="unfinished">Новчаник</translation>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
@@ -1517,7 +1517,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation type="unfinished">&amp;Oznaka</translation>
+        <translation type="unfinished">&amp;Ознака</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -1589,6 +1589,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation type="unfinished">Биткоин</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -2355,7 +2359,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adresa</translation>
+        <translation type="unfinished">Адреса</translation>
     </message>
     <message>
         <source>Type</source>
@@ -2792,11 +2796,11 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Kome</translation>
+        <translation type="unfinished">За</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">Od</translation>
+        <translation type="unfinished">Од</translation>
     </message>
     <message>
         <source>Ban for</source>
@@ -2969,7 +2973,7 @@ For more information on using this console, type %6.
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Datum</translation>
+        <translation type="unfinished">Датум</translation>
     </message>
     <message>
         <source>Label</source>
@@ -3016,7 +3020,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Količina:</translation>
+        <translation type="unfinished">Количина:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -3032,7 +3036,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">Nakon Naknade:</translation>
+        <translation type="unfinished">Након накнаде:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -3276,7 +3280,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">Taksa transakcije</translation>
+        <translation type="unfinished">Провизија за трансакцију</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
@@ -3584,20 +3588,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>%1/unconfirmed</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
-        <translation type="unfinished">%1/nepotvrdjeno</translation>
+        <translation type="unfinished">%1/непотврђено</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
-        <translation type="unfinished">%1 potvrdjeno/ih</translation>
+        <translation type="unfinished">%1 порврде</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Stanje/Status</translation>
+        <translation type="unfinished">Статус</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Datum</translation>
+        <translation type="unfinished">Датум</translation>
     </message>
     <message>
         <source>Source</source>
@@ -3609,7 +3613,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">Od</translation>
+        <translation type="unfinished">Од</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -3617,11 +3621,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Kome</translation>
+        <translation type="unfinished">За</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation type="unfinished">sopstvena adresa</translation>
+        <translation type="unfinished">сопствена адреса</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3633,7 +3637,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Credit</source>
-        <translation type="unfinished">Kredit</translation>
+        <translation type="unfinished">Заслуге</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
@@ -3653,7 +3657,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Total debit</source>
-        <translation type="unfinished">Ukupno zaduzenje</translation>
+        <translation type="unfinished">Укупно задужење</translation>
     </message>
     <message>
         <source>Total credit</source>
@@ -3661,11 +3665,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">Taksa transakcije</translation>
+        <translation type="unfinished">Провизија за трансакцију</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation type="unfinished">Neto iznos</translation>
+        <translation type="unfinished">Нето износ</translation>
     </message>
     <message>
         <source>Message</source>
@@ -3673,11 +3677,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Comment</source>
-        <translation type="unfinished">Komentar</translation>
+        <translation type="unfinished">Коментар</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished">ID Transakcije</translation>
+        <translation type="unfinished">ID Трансакције</translation>
     </message>
     <message>
         <source>Transaction total size</source>
@@ -3705,7 +3709,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Debug information</source>
-        <translation type="unfinished">Informacije debugovanja</translation>
+        <translation type="unfinished">Информације о оклањању грешака</translation>
     </message>
     <message>
         <source>Transaction</source>
@@ -3717,7 +3721,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Kolicina</translation>
+        <translation type="unfinished">Износ</translation>
     </message>
     <message>
         <source>true</source>
@@ -3743,7 +3747,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Datum</translation>
+        <translation type="unfinished">Датум</translation>
     </message>
     <message>
         <source>Type</source>
@@ -3787,7 +3791,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Received from</source>
-        <translation type="unfinished">Primljeno od</translation>
+        <translation type="unfinished">Примљено од</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3795,11 +3799,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation type="unfinished">Placanje samom sebi</translation>
+        <translation type="unfinished">Уплата самом себи</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Iskopano</translation>
+        <translation type="unfinished">Рударено</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3874,7 +3878,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Iskopano</translation>
+        <translation type="unfinished">Рударено</translation>
     </message>
     <message>
         <source>Other</source>
@@ -3947,7 +3951,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Datum</translation>
+        <translation type="unfinished">Датум</translation>
     </message>
     <message>
         <source>Type</source>
@@ -3959,11 +3963,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresa</translation>
+        <translation type="unfinished">Адреса</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Izvoz Neuspeo</translation>
+        <translation type="unfinished">Извоз Неуспешан</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -4081,7 +4085,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Izvoz podataka iz trenutne kartice u datoteku</translation>
+        <translation type="unfinished">Извези податке из одабране картице у датотеку</translation>
     </message>
     <message>
         <source>Backup Wallet</source>

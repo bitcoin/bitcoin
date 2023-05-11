@@ -241,6 +241,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Datoteka postavki %1 je možda oštećena ili nevažeća.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Odbegli izuzetak</translation>
     </message>
@@ -661,6 +665,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Alatna traka kartica</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Sinhroniziranje zaglavlja (%1%)…</translation>
+    </message>
+    <message>
         <source>Synchronizing with network…</source>
         <translation type="unfinished">Sinhronizacija sa mrežom...</translation>
     </message>
@@ -675,6 +683,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Reindexing blocks on disk…</source>
         <translation type="unfinished">Reindekiraju se blokovi na disku...</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">Povezivanje sa kolegama…</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -1023,6 +1035,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ova naljepnica postaje crvena ako bilo koji primatelj primi količinu manju od trenutnog praga prašine.</translation>
     </message>
     <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation type="unfinished">Može varirati +/- %1 satoshi (a) po upisu vrijednosti.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation type="unfinished">(nema oznake)</translation>
     </message>
@@ -1285,6 +1301,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">Vraćanje ove postavke zahtijeva ponovno preuzimanje cijelog lanca blokova. Brže je prvo preuzeti čitav lanac i kasnije ga obrezati. Onemogućava neke napredne funkcije.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Ova početna sihronizacija je veoma zahtjevna,i moze razotkriti hardverske probleme na vašem kompjuteru a niste ih prije primijetili.Svki put kad koristite %1, nastavice download gdje je stao.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>

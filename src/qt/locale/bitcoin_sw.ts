@@ -129,6 +129,28 @@
     </message>
     </context>
 <context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Wingi</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation type="unfinished">hapana</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation type="unfinished">La</translation>
+    </message>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation type="unfinished">Jina</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message numerus="yes">
         <source>%n GB of space available</source>
@@ -170,6 +192,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Wingi</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">

@@ -244,6 +244,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">შიდა შეცდომა</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
@@ -326,6 +333,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">პარამეტრების ფაილის წაკითხვა ვერ მოხერხდა</translation>
+    </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation type="unfinished">ეს არის წინასწარი სატესტო ვერსია - გამოიყენეთ საკუთარი რისკით - არ გამოიყენოთ მოპოვებისა ან კომერციული მიზნებისათვის</translation>
@@ -495,6 +506,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">შეამოწმეთ, რომ მესიჯები ხელმოწერილია მითითებული Bitcoin-მისამართით</translation>
     </message>
     <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">საფულის დახურვა…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">საფულის შექმნა…</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">ყველა საფულის დახურვა…</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation type="unfinished">&amp;ფაილი</translation>
     </message>
@@ -594,6 +617,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">საფულის დახურვა</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">საფულის აღდგენა…</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">ყველა საფულის დახურვა</translation>
     </message>
@@ -606,6 +634,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">არ არის ჩატვირთული საფულე.</translation>
     </message>
     <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">საფულის მონაცემები</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">საფულის სახელი</translation>
@@ -615,12 +648,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;ფანჯარა</translation>
     </message>
     <message>
+        <source>Zoom</source>
+        <translation type="unfinished">მასშტაბირება</translation>
+    </message>
+    <message>
         <source>Main Window</source>
         <translation type="unfinished">ძირითადი ფანჯარა</translation>
     </message>
     <message>
         <source>%1 client</source>
         <translation type="unfinished">%1 კლიენტი</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;დამალვა</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -636,8 +677,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">მეტი...</translation>
     </message>
     <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">ქსელის აქტივობის გამორთვა</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">შეცდუმა: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation type="unfinished">გაფრთხილება: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -761,6 +811,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy amount</source>
         <translation type="unfinished">რაოდენობის კოპირება</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;დააკოპირეთ მისამართი</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1432,6 +1486,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">გამავალი:</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;დააკოპირეთ მისამართი</translation>
+    </message>
+    <message>
         <source>To</source>
         <translation type="unfinished">მიმღები</translation>
     </message>
@@ -1509,6 +1568,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">&amp;URI-ის კოპირება</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;დააკოპირეთ მისამართი</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -2174,6 +2237,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">მინ. თანხა</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;დააკოპირეთ მისამართი</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">ტრანსაქციების ისტორიის ექსპორტი</translation>
     </message>
@@ -2262,6 +2329,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Backup Wallet</source>
         <translation type="unfinished">საფულის არქივირება</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">საფულის მონაცემები</translation>
     </message>
     <message>
         <source>Backup Failed</source>

@@ -245,7 +245,23 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">Datoteka z nastavitvami %1 je morda ovkarjena ali neveljavna.</translation>
     </message>
-    </context>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">Pobegla napaka</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Prišlo je do usodne napake. %1 ne more nadaljevati in se bo zaprl.</translation>
+    </message>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Notranja napaka</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Prišlo je do notranje napake. %1 bo skušal varno nadaljevati z izvajanjem. To je nepričakovan hrošč, ki ga lahko prijavite, kot je opisano spodaj.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -270,6 +286,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">Napaka: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 se še ni varno zaprl…</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -1254,6 +1274,22 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     <message>
         <source>&amp;Load PSBT from file…</source>
         <translation type="unfinished">&amp;Naloži DPBT iz datoteke...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Odpri &amp;URI…</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Zapri denarnico…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Ustvari denarnico…</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Zapri vse denarnice…</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>

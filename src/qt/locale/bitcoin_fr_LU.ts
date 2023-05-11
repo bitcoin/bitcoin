@@ -1,4 +1,4 @@
-<TS version="2.1" language="fr">
+<TS version="2.1" language="fr_LU">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copier dans le presse-papiers l’adresse sélectionnée actuellement</translation>
+        <translation type="unfinished">Copier l’adresse sélectionnée actuellement dans le presse-papiers</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Supprimer de la liste l’adresse sélectionnée actuellement</translation>
+        <translation type="unfinished">Supprimer l’adresse sélectionnée actuellement de la liste</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -688,7 +688,7 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     </message>
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Erreur : La transaction %s dans le portefeuille ne peut pas être identifiée comme appartenant aux portefeuilles migrés</translation>
+        <translation type="unfinished">Erreur : La transaction %s dans le portefeuille ne peut pas être identifiée comme appartenant aux portefeuilles migrés.</translation>
     </message>
     <message>
         <source>Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first</source>
@@ -716,11 +716,10 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
 The wallet might had been created on a newer version.
 Please try running the latest software version.
 </source>
-        <translation type="unfinished">Descripteur non reconnu trouvé. Chargement du portefeuille %s
+        <translation type="unfinished">Descripteur non reconnu trouvé. Chargement du portefeuille %ss
 
 Le portefeuille a peut-être été créé avec une version plus récente.
-Veuillez essayer d'utiliser la dernière version du logiciel.
-</translation>
+Veuillez essayer d'utiliser la dernière version du logiciel.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -729,8 +728,7 @@ Veuillez essayer d'utiliser la dernière version du logiciel.
     <message>
         <source>
 Unable to cleanup failed migration</source>
-        <translation type="unfinished">
-Impossible de corriger l'échec de la migration</translation>
+        <translation type="unfinished">Impossible de corriger l'échec de la migration</translation>
     </message>
     <message>
         <source>
@@ -820,7 +818,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Erreur : Impossible d'ajouter la transaction watchonly au portefeuille watchonly</translation>
+        <translation type="unfinished">Erreur : Impossible d'ajouter le tx watchonly au portefeuille watchonly</translation>
     </message>
     <message>
         <source>Error: Could not delete watchonly transactions</source>
@@ -840,7 +838,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Error: Failed to create new watchonly wallet</source>
-        <translation type="unfinished">Erreur : Echec de la création d'un nouveau portefeuille watchonly</translation>
+        <translation type="unfinished">Erreur : Echec de la création d'un nouveau porte-monnaie Watchonly</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
@@ -892,7 +890,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Error: Unable to remove watchonly address book data</source>
-        <translation type="unfinished">Erreur : Impossible de supprimer les données du carnet d'adresses watchonly</translation>
+        <translation type="unfinished">Erreur : Impossible de supprimer les données du carnet d'adresses en mode veille</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -1224,7 +1222,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Le portefeuille doit être réécrit : redémarrer %s pour terminer</translation>
+        <translation type="unfinished">Le porte-monnaie devait être réécrit : redémarrer %s pour terminer l’opération.</translation>
     </message>
 </context>
 <context>

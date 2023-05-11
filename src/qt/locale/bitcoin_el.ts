@@ -347,36 +347,36 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n δευτερόλεπτο(α)</numerusform>
+            <numerusform>%n δευτερόλεπτο(α)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n λεπτό</numerusform>
+            <numerusform>%n λεπτά</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n ώρα</numerusform>
+            <numerusform>%n ώρες</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n μέρα</numerusform>
+            <numerusform>%n μέρες</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n εβδομάδα</numerusform>
+            <numerusform>%n εβδομάδες</numerusform>
         </translation>
     </message>
     <message>
@@ -386,8 +386,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n έτος</numerusform>
+            <numerusform>%n έτη</numerusform>
         </translation>
     </message>
     </context>
@@ -1782,8 +1782,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%nGB διαθέσιμου χώρου</numerusform>
+            <numerusform>%nGB διαθέσιμου χώρου</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -2073,6 +2073,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Ξόδεμα μη επικυρωμένων ρέστων</translation>
+    </message>
+    <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation type="unfinished">Ενεργοποίηση ελέγχων &amp;PSBT</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>

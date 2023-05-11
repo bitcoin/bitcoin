@@ -30,8 +30,16 @@
         <translation type="unfinished">Nhập địa chỉ hoặc nhãn để tìm kiếm</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Xuất dữ liệu ở thẻ hiện tại ra tập tin.</translation>
+    </message>
+    <message>
         <source>&amp;Export</source>
         <translation type="unfinished">&amp;Xuất</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">&amp;Xoá</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -40,6 +48,22 @@
     <message>
         <source>Sending addresses</source>
         <translation type="unfinished">Đang gửi địa chỉ</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation type="unfinished">Đang nhận địa chỉ</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Các địa chỉ này là các địa chỉ Bitcoin dùng để thanh toán.Luôn luôn kiểm tra số dư và địa chỉ nhận trước khi gởi chuyển tiền ảo. </translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">&amp;Sao chép địa chỉ</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">Sao chép &amp;Nhãn</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -155,7 +179,30 @@
         <source>The supplied passphrases do not match.</source>
         <translation type="unfinished">Mật khẩu đã nhập không đúng.</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished">Mở khóa ví thất bại</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation type="unfinished">Cụm mật khẩu đã nhập để giải mã ví không đúng.</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished">Cụm mật khẩu ví đã được thay đổi thành công.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished">Cảnh báo: Phím Caps Lock đang được kích hoạt!</translation>
+    </message>
+</context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>Banned Until</source>
+        <translation type="unfinished">Bị cấm cho đến</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinApplication</name>
     <message>
@@ -182,6 +229,14 @@
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation type="unfinished">Đã xảy ra lỗi nghiêm trọng. Kiểm tra xem tệp cài đặt có thể ghi được không hoặc thử chạy với -nosettings.</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation type="unfinished">Lỗi: Thư mục dữ liệu được chỉ định %1 không tồn tại.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation type="unfinished">Lỗi: Không thể phân tích tệp cấu hình: .%1</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -307,6 +362,74 @@
         <translation type="unfinished">Không thể đổi tên tệp ngang hàng không hợp lệ. Vui lòng di chuyển hoặc xóa nó và thử lại.</translation>
     </message>
     <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might had been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">Phát hiện mô tả không xác định. Đang tải ví %s
+
+Ví này có thể đã được tạo bởi một phiên bản mới hơn.
+Vui lòng thử chạy phiên bản phần mềm mới nhất.
+</translation>
+    </message>
+    <message>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation type="unfinished">Mức độ ghi chú theo danh mục không được hỗ trợ -loglevel=%s. Kỳ vọng -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Các danh mục hợp lệ: %s. Các giá trị loglevels hợp lệ: %s.</translation>
+    </message>
+    <message>
+        <source>
+Unable to cleanup failed migration</source>
+        <translation type="unfinished">
+Không thể dọn dẹp quá trình chuyển đã thất bại</translation>
+    </message>
+    <message>
+        <source>
+Unable to restore backup of wallet.</source>
+        <translation type="unfinished">
+Không thể khôi phục bản sao lưu của ví.</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx to watchonly wallet</source>
+        <translation type="unfinished">Lỗi: Không thể thêm giao dịch chỉ xem vào ví chỉ xem</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions</source>
+        <translation type="unfinished">Lỗi: Không thể xóa các giao dịch chỉ xem</translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished">Lỗi: Tạo ví chỉ xem mới thất bại</translation>
+    </message>
+    <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Lỗi: Không phải giao dịch chỉ xem nào cũng xóa được</translation>
+    </message>
+    <message>
+        <source>Error: This wallet already uses SQLite</source>
+        <translation type="unfinished">Lỗi: Ví này đã dùng SQLite</translation>
+    </message>
+    <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Lỗi: Ví này đã là một ví mô tả</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Lỗi: Không thể bắt đầu việc đọc tất cả bản ghi trong cơ sở dữ liệu</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">Lỗi: Không thể tạo bản sao lưu cho ví của bạn</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Lỗi: Không thể đọc tất cả bản ghi trong cơ sở dữ liệu</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Lỗi: Không thể gỡ sổ địa chỉ chỉ xem</translation>
+    </message>
+    <message>
         <source>Input not found or already spent</source>
         <translation type="unfinished">Đầu vào không được tìm thấy hoặc đã được sử dụng</translation>
     </message>
@@ -339,12 +462,32 @@
         <translation type="unfinished">Không có khả năng để phân bổ bộ nhớ cho -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">Không thể tìm UTXO cho nhập liệu từ bên ngoài</translation>
+    </message>
+    <message>
         <source>Unable to parse -maxuploadtarget: '%s'</source>
         <translation type="unfinished">Không thể parse -maxuploadtarget '%s</translation>
+    </message>
+    <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Không thể gỡ ví trước khi chuyển</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">Mức độ ghi chú không được hỗ trợ -loglevel=%s. Các giá trị hợp lệ: %s.</translation>
     </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;Overview</source>
+        <translation type="unfinished">&amp;Tổng quan</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation type="unfinished">Hiển thị tổng quan chung về ví</translation>
+    </message>
     <message>
         <source>&amp;Minimize</source>
         <translation type="unfinished">&amp;Thu nhỏ</translation>
@@ -543,6 +686,10 @@
         <translation type="unfinished">Bật hoạt động mạng</translation>
     </message>
     <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Tiền đồng bộ hóa Headers (%1%)…</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Lỗi: %1</translation>
     </message>
@@ -692,7 +839,7 @@
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n GB dung lượng khả dụng</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -738,6 +885,10 @@
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">Đảo ngược lại thiết lập này yêu cầu tại lại toàn bộ chuỗi khối. Tải về toàn bộ chuỗi khối trước và loại nó sau đó sẽ nhanh hơn. Vô hiệu hóa một số tính năng nâng cao.</translation>
     </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Khi bạn nhấn OK, %1 sẽ bắt đầu tải xuống và xử lý toàn bộ chuỗi chính %4 (%2 GB), bắt đầu từ các giao dịch sớm nhất trong %3 khi %4 được khởi chạy ban đầu.</translation>
+    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
@@ -771,7 +922,11 @@
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Không xác định. Đồng bộ hóa tiêu đề (%1, %2%)…</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Không xác định. Tiền đồng bộ hóa Headers (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -995,6 +1150,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation type="unfinished">Sử dụng fallbackfee có thể dẫn đến việc gửi giao dịch mất vài giờ hoặc vài ngày (hoặc không bao giờ) để xác nhận. Hãy cân nhắc khi tự chọn phí của bạn hoặc đợi cho tới khi bạn xác minh xong chuỗi hoàn chỉnh.</translation>
+    </message>
     <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>

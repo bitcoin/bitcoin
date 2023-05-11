@@ -459,6 +459,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Przycinanie skonfigurowano poniżej minimalnych %d MiB. Proszę użyć wyższej liczby.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
+        <translation type="unfinished">Tryb przycięty jest niekompatybilny z -reindex-chainstate. Użyj pełnego  -reindex.</translation>
+    </message>
+    <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
         <translation type="unfinished">Prune: ostatnia synchronizacja portfela jest za danymi. Muszisz -reindexować (pobrać cały ciąg bloków ponownie w przypadku przyciętego węzła)</translation>
     </message>
@@ -545,6 +549,42 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">Nie mogę zapisać do katalogu danych '%s'; sprawdź uprawnienia.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">Opcja -reindex-chainstate nie jest kompatybilna z -blockfilterindex. Proszę tymczasowo wyłączyć opcję blockfilterindex podczas używania -reindex-chainstate lub zastąpić -reindex-chainstate opcją -reindex, aby w pełni przebudować wszystkie indeksy.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">Opcja -reindex-chainstate nie jest kompatybilna z -coinstatsindex. Proszę tymczasowo wyłączyć opcję coinstatsindex podczas używania -reindex-chainstate lub zastąpić -reindex-chainstate opcją -reindex, aby w pełni przebudować wszystkie indeksy.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">Opcja -reindex-chainstate nie jest kompatybilna z -txindex. Proszę tymczasowo wyłączyć opcję txindex podczas używania -reindex-chainstate lub zastąpić -reindex-chainstate opcją -reindex, aby w pełni przebudować wszystkie indeksy.</translation>
+    </message>
+    <message>
+        <source>Assumed-valid: last wallet synchronisation goes beyond available block data. You need to wait for the background validation chain to download more blocks.</source>
+        <translation type="unfinished">Assumed-valid: ostatnia synchronizacja portfela wykracza poza dostępne dane bloków. Musisz poczekać, aż proces walidacji bloków w tle pobierze więcej bloków.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation type="unfinished">Nie można jednocześnie określić konkretnych połączeń oraz pozwolić procesowi addrman na wyszukiwanie wychodzących połączeń.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation type="unfinished">Błąd ładowania %s: Ładowanie portfela zewnętrznego podpisu bez skompilowania wsparcia dla zewnętrznego podpisu.</translation>
+    </message>
+    <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Błąd: Dane książki adresowej w portfelu nie można zidentyfikować jako należące do migrowanego portfela</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Błąd: Podczas migracji utworzono zduplikowane deskryptory. Twój portfel może być uszkodzony.</translation>
+    </message>
+    <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first</source>
+        <translation type="unfinished">Błąd: Nie można wygenerować deskryptorów dla tego starego portfela. Upewnij się najpierw, że portfel jest odblokowany.</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -647,6 +687,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Błąd: %s adres nie dostępny</translation>
     </message>
     <message>
+        <source>Error: This wallet already uses SQLite</source>
+        <translation type="unfinished">Błąd: Ten portfel już używa SQLite</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">Błąd: Nie mogę zrobić kopii twojego portfela</translation>
+    </message>
+    <message>
         <source>Error: Unable to write record to new wallet</source>
         <translation type="unfinished">Błąd: Wpisanie rekordu do nowego portfela jest niemożliwe</translation>
     </message>
@@ -683,8 +731,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Wstępna kontrola poprawności nie powiodła się. %s wyłącza się.</translation>
     </message>
     <message>
+        <source>Input not found or already spent</source>
+        <translation type="unfinished">Wejście nie znalezione lub już wydane</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Niewystarczające środki</translation>
+    </message>
+    <message>
+        <source>Invalid -i2psam address or hostname: '%s'</source>
+        <translation type="unfinished">Niewłaściwy adres -i2psam lub nazwa hosta: '%s'</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -739,6 +795,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Brakująca kwota</translation>
     </message>
     <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">Brak danych potrzebnych do oszacowania rozmiaru transakcji</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Musisz określić port z -whitebind: '%s'</translation>
     </message>
@@ -759,8 +819,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Tryb ograniczony jest niekompatybilny z -txindex.</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation type="unfinished">Przycinanie bloków na dysku...</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation type="unfinished">Zmniejszanie -maxconnections z %d do %d z powodu ograniczeń systemu.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Przetwarzam stare bloki...</translation>
     </message>
     <message>
         <source>Rescanning…</source>
@@ -844,6 +912,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Kwota transakcji musi być dodatnia</translation>
     </message>
     <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">Indeks wyjścia reszty z transakcji poza zakresem</translation>
+    </message>
+    <message>
         <source>Transaction has too long of a mempool chain</source>
         <translation type="unfinished">Transakcja posiada zbyt długi łańcuch pamięci</translation>
     </message>
@@ -852,8 +924,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Transakcja wymaga co najmniej jednego odbiorcy</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">Transakcja wymaga adresu reszty, ale nie możemy go wygenerować.</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transakcja zbyt duża</translation>
+    </message>
+    <message>
+        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
+        <translation type="unfinished">Nie mogę zalokować pamięci dla -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -866,6 +946,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
         <translation type="unfinished">Nie można stworzyć pliku PID '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">Nie mogę znaleźć UTXO dla zewnętrznego wejścia</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
@@ -886,6 +970,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Uruchomienie serwera HTTP nie powiodło się. Zobacz dziennik debugowania, aby uzyskać więcej szczegółów.</translation>
+    </message>
+    <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Nie mogę zamknąć portfela przed migracją</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
@@ -1315,6 +1403,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Włącz aktywność sieciową</translation>
     </message>
     <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Synchronizuję nagłówki (%1%)…</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Błąd: %1</translation>
     </message>
@@ -1577,7 +1669,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>Can't list signers</source>
         <translation type="unfinished">Nie można wyświetlić sygnatariuszy</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Znaleziono zbyt wiele zewnętrznych podpisów</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1623,7 +1719,27 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
         <translation type="unfinished">Przywróć portfel</translation>
     </message>
-    </context>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Odtwarzanie portfela &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Odtworzenie portfela nieudane</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Ostrzeżenie przy odtworzeniu portfela</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Wiadomość przy odtwarzaniu portfela</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1802,9 +1918,9 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n GB dostępnej przestrzeni dyskowej </numerusform>
+            <numerusform>%n GB dostępnej przestrzeni dyskowej </numerusform>
+            <numerusform>%n GB dostępnej przestrzeni dyskowej </numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1883,6 +1999,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Wstępna synchronizacja jest bardzo wymagająca i może ujawnić wcześniej niezauważone problemy sprzętowe. Za każdym uruchomieniem %1 pobieranie będzie kontynuowane od miejsca w którym zostało zatrzymane.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Gdy naciśniesz OK, %1 zacznie się pobieranie i przetwarzanie całego %4 łańcucha bloków (%2GB) zaczynając od najwcześniejszych transakcji w %3 gdy %4 został uruchomiony.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1981,7 +2101,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">nieznany, Synchronizowanie nagłówków (1%1, 2%2%)</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Nieznane. Synchronizowanie nagłówków (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2035,6 +2159,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">Minimalizuje zamiast zakończyć działanie programu przy zamykaniu okna. Kiedy ta opcja jest włączona, program zakończy działanie po wybieraniu Zamknij w menu.</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">Opcje ustawione w tym oknie są nadpisane przez linię komend:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -2284,6 +2412,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Wymagany restart programu, aby uaktywnić zmiany.</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">Aktualne ustawienia zostaną zapisane w "%1".</translation>
+    </message>
+    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">Program zostanie wyłączony. Czy chcesz kontynuować?</translation>
@@ -2321,6 +2454,13 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation type="unfinished">Adres podanego proxy jest nieprawidłowy</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation type="unfinished">Nie mogę odczytać ustawienia "%1", %2.</translation>
     </message>
 </context>
 <context>
@@ -2569,6 +2709,11 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Aplikacja kliencka</translation>
     </message>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">Wiek</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
         <translation type="unfinished">Kierunek</translation>
@@ -2768,6 +2913,16 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <source>Address Relay</source>
         <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished">Adres Przekaźnika</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">Całkowita liczba adresów otrzymanych od tego węzła, które zostały przetworzone (wyklucza adresy, które zostały odrzucone ze względu na ograniczenie szybkości).</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation type="unfinished">Całkowita liczba adresów otrzymanych od tego węzła, które zostały odrzucone (nieprzetworzone) z powodu ograniczenia szybkości.</translation>
     </message>
     <message>
         <source>Addresses Processed</source>
@@ -3817,6 +3972,16 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation type="unfinished">sprzeczny z transakcją posiadającą %1 potwierdzeń</translation>
     </message>
     <message>
+        <source>0/unconfirmed, in memory pool</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is in the memory pool.</extracomment>
+        <translation type="unfinished">0/niepotwierdzone, w kolejce w pamięci</translation>
+    </message>
+    <message>
+        <source>0/unconfirmed, not in memory pool</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is not in the memory pool.</extracomment>
+        <translation type="unfinished">0/niepotwierdzone, nie wysłane do kolejki w pamięci</translation>
+    </message>
+    <message>
         <source>abandoned</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">porzucone</translation>
@@ -3874,9 +4039,9 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>dojrzeje po %n kolejnym bloku</numerusform>
+            <numerusform>dojrzeje po %n kolejnych blokach</numerusform>
+            <numerusform>dojrzeje po %n kolejnych blokach</numerusform>
         </translation>
     </message>
     <message>
