@@ -19,7 +19,6 @@
 #include <univalue.h>
 #include <validation.h>
 #include <node/blockstorage.h>
-using node::ReadBlockFromDisk;
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
     confirmedHash(dmn.pdmnState->confirmedHash),
@@ -234,7 +233,7 @@ bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseB
     }
     // TODO store coinbase TX in CBlockIndex
     CBlock block;
-    if (!ReadBlockFromDisk(block, blockIndex, Params().GetConsensus())) {
+    if (!chainman.m_blockman.ReadBlockFromDisk(block, *blockIndex)) {
         errorRet = strprintf("failed to read block %s from disk", blockHash.ToString());
         return false;
     }

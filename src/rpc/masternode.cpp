@@ -15,7 +15,6 @@
 #include <node/transaction.h>
 #include <rpc/server_util.h>
 #include <llmq/quorums_chainlocks.h>
-using node::ReadBlockFromDisk;
 using node::GetTransaction;
 RPCHelpMan masternodelist();
 
@@ -496,7 +495,7 @@ RPCHelpMan masternode_payments()
     while (vecPayments.size() < (size_t)std::abs(nCount) && pindex != nullptr) {
 
         CBlock block;
-        if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+        if (!node.chainman->m_blockman.ReadBlockFromDisk(block, *pindex)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
         }
 
@@ -510,7 +509,7 @@ RPCHelpMan masternode_payments()
             CAmount nValueIn{0};
             for (const auto &txin : tx->vin) {
                 uint256 blockHashTmp;
-                CTransactionRef txPrev = GetTransaction( pindex, node.mempool.get(), txin.prevout.hash, Params().GetConsensus(), blockHashTmp);
+                CTransactionRef txPrev = GetTransaction( pindex, node.mempool.get(), txin.prevout.hash, blockHashTmp, node.chainman->m_blockman);
                 nValueIn += txPrev->vout[txin.prevout.n].nValue;
             }
             nBlockFees += nValueIn - tx->GetValueOut();

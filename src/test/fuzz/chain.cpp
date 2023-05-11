@@ -39,8 +39,7 @@ FUZZ_TARGET_INIT(chain, initialize_chain)
         (void)disk_block_index->IsValid();
     }
 
-    // SYSCOIN
-    const CBlockHeader block_header = disk_block_index->GetBlockHeader(Params().GetConsensus());
+    const CBlockHeader block_header = disk_block_index->GetBlockHeader();
     (void)CDiskBlockIndex{*disk_block_index};
     (void)disk_block_index->BuildSkip();
 

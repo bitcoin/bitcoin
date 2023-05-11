@@ -6,6 +6,7 @@
 #define SYSCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,7 +20,7 @@ class CBlock;
 class uint256;
 class CNEVMData;
 typedef std::vector<std::vector<uint8_t> > NEVMDataVec;
-using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
+using CZMQNotifierFactory = std::function<std::unique_ptr<CZMQAbstractNotifier>()>;
 
 class CZMQAbstractNotifier
 {

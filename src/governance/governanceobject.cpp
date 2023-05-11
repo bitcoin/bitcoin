@@ -540,7 +540,7 @@ bool CGovernanceObject::IsCollateralValid(ChainstateManager &chainman, std::stri
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);	
         return false;   	
     }
-    txCollateral = GetTransaction(chainman.ActiveChain()[nBlockHeight], nullptr, nCollateralHash, Params().GetConsensus(), nBlockHash);
+    txCollateral = GetTransaction(chainman.ActiveChain()[nBlockHeight], nullptr, nCollateralHash, nBlockHash, chainman.m_blockman);
     if(!txCollateral) {
         strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
         LogPrint(BCLog::GOBJECT,"CGovernanceObject::IsCollateralValid -- %s\n", strError);

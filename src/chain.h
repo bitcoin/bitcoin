@@ -17,6 +17,8 @@
 #include <util/time.h>
 
 #include <vector>
+// SYSCOIN
+class ChainstateManager;
 /**
  * Maximum amount of time that a block timestamp is allowed to exceed the
  * current network-adjusted time before the block will be accepted.
@@ -257,7 +259,8 @@ public:
         block.nNonce = nNonce;
         return block;
     }
-    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams) const;
+    CBlockHeader GetBlockHeader(const ChainstateManager& chainman) const;
+    CBlockHeader GetBlockHeader() const;
 
     uint256 GetBlockHash() const
     {

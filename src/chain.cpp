@@ -7,10 +7,11 @@
 #include <tinyformat.h>
 #include <util/time.h>
 #include <node/blockstorage.h>
-using node::ReadBlockHeaderFromDisk;
+// SYSCOIN
+#include <validation.h>
 /* Moved here from the header, because we need auxpow and the logic
    becomes more involved.  */
-CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams) const
+CBlockHeader CBlockIndex::GetBlockHeader(const ChainstateManager& chainman) const
 {
     CBlockHeader block;
 
@@ -21,9 +22,23 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
        have to read the actual *header*, not the full block.  */
     if (block.IsAuxpow())
     {
-        ReadBlockHeaderFromDisk(block, this, consensusParams);
+        chainman.m_blockman.ReadBlockHeaderFromDisk(block, this);
         return block;
     }
+
+    if (pprev)
+        block.hashPrevBlock = pprev->GetBlockHash();
+    block.hashMerkleRoot = hashMerkleRoot;
+    block.nTime          = nTime;
+    block.nBits          = nBits;
+    block.nNonce         = nNonce;
+    return block;
+}
+CBlockHeader CBlockIndex::GetBlockHeader() const
+{
+    CBlockHeader block;
+
+    block.nVersion       = nVersion;
 
     if (pprev)
         block.hashPrevBlock = pprev->GetBlockHash();

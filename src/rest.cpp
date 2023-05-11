@@ -36,7 +36,6 @@
 
 using node::GetTransaction;
 using node::NodeContext;
-using node::ReadBlockFromDisk;
 
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 static constexpr unsigned int MAX_REST_HEADERS_RESULTS = 2000;
@@ -222,10 +221,10 @@ static bool rest_headers(const std::any& context,
     const CBlockIndex* tip = nullptr;
     std::vector<const CBlockIndex*> headers;
     headers.reserve(*parsed_count);
+    ChainstateManager* maybe_chainman = GetChainman(context, req);
+    if (!maybe_chainman) return false;
+    ChainstateManager& chainman = *maybe_chainman;
     {
-        ChainstateManager* maybe_chainman = GetChainman(context, req);
-        if (!maybe_chainman) return false;
-        ChainstateManager& chainman = *maybe_chainman;
         LOCK(cs_main);
         CChain& active_chain = chainman.ActiveChain();
         tip = active_chain.Tip();
@@ -243,7 +242,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::BINARY: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader(Params().GetConsensus());
+            ssHeader << pindex->GetBlockHeader(chainman);
         }
 
         std::string binaryHeader = ssHeader.str();
@@ -255,7 +254,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::HEX: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader(Params().GetConsensus());
+            ssHeader << pindex->GetBlockHeader(chainman);
         }
 
         std::string strHex = HexStr(ssHeader) + "\n";
@@ -312,7 +311,7 @@ static bool rest_block(const std::any& context,
 
     }
 
-    if (!ReadBlockFromDisk(block, pblockindex, chainman.GetParams().GetConsensus())) {
+    if (!chainman.m_blockman.ReadBlockFromDisk(block, *pblockindex)) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
@@ -728,7 +727,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     if (!node) return false;
     uint256 hashBlock = uint256();
     // SYSCOIN
-    const CTransactionRef tx = GetTransaction(blockindex, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);
+    const CTransactionRef tx = GetTransaction(blockindex, node->mempool.get(), hash, hashBlock, node->chainman->m_blockman);
     if (!tx) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }

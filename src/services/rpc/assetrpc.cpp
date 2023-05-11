@@ -23,7 +23,6 @@
 #include <llmq/quorums_chainlocks.h>
 #include <key_io.h>
 #include <common/args.h>
-using node::ReadBlockFromDisk;
 using node::GetTransaction;
 extern RecursiveMutex cs_setethstatus;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
@@ -499,7 +498,7 @@ static RPCHelpMan syscoindecoderawtransaction()
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
     // block may not be found
-    rawTx = GetTransaction(blockindex, node.mempool.get(), rawTx->GetHash(), Params().GetConsensus(), hashBlock);
+    rawTx = GetTransaction(blockindex, node.mempool.get(), rawTx->GetHash(), hashBlock, node.chainman->m_blockman);
 
     UniValue output(UniValue::VOBJ);
     if(rawTx && !DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
@@ -550,7 +549,7 @@ static RPCHelpMan getnevmblockchaininfo()
         if (chainman.m_blockman.IsBlockPruned(pblockindex)) {
             throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not available (pruned data)");
         }
-        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+        if (!chainman.m_blockman.ReadBlockFromDisk(block, *pblockindex)) {
             throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
         }
         if(!GetNEVMData(state, block, evmBlock)) {
@@ -622,7 +621,7 @@ static RPCHelpMan getnevmblobdata()
         } 
         hashBlock.SetNull();
         if(pblockindex != nullptr) {
-            tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
+            tx = GetTransaction(pblockindex, nullptr, txhash, hashBlock, node.chainman->m_blockman);
         }
         if(!tx || hashBlock.IsNull()) {
             vchVH = ParseHex(request.params[0].get_str());
@@ -944,7 +943,7 @@ static RPCHelpMan syscoingetspvproof()
     }
     CTransactionRef tx;
     hashBlock.SetNull();
-    tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
+    tx = GetTransaction(pblockindex, nullptr, txhash, hashBlock, node.chainman->m_blockman);
     if(!tx || hashBlock.IsNull())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
 
@@ -956,7 +955,7 @@ static RPCHelpMan syscoingetspvproof()
         }
     }
 
-    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+    if (!node.chainman->m_blockman.ReadBlockFromDisk(block, *pblockindex)) {
         // Block not found on disk. This could be because we have the block
         // header in our index but don't have the block (for example if a
         // non-whitelisted node sends us an unrequested long chain of valid
@@ -965,7 +964,7 @@ static RPCHelpMan syscoingetspvproof()
         throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
     }   
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
-    ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
+    ssBlock << pblockindex->GetBlockHeader(*node.chainman);
     const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     res.__pushKV("transaction",rawTx);
     res.__pushKV("blockhash", hashBlock.GetHex());
