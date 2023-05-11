@@ -958,7 +958,6 @@ public:
 
     CCriticalSection cs_sendProcessing;
 
-    std::deque<CInv> vRecvGetData;
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
     std::atomic<int> nRecvVersion{INIT_PROTO_VERSION};
 
@@ -1133,8 +1132,6 @@ public:
     std::atomic<bool> fSendRecSigs{false};
     // If true, we will send him all quorum related messages, even if he is not a member of our quorums
     std::atomic<bool> qwatch{false};
-
-    std::set<uint256> orphan_work_set;
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool block_relay_only = false, bool inbound_onion = false);
     ~CNode();
