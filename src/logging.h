@@ -65,7 +65,7 @@ namespace BCLog {
         LOCK        = (1 << 24),
 #endif
         UTIL        = (1 << 25),
-        BLOCKSTORE  = (1 << 26),
+        BLOCKSTORAGE = (1 << 26),
         TXRECONCILIATION = (1 << 27),
         SCAN        = (1 << 28),
         ALL         = ~(uint32_t)0,
