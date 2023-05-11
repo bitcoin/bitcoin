@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
     };
     const node::BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
+        .blocks_dir = gArgs.GetBlocksDirPath(),
     };
     ChainstateManager chainman{chainman_opts, blockman_opts};
 

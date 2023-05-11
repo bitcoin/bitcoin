@@ -51,7 +51,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         pblocktree->WriteReindexing(true);
         //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
         if (options.prune) {
-            CleanupBlockRevFiles();
+            chainman.m_blockman.CleanupBlockRevFiles();
         }
     }
 

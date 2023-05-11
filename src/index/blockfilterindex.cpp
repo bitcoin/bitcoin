@@ -12,8 +12,6 @@
 #include <util/fs_helpers.h>
 #include <validation.h>
 
-using node::UndoReadFromDisk;
-
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
  * height, and those belonging to blocks that have been reorganized out of the active chain are
@@ -223,7 +221,7 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
         // pindex variable gives indexing code access to node internals. It
         // will be removed in upcoming commit
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
-        if (!UndoReadFromDisk(block_undo, pindex)) {
+        if (!m_chainstate->m_blockman.UndoReadFromDisk(block_undo, *pindex)) {
             return false;
         }
 

@@ -20,7 +20,6 @@
 #include <unordered_map>
 #include <vector>
 
-class ArgsManager;
 class BlockValidationState;
 class CBlock;
 class CBlockFileInfo;
@@ -36,7 +35,6 @@ struct Params;
 }
 
 namespace node {
-static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
@@ -95,6 +93,14 @@ private:
     void FlushUndoFile(int block_file, bool finalize = false);
     bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
+
+    FlatFileSeq BlockFileSeq() const;
+    FlatFileSeq UndoFileSeq() const;
+
+    FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
+
+    bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart) const;
+    bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart) const;
 
     /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
     void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
@@ -202,6 +208,8 @@ public:
 
     [[nodiscard]] bool LoadingBlocks() const { return m_importing || fReindex; }
 
+    [[nodiscard]] bool StopAfterBlockImport() const { return m_opts.stop_after_block_import; }
+
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();
 
@@ -219,28 +227,29 @@ public:
 
     //! Create or update a prune lock identified by its name
     void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Open a block file (blk?????.dat) */
+    FILE* OpenBlockFile(const FlatFilePos& pos, bool fReadOnly = false) const;
+
+    /** Translation to a filesystem path */
+    fs::path GetBlockPosFilename(const FlatFilePos& pos) const;
+
+    /**
+     *  Actually unlink the specified files
+     */
+    void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const;
+
+    /** Functions for disk access for blocks */
+    bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) const;
+    bool ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) const;
+    bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start) const;
+
+    bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const;
+
+    void CleanupBlockRevFiles() const;
 };
 
-void CleanupBlockRevFiles();
-
-/** Open a block file (blk?????.dat) */
-FILE* OpenBlockFile(const FlatFilePos& pos, bool fReadOnly = false);
-/** Translation to a filesystem path */
-fs::path GetBlockPosFilename(const FlatFilePos& pos);
-
-/**
- *  Actually unlink the specified files
- */
-void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
-
-/** Functions for disk access for blocks */
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
-bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start);
-
-bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
-
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path);
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const fs::path& mempool_path);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
