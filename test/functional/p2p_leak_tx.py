@@ -23,16 +23,19 @@ class P2PLeakTxTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        gen_node = self.nodes[0]  # The block and tx generating node
-        miniwallet = MiniWallet(gen_node)
+        self.gen_node = self.nodes[0]  # The block and tx generating node
+        self.miniwallet = MiniWallet(self.gen_node)
 
+        self.test_notfound_on_unannounced_tx()
+
+    def test_notfound_on_unannounced_tx(self):
         inbound_peer = self.nodes[0].add_p2p_connection(P2PNode())  # An "attacking" inbound peer
 
         MAX_REPEATS = 100
         self.log.info("Running test up to {} times.".format(MAX_REPEATS))
         for i in range(MAX_REPEATS):
             self.log.info('Run repeat {}'.format(i + 1))
-            txid = miniwallet.send_self_transfer(from_node=gen_node)['wtxid']
+            txid = self.miniwallet.send_self_transfer(from_node=self.gen_node)["wtxid"]
 
             want_tx = msg_getdata()
             want_tx.inv.append(CInv(t=MSG_TX, h=int(txid, 16)))
