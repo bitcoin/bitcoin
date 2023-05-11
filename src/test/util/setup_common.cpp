@@ -32,6 +32,7 @@
 #include <policy/fees.h>
 #include <policy/fees_args.h>
 #include <pow.h>
+#include <random.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>

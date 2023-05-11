@@ -11,7 +11,6 @@
 #include <node/context.h> // IWYU pragma: export
 #include <primitives/transaction.h>
 #include <pubkey.h>
-#include <random.h>
 #include <stdexcept>
 #include <util/chaintype.h>
 #include <util/check.h>
@@ -25,6 +24,7 @@
 
 class CFeeRate;
 class Chainstate;
+class FastRandomContext;
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
