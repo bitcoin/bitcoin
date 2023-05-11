@@ -43,7 +43,8 @@ RUN pip3 install \
     multiprocess
 
 # dash_hash
-RUN git clone --depth 1 --no-tags https://github.com/dashpay/dash_hash
+ARG DASH_HASH_VERSION=1.4.0
+RUN git clone --depth 1 --no-tags --branch=${DASH_HASH_VERSION} https://github.com/dashpay/dash_hash
 RUN cd dash_hash && python3 setup.py install
 
 ARG USER_ID=1000
