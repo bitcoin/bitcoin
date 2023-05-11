@@ -1,4 +1,4 @@
-base: ubuntu:16.04
+base: ubuntu:focal
 language: c++
 engine: libFuzzer
 environment:

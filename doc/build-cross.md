@@ -4,7 +4,7 @@ Cross-compiliation of Dash Core
 Dash Core can be cross-compiled on Linux to all other supported host systems. This is done by changing
 the `HOST` parameter when building the dependencies and then specifying another `--prefix` directory when building Dash.
 
-The following instructions are only tested on Debian Stretch and Ubuntu Bionic.
+The following instructions are only tested on Debian Stretch and Ubuntu Focal.
 
 macOS Cross-compilation
 ------------------------
@@ -67,7 +67,7 @@ The first step is to install the mingw-w64 cross-compilation tool chain:
 
     sudo apt install g++-mingw-w64-x86-64
 
-Ubuntu Bionic 18.04 <sup>[1](#footnote1)</sup>:
+Ubuntu Focal 20.04 <sup>[1](#footnote1)</sup>:
 
     sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 

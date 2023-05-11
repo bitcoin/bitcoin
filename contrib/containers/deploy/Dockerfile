@@ -1,4 +1,4 @@
-FROM phusion/baseimage:bionic-1.0.0
+FROM phusion/baseimage:focal-1.0.0
 LABEL maintainer="Dash Developers <dev@dash.org>"
 LABEL description="Dockerised DashCore, built from Travis"
 

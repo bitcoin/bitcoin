@@ -1,4 +1,4 @@
-image: "ubuntu:bionic"
+image: "ubuntu:focal"
 
 variables:
   DOCKER_DRIVER: overlay2
