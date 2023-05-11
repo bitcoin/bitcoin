@@ -952,7 +952,8 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     // ********************************************************* Step 3: parameter-to-internal-flags
     auto result = init::SetLoggingCategories(args);
     if (!result) return InitError(util::ErrorString(result));
-    init::SetLoggingLevel(args);
+    result = init::SetLoggingLevel(args);
+    if (!result) return InitError(util::ErrorString(result));
 
     nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {

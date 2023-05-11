@@ -59,24 +59,25 @@ void SetLoggingOptions(const ArgsManager& args)
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
 }
 
-void SetLoggingLevel(const ArgsManager& args)
+util::Result<void> SetLoggingLevel(const ArgsManager& args)
 {
     if (args.IsArgSet("-loglevel")) {
         for (const std::string& level_str : args.GetArgs("-loglevel")) {
             if (level_str.find_first_of(':', 3) == std::string::npos) {
                 // user passed a global log level, i.e. -loglevel=<level>
                 if (!LogInstance().SetLogLevel(level_str)) {
-                    InitWarning(strprintf(_("Unsupported global logging level -loglevel=%s. Valid values: %s."), level_str, LogInstance().LogLevelsString()));
+                    return util::Error{strprintf(_("Unsupported global logging level -loglevel=%s. Valid values: %s."), level_str, LogInstance().LogLevelsString())};
                 }
             } else {
                 // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
                 const auto& toks = SplitString(level_str, ':');
                 if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
-                    InitWarning(strprintf(_("Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=<category>:<loglevel>. Valid categories: %s. Valid loglevels: %s."), level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString()));
+                    return util::Error{strprintf(_("Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=<category>:<loglevel>. Valid categories: %s. Valid loglevels: %s."), level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
                 }
             }
         }
     }
+    return {};
 }
 
 util::Result<void> SetLoggingCategories(const ArgsManager& args)
