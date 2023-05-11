@@ -820,6 +820,7 @@ static RPCHelpMan submitpackage()
 {
     return RPCHelpMan{"submitpackage",
         "Submit a package of raw transactions (serialized, hex-encoded) to local node (-regtest only).\n"
+        "The package must consist of a child with its parents, and none of the parents may depend on one another.\n"
         "The package will be validated according to consensus and mempool policy rules. If all transactions pass, they will be accepted to mempool.\n"
         "This RPC is experimental and the interface may be unstable. Refer to doc/policy/packages.md for documentation on package policies.\n"
         "Warning: until package relay is in use, successful submission does not mean the transaction will propagate to other nodes on the network.\n"
@@ -880,6 +881,9 @@ static RPCHelpMan submitpackage()
                                        "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
                 }
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+            }
+            if (!IsChildWithParentsTree(txns)) {
+                throw JSONRPCTransactionError(TransactionError::INVALID_PACKAGE, "package topology disallowed. not child-with-parents or parents depend on each other.");
             }
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
