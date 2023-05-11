@@ -1038,23 +1038,30 @@ class DashTestFramework(BitcoinTestFramework):
         batch_size = 10
         if expected_activation_height is not None:
             height = self.nodes[0].getblockcount()
-            while height - expected_activation_height > batch_size:
+            # NOTE: getblockchaininfo shows softforks active at block (window * 3 - 1)
+            # since it's returning whether a softwork is active for the _next_ block.
+            # Hence the last block prior to the activation is (expected_activation_height - 2).
+            while expected_activation_height - height - 2 >= batch_size:
                 self.bump_mocktime(batch_size)
                 self.nodes[0].generate(batch_size)
                 height += batch_size
                 self.sync_blocks()
-            assert height - expected_activation_height < batch_size
-            blocks_left = height - expected_activation_height - 1
+            blocks_left = expected_activation_height - height - 2
+            assert blocks_left < batch_size
             self.bump_mocktime(blocks_left)
             self.nodes[0].generate(blocks_left)
             self.sync_blocks()
             assert not softfork_active(self.nodes[0], name)
-
-        while not softfork_active(self.nodes[0], name):
-            self.bump_mocktime(batch_size)
-            self.nodes[0].generate(batch_size)
+            self.bump_mocktime(1)
+            self.nodes[0].generate(1)
             self.sync_blocks()
-        self.sync_blocks()
+        else:
+            while not softfork_active(self.nodes[0], name):
+                self.bump_mocktime(batch_size)
+                self.nodes[0].generate(batch_size)
+                self.sync_blocks()
+
+        assert softfork_active(self.nodes[0], name)
 
     def activate_dip0024(self, expected_activation_height=None):
         # disable spork17 while mining blocks to activate dip0024 to prevent accidental quorum formation

@@ -33,10 +33,14 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
-        self.activate_v20(expected_activation_height=904)
+        self.activate_v20(expected_activation_height=1440)
         self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
-        # no quorums, no CLs - null CL in CbTx
+        # v20 is active for the next block, not for the tip
+        self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
+
+        # v20 is active, no quorums, no CLs - null CL in CbTx
+        self.nodes[0].generate(1)
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=True, expected_null_cl=True)
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
