@@ -1,9 +1,9 @@
-24.1rc2 Release Notes
+24.1rc3 Release Notes
 ====================
 
-Bitcoin Core version 24.1rc2 is now available from:
+Bitcoin Core version 24.1rc3 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-24.1/test.rc2/>
+  <https://bitcoincore.org/bin/bitcoin-core-24.1/test.rc3/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -41,6 +41,8 @@ unsupported systems.
 
 - #26878 I2P network optimizations
 - #26909 net: prevent peers.dat corruptions by only serializing once
+- #27608 p2p: Avoid prematurely clearing download state for other peers
+- #27610 Improve performance of p2p inv to send queues
 
 ### RPC and other APIs
 
@@ -79,6 +81,7 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - Andrew Chow
+- Anthony Towns
 - Hennadii Stepanov
 - John Moffett
 - Jon Atack
@@ -88,6 +91,7 @@ Thanks to everyone who directly contributed to this release:
 - Michael Ford
 - pablomartin4btc
 - Sebastian Falbesoner
+- Suhas Daftuar
 - Thomas Nguyen
 - Vasil Dimov
 
