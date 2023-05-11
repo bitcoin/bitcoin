@@ -1264,7 +1264,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     // nodeStateStats couldn't be fetched.
     if (stats->fNodeStateStatsAvailable) {
         // Ban score is init to 0
-        ui->peerBanScore->setText(QString("%1").arg(stats->nodeStateStats.nMisbehavior));
+        ui->peerBanScore->setText(QString("%1").arg(stats->nodeStateStats.m_misbehavior_score));
 
         // Sync height is init to -1
         if (stats->nodeStateStats.nSyncHeight > -1)

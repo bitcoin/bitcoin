@@ -148,8 +148,9 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
     }.Check(request);
 
     NodeContext& node = EnsureNodeContext(request.context);
-    if(!node.connman)
+    if(!node.connman || !node.peerman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
 
     std::vector<CNodeStats> vstats;
     node.connman->GetNodeStats(vstats);
@@ -159,7 +160,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
     for (const CNodeStats& stats : vstats) {
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
-        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
+        bool fStateStats = node.peerman->GetNodeStateStats(stats.nodeid, statestats);
         obj.pushKV("id", stats.nodeid);
         obj.pushKV("addr", stats.addrName);
         if (stats.addrBind.IsValid()) {
@@ -206,7 +207,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("masternode", stats.m_masternode_connection);
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
-            obj.pushKV("banscore", statestats.nMisbehavior);
+            obj.pushKV("banscore", statestats.m_misbehavior_score);
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);
@@ -546,7 +547,9 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
         obj.pushKV("localservices", strprintf("%016x", services));
         obj.pushKV("localservicesnames", GetServicesNames(services));
     }
-    obj.pushKV("localrelay", g_relay_txes);
+    if (node.peerman) {
+        obj.pushKV("localrelay", !node.peerman->IgnoresIncomingTxs());
+    }
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());

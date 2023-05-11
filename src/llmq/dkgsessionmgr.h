@@ -10,10 +10,12 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
-class UniValue;
 class CBlockIndex;
 class CDKGDebugManager;
 class CSporkManager;
+class PeerManager;
+
+class UniValue;
 
 namespace llmq
 {
@@ -30,6 +32,8 @@ private:
     CSporkManager& spork_manager;
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
+
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     //TODO name struct instead of std::pair
     std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
@@ -54,7 +58,9 @@ private:
     mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
-    CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager, bool unitTests, bool fWipe);
+    CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager,
+                       CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
+                       const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
     void StartThreads();

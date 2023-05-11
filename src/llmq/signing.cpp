@@ -526,8 +526,10 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CConnman& _connman, const CQuorumManager& _qman, bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), connman(_connman), qman(_qman)
+CSigningManager::CSigningManager(CConnman& _connman, const CQuorumManager& _qman,
+                                 const std::unique_ptr<PeerManager>& peerman,
+                                 bool fMemory, bool fWipe) :
+    db(fMemory, fWipe), connman(_connman), qman(_qman), m_peerman(peerman)
 {
 }
 
@@ -577,7 +579,7 @@ void CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const std::
     bool ban = false;
     if (!PreVerifyRecoveredSig(qman, *recoveredSig, ban)) {
         if (ban) {
-            Misbehaving(pfrom.GetId(), 100);
+            m_peerman->Misbehaving(pfrom.GetId(), 100);
         }
         return;
     }
@@ -751,7 +753,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
-            Misbehaving(nodeId, 100);
+            m_peerman->Misbehaving(nodeId, 100);
             continue;
         }
 

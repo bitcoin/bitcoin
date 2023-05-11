@@ -790,7 +790,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
     }
 
     if (!islock->TriviallyValid()) {
-        Misbehaving(pfrom.GetId(), 100);
+        m_peerman->Misbehaving(pfrom.GetId(), 100);
         return;
     }
 
@@ -799,7 +799,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
         const auto blockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(islock->cycleHash));
         if (blockIndex == nullptr) {
             // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
-            Misbehaving(pfrom.GetId(), 1);
+            m_peerman->Misbehaving(pfrom.GetId(), 1);
             return;
         }
 
@@ -808,7 +808,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, cons
         const auto& llmq_params_opt = GetLLMQParams(llmqType);
         assert(llmq_params_opt);
         if (blockIndex->nHeight % llmq_params_opt->dkgInterval != 0) {
-            Misbehaving(pfrom.GetId(), 100);
+            m_peerman->Misbehaving(pfrom.GetId(), 100);
             return;
         }
     }
@@ -1010,7 +1010,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         for (const auto& nodeId : batchVerifier.badSources) {
             // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
             // does not validate anymore due to changed quorums
-            Misbehaving(nodeId, 20);
+            m_peerman->Misbehaving(nodeId, 20);
         }
     }
     for (const auto& p : pend) {

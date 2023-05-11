@@ -24,7 +24,10 @@ namespace llmq
 {
 std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
-CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
+                                       CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman,
+                                       const std::unique_ptr<CMasternodeSync>& mn_sync,
+                                       const std::unique_ptr<PeerManager>& peerman) :
     connman(_connman),
     mempool(_mempool),
     spork_manager(sporkManager),
@@ -32,6 +35,7 @@ CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman,
     shareman(_shareman),
     qman(_qman),
     m_mn_sync(mn_sync),
+    m_peerman(peerman),
     scheduler(std::make_unique<CScheduler>()),
     scheduler_thread(std::make_unique<std::thread>([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); }))
 {
@@ -125,7 +129,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     if (!VerifyChainLock(clsig)) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
-            Misbehaving(from, 10);
+            m_peerman->Misbehaving(from, 10);
         }
         return;
     }
