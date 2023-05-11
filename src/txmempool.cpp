@@ -1171,11 +1171,16 @@ void CTxMemPool::check(CChainState& active_chainstate) const
 
 bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb)
 {
+    /* Return `true` if hasha should be considered sooner than hashb. Namely when:
+     *   a is not in the mempool, but b is
+     *   both are in the mempool and a has fewer ancestors than b
+     *   both are in the mempool and a has a higher score than b
+     */
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = mapTx.find(hasha);
-    if (i == mapTx.end()) return false;
     indexed_transaction_set::const_iterator j = mapTx.find(hashb);
-    if (j == mapTx.end()) return true;
+    if (j == mapTx.end()) return false;
+    indexed_transaction_set::const_iterator i = mapTx.find(hasha);
+    if (i == mapTx.end()) return true;
     uint64_t counta = i->GetCountWithAncestors();
     uint64_t countb = j->GetCountWithAncestors();
     if (counta == countb) {
