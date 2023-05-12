@@ -17,7 +17,7 @@
 
 void initialize_psbt()
 {
-    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
 }
 
 FUZZ_TARGET_INIT(psbt, initialize_psbt)
