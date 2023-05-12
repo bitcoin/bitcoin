@@ -41,7 +41,7 @@ fi
 if [ "${RUN_TIDY}" = "true" ]; then
   set -eo pipefail
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/src/"
-  ( run-clang-tidy-16 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  ( run-clang-tidy-15 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/"
   python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
            src/common/args.cpp \
