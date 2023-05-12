@@ -45,7 +45,7 @@ RUN pip3 install \
 # dash_hash
 ARG DASH_HASH_VERSION=1.4.0
 RUN git clone --depth 1 --no-tags --branch=${DASH_HASH_VERSION} https://github.com/dashpay/dash_hash
-RUN cd dash_hash && python3 setup.py install
+RUN cd dash_hash && pip3 install -r requirements.txt .
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
