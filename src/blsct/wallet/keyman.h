@@ -47,14 +47,11 @@ private:
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
 
-    //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
-    int64_t m_keypool_size GUARDED_BY(cs_KeyStore){wallet::DEFAULT_KEYPOOL_SIZE};
-
     int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = 0;
 
     bool fDecryptionThoroughlyChecked = true;
 public:
-    KeyMan(wallet::WalletStorage& storage, int64_t keypool_size) : Manager(storage), m_keypool_size(keypool_size) {}
+    KeyMan(wallet::WalletStorage& storage, int64_t keypool_size) : Manager(storage) {}
 
     bool SetupGeneration(bool force = false) override;
     bool IsHDEnabled() const override;

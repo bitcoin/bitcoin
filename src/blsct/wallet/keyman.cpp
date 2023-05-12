@@ -211,7 +211,7 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     auto scalarMasterKey = key.GetScalar();
     auto childKey = BLS12_381_KeyGen::derive_child_SK(scalarMasterKey, 130);
     auto transactionKey = BLS12_381_KeyGen::derive_child_SK(childKey, 0);
-    auto blindingKey = BLS12_381_KeyGen::derive_child_SK(childKey, 1);
+    //auto blindingKey = BLS12_381_KeyGen::derive_child_SK(childKey, 1);
     auto tokenKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(childKey, 2));
     auto viewKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(transactionKey, 0));
     auto spendKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(transactionKey, 1));
@@ -240,27 +240,23 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     tokenMetadata.has_key_origin = false;
     tokenMetadata.hd_seed_id = newHdChain.token_id;
 
-    {
-        LOCK(cs_KeyStore);
+    // mem store the metadata
+    mapKeyMetadata[newHdChain.spend_id] = spendMetadata;
+    mapKeyMetadata[newHdChain.view_id] = viewMetadata;
+    mapKeyMetadata[newHdChain.token_id] = tokenMetadata;
 
-        // mem store the metadata
-        mapKeyMetadata[newHdChain.spend_id] = spendMetadata;
-        mapKeyMetadata[newHdChain.view_id] = viewMetadata;
-        mapKeyMetadata[newHdChain.token_id] = tokenMetadata;
+    // write the keys to the database
+    if (!AddKeyPubKey(key, seed))
+        throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
 
-        // write the keys to the database
-        if (!AddKeyPubKey(key, seed))
-            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+    if (!AddKeyPubKey(spendKey, spendKey.GetPublicKey()))
+        throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
 
-        if (!AddKeyPubKey(spendKey, spendKey.GetPublicKey()))
-            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+    if (!AddViewKey(viewKey, viewKey.GetPublicKey()))
+        throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
 
-        if (!AddViewKey(viewKey, viewKey.GetPublicKey()))
-            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
-
-        if (!AddKeyPubKey(tokenKey, tokenKey.GetPublicKey()))
-            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
-    }
+    if (!AddKeyPubKey(tokenKey, tokenKey.GetPublicKey()))
+        throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
 
     AddHDChain(newHdChain);
     NotifyCanGetAddressesChanged();

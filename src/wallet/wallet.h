@@ -336,7 +336,7 @@ private:
 
     std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
-    std::unique_ptr<blsct::KeyMan> m_blsct_key_manager = nullptr;;
+    std::unique_ptr<blsct::KeyMan> m_blsct_key_manager = nullptr;
 
     // Indexed by a unique identifier produced by each ScriptPubKeyMan using
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
