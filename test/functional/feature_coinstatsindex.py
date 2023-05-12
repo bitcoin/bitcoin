@@ -145,14 +145,14 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             self.block_sanity_check(res5['block_info'])
 
         # Generate and send a normal tx with two outputs
-        tx1_txid, tx1_vout = self.wallet.send_to(
+        tx1 = self.wallet.send_to(
             from_node=node,
             scriptPubKey=self.wallet.get_scriptPubKey(),
             amount=21 * COIN,
         )
 
         # Find the right position of the 21 BTC output
-        tx1_out_21 = self.wallet.get_utxo(txid=tx1_txid, vout=tx1_vout)
+        tx1_out_21 = self.wallet.get_utxo(txid=tx1["txid"], vout=tx1["sent_vout"])
 
         # Generate and send another tx with an OP_RETURN output (which is unspendable)
         tx2 = self.wallet.create_self_transfer(utxo_to_spend=tx1_out_21)['tx']

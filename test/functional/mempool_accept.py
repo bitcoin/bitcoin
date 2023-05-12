@@ -350,7 +350,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('A tiny transaction(in non-witness bytes) that is disallowed')
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(int(seed_tx[0], 16), seed_tx[1]), b"", SEQUENCE_FINAL))
+        tx.vin.append(CTxIn(COutPoint(int(seed_tx["txid"], 16), seed_tx["sent_vout"]), b"", SEQUENCE_FINAL))
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
