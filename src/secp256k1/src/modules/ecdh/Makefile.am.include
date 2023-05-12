@@ -1,0 +1,4 @@
+include_HEADERS += include/secp256k1_ecdh.h
+noinst_HEADERS += src/modules/ecdh/main_impl.h
+noinst_HEADERS += src/modules/ecdh/tests_impl.h
+noinst_HEADERS += src/modules/ecdh/bench_impl.h

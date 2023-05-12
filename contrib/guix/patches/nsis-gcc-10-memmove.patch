@@ -1,0 +1,23 @@
+commit f6df41524e703dc471e283e566a48e05a735b7f2
+Author: Anders <anders_k@users.sourceforge.net>
+Date:   Sat Jun 27 23:18:45 2020 +0000
+
+    Don't let GCC 10 generate memmove calls (bug #1248)
+    
+    git-svn-id: https://svn.code.sf.net/p/nsis/code/NSIS/trunk@7189 212acab6-be3b-0410-9dea-997c60f758d6
+
+diff --git a/SCons/Config/gnu b/SCons/Config/gnu
+index bfcb362d..21fa446b 100644
+--- a/SCons/Config/gnu
++++ b/SCons/Config/gnu
+@@ -103,6 +103,10 @@ stub_env.Append(LINKFLAGS = ['$NODEFLIBS_FLAG'])    # no standard libraries
+ stub_env.Append(LINKFLAGS = ['$ALIGN_FLAG'])        # 512 bytes align
+ stub_env.Append(LINKFLAGS = ['$MAP_FLAG'])          # generate map file
+ 
++conf = FlagsConfigure(stub_env)
++conf.CheckCompileFlag('-fno-tree-loop-distribute-patterns')  # GCC 10: Don't generate msvcrt!memmove calls (bug #1248)
++conf.Finish()
++
+ stub_uenv = stub_env.Clone()
+ stub_uenv.Append(CPPDEFINES = ['_UNICODE', 'UNICODE'])
+ 

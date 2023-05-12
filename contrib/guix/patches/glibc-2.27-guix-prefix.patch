@@ -1,0 +1,22 @@
+Without ffile-prefix-map, the debug symbols will contain paths for the
+guix store which will include the hashes of each package. However, the
+hash for the same package will differ when on different architectures.
+In order to be reproducible regardless of the architecture used to build
+the package, map all guix store prefixes to something fixed, e.g. /usr.
+
+We might be able to drop this in favour of using --with-nonshared-cflags
+when we being using newer versions of glibc.
+
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -992,6 +992,10 @@ object-suffixes :=
+ CPPFLAGS-.o = $(pic-default)
+ # libc.a must be compiled with -fPIE/-fpie for static PIE.
+ CFLAGS-.o = $(filter %frame-pointer,$(+cflags)) $(pie-default)
++
++# Map Guix store paths to /usr
++CFLAGS-.o += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;`
++
+ libtype.o := lib%.a
+ object-suffixes += .o
+ ifeq (yes,$(build-shared))

@@ -1,0 +1,29 @@
+Correct default for Binary::has_nx on ppc64
+
+From the Linux kernel source:
+
+    * This is the default if a program doesn't have a PT_GNU_STACK
+    * program header entry. The PPC64 ELF ABI has a non executable stack
+    * stack by default, so in the absence of a PT_GNU_STACK program header
+    * we turn execute permission off.
+
+This patch can be dropped the next time we update LIEF.
+
+diff --git a/src/ELF/Binary.cpp b/src/ELF/Binary.cpp
+index a90be1ab..fd2d9764 100644
+--- a/src/ELF/Binary.cpp
++++ b/src/ELF/Binary.cpp
+@@ -1084,7 +1084,12 @@ bool Binary::has_nx() const {
+                                        return segment->type() == SEGMENT_TYPES::PT_GNU_STACK;
+                                      });
+   if (it_stack == std::end(segments_)) {
+-    return false;
++    if (header().machine_type() == ARCH::EM_PPC64) {
++      // The PPC64 ELF ABI has a non-executable stack by default.
++      return true;
++    } else {
++      return false;
++    }
+   }
+ 
+   return !(*it_stack)->has(ELF_SEGMENT_FLAGS::PF_X);

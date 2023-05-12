@@ -1,0 +1,153 @@
+# Copyright (c) 2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+LIBLEVELDB_INT = leveldb/libleveldb.la
+LIBMEMENV_INT  = leveldb/libmemenv.la
+
+noinst_LTLIBRARIES += $(LIBLEVELDB_INT)
+noinst_LTLIBRARIES += $(LIBMEMENV_INT)
+
+LIBLEVELDB = $(LIBLEVELDB_INT) $(LIBCRC32C)
+LIBMEMENV = $(LIBMEMENV_INT)
+
+LEVELDB_CPPFLAGS =
+LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
+
+LEVELDB_CPPFLAGS_INT =
+LEVELDB_CPPFLAGS_INT += -I$(srcdir)/leveldb
+LEVELDB_CPPFLAGS_INT += -I$(srcdir)/crc32c/include
+LEVELDB_CPPFLAGS_INT += -D__STDC_LIMIT_MACROS
+LEVELDB_CPPFLAGS_INT += -DHAVE_SNAPPY=0 -DHAVE_CRC32C=1
+LEVELDB_CPPFLAGS_INT += -DHAVE_FDATASYNC=@HAVE_FDATASYNC@
+LEVELDB_CPPFLAGS_INT += -DHAVE_FULLFSYNC=@HAVE_FULLFSYNC@
+LEVELDB_CPPFLAGS_INT += -DHAVE_O_CLOEXEC=@HAVE_O_CLOEXEC@
+LEVELDB_CPPFLAGS_INT += -DFALLTHROUGH_INTENDED=[[fallthrough]]
+
+if WORDS_BIGENDIAN
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_IS_BIG_ENDIAN=1
+else
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_IS_BIG_ENDIAN=0
+endif
+
+if TARGET_WINDOWS
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_WINDOWS -D_UNICODE -DUNICODE -D__USE_MINGW_ANSI_STDIO=1
+else
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_POSIX
+endif
+
+leveldb_libleveldb_la_CPPFLAGS = $(AM_CPPFLAGS) $(LEVELDB_CPPFLAGS_INT) $(LEVELDB_CPPFLAGS)
+
+# Specify -static in both CXXFLAGS and LDFLAGS so libtool will only build a
+# static version of this library. We don't need a dynamic version, and a dynamic
+# version can't be used on windows anyway because the library doesn't currently
+# export DLL symbols.
+leveldb_libleveldb_la_CXXFLAGS = $(filter-out -Wconditional-uninitialized -Werror=conditional-uninitialized -Wsuggest-override -Werror=suggest-override, $(AM_CXXFLAGS)) $(PIE_FLAGS) -static
+leveldb_libleveldb_la_LDFLAGS = $(AM_LDFLAGS) -static
+
+leveldb_libleveldb_la_SOURCES=
+leveldb_libleveldb_la_SOURCES += leveldb/port/port_stdcxx.h
+leveldb_libleveldb_la_SOURCES += leveldb/port/port.h
+leveldb_libleveldb_la_SOURCES += leveldb/port/thread_annotations.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/db.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/options.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/comparator.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/filter_policy.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/slice.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/table_builder.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/env.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/export.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/c.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/iterator.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/cache.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/dumpfile.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/table.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/write_batch.h
+leveldb_libleveldb_la_SOURCES += leveldb/include/leveldb/status.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/log_format.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/memtable.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/version_set.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/write_batch_internal.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/filename.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/version_edit.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/dbformat.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/builder.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/log_writer.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/db_iter.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/skiplist.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/db_impl.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/table_cache.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/snapshot.h
+leveldb_libleveldb_la_SOURCES += leveldb/db/log_reader.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/filter_block.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/block_builder.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/block.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/two_level_iterator.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/merger.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/format.h
+leveldb_libleveldb_la_SOURCES += leveldb/table/iterator_wrapper.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/crc32c.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/env_posix_test_helper.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/env_windows_test_helper.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/arena.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/random.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/posix_logger.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/hash.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/histogram.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/coding.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/testutil.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/mutexlock.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/logging.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/no_destructor.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/testharness.h
+leveldb_libleveldb_la_SOURCES += leveldb/util/windows_logger.h
+
+leveldb_libleveldb_la_SOURCES += leveldb/db/builder.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/c.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/dbformat.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/db_impl.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/db_iter.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/dumpfile.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/filename.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/log_reader.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/log_writer.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/memtable.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/repair.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/table_cache.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/version_edit.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/version_set.cc
+leveldb_libleveldb_la_SOURCES += leveldb/db/write_batch.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/block_builder.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/block.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/filter_block.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/format.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/iterator.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/merger.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/table_builder.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/table.cc
+leveldb_libleveldb_la_SOURCES += leveldb/table/two_level_iterator.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/arena.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/bloom.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/cache.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/coding.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/comparator.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/crc32c.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/env.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/filter_policy.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/hash.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/histogram.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/logging.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/options.cc
+leveldb_libleveldb_la_SOURCES += leveldb/util/status.cc
+
+if TARGET_WINDOWS
+leveldb_libleveldb_la_SOURCES += leveldb/util/env_windows.cc
+else
+leveldb_libleveldb_la_SOURCES += leveldb/util/env_posix.cc
+endif
+
+leveldb_libmemenv_la_CPPFLAGS = $(leveldb_libleveldb_la_CPPFLAGS)
+leveldb_libmemenv_la_CXXFLAGS = $(leveldb_libleveldb_la_CXXFLAGS)
+leveldb_libmemenv_la_LDFLAGS = $(leveldb_libleveldb_la_LDFLAGS)
+leveldb_libmemenv_la_SOURCES =  leveldb/helpers/memenv/memenv.cc
+leveldb_libmemenv_la_SOURCES += leveldb/helpers/memenv/memenv.h
