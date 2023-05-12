@@ -202,6 +202,11 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", o);
+            if (txin.scriptSig.IsPayToScriptHash()) {
+                UniValue r(UniValue::VOBJ);
+                r.pushKV("asm", "");
+                in.pushKV("redeemScript", r);
+            }
         }
         if (!tx.vin[i].scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
