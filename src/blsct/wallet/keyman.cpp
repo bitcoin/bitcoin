@@ -101,8 +101,8 @@ bool KeyMan::AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& se
 
     if (!m_storage.HasEncryptionKeys()) {
         return batch.WriteKey(pubkey,
-                                                 secret,
-                                                 mapKeyMetadata[pubkey.GetID()]);
+                                 secret,
+                                 mapKeyMetadata[pubkey.GetID()]);
     }
     m_storage.UnsetBlankWalletFlag(batch);
     return true;

@@ -83,7 +83,7 @@ public:
     bool AddCryptedKey(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     //! Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid);
-    bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey);
+    bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);;
 
     bool CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool accept_no_keys);
 
