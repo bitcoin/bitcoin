@@ -1,0 +1,409 @@
+env:
+  ### cirrus config
+  CIRRUS_CLONE_DEPTH: 1
+  ### compiler options
+  HOST:
+  WRAPPER_CMD:
+  # Specific warnings can be disabled with -Wno-error=foo.
+  # -pedantic-errors is not equivalent to -Werror=pedantic and thus not implied by -Werror according to the GCC manual.
+  WERROR_CFLAGS: -Werror -pedantic-errors
+  MAKEFLAGS: -j4
+  BUILD: check
+  ### secp256k1 config
+  ECMULTWINDOW: auto
+  ECMULTGENPRECISION: auto
+  ASM: no
+  WIDEMUL: auto
+  WITH_VALGRIND: yes
+  EXTRAFLAGS:
+  ### secp256k1 modules
+  EXPERIMENTAL: no
+  ECDH: no
+  RECOVERY: no
+  SCHNORRSIG: no
+  ### test options
+  SECP256K1_TEST_ITERS:
+  BENCH: yes
+  SECP256K1_BENCH_ITERS: 2
+  CTIMETESTS: yes
+  # Compile and run the tests
+  EXAMPLES: yes
+
+# https://cirrus-ci.org/pricing/#compute-credits
+credits_snippet: &CREDITS
+  # Don't use any credits for now.
+  use_compute_credits: false
+
+cat_logs_snippet: &CAT_LOGS
+  always:
+    cat_tests_log_script:
+      - cat tests.log || true
+    cat_noverify_tests_log_script:
+      - cat noverify_tests.log || true
+    cat_exhaustive_tests_log_script:
+      - cat exhaustive_tests.log || true
+    cat_ctime_tests_log_script:
+      - cat ctime_tests.log || true
+    cat_bench_log_script:
+      - cat bench.log || true
+    cat_config_log_script:
+      - cat config.log || true
+    cat_test_env_script:
+      - cat test_env.log || true
+    cat_ci_env_script:
+      - env
+
+merge_base_script_snippet: &MERGE_BASE
+  merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
+    - git fetch --depth=1 $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
+    - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
+
+linux_container_snippet: &LINUX_CONTAINER
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    # Reduce number of CPUs to be able to do more builds in parallel.
+    cpu: 1
+    # Gives us more CPUs for free if they're available.
+    greedy: true
+    # More than enough for our scripts.
+    memory: 1G
+
+task:
+  name: "x86_64: Linux (Debian stable)"
+  << : *LINUX_CONTAINER
+  matrix: &ENV_MATRIX
+    - env: {WIDEMUL:  int64,  RECOVERY: yes}
+    - env: {WIDEMUL:  int64,                 ECDH: yes, SCHNORRSIG: yes}
+    - env: {WIDEMUL: int128}
+    - env: {WIDEMUL: int128_struct}
+    - env: {WIDEMUL: int128,  RECOVERY: yes,            SCHNORRSIG: yes}
+    - env: {WIDEMUL: int128,                 ECDH: yes, SCHNORRSIG: yes}
+    - env: {WIDEMUL: int128,  ASM: x86_64}
+    - env: {                  RECOVERY: yes,            SCHNORRSIG: yes}
+    - env: {CTIMETESTS: no,    RECOVERY: yes, ECDH: yes, SCHNORRSIG: yes, CPPFLAGS: -DVERIFY}
+    - env: {BUILD: distcheck, WITH_VALGRIND: no, CTIMETESTS: no, BENCH: no}
+    - env: {CPPFLAGS: -DDETERMINISTIC}
+    - env: {CFLAGS: -O0, CTIMETESTS: no}
+    - env: { ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+    - env: { ECMULTGENPRECISION: 8, ECMULTWINDOW: 4 }
+  matrix:
+    - env:
+        CC: gcc
+    - env:
+        CC: clang
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "i686: Linux (Debian stable)"
+  << : *LINUX_CONTAINER
+  env:
+    HOST: i686-linux-gnu
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+  matrix:
+    - env:
+        CC: i686-linux-gnu-gcc
+    - env:
+        CC: clang --target=i686-pc-linux-gnu -isystem /usr/i686-linux-gnu/include
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "arm64: macOS Ventura"
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-ventura-base:latest
+  env:
+    HOMEBREW_NO_AUTO_UPDATE: 1
+    HOMEBREW_NO_INSTALL_CLEANUP: 1
+    # Cirrus gives us a fixed number of 4 virtual CPUs. Not that we even have that many jobs at the moment...
+    MAKEFLAGS: -j5
+  matrix:
+    << : *ENV_MATRIX
+  env:
+    ASM: no
+    WITH_VALGRIND: no
+    CTIMETESTS: no
+  matrix:
+    - env:
+        CC: gcc
+    - env:
+        CC: clang
+  brew_script:
+    - brew install automake libtool gcc
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+  << : *CREDITS
+
+task:
+  name: "s390x (big-endian): Linux (Debian stable, QEMU)"
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: qemu-s390x
+    SECP256K1_TEST_ITERS: 16
+    HOST: s390x-linux-gnu
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+  << : *MERGE_BASE
+  test_script:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=27008
+    - rm /etc/ld.so.cache
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "ARM32: Linux (Debian stable, QEMU)"
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: qemu-arm
+    SECP256K1_TEST_ITERS: 16
+    HOST: arm-linux-gnueabihf
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+  matrix:
+    - env: {}
+    - env: {EXPERIMENTAL: yes, ASM: arm}
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "ARM64: Linux (Debian stable, QEMU)"
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: qemu-aarch64
+    SECP256K1_TEST_ITERS: 16
+    HOST: aarch64-linux-gnu
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "ppc64le: Linux (Debian stable, QEMU)"
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: qemu-ppc64le
+    SECP256K1_TEST_ITERS: 16
+    HOST: powerpc64le-linux-gnu
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: wine
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+  matrix:
+    - name: "x86_64 (mingw32-w64): Windows (Debian stable, Wine)"
+      env:
+        HOST: x86_64-w64-mingw32
+    - name: "i686 (mingw32-w64): Windows (Debian stable, Wine)"
+      env:
+        HOST: i686-w64-mingw32
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  << : *LINUX_CONTAINER
+  env:
+    WRAPPER_CMD: wine
+    WERROR_CFLAGS: -WX
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+    # Use a MinGW-w64 host to tell ./configure we're building for Windows.
+    # This will detect some MinGW-w64 tools but then make will need only
+    # the MSVC tools CC, AR and NM as specified below.
+    HOST: x86_64-w64-mingw32
+    CC: /opt/msvc/bin/x64/cl
+    AR: /opt/msvc/bin/x64/lib
+    NM: /opt/msvc/bin/x64/dumpbin -symbols -headers
+    # Set non-essential options that affect the CLI messages here.
+    # (They depend on the user's taste, so we don't want to set them automatically in configure.ac.)
+    CFLAGS: -nologo -diagnostics:caret
+    LDFLAGS: -Xlinker -Xlinker -Xlinker -nologo
+  matrix:
+    - name: "x86_64 (MSVC): Windows (Debian stable, Wine)"
+    - name: "x86_64 (MSVC): Windows (Debian stable, Wine, int128_struct)"
+      env:
+        WIDEMUL: int128_struct
+    - name: "x86_64 (MSVC): Windows (Debian stable, Wine, int128_struct with __(u)mulh)"
+      env:
+        WIDEMUL: int128_struct
+        CPPFLAGS: -DSECP256K1_MSVC_MULH_TEST_OVERRIDE
+    - name: "i686 (MSVC): Windows (Debian stable, Wine)"
+      env:
+        HOST: i686-w64-mingw32
+        CC: /opt/msvc/bin/x86/cl
+        AR: /opt/msvc/bin/x86/lib
+        NM: /opt/msvc/bin/x86/dumpbin -symbols -headers
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+# Sanitizers
+task:
+  << : *LINUX_CONTAINER
+  env:
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: no
+  matrix:
+    - name: "Valgrind (memcheck)"
+      container:
+        cpu: 2
+      env:
+        # The `--error-exitcode` is required to make the test fail if valgrind found errors, otherwise it'll return 0 (https://www.valgrind.org/docs/manual/manual-core.html)
+        WRAPPER_CMD: "valgrind --error-exitcode=42"
+        SECP256K1_TEST_ITERS: 2
+    - name: "UBSan, ASan, LSan"
+      container:
+        memory: 2G
+      env:
+        CFLAGS: "-fsanitize=undefined,address -g"
+        UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+        ASAN_OPTIONS: "strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1"
+        LSAN_OPTIONS: "use_unaligned=1"
+        SECP256K1_TEST_ITERS: 32
+  # Try to cover many configurations with just a tiny matrix.
+  matrix:
+    - env:
+        ASM: auto
+    - env:
+        ASM: no
+        ECMULTGENPRECISION: 2
+        ECMULTWINDOW: 2
+  matrix:
+    - env:
+        CC: clang
+    - env:
+        HOST: i686-linux-gnu
+        CC: i686-linux-gnu-gcc
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+# Memory sanitizers
+task:
+  << : *LINUX_CONTAINER
+  name: "MSan"
+  env:
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+    CTIMETESTS: yes
+    CC: clang
+    SECP256K1_TEST_ITERS: 32
+    ASM: no
+    WITH_VALGRIND: no
+  container:
+    memory: 2G
+  matrix:
+    - env:
+        CFLAGS: "-fsanitize=memory -g"
+    - env:
+        ECMULTGENPRECISION: 2
+        ECMULTWINDOW: 2
+        CFLAGS: "-fsanitize=memory -g -O3"
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "C++ -fpermissive (entire project)"
+  << : *LINUX_CONTAINER
+  env:
+    CC: g++
+    CFLAGS: -fpermissive -g
+    CPPFLAGS: -DSECP256K1_CPLUSPLUS_TEST_OVERRIDE
+    WERROR_CFLAGS:
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "C++ (public headers)"
+  << : *LINUX_CONTAINER
+  test_script:
+    - g++ -Werror include/*.h
+    - clang -Werror -x c++-header include/*.h
+    - /opt/msvc/bin/x64/cl.exe -c -WX -TP include/*.h
+
+task:
+  name: "sage prover"
+  << : *LINUX_CONTAINER
+  test_script:
+    - cd sage
+    - sage prove_group_implementations.sage
+
+task:
+  name: "x86_64: Windows (VS 2022)"
+  windows_container:
+    image: cirrusci/windowsservercore:visualstudio2022
+    cpu: 4
+    memory: 3840MB
+  env:
+    PATH: '%CIRRUS_WORKING_DIR%\build\src\RelWithDebInfo;%PATH%'
+    x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
+    # Ignore MSBuild warning MSB8029.
+    # See: https://learn.microsoft.com/en-us/visualstudio/msbuild/errors/msb8029?view=vs-2022
+    IgnoreWarnIntDirInTempDetected: 'true'
+  merge_script:
+    - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL pull/$env:CIRRUS_PR/merge; git reset --hard FETCH_HEAD; }
+  configure_script:
+    - '%x64_NATIVE_TOOLS%'
+    - cmake -G "Visual Studio 17 2022" -A x64 -S . -B build -DSECP256K1_ENABLE_MODULE_RECOVERY=ON -DSECP256K1_BUILD_EXAMPLES=ON
+  build_script:
+    - '%x64_NATIVE_TOOLS%'
+    - cmake --build build --config RelWithDebInfo -- -property:UseMultiToolTask=true;CL_MPcount=5
+  check_script:
+    - '%x64_NATIVE_TOOLS%'
+    - ctest --test-dir build -j 5
+    - build\src\RelWithDebInfo\bench_ecmult.exe
+    - build\src\RelWithDebInfo\bench_internal.exe
+    - build\src\RelWithDebInfo\bench.exe
