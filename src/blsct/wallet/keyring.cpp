@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "keyring.h"
+#include <blsct/wallet/keyring.h>
 
 namespace blsct {
 bool KeyRing::AddKeyPubKey(const PrivateKey& key, const PublicKey &pubkey)

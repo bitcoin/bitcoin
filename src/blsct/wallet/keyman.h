@@ -29,6 +29,8 @@ public:
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
+
+    virtual ~Manager() = default;
 };
 
 class KeyMan : public Manager, public KeyRing {

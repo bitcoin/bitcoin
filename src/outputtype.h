@@ -19,7 +19,6 @@ enum class OutputType {
     P2SH_SEGWIT,
     BECH32,
     BECH32M,
-    BLSCT,
     UNKNOWN,
 };
 

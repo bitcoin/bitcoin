@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "keyman.h"
+#include <blsct/wallet/keyman.h>
 
 namespace blsct {
 bool KeyMan::IsHDEnabled() const
