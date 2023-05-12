@@ -1,9 +1,9 @@
-23.2rc1 Release Notes
+23.1 Release Notes
 ==================
 
-Bitcoin Core version 23.2rc1 is now available from:
+Bitcoin Core version 23.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-23.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-23.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -39,34 +39,52 @@ unsupported systems.
 
 ### P2P
 
-- #26909 net: prevent peers.dat corruptions by only serializing once
-- #27608 p2p: Avoid prematurely clearing download state for other peers
-- #27610 Improve performance of p2p inv to send queues
+- #25314 p2p: always set nTime for self-advertisements
+
+### RPC and other APIs
+
+- #25220 rpc: fix incorrect warning for address type p2sh-segwit in createmultisig
+- #25237 rpc: Capture UniValue by ref for rpcdoccheck
+- #25983 Prevent data race for pathHandlers
+- #26275 Fix crash on deriveaddresses when index is 2147483647 (2^31-1)
 
 ### Build system
 
-- #25436 build: suppress array-bounds errors in libxkbcommon
-- #25763 bdb: disable Werror for format-security
-- #26944 depends: fix systemtap download URL
-- #27462 depends: fix compiling bdb with clang-16 on aarch64
+- #25201 windeploy: Renewed windows code signing certificate
+- #25788 guix: patch NSIS to remove .reloc sections from installer stubs
+- #25861 guix: use --build={arch}-guix-linux-gnu in cross toolchain
+- #25985 Revert "build: Use Homebrew's sqlite package if it is available"
+
+### GUI
+
+- #24668 build, qt: bump Qt5 version to 5.15.3
+- gui#631 Disallow encryption of watchonly wallets
+- gui#680 Fixes MacOS 13 segfault by preventing certain notifications
+
+### Tests
+
+- #24454 tests: Fix calculation of external input weights
 
 ### Miscellaneous
 
-- #25444 ci: macOS task imrovements
-- #26388 ci: Use macos-ventura-xcode:14.1 image for "macOS native" task
-- #26924 refactor: Add missing includes to fix gcc-13 compile error
+- #26321 Adjust .tx/config for new Transifex CLI
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Anthony Towns
+- Andrew Chow
+- brunoerg
 - Hennadii Stepanov
+- John Moffett
 - MacroFake
 - Martin Zumsande
 - Michael Ford
-- Suhas Daftuar
+- muxator
+- Pavol Rusnak
+- Sebastian Falbesoner
+- W. J. van der Laan
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
