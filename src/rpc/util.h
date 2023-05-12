@@ -132,9 +132,6 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, const bool expand_priv = false);
 
-/** Returns, given services flags, a list of humanly readable (known) network services */
-UniValue GetServicesNames(ServiceFlags services);
-
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
  * dictionaries can be nested in json. The top-level outer type is "NONE".
