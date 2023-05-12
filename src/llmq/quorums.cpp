@@ -192,7 +192,6 @@ void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqPa
 
 CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const
 {
-    AssertLockHeld(cs_map_quorums);
     assert(pQuorumBaseBlockIndex);
 
     const uint256& quorumHash{pQuorumBaseBlockIndex->GetBlockHash()};
@@ -227,7 +226,8 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, con
         // sessions if the shares would be calculated on-demand
         StartCachePopulatorThread(quorum);
     }
-    mapQuorumsCache[llmqType].insert(quorumHash, quorum);
+
+    WITH_LOCK(cs_map_quorums, mapQuorumsCache[llmqType].insert(quorumHash, quorum));
 
     return quorum;
 }
@@ -359,9 +359,8 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pQuor
         return nullptr;
     }
 
-    LOCK(cs_map_quorums);
     CQuorumPtr pQuorum;
-    if (mapQuorumsCache[llmqType].get(quorumHash, pQuorum)) {
+    if (LOCK(cs_map_quorums); mapQuorumsCache[llmqType].get(quorumHash, pQuorum)) {
         return pQuorum;
     }
 
