@@ -23,6 +23,9 @@ ExecStart=/usr/bin/bitcoind -daemonwait \
                             -conf=/etc/bitcoin/bitcoin.conf \
                             -datadir=/var/lib/bitcoind
 
+# Avoid excessive memory usage by bitcoind
+Environment="MALLOC_ARENA_MAX=1"
+
 # Make sure the config directory is readable by the service user
 PermissionsStartOnly=true
 ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
