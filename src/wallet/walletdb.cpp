@@ -568,8 +568,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
 
             auto vchKey = key.GetScalar().GetVch();
 
-            bool fSkipCheck = false;
-
             if (!hash.IsNull())
             {
                 // hash pubkey/privkey to accelerate wallet load
@@ -583,8 +581,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                     strErr = "Error reading wallet database: PublicKey/PrivateKey corrupt";
                     return false;
                 }
-
-                fSkipCheck = true;
             }
 
             if (key.GetPublicKey() != pubKey)
@@ -615,8 +611,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
 
             auto vchKey = key.GetScalar().GetVch();
 
-            bool fSkipCheck = false;
-
             if (!hash.IsNull())
             {
                 // hash pubkey/privkey to accelerate wallet load
@@ -630,8 +624,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                     strErr = "Error reading wallet database: PublicKey/PrivateKey corrupt";
                     return false;
                 }
-
-                fSkipCheck = true;
             }
 
             if (key.GetPublicKey() != pubKey)
