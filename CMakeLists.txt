@@ -155,8 +155,13 @@ else()
   endif()
 endif()
 
+find_package(Python3 3.8 COMPONENTS Interpreter)
+set(PYTHON_COMMAND ${Python3_EXECUTABLE})
+
 add_subdirectory(src)
 add_subdirectory(test)
+
+include(cmake/tests.cmake)
 
 message("\n")
 message("Configure summary")
