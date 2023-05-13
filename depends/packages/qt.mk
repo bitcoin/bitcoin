@@ -17,7 +17,6 @@ $(package)_patches+= fix_montery_include.patch
 $(package)_patches += glibc_compatibility.patch
 $(package)_patches+= qtbase-moc-ignore-gcc-macro.patch
 
-# Update OSX_QT_TRANSLATIONS when this is updated
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=577b0668a777eb2b451c61e8d026d79285371597ce9df06b6dee6c814164b7c3
 
