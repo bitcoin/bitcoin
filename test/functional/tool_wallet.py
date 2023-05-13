@@ -80,7 +80,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 ===========
                 Name: %s
                 Format: sqlite
-                Descriptors: yes
+                BLSCT: no
                 Encrypted: no
                 HD (hd seed available): yes
                 Keypool Size: %d
@@ -94,7 +94,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 ===========
                 Name: %s
                 Format: bdb
-                Descriptors: no
+                BLSCT: no
                 Encrypted: no
                 HD (hd seed available): yes
                 Keypool Size: %d
