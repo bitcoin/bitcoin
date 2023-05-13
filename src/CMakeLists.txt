@@ -276,3 +276,9 @@ if(BUILD_UTIL)
     bitcoin_util
   )
 endif()
+
+
+add_subdirectory(test/util)
+if(BUILD_BENCH)
+  add_subdirectory(bench)
+endif()
