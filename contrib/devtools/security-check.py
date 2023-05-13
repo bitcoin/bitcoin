@@ -6,21 +6,12 @@
 Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
-Needs `objdump` (for PE) and `otool` (for MACHO).
 '''
-import subprocess
 import sys
-import os
 from typing import List, Optional
 
+import lief
 import pixie
-
-OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
-OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
-
-def run_command(command) -> str:
-    p = subprocess.run(command, stdout=subprocess.PIPE, check=True, universal_newlines=True)
-    return p.stdout
 
 def check_ELF_PIE(executable) -> bool:
     '''
@@ -143,112 +134,59 @@ def check_ELF_separate_code(executable):
                 return False
     return True
 
-def get_PE_dll_characteristics(executable) -> int:
-    '''Get PE DllCharacteristics bits'''
-    stdout = run_command([OBJDUMP_CMD, '-x',  executable])
-
-    bits = 0
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
-            bits = int(tokens[1],16)
-    return bits
-
-IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
-IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
-IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
-
 def check_PE_DYNAMIC_BASE(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    bits = get_PE_dll_characteristics(executable)
-    return (bits & IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE) == IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
+    binary = lief.parse(executable)
+    return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
 
 # Must support high-entropy 64-bit address space layout randomization
 # in addition to DYNAMIC_BASE to have secure ASLR.
 def check_PE_HIGH_ENTROPY_VA(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    bits = get_PE_dll_characteristics(executable)
-    return (bits & IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA) == IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
+    binary = lief.parse(executable)
+    return lief.PE.DLL_CHARACTERISTICS.HIGH_ENTROPY_VA in binary.optional_header.dll_characteristics_lists
 
 def check_PE_RELOC_SECTION(executable) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
-    stdout = run_command([OBJDUMP_CMD, '-h',  executable])
-
-    for line in stdout.splitlines():
-        if '.reloc' in line:
-            return True
-    return False
-
-def check_PE_NX(executable) -> bool:
-    '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    bits = get_PE_dll_characteristics(executable)
-    return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
-
-def get_MACHO_executable_flags(executable) -> List[str]:
-    stdout = run_command([OTOOL_CMD, '-vh', executable])
-
-    flags: List[str] = []
-    for line in stdout.splitlines():
-        tokens = line.split()
-        # filter first two header lines
-        if 'magic' in tokens or 'Mach' in tokens:
-            continue
-        # filter ncmds and sizeofcmds values
-        flags += [t for t in tokens if not t.isdigit()]
-    return flags
-
-def check_MACHO_PIE(executable) -> bool:
-    '''
-    Check for position independent executable (PIE), allowing for address space randomization.
-    '''
-    flags = get_MACHO_executable_flags(executable)
-    if 'PIE' in flags:
-        return True
-    return False
+    binary = lief.parse(executable)
+    return binary.has_relocations
 
 def check_MACHO_NOUNDEFS(executable) -> bool:
     '''
     Check for no undefined references.
     '''
-    flags = get_MACHO_executable_flags(executable)
-    if 'NOUNDEFS' in flags:
-        return True
-    return False
-
-def check_MACHO_NX(executable) -> bool:
-    '''
-    Check for no stack execution
-    '''
-    flags = get_MACHO_executable_flags(executable)
-    if 'ALLOW_STACK_EXECUTION' in flags:
-        return False
-    return True
+    binary = lief.parse(executable)
+    return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
 
 def check_MACHO_LAZY_BINDINGS(executable) -> bool:
     '''
     Check for no lazy bindings.
     We don't use or check for MH_BINDATLOAD. See #18295.
     '''
-    stdout = run_command([OTOOL_CMD, '-l', executable])
-
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if 'lazy_bind_off' in tokens or 'lazy_bind_size' in tokens:
-            if tokens[1] != '0':
-                return False
-    return True
+    binary = lief.parse(executable)
+    return binary.dyld_info.lazy_bind == (0,0)
 
 def check_MACHO_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
-    stdout = run_command([OTOOL_CMD, '-Iv', executable])
+    binary = lief.parse(executable)
+    return binary.has_symbol('___stack_chk_fail')
 
-    ok = False
-    for line in stdout.splitlines():
-        if '___stack_chk_fail' in line:
-            ok = True
-    return ok
+def check_PIE(executable) -> bool:
+    '''
+    Check for position independent executable (PIE),
+    allowing for address space randomization.
+    '''
+    binary = lief.parse(executable)
+    return binary.is_pie
+
+def check_NX(executable) -> bool:
+    '''
+    Check for no stack execution
+    '''
+    binary = lief.parse(executable)
+    return binary.has_nx
 
 CHECKS = {
 'ELF': [
@@ -259,15 +197,16 @@ CHECKS = {
     ('separate_code', check_ELF_separate_code),
 ],
 'PE': [
+    ('PIE', check_PIE),
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
-    ('NX', check_PE_NX),
+    ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION)
 ],
 'MACHO': [
-    ('PIE', check_MACHO_PIE),
+    ('PIE', check_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('NX', check_MACHO_NX),
+    ('NX', check_NX),
     ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
     ('Canary', check_MACHO_Canary)
 ]
@@ -285,24 +224,24 @@ def identify_executable(executable) -> Optional[str]:
     return None
 
 if __name__ == '__main__':
-    retval = 0
+    retval: int = 0
     for filename in sys.argv[1:]:
         try:
             etype = identify_executable(filename)
             if etype is None:
-                print('%s: unknown format' % filename)
+                print(f'{filename}: unknown format')
                 retval = 1
                 continue
 
-            failed = []
+            failed: List[str] = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
                     failed.append(name)
             if failed:
-                print('%s: failed %s' % (filename, ' '.join(failed)))
+                print(f'{filename}: failed {" ".join(failed)}')
                 retval = 1
         except IOError:
-            print('%s: cannot open' % filename)
+            print(f'{filename}: cannot open')
             retval = 1
     sys.exit(retval)
 

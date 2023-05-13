@@ -23,6 +23,7 @@ packages:
 - "patch"
 - "pkg-config"
 - "python3"
+- "python3-pip"
 - "libxkbcommon0"
 - "ccache"
 # Cross compilation HOSTS:
@@ -108,6 +109,8 @@ script: |
     done
   done
   }
+
+  pip3 install lief==0.11.4
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}

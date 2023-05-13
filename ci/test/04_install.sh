@@ -68,6 +68,9 @@ if [[ $DOCKER_NAME_TAG == centos* ]]; then
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
+  if [ -n "$PIP_PACKAGES" ]; then
+    ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
+  fi
 fi
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
