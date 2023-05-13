@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <common/args.h>
 #include <compressor.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
@@ -25,6 +26,7 @@
 #include <test/fuzz/util.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>
@@ -41,7 +43,7 @@
 
 void initialize_integer()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(integer, initialize_integer)

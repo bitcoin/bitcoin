@@ -12,7 +12,7 @@ import re
 
 from subprocess import check_output, CalledProcessError
 
-EXCLUDED_DIRS = ["src/crc32c/", "src/bls/"]
+EXCLUDED_DIRS = ["src/crc32c/", "src/bls/", "src/secp256k1/"]
 
 
 def get_exclude_args():

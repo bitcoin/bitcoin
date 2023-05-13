@@ -127,46 +127,45 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     // the specified port to tried, but not the other.
     addrman->Good(CAddress(addr1_port, NODE_NONE));
     BOOST_CHECK_EQUAL(addrman->Size(), 2U);
-    bool newOnly = true;
-    auto addr_ret3 = addrman->Select(newOnly).first;
+    bool new_only = true;
+    auto addr_ret3 = addrman->Select(new_only).first;
     BOOST_CHECK_EQUAL(addr_ret3.ToStringAddrPort(), "250.1.1.1:8333");
 }
-
 
 BOOST_AUTO_TEST_CASE(addrman_select)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    BOOST_CHECK(!addrman->Select(false).first.IsValid());
+    BOOST_CHECK(!addrman->Select(true).first.IsValid());
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
-    // Test: Select from new with 1 addr in new.
+    // Add 1 address to the new table
     CService addr1 = ResolveService("250.1.1.1", 8333);
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
-    bool newOnly = true;
-    auto addr_ret1 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret1.ToStringAddrPort(), "250.1.1.1:8333");
+    BOOST_CHECK(addrman->Select(/*new_only=*/true).first == addr1);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false).first == addr1);
 
-    // Test: move addr to tried, select from new expected nothing returned.
+    // Move address to the tried table
     BOOST_CHECK(addrman->Good(CAddress(addr1, NODE_NONE)));
-    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
-    auto addr_ret2 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret2.ToStringAddrPort(), "[::]:0");
-
-    auto addr_ret3 = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_ret3.ToStringAddrPort(), "250.1.1.1:8333");
 
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true).first.IsValid());
+    BOOST_CHECK(addrman->Select().first == addr1);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
-
-    // Add three addresses to new table.
+    // Add one address to the new table
     CService addr2 = ResolveService("250.3.1.1", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, addr2));
+    BOOST_CHECK(addrman->Select(/*new_only=*/true).first == addr2);
+
+    // Add two more addresses to the new table
     CService addr3 = ResolveService("250.3.2.2", 9999);
     CService addr4 = ResolveService("250.3.3.3", 9999);
 
-    BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
-    BOOST_CHECK(addrman->Add({CAddress(addr3, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
+    BOOST_CHECK(addrman->Add({CAddress(addr3, NODE_NONE)}, addr2));
     BOOST_CHECK(addrman->Add({CAddress(addr4, NODE_NONE)}, ResolveService("250.4.1.1", 8333)));
 
     // Add three addresses to tried table.
@@ -174,22 +173,105 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     CService addr6 = ResolveService("250.4.5.5", 7777);
     CService addr7 = ResolveService("250.4.6.6", 8333);
 
-    BOOST_CHECK(addrman->Add({CAddress(addr5, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
+    BOOST_CHECK(addrman->Add({CAddress(addr5, NODE_NONE)}, addr3));
     BOOST_CHECK(addrman->Good(CAddress(addr5, NODE_NONE)));
-    BOOST_CHECK(addrman->Add({CAddress(addr6, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
+    BOOST_CHECK(addrman->Add({CAddress(addr6, NODE_NONE)}, addr3));
     BOOST_CHECK(addrman->Good(CAddress(addr6, NODE_NONE)));
     BOOST_CHECK(addrman->Add({CAddress(addr7, NODE_NONE)}, ResolveService("250.1.1.3", 8333)));
     BOOST_CHECK(addrman->Good(CAddress(addr7, NODE_NONE)));
 
-    // Test: 6 addrs + 1 addr from last test = 7.
+    // 6 addrs + 1 addr from last test = 7.
     BOOST_CHECK_EQUAL(addrman->Size(), 7U);
 
-    // Test: Select pulls from new and tried regardless of port number.
+    // Select pulls from new and tried regardless of port number.
     std::set<uint16_t> ports;
     for (int i = 0; i < 20; ++i) {
         ports.insert(addrman->Select().first.GetPort());
     }
     BOOST_CHECK_EQUAL(ports.size(), 3U);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_select_by_network)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_IPV4).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV4).first.IsValid());
+
+    // add ipv4 address to the new table
+    CNetAddr source = ResolveIP("252.2.2.2");
+    CService addr1 = ResolveService("250.1.1.1", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_IPV4).first == addr1);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV6).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_ONION).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_I2P).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_CJDNS).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_CJDNS).first.IsValid());
+    BOOST_CHECK(addrman->Select(/*new_only=*/false).first == addr1);
+
+    // add I2P address to the new table
+    CAddress i2p_addr;
+    i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_I2P).first == i2p_addr);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_I2P).first == i2p_addr);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV6).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_ONION).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_CJDNS).first.IsValid());
+
+    // bump I2P address to tried table
+    BOOST_CHECK(addrman->Good(i2p_addr));
+
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_I2P).first.IsValid());
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_I2P).first == i2p_addr);
+
+    // add another I2P address to the new table
+    CAddress i2p_addr2;
+    i2p_addr2.SetSpecial("c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr2}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_I2P).first == i2p_addr2);
+
+    // ensure that both new and tried table are selected from
+    bool new_selected{false};
+    bool tried_selected{false};
+
+    while (!new_selected || !tried_selected) {
+        const CAddress selected{addrman->Select(/*new_only=*/false, NET_I2P).first};
+        BOOST_REQUIRE(selected == i2p_addr || selected == i2p_addr2);
+        if (selected == i2p_addr) {
+            tried_selected = true;
+        } else {
+            new_selected = true;
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(addrman_select_special)
+{
+    // use a non-deterministic addrman to ensure a passing test isn't due to setup
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, /*deterministic=*/false, GetCheckRatio(m_node));
+
+    CNetAddr source = ResolveIP("252.2.2.2");
+
+    // add I2P address to the tried table
+    CAddress i2p_addr;
+    i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr}, source));
+    BOOST_CHECK(addrman->Good(i2p_addr));
+
+    // add ipv4 address to the new table
+    CService addr1 = ResolveService("250.1.1.3", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+
+    // since the only ipv4 address is on the new table, ensure that the new
+    // table gets selected even if new_only is false. if the table was being
+    // selected at random, this test will sporadically fail
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)

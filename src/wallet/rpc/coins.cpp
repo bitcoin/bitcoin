@@ -320,7 +320,7 @@ RPCHelpMan lockunspent()
             });
 
         const uint256 txid(ParseHashO(o, "txid"));
-        const int nOutput = find_value(o, "vout").getInt<int>();
+        const int nOutput = o.find_value("vout").getInt<int>();
         if (nOutput < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }
@@ -448,6 +448,7 @@ RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
                 }},
+                RESULT_LAST_PROCESSED_BLOCK,
             }
             },
         RPCExamples{
@@ -488,6 +489,8 @@ RPCHelpMan getbalances()
         balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
         balances.pushKV("watchonly", balances_watchonly);
     }
+
+    AppendLastProcessedBlock(balances, wallet);
     return balances;
 },
     };

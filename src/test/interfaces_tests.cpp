@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(findAncestorByHash)
 BOOST_AUTO_TEST_CASE(findCommonAncestor)
 {
     auto& chain = m_node.chain;
-    const CChain& active = WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return Assert(m_node.chainman)->ActiveChain());
+    const CChain& active{*WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return &Assert(m_node.chainman)->ActiveChain())};
     auto* orig_tip = active.Tip();
     for (int i = 0; i < 10; ++i) {
         BlockValidationState state;

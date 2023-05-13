@@ -6,11 +6,11 @@
 #ifndef BITCOIN_NODE_UTXO_SNAPSHOT_H
 #define BITCOIN_NODE_UTXO_SNAPSHOT_H
 
-#include <fs.h>
 #include <kernel/cs_main.h>
 #include <serialize.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/fs.h>
 
 #include <cstdint>
 #include <optional>

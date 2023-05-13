@@ -332,15 +332,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
             assert_equal(received_addr, expected_addr)
             bech32_addr_info = w1.getaddressinfo(received_addr)
-            assert_equal(bech32_addr_info['desc'][:23], 'wpkh([80002067/0\'/0\'/{}]'.format(i))
+            assert_equal(bech32_addr_info['desc'][:23], 'wpkh([80002067/0h/0h/{}]'.format(i))
 
             shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
             shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
-            assert_equal(shwpkh_addr_info['desc'][:26], 'sh(wpkh([abcdef12/0\'/0\'/{}]'.format(i))
+            assert_equal(shwpkh_addr_info['desc'][:26], 'sh(wpkh([abcdef12/0h/0h/{}]'.format(i))
 
             pkh_addr = w1.getnewaddress('', 'legacy')
             pkh_addr_info = w1.getaddressinfo(pkh_addr)
-            assert_equal(pkh_addr_info['desc'][:22], 'pkh([12345678/0\'/0\'/{}]'.format(i))
+            assert_equal(pkh_addr_info['desc'][:22], 'pkh([12345678/0h/0h/{}]'.format(i))
 
             assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 3) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
         w1.keypoolrefill()

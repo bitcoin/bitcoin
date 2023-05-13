@@ -4,6 +4,7 @@
 
 #include <addrman.h>
 #include <bench/bench.h>
+#include <netbase.h>
 #include <netgroup.h>
 #include <random.h>
 #include <util/check.h>
@@ -71,6 +72,20 @@ static void FillAddrMan(AddrMan& addrman)
     AddAddressesToAddrMan(addrman);
 }
 
+static CNetAddr ResolveIP(const std::string& ip)
+{
+    CNetAddr addr;
+    LookupHost(ip, addr, false);
+    return addr;
+}
+
+static CService ResolveService(const std::string& ip, uint16_t port = 0)
+{
+    CService serv;
+    Lookup(ip, serv, port, false);
+    return serv;
+}
+
 /* Benchmarks */
 
 static void AddrManAdd(benchmark::Bench& bench)
@@ -92,6 +107,41 @@ static void AddrManSelect(benchmark::Bench& bench)
     bench.run([&] {
         const auto& address = addrman.Select();
         assert(address.first.GetPort() > 0);
+    });
+}
+
+// The worst case performance of the Select() function is when there is only
+// one address on the table, because it linearly searches every position of
+// several buckets before identifying the correct bucket
+static void AddrManSelectFromAlmostEmpty(benchmark::Bench& bench)
+{
+    AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
+
+    // Add one address to the new table
+    CService addr = ResolveService("250.3.1.1", 8333);
+    addrman.Add({CAddress(addr, NODE_NONE)}, ResolveService("250.3.1.1", 8333));
+
+    bench.run([&] {
+        (void)addrman.Select();
+    });
+}
+
+static void AddrManSelectByNetwork(benchmark::Bench& bench)
+{
+    AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
+
+    // add single I2P address to new table
+    CService i2p_service;
+    i2p_service.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    CAddress i2p_address(i2p_service, NODE_NONE);
+    i2p_address.nTime = Now<NodeSeconds>();
+    CNetAddr source = ResolveIP("252.2.2.2");
+    addrman.Add({i2p_address}, source);
+
+    FillAddrMan(addrman);
+
+    bench.run([&] {
+        (void)addrman.Select(/*new_only=*/false, NET_I2P);
     });
 }
 
@@ -135,5 +185,7 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
 
 BENCHMARK(AddrManAdd, benchmark::PriorityLevel::HIGH);
 BENCHMARK(AddrManSelect, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManSelectFromAlmostEmpty, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManSelectByNetwork, benchmark::PriorityLevel::HIGH);
 BENCHMARK(AddrManGetAddr, benchmark::PriorityLevel::HIGH);
 BENCHMARK(AddrManAddThenGood, benchmark::PriorityLevel::HIGH);

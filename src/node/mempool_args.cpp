@@ -7,6 +7,7 @@
 #include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
+#include <common/args.h>
 #include <consensus/amount.h>
 #include <kernel/chainparams.h>
 #include <logging.h>
@@ -16,7 +17,6 @@
 #include <tinyformat.h>
 #include <util/error.h>
 #include <util/moneystr.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 #include <chrono>
@@ -89,7 +89,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
-        return strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString());
+        return strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString());
     }
 
     mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);

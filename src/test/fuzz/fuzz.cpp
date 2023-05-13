@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl_init.h>
-#include <fs.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/time.h>
 

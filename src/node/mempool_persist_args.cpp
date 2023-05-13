@@ -4,8 +4,8 @@
 
 #include <node/mempool_persist_args.h>
 
-#include <fs.h>
-#include <util/system.h>
+#include <common/args.h>
+#include <util/fs.h>
 #include <validation.h>
 
 namespace node {

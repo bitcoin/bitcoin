@@ -7,13 +7,14 @@
 #define BITCOIN_WALLET_BDB_H
 
 #include <clientversion.h>
-#include <fs.h>
 #include <serialize.h>
 #include <streams.h>
+#include <util/fs.h>
 #include <util/system.h>
 #include <wallet/db.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <string>
@@ -191,10 +192,11 @@ private:
     Dbc* m_cursor;
 
 public:
-    explicit BerkeleyCursor(BerkeleyDatabase& database);
+    explicit BerkeleyCursor(BerkeleyDatabase& database, BerkeleyBatch* batch=nullptr);
     ~BerkeleyCursor() override;
 
     Status Next(DataStream& key, DataStream& value) override;
+    Dbc* dbc() const { return m_cursor; }
 };
 
 /** RAII class that provides access to a Berkeley database */
@@ -205,6 +207,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
     bool EraseKey(DataStream&& key) override;
     bool HasKey(DataStream&& key) override;
+    bool ErasePrefix(Span<const std::byte> prefix) override;
 
 protected:
     Db* pdb{nullptr};
@@ -229,6 +232,7 @@ public:
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;
+    DbTxn* txn() const { return activeTxn; }
 };
 
 std::string BerkeleyDatabaseVersion();

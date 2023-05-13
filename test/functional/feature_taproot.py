@@ -20,6 +20,7 @@ from test_framework.messages import (
     CTxOut,
     SEQUENCE_FINAL,
     TX_VERSION_BLSCT_MARKER,
+    tx_from_hex,
 )
 from test_framework.script import (
     ANNEX_TAG,
@@ -110,7 +111,6 @@ from test_framework.address import (
     program_to_witness,
 )
 from collections import OrderedDict, namedtuple
-from io import BytesIO
 import json
 import hashlib
 import os
@@ -1387,8 +1387,7 @@ class TaprootTest(BitcoinTestFramework):
             # Add change
             fund_tx.vout.append(CTxOut(balance - 10000, random.choice(host_spks)))
             # Ask the wallet to sign
-            ss = BytesIO(bytes.fromhex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"]))
-            fund_tx.deserialize(ss)
+            fund_tx = tx_from_hex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"])
             # Construct UTXOData entries
             fund_tx.rehash()
             for i in range(count_this_tx):

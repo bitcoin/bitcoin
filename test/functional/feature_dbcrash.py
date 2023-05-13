@@ -51,9 +51,11 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.supports_cli = False
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
-        # Set -rpcservertimeout=900 to reduce socket disconnects in this
-        # long-running test
-        self.base_args = ["-limitdescendantsize=0", "-maxmempool=0", "-rpcservertimeout=900", "-dbbatchsize=200000"]
+        self.base_args = [
+            "-limitdescendantsize=0",
+            "-maxmempool=0",
+            "-dbbatchsize=200000",
+        ]
 
         # Set different crash ratios and cache sizes.  Note that not all of
         # -dbcache goes to the in-memory coins cache.

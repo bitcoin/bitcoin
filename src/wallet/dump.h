@@ -5,7 +5,7 @@
 #ifndef BITCOIN_WALLET_DUMP_H
 #define BITCOIN_WALLET_DUMP_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <string>
 #include <vector>

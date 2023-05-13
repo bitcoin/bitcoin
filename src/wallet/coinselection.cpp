@@ -6,15 +6,24 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/moneystr.h>
+#include <util/system.h>
 
 #include <numeric>
 #include <optional>
+#include <queue>
 
 namespace wallet {
+// Common selection error across the algorithms
+static util::Result<SelectionResult> ErrorMaxWeightExceeded()
+{
+    return util::Error{_("The inputs size exceeds the maximum weight. "
+                         "Please try sending a smaller amount or manually consolidating your wallet's UTXOs")};
+}
+
 // Descending order comparator
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
@@ -63,11 +72,13 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
+util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
+                                             int max_weight)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
     std::vector<size_t> curr_selection; // selected utxo indexes
+    int curr_selection_weight = 0; // sum of selected utxo weight
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
@@ -78,7 +89,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
         curr_available_value += utxo.GetSelectionAmount();
     }
     if (curr_available_value < selection_target) {
-        return std::nullopt;
+        return util::Error();
     }
 
     // Sort the utxo_pool
@@ -89,6 +100,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     CAmount best_waste = MAX_MONEY;
 
     bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
+    bool max_tx_weight_exceeded = false;
 
     // Depth First search loop for choosing the UTXOs
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
@@ -97,6 +109,9 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
             curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
+            backtrack = true;
+        } else if (curr_selection_weight > max_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
+            max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
             curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
@@ -127,6 +142,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
             curr_value -= utxo.GetSelectionAmount();
             curr_waste -= utxo.fee - utxo.long_term_fee;
+            curr_selection_weight -= utxo.m_weight;
             curr_selection.pop_back();
         } else { // Moving forwards, continuing down this branch
             OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
@@ -146,13 +162,14 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
                 curr_selection.push_back(utxo_pool_index);
                 curr_value += utxo.GetSelectionAmount();
                 curr_waste += utxo.fee - utxo.long_term_fee;
+                curr_selection_weight += utxo.m_weight;
             }
         }
     }
 
     // Check for solution
     if (best_selection.empty()) {
-        return std::nullopt;
+        return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
     }
 
     // Set output set
@@ -165,9 +182,20 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     return result;
 }
 
-std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
+class MinOutputGroupComparator
+{
+public:
+    int operator() (const OutputGroup& group1, const OutputGroup& group2) const
+    {
+        return group1.GetSelectionAmount() > group2.GetSelectionAmount();
+    }
+};
+
+util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng,
+                                             int max_weight)
 {
     SelectionResult result(target_value, SelectionAlgorithm::SRD);
+    std::priority_queue<OutputGroup, std::vector<OutputGroup>, MinOutputGroupComparator> heap;
 
     // Include change for SRD as we want to avoid making really small change if the selection just
     // barely meets the target. Just use the lower bound change target instead of the randomly
@@ -181,16 +209,40 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
     Shuffle(indexes.begin(), indexes.end(), rng);
 
     CAmount selected_eff_value = 0;
+    int weight = 0;
+    bool max_tx_weight_exceeded = false;
     for (const size_t i : indexes) {
         const OutputGroup& group = utxo_pool.at(i);
         Assume(group.GetSelectionAmount() > 0);
+
+        // Add group to selection
+        heap.push(group);
         selected_eff_value += group.GetSelectionAmount();
-        result.AddInput(group);
+        weight += group.m_weight;
+
+        // If the selection weight exceeds the maximum allowed size, remove the least valuable inputs until we
+        // are below max weight.
+        if (weight > max_weight) {
+            max_tx_weight_exceeded = true; // mark it in case we don't find any useful result.
+            do {
+                const OutputGroup& to_remove_group = heap.top();
+                selected_eff_value -= to_remove_group.GetSelectionAmount();
+                weight -= to_remove_group.m_weight;
+                heap.pop();
+            } while (!heap.empty() && weight > max_weight);
+        }
+
+        // Now check if we are above the target
         if (selected_eff_value >= target_value) {
+            // Result found, add it.
+            while (!heap.empty()) {
+                result.AddInput(heap.top());
+                heap.pop();
+            }
             return result;
         }
     }
-    return std::nullopt;
+    return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
 }
 
 /** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
@@ -252,8 +304,8 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
     }
 }
 
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                              CAmount change_target, FastRandomContext& rng)
+util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
+                                             CAmount change_target, FastRandomContext& rng, int max_weight)
 {
     SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
@@ -286,7 +338,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
     }
 
     if (nTotalLower < nTargetValue) {
-        if (!lowest_larger) return std::nullopt;
+        if (!lowest_larger) return util::Error();
         result.AddInput(*lowest_larger);
         return result;
     }
@@ -311,6 +363,16 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
             if (vfBest[i]) {
                 result.AddInput(applicable_groups[i]);
             }
+        }
+
+        // If the result exceeds the maximum allowed size, return closest UTXO above the target
+        if (result.GetWeight() > max_weight) {
+            // No coin above target, nothing to do.
+            if (!lowest_larger) return ErrorMaxWeightExceeded();
+
+            // Return closest UTXO above target
+            result.Clear();
+            result.AddInput(*lowest_larger);
         }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS, BCLog::Level::Debug)) {
