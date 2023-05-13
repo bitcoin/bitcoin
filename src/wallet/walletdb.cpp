@@ -126,7 +126,7 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::BLSCTKEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
+    return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
 }
 
 bool WalletBatch::WriteKey(const blsct::PublicKey& pubKey, const blsct::PrivateKey& privKey, const CKeyMetadata& keyMeta)
@@ -148,7 +148,7 @@ bool WalletBatch::WriteKey(const blsct::PublicKey& pubKey, const blsct::PrivateK
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
+    return WriteIC(std::make_pair(DBKeys::BLSCTKEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
 }
 
 bool WalletBatch::WriteViewKey(const blsct::PublicKey& pubKey, const blsct::PrivateKey& privKey, const CKeyMetadata& keyMeta)
@@ -184,7 +184,7 @@ bool WalletBatch::WriteSpendKey(const blsct::PublicKey& pubKey)
     return WriteIC(DBKeys::SPENDKEY, vchPubKey, false);
 }
 
-bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
+bool WalletBatch::WriteCryptedKey(const blsct::PublicKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
                                 const CKeyMetadata &keyMeta)
 {
@@ -210,7 +210,7 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
-bool WalletBatch::WriteCryptedKey(const blsct::PublicKey& vchPubKey,
+bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
                                 const CKeyMetadata &keyMeta)
 {
