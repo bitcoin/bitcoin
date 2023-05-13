@@ -3564,10 +3564,7 @@ void CWallet::SetupLegacyScriptPubKeyMan()
 
 blsct::KeyMan* CWallet::GetBLSCTKeyMan() const
 {
-    if (IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
-        return nullptr;
-    }
-    return dynamic_cast<blsct::KeyMan*>(m_blsct_key_manager.get());
+    return m_blsct_key_manager;
 }
 
 blsct::KeyMan* CWallet::GetOrCreateBLSCTKeyMan()
@@ -3578,11 +3575,10 @@ blsct::KeyMan* CWallet::GetOrCreateBLSCTKeyMan()
 
 void CWallet::SetupBLSCTKeyMan()
 {
-    if (!IsWalletFlagSet(WALLET_FLAG_BLSCT) || m_blsct_key_manager != nullptr) {
+    if (m_blsct_key_manager != nullptr) {
         return;
     }
-
-    auto spk_manager = std::unique_ptr<blsct::KeyMan>(new blsct::KeyMan(*this, m_keypool_size));
+    auto spk_manager = new blsct::KeyMan(*this, m_keypool_size);
     m_blsct_key_manager = std::move(spk_manager);
 }
 
