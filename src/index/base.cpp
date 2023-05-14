@@ -30,7 +30,7 @@ constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 
 template <typename... Args>
-static void FatalError(const char* fmt, const Args&... args)
+static void FatalErrorf(const char* fmt, const Args&... args)
 {
     AbortNode(tfm::format(fmt, args...));
 }
@@ -197,7 +197,7 @@ void BaseIndex::ThreadSync()
                     break;
                 }
                 if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
-                    FatalError("%s: Failed to rewind index %s to a previous chain tip",
+                    FatalErrorf("%s: Failed to rewind index %s to a previous chain tip",
                                __func__, GetName());
                     return;
                 }
@@ -221,14 +221,14 @@ void BaseIndex::ThreadSync()
             CBlock block;
             interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
             if (!m_chainstate->m_blockman.ReadBlockFromDisk(block, *pindex)) {
-                FatalError("%s: Failed to read block %s from disk",
+                FatalErrorf("%s: Failed to read block %s from disk",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
             } else {
                 block_info.data = &block;
             }
             if (!CustomAppend(block_info)) {
-                FatalError("%s: Failed to write block %s to index database",
+                FatalErrorf("%s: Failed to write block %s to index database",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
             }
@@ -294,7 +294,7 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (!best_block_index) {
         if (pindex->nHeight != 0) {
-            FatalError("%s: First block connected is not the genesis block (height=%d)",
+            FatalErrorf("%s: First block connected is not the genesis block (height=%d)",
                        __func__, pindex->nHeight);
             return;
         }
@@ -312,7 +312,7 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
             return;
         }
         if (best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
-            FatalError("%s: Failed to rewind index %s to a previous chain tip",
+            FatalErrorf("%s: Failed to rewind index %s to a previous chain tip",
                        __func__, GetName());
             return;
         }
@@ -325,7 +325,7 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
         // processed, and the index object being safe to delete.
         SetBestBlockIndex(pindex);
     } else {
-        FatalError("%s: Failed to write block %s to index",
+        FatalErrorf("%s: Failed to write block %s to index",
                    __func__, pindex->GetBlockHash().ToString());
         return;
     }
@@ -345,7 +345,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     }
 
     if (!locator_tip_index) {
-        FatalError("%s: First block (hash=%s) in locator was not found",
+        FatalErrorf("%s: First block (hash=%s) in locator was not found",
                    __func__, locator_tip_hash.ToString());
         return;
     }
