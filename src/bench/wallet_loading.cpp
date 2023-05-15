@@ -17,18 +17,17 @@
 #include <optional>
 
 using wallet::CWallet;
-using wallet::DatabaseFormat;
-using wallet::DatabaseOptions;
+using wallet::CreateMockableWalletDatabase;
 using wallet::TxStateInactive;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 using wallet::WalletContext;
 using wallet::WalletDatabase;
 
-static std::shared_ptr<CWallet> BenchLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, DatabaseOptions& options)
+static std::shared_ptr<CWallet> BenchLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
 {
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto wallet = CWallet::Create(context, "", std::move(database), options.create_flags, error, warnings);
+    auto wallet = CWallet::Create(context, "", std::move(database), create_flags, error, warnings);
     NotifyWalletLoaded(context, wallet);
     if (context.chain) {
         wallet->postInitProcess();
@@ -55,7 +54,6 @@ static void AddTx(CWallet& wallet)
 static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 {
     const auto test_setup = MakeNoLogFileContext<TestingSetup>();
-    test_setup->m_args.ForceSetArg("-unsafesqlitesync", "1");
 
     WalletContext context;
     context.args = &test_setup->m_args;
@@ -63,31 +61,28 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 
     // Setup the wallet
     // Loading the wallet will also create it
-    DatabaseOptions options;
-    if (legacy_wallet) {
-        options.require_format = DatabaseFormat::BERKELEY;
-    } else {
-        options.create_flags = WALLET_FLAG_DESCRIPTORS;
-        options.require_format = DatabaseFormat::SQLITE;
+    uint64_t create_flags = 0;
+    if (!legacy_wallet) {
+        create_flags = WALLET_FLAG_DESCRIPTORS;
     }
-    auto database = CreateMockWalletDatabase(options);
-    auto wallet = BenchLoadWallet(std::move(database), context, options);
+    auto database = CreateMockableWalletDatabase();
+    auto wallet = BenchLoadWallet(std::move(database), context, create_flags);
 
     // Generate a bunch of transactions and addresses to put into the wallet
     for (int i = 0; i < 1000; ++i) {
         AddTx(*wallet);
     }
 
-    database = DuplicateMockDatabase(wallet->GetDatabase(), options);
+    database = DuplicateMockDatabase(wallet->GetDatabase());
 
     // reload the wallet for the actual benchmark
     BenchUnloadWallet(std::move(wallet));
 
     bench.epochs(5).run([&] {
-        wallet = BenchLoadWallet(std::move(database), context, options);
+        wallet = BenchLoadWallet(std::move(database), context, create_flags);
 
         // Cleanup
-        database = DuplicateMockDatabase(wallet->GetDatabase(), options);
+        database = DuplicateMockDatabase(wallet->GetDatabase());
         BenchUnloadWallet(std::move(wallet));
     });
 }

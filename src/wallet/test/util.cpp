@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <key.h>
 #include <key_io.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -16,7 +17,7 @@
 namespace wallet {
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockWalletDatabase());
+    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase());
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
@@ -44,28 +45,9 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     return wallet;
 }
 
-std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, DatabaseOptions& options)
+std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
 {
-    auto new_database = CreateMockWalletDatabase(options);
-
-    // Get a cursor to the original database
-    auto batch = database.MakeBatch();
-    std::unique_ptr<wallet::DatabaseCursor> cursor = batch->GetNewCursor();
-
-    // Get a batch for the new database
-    auto new_batch = new_database->MakeBatch();
-
-    // Read all records from the original database and write them to the new one
-    while (true) {
-        DataStream key{};
-        DataStream value{};
-        DatabaseCursor::Status status = cursor->Next(key, value);
-        assert(status != DatabaseCursor::Status::FAIL);
-        if (status == DatabaseCursor::Status::DONE) break;
-        new_batch->Write(key, value);
-    }
-
-    return new_database;
+    return std::make_unique<MockableDatabase>(dynamic_cast<MockableDatabase&>(database).m_records);
 }
 
 std::string getnewaddress(CWallet& w)
@@ -79,4 +61,93 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
+DatabaseCursor::Status MockableCursor::Next(DataStream& key, DataStream& value)
+{
+    if (!m_pass) {
+        return Status::FAIL;
+    }
+    if (m_cursor == m_cursor_end) {
+        return Status::DONE;
+    }
+    const auto& [key_data, value_data] = *m_cursor;
+    key.write(key_data);
+    value.write(value_data);
+    m_cursor++;
+    return Status::MORE;
+}
+
+bool MockableBatch::ReadKey(DataStream&& key, DataStream& value)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    const auto& it = m_records.find(key_data);
+    if (it == m_records.end()) {
+        return false;
+    }
+    value.write(it->second);
+    return true;
+}
+
+bool MockableBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    SerializeData value_data{value.begin(), value.end()};
+    auto [it, inserted] = m_records.emplace(key_data, value_data);
+    if (!inserted && overwrite) { // Overwrite if requested
+        it->second = value_data;
+        inserted = true;
+    }
+    return inserted;
+}
+
+bool MockableBatch::EraseKey(DataStream&& key)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    m_records.erase(key_data);
+    return true;
+}
+
+bool MockableBatch::HasKey(DataStream&& key)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    return m_records.count(key_data) > 0;
+}
+
+bool MockableBatch::ErasePrefix(Span<const std::byte> prefix)
+{
+    if (!m_pass) {
+        return false;
+    }
+    auto it = m_records.begin();
+    while (it != m_records.end()) {
+        auto& key = it->first;
+        if (key.size() < prefix.size() || std::search(key.begin(), key.end(), prefix.begin(), prefix.end()) != key.begin()) {
+            it++;
+            continue;
+        }
+        it = m_records.erase(it);
+    }
+    return true;
+}
+
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(std::map<SerializeData, SerializeData> records)
+{
+    return std::make_unique<MockableDatabase>(records);
+}
+
+MockableDatabase& GetMockableDatabase(CWallet& wallet)
+{
+    return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
+}
 } // namespace wallet
