@@ -1,11 +1,11 @@
-23.2rc1 Release Notes
+23.2 Release Notes
 ==================
 
-Bitcoin Core version 23.2rc1 is now available from:
+Bitcoin Core version 23.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-23.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-23.2/>
 
-This release includes new features, various bug fixes and performance
+This release includes various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
