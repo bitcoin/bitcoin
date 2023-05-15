@@ -31,6 +31,7 @@ public:
     void Add(const T& x);
     void Clear();
     bool Empty() const;
+    std::vector<uint8_t> GetVch() const;
 
     void ConfirmIndexInsideRange(const uint32_t& index) const;
     void ConfirmSizesMatch(const size_t& other_size) const;
@@ -84,10 +85,9 @@ public:
      */
     Elements<T> To(const size_t to_index) const;
 
-    /**
-     * Negate each contained elements
-     */
     Elements<T> Negate() const;
+
+    Elements<T> Invert() const;
 
     template <typename Stream>
     void Serialize(Stream& s) const

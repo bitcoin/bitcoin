@@ -2,11 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
+#include <logging.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/settings.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <limits>
 #include <string>
@@ -29,6 +30,7 @@ void ResetArgs(ArgsManager& local_args, const std::string& strArg)
 
     // Convert to char*:
     std::vector<const char*> vecChar;
+    vecChar.reserve(vecArg.size());
     for (const std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 

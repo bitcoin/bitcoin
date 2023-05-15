@@ -6,8 +6,6 @@
 import hashlib
 import unittest
 
-from .util import modinv
-
 def rot32(v, bits):
     """Rotate the 32-bit value v left by bits bits."""
     bits %= 32  # Make sure the term below does not throw an exception
@@ -88,7 +86,7 @@ class MuHash3072:
 
     def digest(self):
         """Extract the final hash. Does not modify this object."""
-        val = (self.numerator * modinv(self.denominator, self.MODULUS)) % self.MODULUS
+        val = (self.numerator * pow(self.denominator, -1, self.MODULUS)) % self.MODULUS
         bytes384 = val.to_bytes(384, 'little')
         return hashlib.sha256(bytes384).digest()
 

@@ -4,11 +4,6 @@ boost_packages = boost
 
 libevent_packages = libevent
 
-qrencode_linux_packages = qrencode
-qrencode_android_packages = qrencode
-qrencode_darwin_packages = qrencode
-qrencode_mingw32_packages = qrencode
-
 bdb_packages=bdb
 sqlite_packages=sqlite
 

@@ -10,6 +10,7 @@
 #include <blsct/arith/mcl/mcl_init.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/args.h>
 #include <common/init.h>
 #include <common/url.h>
 #include <compat/compat.h>
@@ -249,7 +250,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
 MAIN_FUNCTION
 {
 #ifdef WIN32
-    util::WinCmdLineArgs winArgs;
+    common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
 

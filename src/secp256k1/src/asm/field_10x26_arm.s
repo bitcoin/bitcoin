@@ -29,6 +29,7 @@ Note:
 	.align	2
 	.global secp256k1_fe_mul_inner
 	.type	secp256k1_fe_mul_inner, %function
+	.hidden secp256k1_fe_mul_inner
 	@ Arguments:
 	@  r0  r      Restrict: can overlap with a, not with b
 	@  r1  a
@@ -516,6 +517,7 @@ secp256k1_fe_mul_inner:
 	.align	2
 	.global secp256k1_fe_sqr_inner
 	.type	secp256k1_fe_sqr_inner, %function
+	.hidden secp256k1_fe_sqr_inner
 	@ Arguments:
 	@  r0  r	 Can overlap with a
 	@  r1  a

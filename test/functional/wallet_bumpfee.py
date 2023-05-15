@@ -26,6 +26,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    get_fee,
 )
 from test_framework.wallet import MiniWallet
 
@@ -40,6 +41,10 @@ NORMAL       =    100
 HIGH         =    500
 TOO_HIGH     = 100000
 
+def get_change_address(tx, node):
+    tx_details = node.getrawtransaction(tx, 1)
+    txout_addresses = [txout['scriptPubKey']['address'] for txout in tx_details["vout"]]
+    return [address for address in txout_addresses if node.getaddressinfo(address)["ischange"]]
 
 class BumpFeeTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -103,6 +108,10 @@ class BumpFeeTest(BitcoinTestFramework):
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
+        self.test_bump_back_to_yourself()
+
+        # Context independent tests
+        test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -167,6 +176,54 @@ class BumpFeeTest(BitcoinTestFramework):
 
         self.clear_mempool()
 
+    def test_bump_back_to_yourself(self):
+        self.log.info("Test that bumpfee can send coins back to yourself")
+        node = self.nodes[1]
+
+        node.createwallet("back_to_yourself")
+        wallet = node.get_wallet_rpc("back_to_yourself")
+
+        # Make 3 UTXOs
+        addr = wallet.getnewaddress()
+        for _ in range(3):
+            self.nodes[0].sendtoaddress(addr, 5)
+        self.generate(self.nodes[0], 1)
+
+        # Create a tx with two outputs. recipient and change.
+        tx = wallet.send(outputs={wallet.getnewaddress(): 9}, fee_rate=2)
+        tx_info = wallet.gettransaction(txid=tx["txid"], verbose=True)
+        assert_equal(len(tx_info["decoded"]["vout"]), 2)
+        assert_equal(len(tx_info["decoded"]["vin"]), 2)
+
+        # Bump tx, send coins back to change address.
+        change_addr = get_change_address(tx["txid"], wallet)[0]
+        out_amount = 10
+        bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate": 20, "outputs": [{change_addr: out_amount}]})
+        bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
+        assert_equal(len(bumped_tx["decoded"]["vout"]), 1)
+        assert_equal(len(bumped_tx["decoded"]["vin"]), 2)
+        assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped["fee"], out_amount)
+
+        # Bump tx again, now test send fewer coins back to change address.
+        out_amount = 6
+        bumped = wallet.bumpfee(txid=bumped["txid"], options={"fee_rate": 40, "outputs": [{change_addr: out_amount}]})
+        bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
+        assert_equal(len(bumped_tx["decoded"]["vout"]), 2)
+        assert_equal(len(bumped_tx["decoded"]["vin"]), 2)
+        assert any(txout['value'] == out_amount - bumped["fee"] and txout['scriptPubKey']['address'] == change_addr for txout in bumped_tx['decoded']['vout'])
+        # Check that total out amount is still equal to the previously bumped tx
+        assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped_tx["decoded"]["vout"][1]["value"] + bumped["fee"], 10)
+
+        # Bump tx again, send more coins back to change address. The process will add another input to cover the target.
+        out_amount = 12
+        bumped = wallet.bumpfee(txid=bumped["txid"], options={"fee_rate": 80, "outputs": [{change_addr: out_amount}]})
+        bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
+        assert_equal(len(bumped_tx["decoded"]["vout"]), 2)
+        assert_equal(len(bumped_tx["decoded"]["vin"]), 3)
+        assert any(txout['value'] == out_amount - bumped["fee"] and txout['scriptPubKey']['address'] == change_addr for txout in bumped_tx['decoded']['vout'])
+        assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped_tx["decoded"]["vout"][1]["value"] + bumped["fee"], 15)
+
+        node.unloadwallet("back_to_yourself")
 
 def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     self.log.info('Test simple bumpfee: {}'.format(mode))
@@ -585,6 +642,11 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     # Call abandon to make sure the wallet doesn't attempt to resubmit
     # the bump tx and hope the wallet does not rebroadcast before we call.
     rbf_node.abandontransaction(bumpid)
+
+    tx_bump_abandoned = rbf_node.gettransaction(bumpid)
+    for tx in tx_bump_abandoned['details']:
+        assert_equal(tx['abandoned'], True)
+
     assert bumpid not in rbf_node.getrawmempool()
     assert rbfid in rbf_node.getrawmempool()
 
@@ -626,21 +688,16 @@ def test_locked_wallet_fails(self, rbf_node, dest_address):
 def test_change_script_match(self, rbf_node, dest_address):
     self.log.info('Test that the same change addresses is used for the replacement transaction when possible')
 
-    def get_change_address(tx):
-        tx_details = rbf_node.getrawtransaction(tx, 1)
-        txout_addresses = [txout['scriptPubKey']['address'] for txout in tx_details["vout"]]
-        return [address for address in txout_addresses if rbf_node.getaddressinfo(address)["ischange"]]
-
     # Check that there is only one change output
     rbfid = spend_one_input(rbf_node, dest_address)
-    change_addresses = get_change_address(rbfid)
+    change_addresses = get_change_address(rbfid, rbf_node)
     assert_equal(len(change_addresses), 1)
 
     # Now find that address in each subsequent tx, and no other change
     bumped_total_tx = rbf_node.bumpfee(rbfid, {"fee_rate": ECONOMICAL})
-    assert_equal(change_addresses, get_change_address(bumped_total_tx['txid']))
+    assert_equal(change_addresses, get_change_address(bumped_total_tx['txid'], rbf_node))
     bumped_rate_tx = rbf_node.bumpfee(bumped_total_tx["txid"])
-    assert_equal(change_addresses, get_change_address(bumped_rate_tx['txid']))
+    assert_equal(change_addresses, get_change_address(bumped_rate_tx['txid'], rbf_node))
     self.clear_mempool()
 
 
@@ -665,6 +722,36 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     # spend all funds, no change output
     rbfid = rbf_node.sendall(recipients=[rbf_node.getnewaddress()])['txid']
     assert_raises_rpc_error(-4, "Unable to create transaction. Insufficient funds", rbf_node.bumpfee, rbfid)
+    self.clear_mempool()
+
+
+def test_feerate_checks_replaced_outputs(self, rbf_node, peer_node):
+    # Make sure there is enough balance
+    peer_node.sendtoaddress(rbf_node.getnewaddress(), 60)
+    self.generate(peer_node, 1)
+
+    self.log.info("Test that feerate checks use replaced outputs")
+    outputs = []
+    for i in range(50):
+        outputs.append({rbf_node.getnewaddress(address_type="bech32"): 1})
+    tx_res = rbf_node.send(outputs=outputs, fee_rate=5)
+    tx_details = rbf_node.gettransaction(txid=tx_res["txid"], verbose=True)
+
+    # Calculate the minimum feerate required for the bump to work.
+    # Since the bumped tx will replace all of the outputs with a single output, we can estimate that its size will 31 * (len(outputs) - 1) bytes smaller
+    tx_size = tx_details["decoded"]["vsize"]
+    est_bumped_size = tx_size - (len(tx_details["decoded"]["vout"]) - 1) * 31
+    inc_fee_rate = max(rbf_node.getmempoolinfo()["incrementalrelayfee"], Decimal(0.00005000)) # Wallet has a fixed incremental relay fee of 5 sat/vb
+    # RPC gives us fee as negative
+    min_fee = (-tx_details["fee"] + get_fee(est_bumped_size, inc_fee_rate)) * Decimal(1e8)
+    min_fee_rate = (min_fee / est_bumped_size).quantize(Decimal("1.000"))
+
+    # Attempt to bumpfee and replace all outputs with a single one using a feerate slightly less than the minimum
+    new_outputs = [{rbf_node.getnewaddress(address_type="bech32"): 49}]
+    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx_res["txid"], {"fee_rate": min_fee_rate - 1, "outputs": new_outputs})
+
+    # Bumpfee and replace all outputs with a single one using the minimum feerate
+    rbf_node.bumpfee(tx_res["txid"], {"fee_rate": min_fee_rate, "outputs": new_outputs})
     self.clear_mempool()
 
 

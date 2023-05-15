@@ -17,6 +17,7 @@
 #include <kernel/validation_cache_sizes.h>
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <node/blockstorage.h>
@@ -24,7 +25,7 @@
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
-#include <util/system.h>
+#include <util/chaintype.h>
 #include <util/thread.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -52,7 +53,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Misc Globals
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(ChainType::MAIN);
     auto chainparams = CChainParams::Main();
 
     kernel::Context kernel_context{};
@@ -86,7 +87,10 @@ int main(int argc, char* argv[])
         .datadir = gArgs.GetDataDirNet(),
         .adjusted_time_callback = NodeClock::now,
     };
-    ChainstateManager chainman{chainman_opts, {}};
+    const node::BlockManager::Options blockman_opts{
+        .chainparams = chainman_opts.chainparams,
+    };
+    ChainstateManager chainman{chainman_opts, blockman_opts};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;

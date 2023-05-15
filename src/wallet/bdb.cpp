@@ -4,18 +4,29 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/compat.h>
-#include <fs.h>
+#include <logging.h>
+#include <util/fs.h>
+#include <util/time.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
+#include <sync.h>
 #include <util/check.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <stdint.h>
 
-#ifndef WIN32
 #include <sys/stat.h>
+
+// Windows may not define S_IRUSR or S_IWUSR. We define both
+// here, with the same values as glibc (see stat.h).
+#ifdef WIN32
+#ifndef S_IRUSR
+#define S_IRUSR             0400
+#define S_IWUSR             0200
+#endif
 #endif
 
 namespace wallet {
@@ -432,6 +443,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
     });
 
     std::vector<fs::path> filenames;
+    filenames.reserve(m_databases.size());
     for (const auto& it : m_databases) {
         filenames.push_back(it.first);
     }
@@ -656,12 +668,14 @@ void BerkeleyDatabase::ReloadDbEnv()
     env->ReloadDbEnv();
 }
 
-BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database)
+BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database, BerkeleyBatch* batch)
 {
     if (!database.m_db.get()) {
         throw std::runtime_error(STR_INTERNAL_BUG("BerkeleyDatabase does not exist"));
     }
-    int ret = database.m_db->cursor(nullptr, &m_cursor, 0);
+    // Transaction argument to cursor is only needed when using the cursor to
+    // write to the database. Read-only cursors do not need a txn pointer.
+    int ret = database.m_db->cursor(batch ? batch->txn() : nullptr, &m_cursor, 0);
     if (ret != 0) {
         throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret)));
     }
@@ -806,6 +820,25 @@ bool BerkeleyBatch::HasKey(DataStream&& key)
 
     int ret = pdb->exists(activeTxn, datKey, 0);
     return ret == 0;
+}
+
+bool BerkeleyBatch::ErasePrefix(Span<const std::byte> prefix)
+{
+    if (!TxnBegin()) return false;
+    auto cursor{std::make_unique<BerkeleyCursor>(m_database, this)};
+    // const_cast is safe below even though prefix_key is an in/out parameter,
+    // because we are not using the DB_DBT_USERMEM flag, so BDB will allocate
+    // and return a different output data pointer
+    Dbt prefix_key{const_cast<std::byte*>(prefix.data()), static_cast<uint32_t>(prefix.size())}, prefix_value{};
+    int ret{cursor->dbc()->get(&prefix_key, &prefix_value, DB_SET_RANGE)};
+    for (int flag{DB_CURRENT}; ret == 0; flag = DB_NEXT) {
+        SafeDbt key, value;
+        ret = cursor->dbc()->get(key, value, flag);
+        if (ret != 0 || key.get_size() < prefix.size() || memcmp(key.get_data(), prefix.data(), prefix.size()) != 0) break;
+        ret = cursor->dbc()->del(0);
+    }
+    cursor.reset();
+    return TxnCommit() && (ret == 0 || ret == DB_NOTFOUND);
 }
 
 void BerkeleyDatabase::AddRef()

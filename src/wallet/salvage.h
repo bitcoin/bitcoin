@@ -6,8 +6,8 @@
 #ifndef BITCOIN_WALLET_SALVAGE_H
 #define BITCOIN_WALLET_SALVAGE_H
 
-#include <fs.h>
 #include <streams.h>
+#include <util/fs.h>
 
 class ArgsManager;
 struct bilingual_str;

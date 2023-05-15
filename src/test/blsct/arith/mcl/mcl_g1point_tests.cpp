@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(test_constructors)
     // Default
     {
         MclG1Point p;
-        BOOST_CHECK(p.IsUnity() == true);
+        BOOST_CHECK(p.IsZero() == true);
 
         MclG1Point p2;
         BOOST_CHECK(p.GetVch() == p2.GetVch());
@@ -209,13 +209,13 @@ BOOST_AUTO_TEST_CASE(test_rand)
     BOOST_CHECK(dupRatio < 0.001);
 }
 
-BOOST_AUTO_TEST_CASE(test_is_unity)
+BOOST_AUTO_TEST_CASE(test_is_zero)
 {
     auto g = MclG1Point::GetBasePoint();
-    BOOST_CHECK_EQUAL(g.IsUnity(), false);
+    BOOST_CHECK_EQUAL(g.IsZero(), false);
 
     auto p = g - g;
-    BOOST_CHECK_EQUAL(p.IsUnity(), true);
+    BOOST_CHECK_EQUAL(p.IsZero(), true);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_set_vch)

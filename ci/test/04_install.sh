@@ -18,7 +18,6 @@ export ASAN_OPTIONS="detect_stack_use_after_return=1:check_initialization_order=
 export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
 export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
-env | grep -E '^(BITCOIN_CONFIG|BASE_|QEMU_|CCACHE_|LC_ALL|BOOST_TEST_RANDOM|DEBIAN_FRONTEND|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS|PREVIOUS_RELEASES_DIR)' | tee /tmp/env
 if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
   CI_CONTAINER_CAP="--cap-add SYS_PTRACE"
 fi
@@ -27,12 +26,10 @@ export P_CI_DIR="$PWD"
 export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
+  # Export all env vars to avoid missing some.
+  # Though, exclude those with newlines to avoid parsing problems.
+  python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value]' | tee /tmp/env
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
-  LOCAL_UID=$(id -u)
-  LOCAL_GID=$(id -g)
-
-  # the name isn't important, so long as we use the same UID
-  LOCAL_USER=nonroot
   DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
@@ -59,42 +56,24 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --name $CONTAINER_NAME \
                   $CONTAINER_NAME)
   export CI_CONTAINER_ID
-
-  # Create a non-root user inside the container which matches the local user.
-  #
-  # This prevents the root user in the container modifying the local file system permissions
-  # on the mounted directories
-  docker exec "$CI_CONTAINER_ID" useradd -u "$LOCAL_UID" -o -m "$LOCAL_USER"
-  docker exec "$CI_CONTAINER_ID" groupmod -o -g "$LOCAL_GID" "$LOCAL_USER"
-  docker exec "$CI_CONTAINER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
-  export CI_EXEC_CMD_PREFIX_ROOT="docker exec -u 0 $CI_CONTAINER_ID"
-  export CI_EXEC_CMD_PREFIX="docker exec -u $LOCAL_UID $CI_CONTAINER_ID"
+  export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
 else
   echo "Running on host system without docker wrapper"
-  "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 fi
 
 CI_EXEC () {
   $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
-CI_EXEC_ROOT () {
-  $CI_EXEC_CMD_PREFIX_ROOT bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
-}
 export -f CI_EXEC
-export -f CI_EXEC_ROOT
+
+CI_EXEC rsync --archive --stats --human-readable /ci_base_install/ "${BASE_ROOT_DIR}" || echo "/ci_base_install/ missing"
+CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
+CI_EXEC rsync --archive --stats --human-readable /ro_base/ "${BASE_ROOT_DIR}" || echo "Nothing to copy from ro_base"
+# Fixes permission issues when there is a container UID/GID mismatch with the owner
+# of the git source code directory.
+CI_EXEC git config --global --add safe.directory \"*\"
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
-
-if [ -n "$PIP_PACKAGES" ]; then
-  if [ "$CI_OS_NAME" == "macos" ]; then
-    sudo -H pip3 install --upgrade pip
-    # shellcheck disable=SC2086
-    IN_GETOPT_BIN="$(brew --prefix gnu-getopt)/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-  else
-    # shellcheck disable=SC2086
-    ${CI_RETRY_EXE} CI_EXEC pip3 install --user $PIP_PACKAGES
-  fi
-fi
 
 if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
@@ -121,30 +100,6 @@ elif [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]
 fi
 
 CI_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
-
-if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  CI_EXEC_ROOT "update-alternatives --install /usr/bin/clang++ clang++ \$(which clang++-12) 100"
-  CI_EXEC_ROOT "update-alternatives --install /usr/bin/clang clang \$(which clang-12) 100"
-  CI_EXEC "mkdir -p ${BASE_SCRATCH_DIR}/msan/build/"
-  CI_EXEC "git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-12.0.0 ${BASE_SCRATCH_DIR}/msan/llvm-project"
-  CI_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && cmake -DLLVM_ENABLE_PROJECTS='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 ../llvm-project/llvm/"
-  CI_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && make $MAKEJOBS cxx"
-fi
-
-if [[ "${RUN_TIDY}" == "true" ]]; then
-  export DIR_IWYU="${BASE_SCRATCH_DIR}/iwyu"
-  if [ ! -d "${DIR_IWYU}" ]; then
-    CI_EXEC "mkdir -p ${DIR_IWYU}/build/"
-    CI_EXEC "git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 ${DIR_IWYU}/include-what-you-use"
-    CI_EXEC "cd ${DIR_IWYU}/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 ../include-what-you-use"
-    CI_EXEC_ROOT "cd ${DIR_IWYU}/build && make install $MAKEJOBS"
-  fi
-fi
-
-if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  echo "Create $BASE_ROOT_DIR"
-  CI_EXEC rsync -a /ro_base/ "$BASE_ROOT_DIR"
-fi
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
   echo "Setup to use BusyBox utils"

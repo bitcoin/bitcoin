@@ -756,15 +756,25 @@ public:
     }
 
     //! search for a given byte in the stream, and remain positioned on it
-    void FindByte(uint8_t ch)
+    void FindByte(std::byte byte)
     {
+        // For best performance, avoid mod operation within the loop.
+        size_t buf_offset{size_t(m_read_pos % uint64_t(vchBuf.size()))};
         while (true) {
-            if (m_read_pos == nSrcPos)
+            if (m_read_pos == nSrcPos) {
+                // No more bytes available; read from the file into the buffer,
+                // setting nSrcPos to one beyond the end of the new data.
+                // Throws exception if end-of-file reached.
                 Fill();
-            if (vchBuf[m_read_pos % vchBuf.size()] == std::byte{ch}) {
-                break;
             }
-            m_read_pos++;
+            const size_t len{std::min<size_t>(vchBuf.size() - buf_offset, nSrcPos - m_read_pos)};
+            const auto it_start{vchBuf.begin() + buf_offset};
+            const auto it_find{std::find(it_start, it_start + len, byte)};
+            const size_t inc{size_t(std::distance(it_start, it_find))};
+            m_read_pos += inc;
+            if (inc < len) break;
+            buf_offset += inc;
+            if (buf_offset >= vchBuf.size()) buf_offset = 0;
         }
     }
 };

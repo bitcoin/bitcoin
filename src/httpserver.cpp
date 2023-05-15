@@ -9,7 +9,9 @@
 #include <httpserver.h>
 
 #include <chainparamsbase.h>
+#include <common/args.h>
 #include <compat/compat.h>
+#include <logging.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h> // For HTTP status codes
@@ -17,7 +19,6 @@
 #include <sync.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
 
@@ -673,6 +674,9 @@ std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string& key
 std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::string& key)
 {
     evhttp_uri* uri_parsed{evhttp_uri_parse(uri)};
+    if (!uri_parsed) {
+        throw std::runtime_error("URI parsing failed, it likely contained RFC 3986 invalid characters");
+    }
     const char* query{evhttp_uri_get_query(uri_parsed)};
     std::optional<std::string> result;
 

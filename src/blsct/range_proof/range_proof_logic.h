@@ -82,7 +82,7 @@ public:
         const std::vector<RangeProof<T>>& proofs,
         const TokenId& token_id) const;
 
-    Point VerifyProofs(
+    bool VerifyProofs(
         const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
         const Generators<T>& gens,
         const size_t& max_mn) const;
@@ -101,18 +101,6 @@ private:
         const Point& p,
         size_t index,
         TokenId token_id) const;
-
-    bool InnerProductArgument(
-        const size_t concat_input_values_in_bits,
-        Points& Gi,
-        Points& Hi,
-        const Point& u,
-        const Scalar& cx_factor, // factor to multiply to cL and cR
-        Scalars& a,
-        Scalars& b,
-        const Scalar& y,
-        RangeProof<T>& proof,
-        CHashWriter& transcript_gen) const;
 
     // using pointers for Scalar and GeneratorsFactory to avoid default constructors to be called before mcl initialization
     // these variables are meant to be constant. do not make changes after initialization.

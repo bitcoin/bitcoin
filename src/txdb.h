@@ -10,7 +10,7 @@
 #include <dbwrapper.h>
 #include <kernel/cs_main.h>
 #include <sync.h>
-#include <fs.h>
+#include <util/fs.h>
 
 #include <memory>
 #include <optional>

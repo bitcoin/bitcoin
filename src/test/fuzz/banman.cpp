@@ -3,15 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <banman.h>
-#include <fs.h>
+#include <common/args.h>
 #include <netaddress.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 #include <util/readwritefile.h>
-#include <util/system.h>
 
 #include <cassert>
 #include <cstdint>

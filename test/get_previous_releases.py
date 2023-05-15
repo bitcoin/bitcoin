@@ -218,7 +218,7 @@ def build_release(tag, args) -> int:
         host = args.host
         if args.depends:
             with pushd('depends'):
-                ret = subprocess.run(['make', 'NO_QT=1']).returncode
+                ret = subprocess.run(['make']).returncode
                 if ret:
                     return ret
                 host = os.environ.get(

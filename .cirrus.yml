@@ -41,6 +41,7 @@ container_depends_template: &CONTAINER_DEPENDS_TEMPLATE
     cpu: 2
     greedy: true
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+    dockerfile: ci/test_imagefile  # https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
   depends_built_cache:
     folder: "depends/built"
     fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
@@ -74,17 +75,18 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'tidy [bookworm]'
+  name: 'tidy [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: debian:bookworm
     cpu: 2
     memory: 5G
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
 
 task:
   name: "Win64 native [vs2022]"
@@ -161,37 +163,42 @@ task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
-    image: debian:bullseye
     cpu: 2
     memory: 8G
+    dockerfile: ci/test_imagefile
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: debian:bullseye
+      FILE_ENV: "./ci/test/00_setup_env_arm.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
 
 task:
   name: 'Win64 [unit tests, no boost::process, no functional tests] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:jammy
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
+      FILE_ENV: "./ci/test/00_setup_env_win64.sh"
+  << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
   name: '32-bit + dash [CentOS 8]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: quay.io/centos/centos:stream8
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: quay.io/centos/centos:stream8
+      FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
   # For faster CI feedback, immediately schedule one task that runs all tests
   << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     PACKAGE_MANAGER_INSTALL: "yum install -y"
-    FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
-  name: '[previous releases, dev package and some depends packages, DEBUG] [unsigned char] [buster]'
+  name: '[previous releases, dev package and depends packages, DEBUG] [focal]'
   previous_releases_cache:
     folder: "releases"
   << : *GLOBAL_TASK_TEMPLATE
@@ -201,28 +208,30 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native.sh"
 
 task:
-  name: '[TSan, depends] [jammy]'
+  name: '[TSan, depends] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:jammy
     cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: '[MSan, depends] [focal]'
+  name: '[MSan, depends] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
     MAKEJOBS: "-j4"  # Avoid excessive memory use due to MSan
 
 task:
-  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [jammy]'
+  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   # We can't use a 'container' for the USDT interface tests as the CirrusCI
   # containers don't have privileges to hook into bitcoind. CirrusCI uses
@@ -230,8 +239,9 @@ task:
   # Images can be found here: https://cloud.google.com/compute/docs/images/os-details
   compute_engine_instance:
     image_project: ubuntu-os-cloud
-    image: family/ubuntu-2204-lts # when upgrading, check if we can drop "ADD_UNTRUSTED_BPFCC_PPA"
+    image: family/ubuntu-2304-amd64 # https://cirrus-ci.org/guide/custom-vms/#custom-compute-engine-vms
     cpu: 4
+    disk: 100
     memory: 12G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
@@ -240,41 +250,48 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use
 
 task:
-  name: '[fuzzer,address,undefined,integer, no depends] [jammy]'
+  name: '[fuzzer,address,undefined,integer, no depends] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:jammy
-    cpu: 8  # Increase CPU and memory to avoid timeout
-    memory: 32G
+    cpu: 4  # Increase CPU and memory to avoid timeout
+    memory: 16G
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
   name: '[multiprocess, i686, DEBUG] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
     cpu: 4
     memory: 16G  # The default memory is sometimes just a bit too small, so double everything
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:focal
+      FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
 
 task:
-  name: '[no wallet, libbitcoinkernel] [buster]'
+  name: '[no wallet, libbitcoinkernel] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: debian:buster
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:focal
+      FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
+  << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
 
 task:
   name: 'macOS 10.15 [no tests] [focal]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
-    image: ubuntu:focal
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:focal
+      FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+  << : *CREDITS_TEMPLATE
   macos_sdk_cache:
     folder: "depends/SDKs/$MACOS_SDK"
     fingerprint_key: "$MACOS_SDK"
@@ -282,7 +299,6 @@ task:
   env:
     MACOS_SDK: "Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers"
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
   name: 'macOS 13 native arm64 [sqlite only] [no depends]'
@@ -305,7 +321,10 @@ task:
   name: 'ARM64 Android APK [jammy]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
-    image: ubuntu:jammy
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
+      FILE_ENV: "./ci/test/00_setup_env_android.sh"
+  << : *CREDITS_TEMPLATE
   android_sdk_cache:
     folder: "depends/SDKs/android"
     fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.2.8568313"
@@ -315,4 +334,3 @@ task:
   << : *MAIN_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_android.sh"

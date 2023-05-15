@@ -66,7 +66,7 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
 {
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
-        node.MarkReceivedMsgsForProcessing(nReceiveFloodSize);
+        node.MarkReceivedMsgsForProcessing();
     }
 }
 
@@ -84,6 +84,7 @@ bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) con
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context)
 {
     std::vector<NodeEvictionCandidate> candidates;
+    candidates.reserve(n_candidates);
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
             /*id=*/id,

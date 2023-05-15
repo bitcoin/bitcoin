@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     // As soon as these are created they will start running and servicing the queue
     std::vector<std::thread> microThreads;
+    microThreads.reserve(10);
     for (int i = 0; i < 5; i++)
         microThreads.emplace_back(std::bind(&CScheduler::serviceQueue, &microTasks));
 
@@ -136,6 +137,7 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     // the extra threads should effectively be doing nothing
     // if they don't we'll get out of order behaviour
     std::vector<std::thread> threads;
+    threads.reserve(5);
     for (int i = 0; i < 5; ++i) {
         threads.emplace_back([&] { scheduler.serviceQueue(); });
     }

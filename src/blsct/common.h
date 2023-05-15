@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <cstdint>
+#include <streams.h>
 
 namespace blsct {
 
@@ -18,6 +19,14 @@ public:
     inline static const std::vector<uint8_t> BLSCTBALANCE = {
         'B', 'L', 'S', 'C', 'T', 'B', 'A', 'L', 'A', 'N', 'C', 'E'
     };
+
+    static std::vector<uint8_t> CDataStreamToVector(const CDataStream& st);
+
+    /**
+     * Returns power of 2 that is greater or equal to input_value_len
+     * throws exception if such a number exceeds the maximum
+     */
+    static size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_vec_len);
 };
 
 }

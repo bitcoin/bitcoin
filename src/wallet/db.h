@@ -7,9 +7,9 @@
 #define BITCOIN_WALLET_DB_H
 
 #include <clientversion.h>
-#include <fs.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
+#include <util/fs.h>
 
 #include <atomic>
 #include <memory>
@@ -110,6 +110,7 @@ public:
 
         return HasKey(std::move(ssKey));
     }
+    virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
     virtual bool TxnBegin() = 0;
@@ -186,6 +187,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return true; }
     bool EraseKey(DataStream&& key) override { return true; }
     bool HasKey(DataStream&& key) override { return true; }
+    bool ErasePrefix(Span<const std::byte> prefix) override { return true; }
 
 public:
     void Flush() override {}

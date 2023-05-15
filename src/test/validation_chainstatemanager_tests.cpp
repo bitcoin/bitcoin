@@ -367,10 +367,13 @@ struct SnapshotTestSetup : TestChain100Setup {
 
         BOOST_TEST_MESSAGE("Simulating node restart");
         {
-            LOCK(::cs_main);
             for (Chainstate* cs : chainman.GetAll()) {
+                LOCK(::cs_main);
                 cs->ForceFlushStateToDisk();
             }
+            // Process all callbacks referring to the old manager before wiping it.
+            SyncWithValidationInterfaceQueue();
+            LOCK(::cs_main);
             chainman.ResetChainstates();
             BOOST_CHECK_EQUAL(chainman.GetAll().size(), 0);
             const ChainstateManager::Options chainman_opts{
@@ -378,10 +381,13 @@ struct SnapshotTestSetup : TestChain100Setup {
                 .datadir = m_args.GetDataDirNet(),
                 .adjusted_time_callback = GetAdjustedTime,
             };
+            node::BlockManager::Options blockman_opts{
+                .chainparams = chainman_opts.chainparams,
+            };
             // For robustness, ensure the old manager is destroyed before creating a
             // new one.
             m_node.chainman.reset();
-            m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts, node::BlockManager::Options{});
+            m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts, blockman_opts);
         }
         return *Assert(m_node.chainman);
     }
