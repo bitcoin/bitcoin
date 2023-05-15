@@ -526,9 +526,7 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "0wm0if2n4z48kpn85va6yb4iac34crds2f55ddpz1hykx6jp1pb6"))
-              (patches (search-our-patches "glibc-ldd-x86_64.patch"
-                                           "glibc-versioned-locpath.patch"
-                                           "glibc-2.27-fcommon.patch"
+              (patches (search-our-patches "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"))))))
 
 (define (fix-ppc64-nx-default lief)
