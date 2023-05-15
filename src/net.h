@@ -1362,7 +1362,13 @@ private:
      */
     bool AlreadyConnectedToAddress(const CAddress& addr);
 
-    bool AttemptToEvictConnection();
+    /**
+     * Try to find an inbound connection to evict.
+     * @param[in] evict_tx_relay_peer Whether to only select full relay peers for eviction
+     * @param[in] protect_peer        Protect peer with node id
+     * @return                        True if a node was marked for disconnect
+     */
+    bool AttemptToEvictConnection(bool evict_tx_relay_peer = false, std::optional<NodeId> protect_peer = std::nullopt);
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
     void AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr, const std::vector<NetWhitelistPermissions>& ranges) const;
 
