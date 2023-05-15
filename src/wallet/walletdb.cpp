@@ -1262,38 +1262,4 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     status = DatabaseStatus::FAILED_BAD_FORMAT;
     return nullptr;
 }
-
-/** Return object for accessing temporary in-memory database. */
-std::unique_ptr<WalletDatabase> CreateMockWalletDatabase(DatabaseOptions& options)
-{
-
-    std::optional<DatabaseFormat> format;
-    if (options.require_format) format = options.require_format;
-    if (!format) {
-#ifdef USE_BDB
-        format = DatabaseFormat::BERKELEY;
-#endif
-#ifdef USE_SQLITE
-        format = DatabaseFormat::SQLITE;
-#endif
-    }
-
-    if (format == DatabaseFormat::SQLITE) {
-#ifdef USE_SQLITE
-        return std::make_unique<SQLiteDatabase>(":memory:", "", options, true);
-#endif
-        assert(false);
-    }
-
-#ifdef USE_BDB
-    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "", options);
-#endif
-    assert(false);
-}
-
-std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
-{
-    DatabaseOptions options;
-    return CreateMockWalletDatabase(options);
-}
 } // namespace wallet
