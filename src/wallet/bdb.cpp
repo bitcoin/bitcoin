@@ -764,6 +764,7 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
     SafeDbt datValue;
     int ret = pdb->get(activeTxn, datKey, datValue, 0);
     if (ret == 0 && datValue.get_data() != nullptr) {
+        value.clear();
         value.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
         return true;
     }
