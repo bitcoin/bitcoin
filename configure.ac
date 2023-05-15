@@ -115,9 +115,6 @@ else
 AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 fi
 
-dnl check if additional link flags are required for std::filesystem
-CHECK_FILESYSTEM
-
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
 m4_ifdef([AC_PROG_OBJCXX],[
