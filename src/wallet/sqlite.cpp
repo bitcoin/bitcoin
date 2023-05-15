@@ -409,6 +409,7 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
     // Leftmost column in result is index 0
     const std::byte* data{AsBytePtr(sqlite3_column_blob(m_read_stmt, 0))};
     size_t data_size(sqlite3_column_bytes(m_read_stmt, 0));
+    value.clear();
     value.write({data, data_size});
 
     sqlite3_clear_bindings(m_read_stmt);
@@ -494,6 +495,9 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
         LogPrintf("%s: Unable to execute cursor step: %s\n", __func__, sqlite3_errstr(res));
         return Status::FAIL;
     }
+
+    key.clear();
+    value.clear();
 
     // Leftmost column in result is index 0
     const std::byte* key_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 0))};
