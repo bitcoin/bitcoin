@@ -25,7 +25,6 @@ race:src/qt/test/*
 deadlock:src/qt/test/*
 
 # External libraries
-deadlock:libdb
 race:libzmq
 
 # Intermittent issues
