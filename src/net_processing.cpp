@@ -1978,7 +1978,7 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
     if (state.IsInvalid() &&
         it != mapBlockSource.end() &&
         State(it->second.first)) {
-            MaybePunishNodeForBlock(/*nodeid=*/ it->second.first, state, /*via_compact_block=*/ !it->second.second);
+            (void)std::async(std::launch::async, &PeerManagerImpl::MaybePunishNodeForBlock, this, /*nodeid=*/it->second.first, state, /*via_compact_block=*/!it->second.second, "");
     }
     // Check that:
     // 1. The block is valid
