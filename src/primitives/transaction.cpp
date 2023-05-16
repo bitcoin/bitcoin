@@ -6,9 +6,9 @@
 #include <primitives/transaction.h>
 
 #include <consensus/amount.h>
-#include <consensus/validation.h>
+#include <consensus/validation.h> // ITCOIN_SPECIFIC
 #include <hash.h>
-#include <signet.h>
+#include <signet.h> // ITCOIN_SPECIFIC
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
