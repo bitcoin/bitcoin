@@ -111,37 +111,23 @@ bool BaseIndex::Init()
     const CBlockIndex* start_block = m_best_block_index.load();
     bool synced = start_block == active_chain.Tip();
     if (!synced && g_indexes_ready_to_sync) {
-        bool prune_violation = false;
-        if (!start_block) {
-            // index is not built yet
-            // make sure we have all block data back to the genesis
-            bool has_tip_data = active_chain.Tip()->nStatus & BLOCK_HAVE_DATA;
-            prune_violation = !has_tip_data || m_chainstate->m_blockman.GetFirstStoredBlock(*active_chain.Tip()) != active_chain.Genesis();
+        const CBlockIndex* block_to_test = start_block ? start_block : active_chain.Genesis();
+
+        // Assert block_to_test is not null here. It can't be null because the
+        // genesis block can't be null here. The genesis block will be null
+        // during this BaseIndex::Init() call if the node is being started for
+        // the first time, or if -reindex is used. But in both of these cases
+        // m_best_block_index is also null so this branch is not reached.
+        assert(block_to_test);
+
+        if (!active_chain.Contains(block_to_test)) {
+            // if the bestblock is not part of the mainchain, find the fork
+            // so we can make sure we have all data down to the fork
+            block_to_test = active_chain.FindFork(block_to_test);
         }
-        // in case the index has a best block set and is not fully synced
-        // check if we have the required blocks to continue building the index
-        else {
-            const CBlockIndex* block_to_test = start_block;
-            if (!active_chain.Contains(block_to_test)) {
-                // if the bestblock is not part of the mainchain, find the fork
-                // and make sure we have all data down to the fork
-                block_to_test = active_chain.FindFork(block_to_test);
-            }
-            const CBlockIndex* block = active_chain.Tip();
-            prune_violation = true;
-            // check backwards from the tip if we have all block data until we reach the indexes bestblock
-            while (block_to_test && block && (block->nStatus & BLOCK_HAVE_DATA)) {
-                if (block_to_test == block) {
-                    prune_violation = false;
-                    break;
-                }
-                // block->pprev must exist at this point, since block_to_test is part of the chain
-                // and thus must be encountered when going backwards from the tip
-                assert(block->pprev);
-                block = block->pprev;
-            }
-        }
-        if (prune_violation) {
+
+        // make sure we have all block data back to the start block
+        if (!m_chainstate->m_blockman.CheckBlockDataAvailability(*active_chain.Tip(), *Assert(block_to_test))) {
             return InitError(strprintf(Untranslated("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"), GetName()));
         }
     }
