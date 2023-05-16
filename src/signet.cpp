@@ -110,11 +110,12 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
 
     std::vector<uint8_t> block_data;
     CVectorWriter writer(SER_NETWORK, INIT_PROTO_VERSION, block_data, 0);
-    // ITCOIN_SPECIFIC START, include pow fields (nBits, nNonce) in block signature
-    CBlockHeader signet_block_header(block);
-    signet_block_header.hashMerkleRoot = signet_merkle;
-    signet_block_header.Serialize(writer);
-    // ITCOIN_SPECIFIC END
+    writer << block.nVersion;
+    writer << block.hashPrevBlock;
+    writer << signet_merkle;
+    writer << block.nTime;
+    writer << block.nBits; // ITCOIN_SPECIFIC: include pow fields (nBits, nNonce) in block signature
+    writer << block.nNonce; // ITCOIN_SPECIFIC: include pow fields (nBits, nNonce) in block signature
     tx_to_spend.vin[0].scriptSig << block_data;
     tx_spending.vin[0].prevout = COutPoint(tx_to_spend.GetHash(), 0);
 
