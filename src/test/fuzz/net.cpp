@@ -76,4 +76,5 @@ FUZZ_TARGET_INIT(net, initialize_net)
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);
     (void)node.ConnectedThroughNetwork();
+    (void)node.MarkReceivedMsgsForProcessing();
 }
