@@ -1344,7 +1344,7 @@ static const CRPCCommand commands[] =
     { "mining",              &getblocktemplate,        },
     { "mining",              &submitblock,             },
     { "mining",              &submitheader,            },
-    { "mining",              &testblockvalidity,       },
+    { "mining",              &testblockvalidity,       }, // ITCOIN_SPECIFIC
 
 
     { "hidden",              &generatetoaddress,       },
