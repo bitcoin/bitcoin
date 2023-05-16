@@ -50,10 +50,14 @@ RUN for i in $(seq -w 1 ${builder_count}); do    \
               "guixbuilder${i}" ;                \
     done
 
-CMD ["/root/.config/guix/current/bin/guix-daemon","--build-users-group=guixbuild"]
+ENTRYPOINT ["/root/.config/guix/current/bin/guix-daemon","--build-users-group=guixbuild"]
 
 RUN git clone https://github.com/dashpay/dash.git /dash
 
 RUN mkdir base_cache sources SDKs
 
 WORKDIR /dash
+
+RUN mkdir -p depends/SDKs && \
+    curl -L https://bitcoincore.org/depends-sources/sdks/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz | tar -xz -C depends/SDKs
+

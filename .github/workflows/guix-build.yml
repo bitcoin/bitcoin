@@ -1,0 +1,67 @@
+name: Guix Build
+
+on:
+  pull_request:
+    types: [ labeled ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    if: contains(github.event.pull_request.labels.*.name, 'guix-build')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Hash Dockerfile
+        id: dockerfile
+        run: |
+          echo "::set-output name=hash::$(sha256sum ./contrib/guix/Dockerfile | cut -d ' ' -f1)"
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ steps.dockerfile.outputs.hash }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./contrib/guix/Dockerfile
+          load: true
+          tags: alpine-guix:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Run Guix build
+        run: |
+          export ADDITIONAL_GUIX_COMMON_FLAGS='--max-jobs=32' && \
+          mkdir -p depends/SDKs && \
+          mkdir -p /tmp/guix-store && \
+          curl -L https://bitcoincore.org/depends-sources/sdks/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz | tar -xz -C depends/SDKs && \
+          docker run --privileged -d --name guix-daemon --rm -v ${{ github.workspace }}:/dash -w /dash alpine-guix:latest && \
+          docker exec guix-daemon bash -c "\
+          chmod 777 /dash/depends && \
+          git config --global --add safe.directory /dash && \
+          cd /dash && \
+          contrib/guix/guix-build"
+
+      - name: Ensure build passes
+        run: |
+          if [[ $? != 0 ]]; then
+            echo "Guix build failed!"
+            exit 1
+          fi
+      - name: Compute SHA1 checksum
+        run: |
+          sha1sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/dashd{,.exe}
+          sha1sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/qt/dash-qt{,.exe}
+      - name: Compute SHA256 checksum
+        run: |
+          sha256sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/dashd{,.exe}
+          sha256sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/qt/dash-qt{,.exe}
