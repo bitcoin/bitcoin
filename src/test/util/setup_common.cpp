@@ -259,7 +259,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 }
 
-TestChainSetup::TestChainSetup(int blockCount)
+TestChainSetup::TestChainSetup(int blockCount, const std::vector<const char*>& extra_args)
+    : RegTestingSetup(extra_args)
 {
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);

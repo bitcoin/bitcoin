@@ -102,8 +102,8 @@ struct TestingSetup : public ChainTestingSetup {
 
 /** Identical to TestingSetup, but chain set to regtest */
 struct RegTestingSetup : public TestingSetup {
-    RegTestingSetup()
-        : TestingSetup{CBaseChainParams::REGTEST} {}
+    RegTestingSetup(const std::vector<const char*>& extra_args = {})
+        : TestingSetup{CBaseChainParams::REGTEST, extra_args} {}
 };
 
 class CBlock;
@@ -112,7 +112,7 @@ class CScript;
 
 struct TestChainSetup : public RegTestingSetup
 {
-    TestChainSetup(int blockCount);
+    TestChainSetup(int blockCount, const std::vector<const char*>& extra_args = {});
     ~TestChainSetup();
 
     /**

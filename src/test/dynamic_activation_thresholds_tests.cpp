@@ -34,10 +34,7 @@ static constexpr int threshold(int attempt)
 
 struct TestChainDATSetup : public TestChainSetup
 {
-    TestChainDATSetup() : TestChainSetup(window - 2) {
-        gArgs.ForceSetArg("-vbparams","testdummy:0:999999999999:100:80:60:5");
-        SelectParams(CBaseChainParams::REGTEST);
-    }
+    TestChainDATSetup() : TestChainSetup(window - 2, {"-vbparams=testdummy:0:999999999999:100:80:60:5"}) {}
 
     void signal(int num_blocks, bool expected_lockin)
     {
