@@ -23,8 +23,6 @@
 #include <string>
 #include <utility>
 
-using node::g_indexes_ready_to_sync;
-
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};
@@ -107,32 +105,8 @@ bool BaseIndex::Init()
         SetBestBlockIndex(locator_index);
     }
 
-    // Skip pruning check if indexes are not ready to sync (because reindex-chainstate has wiped the chain).
-    const CBlockIndex* start_block = m_best_block_index.load();
-    bool synced = start_block == active_chain.Tip();
-    if (!synced && g_indexes_ready_to_sync) {
-        const CBlockIndex* block_to_test = start_block ? start_block : active_chain.Genesis();
-
-        // Assert block_to_test is not null here. It can't be null because the
-        // genesis block can't be null here. The genesis block will be null
-        // during this BaseIndex::Init() call if the node is being started for
-        // the first time, or if -reindex is used. But in both of these cases
-        // m_best_block_index is also null so this branch is not reached.
-        assert(block_to_test);
-
-        if (!active_chain.Contains(block_to_test)) {
-            // if the bestblock is not part of the mainchain, find the fork
-            // so we can make sure we have all data down to the fork
-            block_to_test = active_chain.FindFork(block_to_test);
-        }
-
-        // make sure we have all block data back to the start block
-        if (!m_chainstate->m_blockman.CheckBlockDataAvailability(*active_chain.Tip(), *Assert(block_to_test))) {
-            return InitError(strprintf(Untranslated("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"), GetName()));
-        }
-    }
-
     // Child init
+    const CBlockIndex* start_block = m_best_block_index.load();
     if (!CustomInit(start_block ? std::make_optional(interfaces::BlockKey{start_block->GetBlockHash(), start_block->nHeight}) : std::nullopt)) {
         return false;
     }
@@ -140,7 +114,7 @@ bool BaseIndex::Init()
     // Note: this will latch to true immediately if the user starts up with an empty
     // datadir and an index enabled. If this is the case, indexation will happen solely
     // via `BlockConnected` signals until, possibly, the next restart.
-    m_synced = synced;
+    m_synced = start_block == active_chain.Tip();
     m_init = true;
     return true;
 }
@@ -412,7 +386,13 @@ IndexSummary BaseIndex::GetSummary() const
     IndexSummary summary{};
     summary.name = GetName();
     summary.synced = m_synced;
-    summary.best_block_height = m_best_block_index ? m_best_block_index.load()->nHeight : 0;
+    if (const auto& pindex = m_best_block_index.load()) {
+        summary.best_block_height = pindex->nHeight;
+        summary.best_block_hash = pindex->GetBlockHash();
+    } else {
+        summary.best_block_height = 0;
+        summary.best_block_hash = m_chain->getBlockHash(0);
+    }
     return summary;
 }
 
