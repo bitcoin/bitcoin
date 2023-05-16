@@ -23,9 +23,11 @@
 #include <util/system.h>
 #include <uint256.h>
 
+// static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2}; ITCOIN_SPECIFIC: moved to signet.h
+
 static constexpr unsigned int BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY | SCRIPT_VERIFY_TAPROOT; // ITCOIN_SPECIFIC: added SCRIPT_VERIFY_TAPROOT
 
-bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
+bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result) // ITCOIN_SPECIFIC: removed "static", because the function is being exposed in signet.h
 {
     CScript replacement;
     bool found_header = false;
@@ -52,7 +54,7 @@ bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& w
     return found_header;
 }
 
-uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block, bool* mutated)
+uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block, bool* mutated) // ITCOIN_SPECIFIC: 1. removed "static", because the function is being exposed in signet.h; 2. added "mutated" output parameter
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
@@ -60,7 +62,7 @@ uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& b
     for (size_t s = 1; s < block.vtx.size(); ++s) {
         leaves[s] = block.vtx[s]->GetHash();
     }
-    return ComputeMerkleRoot(std::move(leaves), mutated);
+    return ComputeMerkleRoot(std::move(leaves), mutated); // ITCOIN_SPECIFIC: added "mutated" parameter
 }
 
 std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
