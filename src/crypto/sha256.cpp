@@ -579,9 +579,15 @@ bool AVXEnabled()
 } // namespace
 
 
-std::string SHA256AutoDetect()
+std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implementation)
 {
     std::string ret = "standard";
+    Transform = sha256::Transform;
+    TransformD64 = sha256::TransformD64;
+    TransformD64_2way = nullptr;
+    TransformD64_4way = nullptr;
+    TransformD64_8way = nullptr;
+
 #if defined(USE_ASM) && defined(HAVE_GETCPUID)
     bool have_sse4 = false;
     bool have_xsave = false;
@@ -592,7 +598,9 @@ std::string SHA256AutoDetect()
 
     uint32_t eax, ebx, ecx, edx;
     GetCPUID(1, 0, eax, ebx, ecx, edx);
-    have_sse4 = (ecx >> 19) & 1;
+    if (use_implementation & sha256_implementation::USE_SSE4) {
+        have_sse4 = (ecx >> 19) & 1;
+    }
     have_xsave = (ecx >> 27) & 1;
     have_avx = (ecx >> 28) & 1;
     if (have_xsave && have_avx) {
@@ -600,8 +608,12 @@ std::string SHA256AutoDetect()
     }
     if (have_sse4) {
         GetCPUID(7, 0, eax, ebx, ecx, edx);
-        have_avx2 = (ebx >> 5) & 1;
-        have_x86_shani = (ebx >> 29) & 1;
+        if (use_implementation & sha256_implementation::USE_AVX2) {
+            have_avx2 = (ebx >> 5) & 1;
+        }
+        if (use_implementation & sha256_implementation::USE_SHANI) {
+            have_x86_shani = (ebx >> 29) & 1;
+        }
     }
 
 #if defined(ENABLE_X86_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
@@ -637,27 +649,28 @@ std::string SHA256AutoDetect()
 
 #if defined(ENABLE_ARM_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
     bool have_arm_shani = false;
-
+    if (use_implementation & sha256_implementation::USE_SHANI) {
 #if defined(__linux__)
 #if defined(__arm__) // 32-bit
-    if (getauxval(AT_HWCAP2) & HWCAP2_SHA2) {
-        have_arm_shani = true;
-    }
+        if (getauxval(AT_HWCAP2) & HWCAP2_SHA2) {
+            have_arm_shani = true;
+        }
 #endif
 #if defined(__aarch64__) // 64-bit
-    if (getauxval(AT_HWCAP) & HWCAP_SHA2) {
-        have_arm_shani = true;
-    }
+        if (getauxval(AT_HWCAP) & HWCAP_SHA2) {
+            have_arm_shani = true;
+        }
 #endif
 #endif
 
 #if defined(MAC_OSX)
-    int val = 0;
-    size_t len = sizeof(val);
-    if (sysctlbyname("hw.optional.arm.FEAT_SHA256", &val, &len, nullptr, 0) == 0) {
-        have_arm_shani = val != 0;
-    }
+        int val = 0;
+        size_t len = sizeof(val);
+        if (sysctlbyname("hw.optional.arm.FEAT_SHA256", &val, &len, nullptr, 0) == 0) {
+            have_arm_shani = val != 0;
+        }
 #endif
+    }
 
     if (have_arm_shani) {
         Transform = sha256_arm_shani::Transform;
