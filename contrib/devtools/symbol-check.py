@@ -33,13 +33,19 @@ import pixie
 # - libc version 2.28 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 #
 # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
+#
+# For 32-bit systems the minimum libc version is 2.28 to embrace new fcntl{64} symbols.
+# It is safer than handling them in the glibc_compat.cpp due to their variadic arguments
+# with possible different sizes.
+# See: https://stackoverflow.com/a/58472959
+#
 
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    pixie.EM_386:    (2,18),
+    pixie.EM_386:    (2,28),
     pixie.EM_X86_64: (2,18),
-    pixie.EM_ARM:    (2,18),
+    pixie.EM_ARM:    (2,28),
     pixie.EM_AARCH64:(2,18),
     pixie.EM_PPC64:  (2,18),
     pixie.EM_RISCV:  (2,27),
