@@ -327,6 +327,7 @@ class WalletBackupTest(BitcoinTestFramework):
             shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'chainstate'))
             shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'evodb'))
             shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'llmq'))
+            shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'indexes'))
 
             self.start_three(["-nowallet"])
             # Create new wallets for the three nodes.

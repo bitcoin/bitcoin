@@ -50,6 +50,7 @@ extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
 extern bool fPruneMode;
 extern uint64_t nPruneTarget;
+extern std::atomic_bool g_indexes_ready_to_sync;
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
 // we ever switch to another associative container, we need to either use a

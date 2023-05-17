@@ -90,6 +90,7 @@ class WalletHDTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "evodb"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "llmq"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "indexes"))
         shutil.copyfile(
             os.path.join(self.nodes[1].datadir, "hd.bak"),
             os.path.join(self.nodes[1].datadir, self.chain, "wallets", self.default_wallet_name, self.wallet_data_filename),
@@ -117,6 +118,7 @@ class WalletHDTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "evodb"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "llmq"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "indexes"))
         shutil.copyfile(
             os.path.join(self.nodes[1].datadir, "hd.bak"),
             os.path.join(self.nodes[1].datadir, self.chain, "wallets", self.default_wallet_name, self.wallet_data_filename),
