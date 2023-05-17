@@ -38,16 +38,6 @@ int GetNumCores();
 
 namespace util {
 
-//! Simplification of std insertion
-template <typename Tdst, typename Tsrc>
-inline void insert(Tdst& dst, const Tsrc& src) {
-    dst.insert(dst.begin(), src.begin(), src.end());
-}
-template <typename TsetT, typename Tsrc>
-inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
-    dst.insert(src.begin(), src.end());
-}
-
 /**
  * Helper function to access the contained object of a std::any instance.
  * Returns a pointer to the object if passed instance has a value and the type
