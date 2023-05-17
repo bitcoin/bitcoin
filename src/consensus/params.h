@@ -88,6 +88,10 @@ struct Params {
     int DIP0008Height;
     /** Block height at which BRR becomes active */
     int BRRHeight;
+    /** Block height at which DIP20 becomes active */
+    int DIP0020Height;
+    /** Block height at which DIP24 becomes active */
+    int DIP0024Height;
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and DIP activations. */
     int MinBIP9WarningHeight;

@@ -396,8 +396,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         } else {
             // NOTE: triggers are handled via triggerman
             if (pObj->GetObjectType() == GovernanceObject::PROPOSAL) {
-                bool fAllowScript = (VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
-                CProposalValidator validator(pObj->GetDataAsHexString(), fAllowScript);
+                CProposalValidator validator(pObj->GetDataAsHexString());
                 if (!validator.Validate()) {
                     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- set for deletion expired obj %s\n", strHash);
                     pObj->PrepareDeletion(nNow);
@@ -636,8 +635,6 @@ void CGovernanceManager::SyncObjects(CNode& peer, PeerManager& peerman, CConnman
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing all objects to peer=%d\n", __func__, peer.GetId());
 
-    bool fAllowScript = WITH_LOCK(cs_main, return VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE);
-
     LOCK(cs);
 
     // all valid objects, no votes
@@ -654,7 +651,7 @@ void CGovernanceManager::SyncObjects(CNode& peer, PeerManager& peerman, CConnman
             continue;
         }
 
-        if (fAllowScript && peer.nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
+        if (peer.nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
             // We know this proposal is valid locally, otherwise we would not store it.
             // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
             // because they won't accept it anyway and will simply ban us eventually.
@@ -1088,9 +1085,7 @@ void CGovernanceManager::AddCachedTriggers()
 
 void CGovernanceManager::InitOnLoad()
 {
-    // TODO: drop cs_main here and script addresses limit in
-    // CSuperblock::ParsePaymentSchedule() once DIP0024 is active
-    LOCK2(cs_main, cs);
+    LOCK(cs);
     int64_t nStart = GetTimeMillis();
     LogPrintf("Preparing masternode indexes and governance triggers...\n");
     RebuildIndexes();

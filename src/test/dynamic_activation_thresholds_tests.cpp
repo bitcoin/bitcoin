@@ -19,7 +19,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-const auto deployment_id = Consensus::DEPLOYMENT_DIP0020;
+const auto deployment_id = Consensus::DEPLOYMENT_TESTDUMMY;
 constexpr int window{100}, th_start{80}, th_end{60};
 
 static constexpr int threshold(int attempt)
@@ -34,7 +34,10 @@ static constexpr int threshold(int attempt)
 
 struct TestChainDATSetup : public TestChainSetup
 {
-    TestChainDATSetup() : TestChainSetup(window - 2) {}
+    TestChainDATSetup() : TestChainSetup(window - 2) {
+        gArgs.ForceSetArg("-vbparams","testdummy:0:999999999999:100:80:60:5");
+        SelectParams(CBaseChainParams::REGTEST);
+    }
 
     void signal(int num_blocks, bool expected_lockin)
     {

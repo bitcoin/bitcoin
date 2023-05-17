@@ -42,7 +42,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVal
         case TRANSACTION_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
-            return VersionBitsState(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE && CheckMNHFTx(tx, pindexPrev, state);
+            return pindexPrev->nHeight + 1 >= Params().GetConsensus().DIP0024Height && CheckMNHFTx(tx, pindexPrev, state);
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
