@@ -73,19 +73,57 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        self.activate_dip0024(expected_activation_height=900)
-        self.log.info("Activated DIP0024 at height:" + str(self.nodes[0].getblockcount()))
+        b_h_0 = self.nodes[0].getbestblockhash()
+
+        #Mine 2 quorums so that Chainlocks can be available: Need them to include CL in CbTx as soon as v20 activates
+        self.log.info("Mining 2 quorums")
+        h_0 = self.mine_quorum()
+        h_100_0 = QuorumId(100, int(h_0, 16))
+        h_106_0 = QuorumId(106, int(h_0, 16))
+        h_104_0 = QuorumId(104, int(h_0, 16))
+        h_1 = self.mine_quorum()
+        h_100_1 = QuorumId(100, int(h_1, 16))
+        h_106_1 = QuorumId(106, int(h_1, 16))
+        h_104_1 = QuorumId(104, int(h_1, 16))
+
+        self.log.info("Mine single block, wait for chainlock")
+        self.nodes[0].generate(1)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+
+        b_h_1 = self.nodes[0].getbestblockhash()
+
+        expectedDeleted = []
+        expectedNew = [h_100_0, h_106_0, h_104_0, h_100_1, h_106_1, h_104_1]
+        quorumList = self.test_getmnlistdiff_quorums(b_h_0, b_h_1, {}, expectedDeleted, expectedNew)
+
+        self.activate_v20(expected_activation_height=1440)
+        self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
+
+        # v20 is active for the next block, not for the tip
+        self.nodes[0].generate(1)
+
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         #At this point, we need to move forward 3 cycles (3 x 24 blocks) so the first 3 quarters can be created (without DKG sessions)
         #self.log.info("Start at H height:" + str(self.nodes[0].getblockcount()))
         self.move_to_next_cycle()
         self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.move_to_next_cycle()
         self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.move_to_next_cycle()
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         b_0 = self.nodes[0].getbestblockhash()
+
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
         assert(self.test_quorum_listextended(quorum_info_0_0, llmq_type_name))
@@ -103,9 +141,12 @@ class LLMQQuorumRotationTest(DashTestFramework):
         q_103_0_1 = QuorumId(103, int(quorum_info_0_1["quorumHash"], 16))
 
         b_1 = self.nodes[0].getbestblockhash()
-        expectedDeleted = []
+        expectedDeleted = [h_100_0, h_104_0]
         expectedNew = [q_100_0, q_102_0, q_104_0, q_103_0_0, q_103_0_1]
-        quorumList = self.test_getmnlistdiff_quorums(b_0, b_1, {}, expectedDeleted, expectedNew)
+        quorumList = self.test_getmnlistdiff_quorums(b_0, b_1, quorumList, expectedDeleted, expectedNew)
+
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
         assert(self.test_quorum_listextended(quorum_info_1_0, llmq_type_name))
@@ -122,7 +163,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         q_103_1_1 = QuorumId(103, int(quorum_info_1_1["quorumHash"], 16))
 
         b_2 = self.nodes[0].getbestblockhash()
-        expectedDeleted = [q_103_0_0, q_103_0_1]
+        expectedDeleted = [h_100_1, q_103_0_0, q_103_0_1]
         expectedNew = [q_100_1, q_102_1, q_103_1_0, q_103_1_1]
         quorumList = self.test_getmnlistdiff_quorums(b_1, b_2, quorumList, expectedDeleted, expectedNew)
 
@@ -136,6 +177,9 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         assert_greater_than_or_equal(len(intersection(quorum_members_0_0, quorum_members_1_0)), 3)
         assert_greater_than_or_equal(len(intersection(quorum_members_0_1, quorum_members_1_1)), 3)
+
+        self.log.info("Wait for chainlock")
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.log.info("Mine a quorum to invalidate")
         (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
