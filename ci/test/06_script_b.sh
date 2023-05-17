@@ -157,51 +157,16 @@ if [ "${RUN_TIDY}" = "true" ]; then
   set -eo pipefail
   cd "${BASE_BUILD_DIR}/bitcoin-$HOST/src/"
   ( run-clang-tidy-16 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  # Filter out files by regex here, because regex may not be
+  # accepted in src/.bear-tidy-config
+  # Filter out:
+  # * qt qrc and moc generated files
+  # * walletutil (temporarily)
+  # * secp256k1
+  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$|src/wallet/walletutil|src/secp256k1/src/") | not))' ../compile_commands.json > tmp.json
+  mv tmp.json ../compile_commands.json
   cd "${BASE_BUILD_DIR}/bitcoin-$HOST/"
   python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
-           src/common/args.cpp \
-           src/common/config.cpp \
-           src/common/init.cpp \
-           src/common/url.cpp \
-           src/compat \
-           src/dbwrapper.cpp \
-           src/init \
-           src/kernel \
-           src/node/blockmanager_args.cpp \
-           src/node/chainstate.cpp \
-           src/node/chainstatemanager_args.cpp \
-           src/node/mempool_args.cpp \
-           src/node/minisketchwrapper.cpp \
-           src/node/utxo_snapshot.cpp \
-           src/node/validation_cache_args.cpp \
-           src/policy/feerate.cpp \
-           src/policy/packages.cpp \
-           src/policy/settings.cpp \
-           src/primitives/transaction.cpp \
-           src/random.cpp \
-           src/rpc/fees.cpp \
-           src/rpc/signmessage.cpp \
-           src/test/fuzz/string.cpp \
-           src/test/fuzz/txorphan.cpp \
-           src/test/fuzz/util \
-           src/test/util/coins.cpp \
-           src/uint256.cpp \
-           src/util/bip32.cpp \
-           src/util/bytevectorhash.cpp \
-           src/util/check.cpp \
-           src/util/error.cpp \
-           src/util/exception.cpp \
-           src/util/getuniquepath.cpp \
-           src/util/hasher.cpp \
-           src/util/message.cpp \
-           src/util/moneystr.cpp \
-           src/util/serfloat.cpp \
-           src/util/spanparsing.cpp \
-           src/util/strencodings.cpp \
-           src/util/string.cpp \
-           src/util/syserror.cpp \
-           src/util/threadinterrupt.cpp \
-           src/zmq \
            -p . "${MAKEJOBS}" \
            -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp" \
            2>&1 | tee /tmp/iwyu_ci.out
