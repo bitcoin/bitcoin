@@ -1570,9 +1570,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Init indexes
     for (auto index : node.indexes) if (!index->Init()) return false;
 
-    // Now that all indexes are loaded, start them
-    if (!StartIndexBackgroundSync(node)) return false;
-
     // ********************************************************* Step 9: load wallet
     for (const auto& client : node.chain_clients) {
         if (!client->load()) {
@@ -1656,9 +1653,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         vImportFiles.push_back(fs::PathFromString(strFile));
     }
 
-    chainman.m_thread_load = std::thread(&util::TraceThread, "initload", [=, &chainman, &args] {
+    chainman.m_thread_load = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         // Import blocks
         ImportBlocks(chainman, vImportFiles);
+        // Start indexes initial sync
+        if (!StartIndexBackgroundSync(node)) {
+            bilingual_str err_str = _("Failed to start indexes, shutting down..");
+            chainman.GetNotifications().fatalError(err_str.original, err_str);
+            return;
+        }
         // Load mempool from disk
         chainman.ActiveChainstate().LoadMempool(ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{});
     });
