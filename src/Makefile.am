@@ -515,9 +515,9 @@ crypto_libbitcoin_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
 crypto_libbitcoin_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
-# ITCOIN_SPECIFIC, signet is part of consensus in itcoin-core
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+# ITCOIN_SPECIFIC: added signet.h and signet.cpp to libbitcoin_consensus_a_SOURCES. Signet is part of consensus in itcoin-core. The comment was added here because it was not possible to add it in place.
 libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
   arith_uint256.h \
