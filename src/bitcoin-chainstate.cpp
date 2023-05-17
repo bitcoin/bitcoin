@@ -108,6 +108,10 @@ int main(int argc, char* argv[])
             std::cerr << "Error: " << debug_message << std::endl;
             std::cerr << (user_message.empty() ? "A fatal internal error occurred." : user_message.original) << std::endl;
         }
+        void interrupt(const kernel::InterruptReason reason) override
+        {
+            std::cout << "Received interrupt notification: " << InterruptReasonToString(reason);
+        }
     };
     auto notifications = std::make_unique<KernelNotifications>();
 

@@ -397,6 +397,7 @@ libbitcoin_node_a_SOURCES = \
   kernel/context.cpp \
   kernel/cs_main.cpp \
   kernel/mempool_persist.cpp \
+  kernel/notifications_interface.cpp \
   mapport.cpp \
   net.cpp \
   net_processing.cpp \
@@ -937,6 +938,7 @@ libbitcoinkernel_la_SOURCES = \
   kernel/context.cpp \
   kernel/cs_main.cpp \
   kernel/mempool_persist.cpp \
+  kernel/notifications_interface.cpp \
   key.cpp \
   logging.cpp \
   node/blockstorage.cpp \
@@ -960,7 +962,6 @@ libbitcoinkernel_la_SOURCES = \
   script/script_error.cpp \
   script/sigcache.cpp \
   script/standard.cpp \
-  shutdown.cpp \
   signet.cpp \
   support/cleanse.cpp \
   support/lockedpool.cpp \

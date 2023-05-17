@@ -46,6 +46,7 @@ struct ChainstateManagerOpts {
     CoinsViewOptions coins_view{};
     Notifications& notifications;
     mutable bool interrupt_on_fatal_error{true};
+    mutable bool interrupt_on_condition{true};
 };
 
 } // namespace kernel

@@ -38,7 +38,6 @@
 #include <reverse_iterator.h>
 #include <script/script.h>
 #include <script/sigcache.h>
-#include <shutdown.h>
 #include <signet.h>
 #include <tinyformat.h>
 #include <txdb.h>
@@ -71,6 +70,7 @@
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
+using kernel::InterruptReason;
 using kernel::LoadMempool;
 using kernel::Notifications;
 
@@ -1868,6 +1868,16 @@ bool ChainstateManager::FatalError(const std::string& strMessage, const bilingua
     return ::FatalError(InterruptOnFatalError(), m_interrupt, GetNotifications(), strMessage, userMessage);
 }
 
+void ChainstateManager::Interrupt(InterruptReason reason)
+{
+    if (!m_interrupt) {
+        GetNotifications().interrupt(reason);
+    }
+    if (InterruptOnCondition()) {
+        m_interrupt();
+    }
+}
+
 /**
  * Restore the UTXO in a Coin at a given COutPoint
  * @param undo The Coin to be restored.
@@ -3201,7 +3211,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
+        if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) m_chainman.Interrupt(InterruptReason::StopAtHeight);
 
         if (WITH_LOCK(::cs_main, return m_disabled)) {
             // Background chainstate has reached the snapshot base block, so exit.

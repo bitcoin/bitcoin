@@ -23,7 +23,6 @@
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <script/script_error.h>
-#include <shutdown.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
@@ -965,9 +964,12 @@ public:
     const uint256& AssumedValidBlock() const { return *Assert(m_options.assumed_valid_block); }
     kernel::Notifications& GetNotifications() const { return m_options.notifications; };
     bool InterruptOnFatalError() const { return m_options.interrupt_on_fatal_error; };
+    bool InterruptOnCondition() const { return m_options.interrupt_on_condition; };
 
     bool FatalError(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = {});
     bool FatalError(const std::string& strMessage, const bilingual_str& userMessage = {});
+
+    void Interrupt(kernel::InterruptReason reason);
 
     /**
      * Alias for ::cs_main.

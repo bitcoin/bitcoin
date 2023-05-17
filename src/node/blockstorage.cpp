@@ -10,6 +10,7 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/chainparams.h>
+#include <kernel/notifications_interface.h>
 #include <logging.h>
 #include <pow.h>
 #include <reverse_iterator.h>
@@ -24,6 +25,8 @@
 
 #include <map>
 #include <unordered_map>
+
+using kernel::InterruptReason;
 
 namespace node {
 std::atomic_bool fReindex(false);
@@ -947,7 +950,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
 
         if (chainman.m_blockman.StopAfterBlockImport()) {
             LogPrintf("Stopping after block import\n");
-            StartShutdown();
+            chainman.Interrupt(InterruptReason::StopAfterBlockImport);
             return;
         }
     } // End scope of ImportingNow

@@ -10,6 +10,7 @@
 
 #include <common/args.h>
 #include <common/system.h>
+#include <kernel/notifications_interface.h>
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <util/strencodings.h>
@@ -78,6 +79,11 @@ void KernelNotifications::fatalError(const std::string& debug_message, const bil
     SetMiscWarning(Untranslated(debug_message));
     LogPrintf("*** %s\n", debug_message);
     InitError(user_message.empty() ? _("A fatal internal error occurred, see debug.log for details") : user_message);
+}
+
+void KernelNotifications::interrupt(const kernel::InterruptReason reason)
+{
+    LogPrintf("Starting shutdown: %s\n", InterruptReasonToString(reason));
 }
 
 } // namespace node
