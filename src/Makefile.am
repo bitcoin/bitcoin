@@ -279,6 +279,7 @@ BITCOIN_CORE_H = \
   txorphanage.h \
   txrequest.h \
   undo.h \
+  util/any.h \
   util/asmap.h \
   util/batchpriority.h \
   util/bip32.h \

@@ -13,7 +13,6 @@
 #include <compat/assumptions.h>
 #include <compat/compat.h>
 
-#include <any>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -35,21 +34,5 @@ void runCommand(const std::string& strCommand);
  * @note This does count virtual cores, such as those provided by HyperThreading.
  */
 int GetNumCores();
-
-namespace util {
-
-/**
- * Helper function to access the contained object of a std::any instance.
- * Returns a pointer to the object if passed instance has a value and the type
- * matches, nullptr otherwise.
- */
-template<typename T>
-T* AnyPtr(const std::any& any) noexcept
-{
-    T* const* ptr = std::any_cast<T*>(&any);
-    return ptr ? *ptr : nullptr;
-}
-
-} // namespace util
 
 #endif // BITCOIN_UTIL_SYSTEM_H
