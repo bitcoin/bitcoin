@@ -200,6 +200,7 @@ task:
     docker_arguments:
       CI_IMAGE_NAME_TAG: debian:bullseye
       FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+  << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
