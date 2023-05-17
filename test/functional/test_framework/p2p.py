@@ -197,7 +197,12 @@ class P2PConnection(asyncio.Protocol):
     def connection_made(self, transport):
         """asyncio callback when a connection is opened."""
         assert not self._transport
-        logger.debug("Connected & Listening: %s:%d" % (self.dstaddr, self.dstport))
+        info = transport.get_extra_info("socket")
+        us = info.getsockname()
+        them = info.getpeername()
+        logger.debug(f"Connected: us={us[0]}:{us[1]}, them={them[0]}:{them[1]}")
+        self.dstaddr = them[0]
+        self.dstport = them[1]
         self._transport = transport
         if self.on_connection_send_msg:
             self.send_message(self.on_connection_send_msg)
