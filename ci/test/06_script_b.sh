@@ -210,10 +210,6 @@ if [ "${RUN_TIDY}" = "true" ]; then
   git --no-pager diff
 fi
 
-if [ "$RUN_SECURITY_TESTS" = "true" ]; then
-  make test-security-check
-fi
-
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   bash -c "LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN}"
 fi
