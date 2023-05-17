@@ -54,7 +54,7 @@ bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& w
     return found_header;
 }
 
-uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block, bool* mutated) // ITCOIN_SPECIFIC: 1. removed "static", because the function is being exposed in signet.h; 2. added "mutated" output parameter
+static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
@@ -62,7 +62,7 @@ uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& b
     for (size_t s = 1; s < block.vtx.size(); ++s) {
         leaves[s] = block.vtx[s]->GetHash();
     }
-    return ComputeMerkleRoot(std::move(leaves), mutated); // ITCOIN_SPECIFIC: added "mutated" parameter
+    return ComputeMerkleRoot(std::move(leaves));
 }
 
 std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)

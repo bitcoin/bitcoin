@@ -15,8 +15,6 @@ constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2}; // ITCOIN_SPECIFI
 
 bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result); // ITCOIN_SPECIFIC: exposed from signet.cpp (it was a static function)
 
-uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block, bool* mutated = nullptr); // ITCOIN_SPECIFIC: 1. exposed from signet.cpp (it was a static function); 2. this function has an additional "mutated" output parameter compared to the original bitcoin function
-
 /**
  * Extract signature and check whether a block has a valid solution
  */
