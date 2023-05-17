@@ -13,12 +13,12 @@
 #include <logging.h>
 #include <pow.h>
 #include <reverse_iterator.h>
-#include <shutdown.h>
 #include <signet.h>
 #include <streams.h>
 #include <undo.h>
 #include <util/batchpriority.h>
 #include <util/fs.h>
+#include <util/signalinterrupt.h>
 #include <util/syscall_sandbox.h>
 #include <validation.h>
 
@@ -251,7 +251,8 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 
 bool BlockManager::LoadBlockIndex()
 {
-    if (!m_block_tree_db->LoadBlockIndexGuts(GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); })) {
+    if (!m_block_tree_db->LoadBlockIndexGuts(
+            GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
         return false;
     }
 
@@ -261,7 +262,7 @@ bool BlockManager::LoadBlockIndex()
               CBlockIndexHeightOnlyComparator());
 
     for (CBlockIndex* pindex : vSortedByHeight) {
-        if (ShutdownRequested()) return false;
+        if (m_interrupt) return false;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
 
@@ -892,8 +893,8 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
                 chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
-                if (ShutdownRequested()) {
-                    LogPrintf("Shutdown requested. Exit %s\n", __func__);
+                if (chainman.m_interrupt) {
+                    LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;
                 }
                 nFile++;
@@ -911,8 +912,8 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             if (file) {
                 LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
                 chainman.ActiveChainstate().LoadExternalBlockFile(file);
-                if (ShutdownRequested()) {
-                    LogPrintf("Shutdown requested. Exit %s\n", __func__);
+                if (chainman.m_interrupt) {
+                    LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;
                 }
             } else {

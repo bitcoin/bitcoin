@@ -33,6 +33,9 @@ struct FlatFilePos;
 namespace Consensus {
 struct Params;
 }
+namespace util {
+class SignalInterrupt;
+} // namespace util
 
 namespace node {
 
@@ -153,10 +156,12 @@ private:
 public:
     using Options = kernel::BlockManagerOpts;
 
-    explicit BlockManager(Options opts)
+    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts)
         : m_prune_mode{opts.prune_target > 0},
-          m_opts{std::move(opts)} {};
+          m_opts{std::move(opts)},
+          m_interrupt{interrupt} {};
 
+    const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 
     BlockMap m_block_index GUARDED_BY(cs_main);

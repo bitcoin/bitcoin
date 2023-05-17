@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = gArgs.GetBlocksDirPath(),
     };
-    ChainstateManager chainman{chainman_opts, blockman_opts};
+    ChainstateManager chainman{kernel_context.interrupt, chainman_opts, blockman_opts};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
