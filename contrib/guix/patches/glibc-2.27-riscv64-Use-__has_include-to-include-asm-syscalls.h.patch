@@ -4,6 +4,8 @@ See also: http://lists.busybox.net/pipermail/buildroot/2020-July/590376.html.
 
 https://sourceware.org/git/?p=glibc.git;a=commit;h=0b9c84906f653978fb8768c7ebd0ee14a47e662e
 
+This patch can be dropped when we are building with glibc 2.28+.
+
 From 562c52cc81a4e456a62e6455feb32732049e9070 Mon Sep 17 00:00:00 2001
 From: "H.J. Lu" <hjl.tools@gmail.com>
 Date: Mon, 31 Dec 2018 09:26:42 -0800
