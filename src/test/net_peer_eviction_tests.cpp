@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
 bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
 {
     std::shuffle(candidates.begin(), candidates.end(), random_context);
-    const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
+    const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates), /*force=*/false);
     if (!evicted_node_id) {
         return false;
     }
@@ -666,14 +666,14 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // four peers by net group, eight by lowest ping time, four by last time of novel tx, up to eight non-tx-relay
         // peers by last novel block time, and four more peers by last novel block time.
         if (number_of_nodes >= 29) {
-            BOOST_CHECK(SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
+            BOOST_CHECK(SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context), /*force=*/false));
         }
 
         // No eviction is expected given <= 20 random eviction candidates. The eviction logic protects at least
         // four peers by net group, eight by lowest ping time, four by last time of novel tx and four peers by last
         // novel block time.
         if (number_of_nodes <= 20) {
-            BOOST_CHECK(!SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
+            BOOST_CHECK(!SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context), /*force=*/false));
         }
 
         // Cases left to test:
