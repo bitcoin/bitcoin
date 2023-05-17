@@ -40,13 +40,8 @@ const int window{500}, th_start{400}, th_end{300};
 
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup
 {
-    TestChainBRRBeforeActivationSetup() : TestChainSetup(497)
-    {
-        // Force fast DIP3 activation
-        gArgs.ForceSetArg("-dip3params", "30:50");
-        SelectParams(CBaseChainParams::REGTEST);
-        gArgs.ForceRemoveArg("dip3params");
-    }
+    // Force fast DIP3 activation
+    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50"}) {}
 };
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)

@@ -259,13 +259,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 }
 
-TestChainSetup::TestChainSetup(int blockCount)
+TestChainSetup::TestChainSetup(int blockCount, const std::vector<const char*>& extra_args)
+    : RegTestingSetup(extra_args)
 {
-    // Make sure CreateAndProcessBlock() support building <deployment_name> blocks before activating it in these tests.
-    //gArgs.ForceSetArg("-vbparams", strprintf("deployment_name:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
-    // Need to recreate chainparams
-    SelectParams(CBaseChainParams::REGTEST);
-
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
