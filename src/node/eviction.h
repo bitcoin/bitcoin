@@ -38,8 +38,12 @@ struct NodeEvictionCandidate {
  * fixed numbers of desirable peers per various criteria, followed by (mostly)
  * ratios of desirable or disadvantaged peers. If any eviction candidates
  * remain, the selection logic chooses a peer to evict.
+ * @param[in]   force   Attempt to evict a random peer if no candidates
+ *                      are available among inbound no-ban connections.
+ *                      (see CConman::AttemptToEvictConnection())
+ *                      Default: false
  */
-[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
+[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates, bool force = false);
 
 /** Protect desirable or disadvantaged inbound peers from eviction by ratio.
  *
