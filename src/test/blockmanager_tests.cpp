@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
         .chainparams = *params,
         .blocks_dir = m_args.GetBlocksDirPath(),
     };
-    BlockManager blockman{blockman_opts};
+    BlockManager blockman{m_node.kernel->interrupt, blockman_opts};
     CChain chain {};
     // simulate adding a genesis block normally
     BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0, chain, nullptr).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);

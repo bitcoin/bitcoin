@@ -62,6 +62,9 @@ class SnapshotMetadata;
 namespace Consensus {
 struct Params;
 } // namespace Consensus
+namespace util {
+class SignalInterrupt;
+} // namespace util
 
 /** Maximum number of dedicated script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 15;
@@ -959,7 +962,7 @@ private:
 public:
     using Options = kernel::ChainstateManagerOpts;
 
-    explicit ChainstateManager(Options options, node::BlockManager::Options blockman_options);
+    explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
@@ -982,6 +985,7 @@ public:
      */
     RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
 
+    const util::SignalInterrupt& m_interrupt;
     const Options m_options;
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed

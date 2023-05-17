@@ -50,6 +50,7 @@
 #include <util/hasher.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <util/trace.h>
@@ -3183,11 +3184,11 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             break;
         }
 
-        // We check shutdown only after giving ActivateBestChainStep a chance to run once so that we
-        // never shutdown before connecting the genesis block during LoadChainTip(). Previously this
-        // caused an assert() failure during shutdown in such cases as the UTXO DB flushing checks
+        // We check interrupt only after giving ActivateBestChainStep a chance to run once so that we
+        // never interrupt before connecting the genesis block during LoadChainTip(). Previously this
+        // caused an assert() failure during interrupt in such cases as the UTXO DB flushing checks
         // that the best block hash is non-null.
-        if (ShutdownRequested()) break;
+        if (m_chainman.m_interrupt) break;
     } while (pindexNewTip != pindexMostWork);
     CheckBlockIndex();
 
@@ -3277,7 +3278,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
 
     // Disconnect (descendants of) pindex, and mark them invalid.
     while (true) {
-        if (ShutdownRequested()) break;
+        if (m_chainman.m_interrupt) break;
 
         // Make sure the queue of validation callbacks doesn't grow unboundedly.
         LimitValidationInterfaceQueue();
@@ -4079,7 +4080,7 @@ void Chainstate::LoadMempool(const fs::path& load_path, FopenFn mockable_fopen_f
 {
     if (!m_mempool) return;
     ::LoadMempool(*m_mempool, load_path, *this, mockable_fopen_function);
-    m_mempool->SetLoadTried(!ShutdownRequested());
+    m_mempool->SetLoadTried(!m_chainman.m_interrupt);
 }
 
 bool Chainstate::LoadChainTip()
@@ -4212,7 +4213,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 skipped_l3_checks = true;
             }
         }
-        if (ShutdownRequested()) return VerifyDBResult::INTERRUPTED;
+        if (chainstate.m_chainman.m_interrupt) return VerifyDBResult::INTERRUPTED;
     }
     if (pindexFailure) {
         LogPrintf("Verification error: coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainstate.m_chain.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
@@ -4245,7 +4246,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 LogPrintf("Verification error: found unconnectable block at %d, hash=%s (%s)\n", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
-            if (ShutdownRequested()) return VerifyDBResult::INTERRUPTED;
+            if (chainstate.m_chainman.m_interrupt) return VerifyDBResult::INTERRUPTED;
         }
     }
 
@@ -4413,7 +4414,7 @@ bool ChainstateManager::LoadBlockIndex()
         }
 
         for (CBlockIndex* pindex : vSortedByHeight) {
-            if (ShutdownRequested()) return false;
+            if (m_interrupt) return false;
             if (pindex->IsAssumedValid() ||
                     (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                      (pindex->HaveTxsDownloaded() || pindex->pprev == nullptr))) {
@@ -4519,7 +4520,7 @@ void Chainstate::LoadExternalBlockFile(
         // such as a block fails to deserialize.
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
-            if (ShutdownRequested()) return;
+            if (m_chainman.m_interrupt) return;
 
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
@@ -5152,13 +5153,13 @@ struct StopHashingException : public std::exception
 {
     const char* what() const throw() override
     {
-        return "ComputeUTXOStats interrupted by shutdown.";
+        return "ComputeUTXOStats interrupted.";
     }
 };
 
-static void SnapshotUTXOHashBreakpoint()
+static void SnapshotUTXOHashBreakpoint(const util::SignalInterrupt& interrupt)
 {
-    if (ShutdownRequested()) throw StopHashingException();
+    if (interrupt) throw StopHashingException();
 }
 
 bool ChainstateManager::PopulateAndValidateSnapshot(
@@ -5235,7 +5236,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         // If our average Coin size is roughly 41 bytes, checking every 120,000 coins
         // means <5MB of memory imprecision.
         if (coins_processed % 120000 == 0) {
-            if (ShutdownRequested()) {
+            if (m_interrupt) {
                 return false;
             }
 
@@ -5292,7 +5293,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     try {
         maybe_stats = ComputeUTXOStats(
-            CoinStatsHashType::HASH_SERIALIZED, snapshot_coinsdb, m_blockman, SnapshotUTXOHashBreakpoint);
+            CoinStatsHashType::HASH_SERIALIZED, snapshot_coinsdb, m_blockman, [&interrupt = m_interrupt] { SnapshotUTXOHashBreakpoint(interrupt); });
     } catch (StopHashingException const&) {
         return false;
     }
@@ -5470,7 +5471,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(
             CoinStatsHashType::HASH_SERIALIZED,
             &ibd_coins_db,
             m_blockman,
-            SnapshotUTXOHashBreakpoint);
+            [&interrupt = m_interrupt] { SnapshotUTXOHashBreakpoint(interrupt); });
     } catch (StopHashingException const&) {
         return SnapshotCompletionResult::STATS_FAILED;
     }
@@ -5579,9 +5580,10 @@ static ChainstateManager::Options&& Flatten(ChainstateManager::Options&& opts)
     return std::move(opts);
 }
 
-ChainstateManager::ChainstateManager(Options options, node::BlockManager::Options blockman_options)
-    : m_options{Flatten(std::move(options))},
-      m_blockman{std::move(blockman_options)} {}
+ChainstateManager::ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options)
+    : m_interrupt{interrupt},
+      m_options{Flatten(std::move(options))},
+      m_blockman{interrupt, std::move(blockman_options)} {}
 
 ChainstateManager::~ChainstateManager()
 {
