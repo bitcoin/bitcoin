@@ -256,15 +256,19 @@ class MiniWallet:
         Note that this method fails if there is no single internal utxo
         available that can cover the cost for the amount and the fixed fee
         (the utxo with the largest value is taken).
-
-        Returns a tuple (txid, n) referring to the created external utxo outpoint.
         """
         tx = self.create_self_transfer(fee_rate=0)["tx"]
         assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
         tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
         tx.vout.append(CTxOut(amount, scriptPubKey))  # arbitrary output -> to be returned
         txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
-        return txid, 1
+        return {
+            "sent_vout": 1,
+            "txid": txid,
+            "wtxid": tx.getwtxid(),
+            "hex": tx.serialize().hex(),
+            "tx": tx,
+        }
 
     def send_self_transfer_multi(self, *, from_node, **kwargs):
         """Call create_self_transfer_multi and send the transaction."""
