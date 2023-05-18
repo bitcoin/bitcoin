@@ -22,6 +22,15 @@ namespace wallet {
 class CWallet;
 class WalletDatabase;
 
+static const DatabaseFormat DATABASE_FORMATS[] = {
+#ifdef USE_SQLITE
+       DatabaseFormat::SQLITE,
+#endif
+#ifdef USE_BDB
+       DatabaseFormat::BERKELEY,
+#endif
+};
+
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key);
 
 // Creates a copy of the provided database

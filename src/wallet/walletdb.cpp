@@ -1161,6 +1161,9 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
 {
+    // Begin db txn
+    if (!m_batch->TxnBegin()) return false;
+
     // Get cursor
     std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
     if (!cursor)
@@ -1169,8 +1172,7 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
     }
 
     // Iterate the DB and look for any records that have the type prefixes
-    while (true)
-    {
+    while (true) {
         // Read next record
         DataStream key{};
         DataStream value{};
@@ -1178,6 +1180,8 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         if (status == DatabaseCursor::Status::DONE) {
             break;
         } else if (status == DatabaseCursor::Status::FAIL) {
+            cursor.reset(nullptr);
+            m_batch->TxnAbort(); // abort db txn
             return false;
         }
 
@@ -1188,10 +1192,16 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         key >> type;
 
         if (types.count(type) > 0) {
-            m_batch->Erase(key_data);
+            if (!m_batch->Erase(key_data)) {
+                cursor.reset(nullptr);
+                m_batch->TxnAbort();
+                return false; // erase failed
+            }
         }
     }
-    return true;
+    // Finish db txn
+    cursor.reset(nullptr);
+    return m_batch->TxnCommit();
 }
 
 bool WalletBatch::TxnBegin()
