@@ -200,6 +200,7 @@ task:
     docker_arguments:
       CI_IMAGE_NAME_TAG: debian:bullseye
       FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+  << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
@@ -245,8 +246,8 @@ task:
   name: '[TSan, depends, gui] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    cpu: 6  # Increase CPU and Memory to avoid timeout
-    memory: 24G
+    cpu: 4
+    memory: 16G  # The default memory is too small, so double everything
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:lunar
       FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
