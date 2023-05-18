@@ -236,7 +236,6 @@ task:
     folder: "/tmp/cirrus-ci-build/releases"
   container:
     docker_arguments:
-        CI_IMAGE_NAME_TAG: debian:buster
         FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
