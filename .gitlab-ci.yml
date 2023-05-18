@@ -252,6 +252,15 @@ linux64_fuzz-build:
   variables:
     BUILD_TARGET: linux64_fuzz
 
+linux64_asan-build:
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
+  needs:
+    - x86_64-pc-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64_asan
+
 linux64_tsan-build:
   extends:
     - .build-template
@@ -314,6 +323,15 @@ linux64_sqlite-test:
     - linux64_sqlite-build
   variables:
     BUILD_TARGET: linux64_sqlite
+
+linux64_asan-test:
+  extends:
+    - .test-template
+    - .skip-in-fast-mode-template
+  needs:
+    - linux64_asan-build
+  variables:
+    BUILD_TARGET: linux64_asan
 
 linux64_tsan-test:
   extends:
