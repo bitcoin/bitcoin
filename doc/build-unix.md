@@ -4,16 +4,6 @@ Some notes on how to build Syscoin Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
-Note
----------------------
-Always use absolute paths to configure and compile Syscoin Core and the dependencies.
-For example, when specifying the path of the dependency:
-
-    ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
-
-Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
-the usage of the absolute path.
-
 To Build
 ---------------------
 
@@ -24,12 +14,11 @@ make # use "-j N" for N parallel jobs
 make install # optional
 ```
 
-This will build syscoin-qt as well, if the dependencies are met.
+See below for instructions on how to [install the dependencies on popular Linux
+distributions](#linux-distribution-specific-instructions), or the
+[dependencies](#dependencies) section for a complete overview.
 
-See [dependencies.md](dependencies.md) for a complete overview.
-
-Memory Requirements
---------------------
+## Memory Requirements
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
 memory available when compiling Syscoin Core. On systems with less, gcc can be
@@ -60,7 +49,7 @@ Build requirements:
 Note that for for Alpine Linux you may need to install `gmp-dev` instead of `libgmp-dev`
 
 
-Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
     sudo apt-get install libevent-dev libboost-dev
 
@@ -68,7 +57,7 @@ SQLite is required for the descriptor wallet:
 
     sudo apt install libsqlite3-dev
 
-Berkeley DB is required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
+Berkeley DB is only required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
 but these will install Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed
 executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass
 `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
@@ -117,7 +106,7 @@ Build requirements:
 
     sudo dnf install gcc-c++ libtool make autoconf automake python3
 
-Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
     sudo dnf install libevent-devel boost-devel
 
@@ -129,7 +118,7 @@ Berkeley DB is required for the legacy wallet:
 
     sudo dnf install libdb4-devel libdb4-cxx-devel
 
-Newer Fedora releases, since Fedora 33, have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
+Berkeley DB is only required for the legacy wallet. Newer Fedora releases have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
 Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
@@ -169,27 +158,13 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a syscoin-qt executable will be
 built by default.
 
-Notes
------
-The release is built with GCC and then "strip syscoind" to strip the debug
-symbols, which reduces the executable size by about 90%.
+## Dependencies
 
-miniupnpc
----------
+See [dependencies.md](dependencies.md) for a complete overview, and
+[depends](/depends/README.md) on how to compile them yourself, if you wish to
+not use the packages of your Linux distribution.
 
-[miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
-https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.
-
-libnatpmp
----------
-
-[libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
-from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
-turned off by default.
-
-Berkeley DB
------------
+### Berkeley DB
 
 The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
 recommended to use Berkeley DB 4.8. If you have to build it yourself, and don't
@@ -207,6 +182,8 @@ export BDB_PREFIX="/path/to/syscoin/depends/x86_64-pc-linux-gnu"
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
     BDB_CFLAGS="-I${BDB_PREFIX}/include"
 ```
+
+**Note**: Make sure that `BDB_PREFIX` is an absolute path.
 
 **Note**: You only need Berkeley DB if the legacy wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
 
