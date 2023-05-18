@@ -15,6 +15,7 @@ For example:
 **Bitcoin Core's `configure` script by default will ignore the depends output.** In
 order for it to pick up libraries, tools, and settings from the depends build,
 you must set the `CONFIG_SITE` environment variable to point to a `config.site` settings file.
+Make sure that `CONFIG_SITE` is an absolute path.
 In the above example, a file named `depends/x86_64-w64-mingw32/share/config.site` will be
 created. To use it during compilation:
 
