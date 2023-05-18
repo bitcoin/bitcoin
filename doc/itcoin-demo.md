@@ -11,7 +11,7 @@ document assumes the use of an **Ubuntu 22.04 LTS** linux distribution.
 Install the build toolchain:
 
 ```
-apt install --no-install-recommends -y
+apt install --no-install-recommends -y \
     autoconf \
     automake \
     bsdextrautils \
