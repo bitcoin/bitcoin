@@ -11,7 +11,7 @@ document assumes the use of an **Ubuntu 22.04 LTS** linux distribution.
 Install the build toolchain:
 
 ```
-apt install --no-install-recommends -y \
+sudo apt install --no-install-recommends -y \
     autoconf \
     automake \
     bsdextrautils \
@@ -24,7 +24,7 @@ apt install --no-install-recommends -y \
 Install the build and runtime dependencies:
 
 ```
-apt install --no-install-recommends -y \
+sudo apt install --no-install-recommends -y \
     gettext-base \
     jq \
     libboost1.74-dev \
