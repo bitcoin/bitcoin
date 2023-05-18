@@ -3402,19 +3402,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const CNetMsgMaker msg_maker(greatest_common_version);
 
-        if (greatest_common_version >= WTXID_RELAY_VERSION) {
-            m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::WTXIDRELAY));
-        }
-
-        // Signal ADDRv2 support (BIP155).
-        if (greatest_common_version >= 70016) {
-            // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
-            // implementations reject messages they don't know. As a courtesy, don't send
-            // it to nodes with a version before 70016, as no software is known to support
-            // BIP155 that doesn't announce at least that protocol version number.
-            m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
-        }
-
         pfrom.m_has_all_wanted_services = HasAllDesirableServiceFlags(nServices);
         peer->m_their_services = nServices;
         pfrom.SetAddrLocal(addrMe);
@@ -3439,6 +3426,47 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 tx_relay->m_relay_txs = fRelay; // set to true after we get the first filter* message
             }
             if (fRelay) pfrom.m_relays_txs = true;
+        }
+
+        if (!pfrom.IsInboundConn()) {
+            // For non-inbound connections, we update the addrman to record
+            // connection success so that addrman will have an up-to-date
+            // notion of which peers are online and available.
+            //
+            // While we strive to not leak information about block-relay-only
+            // connections via the addrman, not moving an address to the tried
+            // table is also potentially detrimental because new-table entries
+            // are subject to eviction in the event of addrman collisions.  We
+            // mitigate the information-leak by never calling
+            // AddrMan::Connected() on block-relay-only peers; see
+            // FinalizeNode().
+            //
+            // This moves an address from New to Tried table in Addrman,
+            // resolves tried-table collisions, etc.
+            m_addrman.Good(pfrom.addr);
+        }
+
+        std::string remoteAddr;
+        if (fLogIPs)
+            remoteAddr = ", peeraddr=" + pfrom.addr.ToStringAddrPort();
+
+        const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
+        LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
+                  cleanSubVer, pfrom.nVersion,
+                  peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
+                  remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+
+        if (greatest_common_version >= WTXID_RELAY_VERSION) {
+            m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::WTXIDRELAY));
+        }
+
+        // Signal ADDRv2 support (BIP155).
+        if (greatest_common_version >= 70016) {
+            // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
+            // implementations reject messages they don't know. As a courtesy, don't send
+            // it to nodes with a version before 70016, as no software is known to support
+            // BIP155 that doesn't announce at least that protocol version number.
+            m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
         }
 
         if (greatest_common_version >= WTXID_RELAY_VERSION && m_txreconciliation) {
@@ -3487,34 +3515,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // (bypassing the MAX_ADDR_PROCESSING_TOKEN_BUCKET limit).
             peer->m_addr_token_bucket += MAX_ADDR_TO_SEND;
         }
-
-        if (!pfrom.IsInboundConn()) {
-            // For non-inbound connections, we update the addrman to record
-            // connection success so that addrman will have an up-to-date
-            // notion of which peers are online and available.
-            //
-            // While we strive to not leak information about block-relay-only
-            // connections via the addrman, not moving an address to the tried
-            // table is also potentially detrimental because new-table entries
-            // are subject to eviction in the event of addrman collisions.  We
-            // mitigate the information-leak by never calling
-            // AddrMan::Connected() on block-relay-only peers; see
-            // FinalizeNode().
-            //
-            // This moves an address from New to Tried table in Addrman,
-            // resolves tried-table collisions, etc.
-            m_addrman.Good(pfrom.addr);
-        }
-
-        std::string remoteAddr;
-        if (fLogIPs)
-            remoteAddr = ", peeraddr=" + pfrom.addr.ToStringAddrPort();
-
-        const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-        LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
-                  cleanSubVer, pfrom.nVersion,
-                  peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
-                  remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
         int64_t nTimeOffset = nTime - GetTime();
         pfrom.nTimeOffset = nTimeOffset;
