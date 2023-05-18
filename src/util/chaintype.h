@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_CHAINTYPE_H
-#define BITCOIN_UTIL_CHAINTYPE_H
+#ifndef SYSCOIN_UTIL_CHAINTYPE_H
+#define SYSCOIN_UTIL_CHAINTYPE_H
 
 #include <optional>
 #include <string>
@@ -19,4 +19,4 @@ std::string ChainTypeToString(ChainType chain);
 
 std::optional<ChainType> ChainTypeFromString(std::string_view chain);
 
-#endif // BITCOIN_UTIL_CHAINTYPE_H
+#endif // SYSCOIN_UTIL_CHAINTYPE_H
