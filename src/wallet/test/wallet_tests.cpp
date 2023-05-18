@@ -426,15 +426,6 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 5, 50, 600), 300);
 }
 
-static const DatabaseFormat DATABASE_FORMATS[] = {
-#ifdef USE_SQLITE
-    DatabaseFormat::SQLITE,
-#endif
-#ifdef USE_BDB
-    DatabaseFormat::BERKELEY,
-#endif
-};
-
 void TestLoadWallet(const std::string& name, DatabaseFormat format, std::function<void(std::shared_ptr<CWallet>)> f)
 {
     node::NodeContext node;
