@@ -481,4 +481,4 @@ private:
 #endif
 } // namespace common
 
-#endif // BITCOIN_COMMON_ARGS_H
+#endif // SYSCOIN_COMMON_ARGS_H
