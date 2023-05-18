@@ -49,7 +49,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         """Create a 1-input-1-output P2WSH spending transaction with only the
            witness script in the witness stack and the given output script."""
         # create P2WSH address and fund it via MiniWallet first
-        txid, vout = self.wallet.send_to(
+        fund = self.wallet.send_to(
             from_node=self.nodes[0],
             scriptPubKey=script_to_p2wsh_script(witness_script),
             amount=1000000,
@@ -57,7 +57,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # create spending transaction
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(txid, 16), vout))]
+        tx.vin = [CTxIn(COutPoint(int(fund["txid"], 16), fund["sent_vout"]))]
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [bytes(witness_script)]
         tx.vout = [CTxOut(500000, output_script)]
