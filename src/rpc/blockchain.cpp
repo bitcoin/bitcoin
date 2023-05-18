@@ -1577,13 +1577,18 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     BuriedForkDescPushBack(softforks,"bip34", consensusParams.BIP34Height);
     BuriedForkDescPushBack(softforks,"bip66", consensusParams.BIP66Height);
     BuriedForkDescPushBack(softforks,"bip65", consensusParams.BIP65Height);
+    BuriedForkDescPushBack(softforks,"bip147", consensusParams.BIP147Height);
     BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
     BuriedForkDescPushBack(softforks, "dip0001", consensusParams.DIP0001Height);
+    BuriedForkDescPushBack(softforks, "dip0003", consensusParams.DIP0003Height);
     BuriedForkDescPushBack(softforks, "dip0008", consensusParams.DIP0008Height);
-    for (int pos = Consensus::DEPLOYMENT_TESTDUMMY + 1; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
-        BIP9SoftForkDescPushBack(softforks, VersionBitsDeploymentInfo[pos].name, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
-    }
+    BuriedForkDescPushBack(softforks, "dip0020", consensusParams.DIP0020Height);
+    BuriedForkDescPushBack(softforks, "dip0024", consensusParams.DIP0024Height);
+    BuriedForkDescPushBack(softforks, "realloc", consensusParams.BRRHeight);
+    BIP9SoftForkDescPushBack(softforks, "v19", consensusParams, Consensus::DEPLOYMENT_V19);
+    BIP9SoftForkDescPushBack(softforks, "v20", consensusParams, Consensus::DEPLOYMENT_V20);
     BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false));

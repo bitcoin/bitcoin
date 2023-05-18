@@ -2046,7 +2046,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // Start enforcing BIP147 (NULLDUMMY) rule using versionbits logic.
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_BIP147, versionbitscache) == ThresholdState::ACTIVE) {
+    if (pindex->nHeight >= consensusparams.BIP147Height) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 

@@ -15,11 +15,6 @@ namespace Consensus {
 
 enum DeploymentPos {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_BIP147,  // Deployment of BIP147 (NULLDUMMY)
-    DEPLOYMENT_DIP0003, // Deployment of DIP0002 and DIP0003 (txv3 and deterministic MN lists)
-    DEPLOYMENT_REALLOC, // Deployment of Block Reward Reallocation
-    DEPLOYMENT_DIP0020, // Deployment of DIP0020, DIP0021 and LMQ_100_67 quorums
-    DEPLOYMENT_DIP0024, // Deployment of DIP0024 (Quorum Rotation) and decreased governance proposal fee
     DEPLOYMENT_V19,     // Deployment of Basic BLS, AssetLocks
     DEPLOYMENT_V20,     // Deployment of EHF, LLMQ Randomness Beacon
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
@@ -75,22 +70,24 @@ struct Params {
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
+    // Deployment of BIP147 (NULLDUMMY)
+    int BIP147Height;
     /** Block height at which CSV (BIP68, BIP112 and BIP113) becomes active */
     int CSVHeight;
     /** Block height at which DIP0001 becomes active */
     int DIP0001Height;
-    /** Block height at which DIP0003 becomes active */
+    /** Block height at which DIP0002 and DIP0003 (txv3 and deterministic MN lists) becomes active */
     int DIP0003Height;
     /** Block height at which DIP0003 becomes enforced */
     int DIP0003EnforcementHeight;
     uint256 DIP0003EnforcementHash;
     /** Block height at which DIP0008 becomes active */
     int DIP0008Height;
-    /** Block height at which BRR becomes active */
+    /** Block height at which BRR (Block Reward Reallocation) becomes active */
     int BRRHeight;
-    /** Block height at which DIP20 becomes active */
+    /** Block height at which DIP0020, DIP0021 and LLMQ_100_67 quorums become active */
     int DIP0020Height;
-    /** Block height at which DIP24 becomes active */
+    /** Block height at which DIP0024 (Quorum Rotation) and decreased governance proposal fee becomes active */
     int DIP0024Height;
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and DIP activations. */

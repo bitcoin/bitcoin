@@ -13,31 +13,6 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.check_mn_protocol =*/ false,
     },
     {
-        /*.name =*/ "bip147",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
-    {
-        /*.name =*/ "dip0003",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
-    {
-        /*.name =*/ "realloc",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
-    {
-        /*.name =*/ "dip0020",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
-    {
-        /*.name =*/"dip0024",
-        /*.gbt_force =*/true,
-        /*.check_mn_protocol =*/false,
-    },
-    {
         /*.name =*/"v19",
         /*.gbt_force =*/true,
         /*.check_mn_protocol =*/false,
@@ -46,5 +21,5 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.name =*/"v20",
         /*.gbt_force =*/true,
         /*.check_mn_protocol =*/false,
-    }
+    },
 };

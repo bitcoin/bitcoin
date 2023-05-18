@@ -41,8 +41,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQCoinbaseCommitmentsTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=dip0024:999999999999:999999999999"]] * 4 # disable dip0024
-        self.set_dash_test_params(4, 3, extra_args=extra_args, fast_dip3_enforcement=True)
+        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
 
     def run_test(self):
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())

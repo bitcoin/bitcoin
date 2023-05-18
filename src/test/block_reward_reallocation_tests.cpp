@@ -35,9 +35,6 @@
 
 using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
-const auto deployment_id = Consensus::DEPLOYMENT_REALLOC;
-const int window{500}, th_start{400}, th_end{300};
-
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup
 {
     // Force fast DIP3 activation
@@ -142,46 +139,12 @@ static CScript GenerateRandomAddress()
     return GetScriptForDestination(PKHash(key.GetPubKey()));
 }
 
-static constexpr int threshold(int attempt)
-{
-    // An implementation of VersionBitsConditionChecker::Threshold()
-    int threshold_calc = th_start - attempt * attempt * window / 100 / 5;
-    if (threshold_calc < th_end) {
-        return th_end;
-    }
-    return threshold_calc;
-}
-
 BOOST_AUTO_TEST_SUITE(block_reward_reallocation_tests)
 
 BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationSetup)
 {
     const auto& consensus_params = Params().GetConsensus();
     CScript coinbasePubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-
-    auto signal = [&](int num_blocks, bool expected_lockin)
-    {
-        // Mine non-signalling blocks
-        gArgs.ForceSetArg("-blockversion", "536870912");
-        for ([[maybe_unused]] auto _ : irange::range(window - num_blocks)) {
-            CreateAndProcessBlock({}, coinbaseKey);
-            LOCK(cs_main);
-            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        }
-        gArgs.ForceRemoveArg("blockversion");
-        // Mine signalling blocks
-        for ([[maybe_unused]] auto _ : irange::range(num_blocks)) {
-            CreateAndProcessBlock({}, coinbaseKey);
-            LOCK(cs_main);
-            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        }
-        LOCK(cs_main);
-        if (expected_lockin) {
-            BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::LOCKED_IN);
-        } else {
-            BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
-        }
-    };
 
     BOOST_ASSERT(deterministicMNManager->IsDIP3Enforced(WITH_LOCK(cs_main, return ::ChainActive().Height())));
 
@@ -200,77 +163,35 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
 
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 498);
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::DEFINED);
+        BOOST_CHECK(::ChainActive().Height() < Params().GetConsensus().BRRHeight);
     }
 
     CreateAndProcessBlock({}, coinbaseKey);
 
     {
         LOCK(cs_main);
-        // Advance from DEFINED to STARTED at height = 499
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 499);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
-        BOOST_CHECK_EQUAL(VersionBitsStatistics(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache).threshold, threshold(0));
-        // Next block should be signaling by default
+        BOOST_CHECK(::ChainActive().Height() < Params().GetConsensus().BRRHeight);
+        // Creating blocks by different ways
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor, *m_node.llmq_ctx->clhandler,  *m_node.llmq_ctx->isman, *m_node.evodb, *m_node.mempool, Params()).CreateNewBlock(::ChainstateActive(), coinbasePubKey);
-        const uint32_t bitmask = ((uint32_t)1) << consensus_params.vDeployments[deployment_id].bit;
-        BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion & bitmask, 0);
-        BOOST_CHECK_EQUAL(pblocktemplate->block.nVersion & bitmask, bitmask);
     }
-
-    signal(threshold(0) - 1, false); // 1 block short
-
-    {
-        // Still STARTED but new threshold should be lower at height = 999
-        LOCK(cs_main);
-        BOOST_CHECK_EQUAL(::ChainActive().Height(), 999);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
-        BOOST_CHECK_EQUAL(VersionBitsStatistics(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache).threshold, threshold(1));
-    }
-
-    signal(threshold(1) - 1, false); // 1 block short again
-
-    {
-        // Still STARTED but new threshold should be even lower at height = 1499
-        LOCK(cs_main);
-        BOOST_CHECK_EQUAL(::ChainActive().Height(), 1499);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::STARTED);
-        BOOST_CHECK_EQUAL(VersionBitsStatistics(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache).threshold, threshold(2));
-    }
-
-    signal(threshold(2), true); // just enough to lock in
-
-    {
-        // Advanced to LOCKED_IN at height = 1999
-        LOCK(cs_main);
-        BOOST_CHECK_EQUAL(::ChainActive().Height(), 1999);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::LOCKED_IN);
-    }
-
-    for ([[maybe_unused]] auto _ : irange::range(499)) {
-        // Still LOCKED_IN at height = 2498
+    for ([[maybe_unused]] auto _ : irange::range(1999)) {
         CreateAndProcessBlock({}, coinbaseKey);
         LOCK(cs_main);
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::LOCKED_IN);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     }
+    BOOST_CHECK(::ChainActive().Height() < Params().GetConsensus().BRRHeight);
     CreateAndProcessBlock({}, coinbaseKey);
 
     {
-        // Advance from LOCKED_IN to ACTIVE at height = 2499
+        // Advance to ACTIVE at height = 2499
         LOCK(cs_main);
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 2499);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
-        BOOST_CHECK_EQUAL(VersionBitsState(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), ThresholdState::ACTIVE);
-        BOOST_CHECK_EQUAL(VersionBitsStateSinceHeight(::ChainActive().Tip(), consensus_params, deployment_id, versionbitscache), 2500);
+        BOOST_CHECK(::ChainActive().Height() + 1 == Params().GetConsensus().BRRHeight);
     }
 
     {
