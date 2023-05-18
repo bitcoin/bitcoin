@@ -174,9 +174,9 @@ class TxConflicts(BitcoinTestFramework):
         # broadcast tx2, replaces tx1 in mempool
         tx2_txid = alice.sendrawtransaction(tx2)
 
-        # Check that unspent[0] is still not available because the wallet does not know that the tx spending it has a mempool conflicted
-        assert_equal(alice.listunspent(), [])
-        assert_equal(alice.getbalance(), 0)
+        # Check that unspent[0] is now available because the transaction spending it has been replaced in the mempool
+        assert_equal(alice.listunspent(), [unspents[0]])
+        assert_equal(alice.getbalance(), 25)
 
         self.log.info("Test scenario where a mempool conflict is removed")
 
@@ -262,8 +262,8 @@ class TxConflicts(BitcoinTestFramework):
         assert tx2_txid in bob.getrawmempool()
         assert tx1_conflict_txid in bob.getrawmempool()
 
-        # check that the tx2 unspent is still not available because the wallet does not know that the tx spending it has a mempool conflict
-        assert_equal(bob.getbalances()["mine"]["untrusted_pending"], 0)
+        # check that tx3 is now conflicted, so the output from tx2 can now be spent
+        assert_equal(bob.getbalances()["mine"]["untrusted_pending"], Decimal("24.99990000"))
 
         # we will be disconnecting this block in the future
         alice.sendrawtransaction(tx2_conflict)
@@ -293,7 +293,7 @@ class TxConflicts(BitcoinTestFramework):
         assert_equal(bob.gettransaction(tx3_txid)["confirmations"], 0)
 
         bob.sendrawtransaction(raw_tx2)
-        assert_equal(bob.getbalances()["mine"]["untrusted_pending"], 0)
+        assert_equal(bob.getbalances()["mine"]["untrusted_pending"], Decimal("24.99990000"))
 
         # create a conflict to previous tx (also spends unspents[2]), but don't broadcast, sends funds back to alice
         raw_tx = alice.createrawtransaction(inputs=[unspents[2]], outputs=[{alice.getnewaddress() : 24.99}])

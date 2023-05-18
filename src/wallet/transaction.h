@@ -48,7 +48,7 @@ struct TxStateBlockConflicted {
     int conflicting_block_height;
 
     explicit TxStateBlockConflicted(const uint256& block_hash, int height) : conflicting_block_hash(block_hash), conflicting_block_height(height) {}
-    std::string toString() const { return strprintf("Conflicted (block=%s, height=%i)", conflicting_block_hash.ToString(), conflicting_block_height); }
+    std::string toString() const { return strprintf("BlockConflicted (block=%s, height=%i)", conflicting_block_hash.ToString(), conflicting_block_height); }
 };
 
 //! State of transaction not confirmed or conflicting with a known block and
@@ -258,6 +258,14 @@ public:
     CTransactionRef tx;
     TxState m_state;
 
+    // Set of mempool transactions that conflict
+    // directly with the transaction, or that conflict
+    // with an ancestor transaction. This set will be
+    // empty if state is InMempool or Confirmed, but
+    // can be nonempty if state is Inactive or
+    // BlockConflicted.
+    std::set<Txid> mempool_conflicts;
+
     template<typename Stream>
     void Serialize(Stream& s) const
     {
@@ -335,9 +343,10 @@ public:
     void updateState(interfaces::Chain& chain);
 
     bool isAbandoned() const { return state<TxStateInactive>() && state<TxStateInactive>()->abandoned; }
+    bool isMempoolConflicted() const { return !mempool_conflicts.empty(); }
     bool isBlockConflicted() const { return state<TxStateBlockConflicted>(); }
     bool isInactive() const { return state<TxStateInactive>(); }
-    bool isUnconfirmed() const { return !isAbandoned() && !isBlockConflicted() && !isConfirmed(); }
+    bool isUnconfirmed() const { return !isAbandoned() && !isBlockConflicted() && !isMempoolConflicted() && !isConfirmed(); }
     bool isConfirmed() const { return state<TxStateConfirmed>(); }
     const Txid& GetHash() const LIFETIMEBOUND { return tx->GetHash(); }
     const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return tx->GetWitnessHash(); }
