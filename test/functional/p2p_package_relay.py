@@ -8,12 +8,18 @@ This has its own test because it requires lots of setmocktimeing and that's hard
 across multiple nodes.
 """
 
+import random
 import time
 
 from test_framework.messages import (
     CInv,
     get_combined_hash,
     get_package_hash,
+    COutPoint,
+    CTransaction,
+    CTxOut,
+    CTxIn,
+    CTxInWitness,
     MSG_ANCPKGINFO,
     MSG_PKGTXNS,
     MSG_WITNESS_TX,
@@ -40,6 +46,11 @@ from test_framework.p2p import (
     P2PTxInvStore,
     TXID_RELAY_DELAY,
     UNCONDITIONAL_RELAY_DELAY,
+)
+from test_framework.script import (
+    CScript,
+    OP_NOP,
+    OP_RETURN,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -193,6 +204,16 @@ class PackageRelayTest(BitcoinTestFramework):
         package_txns = [parent1["tx"], parent2["tx"], child["tx"]]
         package_wtxids = [tx.getwtxid() for tx in package_txns]
         return package_hex, package_txns, package_wtxids
+
+    def create_large_orphan(self):
+        """Create huge orphan transaction"""
+        tx = CTransaction()
+        # Nonexistent UTXO
+        tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
+        tx.wit.vtxinwit = [CTxInWitness()]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_NOP] * 390000)]
+        tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 20]))]
+        return tx
 
     def fastforward(self, seconds):
         """Convenience helper function to fast-forward, so we don't need to keep track of the
@@ -620,6 +641,66 @@ class PackageRelayTest(BitcoinTestFramework):
         assert int(package_txns[1].getwtxid(), 16) not in peer_non_package_relay.get_invs()
         assert int(package_txns[2].getwtxid(), 16) not in peer_non_package_relay.get_invs()
 
+    @cleanup
+    def test_orphanage_dos(self):
+        self.log.info("Test that the node can still resolve orphans when a peer is using lots of orphanage space")
+        node = self.nodes[0]
+        peer_normal = node.add_p2p_connection(PackageRelayer())
+        peer_doser_pkg_2 = node.add_p2p_connection(PackageRelayer())
+        peer_doser_pkg_3 = node.add_p2p_connection(PackageRelayer())
+
+        self.log.info("Create very large orphans to be sent by DoSy peers (may take a while)")
+        large_orphans = [self.create_large_orphan() for _ in range(120)]
+        # Check to make sure these are orphans, within max standard size (to be accepted into the orphanage), and that 3 of them
+        # would make peer_doser an overloaded orphanage occupant.
+        for large_orphan in large_orphans:
+            assert_greater_than_or_equal(100000, large_orphan.get_vsize())
+            assert_greater_than_or_equal(3 * large_orphan.get_vsize(), 2 * 100000)
+            testres = node.testmempoolaccept([large_orphan.serialize().hex()])
+            assert not testres[0]["allowed"]
+            assert_equal(testres[0]["reject-reason"], "missing-inputs")
+
+        self.log.info("Send very large orphans each from a different DoSy peer, reaching maximum orphanage capacity (may take a while)")
+        # This test assumes that unrequested transactions are processed (skipping inv and
+        # getdata steps because they require going through request delays)
+        for large_orphan in large_orphans[:101]:
+            peer_doser_nonpkg = node.add_p2p_connection(PackageRelayer(send_sendpackages=False))
+            peer_doser_nonpkg.send_and_ping(msg_tx(large_orphan))
+            # Make sure that these transactions are going through the orphan handling codepaths.
+            # Subsequent rounds will not wait for getdata because the time mocking will cause the
+            # normal package request to time out.
+            self.fastforward(TXREQUEST_TIME_SKIP)
+            peer_doser_nonpkg.wait_for_getdata([large_orphan.vin[0].prevout.hash])
+
+        self.log.info("Send an orphan from a package relay peer. It should be protected from random eviction.")
+        package_hex, package_txns, package_wtxids = self.create_package(cpfp=False)
+        orphan_wtxid = package_wtxids[-1]
+        orphan_tx = package_txns[-1]
+        orphan_inv = CInv(t=MSG_WTX, h=int(orphan_wtxid, 16))
+        peer_normal.send_and_ping(msg_inv([orphan_inv]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_normal.wait_for_getdata([int(orphan_wtxid, 16)])
+        peer_normal.send_and_ping(msg_tx(orphan_tx))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        self.log.info("Wait for an ancpkginfo request for the orphan.")
+        peer_normal.wait_for_getancpkginfo(int(orphan_wtxid, 16))
+
+        self.log.info("Send another round of very large orphans from a DoSy peer")
+        for large_orphan in large_orphans[101:110]:
+            peer_doser_pkg_2.send_and_ping(msg_tx(large_orphan))
+
+        self.log.info("Send ancpkginfo and wait for getpkgtxns which excludes the orphan")
+        peer_normal.send_and_ping(msg_ancpkginfo([int(wtxid, 16) for wtxid in package_wtxids]))
+        peer_normal.wait_for_getpkgtxns([int(wtxid, 16) for wtxid in package_wtxids[:-1]])
+
+        self.log.info("Send another round of very large orphans from a DoSy peer")
+        for large_orphan in large_orphans[110:]:
+            peer_doser_pkg_3.send_and_ping(msg_tx(large_orphan))
+
+        self.log.info("Provide the orphan's parents. This orphan should be successfully resolved.")
+        peer_normal.send_and_ping(msg_pkgtxns(txns=package_txns[:-1]))
+        assert_equal(node.getmempoolentry(orphan_tx.rehash())["ancestorcount"], 3)
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         self.generate(self.wallet, 160)
@@ -635,6 +716,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_low_fee_caching()
         self.test_pkgtxns()
         self.test_announcements()
+        self.test_orphanage_dos()
 
 
 if __name__ == '__main__':
