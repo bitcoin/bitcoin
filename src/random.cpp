@@ -28,13 +28,10 @@
 #include <sys/time.h>
 #endif
 
-#ifdef HAVE_SYS_GETRANDOM
-#include <sys/syscall.h>
-#include <linux/random.h>
-#endif
-#if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+#if defined(HAVE_GETRANDOM) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
 #include <sys/random.h>
 #endif
+
 #ifdef HAVE_SYSCTL_ARND
 #include <sys/sysctl.h>
 #endif
@@ -284,23 +281,14 @@ void GetOSRand(unsigned char *ent32)
         RandFailure();
     }
     CryptReleaseContext(hProvider, 0);
-#elif defined(HAVE_SYS_GETRANDOM)
+#elif defined(HAVE_GETRANDOM)
     /* Linux. From the getrandom(2) man page:
      * "If the urandom source has been initialized, reads of up to 256 bytes
      * will always return as many bytes as requested and will not be
      * interrupted by signals."
      */
-    int rv = syscall(SYS_getrandom, ent32, NUM_OS_RANDOM_BYTES, 0);
-    if (rv != NUM_OS_RANDOM_BYTES) {
-        if (rv < 0 && errno == ENOSYS) {
-            /* Fallback for kernel <3.17: the return value will be -1 and errno
-             * ENOSYS if the syscall is not available, in that case fall back
-             * to /dev/urandom.
-             */
-            GetDevURandom(ent32);
-        } else {
-            RandFailure();
-        }
+    if (getrandom(ent32, NUM_OS_RANDOM_BYTES, 0) != NUM_OS_RANDOM_BYTES) {
+        RandFailure();
     }
 #elif defined(__OpenBSD__)
     /* OpenBSD. From the arc4random(3) man page:
