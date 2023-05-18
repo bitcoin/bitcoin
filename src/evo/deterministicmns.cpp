@@ -6,7 +6,6 @@
 #include <evo/dmn_types.h>
 #include <evo/dmnstate.h>
 #include <evo/providertx.h>
-#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
 #include <llmq/utils.h>
@@ -398,42 +397,6 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
     // otherwise internalIds will not match with the original list
     std::sort(diffRet.addedMNs.begin(), diffRet.addedMNs.end(), [](const CDeterministicMNCPtr& a, const CDeterministicMNCPtr& b) {
         return a->GetInternalId() < b->GetInternalId();
-    });
-
-    return diffRet;
-}
-
-CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDeterministicMNList& to, bool extended) const
-{
-    bool v19active = llmq::utils::IsV19Active(::ChainActive().Tip());
-    CSimplifiedMNListDiff diffRet;
-    diffRet.baseBlockHash = blockHash;
-    diffRet.blockHash = to.blockHash;
-    diffRet.nVersion = v19active ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
-
-    to.ForEachMN(false, [&](const auto& toPtr) {
-        auto fromPtr = GetMN(toPtr.proTxHash);
-        if (fromPtr == nullptr) {
-            CSimplifiedMNListEntry sme(toPtr);
-            sme.nVersion = diffRet.nVersion;
-            diffRet.mnList.push_back(std::move(sme));
-        } else {
-            CSimplifiedMNListEntry sme1(toPtr);
-            CSimplifiedMNListEntry sme2(*fromPtr);
-            sme1.nVersion = diffRet.nVersion;
-            sme2.nVersion = diffRet.nVersion;
-            if ((sme1 != sme2) ||
-                (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
-                    diffRet.mnList.push_back(std::move(sme1));
-            }
-        }
-    });
-
-    ForEachMN(false, [&](auto& fromPtr) {
-        auto toPtr = to.GetMN(fromPtr.proTxHash);
-        if (toPtr == nullptr) {
-            diffRet.deletedMNs.emplace_back(fromPtr.proTxHash);
-        }
     });
 
     return diffRet;

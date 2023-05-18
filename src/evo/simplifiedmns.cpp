@@ -9,6 +9,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
+#include <llmq/utils.h>
 #include <evo/specialtx.h>
 
 #include <pubkey.h>
@@ -235,6 +236,42 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
     }
 }
 
+CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, const CDeterministicMNList& to, bool extended)
+{
+    bool v19active = llmq::utils::IsV19Active(::ChainActive().Tip());
+    CSimplifiedMNListDiff diffRet;
+    diffRet.baseBlockHash = from.GetBlockHash();
+    diffRet.blockHash = to.GetBlockHash();
+    diffRet.nVersion = v19active ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
+
+    to.ForEachMN(false, [&](const auto& toPtr) {
+        auto fromPtr = from.GetMN(toPtr.proTxHash);
+        if (fromPtr == nullptr) {
+            CSimplifiedMNListEntry sme(toPtr);
+            sme.nVersion = diffRet.nVersion;
+            diffRet.mnList.push_back(std::move(sme));
+        } else {
+            CSimplifiedMNListEntry sme1(toPtr);
+            CSimplifiedMNListEntry sme2(*fromPtr);
+            sme1.nVersion = diffRet.nVersion;
+            sme2.nVersion = diffRet.nVersion;
+            if ((sme1 != sme2) ||
+                (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
+                    diffRet.mnList.push_back(std::move(sme1));
+            }
+        }
+    });
+
+    from.ForEachMN(false, [&](auto& fromPtr) {
+        auto toPtr = to.GetMN(fromPtr.proTxHash);
+        if (toPtr == nullptr) {
+            diffRet.deletedMNs.emplace_back(fromPtr.proTxHash);
+        }
+    });
+
+    return diffRet;
+}
+
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
                                const llmq::CQuorumBlockProcessor& quorum_block_processor, std::string& errorRet, bool extended)
 {
@@ -267,7 +304,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
 
     auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
     auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
-    mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList, extended);
+    mnListDiffRet = BuildSimplifiedDiff(baseDmnList, dmnList, extended);
 
     // We need to return the value that was provided by the other peer as it otherwise won't be able to recognize the
     // response. This will usually be identical to the block found in baseBlockIndex. The only difference is when a

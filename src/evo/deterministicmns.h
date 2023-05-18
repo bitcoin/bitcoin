@@ -28,7 +28,6 @@ class CConnman;
 class CBlock;
 class CBlockIndex;
 class TxValidationState;
-class CSimplifiedMNListDiff;
 
 extern CCriticalSection cs_main;
 
@@ -382,7 +381,6 @@ public:
     void PoSeDecrease(const uint256& proTxHash);
 
     [[nodiscard]] CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
-    [[nodiscard]] CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to, bool extended) const;
     [[nodiscard]] CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
     void RepopulateUniquePropertyMap();

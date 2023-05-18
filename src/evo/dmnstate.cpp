@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <evo/dmnstate.h>
-#include <evo/simplifiedmns.h>
 #include <evo/providertx.h>
 
 #include <chainparams.h>

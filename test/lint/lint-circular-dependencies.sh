@@ -22,7 +22,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     # Dash
     "coinjoin/server -> net_processing -> coinjoin/server"
     "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"
-    "evo/deterministicmns -> evo/simplifiedmns -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/commitment -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/utils -> evo/deterministicmns"
     "evo/mnauth -> net_processing -> evo/mnauth"
@@ -63,12 +62,10 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "coinjoin/client -> coinjoin/util -> wallet/wallet -> coinjoin/client"
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
     "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil"
-    "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> evo/deterministicmns"
 
     "coinjoin/client -> net_processing -> coinjoin/client"
     "llmq/quorums -> net_processing -> llmq/quorums"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
-    "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> txmempool -> evo/deterministicmns"
     "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
