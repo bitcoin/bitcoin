@@ -235,7 +235,8 @@ class MiniWallet:
     def get_utxos(self, *, include_immature_coinbase=False, mark_as_spent=True):
         """Returns the list of all utxos and optionally mark them as spent"""
         if not include_immature_coinbase:
-            utxo_filter = filter(lambda utxo: not utxo['coinbase'] or COINBASE_MATURITY <= utxo['confirmations'], self._utxos)
+            blocks_height = self._test_node.getblockchaininfo()['blocks']
+            utxo_filter = filter(lambda utxo: not utxo['coinbase'] or COINBASE_MATURITY - 1 <= blocks_height - utxo['height'], self._utxos)
         else:
             utxo_filter = self._utxos
         utxos = deepcopy(list(utxo_filter))
