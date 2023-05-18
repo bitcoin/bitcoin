@@ -11,15 +11,6 @@
     <ClCompile Include="..\..\src\arith_uint256.cpp" />
     <ClCompile Include="..\..\src\consensus\merkle.cpp" />
     <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
-    <ClCompile Include="..\..\src\crypto\aes.cpp" />
-    <ClCompile Include="..\..\src\crypto\chacha20.cpp" />
-    <ClCompile Include="..\..\src\crypto\hmac_sha256.cpp" />
-    <ClCompile Include="..\..\src\crypto\hmac_sha512.cpp" />
-    <ClCompile Include="..\..\src\crypto\ripemd160.cpp" />
-    <ClCompile Include="..\..\src\crypto\sha1.cpp" />
-    <ClCompile Include="..\..\src\crypto\sha256.cpp" />
-    <ClCompile Include="..\..\src\crypto\sha256_sse4.cpp" />
-    <ClCompile Include="..\..\src\crypto\sha512.cpp" />
     <ClCompile Include="..\..\src\hash.cpp" />
     <ClCompile Include="..\..\src\primitives\block.cpp" />
     <ClCompile Include="..\..\src\primitives\transaction.cpp" />

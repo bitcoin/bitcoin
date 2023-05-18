@@ -13,7 +13,7 @@
     <ResourceCompile Include="..\..\src\qt\res\syscoin-qt-res.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libsyscoinconsensus\libsyscoinconsensus.vcxproj">
+    <ProjectReference Include="..\libsyscoin_consensus\libsyscoin_consensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libsyscoin_cli\libsyscoin_cli.vcxproj">
