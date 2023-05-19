@@ -11,6 +11,6 @@ export CONTAINER_NAME=ci_i686_centos_7
 export DOCKER_NAME_TAG=centos:7
 export DOCKER_PACKAGES="gcc-c++ glibc-devel.x86_64 libstdc++-devel.x86_64 glibc-devel.i686 libstdc++-devel.i686 ccache libtool make git python3 python36-zmq which patch lbzip2 dash"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
+export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
 export CONFIG_SHELL="/bin/dash"
 export PYZMQ=true
