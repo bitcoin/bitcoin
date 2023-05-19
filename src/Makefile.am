@@ -273,6 +273,7 @@ SYSCOIN_CORE_H = \
   node/mempool_args.h \
   node/mempool_persist_args.h \
   node/miner.h \
+  node/mini_miner.h \
   node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
@@ -537,6 +538,7 @@ libsyscoin_node_a_SOURCES = \
   node/interfaces.cpp \
   node/mempool_persist_args.cpp \
   node/miner.cpp \
+  node/mini_miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \

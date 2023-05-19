@@ -120,6 +120,7 @@ SYSCOIN_TESTS =\
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
+  test/miniminer_tests.cpp \
   test/miniscript_tests.cpp \
   test/minisketch_tests.cpp \
   test/multisig_tests.cpp \
@@ -303,6 +304,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/message.cpp \
  test/fuzz/miniscript.cpp \
  test/fuzz/minisketch.cpp \
+ test/fuzz/mini_miner.cpp \
  test/fuzz/muhash.cpp \
  test/fuzz/multiplication_overflow.cpp \
  test/fuzz/net.cpp \
