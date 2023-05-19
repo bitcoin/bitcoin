@@ -53,15 +53,14 @@ struct AddressTableEntryLessThan
 };
 
 /* Determine address type from address purpose */
-static AddressTableEntry::Type translateTransactionType(wallet::AddressPurpose purpose, bool isMine)
+constexpr AddressTableEntry::Type translateTransactionType(wallet::AddressPurpose purpose, bool isMine)
 {
     // "refund" addresses aren't shown, and change addresses aren't returned by getAddresses at all.
     switch (purpose) {
     case wallet::AddressPurpose::SEND: return AddressTableEntry::Sending;
     case wallet::AddressPurpose::RECEIVE: return AddressTableEntry::Receiving;
     case wallet::AddressPurpose::REFUND: return AddressTableEntry::Hidden;
-    // No default case to allow for compiler to warn
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
