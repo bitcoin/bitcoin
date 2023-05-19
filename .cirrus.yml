@@ -246,8 +246,8 @@ task:
   name: '[TSan, depends, gui] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    cpu: 4
-    memory: 16G  # The default memory is too small, so double everything
+    cpu: 6
+    memory: 24G  # The default memory is too small, so double everything
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:lunar
       FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
