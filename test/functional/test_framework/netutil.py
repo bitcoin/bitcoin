@@ -167,3 +167,10 @@ def test_unix_socket():
         return False
     else:
         return True
+
+def format_addr_port(addr, port):
+    '''Return either "addr:port" or "[addr]:port" based on whether addr looks like an IPv6 address.'''
+    if ":" in addr:
+        return f"[{addr}]:{port}"
+    else:
+        return f"{addr}:{port}"
