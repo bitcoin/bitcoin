@@ -27,6 +27,7 @@ project("Bitcoin Core"
   LANGUAGES CXX ASM
 )
 
+set(PACKAGE_NAME ${PROJECT_NAME})
 set(CLIENT_VERSION_IS_RELEASE "false")
 set(COPYRIGHT_YEAR "2023")
 set(COPYRIGHT_HOLDERS "The %s developers")
@@ -152,6 +153,7 @@ else()
 endif()
 
 add_subdirectory(src)
+add_subdirectory(test)
 
 message("\n")
 message("Configure summary")
