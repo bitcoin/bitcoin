@@ -33,7 +33,6 @@
 #include <linux/random.h>
 #endif
 #if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
-#include <unistd.h>
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
@@ -314,8 +313,6 @@ void GetOSRand(unsigned char *ent32)
     // Silence a compiler warning about unused function.
     (void)GetDevURandom;
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
-    /* getentropy() is available on macOS 10.12 and later.
-     */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
     }
