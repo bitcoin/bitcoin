@@ -12,3 +12,4 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --disable-bip70 --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
 export CONFIG_SHELL="/bin/dash"
 export PYZMQ=true
+export RUN_SYMBOL_TESTS=false
