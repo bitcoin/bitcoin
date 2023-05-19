@@ -100,7 +100,7 @@ Generate the change log. As this is a huge amount of work to do manually, there 
 
 Generate list of authors:
 
-    git log --format='- %aN' v(current version, e.g. 24.0)..v(new version, e.g. 24.1) | sort -fiu
+    git log --format='- %aN' v(current version, e.g. 24.0)..v(new version, e.g. 24.1) | grep -v 'merge-script' | sort -fiu
 
 ### Setup and perform Guix builds
 
