@@ -2075,6 +2075,13 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
 
 bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
 {
+    if (m_opts.sensitiverelayowntx) {
+        LOCK(m_mempool.cs);
+        if (m_mempool.IsUnbroadcastTx(gtxid)) {
+            return false;
+        }
+    }
+
     if (m_chainman.ActiveChain().Tip()->GetBlockHash() != hashRecentRejectsChainTip) {
         // If the chain tip has changed previously rejected transactions
         // might be now valid, e.g. due to a nLockTime'd tx becoming valid,
@@ -2410,7 +2417,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
             m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-            m_mempool.RemoveUnbroadcastTx(tx->GetHash());
+            if (!m_opts.sensitiverelayowntx) {
+                m_mempool.RemoveUnbroadcastTx(tx->GetHash());
+            }
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
             std::vector<uint256> parent_ids_to_add;
             {
@@ -4309,6 +4318,23 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         m_txrequest.ReceivedResponse(pfrom.GetId(), txid);
         if (tx.HasWitness()) m_txrequest.ReceivedResponse(pfrom.GetId(), wtxid);
+
+        if (m_opts.sensitiverelayowntx && m_mempool.RemoveUnbroadcastTx(txid)) {
+            LogPrintLevel( /* Continued */
+                BCLog::SENSITIVE_RELAY,
+                BCLog::Level::Info,
+                "Received own transaction (txid=%s) from the network from peer=%d%s; "
+                "stopping sensitive broadcast and broadcasting it to everybody as if it is not our transaction\n",
+                txid.ToString(),
+                pfrom.GetId(),
+                fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+
+            m_txrequest.ForgetTxHash(txid);
+            m_txrequest.ForgetTxHash(wtxid);
+            ScheduleTxForRelayToAll(txid, wtxid);
+            pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
+            return;
+        }
 
         // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
         // absence of witness malleation, this is strictly better, because the
