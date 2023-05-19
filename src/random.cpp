@@ -251,7 +251,7 @@ static void Strengthen(const unsigned char (&seed)[32], SteadyClock::duration du
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.
  */
-static void GetDevURandom(unsigned char *ent32)
+[[maybe_unused]] static void GetDevURandom(unsigned char *ent32)
 {
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
@@ -310,14 +310,10 @@ void GetOSRand(unsigned char *ent32)
        The function call is always successful.
      */
     arc4random_buf(ent32, NUM_OS_RANDOM_BYTES);
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
     }
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #elif defined(HAVE_SYSCTL_ARND)
     /* FreeBSD, NetBSD and similar. It is possible for the call to return less
      * bytes than requested, so need to read in a loop.
@@ -331,8 +327,6 @@ void GetOSRand(unsigned char *ent32)
         }
         have += len;
     } while (have < NUM_OS_RANDOM_BYTES);
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #else
     /* Fall back to /dev/urandom if there is no specific method implemented to
      * get system entropy for this OS.
