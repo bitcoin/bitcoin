@@ -800,7 +800,7 @@ std::set<BlockFilterType> g_enabled_filter_types;
     std::terminate();
 };
 
-bool AppInitBasicSetup(const ArgsManager& args)
+bool AppInitBasicSetup(const ArgsManager& args, std::atomic<int>& exit_status)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -814,7 +814,7 @@ bool AppInitBasicSetup(const ArgsManager& args)
     // Enable heap terminate-on-corruption
     HeapSetInformation(nullptr, HeapEnableTerminationOnCorruption, nullptr, 0);
 #endif
-    if (!InitShutdownState()) {
+    if (!InitShutdownState(exit_status)) {
         return InitError(Untranslated("Initializing wait-for-shutdown state failed."));
     }
 

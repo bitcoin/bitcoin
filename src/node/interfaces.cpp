@@ -92,7 +92,7 @@ public:
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        if (!AppInitBasicSetup(args())) return false;
+        if (!AppInitBasicSetup(args(), Assert(context())->exit_status)) return false;
         if (!AppInitParameterInteraction(args(), /*use_syscall_sandbox=*/false)) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
