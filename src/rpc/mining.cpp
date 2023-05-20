@@ -372,7 +372,8 @@ static UniValue generateblock(const JSONRPCRequest& request)
         block = blocktemplate->block;
     }
 
-    CHECK_NONFATAL(block.vtx.size() == 1);
+    // 1 coinbase + could have a few quorum commitments
+    CHECK_NONFATAL(block.vtx.size() >= 1);
 
     // Add transactions
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
