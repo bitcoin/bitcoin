@@ -7,8 +7,10 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/eip_2333/bls12_381_keygen.h>
+#include <blsct/double_public_key.h>
 #include <blsct/public_key.h>
 #include <blsct/private_key.h>
+#include <blsct/wallet/address.h>
 #include <blsct/wallet/keyring.h>
 #include <blsct/wallet/hdchain.h>
 #include <logging.h>
@@ -86,6 +88,8 @@ public:
     bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);;
 
     bool CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool accept_no_keys);
+
+    SubAddress GetAddress(const SubAddressIdentifier& id = {0,0});
 
     /* Set the HD chain model (chain child index counters) and writes it to the database */
     void AddHDChain(const blsct::HDChain& chain);

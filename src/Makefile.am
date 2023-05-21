@@ -744,6 +744,8 @@ libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
   blsct/arith/elements.cpp \
+  blsct/double_public_key.cpp \
+  blsct/public_key.cpp \
   chainparams.cpp \
   coins.cpp \
   common/args.cpp \

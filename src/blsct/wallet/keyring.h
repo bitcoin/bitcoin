@@ -5,6 +5,7 @@
 #ifndef KEYRING_H
 #define KEYRING_H
 
+#include <blsct/double_public_key.h>
 #include <blsct/public_key.h>
 #include <blsct/private_key.h>
 #include <sync.h>

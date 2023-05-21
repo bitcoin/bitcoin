@@ -349,4 +349,9 @@ void KeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
         nTimeFirstKey = nCreateTime;
     }
 }
+
+SubAddress KeyMan::GetAddress(const SubAddressIdentifier& id)
+{
+    return SubAddress(viewKey, spendPublicKey, id);
+};
 }

@@ -24,6 +24,7 @@ public:
     static constexpr size_t SIZE = 48 * 2;
 
     DoublePublicKey() {}
+    DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
     DoublePublicKey(const Point& vk_, const Point& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
     DoublePublicKey(const std::vector<unsigned char>& vk_, const std::vector<unsigned char>& sk_) : vk(vk_), sk(sk_) {}
 
@@ -36,6 +37,7 @@ public:
     bool GetSpendKey(Point& ret) const;
 
     bool operator==(const DoublePublicKey& rhs) const;
+    bool operator<(const DoublePublicKey& rhs) const;
 
     bool IsValid() const;
 

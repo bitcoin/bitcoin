@@ -38,6 +38,12 @@ bool DoublePublicKey::operator==(const DoublePublicKey& rhs) const
     return vk == rhs.vk && sk == rhs.sk;
 }
 
+bool DoublePublicKey::operator<(const DoublePublicKey& rhs) const
+{
+    return this->GetVkVch() == rhs.GetVkVch() ? this->GetSkVch() < rhs.GetSkVch() : this->GetVkVch() < rhs.GetVkVch();
+};
+
+
 bool DoublePublicKey::IsValid() const
 {
     return vk.IsValid() && sk.IsValid();

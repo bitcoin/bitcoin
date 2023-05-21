@@ -24,6 +24,16 @@ private:
 public:
     explicit DestinationEncoder(const CChainParams& params) : m_params(params) {}
 
+    std::string operator()(const blsct::DoublePublicKey& id) const
+    {
+        std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
+        auto vchView = id.GetVkVch();
+        auto vchSpend = id.GetSkVch();
+        data.insert(data.end(), vchView.begin(), vchView.end());
+        data.insert(data.end(), vchSpend.begin(), vchSpend.end());
+        return EncodeBase58Check(data);
+    }
+
     std::string operator()(const PKHash& id) const
     {
         std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);

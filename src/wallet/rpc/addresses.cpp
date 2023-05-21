@@ -471,7 +471,13 @@ public:
         }
         return obj;
     }
-
+    UniValue operator()(const blsct::DoublePublicKey& id) const {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey vchPubKey;
+        obj.pushKV("viewKey", HexStr(id.GetVkVch()));
+        obj.pushKV("spendKey", HexStr(id.GetSkVch()));
+        return UniValue(UniValue::VOBJ);
+    }
     UniValue operator()(const WitnessV1Taproot& id) const { return UniValue(UniValue::VOBJ); }
     UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
 };

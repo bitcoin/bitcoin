@@ -7,6 +7,7 @@
 #define BITCOIN_SCRIPT_STANDARD_H
 
 #include <attributes.h>
+#include <blsct/double_public_key.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <uint256.h>
@@ -146,7 +147,7 @@ struct WitnessUnknown
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W???)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-using CTxDestination = std::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, WitnessUnknown, blsct::DoublePublicKey>;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
