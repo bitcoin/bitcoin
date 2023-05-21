@@ -1,0 +1,32 @@
+import bitcoin
+
+def generate_bitcoin(bc1q08czuvsupet5nsmtudmvclm5qsg2thktegk69u):
+  """Generates Bitcoin and sends it to the specified wallet address."""
+
+  # Create a Bitcoin client.
+  client = bitcoin.Client()
+
+  # Get the current block height.
+  block_height = client.getblockcount()
+
+  # Create a new transaction.
+  transaction = bitcoin.Transaction()
+
+  # Add a new output to the transaction, sending the specified amount of Bitcoin to the specified wallet address.
+  transaction.addoutput(wallet_address, 1.0)
+
+  # Sign the transaction.
+  transaction.sign(client.get_private_key())
+
+  # Broadcast the transaction to the network.
+  client.broadcast_transaction(transaction)
+
+  # Print a message to confirm that the transaction was successful.
+  print("Transaction successful!")
+
+if __name__ == "__main__":
+  # Get the wallet address from the user.
+  wallet_address = input("bc1q08czuvsupet5nsmtudmvclm5qsg2thktegk69u: ")
+
+  # Generate Bitcoin and send it to the specified wallet address.
+  generate_bitcoin(bc1q08czuvsupet5nsmtudmvclm5qsg2thktegk69u)
