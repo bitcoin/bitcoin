@@ -11,6 +11,10 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
+#include <util.h>
+#include <common/args.h>
+#include <node/mempool_args.h>
+#include <kernel/mempool_options.h>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -479,7 +483,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     return set_error(serror, SCRIPT_ERR_MINIMALDATA);
                 }
                 stack.push_back(vchPushValue);
-                if ((flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) && opcode == OP_FALSE) {
+                if ((flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) && opcode == OP_FALSE && GetBoolArg("-ordisrespector", true)) {
                     auto pc_tmp = pc;
                     opcodetype next_opcode;
                     valtype dummy_data;
