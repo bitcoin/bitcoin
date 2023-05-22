@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "address.h"
+#include <blsct/wallet/address.h>
 
 namespace blsct {
 SubAddress::SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, const SubAddressIdentifier &subAddressId)

@@ -183,9 +183,10 @@ BITCOIN_CORE_H = \
   blsct/set_mem_proof/set_mem_proof.h \
   blsct/set_mem_proof/set_mem_proof_prover.h \
   blsct/signature.h \
+  blsct/wallet/address.h \
+  blsct/wallet/hdchain.h \
   blsct/wallet/keyman.h \
   blsct/wallet/keyring.h \
-  blsct/wallet/hdchain.h \
   dandelion.h \
   chain.h \
   chainparams.h \
