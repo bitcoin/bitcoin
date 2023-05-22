@@ -38,7 +38,7 @@
 /* Define to 1 to enable SQLite wallet */
 #define USE_SQLITE 1
 
-/* Define to 1 to enable ZMQ functions */
+/* Define this symbol to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
 /* define if external signer support is enabled (requires Boost::Process) */
