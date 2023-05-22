@@ -51,11 +51,11 @@ cd "${MY_DIR}/.."
     --enable-determinism \
     --enable-suppress-external-warnings \
     --enable-wallet \
-    --enable-werror \
     --disable-bench \
     --disable-gui-tests \
     --disable-man \
     --disable-tests \
+    --disable-werror \
     --with-boost="${MY_DIR}/../../itcoin-pbft/build/usrlocal" \
     --with-incompatible-bdb \
     --with-zmq \

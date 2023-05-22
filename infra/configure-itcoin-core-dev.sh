@@ -62,10 +62,10 @@ cd "${MY_DIR}/.."
     --enable-suppress-external-warnings \
     --enable-tests \
     --enable-wallet \
-    --enable-werror \
     --disable-bench \
     --disable-gui-tests \
     --disable-man \
+    --disable-werror \
     --with-boost="${USR_DIR}" \
     --with-incompatible-bdb \
     --with-zmq \
