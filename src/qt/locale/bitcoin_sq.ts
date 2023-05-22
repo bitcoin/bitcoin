@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen.</translation>
+        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">afer</translation>
+        <translation type="unfinished">afër</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>

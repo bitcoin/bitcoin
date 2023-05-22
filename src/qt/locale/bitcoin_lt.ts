@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Spustelėkite dešinįjį klavišą norint keisti adresą arba etiketę</translation>
+        <translation type="unfinished">Spustelėkite dešinįjį pelės klavišą norint keisti adresą arba etiketę </translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -70,6 +70,12 @@
         <translation type="unfinished">Tai yra jūsų Bitcoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Tai jūsų Bitcoin mokėjimų gavimo adresai. Naudokite 'Sukurti naują gavimo adresą' mygtuką gavimų skirtuke kad sukurtumėte naujus adresus.
+Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">&amp;Kopijuoti adresą</translation>
     </message>
@@ -84,6 +90,11 @@
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">Eksportuoti adresų sąrašą</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Kableliais atskirtas failas</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -190,7 +201,7 @@
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Dėl vidinės klaidos nepavyko užšifruoti piniginę.Piniginė neužšifruota.</translation>
+        <translation type="unfinished">Dėl vidinės klaidos nepavyko užšifruoti piniginę. Piniginė neužšifruota.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -244,6 +255,10 @@
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">Klaida: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 dar saugiai neužbaigė darbo...</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -339,6 +354,14 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Nustatymų failas negalėjo būti perskaitytas</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Nustatymų failas negalėjo būti parašytas</translation>
+    </message>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">%s kūrėjai</translation>
@@ -539,6 +562,10 @@
         <translation type="unfinished">Sukurti naują piniginę</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Sumažinti</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Piniginė</translation>
     </message>
@@ -570,6 +597,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation type="unfinished">&amp;Gauti</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Nustatymai</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -2881,6 +2912,11 @@
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Eksportuoti sandorių istoriją</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Kableliais atskirtas failas</translation>
     </message>
     <message>
         <source>Confirmed</source>

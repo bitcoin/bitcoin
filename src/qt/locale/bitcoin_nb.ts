@@ -269,6 +269,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Vil du tilbakestille innstillingene til utgangsverdiene, eller vil du avbryte uten å gjøre endringer?</translation>
     </message>
     <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">En fatal feil har oppstått. Sjekk at filen med innstillinger er skrivbar eller prøv å kjøre med -nosettings.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">Feil: Den spesifiserte datamappen "%1" finnes ikke.</translation>
     </message>
@@ -319,6 +324,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Block Relay</source>
         <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
         <translation type="unfinished">Blokkrelé</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <extracomment>Peer connection type established manually through one of several methods.</extracomment>
+        <translation type="unfinished">Håndbok</translation>
     </message>
     <message>
         <source>Feeler</source>
@@ -656,6 +666,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Feil: Ingen %s adresser tilgjengelige.</translation>
     </message>
     <message>
+        <source>Error: Unable to write record to new wallet</source>
+        <translation type="unfinished">Feil: Kan ikke skrive rekord til ny lommebok</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Kunne ikke lytte på noen port. Bruk -listen=0 hvis det er dette du vil.</translation>
     </message>
@@ -686,6 +700,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation type="unfinished">Sunnhetssjekk ved oppstart mislyktes. %s skrus av.</translation>
+    </message>
+    <message>
+        <source>Input not found or already spent</source>
+        <translation type="unfinished">Finner ikke data eller er allerede brukt</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
@@ -736,8 +754,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Laster lommebok...</translation>
     </message>
     <message>
+        <source>Missing amount</source>
+        <translation type="unfinished">Mangler beløp</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Må oppgi en port med -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>No addresses available</source>
+        <translation type="unfinished">Ingen adresser tilgjengelig</translation>
     </message>
     <message>
         <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
@@ -766,6 +792,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation type="unfinished">Reduserer -maxconnections fra %d til %d, pga. systembegrensninger.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Spiller av blokker på nytt …</translation>
     </message>
     <message>
         <source>Rescanning…</source>
@@ -2332,6 +2362,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Transaksjonen trenger signatur(er).</translation>
     </message>
     <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">(Men ingen lommebok er lastet.)</translation>
+    </message>
+    <message>
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(Men denne lommeboken kan ikke signere transaksjoner.)</translation>
     </message>
@@ -2571,12 +2605,20 @@ Hvis du får denne feilen burde du be forretningsdrivende om å tilby en BIP21 k
         <translation type="unfinished">Synkroniserte Blokker</translation>
     </message>
     <message>
+        <source>Last Transaction</source>
+        <translation type="unfinished">Siste transaksjon</translation>
+    </message>
+    <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
         <translation type="unfinished">Det kartlagte Autonome Systemet som brukes til å diversifisere valg av likemenn.</translation>
     </message>
     <message>
         <source>Mapped AS</source>
         <translation type="unfinished">Kartlagt AS</translation>
+    </message>
+    <message>
+        <source>Addresses Processed</source>
+        <translation type="unfinished">Adresser Prosessert</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3249,6 +3291,11 @@ Hvis du får denne feilen burde du be forretningsdrivende om å tilby en BIP21 k
         <translation type="unfinished">Se over ditt transaksjonsforslag. Dette kommer til å produsere en Delvis Signert Bitcoin Transaksjon (PSBT) som du kan lagre eller kopiere og så signere med f.eks. en offline %1 lommebok, eller en PSBT kompatibel hardware lommebok.</translation>
     </message>
     <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation type="unfinished">Vil du lage denne transaksjonen?</translation>
+    </message>
+    <message>
         <source>Please, review your transaction.</source>
         <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
         <translation type="unfinished">Vennligst se over transaksjonen din.</translation>
@@ -3560,7 +3607,11 @@ Hvis du får denne feilen burde du be forretningsdrivende om å tilby en BIP21 k
         <source>(press q to shutdown and continue later)</source>
         <translation type="unfinished">(trykk q for å skru av og fortsette senere)</translation>
     </message>
-    </context>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">trykk på q for å slå av</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
     <message>

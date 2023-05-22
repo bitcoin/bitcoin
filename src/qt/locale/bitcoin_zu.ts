@@ -72,6 +72,13 @@
     </message>
     </context>
 <context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Error: Missing checksum</source>
+        <translation type="unfinished">Iphutha: iChecksum engekho</translation>
+    </message>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Options…</source>
@@ -166,6 +173,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Sign failed</source>
+        <translation type="unfinished">Uphawu lwehlulekile</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">

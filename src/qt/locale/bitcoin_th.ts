@@ -66,12 +66,22 @@
         <translation type="unfinished">แอดเดรส การรับ</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">&amp;คัดลอก แอดเดรส</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">&amp;คัดลอก เลเบล</translation>
+        <translation type="unfinished">คัดลอก &amp;เลเบล</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -79,21 +89,21 @@
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">ส่งออก รายการ แอดเดรส</translation>
+        <translation type="unfinished">ส่งออกรายการแอดเดรส</translation>
     </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">Comma(,) เพื่อแยก ไฟล์</translation>
+        <translation type="unfinished">เครื่องหมายจุลภาค (Comma) เพื่อแยกไฟล์</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">เกิด ข้อผิดพลาด ขณะพยายาม บันทึก รายการ แอดเดรส ไปยัง %1 โปรด ลอง อีกครั้ง</translation>
+        <translation type="unfinished">เกิดข้อผิดพลาดขณะพยายามบันทึกรายการแอดเดรสไปยัง %1 โปรดลองอีกครั้ง</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">การส่งออก ล้มเหลว</translation>
+        <translation type="unfinished">การส่งออกล้มเหลว</translation>
     </message>
 </context>
 <context>
@@ -131,11 +141,11 @@
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">แสดง พาสเฟส</translation>
+        <translation type="unfinished">แสดงพาสเฟส</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">เข้ารหัส วอลเล็ต</translation>
+        <translation type="unfinished">เข้ารหัสวอลเล็ต</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -143,15 +153,15 @@
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">ปลดล็อค วอลเล็ต</translation>
+        <translation type="unfinished">ปลดล็อควอลเล็ต</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">เปลี่ยน พาสเฟส</translation>
+        <translation type="unfinished">เปลี่ยนพาสเฟส</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">ยืนยัน การเข้ารหัส วอลเล็ต</translation>
+        <translation type="unfinished">ยืนยันการเข้ารหัสวอลเล็ต</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -163,7 +173,7 @@
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">เข้ารหัส วอลเล็ต เรียบร้อย</translation>
+        <translation type="unfinished">เข้ารหัสวอลเล็ตเรียบร้อย</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -171,7 +181,7 @@
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">ป้อน พาสเฟส เก่า และ พาสเฟส ใหม่ สำหรับ วอลเล็ต</translation>
+        <translation type="unfinished">ป้อนพาสเฟสเก่าและพาสเฟสใหม่สำหรับวอลเล็ต</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -179,15 +189,15 @@
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">วอลเล็ต ที่ จะ เข้ารหัส</translation>
+        <translation type="unfinished">วอลเล็ตที่จะเข้ารหัส</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">วอลเล็ต ของคุณ กำลัง ถูก เข้ารหัส</translation>
+        <translation type="unfinished">วอลเล็ตของคุณกำลังถูกเข้ารหัส</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">วอลเล็ต ของคุณ ถูกเข้ารหัส เรียบร้อยแล้ว</translation>
+        <translation type="unfinished">วอลเล็ตของคุณถูกเข้ารหัสเรียบร้อยแล้ว</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -195,7 +205,7 @@
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">การเข้ารหัส วอลเล็ต ล้มเหลว</translation>
+        <translation type="unfinished">การเข้ารหัสวอลเล็ตล้มเหลว</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
@@ -203,11 +213,11 @@
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">พาสเฟส ที่ป้อน ไม่ ถูก ต้อง</translation>
+        <translation type="unfinished">พาสเฟสที่ป้อนไม่ถูกต้อง</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">การปลดล็อค วอลเล็ต ล้มเหลว</translation>
+        <translation type="unfinished">การปลดล็อควอลเล็ตล้มเหลว</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
@@ -215,11 +225,11 @@
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished">เปลี่ยน พาสเฟส วอลเล็ต สำเร็จแล้ว</translation>
+        <translation type="unfinished">เปลี่ยนพาสเฟสวอลเล็ตสำเร็จแล้ว</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished">คำเตือน: Caps Lock คีย์ ถูก เปิด!</translation>
+        <translation type="unfinished">คำเตือน:แป้นคีย์ตัวอักษรพิมพ์ใหญ่ (Cap Lock) ถูกเปิด!</translation>
     </message>
 </context>
 <context>
@@ -231,6 +241,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">ข้อยกเว้นการหลบหนี</translation>
+    </message>
     <message>
         <source>Internal error</source>
         <translation type="unfinished">ข้อผิดพลาดภายใน</translation>
@@ -344,8 +358,20 @@
         <translation type="unfinished">ข้อผิดพลาด: เลกาซี วอลเล็ต เพียง สนับสนุน "legacy", "p2sh-segwit", และ "bech32" ชนิด แอดเดรส</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation type="unfinished">จำนวนเงินที่ทำธุรกรรมน้อยเกินไปที่จะส่งหลังจากหักค่าธรรมเนียมแล้ว</translation>
+    </message>
+    <message>
         <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
         <translation type="unfinished">ไม่สามารถตั้ง -forcednsseed เป็น true ได้เมื่อการตั้งค่า -dnsseed เป็น false</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">ไม่สามารถตั้งค่า -peerblockfilters โดยที่ไม่มี -blockfilterindex</translation>
+    </message>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%sขอฟังความเห็นเรื่องพอร์ต%u พอร์ตนี้ถือว่า "ไม่ดี" ดังนั้นจึงไม่น่าเป็นไปได้ที่ Bitcoin Core จะเชื่อมต่อกับพอร์ตนี้ ดู doc/p2p-bad-ports.md สำหรับรายละเอียดและรายการทั้งหมด</translation>
     </message>
     <message>
         <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
@@ -354,6 +380,10 @@
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">ไม่สามารถเปลี่ยนชื่อไฟล์ peers.dat ที่ไม่ถูกต้อง โปรดย้ายหรือลบแล้วลองอีกครั้ง</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided (no -proxy= and no -onion= given) or it is explicitly forbidden (-onion=0)</source>
+        <translation type="unfinished">การเชื่อมต่อขาออก จำกัด ไว้ที่ Tor (-onlynet=onion) แต่ไม่มีพร็อกซีสำหรับการเข้าถึงเครือข่าย Tor (ไม่มี -proxy= และไม่มี -onion= กำหนด) หรือถูกห้ามอย่างชัดแจ้ง (-onion=0)</translation>
     </message>
     <message>
         <source>Could not find asmap file %s</source>
@@ -472,6 +502,18 @@
         <translation type="unfinished">เงินทุน ไม่เพียงพอ</translation>
     </message>
     <message>
+        <source>Loading P2P addresses…</source>
+        <translation type="unfinished">กำลังโหลด P2P addresses…</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation type="unfinished">กำลังโหลด banlist…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation type="unfinished">กำลังโหลด block index…</translation>
+    </message>
+    <message>
         <source>Loading wallet…</source>
         <translation type="unfinished">กำลังโหลด วอลเล็ต...</translation>
     </message>
@@ -480,12 +522,32 @@
         <translation type="unfinished">จำนวน ที่หายไป</translation>
     </message>
     <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">ไม่มีข้อมูลการแก้ไขสำหรับการประมาณค่าขนาดธุรกรรม</translation>
+    </message>
+    <message>
         <source>No addresses available</source>
         <translation type="unfinished">ไม่มี แอดเดรส ที่ใช้งานได้</translation>
     </message>
     <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">มีตัวอธิบายไฟล์ไม่เพียงพอ</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation type="unfinished">ไม่สามารถกำหนดค่าพรุนด้วยค่าลบ</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation type="unfinished">โหมดพรุนเข้ากันไม่ได้กับ -txindex</translation>
+    </message>
+    <message>
         <source>Rescanning…</source>
         <translation type="unfinished">ทำการสแกนซ้ำ…</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">ส่วน [%s] ไม่เป็นที่รู้จัก</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
@@ -560,6 +622,10 @@
         <translation type="unfinished">ธุรกรรมใหญ่เกินไป</translation>
     </message>
     <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation type="unfinished">ไม่สามารถผูก %s บนคอมพิวเตอร์นี้ %s อาจเนื่องมาจากเคยใช้แล้ว</translation>
+    </message>
+    <message>
         <source>Unable to create the PID file '%s': %s</source>
         <translation type="unfinished">ไม่สามารถสร้างไฟล์ PID '%s': %s</translation>
     </message>
@@ -576,6 +642,10 @@
         <translation type="unfinished">ไม่สามารถเปิด %s สำหรับการเขียนข้อมูล</translation>
     </message>
     <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">ไม่รู้จัก -ค่า blockfilterindex value %s</translation>
+    </message>
+    <message>
         <source>Unknown address type '%s'</source>
         <translation type="unfinished">ไม่รู้จัก ประเภท แอดเดรส '%s'</translation>
     </message>
@@ -588,8 +658,16 @@
         <translation type="unfinished">ไม่รู้จัก เครือข่าย ที่ระบุ ใน -onlynet: '%s'</translation>
     </message>
     <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished">หมวดหมู่การบันทึกที่ไม่รองรับ %s=%s</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation type="unfinished">กำลังอัพเกรด ฐานข้อมูล UTXO</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished">ความคิดเห็นของ User Agent (%s) มีอักขระที่ไม่ปลอดภัย</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
@@ -599,7 +677,11 @@
         <source>Verifying wallet(s)…</source>
         <translation type="unfinished">กำลังตรวจสอบ วอลเล็ต…</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished">ต้องเขียน Wallet ใหม่: restart %s เพื่อให้เสร็จสิ้น</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -673,7 +755,7 @@
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished">สำรองข้อมูล วอลเล็ต ไปยัง ตำแหน่ง ที่ตั้ง อื่น</translation>
+        <translation type="unfinished">แบ็คอัพวอลเล็ตไปยังตำแหน่งที่ตั้งอื่น</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -701,7 +783,7 @@
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;สำรองข้อมูล วอลเล็ต...</translation>
+        <translation type="unfinished">&amp;แบ็คอัพวอลเล็ต…</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase…</source>
@@ -1189,6 +1271,10 @@
         <translation type="unfinished">คุณ แน่ใจ หรือไม่ว่า ต้องการ ปิด วอลเล็ต &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation type="unfinished">Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">ปิด วอลเล็ต ทั้งหมด</translation>
     </message>
@@ -1224,8 +1310,16 @@
         <translation type="unfinished">ตัวเลือก ขั้นสูง</translation>
     </message>
     <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation type="unfinished">Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets</translation>
+    </message>
+    <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">ปิดใช้งาน คีย์ ส่วนตัว</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation type="unfinished">Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1234,6 +1328,10 @@
     <message>
         <source>Descriptor Wallet</source>
         <translation type="unfinished">ตัวอธิบาย วอลเล็ต</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1279,6 +1377,14 @@
         <translation type="unfinished">แอดเดรส ที่ป้อน "%1" เป็น Bitcoin แอดเดรส ที่ ไม่ ถูกต้อง</translation>
     </message>
     <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation type="unfinished">The entered address "%1" is already in the address book with label "%2"</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">ไม่สามารถปลดล็อควอลเล็ต</translation>
     </message>
@@ -1317,6 +1423,10 @@
         <translation type="unfinished">มีพื้นที่ว่าง %1 GB ที่ใช้งานได้</translation>
     </message>
     <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation type="unfinished">At least %1 GB of data will be stored in this directory, and it will grow over time</translation>
+    </message>
+    <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
         <translation type="unfinished">ประมาณ %1 GB ของข้อมูลจะเก็บในไดเร็กทอรี่</translation>
     </message>
@@ -1350,6 +1460,22 @@
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">นี่เป็นการรันโปรแกรมครั้งแรก ท่านสามารถเลือก ว่าจะเก็บข้อมูลไว้ที่ %1</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1662,6 +1788,10 @@
     <message>
         <source>Cannot sign inputs while wallet is locked.</source>
         <translation type="unfinished">ไม่สามารถลงนามอินพุตในขณะที่วอลเล็ตถูกล็อค</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation type="unfinished">ข้อผิดพลาดที่ไม่รู้จักของการประมวลผลธุรกรรม</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -2523,6 +2653,10 @@
         <translation type="unfinished">คัดลอก full transaction &amp;details</translation>
     </message>
     <message>
+        <source>&amp;Show transaction details</source>
+        <translation type="unfinished">&amp;แสดงรายละเอียดการทำธุรกรรม</translation>
+    </message>
+    <message>
         <source>&amp;Edit address label</source>
         <translation type="unfinished">&amp;แก้ไข แอดเดรส เลเบล</translation>
     </message>
@@ -2603,6 +2737,19 @@
         <translation type="unfinished">ส่ง คอยน์</translation>
     </message>
     <message>
+        <source>Increasing transaction fee failed</source>
+        <translation type="unfinished">ค่าธรรมเนียมการทำธุรกรรมที่เพิ่มขึ้นล้มเหลว</translation>
+    </message>
+    <message>
+        <source>Do you want to increase the fee?</source>
+        <extracomment>Asks a user if they would like to manually increase the fee of a transaction that has already been created.</extracomment>
+        <translation type="unfinished">คุณต้องการเพิ่มค่าธรรมเนียมหรือไม่?</translation>
+    </message>
+    <message>
+        <source>Current fee:</source>
+        <translation type="unfinished">ค่าธรรมเนียมปัจจุบัน:</translation>
+    </message>
+    <message>
         <source>Increase:</source>
         <translation type="unfinished">เพิ่มขึ้น:</translation>
     </message>
@@ -2611,8 +2758,20 @@
         <translation type="unfinished">ค่าธรรมเนียม ใหม่:</translation>
     </message>
     <message>
+        <source>Can't draft transaction.</source>
+        <translation type="unfinished">ไม่สามารถร่างธุรกรรมได้</translation>
+    </message>
+    <message>
         <source>PSBT copied</source>
         <translation type="unfinished">คัดลอก PSBT แล้ว</translation>
+    </message>
+    <message>
+        <source>Can't sign transaction.</source>
+        <translation type="unfinished">ไม่สามารถลงนามในการทำธุรกรรม</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation type="unfinished">ไม่สามารถทำธุรกรรมได้</translation>
     </message>
     <message>
         <source>Can't display address</source>
@@ -2635,7 +2794,7 @@
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished">สำรองข้อมูล วอลเล็ต</translation>
+        <translation type="unfinished">แบ็คอัพวอลเล็ต</translation>
     </message>
     <message>
         <source>Wallet Data</source>
@@ -2649,6 +2808,10 @@
     <message>
         <source>Backup Successful</source>
         <translation type="unfinished">สำรองข้อมูล สำเร็จแล้ว</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation type="unfinished">บันทึกข้อมูลวอลเล็ตไว้ที่ %1 เรียบร้อยแล้ว</translation>
     </message>
     <message>
         <source>Cancel</source>

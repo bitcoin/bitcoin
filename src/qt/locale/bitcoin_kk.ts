@@ -606,6 +606,10 @@
         <translation type="unfinished">Растық</translation>
     </message>
     <message>
+        <source>yes</source>
+        <translation type="unfinished">Иа</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation type="unfinished">(белгі жоқ)</translation>
     </message>

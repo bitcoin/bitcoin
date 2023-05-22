@@ -74,6 +74,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">আপনি কি ডিফল্ট মানগুলিতে সেটিংস রিসেট করতে চান, নাকি পরিবর্তন না করেই বাতিল করতে চান?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">একটি জটিল ত্রুটি হয়েছে। সেটিং ফাইল টি রাইটেবল কিনা চেক করুন, অথবা -nosettings দিয়ে রান করার চেষ্টা করুন</translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely…</source>
         <translation type="unfinished">%1 এখনো নিরাপদে বের হয়নি</translation>
     </message>
@@ -132,6 +142,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Settingsসেটিংস ফাইল পড়া যাবে না।fileসেটিংস ফাইল পড়া যাবে না।couldসেটিংস ফাইল পড়া যাবে না।notসেটিংস ফাইল পড়া যাবে না।beসেটিংস ফাইল পড়া যাবে না।read</translation>
+    </message>
     <message>
         <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
         <translation type="unfinished">এস. কিয়ু. লাইট ডাটাবেস : অপ্রত্যাশিত এপ্লিকেশন আই.ডি. প্রত্যাশিত %u, পাওয়া গেলো %u </translation>

@@ -169,11 +169,11 @@ static RPCHelpMan createmultisig()
     result.pushKV("descriptor", descriptor->ToString());
 
     UniValue warnings(UniValue::VARR);
-    if (!request.params[2].isNull() && OutputTypeFromDestination(dest) != output_type) {
+    if (descriptor->GetOutputType() != output_type) {
         // Only warns if the user has explicitly chosen an address type we cannot generate
         warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
     }
-    if (warnings.size()) result.pushKV("warnings", warnings);
+    if (!warnings.empty()) result.pushKV("warnings", warnings);
 
     return result;
 },
@@ -284,7 +284,7 @@ static RPCHelpMan deriveaddresses()
 
     UniValue addresses(UniValue::VARR);
 
-    for (int i = range_begin; i <= range_end; ++i) {
+    for (int64_t i = range_begin; i <= range_end; ++i) {
         FlatSigningProvider provider;
         std::vector<CScript> scripts;
         if (!desc->Expand(i, key_provider, scripts, provider)) {
