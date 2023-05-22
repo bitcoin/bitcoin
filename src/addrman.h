@@ -27,7 +27,14 @@ public:
 class AddrManImpl;
 
 /** Default for -checkaddrman */
-static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
+static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{
+#ifdef DEBUG_ADDRMAN
+    1000
+#else
+    0
+#endif
+};
+
 
 /** Test-only struct, capturing info about an address in AddrMan */
 struct AddressPosition {
