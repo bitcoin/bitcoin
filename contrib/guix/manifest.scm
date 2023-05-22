@@ -559,9 +559,7 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "0azpb9cvnbv25zg8019rqz48h8i2257ngyjg566dlnp74ivrs9vq"))
-              (patches (search-our-patches "glibc-ldd-x86_64.patch"
-                                           "glibc-versioned-locpath.patch"
-                                           "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
+              (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
                                            "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"))))))
 
