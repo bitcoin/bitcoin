@@ -19,6 +19,7 @@ Developer Notes
         - [DEBUG_ADDRMAN](#debug_addrman)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [DEBUG_LOCKCONTENTION](#debug_lockcontention)
+        - [DEBUG_MEMPOOL](#debug_mempool)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
@@ -449,6 +450,21 @@ i.e. `CPPFLAGS="-DDEBUG_LOCKCONTENTION"`, then build and run bitcoind.
 You can then use the `-debug=lock` configuration option at bitcoind startup or
 `bitcoin-cli logging '["lock"]'` at runtime to turn on lock contention logging.
 It can be toggled off again with `bitcoin-cli logging [] '["lock"]'`.
+
+### DEBUG_MEMPOOL
+
+The `--enable-debug` configure option adds `-DDEBUG_MEMPOOL` to the compiler
+flags. You may also enable it manually for a non-debug build by running
+configure with `-DDEBUG_MEMPOOL` added to your CPPFLAGS, i.e.
+`CPPFLAGS="-DDEBUG_MEMPOOL"`, then build and run bitcoind.
+
+When set, the `DEBUG_MEMPOOL` flag will automatically enable mempool
+consistency checks after every <n> operations, the same as using debug runtime
+option `-checkmempool=<n>` where `n=1000`.
+
+To opt out of mempool consistency checks when running a debug build, or to
+re-configure the number of operations it runs after, use the
+`-checkmempool=<n>` runtime option for `bitcoind`.
 
 ### Assertions and Checks
 
