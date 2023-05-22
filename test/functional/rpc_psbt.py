@@ -42,7 +42,10 @@ from test_framework.util import (
     find_vout_for_address,
     random_bytes,
 )
-from test_framework.wallet_util import bytes_to_wif
+from test_framework.wallet_util import (
+    bytes_to_wif,
+    get_generate_key
+)
 
 import json
 import os
@@ -942,6 +945,48 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test we don't crash when making a 0-value funded transaction at 0 fee without forcing an input selection")
         assert_raises_rpc_error(-4, "Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input", self.nodes[0].walletcreatefundedpsbt, [], [{"data": "deadbeef"}], 0, {"fee_rate": "0"})
 
+        self.log.info("Test descriptorprocesspsbt updates and signs a psbt with descriptors")
+
+        self.generate(self.nodes[2], 1)
+
+        # Disable the wallet for node 2 since `descriptorprocesspsbt` does not use the wallet
+        self.restart_node(2, extra_args=["-disablewallet"])
+        self.connect_nodes(0, 2)
+        self.connect_nodes(1, 2)
+
+        key_info = get_generate_key()
+        key = key_info.privkey
+        address = key_info.p2wpkh_addr
+
+        descriptor = descsum_create(f"wpkh({key})")
+
+        txid = self.nodes[0].sendtoaddress(address, 1)
+        self.sync_all()
+        vout = find_output(self.nodes[0], txid, 1)
+
+        psbt = self.nodes[2].createpsbt([{"txid": txid, "vout": vout}], {self.nodes[0].getnewaddress(): 0.99999})
+        decoded = self.nodes[2].decodepsbt(psbt)
+        test_psbt_input_keys(decoded['inputs'][0], [])
+
+        # Test that even if the wrong descriptor is given, `witness_utxo` and `non_witness_utxo`
+        # are still added to the psbt
+        alt_descriptor = descsum_create(f"wpkh({get_generate_key().privkey})")
+        alt_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[alt_descriptor], sighashtype="ALL")["psbt"]
+        decoded = self.nodes[2].decodepsbt(alt_psbt)
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo'])
+
+        # Test that the psbt is not finalized and does not have bip32_derivs unless specified
+        psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=True, finalize=False)["psbt"]
+        decoded = self.nodes[2].decodepsbt(psbt)
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'partial_signatures', 'bip32_derivs'])
+
+        psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=False, finalize=True)["psbt"]
+        decoded = self.nodes[2].decodepsbt(psbt)
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'final_scriptwitness'])
+
+        # Broadcast transaction
+        rawtx = self.nodes[2].finalizepsbt(psbt)["hex"]
+        self.nodes[2].sendrawtransaction(rawtx)
 
 if __name__ == '__main__':
     PSBTTest().main()
