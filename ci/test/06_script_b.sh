@@ -24,6 +24,11 @@ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   if [ ! -d "$DIR_FUZZ_IN" ]; then
     git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${DIR_QA_ASSETS}"
   fi
+  (
+    cd "${DIR_QA_ASSETS}"
+    echo "Using qa-assets repo from commit ..."
+    git log -1
+  )
 elif [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
   export DIR_UNIT_TEST_DATA=${DIR_QA_ASSETS}/unit_test_data/
   if [ ! -d "$DIR_UNIT_TEST_DATA" ]; then
