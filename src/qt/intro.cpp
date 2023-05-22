@@ -206,7 +206,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
         }
 
         /* Let the user choose one */
-        Intro intro(0, node.getAssumedChainStateSize(), node.getAssumedChainStateSize());
+        Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
         GUIUtil::disableMacFocusRect(&intro);
         GUIUtil::loadStyleSheet(true);
         intro.setDataDirectory(dataDirDefaultCurrent);

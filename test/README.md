@@ -27,7 +27,7 @@ Before tests can be run locally, Dash Core must be built.  See the [building ins
 Many Dash specific tests require dash_hash. To install it:
 
 - Clone the repo `git clone https://github.com/dashpay/dash_hash`
-- Install dash_hash `cd dash_hash && python3 setup.py install`
+- Install dash_hash `cd dash_hash && pip3 install -r requirements.txt .`
 
 The ZMQ functional test requires a python ZMQ library. To install it:
 

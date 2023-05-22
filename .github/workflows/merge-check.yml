@@ -1,0 +1,29 @@
+name: Check Merge Fast-Forward Only
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check_merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "noreply@example.com"
+
+      - name: Check merge --ff-only
+        run: |
+          git fetch origin master:master
+          git checkout master
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            git merge --ff-only ${{ github.event.pull_request.head.sha }}
+          else
+            git merge --ff-only ${{ github.sha }}
+          fi
