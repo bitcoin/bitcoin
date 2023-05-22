@@ -26,6 +26,7 @@
 #include <validationinterface.h>
 
 #include <cmath>
+#include <numeric>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -755,11 +756,16 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
 bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid)
 {
+    /* Return `true` if hasha should be considered sooner than hashb. Namely when:
+     *   a is not in the mempool, but b is
+     *   both are in the mempool and a has fewer ancestors than b
+     *   both are in the mempool and a has a higher score than b
+     */
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = wtxid ? get_iter_from_wtxid(hasha) : mapTx.find(hasha);
-    if (i == mapTx.end()) return false;
     indexed_transaction_set::const_iterator j = wtxid ? get_iter_from_wtxid(hashb) : mapTx.find(hashb);
-    if (j == mapTx.end()) return true;
+    if (j == mapTx.end()) return false;
+    indexed_transaction_set::const_iterator i = wtxid ? get_iter_from_wtxid(hasha) : mapTx.find(hasha);
+    if (i == mapTx.end()) return true;
     uint64_t counta = i->GetCountWithAncestors();
     uint64_t countb = j->GetCountWithAncestors();
     if (counta == countb) {
@@ -909,6 +915,19 @@ CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<uint256>& hashes) c
     for (const auto& h : hashes) {
         const auto mi = GetIter(h);
         if (mi) ret.insert(*mi);
+    }
+    return ret;
+}
+
+std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256>& txids) const
+{
+    AssertLockHeld(cs);
+    std::vector<txiter> ret;
+    ret.reserve(txids.size());
+    for (const auto& txid : txids) {
+        const auto it{GetIter(txid)};
+        if (!it) return {};
+        ret.push_back(*it);
     }
     return ret;
 }
@@ -1142,7 +1161,6 @@ void CTxMemPool::SetLoadTried(bool load_tried)
     m_load_tried = load_tried;
 }
 
-
 std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept
 {
     switch (r) {
@@ -1154,4 +1172,31 @@ std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept
         case MemPoolRemovalReason::REPLACED: return "replaced";
     }
     assert(false);
+}
+
+std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<uint256>& txids) const
+{
+    AssertLockHeld(cs);
+    std::vector<txiter> clustered_txs{GetIterVec(txids)};
+    // Use epoch: visiting an entry means we have added it to the clustered_txs vector. It does not
+    // necessarily mean the entry has been processed.
+    WITH_FRESH_EPOCH(m_epoch);
+    for (const auto& it : clustered_txs) {
+        visited(it);
+    }
+    // i = index of where the list of entries to process starts
+    for (size_t i{0}; i < clustered_txs.size(); ++i) {
+        // DoS protection: if there are 500 or more entries to process, just quit.
+        if (clustered_txs.size() > 500) return {};
+        const txiter& tx_iter = clustered_txs.at(i);
+        for (const auto& entries : {tx_iter->GetMemPoolParentsConst(), tx_iter->GetMemPoolChildrenConst()}) {
+            for (const CTxMemPoolEntry& entry : entries) {
+                const auto entry_it = mapTx.iterator_to(entry);
+                if (!visited(entry_it)) {
+                    clustered_txs.push_back(entry_it);
+                }
+            }
+        }
+    }
+    return clustered_txs;
 }

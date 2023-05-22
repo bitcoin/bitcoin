@@ -165,10 +165,10 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     const UniValue& request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
-    id = find_value(request, "id");
+    id = request.find_value("id");
 
     // Parse method
-    UniValue valMethod = find_value(request, "method");
+    const UniValue& valMethod{request.find_value("method")};
     if (valMethod.isNull())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
     if (!valMethod.isStr())
@@ -181,7 +181,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
 
     // Parse params
-    UniValue valParams = find_value(request, "params");
+    const UniValue& valParams{request.find_value("params")};
     if (valParams.isArray() || valParams.isObject())
         params = valParams;
     else if (valParams.isNull())

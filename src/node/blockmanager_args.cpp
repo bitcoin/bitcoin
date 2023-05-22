@@ -5,7 +5,13 @@
 #include <node/blockmanager_args.h>
 
 #include <common/args.h>
+#include <node/blockstorage.h>
+#include <tinyformat.h>
+#include <util/translation.h>
 #include <validation.h>
+
+#include <cstdint>
+#include <optional>
 
 namespace node {
 std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts)
@@ -24,6 +30,9 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockM
         }
     }
     opts.prune_target = nPruneTarget;
+
+    if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
+    if (auto value{args.GetBoolArg("-stopafterblockimport")}) opts.stop_after_block_import = *value;
 
     return std::nullopt;
 }

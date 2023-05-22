@@ -60,14 +60,14 @@ bool WriteSettings(const fs::path& path,
 //!                               command line). Only return settings in the
 //!                               read-only config and read-write settings
 //!                               files.
-//! @param get_chain_name - enable special backwards compatible behavior
-//!                         for GetChainName
+//! @param get_chain_type - enable special backwards compatible behavior
+//!                         for GetChainType
 SettingsValue GetSetting(const Settings& settings,
     const std::string& section,
     const std::string& name,
     bool ignore_default_section_config,
     bool ignore_nonpersistent,
-    bool get_chain_name);
+    bool get_chain_type);
 
 //! Get combined setting value similar to GetSetting(), except if setting was
 //! specified multiple times, return a list of all the values specified.

@@ -7,6 +7,7 @@
 
 #include <compat/compat.h>
 #include <sync.h>
+#include <util/chaintype.h>
 #include <util/fs.h>
 #include <util/settings.h>
 
@@ -17,6 +18,7 @@
 #include <set>
 #include <stdint.h>
 #include <string>
+#include <variant>
 #include <vector>
 
 class ArgsManager;
@@ -323,10 +325,18 @@ protected:
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
 
     /**
-     * Returns the appropriate chain name from the program arguments.
-     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     * Returns the appropriate chain type from the program arguments.
+     * @return ChainType::MAIN by default; raises runtime error if an invalid
+     * combination, or unknown chain is given.
      */
-    std::string GetChainName() const;
+    ChainType GetChainType() const;
+
+    /**
+     * Returns the appropriate chain type string from the program arguments.
+     * @return ChainType::MAIN string by default; raises runtime error if an
+     * invalid combination is given.
+     */
+    std::string GetChainTypeString() const;
 
     /**
      * Add argument
@@ -410,6 +420,14 @@ private:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
     const fs::path& GetDataDir(bool net_specific) const;
+
+    /**
+     * Return -regtest/-signet/-testnet/-chain= setting as a ChainType enum if a
+     * recognized chain type was set, or as a string if an unrecognized chain
+     * name was set. Raise an exception if an invalid combination of flags was
+     * provided.
+     */
+    std::variant<ChainType, std::string> GetChainArg() const;
 
     // Helper function for LogArgs().
     void logArgsPrefix(

@@ -200,6 +200,7 @@ task:
     docker_arguments:
       CI_IMAGE_NAME_TAG: debian:bullseye
       FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+  << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
@@ -216,11 +217,11 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: '32-bit + dash [gui] [CentOS 8]'
+  name: '32-bit + dash [gui] [CentOS 9]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: quay.io/centos/centos:stream8
+      CI_IMAGE_NAME_TAG: quay.io/centos/centos:stream9
       FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
   # For faster CI feedback, immediately schedule one task that runs all tests
   << : *CREDITS_TEMPLATE
@@ -242,8 +243,8 @@ task:
   name: '[TSan, depends, gui] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    cpu: 6  # Increase CPU and Memory to avoid timeout
-    memory: 24G
+    cpu: 4
+    memory: 16G  # The default memory is too small, so double everything
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:lunar
       FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
@@ -297,7 +298,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     cpu: 4
-    memory: 16G  # The default memory is sometimes just a bit too small, so double everything
+    memory: 16G  # The default memory is too small, so double everything
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:focal
       FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"

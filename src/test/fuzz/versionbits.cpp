@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
+#include <util/chaintype.h>
 #include <versionbits.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -104,7 +105,7 @@ std::unique_ptr<const CChainParams> g_params;
 void initialize()
 {
     // this is actually comparatively slow, so only do it once
-    g_params = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN);
+    g_params = CreateChainParams(ArgsManager{}, ChainType::MAIN);
     assert(g_params != nullptr);
 }
 

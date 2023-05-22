@@ -522,8 +522,15 @@ public:
     /** Returns an iterator to the given hash, if found */
     std::optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups */
+    /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups.
+     * Does not require that all of the hashes correspond to actual transactions in the mempool,
+     * only returns the ones that exist. */
     setEntries GetIterSet(const std::set<uint256>& hashes) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** Translate a list of hashes into a list of mempool iterators to avoid repeated lookups.
+     * The nth element in txids becomes the nth element in the returned vector. If any of the txids
+     * don't actually exist in the mempool, returns an empty vector. */
+    std::vector<txiter> GetIterVec(const std::vector<uint256>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
@@ -584,6 +591,12 @@ public:
         const CTxMemPoolEntry &entry,
         const Limits& limits,
         bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** Collect the entire cluster of connected transactions for each transaction in txids.
+     * All txids must correspond to transaction entries in the mempool, otherwise this returns an
+     * empty vector. This call will also exit early and return an empty vector if it collects 500 or
+     * more transactions as a DoS protection. */
+    std::vector<txiter> GatherClusters(const std::vector<uint256>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Calculate all in-mempool ancestors of a set of transactions not already in the mempool and
      * check ancestor and descendant limits. Heuristics are used to estimate the ancestor and

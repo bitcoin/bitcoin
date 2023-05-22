@@ -1,6 +1,7 @@
 Description: Use unaligned VMOV instructions
 Author: Stephen Kitt <skitt@debian.org>
 Bug-Debian: https://bugs.debian.org/939559
+See also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54412
 
 Based on a patch originally by Claude Heiland-Allen <claude@mathr.co.uk>
 

@@ -53,7 +53,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(addr_info["address"], addr_info_old["address"])
         assert_equal(addr_info["scriptPubKey"], addr_info_old["scriptPubKey"])
         assert_equal(addr_info["ismine"], addr_info_old["ismine"])
-        assert_equal(addr_info["hdkeypath"], addr_info_old["hdkeypath"])
+        assert_equal(addr_info["hdkeypath"], addr_info_old["hdkeypath"].replace("'","h"))
         assert_equal(addr_info["solvable"], addr_info_old["solvable"])
         assert_equal(addr_info["ischange"], addr_info_old["ischange"])
         assert_equal(addr_info["hdmasterfingerprint"], addr_info_old["hdmasterfingerprint"])
@@ -91,11 +91,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.assert_is_sqlite("basic0")
 
         # The wallet should create the following descriptors:
-        # * BIP32 descriptors in the form of "0'/0'/*" and "0'/1'/*" (2 descriptors)
-        # * BIP44 descriptors in the form of "44'/1'/0'/0/*" and "44'/1'/0'/1/*" (2 descriptors)
-        # * BIP49 descriptors, P2SH(P2WPKH), in the form of "86'/1'/0'/0/*" and "86'/1'/0'/1/*" (2 descriptors)
-        # * BIP84 descriptors, P2WPKH, in the form of "84'/1'/0'/1/*" and "84'/1'/0'/1/*" (2 descriptors)
-        # * BIP86 descriptors, P2TR, in the form of "86'/1'/0'/0/*" and "86'/1'/0'/1/*" (2 descriptors)
+        # * BIP32 descriptors in the form of "0h/0h/*" and "0h/1h/*" (2 descriptors)
+        # * BIP44 descriptors in the form of "44h/1h/0h/0/*" and "44h/1h/0h/1/*" (2 descriptors)
+        # * BIP49 descriptors, P2SH(P2WPKH), in the form of "86h/1h/0h/0/*" and "86h/1h/0h/1/*" (2 descriptors)
+        # * BIP84 descriptors, P2WPKH, in the form of "84h/1h/0h/1/*" and "84h/1h/0h/1/*" (2 descriptors)
+        # * BIP86 descriptors, P2TR, in the form of "86h/1h/0h/0/*" and "86h/1h/0h/1/*" (2 descriptors)
         # * A combo(PK) descriptor for the wallet master key.
         # So, should have a total of 11 descriptors on it.
         assert_equal(len(basic0.listdescriptors()["descriptors"]), 11)
@@ -107,7 +107,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.assert_addr_info_equal(change_addr_info, old_change_addr_info)
 
         addr_info = basic0.getaddressinfo(basic0.getnewaddress("", "bech32"))
-        assert_equal(addr_info["hdkeypath"], "m/84'/1'/0'/0/0")
+        assert_equal(addr_info["hdkeypath"], "m/84h/1h/0h/0/0")
 
         self.log.info("Test migration of a basic keys only wallet with a balance")
         basic1 = self.create_legacy_wallet("basic1")

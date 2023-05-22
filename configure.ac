@@ -70,11 +70,12 @@ else
 fi
 AC_PROG_CXX
 
-dnl By default, libtool for mingw refuses to link static libs into a dll for
-dnl fear of mixing pic/non-pic objects, and import/export complications. Since
-dnl we have those under control, re-enable that functionality.
+dnl libtool overrides
 case $host in
   *mingw*)
+     dnl By default, libtool for mingw refuses to link static libs into a dll for
+     dnl fear of mixing pic/non-pic objects, and import/export complications. Since
+     dnl we have those under control, re-enable that functionality.
      lt_cv_deplibs_check_method="pass_all"
 
      dnl Remove unwanted -DDLL_EXPORT from these variables.
@@ -82,6 +83,16 @@ case $host in
      dnl if it's set.
      lt_cv_prog_compiler_pic="-DPIC"
      lt_cv_prog_compiler_pic_CXX="-DPIC"
+  ;;
+  *darwin*)
+     dnl Because it prints a verbose warning, lld fails the following check
+     dnl for "-Wl,-single_module" from libtool.m4:
+     dnl   # If there is a non-empty error log, and "single_module"
+     dnl   # appears in it, assume the flag caused a linker warning
+     dnl "-single_module" works fine on ld64 and lld, so just bypass the test.
+     dnl Failure to set this to "yes" causes libtool to use a very broken
+     dnl link-line for shared libs.
+     lt_cv_apple_cc_single_mod="yes"
   ;;
 esac
 
@@ -103,9 +114,6 @@ AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 else
 AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 fi
-
-dnl check if additional link flags are required for std::filesystem
-CHECK_FILESYSTEM
 
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
@@ -1064,7 +1072,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
 dnl Check for posix_fallocate
 AC_MSG_CHECKING([for posix_fallocate])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-                   // same as in src/util/system.cpp
+                   // same as in src/util/fs_helpers.cpp
                    #ifdef __linux__
                    #ifdef _POSIX_C_SOURCE
                    #undef _POSIX_C_SOURCE
@@ -1401,7 +1409,9 @@ if test "$use_usdt" != "no"; then
   AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM(
       [#include <sys/sdt.h>],
-      [DTRACE_PROBE("context", "event");]
+      [DTRACE_PROBE(context, event);
+       int a, b, c, d, e, f, g;
+       DTRACE_PROBE7(context, event, a, b, c, d, e, f, g);]
     )],
     [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
     [AC_MSG_RESULT([no]); use_usdt=no;]

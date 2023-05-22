@@ -130,7 +130,7 @@ SettingsValue GetSetting(const Settings& settings,
     const std::string& name,
     bool ignore_default_section_config,
     bool ignore_nonpersistent,
-    bool get_chain_name)
+    bool get_chain_type)
 {
     SettingsValue result;
     bool done = false; // Done merging any more settings sources.
@@ -145,17 +145,17 @@ SettingsValue GetSetting(const Settings& settings,
         // assigned value instead of last. In general, later settings take
         // precedence over early settings, but for backwards compatibility in
         // the config file the precedence is reversed for all settings except
-        // chain name settings.
+        // chain type settings.
         const bool reverse_precedence =
             (source == Source::CONFIG_FILE_NETWORK_SECTION || source == Source::CONFIG_FILE_DEFAULT_SECTION) &&
-            !get_chain_name;
+            !get_chain_type;
 
         // Weird behavior preserved for backwards compatibility: Negated
         // -regtest and -testnet arguments which you would expect to override
         // values set in the configuration file are currently accepted but
         // silently ignored. It would be better to apply these just like other
         // negated values, or at least warn they are ignored.
-        const bool skip_negated_command_line = get_chain_name;
+        const bool skip_negated_command_line = get_chain_type;
 
         if (done) return;
 

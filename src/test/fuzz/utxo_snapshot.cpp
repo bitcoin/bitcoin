@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <util/chaintype.h>
 #include <util/fs.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -22,7 +23,7 @@ const std::vector<std::shared_ptr<CBlock>>* g_chain;
 
 void initialize_chain()
 {
-    const auto params{CreateChainParams(ArgsManager{}, CBaseChainParams::REGTEST)};
+    const auto params{CreateChainParams(ArgsManager{}, ChainType::REGTEST)};
     static const auto chain{CreateBlockChain(2 * COINBASE_MATURITY, *params)};
     g_chain = &chain;
 }

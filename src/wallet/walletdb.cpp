@@ -1136,6 +1136,9 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
 {
+    // Begin db txn
+    if (!m_batch->TxnBegin()) return false;
+
     // Get cursor
     std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
     if (!cursor)
@@ -1144,8 +1147,7 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
     }
 
     // Iterate the DB and look for any records that have the type prefixes
-    while (true)
-    {
+    while (true) {
         // Read next record
         DataStream key{};
         DataStream value{};
@@ -1153,6 +1155,8 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         if (status == DatabaseCursor::Status::DONE) {
             break;
         } else if (status == DatabaseCursor::Status::FAIL) {
+            cursor.reset(nullptr);
+            m_batch->TxnAbort(); // abort db txn
             return false;
         }
 
@@ -1163,10 +1167,16 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         key >> type;
 
         if (types.count(type) > 0) {
-            m_batch->Erase(key_data);
+            if (!m_batch->Erase(key_data)) {
+                cursor.reset(nullptr);
+                m_batch->TxnAbort();
+                return false; // erase failed
+            }
         }
     }
-    return true;
+    // Finish db txn
+    cursor.reset(nullptr);
+    return m_batch->TxnCommit();
 }
 
 bool WalletBatch::TxnBegin()
@@ -1261,45 +1271,5 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support Berkeley DB database format.", fs::PathToString(path)));
     status = DatabaseStatus::FAILED_BAD_FORMAT;
     return nullptr;
-}
-
-/** Return object for accessing dummy database with no read/write capabilities. */
-std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
-{
-    return std::make_unique<DummyDatabase>();
-}
-
-/** Return object for accessing temporary in-memory database. */
-std::unique_ptr<WalletDatabase> CreateMockWalletDatabase(DatabaseOptions& options)
-{
-
-    std::optional<DatabaseFormat> format;
-    if (options.require_format) format = options.require_format;
-    if (!format) {
-#ifdef USE_BDB
-        format = DatabaseFormat::BERKELEY;
-#endif
-#ifdef USE_SQLITE
-        format = DatabaseFormat::SQLITE;
-#endif
-    }
-
-    if (format == DatabaseFormat::SQLITE) {
-#ifdef USE_SQLITE
-        return std::make_unique<SQLiteDatabase>(":memory:", "", options, true);
-#endif
-        assert(false);
-    }
-
-#ifdef USE_BDB
-    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "", options);
-#endif
-    assert(false);
-}
-
-std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
-{
-    DatabaseOptions options;
-    return CreateMockWalletDatabase(options);
 }
 } // namespace wallet
