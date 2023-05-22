@@ -1467,6 +1467,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
     };
+#ifdef DEBUG_MEMPOOL
+    // Only use debug consistency checking level if unset, otherwise leave.
+    // Test networks continue to use chainparam value of 1 here.
+    if (mempool_opts.check_ratio == 0) {
+        mempool_opts.check_ratio = DEFAULT_MEMPOOL_DEBUG_CHECKS;
+    }
+#endif
     auto result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
     if (!result) {
         return InitError(util::ErrorString(result));

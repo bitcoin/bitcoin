@@ -23,5 +23,7 @@ struct MemPoolOptions;
  */
 [[nodiscard]] util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, kernel::MemPoolOptions& mempool_opts);
 
+/** Default for -checkmempool, if configured with --enable-debug */
+static constexpr int DEFAULT_MEMPOOL_DEBUG_CHECKS{1000};
 
 #endif // BITCOIN_NODE_MEMPOOL_ARGS_H
