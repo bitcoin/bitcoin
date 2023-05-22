@@ -129,6 +129,14 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     BOOST_CHECK(privateKeyFromVector.IsValid());
     BOOST_CHECK(privateKeyFromVector.GetScalar().GetVch() == vectorKey);
 
+    blsct::PrivateKey privateKeyFromStream;
+
+    DataStream s;
+    s << privateKeyFromVector;
+    s >> privateKeyFromStream;
+
+    BOOST_CHECK(privateKeyFromVector == privateKeyFromStream);
+
     Scalar scalarFromVector(vectorKey);
     blsct::PrivateKey privateKeyFromScalar(scalarFromVector);
     BOOST_CHECK(privateKeyFromScalar.IsValid());

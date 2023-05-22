@@ -11,6 +11,12 @@ CKeyID DoublePublicKey::GetID() const
     return CKeyID(Hash160(GetVch()));
 }
 
+bool DoublePublicKey::GetViewKey(PublicKey& ret) const
+{
+    ret = vk;
+    return true;
+}
+
 bool DoublePublicKey::GetViewKey(Point& ret) const
 {
     try {
@@ -19,6 +25,12 @@ bool DoublePublicKey::GetViewKey(Point& ret) const
         return false;
     }
 
+    return true;
+}
+
+bool DoublePublicKey::GetSpendKey(PublicKey& ret) const
+{
+    ret = sk;
     return true;
 }
 

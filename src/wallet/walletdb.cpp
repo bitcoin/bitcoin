@@ -66,6 +66,8 @@ const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
+const std::unordered_set<std::string> BLSCT_TYPES{CRYPTED_BLSCTKEY, BLSCTKEY, VIEWKEY, SPENDKEY, BLSCTKEYMETA};
+const std::unordered_set<std::string> BLSCTKEY_TYPES{CRYPTED_BLSCTKEY, BLSCTKEY};
 } // namespace DBKeys
 
 //
@@ -135,11 +137,7 @@ bool WalletBatch::WriteKey(const blsct::PublicKey& pubKey, const blsct::PrivateK
         return false;
     }
 
-    MclG1Point pointPubKey;
-    if (!pubKey.GetG1Point(pointPubKey))
-        return false;
-
-    auto vchPubKey = pointPubKey.GetVch();
+    auto vchPubKey = pubKey.GetVch();
     auto vchPrivKey = privKey.GetScalar().GetVch();
 
     // hash pubkey/privkey to accelerate wallet load
@@ -148,7 +146,7 @@ bool WalletBatch::WriteKey(const blsct::PublicKey& pubKey, const blsct::PrivateK
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::BLSCTKEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
+    return WriteIC(std::make_pair(DBKeys::BLSCTKEY, pubKey), std::make_pair(privKey, Hash(vchKey)), false);
 }
 
 bool WalletBatch::WriteViewKey(const blsct::PublicKey& pubKey, const blsct::PrivateKey& privKey, const CKeyMetadata& keyMeta)
@@ -170,32 +168,26 @@ bool WalletBatch::WriteViewKey(const blsct::PublicKey& pubKey, const blsct::Priv
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::VIEWKEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
+    return WriteIC(std::make_pair(DBKeys::VIEWKEY, pubKey), std::make_pair(privKey, Hash(vchKey)), true);
 }
 
 bool WalletBatch::WriteSpendKey(const blsct::PublicKey& pubKey)
 {
-    MclG1Point pointPubKey;
-    if (!pubKey.GetG1Point(pointPubKey))
-        return false;
-
-    auto vchPubKey = pointPubKey.GetVch();
-
-    return WriteIC(DBKeys::SPENDKEY, vchPubKey, false);
+    return WriteIC(std::make_pair(DBKeys::SPENDKEY, pubKey), Hash(pubKey.GetVch()), true);
 }
 
-bool WalletBatch::WriteCryptedKey(const blsct::PublicKey& vchPubKey,
+bool WalletBatch::WriteCryptedKey(const blsct::PublicKey& pubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
                                 const CKeyMetadata &keyMeta)
 {
-    if (!WriteKeyMetadata(keyMeta, vchPubKey, true)) {
+    if (!WriteKeyMetadata(keyMeta, pubKey, true)) {
         return false;
     }
 
     // Compute a checksum of the encrypted key
     uint256 checksum = Hash(vchCryptedSecret);
 
-    const auto key = std::make_pair(DBKeys::CRYPTED_BLSCTKEY, vchPubKey);
+    const auto key = std::make_pair(DBKeys::CRYPTED_BLSCTKEY, pubKey);
     if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
         // It may already exist, so try writing just the checksum
         std::vector<unsigned char> val;
@@ -206,7 +198,7 @@ bool WalletBatch::WriteCryptedKey(const blsct::PublicKey& vchPubKey,
             return false;
         }
     }
-    EraseIC(std::make_pair(DBKeys::BLSCTKEY, vchPubKey));
+    EraseIC(std::make_pair(DBKeys::BLSCTKEY, pubKey));
     return true;
 }
 
@@ -572,15 +564,15 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             ssValue >> key;
             ssValue >> hash;
 
-            auto vchKey = key.GetScalar().GetVch();
+            auto vchPrivateKey = key.GetScalar().GetVch();
 
             if (!hash.IsNull())
             {
                 // hash pubkey/privkey to accelerate wallet load
                 std::vector<unsigned char> vchKey;
-                vchKey.reserve(vchPubKey.size() + vchKey.size());
+                vchKey.reserve(vchPubKey.size() + vchPrivateKey.size());
                 vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
-                vchKey.insert(vchKey.end(), vchKey.begin(), vchKey.end());
+                vchKey.insert(vchKey.end(), vchPrivateKey.begin(), vchPrivateKey.end());
 
                 if (Hash(vchKey) != hash)
                 {
@@ -608,22 +600,22 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: PublicKey corrupt";
                 return false;
             }
-            blsct::PrivateKey key;
+            blsct::PrivateKey privKey;
             uint256 hash;
 
             wss.nKeys++;
-            ssValue >> key;
+            ssValue >> privKey;
             ssValue >> hash;
 
-            auto vchKey = key.GetScalar().GetVch();
+            auto vchPrivKey = privKey.GetScalar().GetVch();
 
             if (!hash.IsNull())
             {
                 // hash pubkey/privkey to accelerate wallet load
                 std::vector<unsigned char> vchKey;
-                vchKey.reserve(vchPubKey.size() + vchKey.size());
+                vchKey.reserve(vchPubKey.size() + vchPrivKey.size());
                 vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
-                vchKey.insert(vchKey.end(), vchKey.begin(), vchKey.end());
+                vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
                 if (Hash(vchKey) != hash)
                 {
@@ -632,12 +624,12 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                 }
             }
 
-            if (key.GetPublicKey() != pubKey)
+            if (privKey.GetPublicKey() != pubKey)
             {
                 strErr = "Error reading wallet database: PrivateViewKey corrupt";
                 return false;
             }
-            if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadViewKey(key, pubKey))
+            if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadViewKey(privKey, pubKey))
             {
                 strErr = "Error reading wallet database: BLSCTKeyMan::LoadViewKey failed";
                 return false;
@@ -645,9 +637,19 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::SPENDKEY) {
             blsct::PublicKey pubKey;
             ssKey >> pubKey;
+
+            uint256 hash;
+            ssValue >> hash;
+
+            if (Hash(pubKey.GetVch()) != hash)
+            {
+                strErr = "Error reading wallet database: PublicSpendKey corrupt, hash does not match";
+                return false;
+            }
+
             if (!pubKey.IsValid())
             {
-                strErr = "Error reading wallet database: PublicKey corrupt";
+                strErr = "Error reading wallet database: PublicSpendKey corrupt";
                 return false;
             }
 

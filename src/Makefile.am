@@ -562,6 +562,7 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
+  blsct/wallet/address.cpp \
   blsct/wallet/keyman.cpp \
   blsct/wallet/keyring.cpp \
   wallet/coincontrol.cpp \

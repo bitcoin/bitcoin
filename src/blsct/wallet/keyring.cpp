@@ -27,4 +27,21 @@ bool KeyRing::AddSpendKey(const PublicKey &pubkey)
     spendPublicKey = pubkey;
     return true;
 }
+
+bool KeyRing::HaveKey(const CKeyID &id) const
+{
+    LOCK(cs_KeyStore);
+    return mapKeys.count(id) > 0;
+}
+
+bool KeyRing::GetKey(const CKeyID &address, PrivateKey &keyOut) const
+{
+    LOCK(cs_KeyStore);
+    KeyMap::const_iterator mi = mapKeys.find(address);
+    if (mi != mapKeys.end()) {
+        keyOut = mi->second;
+        return true;
+    }
+    return false;
+}
 }

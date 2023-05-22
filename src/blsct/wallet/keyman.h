@@ -64,9 +64,6 @@ public:
     /* Generates a new HD seed (will not be activated) */
     PrivateKey GenerateNewSeed();
 
-    /* Derives a new HD seed (will not be activated) */
-    PrivateKey DeriveNewSeed(const PrivateKey& key);
-
     /* Set the current HD seed (will reset the chain child index counters)
        Sets the seed's version based on the current wallet version (so the
        caller must ensure the current wallet version is correct before calling
@@ -85,8 +82,13 @@ public:
     bool AddCryptedKey(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     //! Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid);
-    bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);;
+    bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
+    /* KeyRing overrides */
+    bool HaveKey(const CKeyID &address) const override;
+    bool GetKey(const CKeyID &address, PrivateKey& keyOut) const override;
+
+    bool Encrypt(const wallet::CKeyingMaterial& master_key, wallet::WalletBatch* batch);
     bool CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool accept_no_keys);
 
     SubAddress GetAddress(const SubAddressIdentifier& id = {0,0});
@@ -100,6 +102,9 @@ public:
     //! Load metadata (used by LoadWallet)
     void LoadKeyMetadata(const CKeyID& keyID, const wallet::CKeyMetadata &metadata);
     void UpdateTimeFirstKey(int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+
+    bool DeleteRecords();
+    bool DeleteKeys();
 
     /** Keypool has new keys */
     boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;

@@ -36,6 +36,9 @@ public:
     bool GetViewKey(Point& ret) const;
     bool GetSpendKey(Point& ret) const;
 
+    bool GetViewKey(PublicKey& ret) const;
+    bool GetSpendKey(PublicKey& ret) const;
+
     bool operator==(const DoublePublicKey& rhs) const;
     bool operator<(const DoublePublicKey& rhs) const;
 

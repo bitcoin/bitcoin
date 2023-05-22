@@ -97,6 +97,8 @@ extern const std::string WATCHS;
 
 // Keys in this set pertain only to the legacy wallet (LegacyScriptPubKeyMan) and are removed during migration from legacy to descriptors.
 extern const std::unordered_set<std::string> LEGACY_TYPES;
+extern const std::unordered_set<std::string> BLSCT_TYPES;
+extern const std::unordered_set<std::string> BLSCTKEY_TYPES;
 } // namespace DBKeys
 
 /* simple HD chain data model */

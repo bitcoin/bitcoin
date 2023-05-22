@@ -26,7 +26,10 @@ public:
     SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, const SubAddressIdentifier &subAddressId);
     SubAddress(const DoublePublicKey& pk) : pk(pk) {};
 
+    bool IsValid() const;
+
     std::string GetString() const;
+    CTxDestination GetDestination() const;
     DoublePublicKey GetKeys() const { return pk; };
 };
 }

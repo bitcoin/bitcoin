@@ -54,10 +54,6 @@ bool KeyMan::AddViewKey(const PrivateKey& secret, const PublicKey& pubkey)
     wallet::WalletBatch batch(m_storage.GetDatabase());
     AssertLockHeld(cs_KeyStore);
 
-    // Make sure we aren't adding private keys to private key disabled wallets
-    assert(!m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    assert(m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_BLSCT));
-
     KeyRing::AddViewKey(secret, pubkey);
 
     return batch.WriteViewKey(pubkey, secret,
@@ -72,11 +68,11 @@ bool KeyMan::AddSpendKey(const PublicKey& pubkey)
     wallet::WalletBatch batch(m_storage.GetDatabase());
     AssertLockHeld(cs_KeyStore);
 
-    assert(m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_BLSCT));
-
     KeyRing::AddSpendKey(pubkey);
 
-    return batch.WriteSpendKey(pubkey);
+    if (!batch.WriteSpendKey(pubkey))
+        return false;
+
     m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
@@ -87,7 +83,6 @@ bool KeyMan::AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& se
 
     // Make sure we aren't adding private keys to private key disabled wallets
     assert(!m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    assert(m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_BLSCT));
 
     bool needsDB = !encrypted_batch;
     if (needsDB) {
@@ -145,29 +140,11 @@ bool KeyMan::AddCryptedKey(const PublicKey &vchPubKey,
     }
 }
 
-PrivateKey KeyMan::DeriveNewSeed(const PrivateKey& key)
-{
-    // calculate the seed
-    PublicKey seed = key.GetPublicKey();
-    assert(key.VerifyPubKey(seed));
-
-    {
-        LOCK(cs_KeyStore);
-
-        // write the key&metadata to the database
-        if (!AddKeyPubKey(key, seed))
-            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
-    }
-
-    return key;
-}
-
 PrivateKey KeyMan::GenerateNewSeed()
 {
     assert(!m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    assert(m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_BLSCT));
     PrivateKey key(BLS12_381_KeyGen::derive_master_SK(MclScalar::Rand(true).GetVch()));
-    return DeriveNewSeed(key);
+    return key;
 }
 
 void KeyMan::LoadHDChain(const blsct::HDChain& chain)
@@ -251,6 +228,9 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
 
     if (!AddKeyPubKey(spendKey, spendKey.GetPublicKey()))
         throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+
+    if (!AddSpendKey(spendKey.GetPublicKey()))
+        throw std::runtime_error(std::string(__func__) + ": AddSpendKey failed");
 
     if (!AddViewKey(viewKey, viewKey.GetPublicKey()))
         throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
@@ -354,4 +334,74 @@ SubAddress KeyMan::GetAddress(const SubAddressIdentifier& id)
 {
     return SubAddress(viewKey, spendPublicKey, id);
 };
+
+bool KeyMan::HaveKey(const CKeyID &id) const
+{
+    LOCK(cs_KeyStore);
+    if (!m_storage.HasEncryptionKeys()) {
+        return KeyRing::HaveKey(id);
+    }
+    return mapCryptedKeys.count(id) > 0;
+}
+
+bool KeyMan::GetKey(const CKeyID &id, PrivateKey& keyOut) const
+{
+    LOCK(cs_KeyStore);
+    if (!m_storage.HasEncryptionKeys()) {
+        return KeyRing::GetKey(id, keyOut);
+    }
+
+    CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(id);
+    if (mi != mapCryptedKeys.end())
+    {
+        const PublicKey &vchPubKey = (*mi).second.first;
+        const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
+        return wallet::DecryptKey(m_storage.GetEncryptionKey(), vchCryptedSecret, vchPubKey, keyOut);
+    }
+    return false;
+}
+
+bool KeyMan::DeleteRecords()
+{
+    LOCK(cs_KeyStore);
+    wallet::WalletBatch batch(m_storage.GetDatabase());
+    return batch.EraseRecords(wallet::DBKeys::BLSCT_TYPES);
+}
+
+bool KeyMan::DeleteKeys()
+{
+    LOCK(cs_KeyStore);
+    wallet::WalletBatch batch(m_storage.GetDatabase());
+    return batch.EraseRecords(wallet::DBKeys::BLSCTKEY_TYPES);
+}
+
+bool KeyMan::Encrypt(const wallet::CKeyingMaterial& master_key, wallet::WalletBatch* batch)
+{
+    LOCK(cs_KeyStore);
+    encrypted_batch = batch;
+    if (!mapCryptedKeys.empty()) {
+        encrypted_batch = nullptr;
+        return false;
+    }
+
+    KeyMap keys_to_encrypt;
+    keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
+    for (const KeyMap::value_type& mKey : keys_to_encrypt)
+    {
+        const PrivateKey &key = mKey.second;
+        PublicKey pubKey = key.GetPublicKey();
+        wallet::CKeyingMaterial vchSecret(key.begin(), key.end());
+        std::vector<unsigned char> vchCryptedSecret;
+        if (!wallet::EncryptSecret(master_key, vchSecret, pubKey.GetHash(), vchCryptedSecret)) {
+            encrypted_batch = nullptr;
+            return false;
+        }
+        if (!AddCryptedKey(pubKey, vchCryptedSecret)) {
+            encrypted_batch = nullptr;
+            return false;
+        }
+    }
+    encrypted_batch = nullptr;
+    return true;
+}
 }

@@ -7,10 +7,7 @@
 namespace blsct {
 SubAddress::SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, const SubAddressIdentifier &subAddressId)
 {
-    if(!viewKey.IsValid())
-        return;
-
-    if(!spendKey.IsValid())
+    if(!viewKey.IsValid() || !spendKey.IsValid())
         return;
 
     CHashWriter string(SER_GETHASH, 0);
@@ -41,5 +38,17 @@ SubAddress::SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, con
 std::string SubAddress::GetString() const
 {
     return EncodeDestination(pk);
+}
+
+CTxDestination SubAddress::GetDestination() const
+{
+    if (!IsValid())
+        return CNoDestination();
+    return pk;
+}
+
+bool SubAddress::IsValid() const
+{
+    return pk.IsValid();
 }
 }

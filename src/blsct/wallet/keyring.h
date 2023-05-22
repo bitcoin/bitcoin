@@ -32,6 +32,9 @@ public:
     virtual bool AddViewKey(const PrivateKey &key, const PublicKey& pubkey);
     virtual bool AddSpendKey(const PublicKey &pubkey);
 
+    virtual bool HaveKey(const CKeyID &id) const;
+    virtual bool GetKey(const CKeyID &id, PrivateKey &keyOut) const;
+
     virtual ~KeyRing() = default;
 };
 }

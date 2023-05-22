@@ -187,5 +187,130 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
+{
+    // The test duplicates the db so each case has its own db instance.
+    int NUMBER_OF_TESTS = 4;
+    std::vector<std::unique_ptr<WalletDatabase>> dbs;
+    blsct::PrivateKey viewKey;
+    blsct::PrivateKey spendKey;
+
+    DatabaseOptions options;
+    options.create_flags |= WALLET_FLAG_BLSCT;
+
+    auto get_db = [](std::vector<std::unique_ptr<WalletDatabase>>& dbs) {
+        std::unique_ptr<WalletDatabase> db = std::move(dbs.back());
+        dbs.pop_back();
+        return db;
+    };
+
+    {   // Context setup.
+        // Create and encrypt blsct wallet
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockWalletDatabase(options)));
+        LOCK(wallet->cs_wallet);
+        auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
+        BOOST_CHECK(blsct_km->SetupGeneration(true));
+
+        // Get the keys in the wallet
+        auto masterKeysMetadata = blsct_km->GetHDChain();
+        auto recvAddress = blsct_km->GetAddress();
+        blsct::DoublePublicKey dest = recvAddress.GetKeys();
+        blsct::PrivateKey viewKey, spendKey, tokenKey;
+        BOOST_CHECK(blsct_km->GetKey(masterKeysMetadata.view_id, viewKey));
+        BOOST_CHECK(blsct_km->GetKey(masterKeysMetadata.spend_id, spendKey));
+        BOOST_CHECK(blsct_km->GetKey(masterKeysMetadata.token_id, tokenKey));
+
+        // Encrypt the wallet and duplicate database
+        BOOST_CHECK(wallet->EncryptWallet("encrypt"));
+        wallet->Flush();
+
+        for (int i=0; i < NUMBER_OF_TESTS; i++) {
+            dbs.emplace_back(DuplicateMockDatabase(wallet->GetDatabase(), options));
+        }
+    }
+
+    {
+        // First test case:
+        // Erase all the crypted keys from db and unlock the wallet.
+        // The wallet will only re-write the crypted keys to db if any checksum is missing at load time.
+        // So, if any 'cblsctkey' record re-appears on db, then the checksums were not properly calculated, and we are re-writing
+        // the records every time that 'CWallet::Unlock' gets called, which is not good.
+
+        // Load the wallet and check that is encrypted
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", get_db(dbs)));
+        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
+        BOOST_CHECK(wallet->IsCrypted());
+        BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
+
+        // Now delete all records and check that the 'Unlock' function doesn't re-write them
+        BOOST_CHECK(wallet->GetBLSCTKeyMan()->DeleteRecords());
+        BOOST_CHECK(!HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
+        BOOST_CHECK(wallet->Unlock("encrypt"));
+        BOOST_CHECK(!HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
+    }
+
+    {
+        // Second test case:
+        // Verify that loading up a 'cblsctkey' with no checksum triggers a complete re-write of the crypted keys.
+        std::unique_ptr<WalletDatabase> db = get_db(dbs);
+        {
+            std::unique_ptr<DatabaseBatch> batch = db->MakeBatch(false);
+            std::pair<std::vector<unsigned char>, uint256> value;
+            BOOST_CHECK(batch->Read(std::make_pair(DBKeys::CRYPTED_BLSCTKEY, viewKey.GetPublicKey().GetID()), value));
+
+            const auto key = std::make_pair(DBKeys::CRYPTED_BLSCTKEY, viewKey.GetPublicKey());
+            BOOST_CHECK(batch->Write(key, value.first, /*fOverwrite=*/true));
+        }
+
+        // Load the wallet and check that is encrypted
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
+        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
+        BOOST_CHECK(wallet->IsCrypted());
+        BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
+
+        // Now delete all cblsctkey records and check that the 'Unlock' function re-writes them
+        // (this is because the wallet, at load time, found a cblsctkey record with no checksum)
+        BOOST_CHECK(wallet->GetBLSCTKeyMan()->DeleteRecords());
+        BOOST_CHECK(!HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
+        BOOST_CHECK(wallet->Unlock("encrypt"));
+        BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
+    }
+
+    {
+        // Third test case:
+        // Verify that loading up a 'cblsctkey' with an invalid checksum throws an error.
+        std::unique_ptr<WalletDatabase> db = get_db(dbs);
+        {
+            std::unique_ptr<DatabaseBatch> batch = db->MakeBatch(false);
+            std::vector<unsigned char> crypted_data;
+            BOOST_CHECK(batch->Read(std::make_pair(DBKeys::CRYPTED_BLSCTKEY, viewKey.GetPublicKey()), crypted_data));
+
+            // Write an invalid checksum
+            std::pair<std::vector<unsigned char>, uint256> value = std::make_pair(crypted_data, uint256::ONE);
+            const auto key = std::make_pair(DBKeys::CRYPTED_BLSCTKEY, viewKey.GetPublicKey());
+            BOOST_CHECK(batch->Write(key, value, /*fOverwrite=*/true));
+        }
+
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
+        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
+    }
+
+    {
+        // Fourth test case:
+        // Verify that loading up a 'cblsctkey' with an invalid pubkey throws an error
+        std::unique_ptr<WalletDatabase> db = get_db(dbs);
+        {
+            CPubKey invalid_key;
+            BOOST_ASSERT(!invalid_key.IsValid());
+            const auto key = std::make_pair(DBKeys::CRYPTED_KEY, invalid_key);
+            std::pair<std::vector<unsigned char>, uint256> value;
+            BOOST_CHECK(db->MakeBatch(false)->Write(key, value, /*fOverwrite=*/true));
+        }
+
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
+        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
