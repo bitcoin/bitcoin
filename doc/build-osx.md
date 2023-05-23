@@ -153,10 +153,13 @@ For more information on ZMQ, see: [zmq.md](zmq.md)
 #### Test Suite Dependencies
 
 There is an included test suite that is useful for testing code changes when developing.
-To run the test suite (recommended), you will need to have Python 3 installed:
+To run the test suite (recommended), you will need to have Python 3 installed.
+It is recommended to use pyenv to manage your python installation.
+Run pyenv install in the project directory to install the version specified in `.python-version`.
 
 ``` bash
-brew install python
+brew install pyenv
+pyenv install
 ```
 
 ---
@@ -171,6 +174,10 @@ Ensuring that `python` is installed, you can install the deploy dependencies by 
 ``` bash
 pip3 install ds_store mac_alias
 ```
+
+Note: if you experience a `No ds_store module found` error after running `make deploy`, make sure that
+your `PYTHON` variable in your generated Makefile points to your installation of python matching the version specified in `.python-version`.
+
 
 ## Building Bitcoin Core
 
