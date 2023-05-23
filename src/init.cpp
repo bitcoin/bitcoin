@@ -141,6 +141,9 @@ static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 // anyway.
 #define MIN_CORE_FILEDESCRIPTORS 0
 #else
+// Minimum amount of file descriptors needed for Bitcoin Core to
+// run. More file descriptors are needed in order to make network
+// connections.
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
 
@@ -930,17 +933,25 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
 
     nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + nBind + NUM_FDS_MESSAGE_CAPTURE);
 
-#ifdef USE_POLL
+    if (nFD < MIN_CORE_FILEDESCRIPTORS)
+        return InitError(_("Not enough file descriptors available."));
+
     int fd_max = nFD;
-#else
-    int fd_max = FD_SETSIZE;
+
+#ifndef USE_POLL
+// USE_POLL is only defined on linux so the following only runs on other OS
+    if (nFD > FD_SETSIZE) {
+        fd_max = FD_SETSIZE;
+    }
 #endif
+
     // Trim requested connection counts, to fit into system limitations
     // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
     nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE), 0);
-    if (nFD < MIN_CORE_FILEDESCRIPTORS)
-        return InitError(_("Not enough file descriptors available."));
-    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE, nMaxConnections);
+
+    if (nMaxConnections <= 0 && nUserMaxConnections > 0) {
+        return InitError(_("Not enough file descriptors available to make network connections."));
+    }
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
