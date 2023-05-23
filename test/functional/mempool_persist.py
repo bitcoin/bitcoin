@@ -191,6 +191,7 @@ class MempoolPersistTest(BitcoinTestFramework):
     def test_persist_unbroadcast(self):
         node0 = self.nodes[0]
         self.start_node(0)
+        self.start_node(2)
 
         # clear out mempool
         self.generate(node0, 1, sync_fun=self.no_op)
