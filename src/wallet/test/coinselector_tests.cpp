@@ -1090,7 +1090,6 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
     BOOST_CHECK_EQUAL(output5.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
 }
 
-
 static util::Result<SelectionResult> SelectCoinsSRD(const CAmount& target,
                                                     const CoinSelectionParams& cs_params,
                                                     const node::NodeContext& m_node,

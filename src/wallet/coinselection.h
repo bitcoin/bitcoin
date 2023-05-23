@@ -142,8 +142,8 @@ struct CoinSelectionParams {
     size_t change_output_size = 0;
     /** Size of the input to spend a change output in virtual bytes. */
     size_t change_spend_size = 0;
-    /** Mininmum change to target in Knapsack solver: select coins to cover the payment and
-     * at least this value of change. */
+    /** Mininmum change to target in Knapsack solver and CoinGrinder:
+     * select coins to cover the payment and at least this value of change. */
     CAmount m_min_change_target{0};
     /** Minimum amount for creating a change output.
      * If change budget is smaller than min_change then we forgo creation of change output.
@@ -311,7 +311,8 @@ enum class SelectionAlgorithm : uint8_t
     BNB = 0,
     KNAPSACK = 1,
     SRD = 2,
-    MANUAL = 3,
+    CG = 3,
+    MANUAL = 4,
 };
 
 std::string GetAlgorithmName(const SelectionAlgorithm algo);
@@ -329,6 +330,8 @@ private:
     bool m_use_effective{false};
     /** The computed waste */
     std::optional<CAmount> m_waste;
+    /** The count of selections that were evaluated by this coin selection attempt */
+    size_t m_selections_evaluated;
     /** Total weight of the selected inputs */
     int m_weight{0};
     /** How much individual inputs overestimated the bump fees for the shared ancestry */
@@ -386,6 +389,12 @@ public:
     void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
 
+    /** Record the number of selections that were evaluated */
+    void SetSelectionsEvaluated(size_t attempts);
+
+    /** Get selections_evaluated */
+    size_t GetSelectionsEvaluated() const ;
+
     /**
      * Combines the @param[in] other selection result into 'this' selection result.
      *
@@ -429,6 +438,8 @@ public:
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
                                              int max_weight);
+
+util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight);
 
 /** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
  * outputs until the target is satisfied
