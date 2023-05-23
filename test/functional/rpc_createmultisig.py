@@ -12,13 +12,13 @@ from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create, drop_origins
-from test_framework.key import ECPubKey, ECKey
+from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
 )
-from test_framework.wallet_util import bytes_to_wif
+from test_framework.wallet_util import generate_keypair
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
@@ -38,10 +38,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.priv = []
         node0, node1, node2 = self.nodes
         for _ in range(self.nkeys):
-            k = ECKey()
-            k.generate()
-            self.pub.append(k.get_pubkey().get_bytes().hex())
-            self.priv.append(bytes_to_wif(k.get_bytes(), k.is_compressed))
+            privkey, pubkey = generate_keypair(wif=True)
+            self.pub.append(pubkey.hex())
+            self.priv.append(privkey)
         if self.is_bdb_compiled():
             self.final = node2.getnewaddress()
         else:
