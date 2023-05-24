@@ -171,6 +171,7 @@ BASE_SCRIPTS = [
     'wallet_fast_rescan.py --descriptors',
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
+    'rpc_validateaddress.py',
     'interface_bitcoin_cli.py --legacy-wallet',
     'interface_bitcoin_cli.py --descriptors',
     'feature_bind_extra.py',
