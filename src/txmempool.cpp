@@ -1012,6 +1012,26 @@ void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) 
     }
 }
 
+bool CTxMemPool::IsUnbroadcastTx(const GenTxid& gtxid) const
+{
+    AssertLockHeld(cs);
+    uint256 txid;
+    if (gtxid.IsWtxid()) { // m_unbroadcast_txids is by txid (not wtxid), get the txid from wtxid.
+        auto it = get_iter_from_wtxid(gtxid.GetHash());
+        if (it == mapTx.end()) {
+            return false;
+        }
+        auto tx = it->GetSharedTx();
+        if (tx.get() == nullptr) {
+            return false;
+        }
+        txid = tx->GetHash();
+    } else {
+        txid = gtxid.GetHash();
+    }
+    return m_unbroadcast_txids.count(txid) > 0;
+}
+
 void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);

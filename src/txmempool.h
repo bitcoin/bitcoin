@@ -731,12 +731,8 @@ public:
         return m_unbroadcast_txids;
     }
 
-    /** Returns whether a txid is in the unbroadcast set */
-    bool IsUnbroadcastTx(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
-    {
-        AssertLockHeld(cs);
-        return m_unbroadcast_txids.count(txid) != 0;
-    }
+    /** Returns whether a transaction is in the unbroadcast set. */
+    bool IsUnbroadcastTx(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Guards this internal counter for external reporting */
     uint64_t GetAndIncrementSequence() const EXCLUSIVE_LOCKS_REQUIRED(cs) {
