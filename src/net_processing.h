@@ -25,6 +25,9 @@ static const int DISCOURAGEMENT_THRESHOLD{100};
 // SYSCOIN
 /** The number of most recently announced transactions a peer can request. */
 static const unsigned int INVENTORY_MAX_RECENT_RELAY = 35000;
+/** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
+static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
+
 struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
