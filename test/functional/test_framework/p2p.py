@@ -808,12 +808,13 @@ class P2PDataStore(P2PInterface):
         self.getdata_requests = []
 
     def on_getdata(self, message):
-        """Check for the tx/block in our stores and if found, reply with an inv message."""
+        """Check for the tx/block in our stores and if found, reply with MSG_TX or MSG_BLOCK."""
         for inv in message.inv:
             self.getdata_requests.append(inv.hash)
-            if (inv.type & MSG_TYPE_MASK) == MSG_TX and inv.hash in self.tx_store.keys():
+            invtype = inv.type & MSG_TYPE_MASK
+            if (invtype == MSG_TX or invtype == MSG_WTX) and inv.hash in self.tx_store.keys():
                 self.send_message(msg_tx(self.tx_store[inv.hash]))
-            elif (inv.type & MSG_TYPE_MASK) == MSG_BLOCK and inv.hash in self.block_store.keys():
+            elif invtype == MSG_BLOCK and inv.hash in self.block_store.keys():
                 self.send_message(msg_block(self.block_store[inv.hash]))
             else:
                 logger.debug('getdata message type {} received.'.format(hex(inv.type)))
