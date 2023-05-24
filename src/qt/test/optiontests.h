@@ -5,9 +5,9 @@
 #ifndef BITCOIN_QT_TEST_OPTIONTESTS_H
 #define BITCOIN_QT_TEST_OPTIONTESTS_H
 
+#include <common/settings.h>
 #include <qt/optionsmodel.h>
 #include <univalue.h>
-#include <util/settings.h>
 
 #include <QObject>
 

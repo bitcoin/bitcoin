@@ -6,6 +6,7 @@
 #include <common/args.h>
 
 #include <chainparamsbase.h>
+#include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -14,7 +15,6 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/settings.h>
 #include <util/strencodings.h>
 
 #ifdef WIN32

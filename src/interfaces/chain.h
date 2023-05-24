@@ -6,8 +6,8 @@
 #define BITCOIN_INTERFACES_CHAIN_H
 
 #include <blockfilter.h>
+#include <common/settings.h>
 #include <primitives/transaction.h> // For CTransactionRef
-#include <util/settings.h>          // For util::SettingsValue
 
 #include <functional>
 #include <memory>

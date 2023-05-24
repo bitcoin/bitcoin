@@ -5,13 +5,13 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
+#include <common/settings.h>
 #include <consensus/amount.h>          // For CAmount
 #include <net.h>                       // For NodeId
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network
 #include <netbase.h>                   // For ConnectionDirection
 #include <support/allocators/secure.h> // For SecureString
-#include <util/settings.h>             // For util::SettingsValue
 #include <util/translation.h>
 
 #include <functional>

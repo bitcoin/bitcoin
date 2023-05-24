@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/settings.h>
 #include <cstdint>
 #include <hash.h>
 #include <logging.h>
@@ -21,7 +22,6 @@
 #include <univalue.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/settings.h>
 #include <util/translation.h>
 
 namespace {

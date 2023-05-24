@@ -5,11 +5,11 @@
 #ifndef BITCOIN_COMMON_ARGS_H
 #define BITCOIN_COMMON_ARGS_H
 
+#include <common/settings.h>
 #include <compat/compat.h>
 #include <sync.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
-#include <util/settings.h>
 
 #include <iosfwd>
 #include <list>

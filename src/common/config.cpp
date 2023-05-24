@@ -4,13 +4,13 @@
 
 #include <common/args.h>
 
+#include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
-#include <util/settings.h>
 #include <util/string.h>
 
 #include <algorithm>

@@ -3,10 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <common/settings.h>
 #include <logging.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
-#include <util/settings.h>
 #include <util/strencodings.h>
 
 #include <limits>
