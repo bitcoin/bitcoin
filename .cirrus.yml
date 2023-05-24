@@ -252,11 +252,11 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: '[MSan, depends] [lunar]'
+  name: '[MSan, depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
       FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
