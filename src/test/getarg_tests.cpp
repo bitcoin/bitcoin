@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(setting_args)
     ArgsManager args;
     SetupArgs(args, {{"-foo", ArgsManager::ALLOW_ANY}});
 
-    auto set_foo = [&](const util::SettingsValue& value) {
-      args.LockSettings([&](util::Settings& settings) {
+    auto set_foo = [&](const common::SettingsValue& value) {
+      args.LockSettings([&](common::Settings& settings) {
         settings.rw_settings["foo"] = value;
       });
     };

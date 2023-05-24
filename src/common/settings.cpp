@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace util {
+namespace common {
 namespace {
 
 enum class Source {
@@ -258,4 +258,4 @@ size_t SettingsSpan::negated() const
     return 0;
 }
 
-} // namespace util
+} // namespace common

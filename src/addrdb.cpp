@@ -132,7 +132,7 @@ CBanDB::CBanDB(fs::path ban_list_path)
 bool CBanDB::Write(const banmap_t& banSet)
 {
     std::vector<std::string> errors;
-    if (util::WriteSettings(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
+    if (common::WriteSettings(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
         return true;
     }
 
@@ -152,10 +152,10 @@ bool CBanDB::Read(banmap_t& banSet)
         return false;
     }
 
-    std::map<std::string, util::SettingsValue> settings;
+    std::map<std::string, common::SettingsValue> settings;
     std::vector<std::string> errors;
 
-    if (!util::ReadSettings(m_banlist_json, settings, errors)) {
+    if (!common::ReadSettings(m_banlist_json, settings, errors)) {
         for (const auto& err : errors) {
             LogPrintf("Cannot load banlist %s: %s\n", fs::PathToString(m_banlist_json), err);
         }

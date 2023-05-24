@@ -14,7 +14,7 @@
 
 class UniValue;
 
-namespace util {
+namespace common {
 
 //! Settings value type (string/integer/boolean/null variant).
 //!
@@ -110,6 +110,6 @@ auto FindKey(Map&& map, Key&& key) -> decltype(&map.at(key))
     return it == map.end() ? nullptr : &it->second;
 }
 
-} // namespace util
+} // namespace common
 
 #endif // BITCOIN_COMMON_SETTINGS_H

@@ -18,13 +18,13 @@
 
 OptionTests::OptionTests(interfaces::Node& node) : m_node(node)
 {
-    gArgs.LockSettings([&](util::Settings& s) { m_previous_settings = s; });
+    gArgs.LockSettings([&](common::Settings& s) { m_previous_settings = s; });
 }
 
 void OptionTests::init()
 {
     // reset args
-    gArgs.LockSettings([&](util::Settings& s) { s = m_previous_settings; });
+    gArgs.LockSettings([&](common::Settings& s) { s = m_previous_settings; });
     gArgs.ClearPathCache();
 }
 
@@ -76,14 +76,14 @@ void OptionTests::integerGetArgBug()
     // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Ensure
     // that setting integer prune value doesn't cause an exception to be thrown
     // in the OptionsModel constructor
-    gArgs.LockSettings([&](util::Settings& settings) {
+    gArgs.LockSettings([&](common::Settings& settings) {
         settings.forced_settings.erase("prune");
         settings.rw_settings["prune"] = 3814;
     });
     gArgs.WriteSettingsFile();
     bilingual_str error;
     QVERIFY(OptionsModel{m_node}.Init(error));
-    gArgs.LockSettings([&](util::Settings& settings) {
+    gArgs.LockSettings([&](common::Settings& settings) {
         settings.rw_settings.erase("prune");
     });
     gArgs.WriteSettingsFile();
@@ -95,7 +95,7 @@ void OptionTests::parametersInteraction()
     // It was fixed via https://github.com/bitcoin-core/gui/pull/568.
     // With fListen=false in ~/.config/Bitcoin/Bitcoin-Qt.conf and all else left as default,
     // bitcoin-qt should set both -listen and -listenonion to false and start successfully.
-    gArgs.LockSettings([&](util::Settings& s) {
+    gArgs.LockSettings([&](common::Settings& s) {
         s.forced_settings.erase("listen");
         s.forced_settings.erase("listenonion");
     });

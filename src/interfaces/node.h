@@ -103,14 +103,14 @@ public:
     virtual bool isSettingIgnored(const std::string& name) = 0;
 
     //! Return setting value from <datadir>/settings.json or bitcoin.conf.
-    virtual util::SettingsValue getPersistentSetting(const std::string& name) = 0;
+    virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.
-    virtual void updateRwSetting(const std::string& name, const util::SettingsValue& value) = 0;
+    virtual void updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Force a setting value to be applied, overriding any other configuration
     //! source, but not being persisted.
-    virtual void forceSetting(const std::string& name, const util::SettingsValue& value) = 0;
+    virtual void forceSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Clear all settings in <datadir>/settings.json and store a backup of
     //! previous settings in <datadir>/settings.json.bak.
