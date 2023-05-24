@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -102,7 +102,7 @@ struct FeeCalculation;
 enum class FeeEstimateMode;
 class ReserveDestination;
 
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 
 /** (client) version numbers for particular wallet features */
 struct CompactTallyItem
@@ -788,7 +788,7 @@ public:
      * Main wallet lock.
      * This lock protects all the fields added by CWallet.
      */
-    mutable CCriticalSection cs_wallet;
+    mutable RecursiveMutex cs_wallet;
 
     /** Get database handle used by this wallet. Ideally this function would
      * not be necessary.

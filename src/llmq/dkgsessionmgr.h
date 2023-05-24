@@ -38,7 +38,7 @@ private:
     //TODO name struct instead of std::pair
     std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
 
-    mutable CCriticalSection contributionsCacheCs;
+    mutable RecursiveMutex contributionsCacheCs;
     struct ContributionsCacheKey {
         Consensus::LLMQType llmqType;
         uint256 quorumHash;

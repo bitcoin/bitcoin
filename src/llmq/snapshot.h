@@ -214,7 +214,7 @@ uint256 GetLastBaseBlockHash(const std::vector<const CBlockIndex*>& baseBlockInd
 class CQuorumSnapshotManager
 {
 private:
-    mutable CCriticalSection snapshotCacheCs;
+    mutable RecursiveMutex snapshotCacheCs;
 
     CEvoDB& m_evoDb;
 

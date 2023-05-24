@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -42,7 +42,6 @@
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/strencodings.h>
 #include <util/translation.h>
-#include <util/validation.h>
 #include <util/system.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
@@ -157,7 +156,7 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 namespace {
     CBlockIndex* pindexBestInvalid = nullptr;
 
-    CCriticalSection cs_LastBlockFile;
+    RecursiveMutex cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
     int nLastBlockFile = 0;
     /** Global flag to indicate we should check to see if there are
@@ -644,7 +643,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     assert(std::addressof(::ChainstateActive()) == std::addressof(m_active_chainstate));
     if (!ContextualCheckTransaction(tx, state, chainparams.GetConsensus(), m_active_chainstate.m_chain.Tip()))
-        return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), state.ToString());
 
     if (tx.nVersion == 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         // quorum commitment is not allowed outside of blocks
@@ -753,7 +752,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     assert(std::addressof(g_chainman.m_blockman) == std::addressof(m_active_chainstate.m_blockman));
     CAmount nFees = 0;
     if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_blockman.GetSpendHeight(m_view), nFees)) {
-        return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+        return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
     }
 
     // Check for non-standard pay-to-script-hash in inputs
@@ -875,7 +874,7 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
     assert(std::addressof(::ChainstateActive().CoinsTip()) == std::addressof(m_active_chainstate.CoinsTip()));
     if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags, txdata, m_active_chainstate.CoinsTip())) {
         return error("%s: BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not STANDARD flags %s, %s",
-                __func__, hash.ToString(), FormatStateMessage(state));
+                __func__, hash.ToString(), state.ToString());
     }
 
     return true;
@@ -2113,7 +2112,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             // problems.
             return AbortNode(state, "Corrupt block found indicating potential hardware failure; shutting down");
         }
-        return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
+        return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     }
 
     if (pindex->pprev && pindex->phashBlock && m_clhandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
@@ -2260,7 +2259,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(block, pindex, *m_quorum_block_processor, *m_clhandler, state, view, fJustCheck, fScriptChecks)) {
         return error("ConnectBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
-                     pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+                     pindex->GetBlockHash().ToString(), state.ToString());
     }
 
     int64_t nTime2_1 = GetTimeMicros(); nTimeProcessSpecial += nTime2_1 - nTime2;
@@ -2279,7 +2278,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             TxValidationState tx_state;
             if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
-                LogPrintf("ERROR: %s: Consensus::CheckTxInputs: %s, %s\n", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+                LogPrintf("ERROR: %s: Consensus::CheckTxInputs: %s, %s\n", __func__, tx.GetHash().ToString(), state.ToString());
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
             }
@@ -2364,7 +2363,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(), tx_state.GetDebugMessage());
                 LogPrintf("ERROR: ConnectBlock(): CheckInputScripts on %s failed with %s\n",
-                    tx.GetHash().ToString(), FormatStateMessage(state));
+                    tx.GetHash().ToString(), state.ToString());
                 return false;
             }
             control.Add(vChecks);
@@ -2711,7 +2710,7 @@ void CChainState::ForceFlushStateToDisk() {
     BlockValidationState state;
     const CChainParams& chainparams = Params();
     if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS)) {
-        LogPrintf("%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
+        LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
 
@@ -2721,7 +2720,7 @@ void CChainState::PruneAndFlush() {
     const CChainParams& chainparams = Params();
 
     if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::NONE)) {
-        LogPrintf("%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
+        LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
 
@@ -2940,7 +2939,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
         if (!rv) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
-            return error("%s: ConnectBlock %s failed, %s", __func__, pindexNew->GetBlockHash().ToString(), FormatStateMessage(state));
+            return error("%s: ConnectBlock %s failed, %s", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
         assert(nBlocksTotal > 0);
@@ -3479,7 +3478,7 @@ void CChainState::EnforceBlock(BlockValidationState& state, const CChainParams& 
                 continue;
             }
             if (!MarkConflictingBlock(state, chainparams, jt->second)) {
-                LogPrintf("CChainState::%s -- MarkConflictingBlock failed: %s\n", __func__, FormatStateMessage(state));
+                LogPrintf("CChainState::%s -- MarkConflictingBlock failed: %s\n", __func__, state.ToString());
                 // This should not have happened and we are in a state were it's not safe to continue anymore
                 assert(false);
             }
@@ -4065,7 +4064,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         }
 
         if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
-            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
@@ -4089,7 +4088,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         }
 
         if (!ContextualCheckBlockHeader(block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
-            return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+            return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
         /* Determine if this block descends from any block which has been found
          * invalid (m_failed_blocks), then mark pindexPrev and any blocks between
@@ -4258,7 +4257,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
         }
-        return error("%s: %s", __func__, FormatStateMessage(state));
+        return error("%s: %s", __func__, state.ToString());
     }
 
     // Header is valid/has work, merkle tree is good...RELAY NOW
@@ -4316,7 +4315,7 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
         }
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
-            return error("%s: AcceptBlock FAILED: %s", __func__, FormatStateMessage(state));
+            return error("%s: AcceptBlock FAILED: %s", __func__, state.ToString());
         }
     }
 
@@ -4324,7 +4323,7 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
 
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActiveChainstate().ActivateBestChain(state, chainparams, pblock))
-        return error("%s: ActivateBestChain failed: %s", __func__, FormatStateMessage(state));
+        return error("%s: ActivateBestChain failed: %s", __func__, state.ToString());
 
     LogPrintf("%s : ACCEPTED\n", __func__);
     return true;
@@ -4363,11 +4362,11 @@ bool TestBlockValidity(BlockValidationState& state,
     // NOTE: CheckBlockHeader is called by CheckBlock
     assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainstate.m_blockman));
     if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainparams, pindexPrev, GetAdjustedTime()))
-        return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
+        return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, state.ToString());
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
-        return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
+        return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
-        return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
+        return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
     if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());
@@ -4467,7 +4466,7 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     if (!active_chainstate.FlushStateToDisk(
             chainparams, state, FlushStateMode::NONE, nManualPruneHeight)) {
-        LogPrintf("%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
+        LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
 
@@ -4815,7 +4814,7 @@ bool CVerifyDB::VerifyDB(
         // check level 1: verify block validity
         if (nCheckLevel >= 1 && !CheckBlock(block, state, chainparams.GetConsensus()))
             return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__,
-                         pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+                         pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
             CBlockUndo undo;
@@ -4864,7 +4863,7 @@ bool CVerifyDB::VerifyDB(
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             if (!chainstate.ConnectBlock(block, state, pindex, coins, chainparams))
-                return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+                return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
             if (ShutdownRequested()) return true;
         }
     }
@@ -4890,7 +4889,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     BlockValidationState state;
     if (!ProcessSpecialTxsInBlock(block, pindex, *m_quorum_block_processor, *m_clhandler, state, inputs, false /*fJustCheck*/, false /*fScriptChecks*/)) {
         return error("RollforwardBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
-            pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+            pindex->GetBlockHash().ToString(), state.ToString());
     }
 
     for (const CTransactionRef& tx : block.vtx) {
@@ -5047,7 +5046,7 @@ bool CChainState::AddGenesisBlock(const CChainParams& chainparams, const CBlock&
     assert(std::addressof(::ChainActive()) == std::addressof(m_chain));
     FlatFilePos blockPos = SaveBlockToDisk(block, 0, m_chain, chainparams, nullptr);
     if (blockPos.IsNull())
-        return error("%s: writing genesis block to disk failed (%s)", __func__, FormatStateMessage(state));
+        return error("%s: writing genesis block to disk failed (%s)", __func__, state.ToString());
     CBlockIndex* pindex = m_blockman.AddToBlockIndex(block);
     ReceivedBlockTransactions(block, pindex, blockPos);
     return true;

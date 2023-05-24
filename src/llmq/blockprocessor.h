@@ -22,7 +22,7 @@ class CConnman;
 class CEvoDB;
 class PeerManager;
 
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 
 namespace llmq
 {
@@ -39,7 +39,7 @@ private:
     const std::unique_ptr<PeerManager>& m_peerman;
 
     // TODO cleanup
-    mutable CCriticalSection minableCommitmentsCs;
+    mutable RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
     std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
 

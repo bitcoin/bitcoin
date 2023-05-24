@@ -46,7 +46,7 @@ public:
     using BinaryMessage = std::pair<NodeId, std::shared_ptr<CDataStream>>;
 
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     const int invType;
     size_t maxMessagesPerNode GUARDED_BY(cs);
     std::list<BinaryMessage> pendingMessages GUARDED_BY(cs);
@@ -107,7 +107,7 @@ private:
     friend class CDKGSessionManager;
 
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     std::atomic<bool> stopRequested{false};
 
     const Consensus::LLMQParams params;

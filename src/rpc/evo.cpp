@@ -25,7 +25,6 @@
 #include <rpc/util.h>
 #include <util/moneystr.h>
 #include <util/translation.h>
-#include <util/validation.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET
@@ -328,7 +327,7 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const CMu
 
     TxValidationState state;
     if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), true)) {
-        throw std::runtime_error(FormatStateMessage(state));
+        throw std::runtime_error(state.ToString());
     }
     } // cs_main
 

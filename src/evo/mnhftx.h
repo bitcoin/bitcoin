@@ -13,7 +13,7 @@
 
 class CBlockIndex;
 class TxValidationState;
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 
 // mnhf signal special transaction
 class MNHFTx

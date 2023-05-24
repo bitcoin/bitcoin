@@ -35,7 +35,7 @@ static void ApplyHash(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, 
 
     ss << VARINT(it->first + 1);
     ss << it->second.out.scriptPubKey;
-    ss << VARINT(it->second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+    ss << VARINT_MODE(it->second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
 
     if (it == std::prev(outputs.end())) {
         ss << VARINT(0u);

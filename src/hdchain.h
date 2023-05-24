@@ -26,7 +26,7 @@ public:
 class CHDChain
 {
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     static const int CURRENT_VERSION = 1;
     int nVersion GUARDED_BY(cs) {CURRENT_VERSION};

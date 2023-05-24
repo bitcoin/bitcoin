@@ -17,7 +17,6 @@
 #include <spork.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util/validation.h>
 #include <validation.h>
 
 namespace llmq
@@ -511,7 +510,7 @@ void CChainLocksHandler::EnforceBestChainLock()
 
     if (activateNeeded) {
         if (!::ChainstateActive().ActivateBestChain(dummy_state, params)) {
-            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(dummy_state));
+            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;
         }
         LOCK(cs_main);

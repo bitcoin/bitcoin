@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,7 +30,6 @@
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <util/validation.h>
 
 #include <list>
 #include <memory>
@@ -162,7 +161,7 @@ struct COrphanTx {
     size_t list_pos;
     size_t nTxSize;
 };
-CCriticalSection g_cs_orphans;
+RecursiveMutex g_cs_orphans;
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 size_t nMapOrphanTransactionsSize = 0;
@@ -1583,7 +1582,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
 }
 
 // All of the following cache a recent block, and are protected by cs_most_recent_block
-static CCriticalSection cs_most_recent_block;
+static RecursiveMutex cs_most_recent_block;
 static std::shared_ptr<const CBlock> most_recent_block GUARDED_BY(cs_most_recent_block);
 static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block GUARDED_BY(cs_most_recent_block);
 static uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
@@ -1879,7 +1878,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
     if (need_activate_chain) {
         BlockValidationState state;
         if (!::ChainstateActive().ActivateBestChain(state, Params(), a_recent_block)) {
-            LogPrint(BCLog::NET, "failed to activate chain (%s)\n", FormatStateMessage(state));
+            LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
         }
     }
 
@@ -3299,7 +3298,7 @@ void PeerManagerImpl::ProcessMessage(
             }
             BlockValidationState state;
             if (!::ChainstateActive().ActivateBestChain(state, Params(), a_recent_block)) {
-                LogPrint(BCLog::NET, "failed to activate chain (%s)\n", FormatStateMessage(state));
+                LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
             }
         }
 
@@ -3626,7 +3625,7 @@ void PeerManagerImpl::ProcessMessage(
         {
             LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
                 pfrom.GetId(),
-                FormatStateMessage(state));
+                state.ToString());
             MaybePunishNodeForTx(pfrom.GetId(), state);
             m_llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
         }

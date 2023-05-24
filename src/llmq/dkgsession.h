@@ -290,13 +290,13 @@ private:
     // we expect to only receive a single vvec and contribution per member, but we must also be able to relay
     // conflicting messages as otherwise an attacker might be able to broadcast conflicting (valid+invalid) messages
     // and thus split the quorum. Such members are later removed from the quorum.
-    mutable CCriticalSection invCs;
+    mutable RecursiveMutex invCs;
     std::map<uint256, CDKGContribution> contributions GUARDED_BY(invCs);
     std::map<uint256, CDKGComplaint> complaints GUARDED_BY(invCs);
     std::map<uint256, CDKGJustification> justifications GUARDED_BY(invCs);
     std::map<uint256, CDKGPrematureCommitment> prematureCommitments GUARDED_BY(invCs);
 
-    mutable CCriticalSection cs_pending;
+    mutable RecursiveMutex cs_pending;
     std::vector<size_t> pendingContributionVerifications GUARDED_BY(cs_pending);
 
     // filled by ReceivePrematureCommitment and used by FinalizeCommitments
