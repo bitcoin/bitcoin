@@ -33,7 +33,6 @@ from .util import (
     wait_until,
     p2p_port,
     get_chain_folder,
-    Options,
     EncodeDecimal,
 )
 
@@ -79,7 +78,6 @@ class TestNode():
         self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.rpchost = rpchost
         self.rpc_timeout = timewait
-        self.rpc_timeout *= Options.timeout_scale
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
         self.cwd = cwd

@@ -25,15 +25,6 @@ from io import BytesIO
 
 logger = logging.getLogger("TestFramework.utils")
 
-# Util options
-##############
-
-class Options:
-    timeout_scale = 1
-
-def set_timeout_scale(_timeout_scale):
-    Options.timeout_scale = _timeout_scale
-
 # Assert functions
 ##################
 
@@ -225,7 +216,6 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
         timeout = 60
     timeout = timeout * timeout_factor
     attempt = 0
-    timeout *= Options.timeout_scale
     time_end = time.time() + timeout
 
     while attempt < attempts and time.time() < time_end:

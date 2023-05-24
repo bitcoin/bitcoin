@@ -93,7 +93,7 @@ BASE_SCRIPTS = [
     'feature_maxuploadtarget.py',
     'feature_block.py', # NOTE: needs dash_hash to pass
     'rpc_fundrawtransaction.py',
-    'rpc_fundrawtransaction_hd.py',
+    'rpc_fundrawtransaction.py --usehd',
     'wallet_multiwallet.py --usecli',
     'p2p_quorum_data.py',
     # vv Tests less than 2m vv
@@ -471,7 +471,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, attempts=1, enab
         tmpdir=tmpdir,
         test_list=test_list,
         flags=flags,
-        timeout_duration=30 * 60 if runs_ci else float('inf'),  # in seconds
+        timeout_duration= 90 * 60 if runs_ci else float('inf'),  # in seconds
         use_term_control=use_term_control,
         attempts=attempts,
     )

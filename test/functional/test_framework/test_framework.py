@@ -49,7 +49,6 @@ from .util import (
     make_change,
     p2p_port,
     set_node_times,
-    set_timeout_scale,
     satoshi_round,
     softfork_active,
     wait_until,
@@ -136,6 +135,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.requires_wallet = False
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
+        if self.options.timeout_scale != 1:
+            print("DEPRECATED: --timeoutscale option is no longer available, please use --timeout-factor instead")
+            if self.options.timeout_factor == 1:
+                self.options.timeout_factor = self.options.timeout_scale
         if self.options.timeout_factor == 0 :
             self.options.timeout_factor = 99999
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
@@ -200,7 +203,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--dashd-arg", dest="dashd_extra_args", default=[], action="append",
                             help="Pass extra args to all dashd instances")
         parser.add_argument("--timeoutscale", dest="timeout_scale", default=1, type=int,
-                            help="Scale the test timeouts by multiplying them with the here provided value (default: %(default)s)")
+                            help=argparse.SUPPRESS)
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
         parser.add_argument("--valgrind", dest="valgrind", default=False, action="store_true",
@@ -226,11 +229,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
-
-        if self.options.timeout_scale < 1:
-            raise RuntimeError("--timeoutscale can't be less than 1")
-
-        set_timeout_scale(self.options.timeout_scale)
 
         PortSeed.n = self.options.port_seed
 
@@ -530,24 +528,38 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.nodes.append(t_node)
         return t_node
 
-    def dynamically_initialize_datadir(self, chain, node_p2p_port, node_rpc_port):
-        data_dir = get_datadir_path(self.options.tmpdir, len(self.nodes))
-        if not os.path.isdir(data_dir):
-            os.makedirs(data_dir)
+    def dynamically_initialize_datadir(self, node_p2p_port, node_rpc_port):
+        source_data_dir = get_datadir_path(self.options.tmpdir, 0)  # use node0 as a source
+        new_data_dir = get_datadir_path(self.options.tmpdir, len(self.nodes))
+
+        # In general, it's a pretty bad idea to copy datadir folder on the fly...
+        # But we flush all state changes to disk via gettxoutsetinfo call and
+        # we don't care about wallets, so it works
+        self.nodes[0].gettxoutsetinfo()
+        shutil.copytree(source_data_dir, new_data_dir)
+
+        shutil.rmtree(os.path.join(new_data_dir, self.chain, 'wallets'))
+        shutil.rmtree(os.path.join(new_data_dir, self.chain, 'llmq'))
+
+        for entry in os.listdir(os.path.join(new_data_dir, self.chain)):
+            if entry not in ['chainstate', 'blocks', 'indexes', 'evodb']:
+                os.remove(os.path.join(new_data_dir, self.chain, entry))
+
         # Translate chain name to config name
-        if chain == 'testnet3':
+        if self.chain == 'testnet3':
             chain_name_conf_arg = 'testnet'
             chain_name_conf_section = 'test'
             chain_name_conf_arg_value = '1'
-        elif chain == 'devnet':
+        elif self.chain == 'devnet':
             chain_name_conf_arg = 'devnet'
             chain_name_conf_section = 'devnet'
             chain_name_conf_arg_value = 'devnet1'
         else:
-            chain_name_conf_arg = chain
-            chain_name_conf_section = chain
+            chain_name_conf_arg = self.chain
+            chain_name_conf_section = self.chain
             chain_name_conf_arg_value = '1'
-        with open(os.path.join(data_dir, "dash.conf"), 'w', encoding='utf8') as f:
+
+        with open(os.path.join(new_data_dir, "dash.conf"), 'w', encoding='utf8') as f:
             f.write("{}={}\n".format(chain_name_conf_arg, chain_name_conf_arg_value))
             f.write("[{}]\n".format(chain_name_conf_section))
             f.write("port=" + str(node_p2p_port) + "\n")
@@ -561,8 +573,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             f.write("upnp=0\n")
             f.write("natpmp=0\n")
             f.write("shrinkdebugfile=0\n")
-            os.makedirs(os.path.join(data_dir, 'stderr'), exist_ok=True)
-            os.makedirs(os.path.join(data_dir, 'stdout'), exist_ok=True)
+            os.makedirs(os.path.join(new_data_dir, 'stderr'), exist_ok=True)
+            os.makedirs(os.path.join(new_data_dir, 'stdout'), exist_ok=True)
 
     def start_node(self, i, *args, **kwargs):
         """Start a dashd"""
@@ -695,7 +707,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         rpc_connections = nodes or self.nodes
         timeout = int(timeout * self.options.timeout_factor)
-        timeout *= self.options.timeout_scale
         stop_time = time.time() + timeout
         while time.time() <= stop_time:
             best_hash = [x.getbestblockhash() for x in rpc_connections]
@@ -716,7 +727,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         rpc_connections = nodes or self.nodes
         timeout = int(timeout * self.options.timeout_factor)
-        timeout *= self.options.timeout_scale
         stop_time = time.time() + timeout
         if self.mocktime != 0 and wait_func is None:
             wait_func = lambda: self.bump_mocktime(3, nodes=nodes)
@@ -1034,6 +1044,13 @@ class DashTestFramework(BitcoinTestFramework):
 
     def activate_by_name(self, name, expected_activation_height=None):
         self.log.info("Wait for " + name + " activation")
+
+        # disable spork17 while mining blocks to activate "name" to prevent accidental quorum formation
+        spork17_value = self.nodes[0].spork('show')['SPORK_17_QUORUM_DKG_ENABLED']
+        self.bump_mocktime(1)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+
         # mine blocks in batches
         batch_size = 10
         if expected_activation_height is not None:
@@ -1063,19 +1080,13 @@ class DashTestFramework(BitcoinTestFramework):
 
         assert softfork_active(self.nodes[0], name)
 
-    def activate_dip0024(self, expected_activation_height=None):
-        # disable spork17 while mining blocks to activate dip0024 to prevent accidental quorum formation
-        spork17_value = self.nodes[0].spork('show')['SPORK_17_QUORUM_DKG_ENABLED']
-        self.bump_mocktime(1)
-        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
-        self.wait_for_sporks_same()
-
-        self.activate_by_name('dip0024', expected_activation_height)
-
         # revert spork17 changes
         self.bump_mocktime(1)
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", spork17_value)
         self.wait_for_sporks_same()
+
+    def activate_dip0024(self, expected_activation_height=None):
+        self.activate_by_name('dip0024', expected_activation_height)
 
     def activate_v19(self, expected_activation_height=None):
         self.activate_by_name('v19', expected_activation_height)
@@ -1117,7 +1128,7 @@ class DashTestFramework(BitcoinTestFramework):
             # nothing to do
             return
 
-        self.dynamically_initialize_datadir(self.nodes[0].chain,node_p2p_port, node_rpc_port)
+        self.dynamically_initialize_datadir(node_p2p_port, node_rpc_port)
         node_info = self.add_dynamically_node(self.extra_args[1])
 
         args = ['-masternodeblsprivkey=%s' % created_mn_info.keyOperator] + node_info.extra_args
