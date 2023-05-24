@@ -6,6 +6,8 @@
 
 export LC_ALL=C.UTF-8
 
+set -ex
+
 CFG_DONE="ci.base-install-done"  # Use a global git setting to remember whether this script ran to avoid running it twice
 
 if [ "$(git config --global ${CFG_DONE})" == "true" ]; then
