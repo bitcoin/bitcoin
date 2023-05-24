@@ -721,8 +721,11 @@ public:
         if (exists(GenTxid::Txid(txid))) m_unbroadcast_txids.insert(txid);
     };
 
-    /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
+    /**
+     * Removes a transaction from the unbroadcast set.
+     * @return true if the transaction was in the unbroadcast set and was removed.
+     */
+    bool RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
 
     /** Returns transactions in unbroadcast set */
     std::set<uint256> GetUnbroadcastTxs() const
