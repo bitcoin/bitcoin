@@ -46,6 +46,9 @@
 /* Define to 1 if you have the <byteswap.h> header file. */
 #cmakedefine HAVE_BYTESWAP_H 1
 
+/* Define this symbol if the consensus lib has been built */
+#cmakedefine HAVE_CONSENSUS_LIB 1
+
 /* Define to 1 if you have the declaration of `be16toh', and to 0 if you
    don't. */
 #cmakedefine01 HAVE_DECL_BE16TOH

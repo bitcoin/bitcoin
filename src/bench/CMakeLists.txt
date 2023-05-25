@@ -45,6 +45,11 @@ add_executable(bench_bitcoin
   verify_script.cpp
 )
 
+if(TARGET bitcoinconsensus_static)
+  target_link_libraries(bench_bitcoin bitcoinconsensus_static)
+elseif(TARGET bitcoinconsensus AND NOT WIN32)
+  target_link_libraries(bench_bitcoin bitcoinconsensus)
+endif()
 target_link_libraries(bench_bitcoin
   test_util
   leveldb
