@@ -600,6 +600,7 @@ void SetupServerArgs(ArgsManager& argsman)
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-sensitiverelayowntx", strprintf("Relay locally submitted transactions via short lived connections to Tor or I2P for improved privacy. There are two aspects of this - linking transaction-origin/Bitcoin-owner with IP-address/geolocation and linking seemingly unrelated transactions to the same owner/origin (this applies even if the node is running in tor-only mode) (default: %u)", DEFAULT_SENSITIVE_RELAY_OWN_TX), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted inbound peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted inbound peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
@@ -1799,7 +1800,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         connOptions.onion_binds.push_back(onion_service_target);
     }
 
-    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+    const bool listenonion{args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)};
+    if (listenonion) {
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
@@ -1856,6 +1858,22 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     connOptions.m_i2p_accept_incoming = args.GetBoolArg("-i2pacceptincoming", DEFAULT_I2P_ACCEPT_INCOMING);
+
+    if (args.GetBoolArg("-sensitiverelayowntx", DEFAULT_SENSITIVE_RELAY_OWN_TX)) {
+        // If -listenonion is set, then NET_ONION may not be reachable now
+        // but may become reachable later, thus only error here if it is not
+        // reachable and will not become reachable for sure.
+        if (!IsReachable(NET_I2P) && !IsReachable(NET_ONION) && (!listenonion || args.IsArgSet("-onlynet"))) {
+            return InitError(_("Sensitive relay of own transactions requested (-sensitiverelayowntx), "
+                               "but none of Tor or I2P networks is reachable"));
+        }
+        if (!connOptions.m_use_addrman_outgoing) {
+            return InitError(_("Sensitive relay of own transactions requested (-sensitiverelayowntx), "
+                               "but -connect is also configured. They are incompatible because the "
+                               "sensitive relay needs to open a new connection to a randomly "
+                               "chosen Tor or I2P peer"));
+        }
+    }
 
     if (!node.connman->Start(*node.scheduler, connOptions)) {
         return false;
