@@ -14,8 +14,6 @@
 
 #include <optional>
 
-const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
-
 namespace wallet {
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)
 {

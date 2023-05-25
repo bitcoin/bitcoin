@@ -32,6 +32,8 @@ static const DatabaseFormat DATABASE_FORMATS[] = {
 #endif
 };
 
+const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
+
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key);
 
 std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context);
