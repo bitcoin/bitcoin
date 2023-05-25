@@ -807,6 +807,17 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             }
         }
 
+        auto spk_man = GetBLSCTKeyMan();
+        if (spk_man) {
+            if (!spk_man || !spk_man->Encrypt(_vMasterKey, encrypted_batch)) {
+                encrypted_batch->TxnAbort();
+                delete encrypted_batch;
+                encrypted_batch = nullptr;
+                // We now probably have half of our keys encrypted in memory, and half not...
+                // die and let the user reload the unencrypted wallet.
+                assert(false);
+            }
+        }
         // Encryption was introduced in version 0.4.0
         SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch);
 
@@ -827,11 +838,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // If we are using descriptors, make new descriptors with a new seed
         if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
             SetupDescriptorScriptPubKeyMans();
-        } else if (IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
-            auto spk_man = GetBLSCTKeyMan();
-            if (!spk_man || !spk_man->SetupGeneration(true)) {
-                return false;
-            }
         } else if (auto spk_man = GetLegacyScriptPubKeyMan()) {
             // if we are using HD, replace the HD seed with a new one
             if (spk_man->IsHDEnabled()) {
@@ -3402,6 +3408,11 @@ bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
             if (!spk_man_pair.second->CheckDecryptionKey(vMasterKeyIn, accept_no_keys)) {
                 return false;
             }
+        }
+        auto blsct_km = GetBLSCTKeyMan();
+        if (blsct_km) {
+            if (!blsct_km->CheckDecryptionKey(vMasterKeyIn, accept_no_keys))
+                return false;
         }
         vMasterKey = vMasterKeyIn;
     }

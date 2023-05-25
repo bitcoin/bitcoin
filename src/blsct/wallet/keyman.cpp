@@ -54,10 +54,12 @@ bool KeyMan::AddViewKey(const PrivateKey& secret, const PublicKey& pubkey)
     wallet::WalletBatch batch(m_storage.GetDatabase());
     AssertLockHeld(cs_KeyStore);
 
-    KeyRing::AddViewKey(secret, pubkey);
+    if (!fViewKeyDefined) {
+        KeyRing::AddViewKey(secret, pubkey);
 
-    return batch.WriteViewKey(pubkey, secret,
-                              mapKeyMetadata[pubkey.GetID()]);
+        return batch.WriteViewKey(pubkey, secret,
+                                  mapKeyMetadata[pubkey.GetID()]);
+    }
     m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
@@ -68,10 +70,12 @@ bool KeyMan::AddSpendKey(const PublicKey& pubkey)
     wallet::WalletBatch batch(m_storage.GetDatabase());
     AssertLockHeld(cs_KeyStore);
 
-    KeyRing::AddSpendKey(pubkey);
+    if (!fSpendKeyDefined) {
+        KeyRing::AddSpendKey(pubkey);
 
-    if (!batch.WriteSpendKey(pubkey))
-        return false;
+        if (!batch.WriteSpendKey(pubkey))
+            return false;
+    }
 
     m_storage.UnsetBlankWalletFlag(batch);
     return true;
@@ -116,6 +120,11 @@ bool KeyMan::LoadCryptedKey(const PublicKey &vchPubKey, const std::vector<unsign
 bool KeyMan::AddCryptedKeyInner(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     LOCK(cs_KeyStore);
+    for (const KeyMap::value_type& mKey : mapKeys)
+    {
+        const PrivateKey &key = mKey.second;
+        PublicKey pubKey = key.GetPublicKey();
+    }
     assert(mapKeys.empty());
 
     mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);

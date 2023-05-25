@@ -36,6 +36,9 @@ public:
     virtual bool GetKey(const CKeyID &id, PrivateKey &keyOut) const;
 
     virtual ~KeyRing() = default;
+
+    bool fSpendKeyDefined{false};
+    bool fViewKeyDefined{false};
 };
 }
 

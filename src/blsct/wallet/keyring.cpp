@@ -15,9 +15,9 @@ bool KeyRing::AddKeyPubKey(const PrivateKey& key, const PublicKey &pubkey)
 bool KeyRing::AddViewKey(const PrivateKey& key, const PublicKey &pubkey)
 {
     LOCK(cs_KeyStore);
-    mapKeys[pubkey.GetID()] = key;
     viewKey = key;
     viewPublicKey = key.GetPublicKey();
+    fViewKeyDefined = true;
     return true;
 }
 
@@ -25,6 +25,7 @@ bool KeyRing::AddSpendKey(const PublicKey &pubkey)
 {
     LOCK(cs_KeyStore);
     spendPublicKey = pubkey;
+    fSpendKeyDefined = true;
     return true;
 }
 

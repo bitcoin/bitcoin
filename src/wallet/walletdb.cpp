@@ -168,12 +168,14 @@ bool WalletBatch::WriteViewKey(const blsct::PublicKey& pubKey, const blsct::Priv
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::VIEWKEY, pubKey), std::make_pair(privKey, Hash(vchKey)), true);
+    auto ret = WriteIC(std::make_pair(DBKeys::VIEWKEY, pubKey), std::make_pair(privKey, Hash(vchKey)), true);
+    return ret;
 }
 
 bool WalletBatch::WriteSpendKey(const blsct::PublicKey& pubKey)
 {
-    return WriteIC(std::make_pair(DBKeys::SPENDKEY, pubKey), Hash(pubKey.GetVch()), true);
+    auto ret = WriteIC(std::make_pair(DBKeys::SPENDKEY, pubKey), Hash(pubKey.GetVch()), true);
+    return ret;
 }
 
 bool WalletBatch::WriteCryptedKey(const blsct::PublicKey& pubKey,
@@ -707,7 +709,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             ssKey >> vchPubKey;
             if (!vchPubKey.IsValid())
             {
-                strErr = "Error reading wallet database: CPubKey corrupt";
+                strErr = "Error reading wallet database: blsct::PublicKey corrupt";
                 return false;
             }
             std::vector<unsigned char> vchPrivKey;
@@ -719,7 +721,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                 uint256 checksum;
                 ssValue >> checksum;
                 if (!(checksum_valid = Hash(vchPrivKey) == checksum)) {
-                    strErr = "Error reading wallet database: Encrypted key corrupt";
+                    strErr = "Error reading wallet database: Encrypted blsct private key corrupt";
                     return false;
                 }
             }
@@ -728,7 +730,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
 
             if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
             {
-                strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
+                strErr = "Error reading wallet database: GetOrCreateBLSCTKeyMan::LoadCryptedKey failed";
                 return false;
             }
             wss.fIsEncrypted = true;
@@ -1272,13 +1274,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // Set the inactive chain
     if (wss.m_hd_chains.size() > 0) {
         LegacyScriptPubKeyMan* legacy_spkm = pwallet->GetLegacyScriptPubKeyMan();
-        if (!legacy_spkm) {
-            pwallet->WalletLogPrintf("Inactive HD Chains found but no Legacy ScriptPubKeyMan\n");
-            return DBErrors::CORRUPT;
-        }
-        for (const auto& chain_pair : wss.m_hd_chains) {
-            if (chain_pair.first != pwallet->GetLegacyScriptPubKeyMan()->GetHDChain().seed_id) {
-                pwallet->GetLegacyScriptPubKeyMan()->AddInactiveHDChain(chain_pair.second);
+        if (legacy_spkm) {
+            for (const auto& chain_pair : wss.m_hd_chains) {
+                if (chain_pair.first != pwallet->GetLegacyScriptPubKeyMan()->GetHDChain().seed_id) {
+                    pwallet->GetLegacyScriptPubKeyMan()->AddInactiveHDChain(chain_pair.second);
+                }
             }
         }
     }
