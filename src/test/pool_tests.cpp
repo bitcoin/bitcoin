@@ -54,33 +54,40 @@ BOOST_AUTO_TEST_CASE(basic_allocating)
     PoolResourceTester::CheckAllDataAccountedFor(resource);
     BOOST_TEST(1 == PoolResourceTester::FreeListSizes(resource)[1]);
     BOOST_TEST(expected_bytes_available == PoolResourceTester::AvailableMemoryFromChunk(resource));
+    // the system allocates 32 or 16 bytes for an 8-byte allocation
+    BOOST_TEST(((sizeof(void*) == 8) ? 32 : 16) == PoolResourceTester::GetSystemAllocBytes(resource));
 
     resource.Deallocate(block, 8, 16);
     PoolResourceTester::CheckAllDataAccountedFor(resource);
     BOOST_TEST(1 == PoolResourceTester::FreeListSizes(resource)[1]);
     BOOST_TEST(expected_bytes_available == PoolResourceTester::AvailableMemoryFromChunk(resource));
+    BOOST_TEST(0 == PoolResourceTester::GetSystemAllocBytes(resource));
 
     // can't use chunk because size is too big
     block = resource.Allocate(16, 8);
     PoolResourceTester::CheckAllDataAccountedFor(resource);
     BOOST_TEST(1 == PoolResourceTester::FreeListSizes(resource)[1]);
     BOOST_TEST(expected_bytes_available == PoolResourceTester::AvailableMemoryFromChunk(resource));
+    BOOST_TEST(((sizeof(void*) == 8) ? 32 : 16) == PoolResourceTester::GetSystemAllocBytes(resource));
 
     resource.Deallocate(block, 16, 8);
     PoolResourceTester::CheckAllDataAccountedFor(resource);
     BOOST_TEST(1 == PoolResourceTester::FreeListSizes(resource)[1]);
     BOOST_TEST(expected_bytes_available == PoolResourceTester::AvailableMemoryFromChunk(resource));
+    BOOST_TEST(0 == PoolResourceTester::GetSystemAllocBytes(resource));
 
     // it's possible that 0 bytes are allocated, make sure this works. In that case the call is forwarded to operator new
     // 0 bytes takes one entry from the first freelist
     void* p = resource.Allocate(0, 1);
     BOOST_TEST(0 == PoolResourceTester::FreeListSizes(resource)[1]);
     BOOST_TEST(expected_bytes_available == PoolResourceTester::AvailableMemoryFromChunk(resource));
+    BOOST_TEST(0 == PoolResourceTester::GetSystemAllocBytes(resource));
 
     resource.Deallocate(p, 0, 1);
     PoolResourceTester::CheckAllDataAccountedFor(resource);
     BOOST_TEST(1 == PoolResourceTester::FreeListSizes(resource)[1]);
     BOOST_TEST(expected_bytes_available == PoolResourceTester::AvailableMemoryFromChunk(resource));
+    BOOST_TEST(0 == PoolResourceTester::GetSystemAllocBytes(resource));
 }
 
 // Allocates from 0 to n bytes were n > the PoolResource's data, and each should work

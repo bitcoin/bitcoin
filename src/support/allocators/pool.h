@@ -120,6 +120,16 @@ class PoolResource final
     std::byte* m_available_memory_end = nullptr;
 
     /**
+     * Return the number of bytes allocated by the system allocator,
+     * not including internal allocations for the resource itself.
+     *
+     * These are allocations that couldn't be satisfied by the resource
+     * allocator, because of either alignment or size restrictions
+     * (that is, IsFreeListUsable() returned false).
+     */
+    size_t m_system_alloc_bytes{0};
+
+    /**
      * How many multiple of ELEM_ALIGN_BYTES are necessary to fit bytes. We use that result directly as an index
      * into m_free_lists. Round up for the special case when bytes==0.
      */
@@ -162,6 +172,21 @@ class PoolResource final
         m_available_memory_it = new (storage) std::byte[m_chunk_size_bytes];
         m_available_memory_end = m_available_memory_it + m_chunk_size_bytes;
         m_allocated_chunks.emplace_back(m_available_memory_it);
+    }
+
+    // copied from src/memusage.h
+    size_t MallocUsage(size_t alloc) const
+    {
+        // Measured on libc6 2.19 on Linux.
+        if (alloc == 0) {
+            return 0;
+        } else if (sizeof(void*) == 8) {
+            return ((alloc + 31) >> 4) << 4;
+        } else if (sizeof(void*) == 4) {
+            return ((alloc + 15) >> 3) << 3;
+        } else {
+            assert(0);
+        }
     }
 
     /**
@@ -232,6 +257,7 @@ public:
         }
 
         // Can't use the pool => use operator new()
+        m_system_alloc_bytes += MallocUsage(bytes);
         return ::operator new (bytes, std::align_val_t{alignment});
     }
 
@@ -247,16 +273,9 @@ public:
             PlacementAddToList(p, m_free_lists[num_alignments]);
         } else {
             // Can't use the pool => forward deallocation to ::operator delete().
+            m_system_alloc_bytes -= MallocUsage(bytes);
             ::operator delete (p, std::align_val_t{alignment});
         }
-    }
-
-    /**
-     * Number of allocated chunks
-     */
-    [[nodiscard]] std::size_t NumAllocatedChunks() const
-    {
-        return m_allocated_chunks.size();
     }
 
     /**
@@ -265,6 +284,17 @@ public:
     [[nodiscard]] size_t ChunkSizeBytes() const
     {
         return m_chunk_size_bytes;
+    }
+
+    [[nodiscard]] size_t MemoryUsage() const
+    {
+        // The allocated chunks are stored in a std::list. Size per node should
+        // therefore be 3 pointers: next, previous, and a pointer to the chunk.
+        size_t estimated_list_node_size = MallocUsage(sizeof(void*) * 3);
+        size_t usage_resource = estimated_list_node_size * m_allocated_chunks.size();
+        size_t usage_chunks = MallocUsage(m_chunk_size_bytes) * m_allocated_chunks.size();
+        size_t usage_system = m_system_alloc_bytes;
+        return usage_resource + usage_chunks + usage_system;
     }
 };
 

@@ -124,6 +124,12 @@ public:
         assert(chunk_it == chunks.end());
         assert(chunk_size_remaining == 0);
     }
+
+    template <std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES>
+    static size_t GetSystemAllocBytes(const PoolResource<MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>& resource)
+    {
+        return resource.m_system_alloc_bytes;
+    }
 };
 
 #endif // BITCOIN_TEST_UTIL_POOLRESOURCETESTER_H
