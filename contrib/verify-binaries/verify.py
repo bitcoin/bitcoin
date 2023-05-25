@@ -458,6 +458,36 @@ def verify_binary_hashes(hashes_to_verify: t.List[t.List[str]]) -> t.Tuple[Retur
     return (ReturnCode.SUCCESS, files_to_hashes)
 
 
+def print_output(
+        args: argparse.Namespace,
+        good_trusted: t.List[SigData],
+        good_untrusted: t.List[SigData],
+        unknown: t.List[SigData],
+        bad: t.List[SigData],
+        files_to_hashes: t.Dict[str, str],
+        missing_files: t.Optional[t.List[str]] = None,
+        ) -> None:
+    if not missing_files:
+        missing_files = []
+
+    if args.json:
+        output = {
+            'good_trusted_sigs': [str(s) for s in good_trusted],
+            'good_untrusted_sigs': [str(s) for s in good_untrusted],
+            'unknown_sigs': [str(s) for s in unknown],
+            'bad_sigs': [str(s) for s in bad],
+            'verified_binaries': files_to_hashes,
+        }
+        if missing_files:
+            output["missing_binaries"] = missing_files
+        print(json.dumps(output, indent=2))
+    else:
+        for filename in files_to_hashes:
+            print(f"VERIFIED: {filename}")
+        for filename in missing_files:
+            print(f"MISSING: {filename}")
+
+
 def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     WORKINGDIR = Path(tempfile.gettempdir()) / f"bitcoin_verify_binaries.{args.version}"
 
@@ -545,24 +575,12 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     if hashes_status != ReturnCode.SUCCESS:
         return hashes_status
 
-
     if args.cleanup:
         cleanup()
     else:
         log.info(f"did not clean up {WORKINGDIR}")
 
-    if args.json:
-        output = {
-            'good_trusted_sigs': [str(s) for s in good_trusted],
-            'good_untrusted_sigs': [str(s) for s in good_untrusted],
-            'unknown_sigs': [str(s) for s in unknown],
-            'bad_sigs': [str(s) for s in bad],
-            'verified_binaries': files_to_hashes,
-        }
-        print(json.dumps(output, indent=2))
-    else:
-        for filename in files_to_hashes:
-            print(f"VERIFIED: {filename}")
+    print_output(args, good_trusted, good_untrusted, unknown, bad, files_to_hashes)
 
     return ReturnCode.SUCCESS
 
@@ -615,21 +633,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
     if hashes_status != ReturnCode.SUCCESS:
         return hashes_status
 
-    if args.json:
-        output = {
-            'good_trusted_sigs': [str(s) for s in good_trusted],
-            'good_untrusted_sigs': [str(s) for s in good_untrusted],
-            'unknown_sigs': [str(s) for s in unknown],
-            'bad_sigs': [str(s) for s in bad],
-            'verified_binaries': files_to_hashes,
-            "missing_binaries": missing_files,
-        }
-        print(json.dumps(output, indent=2))
-    else:
-        for filename in files_to_hashes:
-            print(f"VERIFIED: {filename}")
-        for filename in missing_files:
-            print(f"MISSING: {filename}")
+    print_output(args, good_trusted, good_untrusted, unknown, bad, files_to_hashes, missing_files)
 
     return ReturnCode.SUCCESS
 
