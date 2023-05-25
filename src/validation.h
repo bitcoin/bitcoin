@@ -1242,15 +1242,6 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
     return DeploymentEnabled(chainman.GetConsensus(), dep);
 }
 
-/**
- * Return the expected assumeutxo value for a given height, if one exists.
- *
- * @param[in] height Get the assumeutxo value for this height.
- *
- * @returns empty if no assumeutxo configuration exists for the given height.
- */
-const AssumeutxoData* ExpectedAssumeutxo(const int height, const CChainParams& params);
-
 /** Identifies blocks that overwrote an existing coinbase output in the UTXO set (see BIP30) */
 bool IsBIP30Repeat(const CBlockIndex& block_index);
 

@@ -5099,18 +5099,6 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return *m_active_chainstate;
 }
 
-const AssumeutxoData* ExpectedAssumeutxo(
-    const int height, const CChainParams& chainparams)
-{
-    const MapAssumeutxo& valid_assumeutxos_map = chainparams.Assumeutxo();
-    const auto assumeutxo_found = valid_assumeutxos_map.find(height);
-
-    if (assumeutxo_found != valid_assumeutxos_map.end()) {
-        return &assumeutxo_found->second;
-    }
-    return nullptr;
-}
-
 [[nodiscard]] static bool DeleteCoinsDBFromDisk(const fs::path db_path, bool is_snapshot)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
@@ -5295,7 +5283,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     CBlockIndex* snapshot_start_block = WITH_LOCK(::cs_main, return m_blockman.LookupBlockIndex(base_blockhash));
 
     if (!snapshot_start_block) {
-        // Needed for ComputeUTXOStats and ExpectedAssumeutxo to determine the
+        // Needed for ComputeUTXOStats to determine the
         // height and to avoid a crash when base_blockhash.IsNull()
         LogPrintf("[snapshot] Did not find snapshot start blockheader %s\n",
                   base_blockhash.ToString());
@@ -5303,7 +5291,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     int base_height = snapshot_start_block->nHeight;
-    auto maybe_au_data = ExpectedAssumeutxo(base_height, GetParams());
+    const auto& maybe_au_data = GetParams().AssumeutxoForHeight(base_height);
 
     if (!maybe_au_data) {
         LogPrintf("[snapshot] assumeutxo height in snapshot metadata not recognized "
@@ -5572,7 +5560,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     CCoinsViewDB& ibd_coins_db = m_ibd_chainstate->CoinsDB();
     m_ibd_chainstate->ForceFlushStateToDisk();
 
-    auto maybe_au_data = ExpectedAssumeutxo(curr_height, m_options.chainparams);
+    const auto& maybe_au_data = m_options.chainparams.AssumeutxoForHeight(curr_height);
     if (!maybe_au_data) {
         LogPrintf("[snapshot] assumeutxo data not found for height "
             "(%d) - refusing to validate snapshot\n", curr_height);
