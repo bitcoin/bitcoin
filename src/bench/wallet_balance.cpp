@@ -14,14 +14,9 @@
 
 #include <optional>
 
-using wallet::CWallet;
-using wallet::CreateMockableWalletDatabase;
-using wallet::DBErrors;
-using wallet::GetBalance;
-using wallet::WALLET_FLAG_DESCRIPTORS;
-
 const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
+namespace wallet {
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
@@ -63,3 +58,4 @@ BENCHMARK(WalletBalanceDirty, benchmark::PriorityLevel::HIGH);
 BENCHMARK(WalletBalanceClean, benchmark::PriorityLevel::HIGH);
 BENCHMARK(WalletBalanceMine, benchmark::PriorityLevel::HIGH);
 BENCHMARK(WalletBalanceWatch, benchmark::PriorityLevel::HIGH);
+} // namespace wallet
