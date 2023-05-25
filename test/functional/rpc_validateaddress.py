@@ -33,7 +33,7 @@ INVALID_DATA = [
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 byte), per BIP141",
+        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
         [],
     ),
     (
@@ -101,12 +101,12 @@ INVALID_DATA = [
     ("bc1pw5dgrnzv", "Invalid Bech32 address program size (1 byte)", []),
     (
         "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v8n0nx0muaewav253zgeav",
-        "Invalid Bech32 address program size (41 byte)",
+        "Invalid Bech32 address program size (41 bytes)",
         [],
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 byte), per BIP141",
+        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
         [],
     ),
     (
