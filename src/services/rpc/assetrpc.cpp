@@ -296,76 +296,6 @@ static RPCHelpMan getnotarysighash()
     };
 }
 
-static RPCHelpMan convertaddress()
-{
-    return RPCHelpMan{"convertaddress",	
-        "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3.\n",	
-        {	
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}	
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "v3address", "The syscoin 3 address validated"},
-                {RPCResult::Type::STR, "v4address", "The syscoin 4 address validated"},
-            }},	
-        RPCExamples{	
-            HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
-            + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
-        },
-    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
-{	
-
-    std::string error_msg;
-    std::vector<int> error_locations;
-    UniValue ret(UniValue::VOBJ);	
-    CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);	
-    bool isValid = IsValidDestination(dest);
-    if(!isValid) {
-        error_locations.clear();
-        error_msg.clear();
-        dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations, true);
-        isValid = IsValidDestination(dest);
-    }
-    // Make sure the destination is valid	
-    if (!isValid) {	
-        UniValue error_indices(UniValue::VARR);
-        for (int i : error_locations) error_indices.push_back(i);
-        ret.pushKV("error_locations", error_indices);
-        ret.pushKV("error", error_msg);
-        return ret;
-    }	
-    std::string currentV4Address;	
-    std::string currentV3Address;	
-    CTxDestination v4Dest;	
-    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {	
-        v4Dest = dest;	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  EncodeDestination(*witness_id);	
-    }	
-    else if (auto key_id = std::get_if<PKHash>(&dest)) {	
-        v4Dest = WitnessV0KeyHash(*key_id);	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  EncodeDestination(*key_id);	
-    }	
-    else if (auto script_id = std::get_if<ScriptHash>(&dest)) {	
-        v4Dest = *script_id;	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  currentV4Address;	
-    }	
-    else if (std::get_if<WitnessV0ScriptHash>(&dest)) {	
-        v4Dest = dest;	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  currentV4Address;	
-    } 	
-
-
-    ret.pushKV("v3address", currentV3Address);	
-    ret.pushKV("v4address", currentV4Address); 	
-    return ret;	
-},
-    };
-}
 
 int CheckActorsInTransactionGraph(const CTxMemPool& mempool, const uint256& lookForTxHash) {
     LOCK(cs_main);
@@ -1133,7 +1063,6 @@ void RegisterAssetRPCCommands(CRPCTable &t)
     static const CRPCCommand commands[]{
         {"syscoin", &syscoingettxroots},
         {"syscoin", &syscoingetspvproof},
-        {"syscoin", &convertaddress},
         {"syscoin", &syscoindecoderawtransaction},
         {"syscoin", &assetinfo},
         {"syscoin", &listassets},

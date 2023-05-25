@@ -228,7 +228,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "spork", 1, "value" },
     { "voteraw", 1, "collateralTxIndex" },
     { "voteraw", 5, "time" },
-    { "convertaddresswallet", 2, "rescan" },
     { "listassets", 0, "count" },
     { "listassets", 1, "from" },
     { "listassets", 2, "options" },

@@ -75,15 +75,15 @@ public:
 
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
-// SYSCOIN
-CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations, bool forcelegacy)
+
+CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
     std::vector<unsigned char> data;
     uint160 hash;
     error_str = "";
 
     // Note this will be false if it is a valid Bech32 address for a different network
-    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP()) && !forcelegacy;
+    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
 
     if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
         // base58-encoded Syscoin addresses.
@@ -146,6 +146,9 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         // The rest of the symbols are converted witness program bytes.
         data.reserve(((dec.data.size() - 1) * 5) / 8);
         if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin() + 1, dec.data.end())) {
+
+            std::string_view byte_str{data.size() == 1 ? "byte" : "bytes"};
+
             if (version == 0) {
                 {
                     WitnessV0KeyHash keyid;
@@ -162,7 +165,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                     }
                 }
 
-                error_str = strprintf("Invalid Bech32 v0 address program size (%s byte), per BIP141", data.size());
+                error_str = strprintf("Invalid Bech32 v0 address program size (%d %s), per BIP141", data.size(), byte_str);
                 return CNoDestination();
             }
 
@@ -179,7 +182,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             }
 
             if (data.size() < 2 || data.size() > BECH32_WITNESS_PROG_MAX_LEN) {
-                error_str = strprintf("Invalid Bech32 address program size (%s byte)", data.size());
+                error_str = strprintf("Invalid Bech32 address program size (%d %s)", data.size(), byte_str);
                 return CNoDestination();
             }
 
@@ -285,9 +288,9 @@ std::string EncodeDestination(const CTxDestination& dest)
     return std::visit(DestinationEncoder(Params()), dest);
 }
 
-CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations, bool forcelegacy)
+CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations)
 {
-    return DecodeDestination(str, Params(), error_msg, error_locations, forcelegacy);
+    return DecodeDestination(str, Params(), error_msg, error_locations);
 }
 
 CTxDestination DecodeDestination(const std::string& str)
@@ -299,7 +302,7 @@ CTxDestination DecodeDestination(const std::string& str)
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
     std::string error_msg;
-    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr, false));
+    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr));
 }
 
 bool IsValidDestinationString(const std::string& str)

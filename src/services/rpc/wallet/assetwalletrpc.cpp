@@ -18,97 +18,7 @@
 #include <wallet/coincontrol.h>
 #include <nevm/sha3.h>
 using namespace wallet;
-static RPCHelpMan convertaddresswallet()
-{
-    return RPCHelpMan{"convertaddresswallet",
-    "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.",   
-    {	
-        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},	
-        {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address"},	
-        {"rescan", RPCArg::Type::BOOL, RPCArg::Default{false}, "Rescan the wallet for transactions. Useful if you provided label to add to receiving address"},	
-    },	
-    RPCResult{
-        RPCResult::Type::OBJ, "", "",
-        {
-            {RPCResult::Type::STR, "v3address", "The syscoin 3 address validated"},
-            {RPCResult::Type::STR, "v4address", "The syscoin 4 address validated"},
-        },
-    },		
-    RPCExamples{	
-        HelpExampleCli("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
-        + HelpExampleRpc("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
-    },
-    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
 
-    UniValue ret(UniValue::VOBJ);	
-    CTxDestination dest = DecodeDestination(request.params[0].get_str());	
-    std::string strLabel;	
-    if (!request.params[1].isNull())	
-        strLabel = request.params[1].get_str();    	
-    bool fRescan = false;	
-    if (!request.params[2].isNull())	
-        fRescan = request.params[2].get_bool();	
-    // Make sure the destination is valid	
-    if (!IsValidDestination(dest)) {	
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");	
-    }	
-    std::string currentV4Address;	
-    std::string currentV3Address;	
-    CTxDestination v4Dest;	
-    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {	
-        v4Dest = dest;	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  EncodeDestination(*witness_id);	
-    }	
-    else if (auto key_id = std::get_if<PKHash>(&dest)) {	
-        v4Dest = WitnessV0KeyHash(*key_id);	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  EncodeDestination(*key_id);	
-    }	
-    else if (auto script_id = std::get_if<ScriptHash>(&dest)) {	
-        v4Dest = *script_id;	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  currentV4Address;	
-    }	
-    else if (std::get_if<WitnessV0ScriptHash>(&dest)) {	
-        v4Dest = dest;	
-        currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  currentV4Address;	
-    } 	
-    else	
-        strLabel = "";	
-    LOCK(pwallet->cs_wallet);
-    isminetype mine = pwallet->IsMine(v4Dest);	
-    if(!(mine & ISMINE_SPENDABLE)){	
-        throw JSONRPCError(RPC_MISC_ERROR, "The V4 Public key or redeemscript not known to wallet, or the key is uncompressed.");	
-    }	
-    if(!strLabel.empty())	
-    {		
-        CScript witprog = GetScriptForDestination(v4Dest);	
-        LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();	
-        if(spk_man)	
-            spk_man->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility	
-        pwallet->SetAddressBook(v4Dest, strLabel, wallet::AddressPurpose::RECEIVE);	
-        WalletRescanReserver reserver(*pwallet);                   	
-        if (fRescan) {	
-            int64_t scanned_time = pwallet->RescanFromTime(0, reserver, true);	
-            if (pwallet->IsAbortingRescan()) {	
-                throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");	
-            } else if (scanned_time > 0) {	
-                throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");	
-            }	
-        }  	
-    }	
-
-    ret.pushKV("v3address", currentV3Address);	
-    ret.pushKV("v4address", currentV4Address); 	
-    return ret;	
-},
-    };
-}
 static RPCHelpMan signmessagebech32()
 {
     return RPCHelpMan{"signmessagebech32",
@@ -472,7 +382,6 @@ static RPCHelpMan getauxblock()
 Span<const CRPCCommand> wallet::GetAssetWalletRPCCommands()
 {
     static const CRPCCommand commands[]{ 
-        {"syscoinwallet", &convertaddresswallet},
         {"syscoinwallet", &signmessagebech32},
         {"syscoinwallet", &syscoincreatenevmblob},
         {"syscoinwallet", &syscoincreaterawnevmblob},
