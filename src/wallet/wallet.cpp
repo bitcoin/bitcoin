@@ -42,6 +42,7 @@
 #include <wallet/context.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 #include <wallet/fees.h>
+#include <wallet/scriptpubkeyman.h>
 
 #include <univalue.h>
 
