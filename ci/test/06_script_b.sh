@@ -67,67 +67,47 @@ if [ "$DOWNLOAD_PREVIOUS_RELEASES" = "true" ]; then
   test/get_previous_releases.py -b -t "$PREVIOUS_RELEASES_DIR"
 fi
 
-BITCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking"
+BITCOIN_CONFIG_ALL=" -DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR"
 if [ -z "$NO_DEPENDS" ]; then
-  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} CONFIG_SITE=$DEPENDS_DIR/$HOST/share/config.site"
+  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} -DCMAKE_TOOLCHAIN_FILE=$DEPENDS_DIR/$HOST/share/toolchain.cmake"
 fi
 if [ -z "$NO_WERROR" ]; then
-  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-werror"
+  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} -DWERROR=ON"
 fi
 
 ccache --zero-stats --max-size="${CCACHE_SIZE}"
 PRINT_CCACHE_STATISTICS="ccache --version | head -n 1 && ccache --show-stats"
 
+mkdir -p "${BASE_BUILD_DIR}"
+cd "${BASE_BUILD_DIR}"
+
 if [ -n "$ANDROID_TOOLS_URL" ]; then
-  make distclean || true
-  ./autogen.sh
-  bash -c "./configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG" || ( (cat config.log) && false)
-  make "${MAKEJOBS}" && cd src/qt && ANDROID_HOME=${ANDROID_HOME} ANDROID_NDK_HOME=${ANDROID_NDK_HOME} make apk
+  bash -c "cmake $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG ${BASE_ROOT_DIR} || ( (cat CMakeFiles/CMakeOutput.log CMakeFiles/CMakeError.log) && false)"
+  bash -c "make $MAKEJOBS bitcoin-qt"
+  bash -c "make $MAKEJOBS apk_package"
   bash -c "${PRINT_CCACHE_STATISTICS}"
   exit 0
 fi
 
-BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-external-signer --prefix=$BASE_OUTDIR"
-
-if [ -n "$CONFIG_SHELL" ]; then
-  "$CONFIG_SHELL" -c "./autogen.sh"
-else
-  ./autogen.sh
-fi
-
-mkdir -p "${BASE_BUILD_DIR}"
-cd "${BASE_BUILD_DIR}"
-
-bash -c "${BASE_ROOT_DIR}/configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG" || ( (cat config.log) && false)
-
-make distdir VERSION="$HOST"
-
-cd "${BASE_BUILD_DIR}/bitcoin-$HOST"
-
-bash -c "./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG" || ( (cat config.log) && false)
+BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} -DWITH_EXTERNAL_SIGNER=ON"
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  MAYBE_BEAR="bear --config src/.bear-tidy-config"
-  MAYBE_TOKEN="--"
+  BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 fi
 
-bash -c "${MAYBE_BEAR} ${MAYBE_TOKEN} make $MAKEJOBS $GOAL" || ( echo "Build failure. Verbose build follows." && make "$GOAL" V=1 ; false )
+bash -c "cmake $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG ${BASE_ROOT_DIR} || ( (cat CMakeFiles/CMakeOutput.log CMakeFiles/CMakeError.log) && false)"
+
+bash -c "make $MAKEJOBS all $GOAL" || ( echo "Build failure. Verbose build follows." && make all "$GOAL" V=1 ; false )
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
 
 if [[ $HOST = *-mingw32 ]]; then
-  # Generate all binaries, so that they can be wrapped
-  make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
-  make "$MAKEJOBS" -C src minisketch/test.exe VERBOSE=1
   "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
 fi
 
 if [ -n "$QEMU_USER_CMD" ]; then
-  # Generate all binaries, so that they can be wrapped
-  make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
-  make "$MAKEJOBS" -C src minisketch/test VERBOSE=1
   "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
 fi
 
@@ -136,7 +116,7 @@ if [ -n "$USE_VALGRIND" ]; then
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
-  bash -c "${TEST_RUNNER_ENV} DIR_UNIT_TEST_DATA=${DIR_UNIT_TEST_DATA} LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib make $MAKEJOBS check VERBOSE=1"
+  bash -c "CTEST_OUTPUT_ON_FAILURE=ON ${TEST_RUNNER_ENV} DIR_UNIT_TEST_DATA=${DIR_UNIT_TEST_DATA} LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib ctest $MAKEJOBS"
 fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
@@ -149,20 +129,15 @@ fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
   set -eo pipefail
-  cd "${BASE_BUILD_DIR}/bitcoin-$HOST/src/"
-  ( run-clang-tidy-16 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
-  # Filter out files by regex here, because regex may not be
-  # accepted in src/.bear-tidy-config
-  # Filter out:
-  # * qt qrc and moc generated files
-  # * walletutil (temporarily)
-  # * secp256k1
-  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$|src/wallet/walletutil|src/secp256k1/src/") | not))' ../compile_commands.json > tmp.json
-  mv tmp.json ../compile_commands.json
-  cd "${BASE_BUILD_DIR}/bitcoin-$HOST/"
+  cd "${BASE_ROOT_DIR}/src"
+  ( run-clang-tidy-16 -p "${BASE_BUILD_DIR}" -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  # Filter out walletutil (temporarily).
+  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|src/wallet/walletutil") | not))' "${BASE_BUILD_DIR}/compile_commands.json" > tmp.json
+  mv tmp.json "${BASE_BUILD_DIR}/compile_commands.json"
+  cd "${BASE_ROOT_DIR}"
   python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
-           -p . "${MAKEJOBS}" \
-           -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp" \
+           -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
+           -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
            -Xiwyu --max_line_length=160 \
            2>&1 | tee /tmp/iwyu_ci.out
   cd "${BASE_ROOT_DIR}/src"

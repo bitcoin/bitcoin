@@ -109,13 +109,17 @@ task:
     VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
-    WRAPPED_CL: 'C:\Users\ContainerAdministrator\AppData\Local\Temp\cirrus-ci-build\ci\test\wrapped-cl.bat'
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.5/single/qt-everywhere-opensource-src-5.15.5.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-opensource-src-5.15.5.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.5'
     QTBASEDIR: 'C:\Qt_static'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     QT_CONFIGURE_COMMAND: '..\configure -release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
+    BITCOIND: '%CIRRUS_WORKING_DIR%\build\src\Release\bitcoind.exe'
+    BITCOINCLI: '%CIRRUS_WORKING_DIR%\build\src\Release\bitcoin-cli.exe'
+    BITCOINTX: '%CIRRUS_WORKING_DIR%\build\src\Release\bitcoin-tx.exe'
+    BITCOINUTIL: '%CIRRUS_WORKING_DIR%\build\src\Release\bitcoin-util.exe'
+    BITCOINWALLET: '%CIRRUS_WORKING_DIR%\build\src\Release\bitcoin-wallet.exe'
     IgnoreWarnIntDirInTempDetected: 'true'
   merge_script:
     - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL pull/$env:CIRRUS_PR/merge; git reset --hard FETCH_HEAD; }
@@ -138,23 +142,6 @@ task:
       - '%QT_CONFIGURE_COMMAND% -prefix %QTBASEDIR%'
       - jom
       - jom install
-  vcpkg_tools_cache:
-    folder: '%VCPKG_DOWNLOADS%\tools'
-    reupload_on_changes: false
-    fingerprint_script:
-      - echo %CI_VCPKG_TAG%
-      - msbuild -version
-  vcpkg_binary_cache:
-    folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
-    reupload_on_changes: true
-    fingerprint_script:
-      - echo %CI_VCPKG_TAG%
-      - type build_msvc\vcpkg.json
-      - msbuild -version
-    populate_script:
-      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
-  ccache_cache:
-    folder: '%CCACHE_DIR%'
   install_tools_script:
     - choco install --yes --no-progress ccache --version=4.7.4
     - choco install --yes --no-progress python3 --version=3.9.6
@@ -170,25 +157,44 @@ task:
     - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
     - .\vcpkg integrate install
     - .\vcpkg version
+  vcpkg_tools_cache:
+    folder: '%VCPKG_DOWNLOADS%\tools'
+    reupload_on_changes: false
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+  vcpkg_binary_cache:
+    folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+    populate_script:
+      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
+  vcpkg_install_packages_script:
+      - ..\vcpkg\vcpkg --triplet=x64-windows-static install pkgconf boost-multi-index boost-process boost-signals2 boost-test libevent berkeleydb sqlite3 miniupnpc zeromq
+  configure_script:
+    - '%x64_NATIVE_TOOLS%'
+    - cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DWITH_GUI=Qt5 -DQt5_DIR=%QTBASEDIR%\lib\cmake\Qt5 -DWERROR=ON -S . -B build
+  ccache_cache:
+    folder: '%CCACHE_DIR%'
   build_script:
     - '%x64_NATIVE_TOOLS%'
-    - cd %CIRRUS_WORKING_DIR%
     - ccache --zero-stats --max-size=%CCACHE_SIZE%
-    - python build_msvc\msvc-autogen.py
-    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - cmake --build build --config Release -- -property:UseMultiToolTask=true;CL_MPcount=7
     - ccache --show-stats
   check_script:
-    - src\test_bitcoin.exe -l test_suite
-    - src\bench_bitcoin.exe --sanity-check
-    - python test\util\test_runner.py
-    - python test\util\rpcauth-test.py
+    - build\src\test\Release\test_bitcoin.exe -l test_suite
+    - build\src\bench\Release\bench_bitcoin.exe --sanity-check
+    - python build\test\util\test_runner.py
+    - python build\test\util\rpcauth-test.py
   functional_tests_script:
     # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
     # See: https://learn.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
     # Exclude feature_dbcrash for now due to timeout
-    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=99999999 --jobs=6 --timeout-factor=8 --extended --exclude feature_dbcrash
+    - python build\test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=99999999 --jobs=6 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'

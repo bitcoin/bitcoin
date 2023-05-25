@@ -14,5 +14,5 @@ export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,address,undefined,integer CC='clang-16 -ftrivial-auto-var-init=pattern' CXX='clang++-16 -ftrivial-auto-var-init=pattern'"
+export BITCOIN_CONFIG="-DFUZZ=ON -DSANITIZERS=fuzzer,address,undefined,integer -DCMAKE_C_COMPILER='clang-16;-ftrivial-auto-var-init=pattern' -DCMAKE_CXX_COMPILER='clang++-16;-ftrivial-auto-var-init=pattern'"
 export CCACHE_SIZE=200M

@@ -49,3 +49,7 @@ target_compile_options(secp256k1
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/wd4146 /wd4334>
 )
+
+set_property(TARGET secp256k1
+  PROPERTY EXPORT_COMPILE_COMMANDS OFF
+)

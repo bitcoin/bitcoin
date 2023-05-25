@@ -92,3 +92,7 @@ target_include_directories(leveldb
 # -Wconditional-uninitialized -Werror=conditional-uninitialized -Wsuggest-override -Werror=suggest-override
 
 target_link_libraries(leveldb PRIVATE crc32c)
+
+set_property(TARGET leveldb
+  PROPERTY EXPORT_COMPILE_COMMANDS OFF
+)
