@@ -53,7 +53,7 @@ private:
 
     bool fDecryptionThoroughlyChecked = true;
 public:
-    KeyMan(wallet::WalletStorage& storage, int64_t keypool_size) : Manager(storage), KeyRing() {}
+    KeyMan(wallet::WalletStorage& storage) : Manager(storage), KeyRing() {}
 
     bool SetupGeneration(bool force = false) override;
     bool IsHDEnabled() const override;

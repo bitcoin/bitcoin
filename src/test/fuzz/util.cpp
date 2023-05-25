@@ -179,8 +179,8 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
         },
         [&] {
-            tx_destination = blsct::DoublePublicKey{blsct::PrivateKey(ConsumeUInt256(fuzzed_data_provider)).GetPublicKey(),
-                    blsct::PrivateKey(ConsumeUInt256(fuzzed_data_provider)).GetPublicKey()};
+            tx_destination = blsct::DoublePublicKey{blsct::PrivateKey(ConsumeMclScalar(fuzzed_data_provider)).GetPublicKey(),
+                    blsct::PrivateKey(ConsumeMclScalar(fuzzed_data_provider)).GetPublicKey()};
         },
         [&] {
             WitnessUnknown witness_unknown{};
