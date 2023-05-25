@@ -36,12 +36,14 @@ PrivateKey::Point PrivateKey::GetPoint() const
 
 PublicKey PrivateKey::GetPublicKey() const
 {
-    return PublicKey(GetPoint());
+    auto point = GetPoint();
+    return point;
 }
 
 PrivateKey::Scalar PrivateKey::GetScalar() const
 {
-    return Scalar(std::vector<unsigned char>(k.begin(), k.end()));
+    auto ret = std::vector<unsigned char>(k.begin(), k.end());
+    return ret;
 }
 
 bool PrivateKey::IsValid() const
