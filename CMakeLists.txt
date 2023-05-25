@@ -40,6 +40,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 include(CMakeDependentOption)
 option(ASM "Use assembly routines." ON)
 cmake_dependent_option(CXX20 "Enable compilation in C++20 mode." OFF "NOT MSVC" ON)
+option(THREADLOCAL "Enable features that depend on the C++ thread_local keyword (currently just thread names in debug logs)." ON)
 
 if(CXX20)
   set(CMAKE_CXX_STANDARD 20)
@@ -85,6 +86,9 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   add_compile_definitions(MAC_OSX)
 endif()
+
+include(AddThreadsIfNeeded)
+add_threads_if_needed()
 
 include(CheckSourceCompilesAndLinks)
 include(cmake/introspection.cmake)
