@@ -3119,9 +3119,6 @@ bool Chainstate::FlushStateToDisk(
             if (pnevmtxrootsdb && !pnevmtxrootsdb->FlushCacheToDisk()) {
                 return AbortNode(state, "Failed to commit to nevm tx roots db");
             }
-            if (pnevmtxmintdb && !pnevmtxmintdb->FlushCacheToDisk()) {
-                return AbortNode(state, "Failed to commit to nevm tx mint db");
-            }
             m_last_write = nNow;
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
@@ -3143,6 +3140,9 @@ bool Chainstate::FlushStateToDisk(
             // SYSCOIN
             if (!evoDb->CommitRootTransaction()) {
                 return AbortNode(state, "Failed to commit EvoDB");
+            }
+            if (pnevmtxmintdb && !pnevmtxmintdb->FlushCacheToDisk()) {
+                return AbortNode(state, "Failed to commit to nevm tx mint db");
             }
             m_last_flush = nNow;
             full_flush_completed = true;
