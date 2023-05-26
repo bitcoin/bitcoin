@@ -150,6 +150,3 @@ dist/
 /guix-build-*
 
 /ci/scratch/
-
-# Jetbrains
-.idea
