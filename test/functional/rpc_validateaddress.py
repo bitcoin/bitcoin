@@ -174,7 +174,7 @@ class ValidateAddressMainTest(SyscoinTestFramework):
         self.setup_clean_chain = True
         self.chain = ""  # main
         self.num_nodes = 1
-        self.extra_args = [["-prune=899"]] * self.num_nodes
+        self.extra_args = [["-prune=899","-hrp=bc1"]] * self.num_nodes
 
     def check_valid(self, addr, spk):
         info = self.nodes[0].validateaddress(addr)

@@ -158,7 +158,8 @@ static Consensus::LLMQParams llmq400_60 = {
  */
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    // SYSCOIN
+    CMainParams(const MainNetOptions& opts) {
         m_chain_type = ChainType::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
@@ -259,8 +260,8 @@ public:
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
-
-        bech32_hrp = "sys";
+        // SYSCOIN
+        bech32_hrp = opts.bech32_hrp;
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
 
@@ -737,10 +738,10 @@ std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions& 
 {
     return std::make_unique<const CRegTestParams>(options);
 }
-
-std::unique_ptr<const CChainParams> CChainParams::Main()
+// SYSCOIN
+std::unique_ptr<const CChainParams> CChainParams::Main(const MainNetOptions& options)
 {
-    return std::make_unique<const CMainParams>();
+    return std::make_unique<const CMainParams>(options);
 }
 
 std::unique_ptr<const CChainParams> CChainParams::TestNet()

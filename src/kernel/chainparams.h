@@ -160,10 +160,14 @@ public:
         int dip3startblock{432};
         int dip3enforcement{432};
     };
-
+    // SYSCOIN
+    struct MainNetOptions {
+        std::string bech32_hrp{"sys"};
+    };
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
-    static std::unique_ptr<const CChainParams> Main();
+    // SYSCOIN
+    static std::unique_ptr<const CChainParams> Main(const MainNetOptions& options);
     static std::unique_ptr<const CChainParams> TestNet();
     // SYSCOIN
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }

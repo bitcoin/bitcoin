@@ -112,7 +112,13 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
         }
     }
 }
-
+// SYSCOIN
+void ReadMainNetArgs(const ArgsManager& args, CChainParams::MainNetOptions& options)
+{
+    if (args.IsArgSet("-hrp")) {
+        options.bech32_hrp = args.GetArg("-hrp", "");
+    }
+}
 static std::unique_ptr<const CChainParams> globalChainParams;
 
 const CChainParams &Params() {
@@ -123,8 +129,12 @@ const CChainParams &Params() {
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
 {
     switch (chain) {
-    case ChainType::MAIN:
-        return CChainParams::Main();
+    // SYSCOIN
+    case ChainType::MAIN: {
+        auto opts = CChainParams::MainNetOptions{};
+        ReadMainNetArgs(args, opts);
+        return CChainParams::Main(opts);
+    }
     case ChainType::TESTNET:
         return CChainParams::TestNet();
     case ChainType::SIGNET: {
