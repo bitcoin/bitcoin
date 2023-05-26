@@ -294,6 +294,8 @@ public:
         LOCK(m_wallet->cs_wallet);
         auto res = CreateTransaction(*m_wallet, recipients, change_pos,
                                      coin_control, sign);
+        // SYSCOIN
+        if (!res) return util::Error{_("Failed to create transaction: ") + util::ErrorString(res)};
         const auto& txr = *res;
         fee = txr.fee;
         change_pos = txr.change_pos;
