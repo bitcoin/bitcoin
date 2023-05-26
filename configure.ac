@@ -715,6 +715,12 @@ case $host in
            export PKG_CONFIG_PATH
          fi
 
+         gmp_prefix=$($BREW --prefix gmp 2>/dev/null)
+         if test x$gmp_prefix != x; then
+           CPPFLAGS="$CPPFLAGS -I$gmp_prefix/include"
+           LDFLAGS="$LDFLAGS -L$gmp_prefix/lib"
+         fi
+
          case $host in
            *aarch64*)
              dnl The preferred Homebrew prefix for Apple Silicon is /opt/homebrew.
