@@ -1,0 +1,54 @@
+Imre{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Angular",
+            "type": "edge",
+            "version": "dev",
+            "request": "launch",
+            "preLaunchTask": "npm: start",
+            "url": "http://localhost:4200/",
+            "webRoot": "${workspaceFolder}"
+        }
+        {
+            "type": "npm",
+            "script": "start",
+            "isBackground": true,
+            "presentation": {
+                "focus": true,
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "typescript",
+                "source": "ts",
+                "applyTo": "closedDocuments",
+                "fileLocation": ["relative", "${cwd}"],
+                "pattern": "$tsc",
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": {
+                        "regexp": "(.*?)"
+                    },
+                    "endsPattern": {
+                        "regexp": "Compiled |Failed to compile."
+                    }
+                }
+            }
+        }
+        {
+            "type": "bmx",
+            "name": "Default BlitzMax debug",
+            "request": "launch",
+            "source": "${file}",
+            "make": "application",
+            "appargs": []
+        }
+    ]
+}
