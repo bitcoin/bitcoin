@@ -163,11 +163,11 @@ template <typename WeakEnumType, size_t size>
 {
     const std::vector<uint8_t> vscalar = fuzzed_data_provider.ConsumeBytes<uint8_t>(256 / 8);
     if (vscalar.size() != 256 / 8) {
-        return MclScalar::Rand();
+        return {};
     }
     auto ret = MclScalar{vscalar};
     if (ret.IsZero()) {
-        return MclScalar::Rand();
+        return {};
     }
     return ret;
 }
