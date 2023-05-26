@@ -38,6 +38,22 @@ To install the Homebrew package manager, see: https://brew.sh
 
 Note: If you run into issues while installing Homebrew or pulling packages, refer to [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
 
+#### Mac M1 and M2 processors
+
+Verify Homebrew targets arm64:
+``` bash
+> brew config | grep macOS
+macOS: 13.4-arm64
+```
+
+Not `macOS: 13.4-x86`, otherwise you will see compilation issues like
+```
+ld: warning: ignoring file /usr/local/Cellar/libevent/2.1.12/lib/libevent.dylib, building for macOS-arm64 but attempting to link with file built for macOS-x86_64
+Undefined symbols for architecture arm64:
+```
+during the `make` step outlined below. If Homebrew does target x86, then you can correct the setup by reinstalling
+Homebrew.
+
 ### 3. Install Required Dependencies
 
 The first step is to download the required dependencies.
