@@ -43,7 +43,7 @@ Notable changes
 P2P and network changes
 -----------------------
 
-- Transactions of non-witness size 65 and above are now allowed by mempool
+- Transactions of non-witness size 65 bytes and above are now allowed by mempool
   and relay policy. This is to better reflect the actual afforded protections
   against CVE-2017-12842 and open up additional use-cases of smaller transaction sizes. (#26265)
 
@@ -60,7 +60,7 @@ Updated RPCs
 ------------
 
 - All JSON-RPC methods accept a new [named
-  parameter](JSON-RPC-interface.md#parameter-passing) called `args` that can
+  parameter](https://github.com/bitcoin/bitcoin/blob/master/doc/JSON-RPC-interface.md#parameter-passing) called `args` that can
   contain positional parameter values. This is a convenience to allow some
   parameter values to be passed by name without having to name every value. The
   python test framework and `bitcoin-cli` tool both take advantage of this, so
