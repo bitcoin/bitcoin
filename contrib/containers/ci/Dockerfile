@@ -77,8 +77,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     wine-stable \
     wine32 \
     wine64 \
-    xorriso \
-    && rm -rf /var/lib/apt/lists/*
+    xorriso
 
 ARG CPPCHECK_VERSION=2.10
 RUN curl -sL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar -xvzf - --directory /tmp/
@@ -101,6 +100,20 @@ RUN \
   update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix; \
   update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
   exit 0
+
+ARG LLVM_VERSION=15
+# Setup Clang+LLVM support
+RUN apt-get update && apt-get install $APT_ARGS \
+    lsb-release \
+    software-properties-common \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN cd /tmp && \
+    wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    /tmp/llvm.sh ${LLVM_VERSION} && \
+    rm -rf /tmp/llvm.sh
 
 RUN \
   mkdir -p /src/dash && \

@@ -18,7 +18,7 @@
 #include <memory>
 #include <atomic>
 
-#if WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <dbghelp.h>
 #include <thread>
@@ -30,14 +30,14 @@
 #include <csignal>
 #endif
 
-#if !WIN32
+#if !defined(WIN32)
 #include <dlfcn.h>
-#if !__APPLE__
+#if !defined(__APPLE__)
 #include <link.h>
 #endif
 #endif
 
-#if __APPLE__
+#if defined(__APPLE__)
 #include <mach-o/dyld.h>
 #include <mach/mach_init.h>
 #include <sys/sysctl.h>
@@ -52,7 +52,7 @@
 
 std::string DemangleSymbol(const std::string& name)
 {
-#if __GNUC__ || __clang__
+#if defined(__GNUC__) || defined(__clang__)
     int status = -4; // some arbitrary value to eliminate the compiler warning
     char* str = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
     if (status != 0) {
@@ -74,7 +74,7 @@ static std::atomic<bool> skipAbortSignal(false);
 
 static ssize_t GetExeFileNameImpl(char* buf, size_t bufSize)
 {
-#if WIN32
+#if defined(WIN32)
     std::vector<TCHAR> tmp(bufSize);
     DWORD len = GetModuleFileName(nullptr, tmp.data(), bufSize);
     if (len >= bufSize) {
@@ -84,7 +84,7 @@ static ssize_t GetExeFileNameImpl(char* buf, size_t bufSize)
         buf[i] = (char)tmp[i];
     }
     return len;
-#elif __APPLE__
+#elif defined(__APPLE__)
     uint32_t bufSize2 = (uint32_t)bufSize;
     if (_NSGetExecutablePath(buf, &bufSize2) != 0) {
         // it's not entirely clear if the value returned by _NSGetExecutablePath includes the null character
@@ -127,7 +127,7 @@ static void my_backtrace_error_callback (void *data, const char *msg,
 
 static backtrace_state* GetLibBacktraceState()
 {
-#if WIN32
+#if defined(WIN32)
     // libbacktrace is not able to handle the DWARF debuglink in the .exe
     // but luckily we can just specify the .dbg file here as it's a valid PE/XCOFF file
     static std::string debugFileName = g_exeFileName + ".dbg";
@@ -140,7 +140,7 @@ static backtrace_state* GetLibBacktraceState()
 }
 #endif // ENABLE_STACKTRACES
 
-#if WIN32
+#if defined(WIN32)
 static uint64_t GetBaseAddress()
 {
     return 0;
@@ -188,7 +188,7 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
     STACKFRAME64 stackframe;
     ZeroMemory(&stackframe, sizeof(STACKFRAME64));
 
-#ifdef __i386__
+#if defined(__i386__)
     image = IMAGE_FILE_MACHINE_I386;
     stackframe.AddrPC.Offset = context.Eip;
     stackframe.AddrPC.Mode = AddrModeFlat;
@@ -196,7 +196,7 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
     stackframe.AddrFrame.Mode = AddrModeFlat;
     stackframe.AddrStack.Offset = context.Esp;
     stackframe.AddrStack.Mode = AddrModeFlat;
-#elif __x86_64__
+#elif defined(__x86_64__)
     image = IMAGE_FILE_MACHINE_AMD64;
     stackframe.AddrPC.Offset = context.Rip;
     stackframe.AddrPC.Mode = AddrModeFlat;
@@ -240,7 +240,7 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
 }
 #else
 
-#if __APPLE__
+#if defined(__APPLE__)
 static uint64_t GetBaseAddress()
 {
     mach_port_name_t target_task;
@@ -534,14 +534,11 @@ static void PrintCrashInfo(const crash_info& ci)
 static StdMutex g_stacktraces_mutex;
 static std::map<void*, std::shared_ptr<std::vector<uint64_t>>> g_stacktraces;
 
-#if CRASH_HOOKS_WRAPPED_CXX_ABI
+#ifdef CRASH_HOOKS_WRAPPED_CXX_ABI
 // These come in through -Wl,-wrap
-// It only works on GCC
 extern "C" void* __real___cxa_allocate_exception(size_t thrown_size);
 extern "C" void __real___cxa_free_exception(void * thrown_exception);
-#if __clang__
-#error not supported on WIN32 (no dlsym support)
-#elif WIN32
+#if defined(WIN32)
 extern "C" void __real__assert(const char *assertion, const char *file, unsigned int line);
 extern "C" void __real__wassert(const wchar_t *assertion, const wchar_t *file, unsigned int line);
 #else
@@ -560,13 +557,13 @@ extern "C" void __real___cxa_free_exception(void * thrown_exception)
     static auto f = (void(*)(void*))dlsym(RTLD_NEXT, "__cxa_free_exception");
     return f(thrown_exception);
 }
-#if __clang__
+#if defined(__clang__) && defined(__APPLE__)
 extern "C" void __attribute__((noreturn)) __real___assert_rtn(const char *function, const char *file, int line, const char *assertion)
 {
     static auto f = (void(__attribute__((noreturn)) *) (const char*, const char*, int, const char*))dlsym(RTLD_NEXT, "__assert_rtn");
     f(function, file, line, assertion);
 }
-#elif WIN32
+#elif defined(WIN32)
 #error not supported on WIN32 (no dlsym support)
 #else
 extern "C" void __real___assert_fail(const char *assertion, const char *file, unsigned int line, const char *function)
@@ -577,7 +574,7 @@ extern "C" void __real___assert_fail(const char *assertion, const char *file, un
 #endif
 #endif
 
-#if CRASH_HOOKS_WRAPPED_CXX_ABI
+#ifdef CRASH_HOOKS_WRAPPED_CXX_ABI
 #define WRAPPED_NAME(x) __wrap_##x
 #else
 #define WRAPPED_NAME(x) x
@@ -625,7 +622,7 @@ static __attribute__((noinline)) crash_info GetCrashInfoFromAssertion(const char
     return ci;
 }
 
-#if __clang__
+#if defined(__clang__) && defined(__APPLE__)
 extern "C" void __attribute__((noinline)) WRAPPED_NAME(__assert_rtn)(const char *function, const char *file, int line, const char *assertion)
 {
     auto ci = GetCrashInfoFromAssertion(assertion, file, line, function);
@@ -633,7 +630,7 @@ extern "C" void __attribute__((noinline)) WRAPPED_NAME(__assert_rtn)(const char 
     skipAbortSignal = true;
     __real___assert_rtn(function, file, line, assertion);
 }
-#elif WIN32
+#elif defined(WIN32)
 extern "C" void __attribute__((noinline)) WRAPPED_NAME(_assert)(const char *assertion, const char *file, unsigned int line)
 {
     auto ci = GetCrashInfoFromAssertion(assertion, file, line, nullptr);
@@ -763,7 +760,7 @@ void RegisterPrettyTerminateHander()
     std::set_terminate(terminate_handler);
 }
 
-#if !WIN32
+#if !defined(WIN32)
 static void HandlePosixSignal(int s)
 {
     if (s == SIGABRT && skipAbortSignal) {
@@ -840,7 +837,7 @@ LONG WINAPI HandleWindowsException(EXCEPTION_POINTERS * ExceptionInfo)
 
 void RegisterPrettySignalHandlers()
 {
-#if WIN32
+#if defined(WIN32)
     SetUnhandledExceptionFilter(HandleWindowsException);
 #else
     const std::vector<int> posix_signals = {
@@ -856,7 +853,7 @@ void RegisterPrettySignalHandlers()
             SIGTRAP,    // Trace/breakpoint trap
             SIGXCPU,    // CPU time limit exceeded (4.2BSD)
             SIGXFSZ,    // File size limit exceeded (4.2BSD)
-#if __APPLE__
+#if defined(__APPLE__)
             SIGEMT,     // emulation instruction executed
 #endif
     };
