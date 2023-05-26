@@ -32,6 +32,13 @@
 #include <unistd.h>      // IWYU pragma: export
 #endif
 
+// Windows does not have `sa_family_t` - it defines `sockaddr::sa_family` as `u_short`.
+// Thus define `sa_family_t` on Windows too so that the rest of the code can use `sa_family_t`.
+// See https://learn.microsoft.com/en-us/windows/win32/api/winsock/ns-winsock-sockaddr#syntax
+#ifdef WIN32
+typedef u_short sa_family_t;
+#endif
+
 // We map Linux / BSD error functions and codes, to the equivalent
 // Windows definitions, and use the WSA* names throughout our code.
 // Note that glibc defines EWOULDBLOCK as EAGAIN (see errno.h).

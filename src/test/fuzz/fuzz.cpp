@@ -81,7 +81,7 @@ static const TypeTestOneInput* g_test_one_input{nullptr};
 void initialize()
 {
     // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
-    CreateSock = [](const CService&) -> std::unique_ptr<Sock> { std::terminate(); };
+    CreateSock = [](const sa_family_t&) -> std::unique_ptr<Sock> { std::terminate(); };
 
     // Terminate immediately if a fuzzing harness ever tries to perform a DNS lookup.
     g_dns_lookup = [](const std::string& name, bool allow_lookup) {

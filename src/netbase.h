@@ -229,16 +229,16 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault = 0, DNSLoo
 CSubNet LookupSubNet(const std::string& subnet_str);
 
 /**
- * Create a TCP socket in the given address family.
- * @param[in] address_family The socket is created in the same address family as this address.
+ * Create a socket in the given address family.
+ * @param[in] address_family to use for the socket.
  * @return pointer to the created Sock object or unique_ptr that owns nothing in case of failure
  */
-std::unique_ptr<Sock> CreateSockTCP(const CService& address_family);
+std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family);
 
 /**
- * Socket factory. Defaults to `CreateSockTCP()`, but can be overridden by unit tests.
+ * Socket factory. Defaults to `CreateSockOS()`, but can be overridden by unit tests.
  */
-extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
+extern std::function<std::unique_ptr<Sock>(const sa_family_t&)> CreateSock;
 
 /**
  * Try to connect to the specified service on the specified socket.

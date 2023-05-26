@@ -326,7 +326,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
 
 std::unique_ptr<Sock> Session::Hello() const
 {
-    auto sock = CreateSock(m_control_host);
+    auto sock = CreateSock(m_control_host.GetSAFamily());
 
     if (!sock) {
         throw std::runtime_error("Cannot create socket");
