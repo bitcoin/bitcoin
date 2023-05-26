@@ -23,7 +23,7 @@ util::Result<void> SanityChecks(const Context&)
 
     // SYSCOIN
     if (!BLSInit()) {
-        return Untranslated("BLS Init failed. Aborting.");
+        return util::Error{Untranslated("BLS Init failed. Aborting.")};
     }
 
     if (!Random_SanityCheck()) {
