@@ -216,6 +216,24 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupF
     return Lookup(name, portDefault, /*fAllowLookup=*/false, dns_lookup_function).value_or(CService{});
 }
 
+bool IsUnixSocketPath(const std::string& name)
+{
+#if HAVE_SOCKADDR_UN
+    if (name.find(ADDR_PREFIX_UNIX) != 0) return false;
+
+    // Split off "unix:" prefix
+    std::string str{name.substr(ADDR_PREFIX_UNIX.length())};
+
+    // Path size limit is platform-dependent
+    // see https://manpages.ubuntu.com/manpages/xenial/en/man7/unix.7.html
+    if (str.size() + 1 > sizeof(((sockaddr_un*)nullptr)->sun_path)) return false;
+
+    return true;
+#else
+    return false;
+#endif
+}
+
 /** SOCKS version */
 enum SOCKSVersion: uint8_t {
     SOCKS4 = 0x04,

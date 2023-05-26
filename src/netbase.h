@@ -27,6 +27,9 @@ static const int DEFAULT_CONNECT_TIMEOUT = 5000;
 //! -dns default
 static const int DEFAULT_NAME_LOOKUP = true;
 
+/** Prefix for unix domain socket addresses (which are local filesystem paths) */
+const std::string ADDR_PREFIX_UNIX = "unix:";
+
 enum class ConnectionDirection {
     None = 0,
     In = (1U << 0),
@@ -43,16 +46,44 @@ static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
     return (underlying(a) & underlying(b));
 }
 
+/**
+ * Check if a string is a valid UNIX domain socket path
+ *
+ * @param      name     The string provided by the user representing a local path
+ *
+ * @returns Whether the string has proper format, length, and points to an existing file path
+ */
+bool IsUnixSocketPath(const std::string& name);
+
 class Proxy
 {
 public:
-    Proxy(): randomize_credentials(false) {}
-    explicit Proxy(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
-
-    bool IsValid() const { return proxy.IsValid(); }
+    Proxy(): m_is_unix_socket(false), randomize_credentials(false) {}
+    explicit Proxy(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), m_is_unix_socket(false), randomize_credentials(_randomize_credentials) {}
+    explicit Proxy(const std::string path, bool _randomize_credentials=false): m_unix_socket_path(path), m_is_unix_socket(true), randomize_credentials(_randomize_credentials) {}
 
     CService proxy;
+    std::string m_unix_socket_path;
+    bool m_is_unix_socket;
     bool randomize_credentials;
+
+    bool IsValid() const
+    {
+        if (m_is_unix_socket) return IsUnixSocketPath(m_unix_socket_path);
+        return proxy.IsValid();
+    }
+
+    sa_family_t GetFamily() const
+    {
+        if (m_is_unix_socket) return AF_UNIX;
+        return proxy.GetSAFamily();
+    }
+
+    std::string ToString() const
+    {
+        if (m_is_unix_socket) return m_unix_socket_path;
+        return proxy.ToStringAddrPort();
+    }
 };
 
 /** Credentials for proxy authentication */
