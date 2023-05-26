@@ -149,7 +149,6 @@ FUZZ_TARGET_INIT(script, initialize_script)
         const CTxDestination tx_destination_2{ConsumeTxDestination(fuzzed_data_provider)};
         const std::string encoded_dest{EncodeDestination(tx_destination_1)};
         const UniValue json_dest{DescribeAddress(tx_destination_1)};
-        std::cout << encoded_dest << "\n";
         Assert(tx_destination_1 == DecodeDestination(encoded_dest));
         (void)GetKeyForDestination(/*store=*/{}, tx_destination_1);
         const CScript dest{GetScriptForDestination(tx_destination_1)};
