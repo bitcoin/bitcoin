@@ -11,16 +11,16 @@
 #include <node/database_args.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
 
 #include <chrono>
-#include <optional>
 #include <string>
 
 namespace node {
-std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
+util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
     if (auto value{args.GetBoolArg("-checkblockindex")}) opts.check_block_index = *value;
 
@@ -28,7 +28,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, Chains
 
     if (auto value{args.GetArg("-minimumchainwork")}) {
         if (!IsHexNumber(*value)) {
-            return strprintf(Untranslated("Invalid non-hex (%s) minimum chain work value specified"), *value);
+            return util::Error{strprintf(Untranslated("Invalid non-hex (%s) minimum chain work value specified"), *value)};
         }
         opts.minimum_chain_work = UintToArith256(uint256S(*value));
     }
@@ -41,6 +41,6 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, Chains
     ReadDatabaseArgs(args, opts.coins_db);
     ReadCoinsViewArgs(args, opts.coins_view);
 
-    return std::nullopt;
+    return {};
 }
 } // namespace node

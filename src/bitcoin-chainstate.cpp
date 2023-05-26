@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     // We can't use a goto here, but we can use an assert since none of the
     // things instantiated so far requires running the epilogue to be torn down
     // properly
-    assert(!kernel::SanityChecks(kernel_context).has_value());
+    assert(kernel::SanityChecks(kernel_context));
 
     // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
     // which will try the script cache first and fall back to actually

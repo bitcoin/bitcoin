@@ -5,7 +5,7 @@
 #ifndef BITCOIN_KERNEL_CHECKS_H
 #define BITCOIN_KERNEL_CHECKS_H
 
-#include <optional>
+#include <util/result.h>
 
 struct bilingual_str;
 
@@ -16,7 +16,7 @@ struct Context;
 /**
  *  Ensure a usable environment with all necessary library support.
  */
-std::optional<bilingual_str> SanityChecks(const Context&);
+util::Result<void> SanityChecks(const Context&);
 
 }
 

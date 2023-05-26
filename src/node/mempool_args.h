@@ -5,7 +5,7 @@
 #ifndef BITCOIN_NODE_MEMPOOL_ARGS_H
 #define BITCOIN_NODE_MEMPOOL_ARGS_H
 
-#include <optional>
+#include <util/result.h>
 
 class ArgsManager;
 class CChainParams;
@@ -21,7 +21,7 @@ struct MemPoolOptions;
  * @param[in]  argsman The ArgsManager in which to check set options.
  * @param[in,out] mempool_opts The MemPoolOptions to modify according to \p argsman.
  */
-[[nodiscard]] std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, kernel::MemPoolOptions& mempool_opts);
+[[nodiscard]] util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, kernel::MemPoolOptions& mempool_opts);
 
 
 #endif // BITCOIN_NODE_MEMPOOL_ARGS_H
