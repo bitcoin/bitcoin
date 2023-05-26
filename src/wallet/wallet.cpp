@@ -3549,7 +3549,7 @@ void CWallet::SetupBLSCTKeyMan()
     if (m_blsct_key_manager != nullptr) {
         return;
     }
-    m_blsct_key_manager = std::move(new blsct::KeyMan(*this));
+    m_blsct_key_manager = new blsct::KeyMan(*this);
 }
 
 const CKeyingMaterial& CWallet::GetEncryptionKey() const
