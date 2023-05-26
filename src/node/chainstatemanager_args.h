@@ -5,15 +5,13 @@
 #ifndef SYSCOIN_NODE_CHAINSTATEMANAGER_ARGS_H
 #define SYSCOIN_NODE_CHAINSTATEMANAGER_ARGS_H
 
+#include <util/result.h>
 #include <validation.h>
 
-#include <optional>
-
 class ArgsManager;
-struct bilingual_str;
 
 namespace node {
-std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts);
+util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts);
 } // namespace node
 
 #endif // SYSCOIN_NODE_CHAINSTATEMANAGER_ARGS_H

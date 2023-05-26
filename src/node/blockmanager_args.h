@@ -7,14 +7,12 @@
 #define SYSCOIN_NODE_BLOCKMANAGER_ARGS_H
 
 #include <node/blockstorage.h>
-
-#include <optional>
+#include <util/result.h>
 
 class ArgsManager;
-struct bilingual_str;
 
 namespace node {
-std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts);
+util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts);
 } // namespace node
 
 #endif // SYSCOIN_NODE_BLOCKMANAGER_ARGS_H
