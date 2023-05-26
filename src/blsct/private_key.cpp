@@ -10,9 +10,6 @@ namespace blsct {
 
 PrivateKey::PrivateKey(Scalar k_)
 {
-    if (k_.IsZero()) {
-        throw std::runtime_error("Private key needs to be a non-zero scalar");
-    }
     k.resize(PrivateKey::SIZE);
     std::vector<unsigned char> v = k_.GetVch();
     memcpy(k.data(), &v.front(), k.size());
