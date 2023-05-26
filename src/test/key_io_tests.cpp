@@ -146,4 +146,17 @@ BOOST_AUTO_TEST_CASE(key_io_invalid)
     }
 }
 
+BOOST_AUTO_TEST_CASE(key_io_blsct)
+{
+    // Generate two random public keys
+    blsct::PublicKey keyFromPointRandom{MclG1Point::Rand()};
+    blsct::PublicKey keyFromPointRandom2{MclG1Point::Rand()};
+
+    blsct::DoublePublicKey doubleKey{keyFromPointRandom, keyFromPointRandom2};
+
+    auto dest = EncodeDestination(doubleKey);
+
+    BOOST_CHECK(DecodeDestination(dest) == CTxDestination(doubleKey));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

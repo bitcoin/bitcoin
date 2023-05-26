@@ -83,6 +83,14 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
                                                 pointR.GetVch());
     BOOST_CHECK(doubleKeyFromVectors.IsValid());
 
+    auto genVector = generator.GetVch();
+    auto pointRVector = pointR.GetVch();
+    genVector.insert(genVector.end(), pointRVector.begin(), pointRVector.end());
+
+    blsct::DoublePublicKey doubleKeyFromConcatenatedVectors(genVector);
+    BOOST_CHECK(doubleKeyFromConcatenatedVectors.IsValid());
+    BOOST_CHECK(doubleKeyFromConcatenatedVectors == doubleKeyFromVectors);
+
     std::vector<unsigned char> serializedDoubleKey = doubleKeyFromPoints.GetVch();
     std::vector<unsigned char> serializedViewKey(serializedDoubleKey.begin(), serializedDoubleKey.begin() + blsct::PublicKey::SIZE);
     std::vector<unsigned char> serializedSpendKey(serializedDoubleKey.begin() + blsct::PublicKey::SIZE, serializedDoubleKey.end());
