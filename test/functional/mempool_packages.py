@@ -7,7 +7,6 @@
 from decimal import Decimal
 
 from test_framework.messages import (
-    COIN,
     DEFAULT_ANCESTOR_LIMIT,
     DEFAULT_DESCENDANT_LIMIT,
 )
@@ -26,9 +25,6 @@ assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
 
 
 class MempoolPackagesTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
@@ -47,10 +43,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.wallet.rescan_utxos()
 
-        if self.is_specified_wallet_compiled():
-            self.nodes[0].createwallet("watch_wallet", disable_private_keys=True)
-            self.nodes[0].importaddress(self.wallet.get_address())
-
         peer_inv_store = self.nodes[0].add_p2p_connection(P2PTxInvStore()) # keep track of invs
 
         # DEFAULT_ANCESTOR_LIMIT transactions off a confirmed tx should be fine
@@ -63,13 +55,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
             ancestor_vsize += t["tx"].get_vsize()
             ancestor_fees += t["fee"]
             self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=t["hex"])
-            # Check that listunspent ancestor{count, size, fees} yield the correct results
-            if self.is_specified_wallet_compiled():
-                wallet_unspent = self.nodes[0].listunspent(minconf=0)
-                this_unspent = next(utxo_info for utxo_info in wallet_unspent if utxo_info["txid"] == t["txid"])
-                assert_equal(this_unspent['ancestorcount'], i + 1)
-                assert_equal(this_unspent['ancestorsize'], ancestor_vsize)
-                assert_equal(this_unspent['ancestorfees'], ancestor_fees * COIN)
 
         # Wait until mempool transactions have passed initial broadcast (sent inv and received getdata)
         # Otherwise, getrawmempool may be inconsistent with getmempoolentry if unbroadcast changes in between
