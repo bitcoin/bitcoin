@@ -3,6 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <netbase.h>
 
 #include <compat/compat.h>
@@ -20,6 +24,10 @@
 #include <functional>
 #include <limits>
 #include <memory>
+
+#if HAVE_SOCKADDR_UN
+#include <sys/un.h>
+#endif
 
 // Settings
 static GlobalMutex g_proxyinfo_mutex;
@@ -446,11 +454,16 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
 
 std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family)
 {
-    // Not IPv4 or IPv6
+    // Not IPv4, IPv6 or UNIX
     if (address_family == AF_UNSPEC) return nullptr;
 
-    // Create a TCP socket in the address family of the specified service.
-    SOCKET hSocket = socket(address_family, SOCK_STREAM, IPPROTO_TCP);
+    int protocol{IPPROTO_TCP};
+#if HAVE_SOCKADDR_UN
+    if (address_family == AF_UNIX) protocol = 0;
+#endif
+
+    // Create a socket in the specified address family.
+    SOCKET hSocket = socket(address_family, SOCK_STREAM, protocol);
     if (hSocket == INVALID_SOCKET) {
         return nullptr;
     }
@@ -474,16 +487,20 @@ std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family)
     }
 #endif
 
-    // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
-    const int on{1};
-    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
-    }
-
     // Set the non-blocking option on the socket.
     if (!sock->SetNonBlocking()) {
         LogPrintf("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
         return nullptr;
+    }
+
+#if HAVE_SOCKADDR_UN
+    if (address_family == AF_UNIX) return sock;
+#endif
+
+    // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
     }
     return sock;
 }
