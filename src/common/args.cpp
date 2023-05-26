@@ -717,7 +717,8 @@ bool CheckDataDirOption(const ArgsManager& args)
 
 fs::path ArgsManager::GetConfigFilePath() const
 {
-    return GetConfigFile(*this, GetPathArg("-conf", SYSCOIN_CONF_FILENAME));
+    LOCK(cs_args);
+    return *Assert(m_config_path);
 }
 
 ChainType ArgsManager::GetChainType() const
