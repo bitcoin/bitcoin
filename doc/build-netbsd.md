@@ -19,6 +19,7 @@ automake
 boost
 git
 gmake
+gmp
 libevent
 libtool
 pkg-config
