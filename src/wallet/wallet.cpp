@@ -3535,7 +3535,7 @@ void CWallet::SetupLegacyScriptPubKeyMan()
 
 blsct::KeyMan* CWallet::GetBLSCTKeyMan() const
 {
-    return m_blsct_key_manager;
+    return m_blsct_key_manager.get();
 }
 
 blsct::KeyMan* CWallet::GetOrCreateBLSCTKeyMan()
@@ -3549,7 +3549,7 @@ void CWallet::SetupBLSCTKeyMan()
     if (m_blsct_key_manager != nullptr) {
         return;
     }
-    m_blsct_key_manager = new blsct::KeyMan(*this);
+    m_blsct_key_manager = std::unique_ptr<blsct::KeyMan>(new blsct::KeyMan(*this));
 }
 
 const CKeyingMaterial& CWallet::GetEncryptionKey() const

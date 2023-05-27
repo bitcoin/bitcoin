@@ -26,13 +26,12 @@ protected:
 
 public:
     explicit Manager(wallet::WalletStorage& storage) : m_storage(storage) {}
+    virtual ~Manager() {};
 
     virtual bool SetupGeneration(bool force = false) { return false; }
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
-
-    virtual ~Manager() = default;
 };
 
 class KeyMan : public Manager, public KeyRing {
