@@ -8,7 +8,7 @@
 #include <common/args.h>
 #include <key.h>
 #include <node/caches.h>
-#include <node/context.h>
+#include <node/context.h> // IWYU pragma: export
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <random.h>
