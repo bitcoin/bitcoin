@@ -1559,8 +1559,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ChainstateManager& chainman = *Assert(node.chainman);
 
     assert(!node.peerman);
+
+    bool require_standard = !args.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
+    if (!chainparams.IsTestChain() && !require_standard) {
+        return InitError(strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString()));
+    }
+
     node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
-                                     chainman, *node.mempool, ignores_incoming_txs);
+                                     chainman, *node.mempool, ignores_incoming_txs, require_standard);
     RegisterValidationInterface(node.peerman.get());
 
     // ********************************************************* Step 8: start indexers

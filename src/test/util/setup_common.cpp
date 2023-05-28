@@ -266,7 +266,7 @@ TestingSetup::TestingSetup(
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
-                                       *m_node.mempool, false);
+                                       *m_node.mempool, false, true);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
@@ -385,7 +385,7 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     // If submit=true, add transaction to the mempool.
     if (submit) {
         LOCK(cs_main);
-        const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn));
+        const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn), true);
         assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
     }
 

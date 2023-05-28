@@ -395,7 +395,6 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_dust_relay_feerate{opts.dust_relay_feerate},
       m_permit_bare_multisig{opts.permit_bare_multisig},
       m_max_datacarrier_bytes{opts.max_datacarrier_bytes},
-      m_require_standard{opts.require_standard},
       m_full_rbf{opts.full_rbf},
       m_limits{opts.limits}
 {

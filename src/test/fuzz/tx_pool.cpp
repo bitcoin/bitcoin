@@ -125,7 +125,6 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     // ...override specific options for this specific fuzz suite
     mempool_opts.estimator = nullptr;
     mempool_opts.check_ratio = 1;
-    mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
     // ...and construct a CTxMemPool from it
     return CTxMemPool{mempool_opts};
@@ -156,6 +155,8 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
     chainstate.SetMempool(&tx_pool);
+
+    bool require_standard = fuzzed_data_provider.ConsumeBool();
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
@@ -243,7 +244,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         // Make sure ProcessNewPackage on one transaction works.
         // The result is not guaranteed to be the same as what is returned by ATMP.
         const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true));
+                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true, require_standard));
         // If something went wrong due to a package-specific policy, it might not return a
         // validation result for the transaction.
         if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
@@ -253,7 +254,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
                    it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
         }
 
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
+        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false, require_standard));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         SyncWithValidationInterfaceQueue();
         UnregisterSharedValidationInterface(txr);
@@ -332,6 +333,8 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
+    bool require_standard = fuzzed_data_provider.ConsumeBool();
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
     {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
@@ -352,7 +355,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 
         const auto tx = MakeTransactionRef(mut_tx);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
+        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false, require_standard));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
