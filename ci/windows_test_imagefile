@@ -1,0 +1,26 @@
+ARG CI_IMAGE_NAME_TAG
+FROM ${CI_IMAGE_NAME_TAG}
+
+ARG CI_CCACHE_VERSION
+ENV CI_CCACHE_VERSION=${CI_CCACHE_VERSION}
+RUN choco install --yes --no-progress ccache --version=%CI_CCACHE_VERSION%
+
+ARG CI_PYTHON_VERSION
+ENV CI_PYTHON_VERSION=${CI_PYTHON_VERSION}
+RUN choco install --yes --no-progress python3 --version=%CI_PYTHON_VERSION%
+
+RUN pip install zmq
+
+RUN git clone --quiet https://github.com/microsoft/vcpkg.git
+
+ARG CI_VCPKG_TAG
+ENV CI_VCPKG_TAG=${CI_VCPKG_TAG}
+RUN cd vcpkg && git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
+
+RUN .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+RUN echo set(VCPKG_BUILD_TYPE release) >> vcpkg\triplets\x64-windows-static.cmake
+
+RUN .\vcpkg\vcpkg integrate install
+
+RUN .\vcpkg\vcpkg install --triplet=x64-windows vcpkg-cmake vcpkg-cmake-config vcpkg-cmake-get-vars

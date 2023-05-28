@@ -100,13 +100,18 @@ task:
   windows_container:
     cpu: 6
     memory: 12G
-    image: cirrusci/windowsservercore:visualstudio2022
+    dockerfile: ci/windows_test_imagefile
+    docker_arguments:
+      CI_IMAGE_NAME_TAG: "%CI_IMAGE_NAME_TAG%"
+      CI_CCACHE_VERSION: 4.7.4
+      CI_PYTHON_VERSION: 3.9.6
+      CI_VCPKG_TAG: "%CI_VCPKG_TAG%"
   timeout_in: 120m
   env:
-    PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin;%PATH%'
+    CI_IMAGE_NAME_TAG: 'cirrusci/windowsservercore:visualstudio2022-2022.06.23'
+    PATH: 'C:\jom;%PATH%'
     PYTHONUTF8: 1
     CI_VCPKG_TAG: '2023.01.09'
-    VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
     WRAPPED_CL: 'C:\Users\ContainerAdministrator\AppData\Local\Temp\cirrus-ci-build\ci\test\wrapped-cl.bat'
@@ -121,10 +126,8 @@ task:
     - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL pull/$env:CIRRUS_PR/merge; git reset --hard FETCH_HEAD; }
   msvc_qt_built_cache:
     folder: "%QTBASEDIR%"
-    reupload_on_changes: false
     fingerprint_script:
-      - echo %QT_DOWNLOAD_URL% %QT_CONFIGURE_COMMAND%
-      - msbuild -version
+      - echo %CI_IMAGE_NAME_TAG% %QT_DOWNLOAD_URL% %QT_CONFIGURE_COMMAND%
     populate_script:
       - curl -L -o C:\jom.zip http://download.qt.io/official_releases/jom/jom.zip
       - mkdir C:\jom
@@ -138,38 +141,13 @@ task:
       - '%QT_CONFIGURE_COMMAND% -prefix %QTBASEDIR%'
       - jom
       - jom install
-  vcpkg_tools_cache:
-    folder: '%VCPKG_DOWNLOADS%\tools'
-    reupload_on_changes: false
-    fingerprint_script:
-      - echo %CI_VCPKG_TAG%
-      - msbuild -version
   vcpkg_binary_cache:
     folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
-    reupload_on_changes: true
     fingerprint_script:
-      - echo %CI_VCPKG_TAG%
+      - echo %CI_IMAGE_NAME_TAG% %CI_VCPKG_TAG%
       - type build_msvc\vcpkg.json
-      - msbuild -version
-    populate_script:
-      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
   ccache_cache:
     folder: '%CCACHE_DIR%'
-  install_tools_script:
-    - choco install --yes --no-progress ccache --version=4.7.4
-    - choco install --yes --no-progress python3 --version=3.9.6
-    - pip install zmq
-    - ccache --version
-    - python -VV
-  install_vcpkg_script:
-    - cd ..
-    - git clone --quiet https://github.com/microsoft/vcpkg.git
-    - cd vcpkg
-    - git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
-    - .\bootstrap-vcpkg -disableMetrics
-    - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
-    - .\vcpkg integrate install
-    - .\vcpkg version
   build_script:
     - '%x64_NATIVE_TOOLS%'
     - cd %CIRRUS_WORKING_DIR%
