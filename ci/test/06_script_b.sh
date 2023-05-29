@@ -155,9 +155,8 @@ if [ "${RUN_TIDY}" = "true" ]; then
   # accepted in src/.bear-tidy-config
   # Filter out:
   # * qt qrc and moc generated files
-  # * walletutil (temporarily)
   # * secp256k1
-  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$|src/wallet/walletutil|src/secp256k1/src/") | not))' ../compile_commands.json > tmp.json
+  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$|src/secp256k1/src/") | not))' ../compile_commands.json > tmp.json
   mv tmp.json ../compile_commands.json
   cd "${BASE_BUILD_DIR}/bitcoin-$HOST/"
   python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
