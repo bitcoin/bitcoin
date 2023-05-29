@@ -13,7 +13,7 @@ import pkg_resources
 import subprocess
 import sys
 
-DEPS = ['flake8', 'mypy', 'pyzmq']
+DEPS = ['flake8', 'lief', 'mypy', 'pyzmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
 
 # All .py files, except those in src/ (to exclude subtrees there)

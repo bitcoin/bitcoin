@@ -5,7 +5,7 @@
 '''
 Test script for security-check.py
 '''
-import lief #type:ignore
+import lief
 import os
 import subprocess
 from typing import List
