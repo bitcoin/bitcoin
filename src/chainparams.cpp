@@ -6,17 +6,20 @@
 #include <chainparams.h>
 
 #include <chainparamsbase.h>
-#include <chainparamsseeds.h>
 #include <common/args.h>
-#include <consensus/merkle.h>
+#include <consensus/params.h>
 #include <deploymentinfo.h>
-#include <hash.h> // for signet block challenge hash
 #include <logging.h>
-#include <script/interpreter.h>
+#include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/strencodings.h>
 #include <util/string.h>
 
-#include <assert.h>
+#include <cassert>
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+#include <vector>
 
 void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
 {
@@ -26,9 +29,13 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
     if (args.IsArgSet("-signetchallenge")) {
         const auto signet_challenge = args.GetArgs("-signetchallenge");
         if (signet_challenge.size() != 1) {
-            throw std::runtime_error(strprintf("%s: -signetchallenge cannot be multiple values.", __func__));
+            throw std::runtime_error("-signetchallenge cannot be multiple values.");
         }
-        options.challenge.emplace(ParseHex(signet_challenge[0]));
+        const auto val{TryParseHex<uint8_t>(signet_challenge[0])};
+        if (!val) {
+            throw std::runtime_error(strprintf("-signetchallenge must be hex, not '%s'.", signet_challenge[0]));
+        }
+        options.challenge.emplace(*val);
     }
 }
 
