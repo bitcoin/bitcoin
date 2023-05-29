@@ -921,6 +921,9 @@ public:
     //! Get the wallet descriptors for a script.
     std::vector<WalletDescriptor> GetWalletDescriptors(const CScript& script) const;
 
+    //! Get the wallet descriptor for an output type.
+    util::Result<WalletDescriptor> GetWalletDescriptor(const OutputType type, const bool internal) const;
+
     //! Get the LegacyScriptPubKeyMan which is used for all types, internal, and external.
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
     LegacyScriptPubKeyMan* GetOrCreateLegacyScriptPubKeyMan();
