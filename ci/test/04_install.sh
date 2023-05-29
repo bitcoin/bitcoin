@@ -28,7 +28,7 @@ export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Export all env vars to avoid missing some.
   # Though, exclude those with newlines to avoid parsing problems.
-  python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value]' | tee /tmp/env
+  python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value and "HOME" not in key]' | tee /tmp/env
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
   DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
