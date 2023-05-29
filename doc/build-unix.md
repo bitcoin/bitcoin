@@ -2,49 +2,236 @@ UNIX BUILD NOTES
 ====================
 Some notes on how to build Dash Core in Unix.
 
-(For BSD specific instructions, see [build-openbsd.md](build-openbsd.md) and/or
-[build-netbsd.md](build-netbsd.md))
+(For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
-Base build dependencies
------------------------
-Building the dependencies and Dash Core requires some essential build tools and libraries to be installed before.
+Note
+---------------------
+Always use absolute paths to configure and compile Dash Core and the dependencies.
+For example, when specifying the path of the dependency:
 
-Run the following commands to install required packages:
+	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
-##### Debian/Ubuntu:
+Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
+the usage of the absolute path.
+
+To Build
+---------------------
+
 ```bash
-$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils bison libsqlite3-dev
+./autogen.sh
+./configure
+make
+make install # optional
 ```
 
-##### Fedora:
-```bash
-$ sudo dnf install gcc-c++ libtool make autoconf automake python3 libstdc++-static patch sqlite-devel zeromq-devel
-```
+This will build dash-qt as well, if the dependencies are met.
 
-##### Arch Linux:
-```bash
-$ pacman -S base-devel python3
-```
+Dependencies
+---------------------
 
-##### Alpine Linux:
-```sh
-$ sudo apk --update --no-cache add autoconf automake curl g++ gcc libexecinfo-dev libexecinfo-static libtool make perl pkgconfig python3 patch linux-headers
-```
+These dependencies are required:
 
-##### FreeBSD/OpenBSD:
-```bash
-pkg_add gmake libtool
-pkg_add autoconf # (select highest version, e.g. 2.69)
-pkg_add automake # (select highest version, e.g. 1.15)
-pkg_add python # (select highest version, e.g. 3.5)
-```
+ Library     | Purpose          | Description
+ ------------|------------------|----------------------
+ libboost    | Utility          | Library for threading, data structures, etc
+ libevent    | Networking       | OS independent asynchronous networking
+
+Optional dependencies:
+
+ Library     | Purpose          | Description
+ ------------|------------------|----------------------
+ gmp         | Optimized math routines | Arbitrary precision arithmetic library
+ miniupnpc   | UPnP Support     | Firewall-jumping support
+ libnatpmp   | NAT-PMP Support  | Firewall-jumping support
+ libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
+ qt          | GUI              | GUI toolkit (only needed when GUI enabled)
+ libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
+ univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
+ libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
+ sqlite3     | SQLite DB        | Wallet storage (only needed when wallet enabled)
 
 For the versions used, see [dependencies.md](dependencies.md)
 
-Building
---------
+Memory Requirements
+--------------------
 
-Follow the instructions in [build-generic](build-generic.md)
+C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
+memory available when compiling Dash Core. On systems with less, gcc can be
+tuned to conserve memory with additional CXXFLAGS:
+
+
+    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
+
+
+## Linux Distribution Specific Instructions
+
+### Ubuntu & Debian
+
+#### Dependency Build Instructions
+
+Build requirements:
+
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils bison python3
+
+Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+
+    sudo apt-get libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev
+
+Berkeley DB is required for the wallet.
+
+Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
+Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
+are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
+pass `--with-incompatible-bdb` to configure.
+
+Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+
+SQLite is required for the wallet:
+
+    sudo apt install libsqlite3-dev
+
+To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+
+Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
+
+    sudo apt install libminiupnpc-dev libnatpmp-dev
+
+ZMQ dependencies (provides ZMQ API):
+
+    sudo apt-get install libzmq3-dev
+
+GMP dependencies (provides platform-optimized routines):
+
+   sudo apt-get install libgmp-dev
+
+GUI dependencies:
+
+If you want to build dash-qt, make sure that the required packages for Qt development
+are installed. Qt 5 is necessary to build the GUI.
+To build without GUI pass `--without-gui`.
+
+To build with Qt 5 you need the following:
+
+    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+
+libqrencode (optional) can be installed with:
+
+    sudo apt-get install libqrencode-dev
+
+Once these are installed, they will be found by configure and a dash-qt executable will be
+built by default.
+
+
+### Fedora
+
+#### Dependency Build Instructions
+
+Build requirements:
+
+    sudo dnf install gcc-c++ libtool make autoconf automake python3
+
+Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+
+    sudo dnf install libevent-devel boost-devel
+
+Berkeley DB is required for the wallet:
+
+    sudo dnf install libdb4-devel libdb4-cxx-devel
+
+Newer Fedora releases, since Fedora 33, have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
+Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
+are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
+pass `--with-incompatible-bdb` to configure.
+
+Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+
+SQLite is required for the wallet:
+
+    sudo dnf install sqlite-devel
+
+To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+
+Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
+
+    sudo dnf install miniupnpc-devel libnatpmp-devel
+
+ZMQ dependencies (provides ZMQ API):
+
+    sudo dnf install zeromq-devel
+
+GMP dependencies (provides platform-optimized routines):
+
+    sudo dnf install gmp-devel
+
+GUI dependencies:
+
+If you want to build dash-qt, make sure that the required packages for Qt development
+are installed. Qt 5 is necessary to build the GUI.
+To build without GUI pass `--without-gui`.
+
+To build with Qt 5 you need the following:
+
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel
+
+libqrencode (optional) can be installed with:
+
+    sudo dnf install qrencode-devel
+
+Once these are installed, they will be found by configure and a dash-qt executable will be
+built by default.
+
+Notes
+-----
+The release is built with GCC and then "strip dashd" to strip the debug
+symbols, which reduces the executable size by about 90%.
+
+
+miniupnpc
+---------
+
+[miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
+https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
+turned off by default.  See the configure options for upnp behavior desired:
+
+	--without-miniupnpc      No UPnP support miniupnp not required
+	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
+	--enable-upnp-default    UPnP support turned on by default at runtime
+
+libnatpmp
+---------
+
+[libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
+from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
+turned off by default. See the configure options for NAT-PMP behavior desired:
+
+	--without-natpmp          No NAT-PMP support, libnatpmp not required
+	--disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
+	--enable-natpmp-default   NAT-PMP support turned on by default at runtime
+
+Berkeley DB
+-----------
+It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
+you can use [the installation script included in contrib/](contrib/install_db4.sh)
+like so:
+
+```shell
+./contrib/install_db4.sh `pwd`
+```
+
+from the root of the repository.
+
+Otherwise, you can build Dash Core from self-compiled [depends](/depends/README.md).
+
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
+
+Boost
+-----
+If you need to build Boost yourself:
+
+	sudo su
+	./bootstrap.sh
+	./bjam install
+
 
 Security
 --------
@@ -54,8 +241,8 @@ This can be disabled with:
 
 Hardening Flags:
 
-	./configure --prefix=<prefix> --enable-hardening
-	./configure --prefix=<prefix> --disable-hardening
+	./configure --enable-hardening
+	./configure --disable-hardening
 
 
 Hardening enables the following features:
@@ -97,7 +284,7 @@ Disable-wallet mode
 When the intention is to run only a P2P node without a wallet, Dash Core may be compiled in
 disable-wallet mode with:
 
-    ./configure --prefix=<prefix> --disable-wallet
+    ./configure --disable-wallet
 
 In this case there is no dependency on Berkeley DB 4.8 and SQLite.
 
@@ -109,55 +296,44 @@ A list of additional configure flags can be displayed with:
 
     ./configure --help
 
-Building on FreeBSD
---------------------
 
-(TODO, this is untested, please report if it works and if changes to this documentation are needed)
+Setup and Build Example: Arch Linux
+-----------------------------------
+This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
-Building on FreeBSD is basically the same as on Linux based systems, with the difference that you have to use `gmake`
-instead of `make`.
+    pacman -S git base-devel boost libevent python
+    git clone https://github.com/dashpay/dash.git
+    cd dash/
+    ./autogen.sh
+    ./configure --disable-wallet --without-gui --without-miniupnpc
+    make check
 
-*Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
-It is not suitable for debugging a multi-threaded C++ program, not even for getting backtraces. Please install the package `gdb` and
-use the versioned gdb command e.g. `gdb7111`.
+Note:
+Enabling wallet support requires either compiling against a Berkeley DB newer than 4.8 (package `db`) using `--with-incompatible-bdb`,
+or building and depending on a local version of Berkeley DB 4.8. The readily available Arch Linux packages are currently built using
+`--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/bitcoin/trunk/PKGBUILD).
+As mentioned above, when maintaining portability of the wallet between the standard Dash Core distributions and independently built
+node software is desired, Berkeley DB 4.8 must be used.
 
-Building on OpenBSD
+
+ARM Cross-compilation
 -------------------
+These steps can be performed on, for example, an Ubuntu VM. The depends system
+will also work on other Linux distributions, however the commands for
+installing the toolchain will be different.
 
-(TODO, this is untested, please report if it works and if changes to this documentation are needed)
+Make sure you install the build requirements mentioned above.
+Then, install the toolchain and curl:
 
-**Important**: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is
-part of the base image, and while building it is necessary to make sure that this
-compiler is used and not ancient g++ 4.2.1. This is done by appending
-`CC=cc CXX=c++` to configuration commands. Mixing different compilers
-within the same executable will result in linker errors.
+    sudo apt-get install g++-arm-linux-gnueabihf curl
 
-```bash
-$ cd depends
-$ make CC=cc CXX=c++
-$ cd ..
-$ export AUTOCONF_VERSION=2.69 # replace this with the autoconf version that you installed
-$ export AUTOMAKE_VERSION=1.15 # replace this with the automake version that you installed
-$ ./autogen.sh
-$ ./configure --prefix=<prefix> CC=cc CXX=c++
-$ gmake # use -jX here for parallelism
-```
+To build executables for ARM:
 
-OpenBSD Resource limits
--------------------
-If the build runs into out-of-memory errors, the instructions in this section
-might help.
+    cd depends
+    make HOST=arm-linux-gnueabihf NO_QT=1
+    cd ..
+    ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+    make
 
-The standard ulimit restrictions in OpenBSD are very strict:
 
-    data(kbytes)         1572864
-
-This, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
-(see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
-If your user is in the `staff` group the limit can be raised with:
-
-    ulimit -d 3000000
-
-The change will only affect the current shell and processes spawned by it. To
-make the change system-wide, change `datasize-cur` and `datasize-max` in
-`/etc/login.conf`, and reboot.
+For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.

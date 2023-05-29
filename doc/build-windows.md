@@ -51,7 +51,58 @@ recommended, but it is possible to compile the 32-bit version.
 Cross-compilation
 -------------------
 
-Follow the instructions for Windows in [build-cross](build-cross.md)
+These steps can be performed on, for example, an Ubuntu VM. The depends system
+will also work on other Linux distributions, however the commands for
+installing the toolchain will be different.
+
+First, install the general dependencies:
+
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils bison curl
+
+A host toolchain (`build-essential`) is necessary because some dependency
+packages (such as `protobuf`) need to build host utilities that are used in the
+build process.
+
+## Building for 64-bit Windows
+
+To build executables for Windows 64-bit, install the following dependencies:
+
+    sudo apt-get install g++-mingw-w64-x86-64 mingw-w64-x86-64-dev
+
+Then build using:
+
+    cd depends
+    make HOST=x86_64-w64-mingw32
+    cd ..
+    ./autogen.sh # not required when building from tarball
+    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+    make
+
+## Building for 32-bit Windows
+
+To build executables for Windows 32-bit, install the following dependencies:
+
+    sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev
+
+Additional WSL Note: WSL support for [launching Win32 applications](https://docs.microsoft.com/en-us/archive/blogs/wsl/windows-and-ubuntu-interoperability#launching-win32-applications-from-within-wsl)
+results in `Autoconf` configure scripts being able to execute Windows Portable Executable files. This can cause
+unexpected behaviour during the build, such as Win32 error dialogs for missing libraries. The recommended approach
+is to temporarily disable WSL support for Win32 applications.
+
+Then build using:
+
+    sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
+    cd depends
+    make HOST=i686-w64-mingw32
+    cd ..
+    ./autogen.sh # not required when building from tarball
+    CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
+    make
+    sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+
+## Depends system
+
+For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
 Installation
 -------------
