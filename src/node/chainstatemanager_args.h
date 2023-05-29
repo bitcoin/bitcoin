@@ -11,7 +11,7 @@
 class ArgsManager;
 
 namespace node {
-util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts);
+[[nodiscard]] util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATEMANAGER_ARGS_H
