@@ -3526,6 +3526,25 @@ std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& scrip
     return descs;
 }
 
+util::Result<WalletDescriptor> CWallet::GetWalletDescriptor(const OutputType type, const bool internal) const
+{
+    LOCK(cs_wallet);
+    auto spk_man = GetScriptPubKeyMan(type, false /* internal */);
+
+    if (!spk_man) {
+        return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
+    }
+
+    const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
+
+    if (!desc_spk_man) {
+        return util::Error{strprintf(_("Error: No descriptor scriptpubkeymanager for this output type"))};
+    }
+
+    LOCK(desc_spk_man->cs_desc_man);
+    return desc_spk_man->GetWalletDescriptor();
+}
+
 LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
 {
     if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
