@@ -7,8 +7,6 @@
 
 #include <util/result.h>
 
-struct bilingual_str;
-
 namespace kernel {
 
 struct Context;

@@ -6,12 +6,11 @@
 #ifndef BITCOIN_ADDRDB_H
 #define BITCOIN_ADDRDB_H
 
-#include <net_types.h> // For banmap_t
-#include <univalue.h>
+#include <net_types.h>
 #include <util/fs.h>
 #include <util/result.h>
 
-#include <optional>
+#include <memory>
 #include <vector>
 
 class ArgsManager;
@@ -19,7 +18,6 @@ class AddrMan;
 class CAddress;
 class CDataStream;
 class NetGroupManager;
-struct bilingual_str;
 
 bool DumpPeerAddresses(const ArgsManager& args, const AddrMan& addr);
 /** Only used by tests. */
