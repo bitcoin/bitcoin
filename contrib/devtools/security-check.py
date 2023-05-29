@@ -10,7 +10,7 @@ Otherwise the exit status will be 1 and it will log which executables failed whi
 import sys
 from typing import List
 
-import lief #type:ignore
+import lief
 
 def check_ELF_RELRO(binary) -> bool:
     '''

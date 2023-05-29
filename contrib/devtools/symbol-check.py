@@ -13,7 +13,7 @@ Example usage:
 import sys
 from typing import List, Dict
 
-import lief #type:ignore
+import lief
 
 # Debian 10 (Buster) EOL: 2024. https://wiki.debian.org/LTS
 #
