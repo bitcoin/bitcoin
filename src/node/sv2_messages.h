@@ -18,7 +18,7 @@ namespace node {
 /**
  * All the stratum v2 message types handled by the template provider.
  */
-enum class Sv2MsgType {
+enum class Sv2MsgType : uint8_t {
     SETUP_CONNECTION = 0x00,
     SETUP_CONNECTION_SUCCESS = 0x01,
     SETUP_CONNECTION_ERROR = 0x02,
@@ -33,7 +33,7 @@ struct Sv2SetupConnectionMsg
     /**
      * The default message type value for this Stratum V2 message.
      */
-    static const auto m_msg_type = Sv2MsgType::SETUP_CONNECTION;
+    static constexpr auto m_msg_type = Sv2MsgType::SETUP_CONNECTION;
 
     /**
      * Specifies the subprotocol for the new connection. It will always be TemplateDistribution
@@ -53,7 +53,7 @@ struct Sv2SetupConnectionMsg
 
     /**
      * Flags indicating optional protocol features the client supports. Each protocol
-     * from protocol field has its own values/flags.
+     * from the protocol field has its own values/flags.
      */
     uint32_t m_flags;
 
@@ -105,7 +105,7 @@ struct Sv2SetupConnectionMsg
 
 /**
  * Set the coinbase outputs data len for the outputs that the client wants to add to the coinbase.
- * The Template Provider MUST NOT provide NewWork messages which would represent consensus-invalid blocks once this
+ * The template provider MUST NOT provide NewWork messages which would represent consensus-invalid blocks once this
  * additional size — along with a maximally-sized (100 byte) coinbase field — is added.
  */
 struct Sv2CoinbaseOutputDataSizeMsg
@@ -113,7 +113,7 @@ struct Sv2CoinbaseOutputDataSizeMsg
     /**
      * The default message type value for this Stratum V2 message.
      */
-    static const auto m_msg_type = Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE;
+    static constexpr auto m_msg_type = Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE;
 
     /**
      * The maximum additional serialized bytes which the pool will add in coinbase transaction outputs.
@@ -138,7 +138,7 @@ struct Sv2SetupConnectionSuccessMsg
     /**
      * The default message type value for this Stratum V2 message.
      */
-    static const auto m_msg_type = Sv2MsgType::SETUP_CONNECTION_SUCCESS;
+    static constexpr auto m_msg_type = Sv2MsgType::SETUP_CONNECTION_SUCCESS;
 
     /**
      * Selected version proposed by the connecting node that the upstream node supports.
@@ -167,7 +167,7 @@ struct Sv2SetupConnectionSuccessMsg
  */
 struct Sv2SetupConnectionErrorMsg
 {
-    static const auto m_msg_type = Sv2MsgType::SETUP_CONNECTION_ERROR;
+    static constexpr auto m_msg_type = Sv2MsgType::SETUP_CONNECTION_ERROR;
 
     /**
      * Flags indicating optional protocol features the server supports. Each protocol
@@ -199,7 +199,7 @@ struct Sv2NewTemplateMsg
     /**
      * The default message type value for this Stratum V2 message.
      */
-    static const auto m_msg_type = Sv2MsgType::NEW_TEMPLATE;
+    static constexpr auto m_msg_type = Sv2MsgType::NEW_TEMPLATE;
 
     /**
      * Server’s identification of the template. Strictly increasing, the current UNIX
@@ -298,7 +298,7 @@ struct Sv2NewTemplateMsg
 };
 
 /**
- * When the template provider creates a new valid best block, the Template Provider
+ * When the template provider creates a new valid best block, the template provider
  * MUST immediately send the SetNewPrevHash message. This message can also be used
  * for a future template, indicating the client can begin work on a previously
  * received and cached NewTemplate which contains the same template id.
@@ -308,7 +308,7 @@ struct Sv2SetNewPrevHashMsg
     /**
      * The default message type value for this Stratum V2 message.
      */
-    static const auto m_msg_type = Sv2MsgType::SET_NEW_PREV_HASH;
+    static constexpr auto m_msg_type = Sv2MsgType::SET_NEW_PREV_HASH;
 
     /**
      * The id referenced in a previous NewTemplate message.
@@ -354,9 +354,9 @@ struct Sv2SetNewPrevHashMsg
 
 /**
  * The client sends a SubmitSolution after finding a coinbase transaction/nonce
- * pair which double-SHA256 hashes at or below SetNewPrevHash::target. The Template Provider
+ * pair which double-SHA256 hashes at or below SetNewPrevHash::target. The template provider
  * finds the cached block according to the template id and reconstructs the block with the
- * values from SubmitSolution. The Template Provider must then propagate the block to the
+ * values from SubmitSolution. The template provider must then propagate the block to the
  * Bitcoin Network.
  */
 struct Sv2SubmitSolutionMsg
@@ -364,7 +364,7 @@ struct Sv2SubmitSolutionMsg
     /**
      * The default message type value for this Stratum V2 message.
      */
-    static const auto m_msg_type = Sv2MsgType::SUBMIT_SOLUTION;
+    static constexpr auto m_msg_type = Sv2MsgType::SUBMIT_SOLUTION;
 
     /**
      * The id referenced in a NewTemplate.
@@ -440,7 +440,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        // The Template Provider currently does not use the extension_type field,
+        // The template provider currently does not use the extension_type field,
         // but the field is still required for all headers.
         uint16_t extension_type = 0;
 
@@ -457,7 +457,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        // Ignore the first 2 bytes (extension type) as the Template Provider currently doesn't
+        // Ignore the first 2 bytes (extension type) as the template provider currently doesn't
         // interpret this field.
         s.ignore(2);
 
@@ -494,7 +494,10 @@ public:
      */
     explicit Sv2NetMsg(const M& msg)
     {
+        // Serialize the sv2 message.
         CVectorWriter{SER_NETWORK, PROTOCOL_VERSION, m_msg, 0, msg};
+
+        // Create the header for the message.
         m_sv2_header = Sv2NetHeader{msg.m_msg_type, static_cast<uint32_t>(m_msg.size())};
     }
 
