@@ -2346,10 +2346,14 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
 {
     auto txinfo = m_mempool.info(gtxid);
     if (txinfo.tx) {
+        const bool is_unbroadcast{
+            WITH_LOCK(m_mempool.cs, return m_mempool.IsUnbroadcastTx(GenTxid::Txid(txinfo.tx->GetHash())))};
         // If a TX could have been INVed in reply to a MEMPOOL request,
         // or is older than UNCONDITIONAL_RELAY_DELAY, permit the request
-        // unconditionally.
-        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) {
+        // unconditionally (but not for unbroadcast transactions).
+        if (((mempool_req.count() && txinfo.m_time <= mempool_req) ||
+             txinfo.m_time <= now - UNCONDITIONAL_RELAY_DELAY) &&
+            !is_unbroadcast) {
             return std::move(txinfo.tx);
         }
     }
@@ -5898,6 +5902,16 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                         if (tx_relay->m_bloom_filter) {
                             if (!tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+                        }
+                        if (WITH_LOCK(m_mempool.cs, return m_mempool.IsUnbroadcastTx(GenTxid::Txid(txinfo.tx->GetHash())))) {
+                            LogPrintLevel( /* Continued */
+                                BCLog::SENSITIVE_RELAY,
+                                BCLog::Level::Info,
+                                "Omitting INV for unbroadcast transaction (txid=%s) from MEMPOOL reply peer=%d%s\n",
+                                txinfo.tx->GetHash().ToString(),
+                                pto->GetId(),
+                                fLogIPs ? strprintf(", peeraddr=%s", pto->addr.ToStringAddrPort()) : "");
+                            continue;
                         }
                         tx_relay->m_tx_inventory_known_filter.insert(hash);
                         // Responses to MEMPOOL requests bypass the m_recently_announced_invs filter.

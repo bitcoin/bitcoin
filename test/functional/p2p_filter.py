@@ -9,6 +9,7 @@ Test BIP 37
 from test_framework.messages import (
     CInv,
     COIN,
+    CTxOut,
     MAX_BLOOM_FILTER_SIZE,
     MAX_BLOOM_HASH_FUNCS,
     MSG_BLOCK,
@@ -18,6 +19,7 @@ from test_framework.messages import (
     msg_filterload,
     msg_getdata,
     msg_mempool,
+    msg_tx,
     msg_version,
 )
 from test_framework.p2p import (
@@ -29,6 +31,9 @@ from test_framework.p2p import (
 )
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_greater_than_or_equal,
+)
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
@@ -136,13 +141,23 @@ class FilterTest(BitcoinTestFramework):
         filter_peer = P2PBloomFilter()
 
         self.log.debug("Create a tx relevant to the peer before connecting")
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)["txid"]
+
+        amount = 9 * COIN
+        fee = 1000
+        tx = self.wallet.create_self_transfer(fee_rate=0)["tx"]
+        assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
+        tx.vout[0].nValue -= (amount + fee)
+        tx.vout.append(CTxOut(amount, filter_peer.watch_script_pubkey))
+        tx.rehash()
+
+        tx_sender = self.nodes[0].add_p2p_connection(P2PInterface())
+        tx_sender.send_message(msg_tx(tx))
 
         self.log.debug("Send a mempool msg after connecting and check that the tx is received")
         self.nodes[0].add_p2p_connection(filter_peer)
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
         filter_peer.send_message(msg_mempool())
-        filter_peer.wait_for_tx(txid)
+        filter_peer.wait_for_tx(tx.hash)
 
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
