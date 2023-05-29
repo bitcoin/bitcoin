@@ -103,16 +103,10 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
 {
     assert(!outputs.empty());
     stats.nTransactions++;
-    // SYSCOIN
-    const uint64_t &nSYSXAsset = Params().GetConsensus().nSYSXAsset;
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         stats.nTransactionOutputs++;
         if (stats.total_amount.has_value()) {
             stats.total_amount = CheckedAdd(*stats.total_amount, it->second.out.nValue);
-            // SYSCOIN
-            if(it->second.out.assetInfo.nAsset == nSYSXAsset) {
-                stats.total_amount = CheckedAdd(*stats.total_amount, it->second.out.assetInfo.nValue);
-            }
         }
         stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }

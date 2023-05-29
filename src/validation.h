@@ -704,12 +704,12 @@ public:
 
     // Block (dis)connection on a given view:
     // SYSCOIN
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut, std::vector<uint256> &vecNEVMBlocks, std::vector<std::pair<uint256,uint32_t> >& vecTXIDPairs, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut, std::vector<uint256> &vecNEVMBlocks, std::vector<std::pair<uint256,uint32_t> >& vecTXIDPairs, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                     CCoinsViewCache& view, bool fJustCheck = false, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                    CCoinsViewCache& view, bool fJustCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                    CCoinsViewCache& view, bool fJustCheck, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // SYSCOIN Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
@@ -796,7 +796,7 @@ private:
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, AssetMap &mapAssets, NEVMTxRootMap &mapNEVMTxRoots, NEVMMintTxMap &mapMintKeys, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, NEVMTxRootMap &mapNEVMTxRoots, NEVMMintTxMap &mapMintKeys, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ConflictingChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

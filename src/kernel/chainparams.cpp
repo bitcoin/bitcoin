@@ -214,7 +214,6 @@ public:
         consensus.defaultAssumeValid = uint256S("0x5c5a43bece78786ee261458dc300323cec0485b61d6b33a65d624aadf9a1d35b"); // 1586970
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 123456;
         consensus.nNEVMChainID = 57;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
@@ -223,6 +222,7 @@ public:
         consensus.nNEVMStartBlock = 1317500;
         consensus.nPODAStartBlock = 1586000;
         consensus.nV19StartBlock = 1586000;
+        consensus.nRolluxStartBlock = 1630000;
         consensus.nUTXOAssetsBlock = 1004200;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
         consensus.DIP0003Height = 1004200;
@@ -378,7 +378,6 @@ public:
         consensus.nAuxpowOldChainId = 4096;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 123456;
         consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
@@ -387,6 +386,7 @@ public:
         consensus.nNEVMStartBlock = 840000;
         consensus.nUTXOAssetsBlock = 545000;
         consensus.nPODAStartBlock = 1004000;
+        consensus.nRolluxStartBlock = 1130000;
         consensus.nV19StartBlock = 1100000;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
         consensus.DIP0003Height = 545000;
@@ -622,7 +622,6 @@ public:
         consensus.nAuxpowOldChainId = 4096;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
-        consensus.nSYSXAsset = 123456;
         consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
@@ -630,6 +629,7 @@ public:
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = 205;
         consensus.nPODAStartBlock = 0;
+        consensus.nRolluxStartBlock = 0;
         consensus.nV19StartBlock = opts.v19startblock;
         consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = 1000;

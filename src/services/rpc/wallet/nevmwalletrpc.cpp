@@ -11,7 +11,7 @@
 #include <util/fees.h>
 #include <consensus/validation.h>
 #include <validation.h>
-#include <services/assetconsensus.h>
+#include <services/nevmconsensus.h>
 #include <rpc/auxpow_miner.h>
 #include <wallet/rpc/spend.h>
 #include <rpc/server.h>
@@ -379,7 +379,7 @@ static RPCHelpMan getauxblock()
     };
 }
 
-Span<const CRPCCommand> wallet::GetAssetWalletRPCCommands()
+Span<const CRPCCommand> wallet::GetNEVMWalletRPCCommands()
 {
     static const CRPCCommand commands[]{ 
         {"syscoinwallet", &signmessagebech32},

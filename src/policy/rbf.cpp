@@ -46,36 +46,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     }
     return RBFTransactionState::FINAL;
 }
-// SYSCOIN
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, CTxMemPool::setEntries &setAncestors)
-{
-    AssertLockHeld(pool.cs);
 
-
-    // First check the transaction itself.
-    if (SignalsOptInRBF(tx)) {
-        return RBFTransactionState::REPLACEABLE_BIP125;
-    }
-
-    // If this transaction is not in our mempool, then we can't be sure
-    // we will know about all its inputs.
-    if (!pool.exists(GenTxid::Txid(tx.GetHash()))) {
-        return RBFTransactionState::UNKNOWN;
-    }
-
-    // signaled for RBF if any unconfirmed parents have signaled.
-    const CTxMemPoolEntry entry{*pool.mapTx.find(tx.GetHash())};
-    // SYSCOIN
-    setAncestors = pool.AssumeCalculateMemPoolAncestors(__func__, entry, CTxMemPool::Limits::NoLimits(),
-                                                        /*fSearchForParents=*/false);
-
-    for (CTxMemPool::txiter it : setAncestors) {
-        if (SignalsOptInRBF(it->GetTx())) {
-            return RBFTransactionState::REPLACEABLE_BIP125;
-        }
-    }
-    return RBFTransactionState::FINAL;
-}
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 {
     // If we don't have a local mempool we can only check the transaction itself.
@@ -141,16 +112,14 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
     }
     return std::nullopt;
 }
-// SYSCOIN
+
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
                                                    const std::set<uint256>& direct_conflicts,
-                                                   const std::set<uint256>& direct_conflicts_asset,
                                                    const uint256& txid)
 {
     for (CTxMemPool::txiter ancestorIt : ancestors) {
-        // SYSCOIN
         const uint256& hashAncestor = ancestorIt->GetTx().GetHash();
-        if (direct_conflicts.count(hashAncestor) || direct_conflicts_asset.count(hashAncestor)) {
+        if (direct_conflicts.count(hashAncestor)) {
             return strprintf("%s spends conflicting transaction %s",
                              txid.ToString(),
                              hashAncestor.ToString());

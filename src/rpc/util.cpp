@@ -72,41 +72,6 @@ CAmount AmountFromValue(const UniValue& value, int decimals)
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
     return amount;
 }
-// SYSCOIN
-UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
-{
-    if (precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs;
-    int64_t divByAmount = 1;
-    int64_t remainder = 0;
-    std::string strPrecision = "0";
-    if (precision > 0) {
-        divByAmount = pow(10.0, precision);
-        quotient = n_abs / divByAmount;
-        remainder = n_abs % divByAmount;
-        strPrecision = itostr(precision);
-    }
-
-    return UniValue(UniValue::VNUM,
-        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
-}
-CAmount AssetAmountFromValue(const UniValue& value, int precision)
-{
-    if(precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    if (!value.isNum() && !value.isStr())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
-  
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (!MoneyRangeAsset(amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-    return amount;
-}
 uint256 ParseHashV(const UniValue& v, std::string strName)
 {
     const std::string& strHex(v.get_str());

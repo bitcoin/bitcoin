@@ -10,5 +10,5 @@
 #include <nevm/rlp.h>
 #include <consensus/amount.h>
 bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP& parentNodes, const dev::RLP& root); 
-bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash,  const uint8_t& nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint64_t& nAsset, std::string& witnessAddress);
+bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, std::string& witnessAddress);
 #endif // SYSCOIN_NEVM_NEVM_H

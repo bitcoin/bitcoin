@@ -94,10 +94,9 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
 bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     // SYSCOIN
-    const bool &isSysTx = tx.HasAssets();
     const bool &IsMnTx = tx.IsMnTx();
     const bool &IsNEVMDataTx = tx.IsNEVMData();
-    if(!isSysTx && !IsMnTx && !IsNEVMDataTx){
+    if(!IsMnTx && !IsNEVMDataTx){
         if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
             reason = "version";
             return false;
@@ -142,7 +141,7 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         // SYSCOIN
-        if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType, isSysTx || IsMnTx)) {
+        if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType, IsMnTx)) {
             reason = "scriptpubkey";
             return false;
         }

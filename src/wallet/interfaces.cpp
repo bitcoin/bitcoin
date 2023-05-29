@@ -596,7 +596,7 @@ public:
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         // SYSCOIN
-        for (const CRPCCommand& command : GetAssetWalletRPCCommands()) {
+        for (const CRPCCommand& command : GetNEVMWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const node::JSONRPCRequest& request, UniValue& result, bool last_handler) {
                 node::JSONRPCRequest wallet_request = request;
                 wallet_request.context = &m_context;

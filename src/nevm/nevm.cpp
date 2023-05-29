@@ -118,15 +118,12 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * expected, or the length of the expected string is not what we expect then return false.
  *
  * @param vchInputExpectedMethodHash The expected method hash
- * @param nERC20Precision The erc20 precision to know how to convert NEVM's uint256 to a uint64 with truncation of insignifficant bits
- * @param nLocalPrecision The local precision to know how to convert NEVM's uint256 to a uint64 with truncation of insignifficant bits
  * @param vchInputData The input to parse
  * @param outputAmount The amount burned
- * @param nAsset The asset burned
  * @param witnessAddress The witness address for the minting
  * @return true if everything is valid
  */
-bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint64_t& nAsset, std::string& witnessAddress) {
+bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, std::string& witnessAddress) {
     // total 5 to 7 fields are expected @ 32 bytes each field, > 5 fields if address is bigger, bech32 can be up to 91 characters so it will span up to 3 fields and as little as 1 field
     if(vchInputData.size() < 164 || vchInputData.size() > 228) {
       return false;  
@@ -148,15 +145,11 @@ bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpected
     // we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
     if(nLocalPrecision > nERC20Precision){
       outputAmountArith *= pow(10.0, nLocalPrecision-nERC20Precision);
-    // ensure we truncate decimals to fit within int64 if erc20's precision is more than our asset precision
+    // ensure we truncate decimals to fit within int64 if erc20's precision is more than our precision
     } else if(nLocalPrecision < nERC20Precision){
       outputAmountArith /= pow(10.0, nERC20Precision-nLocalPrecision);
     }
     outputAmount = (CAmount)outputAmountArith.GetLow64();
-    
-    // convert the vch into a uint64_t (nAsset)
-    // should be in position 60 as big endian
-    nAsset = ReadBE64(&(vchInputData[60]));
 
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
     const unsigned char &dataLength = vchInputData[131];

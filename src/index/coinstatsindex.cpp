@@ -116,8 +116,6 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     CBlockUndo block_undo;
     const CAmount block_subsidy{GetBlockSubsidy(block.height, Params().GetConsensus())};
     m_total_subsidy += block_subsidy;
-    // SYSCOIN
-    const uint64_t &nSYSXAsset = Params().GetConsensus().nSYSXAsset;
     // Ignore genesis block
     if (block.height > 0) {
         // pindex variable gives indexing code access to node internals. It
@@ -159,17 +157,10 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                 const CTxOut& out{tx->vout[j]};
                 Coin coin{out, block.height, tx->IsCoinBase()};
                 COutPoint outpoint{tx->GetHash(), j};
-                // SYSCOIN
-                const bool &isSYSX = coin.out.assetInfo.nAsset == nSYSXAsset;
                 // Skip unspendable coins
                 if (coin.out.scriptPubKey.IsUnspendable()) {
                     m_total_unspendable_amount += coin.out.nValue;
                     m_total_unspendables_scripts += coin.out.nValue;
-                    // SYSCOIN
-                    if(isSYSX) {
-                        m_total_unspendable_amount += coin.out.assetInfo.nValue;
-                        m_total_unspendables_scripts += coin.out.assetInfo.nValue;
-                    }
                     continue;
                 }
 
@@ -179,19 +170,11 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     m_total_coinbase_amount += coin.out.nValue;
                 } else {
                     m_total_new_outputs_ex_coinbase_amount += coin.out.nValue;
-                    // SYSCOIN
-                    if(isSYSX) {
-                        m_total_new_outputs_ex_coinbase_amount += coin.out.assetInfo.nValue;;
-                    }
                 }
 
                 ++m_transaction_output_count;
                 m_total_amount += coin.out.nValue;
                 m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
-                // SYSCOIN
-                if(isSYSX) {
-                    m_total_amount += coin.out.assetInfo.nValue;
-                }
             }
 
             // The coinbase tx has no undo data since no former output is spent
@@ -200,8 +183,6 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
                 for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                     Coin coin{tx_undo.vprevout[j]};
-                    // SYSCOIN
-                    const bool &isSYSX = coin.out.assetInfo.nAsset == nSYSXAsset;
                     COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
                     m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
@@ -211,11 +192,6 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     --m_transaction_output_count;
                     m_total_amount -= coin.out.nValue;
                     m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
-                    // SYSCOIN
-                    if(isSYSX) {
-                        m_total_amount -= coin.out.assetInfo.nValue;
-                        m_total_prevout_spent_amount += coin.out.assetInfo.nValue;
-                    }
                 }
             }
         }
@@ -423,7 +399,6 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
     std::pair<uint256, DBVal> read_out;
     // SYSCOIN
     const CAmount block_subsidy{GetBlockSubsidy(pindex->nHeight, Params().GetConsensus())};
-    const uint64_t &nSYSXAsset = Params().GetConsensus().nSYSXAsset;
     m_total_subsidy -= block_subsidy;
 
     // Ignore genesis block
@@ -456,17 +431,10 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
             const CTxOut& out{tx->vout[j]};
             COutPoint outpoint{tx->GetHash(), j};
             Coin coin{out, pindex->nHeight, tx->IsCoinBase()};
-            // SYSCOIN
-            const bool &isSYSX = coin.out.assetInfo.nAsset == nSYSXAsset;
             // Skip unspendable coins
             if (coin.out.scriptPubKey.IsUnspendable()) {
                 m_total_unspendable_amount -= coin.out.nValue;
                 m_total_unspendables_scripts -= coin.out.nValue;
-                // SYSCOIN
-                if(isSYSX) {
-                    m_total_unspendable_amount -= coin.out.assetInfo.nValue;
-                    m_total_unspendables_scripts -= coin.out.assetInfo.nValue;
-                }
                 continue;
             }
 
@@ -476,19 +444,11 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 m_total_coinbase_amount -= coin.out.nValue;
             } else {
                 m_total_new_outputs_ex_coinbase_amount -= coin.out.nValue;
-                // SYSCOIN
-                if(isSYSX) {
-                    m_total_new_outputs_ex_coinbase_amount -= coin.out.assetInfo.nValue;;
-                }
             }
 
             --m_transaction_output_count;
             m_total_amount -= coin.out.nValue;
             m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
-            // SYSCOIN
-            if(isSYSX) {
-                m_total_amount -= coin.out.assetInfo.nValue;
-            }
         }
 
         // The coinbase tx has no undo data since no former output is spent
@@ -497,8 +457,6 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
 
             for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                 Coin coin{tx_undo.vprevout[j]};
-                // SYSCOIN
-                const bool &isSYSX = coin.out.assetInfo.nAsset == nSYSXAsset;
                 COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
                 m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
@@ -508,11 +466,6 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 m_transaction_output_count++;
                 m_total_amount += coin.out.nValue;
                 m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
-                // SYSCOIN
-                if(isSYSX) {
-                    m_total_amount += coin.out.assetInfo.nValue;
-                    m_total_prevout_spent_amount -= coin.out.assetInfo.nValue;
-                }
             }
         }
     }

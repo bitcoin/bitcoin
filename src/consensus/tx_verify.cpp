@@ -14,7 +14,7 @@
 #include <util/check.h>
 #include <util/moneystr.h>
 // SYSCOIN
-#include <services/asset.h>
+#include <services/nevmconsensus.h>
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
@@ -167,13 +167,15 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     }
     return nSigOps;
 }
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache &inputs, int nSpendHeight, CAmount& txfee, CAssetsMap &mapAssetIn, CAssetsMap &mapAssetOut)
+// SYSCOIN
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, bool fJustCheck, NEVMMintTxMap &mapMintKeys)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
+
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
@@ -185,47 +187,33 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        if (!coin.out.assetInfo.IsNull()) {
-            const bool &zeroVal = coin.out.assetInfo.nValue == 0;
-            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, zeroVal, coin.out.assetInfo.nValue);
-            if (!inRes.second) {
-                inRes.first->second.nAmount += coin.out.assetInfo.nValue;
-                if (!inRes.first->second.bZeroVal) {
-                    inRes.first->second.bZeroVal = zeroVal;
-                }
-                // sanity, should never have multiple zero val inputs for an asset
-                else if (zeroVal) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-val-input");
-                }
-                if(!MoneyRangeAsset(inRes.first->second.nAmount) || !MoneyRangeAsset(coin.out.assetInfo.nValue)) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
-                }
-            }
-        }
+
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
         }
-        
+    }
+    // SYSCOIN  
+    if(tx.IsMintTx()) {
+        CAmount nMintAmount;
+        if(!CheckSyscoinMint(tx, state, fJustCheck, nSpendHeight, mapMintKeys, nMintAmount)) {
+            // state filled by CheckSyscoinMint
+            return false;
+        }
+        // nMintAmount is range checked already because it is compared against an output and outputs are checked in GetValueOut()
+        // but we do need to check for overflow before adding it
+        if (!MoneyRange(nValueIn + nMintAmount))
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-mint-outofrange", strprintf("value out of range value_in (%s) value_in+mint (%s)", FormatMoney(nValueIn), FormatMoney(nValueIn + nMintAmount)));
+        nValueIn += nMintAmount;
+        assert(MoneyRange(nValueIn));
     }
     const CAmount &value_out = tx.GetValueOut();
     if (nValueIn < value_out) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
-    // SYSCOIN
-    if(tx.HasAssets()) {
-        std::string err;
-        if(!tx.GetAssetValueOut(mapAssetOut, err)) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, err);
-        }
-        // if input was used, validate it against output (note, no fees for assets in == out)
-        if(!CheckTxInputsAssets(tx, state, GetBaseAssetID(tx.voutAssets.begin()->key), mapAssetIn, mapAssetOut)) {
-            return false; // state filled by CheckTxInputsAssets
-        }
-    }
-    
+
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
     if (!MoneyRange(txfee_aux)) {

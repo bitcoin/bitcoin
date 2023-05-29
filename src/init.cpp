@@ -122,7 +122,7 @@
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
-#include <services/assetconsensus.h>
+#include <services/nevmconsensus.h>
 #include <key_io.h>
 #include <flatdatabase.h>
 #include <llmq/quorums.h>
@@ -372,8 +372,6 @@ void Shutdown(NodeContext& node)
         }
         UninterruptibleSleep(std::chrono::milliseconds{200});
 
-        passetdb.reset();
-        passetnftdb.reset();
         pnevmtxrootsdb.reset();
         pnevmtxmintdb.reset();
         pblockindexdb.reset();
@@ -549,7 +547,6 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-maxrecsigsage=<n>", strprintf("Number of seconds to keep LLMQ recovery sigs (default: %u)", DEFAULT_MAX_RECOVERED_SIGS_AGE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-hrp=<prefix>", "Bech32 HRP override used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dip19params=<n:m>", "DIP19 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
