@@ -55,6 +55,12 @@ extern "C" int fcntl_old(int fd, int cmd, ...);
 #define SYMVER "GLIBC_2.4"
 #elif defined(__aarch64__)
 #define SYMVER "GLIBC_2.17"
+#elif defined(__powerpc64__)
+#  ifdef WORDS_BIGENDIAN
+#define SYMVER "GLIBC_2.3"
+#  else
+#define SYMVER "GLIBC_2.17"
+#  endif
 #elif defined(__riscv)
 #define SYMVER "GLIBC_2.27"
 #endif // __i386__
