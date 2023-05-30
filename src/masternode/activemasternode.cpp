@@ -205,11 +205,15 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
     // reachable via IPv4.
     CNetAddr addrDummyPeer;
     bool fFoundLocal{false};
-    if (LookupHost("8.8.8.8", addrDummyPeer, false)) {
+    std::optional<CNetAddr> addr = LookupHost("8.8.8.8", false);
+    if (addr.has_value()) {
+        addrDummyPeer = addr.value();
         fFoundLocal = GetLocal(addrRet, &addrDummyPeer) && IsValidNetAddr(addrRet);
     }
     if (!fFoundLocal && !Params().RequireRoutableExternalIP()) {
-        if (Lookup("127.0.0.1", addrRet, GetListenPort(), false)) {
+        std::optional<CService> service_addr = Lookup("127.0.0.1", GetListenPort(), false);
+        if (service_addr.has_value()) {
+            addrRet = service_addr.value();
             fFoundLocal = true;
         }
     }

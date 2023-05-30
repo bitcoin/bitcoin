@@ -264,9 +264,11 @@ static RPCHelpMan protx_register()
 
 
         if (request.params[paramIdx].get_str() != "") {
-            if (!Lookup(request.params[paramIdx].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
+            std::optional<CService> addr = Lookup(request.params[paramIdx].get_str().c_str(), Params().GetDefaultPort(), false);
+            if (!addr.has_value()) {
                 throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
             }
+            ptx.addr = addr.value();
         }
 
         ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
@@ -427,9 +429,11 @@ static RPCHelpMan protx_register_fund()
 
 
     if (request.params[paramIdx].get_str() != "") {
-        if (!Lookup(request.params[paramIdx].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
+        std::optional<CService> addr = Lookup(request.params[paramIdx].get_str().c_str(), Params().GetDefaultPort(), false);
+        if (!addr.has_value()) {
             throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
         }
+        ptx.addr = addr.value();
     }
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
@@ -570,9 +574,11 @@ static RPCHelpMan protx_register_prepare()
         
 
         if (request.params[paramIdx].get_str() != "") {
-            if (!Lookup(request.params[paramIdx].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
+            std::optional<CService> addr = Lookup(request.params[paramIdx].get_str().c_str(), Params().GetDefaultPort(), false);
+            if (!addr.has_value()) {
                 throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
             }
+            ptx.addr = addr.value();
         }
 
         ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
@@ -748,10 +754,11 @@ static RPCHelpMan protx_update_service()
         ptx.nVersion = CProUpServTx::GetVersion(v19active);
     }
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
-
-    if (!Lookup(request.params[1].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
+    std::optional<CService> addr = Lookup(request.params[1].get_str().c_str(), Params().GetDefaultPort(), false);
+    if (!addr.has_value()) {
         throw std::runtime_error(strprintf("invalid network address %s", request.params[1].get_str()));
     }
+    ptx.addr = addr.value();
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
     auto mnList = deterministicMNManager->GetListAtChainTip();
