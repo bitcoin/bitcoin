@@ -12,7 +12,7 @@
 class ArgsManager;
 
 namespace node {
-util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts);
+[[nodiscard]] util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKMANAGER_ARGS_H

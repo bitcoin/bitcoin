@@ -7,8 +7,6 @@
 
 #include <util/result.h>
 
-struct bilingual_str;
-
 namespace kernel {
 
 struct Context;
@@ -16,8 +14,7 @@ struct Context;
 /**
  *  Ensure a usable environment with all necessary library support.
  */
-util::Result<void> SanityChecks(const Context&);
-
-}
+[[nodiscard]] util::Result<void> SanityChecks(const Context&);
+} // namespace kernel
 
 #endif // BITCOIN_KERNEL_CHECKS_H

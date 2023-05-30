@@ -13,6 +13,9 @@
 #include <util/fs.h>
 #include <util/result.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,11 +24,11 @@
 
 class CBlockFileInfo;
 class CBlockIndex;
+class COutPoint;
 class uint256;
 namespace Consensus {
 struct Params;
 };
-struct bilingual_str;
 
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 450;
@@ -99,6 +102,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
-util::Result<void> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
+[[nodiscard]] util::Result<void> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
 
 #endif // BITCOIN_TXDB_H
