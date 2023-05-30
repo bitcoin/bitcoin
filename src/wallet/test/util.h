@@ -21,6 +21,7 @@ class Chain;
 namespace wallet {
 class CWallet;
 class WalletDatabase;
+struct WalletContext;
 
 static const DatabaseFormat DATABASE_FORMATS[] = {
 #ifdef USE_SQLITE
@@ -31,7 +32,13 @@ static const DatabaseFormat DATABASE_FORMATS[] = {
 #endif
 };
 
+const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
+
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key);
+
+std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context);
+std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags);
+void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet);
 
 // Creates a copy of the provided database
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database);
