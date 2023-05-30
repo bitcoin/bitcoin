@@ -628,6 +628,7 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
             }
 
             jsonRequest.params.received.push_back(hash_str);
+            jsonRequest.params.ProcessParameters(getdeploymentinfo().GetArgNames());
         }
 
         req->WriteHeader("Content-Type", "application/json");

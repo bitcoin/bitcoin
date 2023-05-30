@@ -18,6 +18,8 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 /**
@@ -193,22 +195,155 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
 
 const UniValue& JSONRPCRequest::JSONRPCParameters::operator[](const std::string& key) const
 {
-    return received[key];
+    const auto it = named.find(key);
+    if (it == named.end()) return NullUniValue;
+    return *it->second;
 }
 
 const UniValue& JSONRPCRequest::JSONRPCParameters::operator[](size_t pos) const
 {
-    return received[pos];
+    if (pos >= positional.size()) return NullUniValue;
+    const UniValue* item = positional.at(pos);
+    return item ? *item : NullUniValue;
 }
 
 size_t JSONRPCRequest::JSONRPCParameters::size() const
 {
-    return received.size();
+    return positional.size();
 }
 
 UniValue JSONRPCRequest::JSONRPCParameters::AsUniValueArray() const
 {
-    // The callers of this function will always have parameter objects that are arrays
-    Assert(received.isArray());
-    return received;
+    UniValue out{UniValue::VARR};
+    for (size_t i = 0; i < size(); ++i) {
+        out.push_back((*this)[i]);
+    }
+    return out;
+}
+
+void JSONRPCRequest::JSONRPCParameters::ProcessParameters(const std::vector<std::pair<std::string, bool>>& argNames)
+{
+    positional.clear();
+    positional.reserve(argNames.size());
+    named.clear();
+
+    // Build a map of parameters, and remove ones that have been processed, so that we can throw a focused error if
+    // there is an unknown one.
+    std::unordered_map<std::string, const UniValue*> named_args;
+    if (received.isObject()) {
+        const std::vector<std::string>& keys = received.getKeys();
+        const std::vector<UniValue>& values = received.getValues();
+        for (size_t i = 0; i < keys.size(); ++i) {
+            auto [_, inserted] = named_args.emplace(keys[i], &values[i]);
+            if (!inserted) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Parameter %s specified multiple times", keys[i]));
+            }
+        }
+    }
+
+    // Determine where are positional args are. They could be the received params, or in an "args" parameter
+    const UniValue* positional_args = nullptr;
+    if (received.isObject() && named_args.count("args") > 0) {
+        positional_args = named_args.extract("args").mapped();
+    } else if (received.isArray()) {
+        positional_args = &received;
+    }
+
+    // Process expected parameters. If any parameters were left unspecified in
+    // the request before a parameter that was specified, null values need to be
+    // inserted at the unspecifed parameter positions.
+    size_t pos = 0;
+    UniValue* options = nullptr;
+    for (const auto& [name_pattern, named_only] : argNames) {
+        std::vector<std::string> aliases = SplitString(name_pattern, '|');
+
+        // Search for this parameter in our named args
+        auto named_it = named_args.end();
+        for (const std::string& alias : aliases) {
+            named_it = named_args.find(alias);
+            if (named_it != named_args.end()) break;
+        }
+        const UniValue* arg = nullptr;
+        bool found_named = named_it != named_args.end();
+        if (found_named) {
+            arg = named_it->second;
+        }
+
+        // Handle named-only parameters by pushing them into a temporary options
+        // object, and then pushing the accumulated options as the next
+        // positional argument.
+        if (named_only) {
+            if (found_named) {
+                if (!options) {
+                    constructed.emplace_back(UniValue::VOBJ);
+                    options = &constructed.back();
+                }
+                if (options->exists(named_it->first)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Parameter %s specified multiple times", named_it->first));
+                }
+                options->pushKVEnd(named_it->first, *arg);
+                named_args.erase(named_it);
+            }
+            continue;
+        }
+
+        // Search for this parameter in our positional args
+        if (positional_args && pos < positional_args->size()) {
+            // Cannot be both positional and named
+            if (arg) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Parameter %s specified twice both as positional and named argument", named_it->first));
+            }
+            arg = &(*positional_args)[pos];
+        }
+        ++pos;
+
+        // Insert the parameter into our mappings
+        if (options) {
+            // Non-empty options means that we've parsed all of the named-only parameters
+            // that belong to this options object parameter
+            positional.emplace_back(options);
+            for (const std::string& alias : aliases) {
+                auto [_, inserted] = named.emplace(alias, options);
+                if (!inserted) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Parameter %s specified multiple times", alias));
+                }
+            }
+            // The current parameter is the options object. There should not be any parameter for it.
+            if (arg) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Parameter %s conflicts with parameter %s", aliases.front(), options->getKeys().front()));
+            }
+            options = nullptr;
+        } else if (arg) {
+            // Normal parameter, specified once
+            positional.emplace_back(arg);
+            for (const std::string& alias : aliases) {
+                auto [_, inserted] = named.emplace(alias, arg);
+                if (!inserted) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Parameter %s specified multiple times", alias));
+                }
+            }
+            if (found_named) {
+                named_args.erase(named_it);
+            }
+        } else {
+            // Not found, insert a nullptr into positionals, and do nothing for named
+            positional.emplace_back(nullptr);
+        }
+    }
+
+    // If there are still arguments in named_args, this is an error.
+    if (!named_args.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown named parameter %s", named_args.begin()->first));
+    }
+
+    // If there are any leftover positional args, stick them onto the end of "positional"
+    // This can only happen if no named arguments were given.
+    for (; pos < (positional_args ? positional_args->size() : 0) ; ++pos) {
+        positional.emplace_back(&(*positional_args)[pos]);
+    }
+
+    // Trim trailing nullptrs
+    positional.erase(std::find_if(positional.rbegin(), positional.rend(), [](const UniValue* ptr) {
+        return ptr;
+    }).base(), positional.end());
 }

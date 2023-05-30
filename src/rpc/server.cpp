@@ -389,114 +389,13 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
 }
 
 /**
- * Process named arguments into a vector of positional arguments, based on the
+ * Process named arguments into a map of named parameters and a vector of positional arguments, based on the
  * passed-in specification for the RPC call's arguments.
  */
 static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const std::vector<std::pair<std::string, bool>>& argNames)
 {
-    if (!in.params.received.isObject()) {
-        return in;
-    }
-
     JSONRPCRequest out = in;
-    out.params.received = UniValue(UniValue::VARR);
-    // Build a map of parameters, and remove ones that have been processed, so that we can throw a focused error if
-    // there is an unknown one.
-    const std::vector<std::string>& keys = in.params.received.getKeys();
-    const std::vector<UniValue>& values = in.params.received.getValues();
-    std::unordered_map<std::string, const UniValue*> argsIn;
-    for (size_t i=0; i<keys.size(); ++i) {
-        auto [_, inserted] = argsIn.emplace(keys[i], &values[i]);
-        if (!inserted) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + keys[i] + " specified multiple times");
-        }
-    }
-    // Process expected parameters. If any parameters were left unspecified in
-    // the request before a parameter that was specified, null values need to be
-    // inserted at the unspecified parameter positions, and the "hole" variable
-    // below tracks the number of null values that need to be inserted.
-    // The "initial_hole_size" variable stores the size of the initial hole,
-    // i.e. how many initial positional arguments were left unspecified. This is
-    // used after the for-loop to add initial positional arguments from the
-    // "args" parameter, if present.
-    int hole = 0;
-    int initial_hole_size = 0;
-    const std::string* initial_param = nullptr;
-    UniValue options{UniValue::VOBJ};
-    for (const auto& [argNamePattern, named_only]: argNames) {
-        std::vector<std::string> vargNames = SplitString(argNamePattern, '|');
-        auto fr = argsIn.end();
-        for (const std::string & argName : vargNames) {
-            fr = argsIn.find(argName);
-            if (fr != argsIn.end()) {
-                break;
-            }
-        }
-
-        // Handle named-only parameters by pushing them into a temporary options
-        // object, and then pushing the accumulated options as the next
-        // positional argument.
-        if (named_only) {
-            if (fr != argsIn.end()) {
-                if (options.exists(fr->first)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " specified multiple times");
-                }
-                options.pushKVEnd(fr->first, *fr->second);
-                argsIn.erase(fr);
-            }
-            continue;
-        }
-
-        if (!options.empty() || fr != argsIn.end()) {
-            for (int i = 0; i < hole; ++i) {
-                // Fill hole between specified parameters with JSON nulls,
-                // but not at the end (for backwards compatibility with calls
-                // that act based on number of specified parameters).
-                out.params.received.push_back(UniValue());
-            }
-            hole = 0;
-            if (!initial_param) initial_param = &argNamePattern;
-        } else {
-            hole += 1;
-            if (out.params.received.empty()) initial_hole_size = hole;
-        }
-
-        // If named input parameter "fr" is present, push it onto out.params. If
-        // options are present, push them onto out.params. If both are present,
-        // throw an error.
-        if (fr != argsIn.end()) {
-            if (!options.empty()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " conflicts with parameter " + options.getKeys().front());
-            }
-            out.params.received.push_back(*fr->second);
-            argsIn.erase(fr);
-        }
-        if (!options.empty()) {
-            out.params.received.push_back(std::move(options));
-            options = UniValue{UniValue::VOBJ};
-        }
-    }
-    // If leftover "args" param was found, use it as a source of positional
-    // arguments and add named arguments after. This is a convenience for
-    // clients that want to pass a combination of named and positional
-    // arguments as described in doc/JSON-RPC-interface.md#parameter-passing
-    auto positional_args{argsIn.extract("args")};
-    if (positional_args && positional_args.mapped()->isArray()) {
-        if (initial_hole_size < (int)positional_args.mapped()->size() && initial_param) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + *initial_param + " specified twice both as positional and named argument");
-        }
-        // Assign positional_args to out.params.received and append named_args after.
-        UniValue named_args{std::move(out.params.received)};
-        out.params.received = *positional_args.mapped();
-        for (size_t i{out.params.received.size()}; i < named_args.size(); ++i) {
-            out.params.received.push_back(named_args[i]);
-        }
-    }
-    // If there are still arguments in the argsIn map, this is an error.
-    if (!argsIn.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown named parameter " + argsIn.begin()->first);
-    }
-    // Return request with named arguments transformed to positional arguments
+    out.params.ProcessParameters(argNames);
     return out;
 }
 

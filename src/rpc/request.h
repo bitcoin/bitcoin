@@ -8,6 +8,7 @@
 
 #include <any>
 #include <string>
+#include <unordered_map>
 
 #include <univalue.h>
 
@@ -33,10 +34,22 @@ public:
     public:
         /** The parameters as received */
         UniValue received;
+        /** When processing the parameters, we may construct new UniValue objects which we will store here */
+        std::vector<UniValue> constructed;
+        /** Parameter name to parameter. Only provided parameters will be present. */
+        std::unordered_map<std::string, const UniValue*> named;
+        /** Parameter position to parameter.
+         * Parameters not provided at all (neither named nor positional) will be stored as nullptr,
+         * with the exception of trailing parameters (i.e. this vector never ends with nullptrs)
+         * to preserve backwards compatibility that act based on the number of specified parameters. */
+        std::vector<const UniValue*> positional;
 
-        /** Retrieve a parameter by its name */
+        /** Process the received parameters into named and positional mappings */
+        void ProcessParameters(const std::vector<std::pair<std::string, bool>>& argNames);
+
+        /** Retrieve a parameter by its name. Unknown parameters are returned as NullUniValue. */
         const UniValue& operator[](const std::string& key) const;
-        /** Retrieve a parameter by its position */
+        /** Retrieve a parameter by its position. Out of bound parameters are returned as NullUniValue */
         const UniValue& operator[](size_t pos) const;
 
         /** The number of parameters received */
