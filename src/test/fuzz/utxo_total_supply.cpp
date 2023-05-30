@@ -119,7 +119,9 @@ FUZZ_TARGET(utxo_total_supply)
     current_block = PrepareNextBlock();
     StoreLastTxo();
 
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 100'000)
+    // Limit to avoid timeout, but enough to cover duplicate_coinbase_height
+    // and CVE-2018-17144.
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 2'000)
     {
         CallOneOf(
             fuzzed_data_provider,
@@ -142,14 +144,14 @@ FUZZ_TARGET(utxo_total_supply)
                 node::RegenerateCommitments(*current_block, chainman);
                 const bool was_valid = !MineBlock(node, current_block).IsNull();
 
+                if (duplicate_coinbase_height == ActiveHeight()) {
+                    // we mined the duplicate coinbase
+                    assert(current_block->vtx.at(0)->vin.at(0).scriptSig == duplicate_coinbase_script);
+                }
+
                 const auto prev_utxo_stats = utxo_stats;
                 if (was_valid) {
                     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
-
-                    if (duplicate_coinbase_height == ActiveHeight()) {
-                        // we mined the duplicate coinbase
-                        assert(current_block->vtx.at(0)->vin.at(0).scriptSig == duplicate_coinbase_script);
-                    }
                 }
 
                 UpdateUtxoStats();
