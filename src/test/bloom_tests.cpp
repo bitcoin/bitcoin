@@ -5,6 +5,7 @@
 #include <common/bloom.h>
 
 #include <clientversion.h>
+#include <common/system.h>
 #include <key.h>
 #include <key_io.h>
 #include <merkleblock.h>
@@ -16,7 +17,6 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <vector>
 

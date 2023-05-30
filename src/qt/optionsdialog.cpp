@@ -15,11 +15,11 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
+#include <common/system.h>
 #include <interfaces/node.h>
-#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
-#include <txdb.h> // for -dbcache defaults
-#include <util/system.h>
+#include <txdb.h>
+#include <validation.h>
 
 #include <chrono>
 

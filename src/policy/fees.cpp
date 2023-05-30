@@ -6,6 +6,7 @@
 #include <policy/fees.h>
 
 #include <clientversion.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
@@ -19,7 +20,6 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/serfloat.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <algorithm>

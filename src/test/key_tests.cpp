@@ -4,6 +4,7 @@
 
 #include <key.h>
 
+#include <common/system.h>
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/random.h>
@@ -11,7 +12,6 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 
 #include <string>
 #include <vector>

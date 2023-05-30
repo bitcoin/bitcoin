@@ -11,8 +11,8 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
-#include <util/system.h>
 #include <util/check.h>
+#include <util/insert.h>
 #include <util/result.h>
 
 #include <optional>
