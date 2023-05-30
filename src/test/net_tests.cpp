@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     CNetAddr addr;
 
     // IPv4, INADDR_ANY
-    BOOST_REQUIRE(LookupHost("0.0.0.0", addr, false));
+    addr = LookupHost("0.0.0.0", false).value();
     BOOST_REQUIRE(!addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv4());
 
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK_EQUAL(addr.ToStringAddr(), "0.0.0.0");
 
     // IPv4, INADDR_NONE
-    BOOST_REQUIRE(LookupHost("255.255.255.255", addr, false));
+    addr = LookupHost("255.255.255.255", false).value();
     BOOST_REQUIRE(!addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv4());
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK_EQUAL(addr.ToStringAddr(), "255.255.255.255");
 
     // IPv4, casual
-    BOOST_REQUIRE(LookupHost("12.34.56.78", addr, false));
+    addr = LookupHost("12.34.56.78", false).value();
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv4());
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK_EQUAL(addr.ToStringAddr(), "12.34.56.78");
 
     // IPv6, in6addr_any
-    BOOST_REQUIRE(LookupHost("::", addr, false));
+    addr = LookupHost("::", false).value();
     BOOST_REQUIRE(!addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv6());
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK_EQUAL(addr.ToStringAddr(), "::");
 
     // IPv6, casual
-    BOOST_REQUIRE(LookupHost("1122:3344:5566:7788:9900:aabb:ccdd:eeff", addr, false));
+    addr = LookupHost("1122:3344:5566:7788:9900:aabb:ccdd:eeff", false).value();
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv6());
 
@@ -186,14 +186,14 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     // id of "32", return the address as "fe80::1%32".
     const std::string link_local{"fe80::1"};
     const std::string scoped_addr{link_local + "%32"};
-    BOOST_REQUIRE(LookupHost(scoped_addr, addr, false));
+    addr = LookupHost(scoped_addr, false).value();
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv6());
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK_EQUAL(addr.ToStringAddr(), scoped_addr);
 
     // Test that the delimiter "%" and default zone id of 0 can be omitted for the default scope.
-    BOOST_REQUIRE(LookupHost(link_local + "%0", addr, false));
+    addr = LookupHost(link_local + "%0", false).value();
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv6());
     BOOST_CHECK(!addr.IsBindAny());
@@ -318,10 +318,9 @@ BOOST_AUTO_TEST_CASE(cnetaddr_tostring_canonical_ipv6)
         {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AaAa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
     };
     for (const auto& [input_address, expected_canonical_representation_output] : canonical_representations_ipv6) {
-        CNetAddr net_addr;
-        BOOST_REQUIRE(LookupHost(input_address, net_addr, false));
-        BOOST_REQUIRE(net_addr.IsIPv6());
-        BOOST_CHECK_EQUAL(net_addr.ToStringAddr(), expected_canonical_representation_output);
+        const std::optional<CNetAddr> net_addr{LookupHost(input_address, false)};
+        BOOST_REQUIRE(net_addr.value().IsIPv6());
+        BOOST_CHECK_EQUAL(net_addr.value().ToStringAddr(), expected_canonical_representation_output);
     }
 }
 
@@ -334,12 +333,12 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
     BOOST_CHECK_EQUAL(HexStr(s), "00000000000000000000000000000000");
     s.clear();
 
-    BOOST_REQUIRE(LookupHost("1.2.3.4", addr, false));
+    addr = LookupHost("1.2.3.4", false).value();
     s << addr;
     BOOST_CHECK_EQUAL(HexStr(s), "00000000000000000000ffff01020304");
     s.clear();
 
-    BOOST_REQUIRE(LookupHost("1a1b:2a2b:3a3b:4a4b:5a5b:6a6b:7a7b:8a8b", addr, false));
+    addr = LookupHost("1a1b:2a2b:3a3b:4a4b:5a5b:6a6b:7a7b:8a8b", false).value();
     s << addr;
     BOOST_CHECK_EQUAL(HexStr(s), "1a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
     s.clear();
@@ -370,12 +369,12 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v2)
     BOOST_CHECK_EQUAL(HexStr(s), "021000000000000000000000000000000000");
     s.clear();
 
-    BOOST_REQUIRE(LookupHost("1.2.3.4", addr, false));
+    addr = LookupHost("1.2.3.4", false).value();
     s << addr;
     BOOST_CHECK_EQUAL(HexStr(s), "010401020304");
     s.clear();
 
-    BOOST_REQUIRE(LookupHost("1a1b:2a2b:3a3b:4a4b:5a5b:6a6b:7a7b:8a8b", addr, false));
+    addr = LookupHost("1a1b:2a2b:3a3b:4a4b:5a5b:6a6b:7a7b:8a8b", false).value();
     s << addr;
     BOOST_CHECK_EQUAL(HexStr(s), "02101a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
     s.clear();
