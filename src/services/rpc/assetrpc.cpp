@@ -14,7 +14,6 @@
 #include <policy/policy.h>
 #include <index/txindex.h>
 #include <core_io.h>
-#include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <node/transaction.h>

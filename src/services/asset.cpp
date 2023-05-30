@@ -9,7 +9,6 @@
 #include <dbwrapper.h>
 #include <rpc/util.h>
 #include <univalue.h>
-#include <util/system.h>
 #include <key_io.h>
 #include <core_io.h>
 std::unordered_map<uint32_t, uint8_t> mapAssetPrecision;

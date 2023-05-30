@@ -13,7 +13,6 @@
 #include <array>
 #include <mutex>
 // SYSCOIN
-#include <util/system.h>
 #include <optional>
 #include <common/args.h>
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";

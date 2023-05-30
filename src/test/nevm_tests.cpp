@@ -13,7 +13,6 @@
 #include <services/asset.h>
 #include <univalue.h>
 #include <key_io.h>
-#include <util/system.h>
 #include <test/util/setup_common.h>
 #include <test/util/json.h>
 
