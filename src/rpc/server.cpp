@@ -392,8 +392,12 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
  * Process named arguments into a vector of positional arguments, based on the
  * passed-in specification for the RPC call's arguments.
  */
-static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, const std::vector<std::pair<std::string, bool>>& argNames)
+static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const std::vector<std::pair<std::string, bool>>& argNames)
 {
+    if (!in.params.isObject()) {
+        return in;
+    }
+
     JSONRPCRequest out = in;
     out.params = UniValue(UniValue::VARR);
     // Build a map of parameters, and remove ones that have been processed, so that we can throw a focused error if
@@ -531,11 +535,7 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
     try {
         RPCCommandExecution execution(request.strMethod);
         // Execute, convert arguments to array if necessary
-        if (request.params.isObject()) {
-            return command.actor(transformNamedArguments(request, command.argNames), result, last_handler);
-        } else {
-            return command.actor(request, result, last_handler);
-        }
+        return command.actor(transformArguments(request, command.argNames), result, last_handler);
     } catch (const UniValue::type_error& e) {
         throw JSONRPCError(RPC_TYPE_ERROR, e.what());
     } catch (const std::exception& e) {
