@@ -105,7 +105,7 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Wallet info\n===========\n");
     tfm::format(std::cout, "Name: %s\n", wallet_instance->GetName());
     tfm::format(std::cout, "Format: %s\n", wallet_instance->GetDatabase().Format());
-    tfm::format(std::cout, "Descriptors: %s\n", wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) ? "yes" : "no");
+    tfm::format(std::cout, "BLSCT: %s\n", wallet_instance->IsWalletFlagSet(WALLET_FLAG_BLSCT) ? "yes" : "no");
     tfm::format(std::cout, "Encrypted: %s\n", wallet_instance->IsCrypted() ? "yes" : "no");
     tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->IsHDEnabled() ? "yes" : "no");
     tfm::format(std::cout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
@@ -144,18 +144,25 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         options.require_create = true;
         // If -legacy is set, use it. Otherwise default to false.
         bool make_legacy = args.GetBoolArg("-legacy", false);
-        // If neither -legacy nor -descriptors is set, default to true. If -descriptors is set, use its value.
-        bool make_descriptors = (!args.IsArgSet("-descriptors") && !args.IsArgSet("-legacy")) || (args.IsArgSet("-descriptors") && args.GetBoolArg("-descriptors", true));
-        if (make_legacy && make_descriptors) {
-            tfm::format(std::cerr, "Only one of -legacy or -descriptors can be set to true, not both\n");
+        // If -blsct is set, use it. Otherwise default to false.
+        bool make_blsct = args.GetBoolArg("-blsct", false);
+        // If neither -legacy, -blsct nor -descriptors is set, default to true. If -descriptors is set, use its value.
+        bool make_descriptors = (!args.IsArgSet("-descriptors") && !args.IsArgSet("-legacy") && !args.IsArgSet("-blsct")) || (args.IsArgSet("-descriptors") && args.GetBoolArg("-descriptors", true));
+        if (make_legacy + make_descriptors + make_blsct > 1) {
+            tfm::format(std::cerr, "Only one of -legacy, -blsct or -descriptors can be set to true, not both\n");
             return false;
         }
-        if (!make_legacy && !make_descriptors) {
-            tfm::format(std::cerr, "One of -legacy or -descriptors must be set to true (or omitted)\n");
+        if (!make_legacy && !make_descriptors && !make_blsct) {
+            tfm::format(std::cerr, "One of -legacy, -blsct or -descriptors must be set to true (or omitted)\n");
             return false;
         }
         if (make_descriptors) {
             options.create_flags |= WALLET_FLAG_DESCRIPTORS;
+            options.require_format = DatabaseFormat::SQLITE;
+        }
+
+        if (make_blsct) {
+            options.create_flags |= WALLET_FLAG_BLSCT;
             options.require_format = DatabaseFormat::SQLITE;
         }
 

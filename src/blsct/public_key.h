@@ -36,11 +36,14 @@ public:
     std::string ToString() const;
 
     bool operator==(const PublicKey& rhs) const;
+    bool operator!=(const PublicKey& rhs) const;
 
     bool IsValid() const;
 
     bool GetG1Point(Point& ret) const;
     std::vector<unsigned char> GetVch() const;
+
+    bool operator<(const PublicKey& b) const { return this->GetVch() < b.GetVch(); };
 
     blsPublicKey ToBlsPublicKey() const;
     std::vector<uint8_t> AugmentMessage(const Message& msg) const;

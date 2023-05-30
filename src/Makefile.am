@@ -183,6 +183,10 @@ BITCOIN_CORE_H = \
   blsct/set_mem_proof/set_mem_proof.h \
   blsct/set_mem_proof/set_mem_proof_prover.h \
   blsct/signature.h \
+  blsct/wallet/address.h \
+  blsct/wallet/hdchain.h \
+  blsct/wallet/keyman.h \
+  blsct/wallet/keyring.h \
   dandelion.h \
   chain.h \
   chainparams.h \
@@ -556,6 +560,12 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(BDB_CPPFLAGS) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/wallet/address.cpp \
+  blsct/wallet/keyman.cpp \
+  blsct/wallet/keyring.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \
@@ -736,6 +746,8 @@ libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
   blsct/arith/elements.cpp \
+  blsct/double_public_key.cpp \
+  blsct/public_key.cpp \
   chainparams.cpp \
   coins.cpp \
   common/args.cpp \

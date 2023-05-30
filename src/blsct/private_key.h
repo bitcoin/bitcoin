@@ -25,11 +25,21 @@ private:
 public:
     static constexpr size_t SIZE = 32;
 
-    PrivateKey() { k.clear(); }
+    PrivateKey() { k.resize(SIZE); }
     PrivateKey(Scalar k_);
     PrivateKey(CPrivKey k_);
 
-    SERIALIZE_METHODS(PrivateKey, obj) { READWRITE(std::vector<unsigned char>(obj.k.begin(), obj.k.end())); }
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s.write(MakeByteSpan(k));
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s.read(MakeWritableByteSpan(k));
+    }
 
     bool operator==(const PrivateKey& rhs) const;
 
@@ -38,6 +48,7 @@ public:
     Scalar GetScalar() const;
     bool IsValid() const;
     void SetToZero();
+    bool VerifyPubKey(const PublicKey& pk) const;
 
     // Basic scheme
     Signature SignBalance() const;
@@ -48,8 +59,11 @@ public:
     // Core operations
     Signature CoreSign(const Message& msg) const;
 
-    friend class CCryptoKeyStore;
-    friend class CBasicKeyStore;
+    //! Simple read-only vector-like interface.
+    unsigned int size() const { return (IsValid() ? k.size() : 0); }
+    const std::byte* data() const { return reinterpret_cast<const std::byte*>(k.data()); }
+    const unsigned char* begin() const { return k.data(); }
+    const unsigned char* end() const { return k.data() + size(); }
 };
 
 }

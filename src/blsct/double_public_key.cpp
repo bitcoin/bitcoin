@@ -6,9 +6,25 @@
 
 namespace blsct {
 
+DoublePublicKey::DoublePublicKey(const std::vector<unsigned char>& keys) {
+    if (keys.size() != SIZE) return;
+    std::vector<unsigned char> vkData(SIZE/2);
+    std::vector<unsigned char> skData(SIZE/2);
+    std::copy(keys.begin(), keys.begin()+SIZE/2, vkData.begin());
+    std::copy(keys.begin()+SIZE/2, keys.end(), skData.begin());
+    vk = vkData;
+    sk = skData;
+}
+
 CKeyID DoublePublicKey::GetID() const
 {
     return CKeyID(Hash160(GetVch()));
+}
+
+bool DoublePublicKey::GetViewKey(PublicKey& ret) const
+{
+    ret = vk;
+    return true;
 }
 
 bool DoublePublicKey::GetViewKey(Point& ret) const
@@ -19,6 +35,12 @@ bool DoublePublicKey::GetViewKey(Point& ret) const
         return false;
     }
 
+    return true;
+}
+
+bool DoublePublicKey::GetSpendKey(PublicKey& ret) const
+{
+    ret = sk;
     return true;
 }
 
@@ -37,6 +59,12 @@ bool DoublePublicKey::operator==(const DoublePublicKey& rhs) const
 {
     return vk == rhs.vk && sk == rhs.sk;
 }
+
+bool DoublePublicKey::operator<(const DoublePublicKey& rhs) const
+{
+    return this->GetVkVch() == rhs.GetVkVch() ? this->GetSkVch() < rhs.GetSkVch() : this->GetVkVch() < rhs.GetVkVch();
+};
+
 
 bool DoublePublicKey::IsValid() const
 {

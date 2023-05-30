@@ -10,9 +10,6 @@ namespace blsct {
 
 PrivateKey::PrivateKey(Scalar k_)
 {
-    if (k_.IsZero()) {
-        throw std::runtime_error("Private key needs to be a non-zero scalar");
-    }
     k.resize(PrivateKey::SIZE);
     std::vector<unsigned char> v = k_.GetVch();
     memcpy(k.data(), &v.front(), k.size());
@@ -36,12 +33,14 @@ PrivateKey::Point PrivateKey::GetPoint() const
 
 PublicKey PrivateKey::GetPublicKey() const
 {
-    return PublicKey(GetPoint());
+    auto point = GetPoint();
+    return point;
 }
 
 PrivateKey::Scalar PrivateKey::GetScalar() const
 {
-    return Scalar(std::vector<unsigned char>(k.begin(), k.end()));
+    auto ret = std::vector<unsigned char>(k.begin(), k.end());
+    return ret;
 }
 
 bool PrivateKey::IsValid() const
@@ -76,6 +75,10 @@ Signature PrivateKey::Sign(const Message& msg) const
     auto aug_msg = pk.AugmentMessage(msg);
     auto sig = CoreSign(aug_msg);
     return sig;
+}
+
+bool PrivateKey::VerifyPubKey(const PublicKey& pk) const {
+    return GetPublicKey() == pk;
 }
 
 }  // namespace blsct

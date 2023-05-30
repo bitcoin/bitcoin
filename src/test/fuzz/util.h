@@ -159,6 +159,19 @@ template <typename WeakEnumType, size_t size>
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
+[[nodiscard]] inline MclScalar ConsumeMclScalar(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const std::vector<uint8_t> vscalar = fuzzed_data_provider.ConsumeBytes<uint8_t>(256 / 8);
+    if (vscalar.size() != 256 / 8) {
+        return {};
+    }
+    auto ret = MclScalar{vscalar};
+    if (ret.IsZero()) {
+        return {};
+    }
+    return ret;
+}
+
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <typename T>

@@ -295,6 +295,15 @@ public:
         return obj;
     }
 
+    UniValue operator()(const blsct::DoublePublicKey& pk) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isblsct", true);
+        obj.pushKV("spendKey", HexStr(pk.GetSkVch()));
+        obj.pushKV("viewKey", HexStr(pk.GetVkVch()));
+        return obj;
+    }
+
     UniValue operator()(const WitnessUnknown& id) const
     {
         UniValue obj(UniValue::VOBJ);

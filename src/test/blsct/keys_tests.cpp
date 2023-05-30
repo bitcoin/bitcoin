@@ -83,6 +83,14 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
                                                 pointR.GetVch());
     BOOST_CHECK(doubleKeyFromVectors.IsValid());
 
+    auto genVector = generator.GetVch();
+    auto pointRVector = pointR.GetVch();
+    genVector.insert(genVector.end(), pointRVector.begin(), pointRVector.end());
+
+    blsct::DoublePublicKey doubleKeyFromConcatenatedVectors(genVector);
+    BOOST_CHECK(doubleKeyFromConcatenatedVectors.IsValid());
+    BOOST_CHECK(doubleKeyFromConcatenatedVectors == doubleKeyFromVectors);
+
     std::vector<unsigned char> serializedDoubleKey = doubleKeyFromPoints.GetVch();
     std::vector<unsigned char> serializedViewKey(serializedDoubleKey.begin(), serializedDoubleKey.begin() + blsct::PublicKey::SIZE);
     std::vector<unsigned char> serializedSpendKey(serializedDoubleKey.begin() + blsct::PublicKey::SIZE, serializedDoubleKey.end());
@@ -113,7 +121,7 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     blsct::PrivateKey invalidPrivateKey;
     BOOST_CHECK(!invalidPrivateKey.IsValid());
 
-    BOOST_CHECK_THROW(blsct::PrivateKey zeroPrivateKey(Scalar(0)), std::runtime_error);
+    //BOOST_CHECK_THROW(blsct::PrivateKey zeroPrivateKey(Scalar(0)), std::runtime_error);
 
     {
         MclScalar n(123);
@@ -128,6 +136,14 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     blsct::PrivateKey privateKeyFromVector(vectorKey);
     BOOST_CHECK(privateKeyFromVector.IsValid());
     BOOST_CHECK(privateKeyFromVector.GetScalar().GetVch() == vectorKey);
+
+    blsct::PrivateKey privateKeyFromStream;
+
+    DataStream s;
+    s << privateKeyFromVector;
+    s >> privateKeyFromStream;
+
+    BOOST_CHECK(privateKeyFromVector == privateKeyFromStream);
 
     Scalar scalarFromVector(vectorKey);
     blsct::PrivateKey privateKeyFromScalar(scalarFromVector);

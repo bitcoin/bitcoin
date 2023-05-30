@@ -328,6 +328,11 @@ public:
     {
         return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
     }
+
+    CScript operator()(const blsct::DoublePublicKey& pk) const
+    {
+        return CScript() << OP_1;
+    }
 };
 } // namespace
 

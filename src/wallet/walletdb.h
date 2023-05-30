@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
+#include <blsct/wallet/hdchain.h>
 #include <script/sign.h>
 #include <script/standard.h>
 #include <wallet/db.h>
@@ -63,6 +64,10 @@ extern const std::string ACTIVEEXTERNALSPK;
 extern const std::string ACTIVEINTERNALSPK;
 extern const std::string BESTBLOCK;
 extern const std::string BESTBLOCK_NOMERKLE;
+extern const std::string BLSCTHDCHAIN;
+extern const std::string BLSCTKEY;
+extern const std::string BLSCTKEYMETA;
+extern const std::string CRYPTED_BLSCTKEY;
 extern const std::string CRYPTED_KEY;
 extern const std::string CSCRIPT;
 extern const std::string DEFAULTKEY;
@@ -80,8 +85,10 @@ extern const std::string ORDERPOSNEXT;
 extern const std::string POOL;
 extern const std::string PURPOSE;
 extern const std::string SETTINGS;
+extern const std::string SPENDKEY;
 extern const std::string TX;
 extern const std::string VERSION;
+extern const std::string VIEWKEY;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
@@ -90,6 +97,8 @@ extern const std::string WATCHS;
 
 // Keys in this set pertain only to the legacy wallet (LegacyScriptPubKeyMan) and are removed during migration from legacy to descriptors.
 extern const std::unordered_set<std::string> LEGACY_TYPES;
+extern const std::unordered_set<std::string> BLSCT_TYPES;
+extern const std::unordered_set<std::string> BLSCTKEY_TYPES;
 } // namespace DBKeys
 
 /* simple HD chain data model */
@@ -238,6 +247,12 @@ public:
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
+    bool WriteKeyMetadata(const CKeyMetadata& meta, const blsct::PublicKey& pubkey, const bool overwrite);
+    bool WriteKey(const blsct::PublicKey& vchPubKey, const blsct::PrivateKey& vchPrivKey, const CKeyMetadata &keyMeta);
+    bool WriteCryptedKey(const blsct::PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
+    bool WriteViewKey(const blsct::PublicKey& pubKey, const blsct::PrivateKey& privKey, const CKeyMetadata& keyMeta);
+    bool WriteSpendKey(const blsct::PublicKey& pubKey);
+
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
@@ -281,6 +296,7 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+    bool WriteBLSCTHDChain(const blsct::HDChain& chain);
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);

@@ -24,6 +24,16 @@ private:
 public:
     explicit DestinationEncoder(const CChainParams& params) : m_params(params) {}
 
+    std::string operator()(const blsct::DoublePublicKey& id) const
+    {
+        std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
+        auto vchView = id.GetVkVch();
+        auto vchSpend = id.GetSkVch();
+        data.insert(data.end(), vchView.begin(), vchView.end());
+        data.insert(data.end(), vchSpend.begin(), vchSpend.end());
+        return EncodeBase58Check(data);
+    }
+
     std::string operator()(const PKHash& id) const
     {
         std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
@@ -114,7 +124,16 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         return CNoDestination();
     } else if (!is_bech32) {
         // Try Base58 decoding without the checksum, using a much larger max length
-        if (!DecodeBase58(str, data, 100)) {
+        if (DecodeBase58Check(str, data, 100)) {
+            // base58-encoded BLSCT addresses.
+            const std::vector<unsigned char>& blsct_prefix = params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
+            std::vector<unsigned char> blsctKeysData;
+            blsctKeysData.resize(2*blsct::PublicKey::SIZE);
+            if (data.size() == blsctKeysData.size() + blsct_prefix.size() && std::equal(blsct_prefix.begin(), blsct_prefix.end(), data.begin())) {
+                std::copy(data.begin() + blsct_prefix.size(), data.end(), blsctKeysData.begin());
+                return blsct::DoublePublicKey(blsctKeysData);
+            }
+        } if (!DecodeBase58(str, data, 100)) {
             error_str = "Invalid or unsupported Segwit (Bech32) or Base58 encoding.";
         } else {
             error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";

@@ -24,8 +24,10 @@ public:
     static constexpr size_t SIZE = 48 * 2;
 
     DoublePublicKey() {}
+    DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
     DoublePublicKey(const Point& vk_, const Point& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
     DoublePublicKey(const std::vector<unsigned char>& vk_, const std::vector<unsigned char>& sk_) : vk(vk_), sk(sk_) {}
+    DoublePublicKey(const std::vector<unsigned char>& keys);
 
     SERIALIZE_METHODS(DoublePublicKey, obj) { READWRITE(obj.vk.GetVch(), obj.sk.GetVch()); }
 
@@ -35,7 +37,11 @@ public:
     bool GetViewKey(Point& ret) const;
     bool GetSpendKey(Point& ret) const;
 
+    bool GetViewKey(PublicKey& ret) const;
+    bool GetSpendKey(PublicKey& ret) const;
+
     bool operator==(const DoublePublicKey& rhs) const;
+    bool operator<(const DoublePublicKey& rhs) const;
 
     bool IsValid() const;
 

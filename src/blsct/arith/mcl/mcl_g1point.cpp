@@ -172,8 +172,9 @@ std::vector<uint8_t> MclG1Point::GetVch() const
 {
     std::vector<uint8_t> b(SERIALIZATION_SIZE);
     if (mclBnG1_serialize(&b[0], SERIALIZATION_SIZE, &m_p) == 0) {
-        MclG1Point ret;
-        return ret.GetVch();
+        MclG1Point unity;
+        auto ret = unity.GetVch();
+        return ret;
     }
     return b;
 }

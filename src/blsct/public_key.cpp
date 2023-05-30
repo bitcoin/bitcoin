@@ -43,6 +43,11 @@ bool PublicKey::operator==(const PublicKey& rhs) const
     return GetVch() == rhs.GetVch();
 }
 
+bool PublicKey::operator!=(const PublicKey& rhs) const
+{
+    return GetVch() != rhs.GetVch();
+}
+
 bool PublicKey::IsValid() const
 {
     if (data.size() == 0) return false;
