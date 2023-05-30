@@ -93,7 +93,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
     JSONRPCRequest jreq = helpreq;
     jreq.mode = JSONRPCRequest::GET_HELP;
-    jreq.params = UniValue();
+    jreq.params.received = UniValue();
 
     for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
     {
@@ -394,16 +394,16 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
  */
 static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const std::vector<std::pair<std::string, bool>>& argNames)
 {
-    if (!in.params.isObject()) {
+    if (!in.params.received.isObject()) {
         return in;
     }
 
     JSONRPCRequest out = in;
-    out.params = UniValue(UniValue::VARR);
+    out.params.received = UniValue(UniValue::VARR);
     // Build a map of parameters, and remove ones that have been processed, so that we can throw a focused error if
     // there is an unknown one.
-    const std::vector<std::string>& keys = in.params.getKeys();
-    const std::vector<UniValue>& values = in.params.getValues();
+    const std::vector<std::string>& keys = in.params.received.getKeys();
+    const std::vector<UniValue>& values = in.params.received.getValues();
     std::unordered_map<std::string, const UniValue*> argsIn;
     for (size_t i=0; i<keys.size(); ++i) {
         auto [_, inserted] = argsIn.emplace(keys[i], &values[i]);
@@ -452,13 +452,13 @@ static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const 
                 // Fill hole between specified parameters with JSON nulls,
                 // but not at the end (for backwards compatibility with calls
                 // that act based on number of specified parameters).
-                out.params.push_back(UniValue());
+                out.params.received.push_back(UniValue());
             }
             hole = 0;
             if (!initial_param) initial_param = &argNamePattern;
         } else {
             hole += 1;
-            if (out.params.empty()) initial_hole_size = hole;
+            if (out.params.received.empty()) initial_hole_size = hole;
         }
 
         // If named input parameter "fr" is present, push it onto out.params. If
@@ -468,11 +468,11 @@ static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const 
             if (!options.empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " conflicts with parameter " + options.getKeys().front());
             }
-            out.params.push_back(*fr->second);
+            out.params.received.push_back(*fr->second);
             argsIn.erase(fr);
         }
         if (!options.empty()) {
-            out.params.push_back(std::move(options));
+            out.params.received.push_back(std::move(options));
             options = UniValue{UniValue::VOBJ};
         }
     }
@@ -485,11 +485,11 @@ static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const 
         if (initial_hole_size < (int)positional_args.mapped()->size() && initial_param) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + *initial_param + " specified twice both as positional and named argument");
         }
-        // Assign positional_args to out.params and append named_args after.
-        UniValue named_args{std::move(out.params)};
-        out.params = *positional_args.mapped();
-        for (size_t i{out.params.size()}; i < named_args.size(); ++i) {
-            out.params.push_back(named_args[i]);
+        // Assign positional_args to out.params.received and append named_args after.
+        UniValue named_args{std::move(out.params.received)};
+        out.params.received = *positional_args.mapped();
+        for (size_t i{out.params.received.size()}; i < named_args.size(); ++i) {
+            out.params.received.push_back(named_args[i]);
         }
     }
     // If there are still arguments in the argsIn map, this is an error.

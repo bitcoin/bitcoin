@@ -11,6 +11,7 @@
 #include <logging.h>
 #include <random.h>
 #include <rpc/protocol.h>
+#include <util/check.h>
 #include <util/fs_helpers.h>
 #include <util/strencodings.h>
 
@@ -183,9 +184,31 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     // Parse params
     const UniValue& valParams{request.find_value("params")};
     if (valParams.isArray() || valParams.isObject())
-        params = valParams;
+        params.received = valParams;
     else if (valParams.isNull())
-        params = UniValue(UniValue::VARR);
+        params.received = UniValue(UniValue::VARR);
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
+}
+
+const UniValue& JSONRPCRequest::JSONRPCParameters::operator[](const std::string& key) const
+{
+    return received[key];
+}
+
+const UniValue& JSONRPCRequest::JSONRPCParameters::operator[](size_t pos) const
+{
+    return received[pos];
+}
+
+size_t JSONRPCRequest::JSONRPCParameters::size() const
+{
+    return received.size();
+}
+
+UniValue JSONRPCRequest::JSONRPCParameters::AsUniValueArray() const
+{
+    // The callers of this function will always have parameter objects that are arrays
+    Assert(received.isArray());
+    return received;
 }

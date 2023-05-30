@@ -29,7 +29,7 @@ static RPCHelpMan rpcNestedTest_rpc()
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            return request.params.write(0, 0);
+            return request.params.received.write(0, 0);
         },
     };
 }

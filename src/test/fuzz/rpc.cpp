@@ -48,7 +48,7 @@ struct RPCFuzzTestingSetup : public TestingSetup {
         request.context = &m_node;
         request.strMethod = rpc_method;
         try {
-            request.params = RPCConvertValues(rpc_method, arguments);
+            request.params.received = RPCConvertValues(rpc_method, arguments);
         } catch (const std::runtime_error&) {
             return;
         }

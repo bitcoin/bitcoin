@@ -292,7 +292,7 @@ static RPCHelpMan echo(const std::string& name)
         CHECK_NONFATAL(request.params[9].get_str() != "trigger_internal_bug");
     }
 
-    return request.params;
+    return request.params.AsUniValueArray();
 },
     };
 }

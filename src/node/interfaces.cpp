@@ -320,7 +320,7 @@ public:
     {
         JSONRPCRequest req;
         req.context = m_context;
-        req.params = params;
+        req.params.received = params;
         req.strMethod = command;
         req.URI = uri;
         return ::tableRPC.execute(req);

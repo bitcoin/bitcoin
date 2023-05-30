@@ -246,7 +246,7 @@ RPCHelpMan listreceivedbyaddress()
 
     LOCK(pwallet->cs_wallet);
 
-    return ListReceived(*pwallet, request.params, false, include_immature_coinbase);
+    return ListReceived(*pwallet, request.params.AsUniValueArray(), false, include_immature_coinbase);
 },
     };
 }
@@ -291,7 +291,7 @@ RPCHelpMan listreceivedbylabel()
 
     LOCK(pwallet->cs_wallet);
 
-    return ListReceived(*pwallet, request.params, true, include_immature_coinbase);
+    return ListReceived(*pwallet, request.params.AsUniValueArray(), true, include_immature_coinbase);
 },
     };
 }

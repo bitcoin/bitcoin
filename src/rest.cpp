@@ -586,7 +586,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
     case RESTResponseFormat::JSON: {
         JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
-        jsonRequest.params = UniValue(UniValue::VARR);
+        jsonRequest.params.received = UniValue(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo().HandleRequest(jsonRequest);
         std::string strJSON = chainInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -613,7 +613,7 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
     case RESTResponseFormat::JSON: {
         JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
-        jsonRequest.params = UniValue(UniValue::VARR);
+        jsonRequest.params.received = UniValue(UniValue::VARR);
 
         if (!hash_str.empty()) {
             uint256 hash;
@@ -627,7 +627,7 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
                 return RESTERR(req, HTTP_BAD_REQUEST, "Block not found");
             }
 
-            jsonRequest.params.push_back(hash_str);
+            jsonRequest.params.received.push_back(hash_str);
         }
 
         req->WriteHeader("Content-Type", "application/json");

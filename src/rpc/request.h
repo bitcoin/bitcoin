@@ -28,9 +28,27 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in);
 class JSONRPCRequest
 {
 public:
+    class JSONRPCParameters
+    {
+    public:
+        /** The parameters as received */
+        UniValue received;
+
+        /** Retrieve a parameter by its name */
+        const UniValue& operator[](const std::string& key) const;
+        /** Retrieve a parameter by its position */
+        const UniValue& operator[](size_t pos) const;
+
+        /** The number of parameters received */
+        size_t size() const;
+
+        /** Produce a UniValue array with each argument in its expected position */
+        UniValue AsUniValueArray() const;
+    };
+
     UniValue id;
     std::string strMethod;
-    UniValue params;
+    JSONRPCParameters params;
     enum Mode { EXECUTE, GET_HELP, GET_ARGS } mode = EXECUTE;
     std::string URI;
     std::string authUser;

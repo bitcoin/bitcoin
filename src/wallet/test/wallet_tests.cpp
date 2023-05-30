@@ -239,8 +239,8 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         keys.push_back(key);
         JSONRPCRequest request;
         request.context = &context;
-        request.params.setArray();
-        request.params.push_back(keys);
+        request.params.received.setArray();
+        request.params.received.push_back(keys);
 
         UniValue response = importmulti().HandleRequest(request);
         BOOST_CHECK_EQUAL(response.write(),
@@ -294,8 +294,8 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         }
         JSONRPCRequest request;
         request.context = &context;
-        request.params.setArray();
-        request.params.push_back(backup_file);
+        request.params.received.setArray();
+        request.params.received.push_back(backup_file);
 
         wallet::dumpwallet().HandleRequest(request);
         RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
@@ -312,8 +312,8 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         context.args = &m_args;
         JSONRPCRequest request;
         request.context = &context;
-        request.params.setArray();
-        request.params.push_back(backup_file);
+        request.params.received.setArray();
+        request.params.received.push_back(backup_file);
         AddWallet(context, wallet);
         LOCK(Assert(m_node.chainman)->GetMutex());
         wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
