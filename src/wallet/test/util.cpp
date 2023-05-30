@@ -9,6 +9,7 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <wallet/context.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
@@ -43,6 +44,36 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     assert(*result.last_scanned_height == cchain.Height());
     assert(result.last_failed_block.IsNull());
     return wallet;
+}
+
+std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
+{
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto wallet = CWallet::Create(context, "", std::move(database), create_flags, error, warnings);
+    NotifyWalletLoaded(context, wallet);
+    if (context.chain) {
+        wallet->postInitProcess();
+    }
+    return wallet;
+}
+
+std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
+{
+    DatabaseOptions options;
+    options.create_flags = WALLET_FLAG_DESCRIPTORS;
+    DatabaseStatus status;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto database = MakeWalletDatabase("", options, status, error);
+    return TestLoadWallet(std::move(database), context, options.create_flags);
+}
+
+void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
+{
+    SyncWithValidationInterfaceQueue();
+    wallet->m_chain_notifications_handler.reset();
+    UnloadWallet(std::move(wallet));
 }
 
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
