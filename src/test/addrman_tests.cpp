@@ -33,16 +33,16 @@ static int32_t GetCheckRatio(const NodeContext& node_ctx)
 
 static CNetAddr ResolveIP(const std::string& ip)
 {
-    CNetAddr addr;
-    BOOST_CHECK_MESSAGE(LookupHost(ip, addr, false), strprintf("failed to resolve: %s", ip));
-    return addr;
+    const std::optional<CNetAddr> addr{LookupHost(ip, false)};
+    BOOST_CHECK_MESSAGE(addr.has_value(), strprintf("failed to resolve: %s", ip));
+    return addr.value_or(CNetAddr{});
 }
 
 static CService ResolveService(const std::string& ip, uint16_t port = 0)
 {
-    CService serv;
-    BOOST_CHECK_MESSAGE(Lookup(ip, serv, port, false), strprintf("failed to resolve: %s:%i", ip, port));
-    return serv;
+    const std::optional<CService> serv{Lookup(ip, port, false)};
+    BOOST_CHECK_MESSAGE(serv.has_value(), strprintf("failed to resolve: %s:%i", ip, port));
+    return serv.value_or(CService{});
 }
 
 
@@ -948,18 +948,23 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 {
     AddrMan addrman{EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node)};
 
-    CService addr1, addr2, addr3;
-    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
-    BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
-    BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
-    BOOST_CHECK(Lookup("250.7.3.3"s, addr3, 9999, false));
-    BOOST_CHECK(!Lookup("250.7.3.3\0example.com"s, addr3, 9999, false));
+    std::optional<CService> addr1, addr2, addr3, addr4;
+    addr1 = Lookup("250.7.1.1", 8333, false);
+    BOOST_CHECK(addr1.has_value());
+    addr2 = Lookup("250.7.2.2", 9999, false);
+    BOOST_CHECK(addr2.has_value());
+    addr3 = Lookup("250.7.3.3", 9999, false);
+    BOOST_CHECK(addr3.has_value());
+    addr3 = Lookup("250.7.3.3"s, 9999, false);
+    BOOST_CHECK(addr3.has_value());
+    addr4 = Lookup("250.7.3.3\0example.com"s, 9999, false);
+    BOOST_CHECK(!addr4.has_value());
 
     // Add three addresses to new table.
-    CService source;
-    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
-    std::vector<CAddress> addresses{CAddress(addr1, NODE_NONE), CAddress(addr2, NODE_NONE), CAddress(addr3, NODE_NONE)};
-    BOOST_CHECK(addrman.Add(addresses, source));
+    const std::optional<CService> source{Lookup("252.5.1.1", 8333, false)};
+    BOOST_CHECK(source.has_value());
+    std::vector<CAddress> addresses{CAddress(addr1.value(), NODE_NONE), CAddress(addr2.value(), NODE_NONE), CAddress(addr3.value(), NODE_NONE)};
+    BOOST_CHECK(addrman.Add(addresses, source.value()));
     BOOST_CHECK(addrman.Size() == 3);
 
     // Test that the de-serialization does not throw an exception.
@@ -1004,12 +1009,12 @@ static CDataStream MakeCorruptPeersDat()
     int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
     s << nUBuckets;
 
-    CService serv;
-    BOOST_CHECK(Lookup("252.1.1.1", serv, 7777, false));
-    CAddress addr = CAddress(serv, NODE_NONE);
-    CNetAddr resolved;
-    BOOST_CHECK(LookupHost("252.2.2.2", resolved, false));
-    AddrInfo info = AddrInfo(addr, resolved);
+    const std::optional<CService> serv{Lookup("252.1.1.1", 7777, false)};
+    BOOST_REQUIRE(serv.has_value());
+    CAddress addr = CAddress(serv.value(), NODE_NONE);
+    std::optional<CNetAddr> resolved{LookupHost("252.2.2.2", false)};
+    BOOST_REQUIRE(resolved.has_value());
+    AddrInfo info = AddrInfo(addr, resolved.value());
     s << info;
 
     return s;

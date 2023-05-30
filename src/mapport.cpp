@@ -175,10 +175,10 @@ static bool ProcessUpnp()
                 LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
             } else {
                 if (externalIPAddress[0]) {
-                    CNetAddr resolved;
-                    if (LookupHost(externalIPAddress, resolved, false)) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToStringAddr());
-                        AddLocal(resolved, LOCAL_MAPPED);
+                    std::optional<CNetAddr> resolved{LookupHost(externalIPAddress, false)};
+                    if (resolved.has_value()) {
+                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved->ToStringAddr());
+                        AddLocal(resolved.value(), LOCAL_MAPPED);
                     }
                 } else {
                     LogPrintf("UPnP: GetExternalIPAddress failed.\n");

@@ -132,14 +132,9 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     return names;
 }
 
-static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+static std::vector<CNetAddr> LookupIntern(const std::string& name, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    vIP.clear();
-
-    if (!ContainsNoNUL(name)) {
-        return false;
-    }
-
+    if (!ContainsNoNUL(name)) return {};
     {
         CNetAddr addr;
         // From our perspective, onion addresses are not hostnames but rather
@@ -148,83 +143,65 @@ static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, un
         // getaddrinfo to decode them and it wouldn't make sense to resolve
         // them, we return a network address representing it instead. See
         // CNetAddr::SetSpecial(const std::string&) for more details.
-        if (addr.SetSpecial(name)) {
-            vIP.push_back(addr);
-            return true;
-        }
+        if (addr.SetSpecial(name)) return {addr};
     }
 
+    std::vector<CNetAddr> addresses;
+
     for (const CNetAddr& resolved : dns_lookup_function(name, fAllowLookup)) {
-        if (nMaxSolutions > 0 && vIP.size() >= nMaxSolutions) {
+        if (nMaxSolutions > 0 && addresses.size() >= nMaxSolutions) {
             break;
         }
         /* Never allow resolving to an internal address. Consider any such result invalid */
         if (!resolved.IsInternal()) {
-            vIP.push_back(resolved);
+            addresses.push_back(resolved);
         }
     }
 
-    return (vIP.size() > 0);
+    return addresses;
 }
 
-bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+std::vector<CNetAddr> LookupHost(const std::string& name, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ContainsNoNUL(name)) {
-        return false;
-    }
+    if (!ContainsNoNUL(name)) return {};
     std::string strHost = name;
-    if (strHost.empty())
-        return false;
+    if (strHost.empty()) return {};
     if (strHost.front() == '[' && strHost.back() == ']') {
         strHost = strHost.substr(1, strHost.size() - 2);
     }
 
-    return LookupIntern(strHost, vIP, nMaxSolutions, fAllowLookup, dns_lookup_function);
+    return LookupIntern(strHost, nMaxSolutions, fAllowLookup, dns_lookup_function);
 }
 
-bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+std::optional<CNetAddr> LookupHost(const std::string& name, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ContainsNoNUL(name)) {
-        return false;
-    }
-    std::vector<CNetAddr> vIP;
-    LookupHost(name, vIP, 1, fAllowLookup, dns_lookup_function);
-    if(vIP.empty())
-        return false;
-    addr = vIP.front();
-    return true;
+    const std::vector<CNetAddr> addresses{LookupHost(name, 1, fAllowLookup, dns_lookup_function)};
+    return addresses.empty() ? std::nullopt : std::make_optional(addresses.front());
 }
 
-bool Lookup(const std::string& name, std::vector<CService>& vAddr, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
+std::vector<CService> Lookup(const std::string& name, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
 {
     if (name.empty() || !ContainsNoNUL(name)) {
-        return false;
+        return {};
     }
     uint16_t port{portDefault};
     std::string hostname;
     SplitHostPort(name, port, hostname);
 
-    std::vector<CNetAddr> vIP;
-    bool fRet = LookupIntern(hostname, vIP, nMaxSolutions, fAllowLookup, dns_lookup_function);
-    if (!fRet)
-        return false;
-    vAddr.resize(vIP.size());
-    for (unsigned int i = 0; i < vIP.size(); i++)
-        vAddr[i] = CService(vIP[i], port);
-    return true;
+    const std::vector<CNetAddr> addresses{LookupIntern(hostname, nMaxSolutions, fAllowLookup, dns_lookup_function)};
+    if (addresses.empty()) return {};
+    std::vector<CService> services;
+    services.reserve(addresses.size());
+    for (const auto& addr : addresses)
+        services.emplace_back(addr, port);
+    return services;
 }
 
-bool Lookup(const std::string& name, CService& addr, uint16_t portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+std::optional<CService> Lookup(const std::string& name, uint16_t portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ContainsNoNUL(name)) {
-        return false;
-    }
-    std::vector<CService> vService;
-    bool fRet = Lookup(name, vService, portDefault, fAllowLookup, 1, dns_lookup_function);
-    if (!fRet)
-        return false;
-    addr = vService[0];
-    return true;
+    const std::vector<CService> services{Lookup(name, portDefault, fAllowLookup, 1, dns_lookup_function)};
+
+    return services.empty() ? std::nullopt : std::make_optional(services.front());
 }
 
 CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupFn dns_lookup_function)
@@ -232,12 +209,9 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupF
     if (!ContainsNoNUL(name)) {
         return {};
     }
-    CService addr;
     // "1.2:345" will fail to resolve the ip, but will still set the port.
     // If the ip fails to resolve, re-init the result.
-    if(!Lookup(name, addr, portDefault, false, dns_lookup_function))
-        addr = CService();
-    return addr;
+    return Lookup(name, portDefault, /*fAllowLookup=*/false, dns_lookup_function).value_or(CService{});
 }
 
 /** SOCKS version */
@@ -689,27 +663,27 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 
     const size_t slash_pos{subnet_str.find_last_of('/')};
     const std::string str_addr{subnet_str.substr(0, slash_pos)};
-    CNetAddr addr;
+    const std::optional<CNetAddr> addr{LookupHost(str_addr, /*fAllowLookup=*/false)};
 
-    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false)) {
+    if (addr.has_value()) {
         if (slash_pos != subnet_str.npos) {
             const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
             uint8_t netmask;
             if (ParseUInt8(netmask_str, &netmask)) {
                 // Valid number; assume CIDR variable-length subnet masking.
-                subnet_out = CSubNet{addr, netmask};
+                subnet_out = CSubNet{addr.value(), netmask};
                 return subnet_out.IsValid();
             } else {
                 // Invalid number; try full netmask syntax. Never allow lookup for netmask.
-                CNetAddr full_netmask;
-                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false)) {
-                    subnet_out = CSubNet{addr, full_netmask};
+                const std::optional<CNetAddr> full_netmask{LookupHost(netmask_str, /*fAllowLookup=*/false)};
+                if (full_netmask.has_value()) {
+                    subnet_out = CSubNet{addr.value(), full_netmask.value()};
                     return subnet_out.IsValid();
                 }
             }
         } else {
             // Single IP subnet (<ipv4>/32 or <ipv6>/128).
-            subnet_out = CSubNet{addr};
+            subnet_out = CSubNet{addr.value()};
             return subnet_out.IsValid();
         }
     }
