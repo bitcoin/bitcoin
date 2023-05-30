@@ -88,6 +88,7 @@ BOOST_AUTO_TEST_CASE(rpc_namedparams)
 
     // Make sure named arguments are transformed into positional arguments in correct places separated by nulls
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg2": 2, "arg4": 4})"), arg_names).write(), "[null,2,null,4]");
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg2": 2, "arg4": 4, "arg5": null})"), arg_names).write(), "[null,2,null,4,null]");
 
     // Make sure named argument specified multiple times raises an exception
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"arg2": 2, "arg2": 4})"), arg_names), UniValue,
@@ -107,11 +108,13 @@ BOOST_AUTO_TEST_CASE(rpc_namedparams)
     // Make sure extra positional arguments can be passed through to the method implementation, as long as they don't overlap with named arguments.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1,2,3,4,5,6,7,8,9,10]})"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"([1,2,3,4,5,6,7,8,9,10])"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
+    BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1,2,3,4,5,6,7,8,9,10], "arg4": 4, "arg2": 2})"), arg_names), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Parameter arg2 specified twice both as positional and named argument"})"));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
 {
-    const std::vector<std::pair<std::string, bool>> arg_names{{"arg1", false}, {"arg2", false}, {"opt1", true}, {"opt2", true}, {"options", false}};
+    const std::vector<std::pair<std::string, bool>> arg_names{{"arg1", false}, {"arg2", false}, {"opt1", true}, {"opt2", true}, {"options", false}, {"arg3", false}};
 
     // Make sure optional parameters are really optional.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg1": 1, "arg2": 2})"), arg_names).write(), "[1,2]");
@@ -129,6 +132,9 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
     // Make sure options object specified through args array conflicts.
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, 2, {"opt1": 10}], "opt2": 20})"), arg_names), UniValue,
                           HasJSON(R"({"code":-8,"message":"Parameter options conflicts with parameter opt2"})"));
+
+    // Make sure parameters after the options can still be passed
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg1": 1, "arg2": 2, "arg3": 3, "opt1": 10})"), arg_names).write(), R"([1,2,{"opt1":10},3])");
 }
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
@@ -579,6 +585,51 @@ BOOST_AUTO_TEST_CASE(help_example)
 
     // test types matter for Rpc
     BOOST_CHECK_NE(HelpExampleRpcNamed("foo", {{"arg", true}}), HelpExampleRpcNamed("foo", {{"arg", "true"}}));
+}
+
+static void TestParamsByName(const UniValue& params)
+{
+    const std::vector<std::pair<std::string, bool>> arg_names{{"arg0", false}, {"arg1", false}, {"arg2", false}, {"arg3", false}, {"arg4", false}, {"arg5", false}};
+    CRPCTable table;
+    CRPCCommand command{"category", "method",
+        [&](const JSONRPCRequest& request, UniValue&, bool) -> bool
+        {
+            for (size_t i = 0; i < request.params.size() * 2; ++i) {
+                std::string arg_name = strprintf("arg%u", i);
+                if (i < arg_names.size()) {
+                    // Known parameters should be the same for both positional and named
+                    BOOST_CHECK_EQUAL(request.params[arg_name].getType(), request.params[i].getType());
+                    BOOST_CHECK_EQUAL(request.params[arg_name].getValStr(), request.params[i].getValStr());
+                } else {
+                    // Unknown positionals should still be accessible
+                    auto arg = request.params[i];
+                    if (i > request.params.size()) {
+                        // Out of bound positionals are always NullUniValue
+                        BOOST_CHECK(arg.isNull());
+                    }
+                    // Unknown named are always NullUniValue
+                    BOOST_CHECK(request.params[arg_name].isNull());
+                }
+            }
+            return true;
+        },
+        arg_names,
+        /*unique_id=*/0
+    };
+    table.appendCommand("method", &command);
+    JSONRPCRequest request;
+    request.strMethod = "method";
+    request.params.received = params;
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+    table.execute(request);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_params_by_name)
+{
+    TestParamsByName(JSON(R"({"arg2": 2, "arg4": 4})"));
+    TestParamsByName(JSON(R"({"arg2": 2, "arg4": 4, "arg5": null})"));
+    TestParamsByName(JSON(R"([1, 2, 3, 4, 5, 6, 7, 8])"));
+    TestParamsByName(JSON(R"({"args": [1, 2, 3], "arg5": 5})"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
