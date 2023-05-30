@@ -4,6 +4,7 @@
 
 #include <core_io.h>
 
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
@@ -16,7 +17,6 @@
 #include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 // SYSCOIN
 #include <services/asset.h>

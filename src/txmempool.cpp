@@ -7,6 +7,7 @@
 
 #include <chain.h>
 #include <coins.h>
+#include <common/system.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
@@ -19,7 +20,6 @@
 #include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/result.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/trace.h>
 #include <util/translation.h>

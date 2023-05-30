@@ -691,7 +691,7 @@ void FuncVerifyDB(TestChain100Setup& setup)
     LOCK(cs_main);
     Chainstate& active_chainstate = setup.m_node.chainman->ActiveChainstate();
     // Verify db consistency
-    assert(CVerifyDB().VerifyDB(active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), 4, 2) == VerifyDBResult::SUCCESS);
+    assert(CVerifyDB(setup.m_node.chainman->GetNotifications()).VerifyDB(active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), 4, 2) == VerifyDBResult::SUCCESS);
 }
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 

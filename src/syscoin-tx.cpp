@@ -10,6 +10,7 @@
 #include <clientversion.h>
 #include <coins.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -27,7 +28,6 @@
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 #include <cstdio>

@@ -35,6 +35,7 @@
 #include <vector>
 // SYSCOIN
 #include <node/context.h>
+#include <util/any.h>
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;

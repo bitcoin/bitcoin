@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <common/system.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
@@ -15,7 +16,6 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
 #include <versionbits.h>

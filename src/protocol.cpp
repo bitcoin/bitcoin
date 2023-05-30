@@ -5,7 +5,7 @@
 
 #include <protocol.h>
 
-#include <util/system.h>
+#include <common/system.h>
 
 #include <atomic>
 

@@ -6,6 +6,7 @@
 // SYSCOIN
 #include <primitives/transaction.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
@@ -33,7 +34,6 @@
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <version.h>
 
 #include <cassert>

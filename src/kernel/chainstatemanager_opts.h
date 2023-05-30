@@ -5,6 +5,8 @@
 #ifndef SYSCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 #define SYSCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
+#include <kernel/notifications_interface.h>
+
 #include <arith_uint256.h>
 #include <dbwrapper.h>
 #include <txdb.h>
@@ -42,6 +44,7 @@ struct ChainstateManagerOpts {
     DBOptions block_tree_db{};
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
+    Notifications& notifications;
 };
 
 } // namespace kernel

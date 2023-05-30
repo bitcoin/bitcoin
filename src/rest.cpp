@@ -24,8 +24,8 @@
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
+#include <util/any.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <validation.h>
 #include <version.h>
 
