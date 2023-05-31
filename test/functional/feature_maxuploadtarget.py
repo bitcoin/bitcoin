@@ -99,8 +99,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # 144MB will be reserved for relaying new blocks, so expect this to
         # succeed for ~70 tries.
         for i in range(success_count):
-            p2p_conns[0].send_message(getdata_request)
-            p2p_conns[0].sync_with_ping()
+            p2p_conns[0].send_and_ping(getdata_request)
             assert_equal(p2p_conns[0].block_receive_map[big_old_block], i+1)
 
         assert_equal(len(self.nodes[0].getpeerinfo()), 3)
@@ -117,7 +116,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # We'll try 200 times
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]
         for i in range(200):
-            p2p_conns[1].send_message(getdata_request)
+            p2p_conns[1].send_and_ping(getdata_request)
             p2p_conns[1].sync_with_ping()
             assert_equal(p2p_conns[1].block_receive_map[big_new_block], i+1)
 
@@ -137,8 +136,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # and p2p_conns[2] should be able to retrieve the old block.
         self.nodes[0].setmocktime(current_mocktime)
         p2p_conns[2].sync_with_ping()
-        p2p_conns[2].send_message(getdata_request)
-        p2p_conns[2].sync_with_ping()
+        p2p_conns[2].send_and_ping(getdata_request)
         assert_equal(p2p_conns[2].block_receive_map[big_old_block], 1)
 
         self.log.info("Peer 2 able to download old block")
@@ -155,8 +153,7 @@ class MaxUploadTest(BitcoinTestFramework):
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]
         for i in range(20):
-            self.nodes[0].p2p.send_message(getdata_request)
-            self.nodes[0].p2p.sync_with_ping()
+            self.nodes[0].p2p.send_and_ping(getdata_request)
             assert_equal(self.nodes[0].p2p.block_receive_map[big_new_block], i+1)
 
         getdata_request.inv = [CInv(MSG_BLOCK, big_old_block)]

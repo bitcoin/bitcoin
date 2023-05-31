@@ -164,8 +164,7 @@ class CompactFiltersTest(BitcoinTestFramework):
             start_height=1,
             stop_hash=int(stop_hash, 16)
         )
-        node0.send_message(request)
-        node0.sync_with_ping()
+        node0.send_and_ping(request)
         response = node0.pop_cfilters()
         assert_equal(len(response), 10)
 
@@ -183,8 +182,7 @@ class CompactFiltersTest(BitcoinTestFramework):
             start_height=1000,
             stop_hash=int(stale_block_hash, 16)
         )
-        node0.send_message(request)
-        node0.sync_with_ping()
+        node0.send_and_ping(request)
         response = node0.pop_cfilters()
         assert_equal(len(response), 1)
 

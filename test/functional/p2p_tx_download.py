@@ -63,8 +63,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info("Announce the txid from each incoming peer to node 0")
         msg = msg_inv([CInv(t=1, h=txid)])
         for p in self.nodes[0].p2ps:
-            p.send_message(msg)
-            p.sync_with_ping()
+            p.send_and_ping(msg)
 
         outstanding_peer_index = [i for i in range(len(self.nodes[0].p2ps))]
 
@@ -102,7 +101,7 @@ class TxDownloadTest(BitcoinTestFramework):
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
         msg = msg_inv([CInv(t=1, h=txid)])
         for p in self.peers:
-            p.send_message(msg)
+            p.send_and_ping(msg)
             p.sync_with_ping()
             self.bump_mocktime(1)
 

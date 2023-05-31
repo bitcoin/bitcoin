@@ -426,6 +426,40 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "scriptsig-size");
 
+    // Check scriptSig format (non-standard if there are any other ops than just PUSHs)
+    t.vin[0].scriptSig = CScript()
+        << OP_TRUE << OP_0 << OP_1NEGATE << OP_16 // OP_n (single byte pushes: n = 1, 0, -1, 16)
+        << std::vector<unsigned char>(75, 0)      // OP_PUSHx [...x bytes...]
+        << std::vector<unsigned char>(235, 0)     // OP_PUSHDATA1 x [...x bytes...]
+        << std::vector<unsigned char>(1234, 0)    // OP_PUSHDATA2 x [...x bytes...]
+        << OP_9;
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
+    const std::vector<unsigned char> non_push_ops = { // arbitrary set of non-push operations
+        OP_NOP, OP_VERIFY, OP_IF, OP_ROT, OP_3DUP, OP_SIZE, OP_EQUAL, OP_ADD, OP_SUB,
+        OP_HASH256, OP_CODESEPARATOR, OP_CHECKSIG, OP_CHECKLOCKTIMEVERIFY };
+
+    CScript::const_iterator pc = t.vin[0].scriptSig.begin();
+    while (pc < t.vin[0].scriptSig.end()) {
+        opcodetype opcode;
+        CScript::const_iterator prev_pc = pc;
+        t.vin[0].scriptSig.GetOp(pc, opcode); // advance to next op
+        // for the sake of simplicity, we only replace single-byte push operations
+        if (opcode >= 1 && opcode <= OP_PUSHDATA4)
+            continue;
+
+        int index = prev_pc - t.vin[0].scriptSig.begin();
+        unsigned char orig_op = *prev_pc; // save op
+        // replace current push-op with each non-push-op
+        for (auto op : non_push_ops) {
+            t.vin[0].scriptSig[index] = op;
+            BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+            BOOST_CHECK_EQUAL(reason, "scriptsig-not-pushonly");
+        }
+        t.vin[0].scriptSig[index] = orig_op; // restore op
+        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    }
+
     // Check bare multisig (standard if policy flag fIsBareMultisigStd is set)
     fIsBareMultisigStd = true;
     t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1

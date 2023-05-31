@@ -47,11 +47,12 @@ bench_bench_dash_SOURCES = \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
-  bench/string_cast.cpp
+  bench/string_cast.cpp \
+  bench/verify_script.cpp
 
 nodist_bench_bench_dash_SOURCES = $(GENERATED_BENCH_FILES)
 
-bench_bench_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_dash_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_dash_LDADD = \
   $(LIBBITCOIN_SERVER) \

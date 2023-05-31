@@ -11,6 +11,8 @@ from test_framework.messages import (
     MSG_FILTERED_BLOCK,
     msg_getdata,
     msg_filterload,
+    msg_filteradd,
+    msg_filterclear,
 )
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -60,8 +62,7 @@ class FilterTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info('Add filtered P2P connection to the node')
         filter_node = self.nodes[0].add_p2p_connection(FilterNode())
-        filter_node.send_message(filter_node.watch_filter_init)
-        filter_node.sync_with_ping()
+        filter_node.send_and_ping(filter_node.watch_filter_init)
         filter_address = self.nodes[0].decodescript(filter_node.watch_script_pubkey)['addresses'][0]
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
@@ -90,6 +91,16 @@ class FilterTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(filter_address, 90)
         filter_node.wait_for_tx(txid)
         assert not filter_node.merkleblock_received
+
+        self.log.info('Check that after deleting filter all txs get relayed again')
+        filter_node.send_and_ping(msg_filterclear())
+        for _ in range(5):
+            txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 7)
+            filter_node.wait_for_tx(txid)
+
+        self.log.info("Check that division-by-zero remote crash bug [CVE-2013-5700] is fixed")
+        filter_node.send_and_ping(msg_filterload(data=b'', nHashFuncs=1))
+        filter_node.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
 
 
 if __name__ == '__main__':
