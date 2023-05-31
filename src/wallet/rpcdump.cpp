@@ -617,7 +617,7 @@ UniValue importwallet(const JSONRPCRequest& request)
 
 UniValue importelectrumwallet(const JSONRPCRequest& request)
 {
-    RPCHelpMan{"importselectrumwallet",
+    RPCHelpMan{"importelectrumwallet",
         "\nImports keys from an Electrum wallet export file (.csv or .json)\n",
         {
             {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The Electrum wallet export file, should be in csv or json format"},
