@@ -101,8 +101,22 @@ class DIP3V19Test(DashTestFramework):
         self.test_revoke_protx(revoke_protx, revoke_keyoperator)
 
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
+        # revoking a MN results in disconnects, reconnect it back to let sync_blocks finish correctly
+        self.connect_nodes(hpmn_info_3.nodeIdx, 0)
 
-        return
+        self.log.info("Checking that adding more regular MNs after v19 doesn't break DKGs and IS/CLs")
+
+        for i in range(6):
+            new_mn = self.dynamically_add_masternode(hpmn=False, rnd=(10 + i))
+            assert new_mn is not None
+
+        # mine more quorums and make sure everything still works
+        prev_quorum = None
+        for _ in range(5):
+            quorum = self.mine_quorum()
+            assert prev_quorum != quorum
+
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
     def test_revoke_protx(self, revoke_protx, revoke_keyoperator):
         funds_address = self.nodes[0].getnewaddress()
