@@ -148,7 +148,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (hardened-glibc (make-glibc-without-werror glibc-2.27)))
+                                       (base-libc (hardened-glibc (make-glibc-without-werror glibc-2.28)))
                                        (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Dash Core release binaries."
@@ -508,25 +508,24 @@ inspecting signatures in Mach-O binaries.")
 (define (hardened-glibc glibc)
   (package-with-extra-configure-variable (
     package-with-extra-configure-variable glibc
-    "--enable-stack-protector" "all")
+    "--enable-stack-protector" "strong")
     "--enable-bind-now" "yes"))
 
-(define-public glibc-2.27
+(define-public glibc-2.28
   (package
     (inherit glibc-2.31)
-    (version "2.27")
+    (version "2.28")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://sourceware.org/git/glibc.git")
-                    (commit "73886db6218e613bd6d4edf529f11e008a6c2fa6")))
-              (file-name (git-file-name "glibc" "73886db6218e613bd6d4edf529f11e008a6c2fa6"))
+                    (commit "c9e58ae23402eb82877de90fd8a18519c086ed87")))
+              (file-name (git-file-name "glibc" "c9e58ae23402eb82877de90fd8a18519c086ed87"))
               (sha256
                (base32
-                "0azpb9cvnbv25zg8019rqz48h8i2257ngyjg566dlnp74ivrs9vq"))
+                "0wm0if2n4z48kpn85va6yb4iac34crds2f55ddpz1hykx6jp1pb6"))
               (patches (search-our-patches "glibc-ldd-x86_64.patch"
                                            "glibc-versioned-locpath.patch"
-                                           "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
                                            "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"))))))
 
