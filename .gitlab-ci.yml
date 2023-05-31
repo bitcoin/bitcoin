@@ -255,6 +255,15 @@ linux64_tsan-build:
   variables:
     BUILD_TARGET: linux64_tsan
 
+linux64_ubsan-build:
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
+  needs:
+    - x86_64-pc-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64_ubsan
+
 linux64_nowallet-build:
   extends:
     - .build-template
@@ -299,3 +308,12 @@ linux64_tsan-test:
     - linux64_tsan-build
   variables:
     BUILD_TARGET: linux64_tsan
+
+linux64_ubsan-test:
+  extends:
+    - .test-template
+    - .skip-in-fast-mode-template
+  needs:
+    - linux64_ubsan-build
+  variables:
+    BUILD_TARGET: linux64_ubsan
