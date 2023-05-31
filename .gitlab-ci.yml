@@ -173,13 +173,6 @@ x86_64-w64-mingw32:
   variables:
     HOST: x86_64-w64-mingw32
 
-i686-pc-linux-gnu:
-  extends:
-    - .build-depends-template
-    - .skip-in-fast-mode-template
-  variables:
-    HOST: i686-pc-linux-gnu
-
 x86_64-pc-linux-gnu-debug:
   extends: .build-depends-template
   variables:
@@ -218,24 +211,6 @@ win64-build:
     - x86_64-w64-mingw32
   variables:
     BUILD_TARGET: win64
-
-linux32-build:
-  extends:
-    - .build-template
-    - .skip-in-fast-mode-template
-  needs:
-    - i686-pc-linux-gnu
-  variables:
-    BUILD_TARGET: linux32
-
-linux32_ubsan-build:
-  extends:
-    - .build-template
-    - .skip-in-fast-mode-template
-  needs:
-    - i686-pc-linux-gnu
-  variables:
-    BUILD_TARGET: linux32_ubsan
 
 linux64-build:
   extends: .build-template
@@ -299,24 +274,6 @@ mac-build:
     BUILD_TARGET: mac
 
 ###
-
-linux32-test:
-  extends:
-    - .test-template
-    - .skip-in-fast-mode-template
-  needs:
-    - linux32-build
-  variables:
-    BUILD_TARGET: linux32
-
-linux32_ubsan-test:
-  extends:
-    - .test-template
-    - .skip-in-fast-mode-template
-  needs:
-    - linux32_ubsan-build
-  variables:
-    BUILD_TARGET: linux32_ubsan
 
 linux64-test:
   extends: .test-template

@@ -98,9 +98,6 @@ jobs:
       name: depends-win64
       env: BUILD_TARGET=win64
     - <<: *builddepends
-      name: depends-linux32
-      env: BUILD_TARGET=linux32
-    - <<: *builddepends
       name: depends-linux64
       env: BUILD_TARGET=linux64
     - <<: *builddepends
@@ -122,9 +119,6 @@ jobs:
       name: src-win64
       env: BUILD_TARGET=win64
     - <<: *buildsrc
-      name: src-linux32
-      env: BUILD_TARGET=linux32
-    - <<: *buildsrc
       name: src-linux64
       env: BUILD_TARGET=linux64
     - <<: *buildsrc
@@ -142,9 +136,6 @@ jobs:
     - <<: *runtests
       name: tests-win64
       env: BUILD_TARGET=win64
-    - <<: *runtests
-      name: tests-linux32
-      env: BUILD_TARGET=linux32
     - <<: *runtests
       name: tests-linux64
       env: BUILD_TARGET=linux64
@@ -232,11 +223,6 @@ after_success:
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
-
-    - stage: test
-      name: '32-bit + dash  [GOAL: install]  [CentOS 7]  [GUI]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'

@@ -18,10 +18,6 @@ if [ "$BUILD_TARGET" = "arm-linux" ]; then
   source ./ci/test/00_setup_env_arm.sh
 elif [ "$BUILD_TARGET" = "win64" ]; then
   source ./ci/test/00_setup_env_win64.sh
-elif [ "$BUILD_TARGET" = "linux32" ]; then
-  source ./ci/test/00_setup_env_i686_centos.sh
-elif [ "$BUILD_TARGET" = "linux32_ubsan" ]; then
-  source ./ci/test/00_setup_env_i686_ubsan.sh
 elif [ "$BUILD_TARGET" = "linux64" ]; then
   source ./ci/test/00_setup_env_native_qt5.sh
 elif [ "$BUILD_TARGET" = "linux64_tsan" ]; then
