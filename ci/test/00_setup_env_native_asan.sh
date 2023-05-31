@@ -18,4 +18,6 @@ export PACKAGES="systemtap-sdt-dev clang-16 llvm-16 libclang-rt-16-dev python3-z
 export CI_IMAGE_NAME_TAG=ubuntu:23.04 # Version 23.04 will reach EOL in Jan 2024, and can be replaced by "ubuntu:24.04" (or anything else that ships the wanted clang version).
 export NO_DEPENDS=1
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-c++20 --enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=address,integer,undefined CC=clang-16 CXX=clang++-16"
+export BITCOIN_CONFIG="--enable-c++20 --enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 \
+CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
+--with-sanitizers=address,float-divide-by-zero,integer,undefined CC=clang-16 CXX=clang++-16"
