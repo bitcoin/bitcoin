@@ -128,6 +128,7 @@ private:
 extern std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
 bool AreChainLocksEnabled(const CSporkManager& sporkManager);
+bool ChainLocksSigningEnabled(const CSporkManager& sporkManager);
 
 } // namespace llmq
 

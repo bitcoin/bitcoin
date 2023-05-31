@@ -249,6 +249,10 @@ void CChainLocksHandler::TrySignChainTip()
         return;
     }
 
+    if (!ChainLocksSigningEnabled(spork_manager)) {
+        return;
+    }
+
     const CBlockIndex* pindex = WITH_LOCK(cs_main, return ::ChainActive().Tip());
 
     if (pindex->pprev == nullptr) {
@@ -685,6 +689,11 @@ void CChainLocksHandler::Cleanup()
 bool AreChainLocksEnabled(const CSporkManager& sporkManager)
 {
     return sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+}
+
+bool ChainLocksSigningEnabled(const CSporkManager& sporkManager)
+{
+    return sporkManager.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
 }
 
 } // namespace llmq
