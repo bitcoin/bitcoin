@@ -23,15 +23,20 @@ EXCLUDED_DIRS = ["src/leveldb/",
 
 EXPECTED_BOOST_INCLUDES = ["boost/date_time/posix_time/posix_time.hpp",
                            "boost/multi_index/hashed_index.hpp",
+                           "boost/multi_index/identity.hpp",
+                           "boost/multi_index/indexed_by.hpp",
                            "boost/multi_index/ordered_index.hpp",
                            "boost/multi_index/sequenced_index.hpp",
+                           "boost/multi_index/tag.hpp",
                            "boost/multi_index_container.hpp",
                            "boost/process.hpp",
                            "boost/signals2/connection.hpp",
                            "boost/signals2/optional_last_value.hpp",
                            "boost/signals2/signal.hpp",
                            "boost/test/included/unit_test.hpp",
-                           "boost/test/unit_test.hpp"]
+                           "boost/test/unit_test.hpp",
+                           "boost/tuple/tuple.hpp",
+                          ]
 
 
 def get_toplevel():
