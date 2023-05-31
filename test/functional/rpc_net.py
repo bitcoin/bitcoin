@@ -145,6 +145,7 @@ class NetTest(BitcoinTestFramework):
                 "synced_blocks": -1,
                 "synced_headers": -1,
                 "timeoffset": 0,
+                "tx_reconciliation": False,
                 "version": 0,
             },
         )

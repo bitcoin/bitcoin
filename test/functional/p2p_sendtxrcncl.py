@@ -63,10 +63,16 @@ def create_sendtxrcncl_msg():
 
 class SendTxRcnclTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
-        self.extra_args = [['-txreconciliation']]
+        self.num_nodes = 2
+        self.extra_args = [['-txreconciliation'], ["-txreconciliation"]]
 
     def run_test(self):
+        # Check both nodes successfully registered tx reconciliation support
+        self.log.info("Test the getpeerinfo `tx_reconciliation` field")
+        for node in self.nodes:
+            peerinfo = node.getpeerinfo()
+            assert_equal(peerinfo[0]['tx_reconciliation'], True)
+
         # Check everything concerning *sending* SENDTXRCNCL
         # First, *sending* to *inbound*.
         self.log.info('SENDTXRCNCL sent to an inbound')
