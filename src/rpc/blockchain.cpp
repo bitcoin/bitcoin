@@ -1804,7 +1804,7 @@ static UniValue preciousblock(const JSONRPCRequest& request)
     }
 
     BlockValidationState state;
-    ::ChainstateActive().PreciousBlock(state, Params(), pblockindex);
+    ::ChainstateActive().PreciousBlock(state, pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1838,10 +1838,10 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    ::ChainstateActive().InvalidateBlock(state, Params(), pblockindex);
+    ::ChainstateActive().InvalidateBlock(state, pblockindex);
 
     if (state.IsValid()) {
-        ::ChainstateActive().ActivateBestChain(state, Params());
+        ::ChainstateActive().ActivateBestChain(state);
     }
 
     if (!state.IsValid()) {
@@ -1879,7 +1879,7 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
     }
 
     BlockValidationState state;
-    ::ChainstateActive().ActivateBestChain(state, Params());
+    ::ChainstateActive().ActivateBestChain(state);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());

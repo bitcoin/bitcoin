@@ -1479,7 +1479,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         BlockValidationState state;
         // need non-const pointer
         auto pindex2 = WITH_LOCK(::cs_main, return g_chainman.m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
-        if (!::ChainstateActive().InvalidateBlock(state, Params(), pindex2)) {
+        if (!::ChainstateActive().InvalidateBlock(state, pindex2)) {
             LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, state.ToString());
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);
@@ -1495,7 +1495,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
 
     if (activateBestChain) {
         BlockValidationState state;
-        if (!::ChainstateActive().ActivateBestChain(state, Params())) {
+        if (!::ChainstateActive().ActivateBestChain(state)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);

@@ -502,18 +502,17 @@ void CChainLocksHandler::EnforceBestChainLock()
     }
 
     BlockValidationState dummy_state;
-    const auto &params = Params();
 
     // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
     // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
     // and mark all of them as conflicting.
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__, pindex->GetBlockHash().ToString(), clsig->ToString());
-    ::ChainstateActive().EnforceBlock(dummy_state, params, pindex);
+    ::ChainstateActive().EnforceBlock(dummy_state, pindex);
 
     bool activateNeeded = WITH_LOCK(::cs_main, return ::ChainActive().Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex;
 
     if (activateNeeded) {
-        if (!::ChainstateActive().ActivateBestChain(dummy_state, params)) {
+        if (!::ChainstateActive().ActivateBestChain(dummy_state)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;
         }
