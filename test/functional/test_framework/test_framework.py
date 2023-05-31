@@ -1120,7 +1120,7 @@ class DashTestFramework(BitcoinTestFramework):
             created_mn_info = self.dynamically_prepare_masternode(mn_idx, node_p2p_port, hpmn, rnd)
             protx_success = True
         except:
-            self.log.info("protx_hpmn rejected")
+            self.log.info("dynamically_prepare_masternode failed")
 
         assert_equal(protx_success, not should_be_rejected)
 
@@ -1136,7 +1136,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         for mn_info in self.mninfo:
             if mn_info.proTxHash == created_mn_info.proTxHash:
-                mn_info.nodeIx = mn_idx
+                mn_info.nodeIdx = mn_idx
                 mn_info.node = self.nodes[mn_idx]
 
         self.connect_nodes(mn_idx, 0)
@@ -1157,8 +1157,8 @@ class DashTestFramework(BitcoinTestFramework):
         reward_address = self.nodes[0].getnewaddress()
 
         platform_node_id = hash160(b'%d' % rnd).hex() if rnd is not None else hash160(b'%d' % node_p2p_port).hex()
-        platform_p2p_port = '%d' % (node_p2p_port + 101) if hpmn else ''
-        platform_http_port = '%d' % (node_p2p_port + 102) if hpmn else ''
+        platform_p2p_port = '%d' % (node_p2p_port + 101)
+        platform_http_port = '%d' % (node_p2p_port + 102)
 
         collateral_amount = 4000 if hpmn else 1000
         outputs = {collateral_address: collateral_amount, funds_address: 1}
@@ -1179,8 +1179,12 @@ class DashTestFramework(BitcoinTestFramework):
         ipAndPort = '127.0.0.1:%d' % node_p2p_port
         operatorReward = idx
 
-        register_rpc = 'register_hpmn' if hpmn else 'register'
-        protx_result = self.nodes[0].protx(register_rpc, collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, platform_node_id, platform_p2p_port, platform_http_port, funds_address, True)
+        protx_result = None
+        if hpmn:
+            protx_result = self.nodes[0].protx("register_hpmn", collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, platform_node_id, platform_p2p_port, platform_http_port, funds_address, True)
+        else:
+            protx_result = self.nodes[0].protx("register", collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, funds_address, True)
+
         self.wait_for_instantlock(protx_result, self.nodes[0])
         tip = self.nodes[0].generate(1)[0]
         self.sync_all(self.nodes)
