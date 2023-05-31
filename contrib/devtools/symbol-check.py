@@ -33,13 +33,19 @@ import pixie
 # - libc version 2.28 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 #
 # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
+#
+# For 32-bit systems the minimum libc version is 2.28 to embrace new fcntl{64} symbols.
+# It is safer than handling them in the glibc_compat.cpp due to their variadic arguments
+# with possible different sizes.
+# See: https://stackoverflow.com/a/58472959
+#
 
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    pixie.EM_386:    (2,18),
+    pixie.EM_386:    (2,28),
     pixie.EM_X86_64: (2,18),
-    pixie.EM_ARM:    (2,18),
+    pixie.EM_ARM:    (2,28),
     pixie.EM_AARCH64:(2,18),
     pixie.EM_PPC64:  (2,18),
     pixie.EM_RISCV:  (2,27),
@@ -54,6 +60,8 @@ MAX_VERSIONS = {
 IGNORE_EXPORTS = {
 '_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__', '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
 'environ', '_environ', '__environ',
+# Used in stacktraces.cpp
+'__cxa_demangle'
 }
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
@@ -75,8 +83,10 @@ ELF_ALLOWED_LIBRARIES = {
 'ld64.so.1', # POWER64 ABIv1 dynamic linker
 'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
+'libz.so.1', # zlib
 # dash-qt only
 'libxcb.so.1', # part of X11
+'libxcb-shm.so.0', # X11 shared memory extension
 'libxkbcommon.so.0', # keyboard keymapping
 'libxkbcommon-x11.so.0', # keyboard keymapping
 'libfontconfig.so.1', # font support
