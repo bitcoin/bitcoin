@@ -32,9 +32,14 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
     podman container rm --force --all  # Similar to "systemctl restart docker"
+
+    # Still prune everything in case the filtered pruning doesn't work, or if labels were not set
+    # on a previous run. Belt and suspenders approach, should be fine to remove in the future.
     echo "Prune all dangling images"
     docker image prune --force
   fi
+  echo "Prune all dangling $CI_IMAGE_LABEL images"
+  docker image prune --force --filter "label=$CI_IMAGE_LABEL"
 
   # shellcheck disable=SC2086
   CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
