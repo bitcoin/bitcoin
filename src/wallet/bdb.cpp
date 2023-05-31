@@ -691,7 +691,7 @@ DatabaseCursor::Status BerkeleyCursor::Next(DataStream& ssKey, DataStream& ssVal
     if (ret == DB_NOTFOUND) {
         return Status::DONE;
     }
-    if (ret != 0 || datKey.get_data() == nullptr || datValue.get_data() == nullptr) {
+    if (ret != 0) {
         return Status::FAIL;
     }
 

@@ -39,7 +39,11 @@ static bool BindBlobToStatement(sqlite3_stmt* stmt,
                                 Span<const std::byte> blob,
                                 const std::string& description)
 {
-    int res = sqlite3_bind_blob(stmt, index, blob.data(), blob.size(), SQLITE_STATIC);
+    // Pass a pointer to the empty string "" below instead of passing the
+    // blob.data() pointer if the blob.data() pointer is null. Passing a null
+    // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
+    // instead of the empty blob value X'', which would mess up SQL comparisons.
+    int res = sqlite3_bind_blob(stmt, index, blob.data() ? static_cast<const void*>(blob.data()) : "", blob.size(), SQLITE_STATIC);
     if (res != SQLITE_OK) {
         LogPrintf("Unable to bind %s to statement: %s\n", description, sqlite3_errstr(res));
         sqlite3_clear_bindings(stmt);
