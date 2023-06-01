@@ -130,6 +130,15 @@ struct RPCArgOptions {
     std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
     std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
     bool hidden{false};                  //!< For testing only
+    bool also_positional{false};         //!< If set allows a named-parameter field in an OBJ_NAMED_PARAM options object
+                                         //!< to have the same name as a top-level parameter. By default the RPC
+                                         //!< framework disallows this, because if an RPC request passes the value by
+                                         //!< name, it is assigned to top-level parameter position, not to the options
+                                         //!< position, defeating the purpose of using OBJ_NAMED_PARAMS instead OBJ for
+                                         //!< that option. But sometimes it makes sense to allow less-commonly used
+                                         //!< options to be passed by name only, and more commonly used options to be
+                                         //!< passed by name or position, so the RPC framework allows this as long as
+                                         //!< methods set the also_positional flag and read values from both positions.
 };
 
 struct RPCArg {
@@ -139,6 +148,13 @@ struct RPCArg {
         STR,
         NUM,
         BOOL,
+        OBJ_NAMED_PARAMS, //!< Special type that behaves almost exactly like
+                          //!< OBJ, defining an options object with a list of
+                          //!< pre-defined keys. The only difference between OBJ
+                          //!< and OBJ_NAMED_PARAMS is that OBJ_NAMED_PARMS
+                          //!< also allows the keys to be passed as top-level
+                          //!< named parameters, as a more convenient way to pass
+                          //!< options to the RPC method without nesting them.
         OBJ_USER_KEYS, //!< Special type where the user must set the keys e.g. to define multiple addresses; as opposed to e.g. an options object where the keys are predefined
         AMOUNT,        //!< Special type representing a floating point amount (can be either NUM or STR)
         STR_HEX,       //!< Special type that is a STR with only hex chars
@@ -183,7 +199,7 @@ struct RPCArg {
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
-        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_USER_KEYS);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_NAMED_PARAMS && type != Type::OBJ_USER_KEYS);
     }
 
     RPCArg(
@@ -200,7 +216,7 @@ struct RPCArg {
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
-        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_USER_KEYS);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_NAMED_PARAMS || type == Type::OBJ_USER_KEYS);
     }
 
     bool IsOptional() const;
@@ -369,7 +385,8 @@ public:
     UniValue GetArgMap() const;
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
-    std::vector<std::string> GetArgNames() const;
+    //! Return list of arguments and whether they are named-only.
+    std::vector<std::pair<std::string, bool>> GetArgNames() const;
 
     const std::string m_name;
 

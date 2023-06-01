@@ -42,11 +42,11 @@ private:
 class RPCTestingSetup : public TestingSetup
 {
 public:
-    UniValue TransformParams(const UniValue& params, std::vector<std::string> arg_names) const;
+    UniValue TransformParams(const UniValue& params, std::vector<std::pair<std::string, bool>> arg_names) const;
     UniValue CallRPC(std::string args);
 };
 
-UniValue RPCTestingSetup::TransformParams(const UniValue& params, std::vector<std::string> arg_names) const
+UniValue RPCTestingSetup::TransformParams(const UniValue& params, std::vector<std::pair<std::string, bool>> arg_names) const
 {
     UniValue transformed_params;
     CRPCTable table;
@@ -84,7 +84,7 @@ BOOST_FIXTURE_TEST_SUITE(rpc_tests, RPCTestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_namedparams)
 {
-    const std::vector<std::string> arg_names{"arg1", "arg2", "arg3", "arg4", "arg5"};
+    const std::vector<std::pair<std::string, bool>> arg_names{{"arg1", false}, {"arg2", false}, {"arg3", false}, {"arg4", false}, {"arg5", false}};
 
     // Make sure named arguments are transformed into positional arguments in correct places separated by nulls
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg2": 2, "arg4": 4})"), arg_names).write(), "[null,2,null,4]");
@@ -107,6 +107,28 @@ BOOST_AUTO_TEST_CASE(rpc_namedparams)
     // Make sure extra positional arguments can be passed through to the method implementation, as long as they don't overlap with named arguments.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1,2,3,4,5,6,7,8,9,10]})"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"([1,2,3,4,5,6,7,8,9,10])"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
+{
+    const std::vector<std::pair<std::string, bool>> arg_names{{"arg1", false}, {"arg2", false}, {"opt1", true}, {"opt2", true}, {"options", false}};
+
+    // Make sure optional parameters are really optional.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg1": 1, "arg2": 2})"), arg_names).write(), "[1,2]");
+
+    // Make sure named-only parameters are passed as options.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg1": 1, "arg2": 2, "opt1": 10, "opt2": 20})"), arg_names).write(), R"([1,2,{"opt1":10,"opt2":20}])");
+
+    // Make sure options can be passed directly.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg1": 1, "arg2": 2, "options":{"opt1": 10, "opt2": 20}})"), arg_names).write(), R"([1,2,{"opt1":10,"opt2":20}])");
+
+    // Make sure options and named parameters conflict.
+    BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"arg1": 1, "arg2": 2, "opt1": 10, "options":{"opt1": 10}})"), arg_names), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Parameter options conflicts with parameter opt1"})"));
+
+    // Make sure options object specified through args array conflicts.
+    BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, 2, {"opt1": 10}], "opt2": 20})"), arg_names), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
@@ -504,6 +526,53 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     for (int64_t i = 0; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) {
         BOOST_CHECK_EQUAL(result4[i], 1);
     }
+}
+
+// Make sure errors are triggered appropriately if parameters have the same names.
+BOOST_AUTO_TEST_CASE(check_dup_param_names)
+{
+    enum ParamType { POSITIONAL, NAMED, NAMED_ONLY };
+    auto make_rpc = [](std::vector<std::tuple<std::string, ParamType>> param_names) {
+        std::vector<RPCArg> params;
+        std::vector<RPCArg> options;
+        auto push_options = [&] { if (!options.empty()) params.emplace_back(RPCArg{strprintf("options%i", params.size()), RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", std::move(options)}); };
+        for (auto& [param_name, param_type] : param_names) {
+            if (param_type == POSITIONAL) {
+                push_options();
+                params.emplace_back(std::move(param_name), RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description");
+            } else {
+                options.emplace_back(std::move(param_name), RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description", RPCArgOptions{.also_positional = param_type == NAMED});
+            }
+        }
+        push_options();
+        return RPCHelpMan{"method_name", "description", params, RPCResults{}, RPCExamples{""}};
+    };
+
+    // No errors if parameter names are unique.
+    make_rpc({{"p1", POSITIONAL}, {"p2", POSITIONAL}});
+    make_rpc({{"p1", POSITIONAL}, {"p2", NAMED}});
+    make_rpc({{"p1", POSITIONAL}, {"p2", NAMED_ONLY}});
+    make_rpc({{"p1", NAMED}, {"p2", POSITIONAL}});
+    make_rpc({{"p1", NAMED}, {"p2", NAMED}});
+    make_rpc({{"p1", NAMED}, {"p2", NAMED_ONLY}});
+    make_rpc({{"p1", NAMED_ONLY}, {"p2", POSITIONAL}});
+    make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED}});
+    make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED_ONLY}});
+
+    // Error if parameters names are duplicates, unless one parameter is
+    // positional and the other is named and .also_positional is true.
+    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", POSITIONAL}}), NonFatalCheckError);
+    make_rpc({{"p1", POSITIONAL}, {"p1", NAMED}});
+    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+    make_rpc({{"p1", NAMED}, {"p1", POSITIONAL}});
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", POSITIONAL}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED}}), NonFatalCheckError);
+    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+
+    // Make sure duplicate aliases are detected too.
+    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p2|p1", NAMED_ONLY}}), NonFatalCheckError);
 }
 
 BOOST_AUTO_TEST_CASE(help_example)

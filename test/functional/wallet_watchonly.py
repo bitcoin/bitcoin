@@ -98,13 +98,13 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
         options = {'changeAddress': wo_change}
         no_wo_options = {'changeAddress': wo_change, 'includeWatching': False}
 
-        result = wo_wallet.walletcreatefundedpsbt(inputs=inputs, outputs=outputs, options=options)
+        result = wo_wallet.walletcreatefundedpsbt(inputs=inputs, outputs=outputs, **options)
         assert_equal("psbt" in result, True)
         assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.walletcreatefundedpsbt, inputs, outputs, 0, no_wo_options)
 
         self.log.info('Testing fundrawtransaction watch-only defaults')
         rawtx = wo_wallet.createrawtransaction(inputs=inputs, outputs=outputs)
-        result = wo_wallet.fundrawtransaction(hexstring=rawtx, options=options)
+        result = wo_wallet.fundrawtransaction(hexstring=rawtx, **options)
         assert_equal("hex" in result, True)
         assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.fundrawtransaction, rawtx, no_wo_options)
 

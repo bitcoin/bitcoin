@@ -151,7 +151,7 @@ class SendallTest(BitcoinTestFramework):
         self.log.info("Test sending more than balance")
         pre_sendall_balance = self.add_utxos([7, 14])
 
-        expected_tx = self.wallet.sendall(recipients=[{self.recipient: 5}, self.remainder_target], options={"add_to_wallet": False})
+        expected_tx = self.wallet.sendall(recipients=[{self.recipient: 5}, self.remainder_target], add_to_wallet=False)
         tx = self.wallet.decoderawtransaction(expected_tx['hex'])
         fee = 21 - sum([o["value"] for o in tx["vout"]])
 
@@ -190,7 +190,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([0.00000400, 0.00000300, 1])
 
         # sendall with send_max
-        sendall_tx_receipt = self.wallet.sendall(recipients=[self.remainder_target], fee_rate=300, options={"send_max": True})
+        sendall_tx_receipt = self.wallet.sendall(recipients=[self.remainder_target], fee_rate=300, send_max=True)
         tx_from_wallet = self.wallet.gettransaction(txid = sendall_tx_receipt["txid"], verbose = True)
 
         assert_equal(len(tx_from_wallet["decoded"]["vin"]), 1)
@@ -206,7 +206,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([17, 4])
         utxo = self.wallet.listunspent()[0]
 
-        sendall_tx_receipt = self.wallet.sendall(recipients=[self.remainder_target], options={"inputs": [utxo]})
+        sendall_tx_receipt = self.wallet.sendall(recipients=[self.remainder_target], inputs=[utxo])
         tx_from_wallet = self.wallet.gettransaction(txid = sendall_tx_receipt["txid"], verbose = True)
         assert_equal(len(tx_from_wallet["decoded"]["vin"]), 1)
         assert_equal(len(tx_from_wallet["decoded"]["vout"]), 1)
@@ -227,26 +227,26 @@ class SendallTest(BitcoinTestFramework):
         # fails on out of bounds vout
         assert_raises_rpc_error(-8,
                 "Input not found. UTXO ({}:{}) is not part of wallet.".format(spent_utxo["txid"], 1000),
-                self.wallet.sendall, recipients=[self.remainder_target], options={"inputs": [{"txid": spent_utxo["txid"], "vout": 1000}]})
+                self.wallet.sendall, recipients=[self.remainder_target], inputs=[{"txid": spent_utxo["txid"], "vout": 1000}])
 
         # fails on unconfirmed spent UTXO
         self.wallet.sendall(recipients=[self.remainder_target])
         assert_raises_rpc_error(-8,
                 "Input not available. UTXO ({}:{}) was already spent.".format(spent_utxo["txid"], spent_utxo["vout"]),
-                self.wallet.sendall, recipients=[self.remainder_target], options={"inputs": [spent_utxo]})
+                self.wallet.sendall, recipients=[self.remainder_target], inputs=[spent_utxo])
 
         # fails on specific previously spent UTXO, while other UTXOs exist
         self.generate(self.nodes[0], 1)
         self.add_utxos([19, 2])
         assert_raises_rpc_error(-8,
                 "Input not available. UTXO ({}:{}) was already spent.".format(spent_utxo["txid"], spent_utxo["vout"]),
-                self.wallet.sendall, recipients=[self.remainder_target], options={"inputs": [spent_utxo]})
+                self.wallet.sendall, recipients=[self.remainder_target], inputs=[spent_utxo])
 
         # fails because UTXO is unknown, while other UTXOs exist
         foreign_utxo = self.def_wallet.listunspent()[0]
         assert_raises_rpc_error(-8, "Input not found. UTXO ({}:{}) is not part of wallet.".format(foreign_utxo["txid"],
             foreign_utxo["vout"]), self.wallet.sendall, recipients=[self.remainder_target],
-            options={"inputs": [foreign_utxo]})
+            inputs=[foreign_utxo])
 
     @cleanup
     def sendall_fails_on_no_address(self):
@@ -270,7 +270,7 @@ class SendallTest(BitcoinTestFramework):
             "Cannot combine send_max with specific inputs.",
             self.wallet.sendall,
             recipients=[self.remainder_target],
-            options={"inputs": [utxo], "send_max": True})
+            inputs=[utxo], send_max=True)
 
     @cleanup
     def sendall_fails_on_high_fee(self):
@@ -308,7 +308,7 @@ class SendallTest(BitcoinTestFramework):
         else:
             watchonly.importmulti(import_req)
 
-        sendall_tx_receipt = watchonly.sendall(recipients=[self.remainder_target], options={"inputs": [utxo]})
+        sendall_tx_receipt = watchonly.sendall(recipients=[self.remainder_target], inputs=[utxo])
         psbt = sendall_tx_receipt["psbt"]
         decoded = self.nodes[0].decodepsbt(psbt)
         assert_equal(len(decoded["inputs"]), 1)
