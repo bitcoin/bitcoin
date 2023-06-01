@@ -184,6 +184,8 @@ public:
 
 class NodeImpl : public Node
 {
+private:
+    ChainstateManager& chainman() { return *Assert(m_context->chainman); }
 public:
     EVOImpl m_evo;
     GOVImpl m_gov;
@@ -321,21 +323,28 @@ public:
     int getNumBlocks() override
     {
         LOCK(::cs_main);
-        assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-        return m_context->chainman->ActiveChain().Height();
+        assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+        return chainman().ActiveChain().Height();
     }
     uint256 getBestBlockHash() override
     {
-        assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-        const CBlockIndex* tip = WITH_LOCK(::cs_main, return m_context->chainman->ActiveChain().Tip());
+        const CBlockIndex* tip;
+        {
+            // TODO: Temporary scope to check correctness of refactored code.
+            // Should be removed manually after merge of
+            // https://github.com/bitcoin/bitcoin/pull/20158
+            LOCK(cs_main);
+            assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+            tip = chainman().ActiveChain().Tip();
+        }
         return tip ? tip->GetBlockHash() : Params().GenesisBlock().GetHash();
     }
     int64_t getLastBlockTime() override
     {
         LOCK(::cs_main);
-        assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-        if (m_context->chainman->ActiveChain().Tip()) {
-            return m_context->chainman->ActiveChain().Tip()->GetBlockTime();
+        assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+        if (chainman().ActiveChain().Tip()) {
+            return chainman().ActiveChain().Tip()->GetBlockTime();
         }
         return Params().GenesisBlock().GetBlockTime(); // Genesis block's time of current network
     }
@@ -353,14 +362,22 @@ public:
         const CBlockIndex* tip;
         {
             LOCK(::cs_main);
-            assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-            tip = m_context->chainman->ActiveChain().Tip();
+            assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+            tip = chainman().ActiveChain().Tip();
         }
         return GuessVerificationProgress(Params().TxData(), tip);
     }
     bool isInitialBlockDownload() override {
-        assert(std::addressof(::ChainstateActive()) == std::addressof(m_context->chainman->ActiveChainstate()));
-        return m_context->chainman->ActiveChainstate().IsInitialBlockDownload();
+        const CChainState* active_chainstate;
+        {
+            // TODO: Temporary scope to check correctness of refactored code.
+            // Should be removed manually after merge of
+            // https://github.com/bitcoin/bitcoin/pull/20158
+            LOCK(::cs_main);
+            active_chainstate = &m_context->chainman->ActiveChainstate();
+            assert(std::addressof(::ChainstateActive()) == std::addressof(*active_chainstate));
+        }
+        return active_chainstate->IsInitialBlockDownload();
     }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }
@@ -386,8 +403,8 @@ public:
     bool getUnspentOutput(const COutPoint& output, Coin& coin) override
     {
         LOCK(::cs_main);
-        assert(std::addressof(::ChainstateActive()) == std::addressof(m_context->chainman->ActiveChainstate()));
-        return m_context->chainman->ActiveChainstate().CoinsTip().GetCoin(output, coin);
+        assert(std::addressof(::ChainstateActive()) == std::addressof(chainman().ActiveChainstate()));
+        return chainman().ActiveChainstate().CoinsTip().GetCoin(output, coin);
     }
     WalletClient& walletClient() override
     {
@@ -597,6 +614,8 @@ public:
 
 class ChainImpl : public Chain
 {
+private:
+    ChainstateManager& chainman() { return *Assert(m_node.chainman); }
 public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::optional<int> getHeight() override
@@ -645,9 +664,8 @@ public:
     CBlockLocator getTipLocator() override
     {
         LOCK(cs_main);
-        assert(std::addressof(::ChainActive()) == std::addressof(m_node.chainman->ActiveChain()));
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        return active.GetLocator();
+        assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+        return chainman().ActiveChain().GetLocator();
     }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
@@ -716,8 +734,8 @@ public:
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
-        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
-        return GuessVerificationProgress(Params().TxData(), m_node.chainman->m_blockman.LookupBlockIndex(block_hash));
+        assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainman().m_blockman));
+        return GuessVerificationProgress(Params().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
     {
@@ -729,8 +747,8 @@ public:
         // used to limit the range, and passing min_height that's too low or
         // max_height that's too high will not crash or change the result.
         LOCK(::cs_main);
-        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
-        if (CBlockIndex* block = m_node.chainman->m_blockman.LookupBlockIndex(block_hash)) {
+        assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainman().m_blockman));
+        if (CBlockIndex* block = chainman().m_blockman.LookupBlockIndex(block_hash)) {
             if (max_height && block->nHeight >= *max_height) block = block->GetAncestor(*max_height);
             for (; block->nStatus & BLOCK_HAVE_DATA; block = block->pprev) {
                 // Check pprev to not segfault if min_height is too low
@@ -806,8 +824,16 @@ public:
     }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
-        assert(std::addressof(::ChainstateActive()) == std::addressof(m_node.chainman->ActiveChainstate()));
-        return m_node.chainman->ActiveChainstate().IsInitialBlockDownload();
+        const CChainState* active_chainstate;
+        {
+            // TODO: Temporary scope to check correctness of refactored code.
+            // Should be removed manually after merge of
+            // https://github.com/bitcoin/bitcoin/pull/20158
+            LOCK(::cs_main);
+            active_chainstate = &chainman().ActiveChainstate();
+            assert(std::addressof(::ChainstateActive()) == std::addressof(*active_chainstate));
+        }
+        return active_chainstate->IsInitialBlockDownload();
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
     void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }

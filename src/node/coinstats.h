@@ -8,11 +8,11 @@
 
 #include <amount.h>
 #include <uint256.h>
-#include <validation.h>
 
 #include <cstdint>
 #include <functional>
 
+class BlockManager;
 class CCoinsView;
 
 enum class CoinStatsHashType {

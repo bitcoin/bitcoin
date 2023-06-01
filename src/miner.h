@@ -155,6 +155,7 @@ private:
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
+    CChainState& m_chainstate;
     const CSporkManager& spork_manager;
     CGovernanceManager& governance_manager;
     const llmq::CQuorumBlockProcessor& quorum_block_processor;
@@ -171,13 +172,13 @@ public:
 
     explicit BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
                             const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                            llmq::CInstantSendManager& isman, CEvoDB& evoDb, const CTxMemPool& mempool, const CChainParams& params);
+                            llmq::CInstantSendManager& isman, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
     explicit BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
                             const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                            llmq::CInstantSendManager& isman, CEvoDB& evoDb, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
+                            llmq::CInstantSendManager& isman, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_size{};
