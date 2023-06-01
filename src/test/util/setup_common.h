@@ -79,7 +79,6 @@ struct BasicTestingSetup {
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
 
-private:
     std::unique_ptr<CConnman> connman;
     const fs::path m_path_root;
 };
@@ -112,7 +111,7 @@ class CScript;
 
 struct TestChainSetup : public RegTestingSetup
 {
-    TestChainSetup(int blockCount, const std::vector<const char*>& extra_args = {});
+    TestChainSetup(int num_blocks, bool deterministic = false, const std::vector<const char*>& extra_args = {});
     ~TestChainSetup();
 
     /**
@@ -128,6 +127,10 @@ struct TestChainSetup : public RegTestingSetup
     CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
                        const CKey& scriptKey);
 
+    //! Mine a series of new blocks on the active chain.
+    void mineBlocks(int num_blocks);
+
+    bool m_deterministic;
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -136,7 +139,11 @@ struct TestChainSetup : public RegTestingSetup
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestChainSetup {
-    TestChain100Setup() : TestChainSetup(100) {}
+    TestChain100Setup() : TestChainSetup(100, false) {}
+};
+
+struct TestChain100DeterministicSetup : public TestChainSetup {
+    TestChain100DeterministicSetup() : TestChainSetup(100, true) { }
 };
 
 struct TestChainDIP3Setup : public TestChainSetup

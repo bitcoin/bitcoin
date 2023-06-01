@@ -9,7 +9,6 @@
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
 #include <llmq/params.h>
-#include <tinyformat.h>
 #include <util/ranges.h>
 #include <util/system.h>
 #include <util/underlying.h>
@@ -311,6 +310,10 @@ public:
             }
         };
 
+        m_assumeutxo_data = MapAssumeutxo{
+         // TODO to be specified in a future patch.
+        };
+
         // getchaintxstats 17280 00000000000000261bdbe99c01fcba992e577efa6cc41aae564b8ca9f112b2a3
         chainTxData = ChainTxData{
                 1680866408, // * UNIX timestamp of last known number of transactions (Block 1718597)
@@ -475,6 +478,10 @@ public:
                 {808000, uint256S("0x00000104cb60a2b5e00a8a4259582756e5bf0dca201c0993c63f0e54971ea91a")},
                 {864000, uint256S("0x0000005c35514190ef3c38d322f69412553dc7e1107ed5f92adc2935b90acc51")},
             }
+        };
+
+        m_assumeutxo_data = MapAssumeutxo{
+            // TODO to be specified in a future patch.
         };
 
         // getchaintxstats 17280 0000005c35514190ef3c38d322f69412553dc7e1107ed5f92adc2935b90acc51
@@ -844,6 +851,17 @@ public:
             {
                 {0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
             }
+        };
+
+        m_assumeutxo_data = MapAssumeutxo{
+            {
+                110,
+                {uint256S("0x533d91c2aee01848b86693c226da68b1ba3f47bf266d9082a32bb2df4dafd7d8"), 110},
+            },
+            {
+                210,
+                {uint256S("0x4282d2b2a90444a8e5d3f80250c5a0cacde5a7000f2b03b0982013be98c2ba53"), 210},
+            },
         };
 
         chainTxData = ChainTxData{
@@ -1325,4 +1343,10 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);
+}
+
+std::ostream& operator<<(std::ostream& o, const AssumeutxoData& aud)
+{
+    o << strprintf("AssumeutxoData(%s, %s)", aud.hash_serialized.ToString(), aud.nChainTx);
+    return o;
 }
