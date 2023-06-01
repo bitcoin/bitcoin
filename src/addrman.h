@@ -154,12 +154,6 @@ public:
 //! how recent a successful connection should be before we allow an address to be evicted from tried
 #define ADDRMAN_REPLACEMENT_HOURS 4
 
-//! the maximum percentage of nodes to return in a getaddr call
-#define ADDRMAN_GETADDR_MAX_PCT 23
-
-//! the maximum number of nodes to return in a getaddr call
-#define ADDRMAN_GETADDR_MAX 1000
-
 //! Convenience
 #define ADDRMAN_TRIED_BUCKET_COUNT (1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2)
 #define ADDRMAN_NEW_BUCKET_COUNT (1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2)
@@ -266,7 +260,7 @@ protected:
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void GetAddr_(std::vector<CAddress> &vAddr, size_t max_addresses, size_t max_pct) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** We have successfully connected to this peer. Calling this function
      *  updates the CAddress's nTime, which is used in our IsTerrible()
@@ -708,13 +702,13 @@ public:
     }
 
     //! Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct)
     {
         Check();
         std::vector<CAddress> vAddr;
         {
             LOCK(cs);
-            GetAddr_(vAddr);
+            GetAddr_(vAddr, max_addresses, max_pct);
         }
         Check();
         return vAddr;

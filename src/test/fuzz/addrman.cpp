@@ -61,7 +61,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 (void)addr_man.Select(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
-                (void)addr_man.GetAddr();
+                (void)addr_man.GetAddr(fuzzed_data_provider.ConsumeIntegral<size_t>(), fuzzed_data_provider.ConsumeIntegral<size_t>());
             },
             [&] {
                 const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
