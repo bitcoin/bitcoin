@@ -14,6 +14,7 @@
 #include <merkleblock.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <psbt.h>
@@ -264,6 +265,10 @@ FUZZ_TARGET_DESERIALIZE(blocktransactions_deserialize, {
 FUZZ_TARGET_DESERIALIZE(blocktransactionsrequest_deserialize, {
         BlockTransactionsRequest btr;
         DeserializeFromFuzzingInput(buffer, btr);
+})
+FUZZ_TARGET_DESERIALIZE(snapshotmetadata_deserialize, {
+    SnapshotMetadata snapshot_metadata;
+    DeserializeFromFuzzingInput(buffer, snapshot_metadata);
 })
 FUZZ_TARGET_DESERIALIZE(uint160_deserialize, {
         uint160 u160;

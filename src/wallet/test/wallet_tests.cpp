@@ -310,10 +310,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 // Verify getaddressinfo RPC produces more or less expected results
 BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 {
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
-
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), "", CreateMockWalletDatabase());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
     wallet->SetupLegacyScriptPubKeyMan();
     AddWallet(wallet);
     CoreContext context{m_node};
@@ -369,12 +366,15 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     BOOST_CHECK_EQUAL(find_value(response, "iswatchonly").get_bool(), false);
     BOOST_CHECK_EQUAL(find_value(response, "isscript").get_bool(), true);
     BOOST_CHECK_EQUAL(find_value(response, "ischange").get_bool(), false);
-    BOOST_CHECK_EQUAL(find_value(response, "label").get_str(), "");
     BOOST_CHECK_EQUAL(find_value(response, "sigsrequired").get_int(), 2);
+    BOOST_CHECK(find_value(response, "label").isNull());
 
+    UniValue labels = find_value(response, "labels").get_array();
     UniValue pubkeys = find_value(response, "pubkeys").get_array();
     UniValue addresses = find_value(response, "addresses").get_array();
 
+    BOOST_CHECK_EQUAL(labels.size(), 1);
+    BOOST_CHECK_EQUAL(labels[0].get_str(), "");
     BOOST_CHECK_EQUAL(addresses.size(), 2);
     BOOST_CHECK_EQUAL(addresses[0].get_str(), addr1);
     BOOST_CHECK_EQUAL(addresses[1].get_str(), addr2);

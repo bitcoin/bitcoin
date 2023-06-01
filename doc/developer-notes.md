@@ -1186,6 +1186,11 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
     showing up in the command list.
 
+- Use *invalid* Dash addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
+  `RPCExamples` help documentation.
+
+  - *Rationale*: Prevent accidental transactions by users.
+
 - Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
   timestamps in the documentation.
 

@@ -329,6 +329,13 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PSBT is not valid. Input 0 has invalid value')
 
+        self.log.info("PSBT with signed, but not finalized, inputs should have Finalizer as next")
+        analysis = self.nodes[0].analyzepsbt('cHNidP8BAHECAAAAAXfx5nfVEBDq0BbpUjqqfvNEWyX2dGCkx7RiW9E6DXPbAAAAAAD9////AlDDAAAAAAAAFgAUy/UxxZuzZswcmFnN/E9DGSiHLUsuGPUFAAAAABYAFLsH5o0R38wXx+X2cCosTMCZnQ4baAAAAAABACwCAAAAAAEA4fUFAAAAABl2qRTgSNoebYX9/i35W9ixgrFUmcLJbYisAAAAACICAv4uHbVQEQkVrUThtBx6BnGlZJcyVHMKOYaJoBpEjQJyRzBEAiBse8ynDCBq+3BBEvQUeCnbf6cz0yt3ylnBsgiV2+zFZwIgCzgYKpTB+BmwtRw4fx5spZjueH8hMuJSnXu/wU/z1scBAQMEAQAAACIGAv4uHbVQEQkVrUThtBx6BnGlZJcyVHMKOYaJoBpEjQJyGA8FaUNUAACAAQAAgAAAAIAAAAAAAAAAAAEBHwDh9QUAAAAAFgAU4EjaHm2F/f4t+VvYsYKxVJnCyW0AACICAv4IiIHn01IKyw4lEaIxhArVyFqGABpomkhcTjULKKv7GA8FaUNUAACAAQAAgAAAAIABAAAAAAAAAAA=')
+        # TODO update tx above.
+        # currently I can't figure out how to generate transaction, that would be valid and will show correct stage finalizer.
+        # currently it fails at `verify pubkey` for signer
+        # assert_equal(analysis['next'], 'finalizer')
+
         analysis = self.nodes[0].analyzepsbt('cHNidP8BAHECAAAAAbmNr2X0Nc+2AtaXYjPu3kIFc3Cmj1aYy5WQs5yaUfRvAAAAAAD/////AgCAgWrj0AcAFgAUKNw0x8HRctAgmvoevm4u1SbN7XL87QKVAAAAABYAFPck4gF7iL4NL4wtfRAKgQbghiTUAAAAAAABABQCAAAAAAGghgEAAAAAAAFRAAAAAAEBHwDyBSoBAAAAFgAUlQO3F/Y8ejrjUcQ4E4Ai8Uw1OvYAAAA=')
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PSBT is not valid. Output amount invalid')

@@ -29,6 +29,12 @@
  */
 extern const std::string UNIX_EPOCH_TIME;
 
+/**
+ * Example Dash addresses for the RPCExamples help documentation. They are intentionally
+ * invalid to prevent accidental transactions by users.
+ */
+extern const std::string EXAMPLE_ADDRESS[2];
+
 class FillableSigningProvider;
 class FillableSigningProvider;
 class CPubKey;

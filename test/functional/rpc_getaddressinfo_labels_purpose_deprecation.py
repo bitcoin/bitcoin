@@ -4,8 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
 Test deprecation of RPC getaddressinfo `labels` returning an array
-containing a JSON hash of `name` and purpose` key-value pairs. It now
-returns an array of label names.
+containing a JSON object of `name` and purpose` key-value pairs. It now
+returns an array containing only the label name.
 
 """
 from test_framework.test_framework import BitcoinTestFramework
