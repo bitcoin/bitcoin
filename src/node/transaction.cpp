@@ -27,9 +27,10 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     { // cs_main scope
     LOCK(cs_main);
+    assert(std::addressof(::ChainstateActive()) == std::addressof(node.chainman->ActiveChainstate()));
     // If the transaction is already confirmed in the chain, don't do anything
     // and return early.
-    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
+    CCoinsViewCache &view = node.chainman->ActiveChainstate().CoinsTip();
     for (size_t o = 0; o < tx->vout.size(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
         // IsSpent does not mean the coin is spent, it means the output does not exist.
@@ -39,7 +40,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
         TxValidationState state;
-        if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, std::move(tx),
+        if (!AcceptToMemoryPool(node.chainman->ActiveChainstate(), *node.mempool, state, std::move(tx),
                                 bypass_limits, max_tx_fee)) {
             err_string = state.ToString();
             if (state.IsInvalid()) {
