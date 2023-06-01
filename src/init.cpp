@@ -812,9 +812,7 @@ bool AppInitBasicSetup(const ArgsManager& args, std::atomic<int>& exit_status)
     // Enable heap terminate-on-corruption
     HeapSetInformation(nullptr, HeapEnableTerminationOnCorruption, nullptr, 0);
 #endif
-    if (!InitShutdownState(exit_status)) {
-        return InitError(Untranslated("Initializing wait-for-shutdown state failed."));
-    }
+    InitShutdownState(exit_status);
 
     if (!SetupNetworking()) {
         return InitError(Untranslated("Initializing networking failed."));

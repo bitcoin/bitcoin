@@ -16,7 +16,7 @@ bool AbortNode(const std::string& strMessage, bilingual_str user_message = bilin
 /** Initialize shutdown state. This must be called before using either StartShutdown(),
  * AbortShutdown() or WaitForShutdown(). Calling ShutdownRequested() is always safe.
  */
-bool InitShutdownState(std::atomic<int>& exit_status);
+void InitShutdownState(std::atomic<int>& exit_status);
 
 /** Request shutdown of the application. */
 void StartShutdown();
