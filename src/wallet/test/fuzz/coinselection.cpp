@@ -85,6 +85,7 @@ FUZZ_TARGET(coinselection)
     const CFeeRate long_term_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CFeeRate effective_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CAmount cost_of_change{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    const CAmount min_viable_change{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
     const bool subtract_fee_outputs{fuzzed_data_provider.ConsumeBool()};
 
@@ -93,6 +94,8 @@ FUZZ_TARGET(coinselection)
     coin_params.m_subtract_fee_outputs = subtract_fee_outputs;
     coin_params.m_long_term_feerate = long_term_fee_rate;
     coin_params.m_effective_feerate = effective_fee_rate;
+    coin_params.min_viable_change = min_viable_change;
+    coin_params.m_cost_of_change = cost_of_change;
     coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
     coin_params.m_change_fee = effective_fee_rate.GetFee(coin_params.change_output_size);
 
@@ -110,7 +113,7 @@ FUZZ_TARGET(coinselection)
     }
 
     // Run coinselection algorithms
-    auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change, MAX_STANDARD_TX_WEIGHT);
+    auto result_bnb = SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT);
     if (result_bnb) {
         (void)result_bnb->GetShuffledInputVector();
         (void)result_bnb->GetInputSet();
@@ -119,7 +122,7 @@ FUZZ_TARGET(coinselection)
     auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_srd) {
         assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0); // Demonstrate that SRD creates change of at least CHANGE_LOWER
-        result_srd->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
+        result_srd->ComputeAndSetWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
         (void)result_srd->GetShuffledInputVector();
         (void)result_srd->GetInputSet();
     }
@@ -127,7 +130,7 @@ FUZZ_TARGET(coinselection)
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
     auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_knapsack) {
-        result_knapsack->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
+        result_knapsack->ComputeAndSetWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
         (void)result_knapsack->GetShuffledInputVector();
         (void)result_knapsack->GetInputSet();
     }
