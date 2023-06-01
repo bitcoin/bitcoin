@@ -190,6 +190,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "send", 1, "conf_target" },
     { "send", 3, "fee_rate"},
     { "send", 4, "options" },
+    // SYSCOIN
+    { "send", 4, "version"},
     { "send", 4, "add_inputs"},
     { "send", 4, "include_unsafe"},
     { "send", 4, "minconf"},
