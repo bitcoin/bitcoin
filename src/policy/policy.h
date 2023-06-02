@@ -69,6 +69,8 @@ static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
  * configurable as it doesn't materially change DoS parameters.
  */
 static constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10000};
+/** The maximum size of the annex of an input */
+static constexpr unsigned int MAX_PER_INPUT_ANNEX_SIZE{257};
 /**
  * Standard script verification flags that standard transactions will comply
  * with. However scripts violating these flags may still be present in valid

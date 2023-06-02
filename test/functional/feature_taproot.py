@@ -460,7 +460,7 @@ def spend(tx, idx, utxos, **kwargs):
     scriptsig_list = flatten(get(ctx, "scriptsig"))
     scriptsig = CScript(b"".join(bytes(to_script(elem)) for elem in scriptsig_list))
     witness_stack = flatten(get(ctx, "witness"))
-    return (scriptsig, witness_stack)
+    return (scriptsig, witness_stack, get(ctx, "annex"))
 
 
 # === Spender objects ===
@@ -709,14 +709,24 @@ def spenders_taproot_active():
 
     # == Tests for signature hashing ==
 
-    # Run all tests once with no annex, and once with a valid random annex.
-    for annex in [None, lambda _: bytes([ANNEX_TAG]) + random_bytes(random.randrange(0, 250))]:
-        # Non-empty annex is non-standard
-        no_annex = annex is None
+    # No annex is standard.
+    no_annex = (None, True)
 
+    # An empty annex is standard.
+    empty_annex = (lambda _: bytes([ANNEX_TAG]), True)
+
+    # An unstructured annex (starts with 0x00) is only standard if it is <= 256 bytes.
+    std_unstructured_annex = (lambda _: bytes([ANNEX_TAG, 0]) + random_bytes(random.randint(0, 256)), True)
+    non_std_unstructured_annex = (lambda _: bytes([ANNEX_TAG, 0]) + random_bytes(random.randint(257, 500)), False)
+
+    # Define non-standard annex (starts with non-0x00).
+    non_std_annex = (lambda _: bytes([ANNEX_TAG, random.randint(1, 255)]) + random_bytes(random.randint(0, 500)), False)
+
+    # Run all tests once with the various types of annexes.
+    for (annex, standard) in [no_annex, empty_annex, std_unstructured_annex, non_std_unstructured_annex, non_std_annex]:
         # Sighash mutation tests (test all sighash combinations)
         for hashtype in VALID_SIGHASHES_TAPROOT:
-            common = {"annex": annex, "hashtype": hashtype, "standard": no_annex}
+            common = {"annex": annex, "hashtype": hashtype, "standard": standard}
 
             # Pure pubkey
             tap = taproot_construct(pubs[0])
@@ -730,12 +740,12 @@ def spenders_taproot_active():
 
             # Test SIGHASH_SINGLE behavior in combination with mismatching outputs
             if hashtype in VALID_SIGHASHES_TAPROOT_SINGLE:
-                add_spender(spenders, "sighash/keypath_hashtype_mis_%x" % hashtype, tap=tap, key=secs[0], annex=annex, standard=no_annex, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), failure={"hashtype_actual": hashtype}, **ERR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
-                add_spender(spenders, "sighash/scriptpath_hashtype_mis_%x" % hashtype, tap=tap, leaf="s0", key=secs[1], annex=annex, standard=no_annex, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), **SINGLE_SIG, failure={"hashtype_actual": hashtype}, **ERR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
+                add_spender(spenders, "sighash/keypath_hashtype_mis_%x" % hashtype, tap=tap, key=secs[0], annex=annex, standard=standard, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), failure={"hashtype_actual": hashtype}, **ERR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
+                add_spender(spenders, "sighash/scriptpath_hashtype_mis_%x" % hashtype, tap=tap, leaf="s0", key=secs[1], annex=annex, standard=standard, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), **SINGLE_SIG, failure={"hashtype_actual": hashtype}, **ERR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
 
         # Test OP_CODESEPARATOR impact on sighashing.
         hashtype = lambda _: random.choice(VALID_SIGHASHES_TAPROOT)
-        common = {"annex": annex, "hashtype": hashtype, "standard": no_annex}
+        common = {"annex": annex, "hashtype": hashtype, "standard": standard}
         scripts = [
             ("pk_codesep", CScript(random_checksig_style(pubs[1]) + bytes([OP_CODESEPARATOR]))),  # codesep after checksig
             ("codesep_pk", CScript(bytes([OP_CODESEPARATOR]) + random_checksig_style(pubs[1]))),  # codesep before checksig
@@ -749,7 +759,7 @@ def spenders_taproot_active():
         add_spender(spenders, "sighash/branched_codesep/right", tap=tap, leaf="branched_codesep", key=secs[1], codeseppos=6, **common, inputs=[getter("sign"), b''], **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
 
     # Reusing the scripts above, test that various features affect the sighash.
-    add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=False, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SIG_SCHNORR)
+    add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=True, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/script", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, script_taproot=tap.leaves["codesep_pk"].script)}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/leafver", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leafversion=random.choice([x & 0xFE for x in range(0x100) if x & 0xFE != LEAF_VERSION_TAPSCRIPT]))}, **ERR_SIG_SCHNORR)
     add_spender(spenders, "sighash/scriptpath", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leaf=None)}, **ERR_SIG_SCHNORR)
@@ -1066,7 +1076,7 @@ def spenders_taproot_active():
         # n OP_CHECKSIGADDs and 1 OP_CHECKSIG, but also an OP_CHECKSIGADD with an empty signature.
         lambda n, pk: (CScript([OP_DROP, OP_0, OP_10, pk, OP_CHECKSIGADD, OP_10, OP_EQUALVERIFY, pk] + [OP_2DUP, OP_16, OP_SWAP, OP_CHECKSIGADD, b'\x11', OP_EQUALVERIFY] * n + [OP_CHECKSIG]), n + 1),
     ]
-    for annex in [None, bytes([ANNEX_TAG]) + random_bytes(random.randrange(1000))]:
+    for annex in [None, bytes([ANNEX_TAG, random.randint(1, 255)]) + random_bytes(random.randrange(1000))]:
         for hashtype in [SIGHASH_DEFAULT, SIGHASH_ALL]:
             for pubkey in [pubs[1], random_bytes(random.choice([x for x in range(2, 81) if x != 32]))]:
                 for fn_num, fn in enumerate(SIGOPS_RATIO_SCRIPTS):
@@ -1492,15 +1502,26 @@ class TaprootTest(BitcoinTestFramework):
                 # Expected message with each input failure, may be None(which is ignored)
                 expected_fail_msg = None if fail_input is None else input_utxos[fail_input].spender.err_msg
                 # Fill inputs/witnesses
+                annex_count = 0
                 for i in range(len(input_utxos)):
-                    tx.vin[i].scriptSig = input_data[i][i != fail_input][0]
-                    tx.wit.vtxinwit[i].scriptWitness.stack = input_data[i][i != fail_input][1]
+                    sat_fn_output = input_data[i][i != fail_input]
+
+                    tx.vin[i].scriptSig = sat_fn_output[0]
+                    tx.wit.vtxinwit[i].scriptWitness.stack = sat_fn_output[1]
+
+                    # Count annex inputs.
+                    annex = sat_fn_output[2]
+                    if annex is not None:
+                        annex_count += 1
+
                 # Submit to mempool to check standardness
                 is_standard_tx = (
                     fail_input is None  # Must be valid to be standard
                     and (all(utxo.spender.is_standard for utxo in input_utxos))  # All inputs must be standard
                     and tx.nVersion >= 1  # The tx version must be standard
-                    and tx.nVersion <= 2)
+                    and tx.nVersion <= 2
+                    and (annex_count == 0 or annex_count == len(input_utxos)) # Opt-in annexes
+                )
                 tx.rehash()
                 msg = ','.join(utxo.spender.comment + ("*" if n == fail_input else "") for n, utxo in enumerate(input_utxos))
                 if is_standard_tx:
