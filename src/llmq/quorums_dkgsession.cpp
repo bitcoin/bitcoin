@@ -969,7 +969,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         k.MakeNewKey();
         qc.quorumPublicKey = k.GetPublicKey();
     } else if (lieType == 1) {
-        (*qc.quorumVvecHash.begin())++;
+        qc.quorumVvecHash = uint256::ONEV;
     }
 
     uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumPublicKey, qc.quorumVvecHash);
