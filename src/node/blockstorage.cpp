@@ -259,8 +259,13 @@ bool BlockManager::LoadBlockIndex()
     std::sort(vSortedByHeight.begin(), vSortedByHeight.end(),
               CBlockIndexHeightOnlyComparator());
 
+    CBlockIndex* previous_index{nullptr};
     for (CBlockIndex* pindex : vSortedByHeight) {
         if (m_interrupt) return false;
+        if (previous_index && pindex->nHeight > previous_index->nHeight + 1) {
+            return error("%s: block index is non-contiguous, index of height %d missing", __func__, previous_index->nHeight + 1);
+        }
+        previous_index = pindex;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
 
