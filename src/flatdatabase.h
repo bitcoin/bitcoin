@@ -57,7 +57,7 @@ private:
 
         // Write and commit header, data
         try {
-            fileout << MakeUCharSpan(ssObj);
+            fileout << ssObj;
         }
         catch (std::exception &e) {
             return error("%s: Serialize or I/O error - %s", __func__, e.what());
