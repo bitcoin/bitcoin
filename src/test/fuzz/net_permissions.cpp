@@ -24,6 +24,7 @@ FUZZ_TARGET(net_permissions)
                                                                                              NetPermissionFlags::PF_FORCERELAY,
                                                                                              NetPermissionFlags::PF_NOBAN,
                                                                                              NetPermissionFlags::PF_MEMPOOL,
+                                                                                             NetPermissionFlags::PF_ADDR,
                                                                                              NetPermissionFlags::PF_ISIMPLICIT,
                                                                                              NetPermissionFlags::PF_ALL,
                                                                                          }) :
