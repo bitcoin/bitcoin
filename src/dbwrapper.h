@@ -426,7 +426,7 @@ public:
 
     template<typename K>
     void Seek(const K& key) {
-        Seek(CDBTransaction::KeyToDataStream(key));
+        Seek(key);
     }
 
     void Seek(const CDataStream& ssKey) {
@@ -601,7 +601,7 @@ public:
 
     template <typename K, typename V>
     void Write(const K& key, const V& v) {
-        Write(KeyToDataStream(key), v);
+        Write(key, v);
     }
 
     template <typename V>
@@ -622,7 +622,7 @@ public:
 
     template <typename K, typename V>
     bool Read(const K& key, V& value) {
-        return Read(KeyToDataStream(key), value);
+        return Read(key, value);
     }
 
     template <typename V>
@@ -641,12 +641,12 @@ public:
             return true;
         }
 
-        return parent.Read(ssKey, value);
+        return parent.Read(MakeUCharSpan(ssKey), value);
     }
 
     template <typename K>
     bool Exists(const K& key) {
-        return Exists(KeyToDataStream(key));
+        return Exists(key);
     }
 
     bool Exists(const CDataStream& ssKey) {
@@ -663,7 +663,7 @@ public:
 
     template <typename K>
     void Erase(const K& key) {
-        return Erase(KeyToDataStream(key));
+        return Erase(key);
     }
 
     void Erase(const CDataStream& ssKey) {
@@ -685,7 +685,7 @@ public:
 
     void Commit() {
         for (const auto &k : deletes) {
-            commitTarget.Erase(k);
+            commitTarget.Erase(MakeUCharSpan(k));
         }
         for (auto &p : writes) {
             p.second->Write(p.first, commitTarget);
