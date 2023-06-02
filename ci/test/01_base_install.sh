@@ -42,7 +42,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.4 "${BASE_SCRATCH_DIR}"/msan/llvm-project
+  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.5 "${BASE_SCRATCH_DIR}"/msan/llvm-project
 
   cmake -G Ninja -B "${BASE_SCRATCH_DIR}"/msan/clang_build/ -DLLVM_ENABLE_PROJECTS="clang" \
                                                             -DCMAKE_BUILD_TYPE=Release \
