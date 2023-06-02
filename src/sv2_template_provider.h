@@ -155,6 +155,11 @@ private:
      */
     bool m_default_future_templates;
 
+    /**
+     * The configured port to listen for new connections.
+     */
+    uint16_t m_port;
+
 public:
     explicit Sv2TemplateProvider(ChainstateManager& chainman, CTxMemPool& mempool) : m_chainman{chainman}, m_mempool{mempool}
     {

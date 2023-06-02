@@ -13,11 +13,14 @@ void Sv2TemplateProvider::Start(const Sv2TemplateProviderOptions& options)
 {
     Init(options);
 
-    // Intentionally no error handling for BindListenPort() since if an sv2 port cannot be opened,
-    // the process should exit.
+    // Here we are checking if we can bind to the port. If we can't, then exit
+    // early and shutdown the node gracefully. This would be called in init.cpp
+    // and allows the caller to see that the node is unable to run with the current
+    // sv2 config.
+    //
+    // The socket is dropped within this scope and re-opened on the same port in
+    // ThreadSv2Handler() when the node has finished IBD.
     auto sock = BindListenPort(options.port);
-    m_listening_socket = std::move(sock);
-    LogPrintf("Sv2 Template Provider listening on port: %d\n", options.port);
 
     m_thread_sv2_handler = std::thread(&util::TraceThread, "sv2", [this] { ThreadSv2Handler(); });
 }
@@ -28,6 +31,7 @@ void Sv2TemplateProvider::Init(const Sv2TemplateProviderOptions& options)
     m_optional_features = options.optional_features;
     m_default_coinbase_tx_additional_output_size = options.default_coinbase_tx_additional_output_size;
     m_default_future_templates = options.default_future_templates;
+    m_port = options.port;
 }
 
 void Sv2TemplateProvider::Interrupt()
@@ -81,6 +85,20 @@ void Sv2TemplateProvider::ThreadSv2Handler()
         if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
             m_interrupt_sv2.sleep_for(std::chrono::milliseconds(100));
             continue;
+        }
+
+        // If we've left IBD. Create the listening socket for new sv2 connections.
+        if (!m_listening_socket) {
+            try {
+                auto socket = BindListenPort(m_port);
+                m_listening_socket = std::move(socket);
+            } catch (const std::runtime_error& e) {
+                LogPrintf("sv2: thread shutting down due to exception: %s\n", e.what());
+                Interrupt();
+                continue;
+            }
+
+            LogPrintf("Sv2 Template Provider listening on port: %d\n", m_port);
         }
 
         // Remove clients that are flagged for disconnection.
