@@ -112,4 +112,4 @@ There are several ways to see your CJDNS address in Syscoin Core:
 To see which CJDNS peers your node is connected to, use `syscoin-cli -netinfo 4`
 or the `getpeerinfo` RPC (i.e. `syscoin-cli getpeerinfo`).
 
-You can use the `getnodeaddresses` RPC to fetch a number of CJDNS peers known to your node; run `bitcoin-cli help getnodeaddresses` for details.
+You can use the `getnodeaddresses` RPC to fetch a number of CJDNS peers known to your node; run `syscoin-cli help getnodeaddresses` for details.
