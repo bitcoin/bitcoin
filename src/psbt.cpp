@@ -27,10 +27,10 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
         return false;
     }
 
-    for (unsigned int i = 0; i < inputs.size(); ++i) {
+    for (std::vector<decltype(inputs)>::size_type i = 0; i < inputs.size(); ++i) {
         inputs[i].Merge(psbt.inputs[i]);
     }
-    for (unsigned int i = 0; i < outputs.size(); ++i) {
+    for (std::vector<decltype(outputs)>::size_type i = 0; i < outputs.size(); ++i) {
         outputs[i].Merge(psbt.outputs[i]);
     }
     for (auto& xpub_pair : psbt.m_xpubs) {
@@ -448,7 +448,7 @@ void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, const int&
     if ((sighash_type & 0x80) != SIGHASH_ANYONECANPAY) {
         // Figure out if any non_witness_utxos should be dropped
         std::vector<unsigned int> to_drop;
-        for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
+        for (std::vector<decltype(psbtx.inputs)>::size_type i = 0; i < psbtx.inputs.size(); ++i) {
             const auto& input = psbtx.inputs.at(i);
             int wit_ver;
             std::vector<unsigned char> wit_prog;
@@ -482,7 +482,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     //   script.
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+    for (std::vector<decltype(psbtx.tx->vin)>::size_type i = 0; i < psbtx.tx->vin.size(); ++i) {
         complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true);
     }
 
@@ -498,7 +498,7 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
     }
 
     result = *psbtx.tx;
-    for (unsigned int i = 0; i < result.vin.size(); ++i) {
+    for (std::vector<decltype(result.vin)>::size_type i = 0; i < result.vin.size(); ++i) {
         result.vin[i].scriptSig = psbtx.inputs[i].final_script_sig;
         result.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
     }

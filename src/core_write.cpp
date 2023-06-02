@@ -190,7 +190,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     CAmount amt_total_in = 0;
     CAmount amt_total_out = 0;
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+    for (std::vector<decltype(&tx)>::size_type i = 0; i < tx.vin.size(); i++) {
         const CTxIn& txin = tx.vin[i];
         UniValue in(UniValue::VOBJ);
         if (tx.IsCoinBase()) {
@@ -234,7 +234,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("vin", vin);
 
     UniValue vout(UniValue::VARR);
-    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+    for (std::vector<decltype(&tx)>::size_type i = 0; i < tx.vout.size(); i++) {
         const CTxOut& txout = tx.vout[i];
 
         UniValue out(UniValue::VOBJ);
