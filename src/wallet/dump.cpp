@@ -255,11 +255,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
 
             std::vector<unsigned char> k = ParseHex(key);
             std::vector<unsigned char> v = ParseHex(value);
-
-            DataStream ss_key{k};
-            DataStream ss_value{v};
-
-            if (!batch->Write(ss_key, ss_value)) {
+            if (!batch->Write(Span{k}, Span{v})) {
                 error = strprintf(_("Error: Unable to write record to new wallet"));
                 ret = false;
                 break;
