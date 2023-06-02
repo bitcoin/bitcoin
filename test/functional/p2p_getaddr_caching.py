@@ -4,8 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test addr response caching"""
 
-import time
-
 from test_framework.messages import msg_getaddr
 from test_framework.mininode import (
     P2PInterface,
@@ -59,14 +57,14 @@ class AddrTest(BitcoinTestFramework):
         responses = []
         self.log.info('Send many addr requests within short time to receive same response')
         N = 5
-        cur_mock_time = int(time.time())
+        cur_mock_time = self.mocktime
         for i in range(N):
             addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
             addr_receiver.send_and_ping(msg_getaddr())
             # Trigger response
             cur_mock_time += 5 * 60
             self.nodes[0].setmocktime(cur_mock_time)
-            addr_receiver.wait_until(addr_receiver.addr_received, timeout=120)
+            addr_receiver.wait_until(addr_receiver.addr_received)
             responses.append(addr_receiver.get_received_addrs())
         for response in responses[1:]:
             assert_equal(response, responses[0])
@@ -81,7 +79,7 @@ class AddrTest(BitcoinTestFramework):
         # Trigger response
         cur_mock_time += 5 * 60
         self.nodes[0].setmocktime(cur_mock_time)
-        last_addr_receiver.wait_until(last_addr_receiver.addr_received, timeout=120)
+        last_addr_receiver.wait_until(last_addr_receiver.addr_received)
         # new response is different
         assert(set(responses[0]) != set(last_addr_receiver.get_received_addrs()))
 
