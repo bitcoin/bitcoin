@@ -968,7 +968,7 @@ static util::Result<SelectionResult> SelectCoinsSRD(const CAmount& target,
     std::unique_ptr<CWallet> wallet = NewWallet(m_node);
     CoinEligibilityFilter filter(0, 0, 0); // accept all coins without ancestors
     Groups group = GroupOutputs(*wallet, coin_setup(*wallet), cs_params, {{filter}})[filter].all_groups;
-    return SelectCoinsSRD(group.positive_group, target, cs_params.rng_fast, max_weight);
+    return SelectCoinsSRD(group.positive_group, target, cs_params.m_change_fee, cs_params.rng_fast, max_weight);
 }
 
 BOOST_AUTO_TEST_CASE(srd_tests)
