@@ -1837,6 +1837,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         const auto connect = args.GetArgs("-connect");
         if (connect.size() != 1 || connect[0] != "0") {
             connOptions.m_specified_outgoing = connect;
+            // De-duplicate -addnode and -connect hosts. Prefer -connect
+            connOptions.m_added_nodes.erase(
+                std::remove_if(connOptions.m_added_nodes.begin(), connOptions.m_added_nodes.end(), [&](const std::string& node) {
+                    return std::find(connOptions.m_specified_outgoing.begin(), connOptions.m_specified_outgoing.end(), node) != connOptions.m_specified_outgoing.end();
+                }),
+                connOptions.m_added_nodes.end());
         }
         if (!connOptions.m_specified_outgoing.empty() && !connOptions.vSeedNodes.empty()) {
             LogPrintf("-seednode is ignored when -connect is used\n");
