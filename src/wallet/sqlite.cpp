@@ -9,6 +9,7 @@
 #include <logging.h>
 #include <sync.h>
 #include <util/fs_helpers.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <wallet/db.h>
@@ -39,7 +40,11 @@ static bool BindBlobToStatement(sqlite3_stmt* stmt,
                                 Span<const std::byte> blob,
                                 const std::string& description)
 {
-    int res = sqlite3_bind_blob(stmt, index, blob.data(), blob.size(), SQLITE_STATIC);
+    // Pass a pointer to the empty string "" below instead of passing the
+    // blob.data() pointer if the blob.data() pointer is null. Passing a null
+    // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
+    // instead of the empty blob value X'', which would mess up SQL comparisons.
+    int res = sqlite3_bind_blob(stmt, index, blob.data() ? static_cast<const void*>(blob.data()) : "", blob.size(), SQLITE_STATIC);
     if (res != SQLITE_OK) {
         LogPrintf("Unable to bind %s to statement: %s\n", description, sqlite3_errstr(res));
         sqlite3_clear_bindings(stmt);
@@ -409,6 +414,7 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
     // Leftmost column in result is index 0
     const std::byte* data{AsBytePtr(sqlite3_column_blob(m_read_stmt, 0))};
     size_t data_size(sqlite3_column_bytes(m_read_stmt, 0));
+    value.clear();
     value.write({data, data_size});
 
     sqlite3_clear_bindings(m_read_stmt);
@@ -495,6 +501,9 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
         return Status::FAIL;
     }
 
+    key.clear();
+    value.clear();
+
     // Leftmost column in result is index 0
     const std::byte* key_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 0))};
     size_t key_data_size(sqlite3_column_bytes(m_cursor_stmt, 0));
@@ -507,6 +516,7 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
 
 SQLiteCursor::~SQLiteCursor()
 {
+    sqlite3_clear_bindings(m_cursor_stmt);
     sqlite3_reset(m_cursor_stmt);
     int res = sqlite3_finalize(m_cursor_stmt);
     if (res != SQLITE_OK) {
@@ -525,6 +535,48 @@ std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewCursor()
     if (res != SQLITE_OK) {
         throw std::runtime_error(strprintf(
             "%s: Failed to setup cursor SQL statement: %s\n", __func__, sqlite3_errstr(res)));
+    }
+
+    return cursor;
+}
+
+std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(Span<const std::byte> prefix)
+{
+    if (!m_database.m_db) return nullptr;
+
+    // To get just the records we want, the SQL statement does a comparison of the binary data
+    // where the data must be greater than or equal to the prefix, and less than
+    // the prefix incremented by one (when interpreted as an integer)
+    std::vector<std::byte> start_range(prefix.begin(), prefix.end());
+    std::vector<std::byte> end_range(prefix.begin(), prefix.end());
+    auto it = end_range.rbegin();
+    for (; it != end_range.rend(); ++it) {
+        if (*it == std::byte(std::numeric_limits<unsigned char>::max())) {
+            *it = std::byte(0);
+            continue;
+        }
+        *it = std::byte(std::to_integer<unsigned char>(*it) + 1);
+        break;
+    }
+    if (it == end_range.rend()) {
+        // If the prefix is all 0xff bytes, clear end_range as we won't need it
+        end_range.clear();
+    }
+
+    auto cursor = std::make_unique<SQLiteCursor>(start_range, end_range);
+    if (!cursor) return nullptr;
+
+    const char* stmt_text = end_range.empty() ? "SELECT key, value FROM main WHERE key >= ?" :
+                            "SELECT key, value FROM main WHERE key >= ? AND key < ?";
+    int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, &cursor->m_cursor_stmt, nullptr);
+    if (res != SQLITE_OK) {
+        throw std::runtime_error(strprintf(
+            "SQLiteDatabase: Failed to setup cursor SQL statement: %s\n", sqlite3_errstr(res)));
+    }
+
+    if (!BindBlobToStatement(cursor->m_cursor_stmt, 1, cursor->m_prefix_range_start, "prefix_start")) return nullptr;
+    if (!end_range.empty()) {
+        if (!BindBlobToStatement(cursor->m_cursor_stmt, 2, cursor->m_prefix_range_end, "prefix_end")) return nullptr;
     }
 
     return cursor;
