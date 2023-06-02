@@ -306,6 +306,14 @@ public:
         vch.insert(vch.end(), src.begin(), src.end());
     }
 
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        // Special case: stream << stream concatenates like stream += stream
+        if (!vch.empty())
+            s.write(MakeByteSpan(vch));
+    }
+
     template<typename T>
     DataStream& operator<<(const T& obj)
     {
