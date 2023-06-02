@@ -83,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_ckey, TestingSetup)
 {
     SerializeData ckey_record_key;
     SerializeData ckey_record_value;
-    std::map<SerializeData, SerializeData> records;
+    MockableData records;
 
     {
         // Context setup.
