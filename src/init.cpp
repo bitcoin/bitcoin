@@ -1888,8 +1888,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     node.sv2_template_provider = std::make_unique<Sv2TemplateProvider>(*node.chainman, *node.mempool);
 
-    auto sv2_port{static_cast<uint16_t>(gArgs.GetIntArg("-stratumv2", 8442))};
-    node.sv2_template_provider->Start(Sv2TemplateProviderOptions { .port = sv2_port });
+    try {
+        auto sv2_port{static_cast<uint16_t>(gArgs.GetIntArg("-stratumv2", 8442))};
+        node.sv2_template_provider->Start(Sv2TemplateProviderOptions { .port = sv2_port });
+    } catch (const std::runtime_error& e) {
+        LogPrintf("sv2: %s\n", e.what());
+        return false;
+    }
 #endif
 
     // ********************************************************* Step 13: finished
