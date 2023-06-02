@@ -277,6 +277,14 @@ static const CRPCConvertParam vRPCConvertParams[] =
 };
 // clang-format on
 
+/** Parse string to UniValue or throw runtime_error if string contains invalid JSON */
+static UniValue Parse(std::string_view raw)
+{
+    UniValue parsed;
+    if (!parsed.read(raw)) throw std::runtime_error(tfm::format("Error parsing JSON: %s", raw));
+    return parsed;
+}
+
 class CRPCConvertTable
 {
 private:
@@ -304,7 +312,7 @@ public:
     UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, int param_idx)
     {
         if (const auto it = members.find({method, param_idx}); it != members.end() && (!it->second || (it->second && LikelyJSONType(arg_value)))) {
-            return ParseNonRFCJSONValue(MaybeUnquoteString(arg_value));
+            return Parse(MaybeUnquoteString(arg_value));
         }
         return arg_value;
     }
@@ -313,7 +321,7 @@ public:
     UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, const std::string& param_name)
     {
         if (const auto it = membersByName.find({method, param_name}); it != membersByName.end() && (!it->second || (it->second && LikelyJSONType(arg_value)))) {
-            return ParseNonRFCJSONValue(MaybeUnquoteString(arg_value));
+            return Parse(MaybeUnquoteString(arg_value));
         }
         return arg_value;
     }
@@ -336,16 +344,6 @@ CRPCConvertTable::CRPCConvertTable()
 }
 
 static CRPCConvertTable rpcCvtTable;
-
-/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
- * as well as objects and arrays.
- */
-UniValue ParseNonRFCJSONValue(std::string_view raw)
-{
-    UniValue parsed;
-    if (!parsed.read(raw)) throw std::runtime_error(tfm::format("Error parsing JSON: %s", raw));
-    return parsed;
-}
 
 UniValue RPCConvertValues(std::string strMethod, const std::vector<std::string> &strParams)
 {
