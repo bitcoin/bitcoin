@@ -107,34 +107,30 @@ void Sv2TemplateProvider::ThreadSv2Handler()
                 return client->m_disconnect_flag;
         }), m_sv2_clients.end());
 
-        {
-            // Required locking order for g_best_block_mutex.
-            LOCK2(cs_main, m_mempool.cs);
+        bool best_block_changed = [this]() {
+            WAIT_LOCK(g_best_block_mutex, lock);
+            auto checktime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+            g_best_block_cv.wait_until(lock, checktime);
+            return m_best_prev_hash.m_prev_hash != g_best_block;
+        }();
 
-            {
-                WAIT_LOCK(g_best_block_mutex, lock);
-                auto checktime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
-                if (g_best_block_cv.wait_until(lock, checktime) == std::cv_status::timeout) {
-                    if (m_best_prev_hash.m_prev_hash != g_best_block) {
-                        // Clear the block cache when the best known block changes since all
-                        // previous work is now invalid.
-                        BlockCache block_cache;
-                        m_block_cache.swap(block_cache);
+        if (best_block_changed) {
+            // Clear the block cache when the best known block changes since all
+            // previous work is now invalid.
+            BlockCache block_cache;
+            m_block_cache.swap(block_cache);
 
-                        // Build a new best template, best prev hash and update the block cache.
-                        ++m_template_id;
-                        auto new_work_set = BuildNewWorkSet(m_default_future_templates, m_default_coinbase_tx_additional_output_size, m_template_id);
-                        m_best_new_template = std::move(new_work_set.new_template);
-                        m_best_prev_hash = std::move(new_work_set.prev_hash);
-                        m_block_cache.insert({m_template_id, std::move(new_work_set.block_template)});
+            // Build a new best template, best prev hash and update the block cache.
+            ++m_template_id;
+            auto new_work_set = BuildNewWorkSet(m_default_future_templates, m_default_coinbase_tx_additional_output_size, m_template_id);
+            m_best_new_template = std::move(new_work_set.new_template);
+            m_best_prev_hash = std::move(new_work_set.prev_hash);
+            m_block_cache.insert({m_template_id, std::move(new_work_set.block_template)});
 
-                        // Update all clients with the new template and prev hash.
-                        for (const auto& client : m_sv2_clients) {
-                            if (!SendWork(*client.get(), m_best_new_template, m_best_prev_hash, m_block_cache, m_template_id))
-                                continue;
-                        }
-                    }
-                }
+            // Update all clients with the new template and prev hash.
+            for (const auto& client : m_sv2_clients) {
+                if (!SendWork(*client.get(), m_best_new_template, m_best_prev_hash, m_block_cache, m_template_id))
+                    continue;
             }
         }
 
