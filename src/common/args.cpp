@@ -268,7 +268,7 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
-fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
+fs::path ArgsManager::GetPathArg(const std::string& arg, const fs::path& default_value) const
 {
     if (IsArgNegated(arg)) return fs::path{};
     std::string path_str = GetArg(arg, "");

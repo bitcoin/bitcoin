@@ -280,7 +280,7 @@ protected:
      * for examples or implementation for details). If argument is empty or not
      * set, default_value is returned unchanged.
      */
-    fs::path GetPathArg(std::string arg, const fs::path& default_value = {}) const;
+    fs::path GetPathArg(const std::string& arg, const fs::path& default_value = {}) const;
 
     /**
      * Return integer argument or default value
