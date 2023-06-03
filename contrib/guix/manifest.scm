@@ -32,7 +32,6 @@
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
-             (guix download)
              (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
@@ -254,12 +253,13 @@ and abstract ELF, PE and MachO formats.")
     (name "osslsigncode")
     (version "2.5")
     (source (origin
-              (method url-fetch)
-              (uri (string-append "https://github.com/mtrojnar/"
-                                  name "/archive/" version ".tar.gz"))
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/mtrojnar/osslsigncode")
+                    (commit version)))
               (sha256
                (base32
-                "03by9706gg0an6dn48pljx38vcb76ziv11bgm8ilwsf293x2k4hv"))))
+                "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
     (build-system cmake-build-system)
     (inputs
      `(("openssl", openssl)))
