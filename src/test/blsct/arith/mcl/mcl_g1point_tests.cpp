@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(test_get_set_vch)
     MclG1Point q;
     BOOST_CHECK(p != q);
 
-    q.SetVch(vec);
+    BOOST_CHECK(q.SetVch(vec) == true);
     BOOST_CHECK(p == q);
 }
 
