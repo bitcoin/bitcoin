@@ -22,6 +22,7 @@ SubAddress::SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, con
     // M = m*G
     // D = B + M
     // C = a*D
+
     std::cout << "hash " << string.GetHash().ToString() << "\n";
     MclScalar m{string.GetHash()};
     MclG1Point M = MclG1Point::GetBasePoint() * m;
