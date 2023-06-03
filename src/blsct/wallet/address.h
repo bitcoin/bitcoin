@@ -20,7 +20,7 @@ public:
     CKeyID hashId;
 
     SubAddressPool() : nTime(GetTime()){};
-    SubAddressPool(const CKeyID& hashIdIn) : hashId(hashIdIn), nTime(GetTime()){};
+    SubAddressPool(const CKeyID& hashIdIn) : nTime(GetTime()), hashId(hashIdIn){};
 
 
     SERIALIZE_METHODS(SubAddressPool, obj)
