@@ -12,23 +12,39 @@
 #include <key.h>
 
 namespace blsct {
-
 class PublicKey
 {
-private:
-    std::vector<unsigned char> data;
-
 public:
     using Point = MclG1Point;
     using Message = std::vector<uint8_t>;
 
+private:
+    Point point;
+
+public:
     static constexpr size_t SIZE = 48;
 
-    PublicKey() { data.clear(); }
-    PublicKey(const Point& pk) : data(pk.GetVch()) {}
-    PublicKey(const std::vector<unsigned char>& pk) : data(pk) {}
+    int8_t fValid = -1;
 
-    SERIALIZE_METHODS(PublicKey, obj) { READWRITE(obj.data); }
+    PublicKey() {}
+    PublicKey(const Point& pk)
+    {
+        try {
+            point = Point{pk};
+            fValid = point.IsValid() ? 1 : 0;
+        } catch (...) {
+            fValid = 0;
+        }
+    }
+    PublicKey(const std::vector<unsigned char>& pk)
+    {
+        fValid = point.SetVch(pk);
+    }
+
+    SERIALIZE_METHODS(PublicKey, obj)
+    {
+        READWRITE(obj.point);
+    }
 
     uint256 GetHash() const;
     CKeyID GetID() const;
@@ -40,10 +56,13 @@ public:
 
     bool IsValid() const;
 
-    bool GetG1Point(Point& ret) const;
+    Point GetG1Point() const;
     std::vector<unsigned char> GetVch() const;
 
-    bool operator<(const PublicKey& b) const { return this->GetVch() < b.GetVch(); };
+    bool operator<(const PublicKey& b) const
+    {
+        return this->GetVch() < b.GetVch();
+    };
 
     blsPublicKey ToBlsPublicKey() const;
     std::vector<uint8_t> AugmentMessage(const Message& msg) const;
@@ -58,6 +77,6 @@ public:
     bool Verify(const Message& msg, const Signature& sig) const;
 };
 
-}
+} // namespace blsct
 
-#endif  // NAVCOIN_BLSCT_PUBLIC_KEY_H
+#endif // NAVCOIN_BLSCT_PUBLIC_KEY_H

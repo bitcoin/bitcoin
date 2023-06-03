@@ -6,12 +6,13 @@
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
+#include <blsct/wallet/address.h>
 #include <blsct/wallet/hdchain.h>
+#include <key.h>
 #include <script/sign.h>
 #include <script/standard.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
-#include <key.h>
 
 #include <stdint.h>
 #include <string>
@@ -44,8 +45,7 @@ struct WalletContext;
 static const bool DEFAULT_FLUSHWALLET = true;
 
 /** Error statuses for the wallet database */
-enum class DBErrors
-{
+enum class DBErrors {
     LOAD_OK,
     CORRUPT,
     NONCRITICAL_ERROR,
@@ -67,6 +67,8 @@ extern const std::string BESTBLOCK_NOMERKLE;
 extern const std::string BLSCTHDCHAIN;
 extern const std::string BLSCTKEY;
 extern const std::string BLSCTKEYMETA;
+extern const std::string BLSCTSUBADDRESS;
+extern const std::string BLSCTSUBADDRESSPOOL;
 extern const std::string CRYPTED_BLSCTKEY;
 extern const std::string CRYPTED_KEY;
 extern const std::string CSCRIPT;
@@ -107,13 +109,13 @@ class CHDChain
 public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
-    CKeyID seed_id; //!< seed hash160
+    CKeyID seed_id;                   //!< seed hash160
     int64_t m_next_external_index{0}; // Next index in the keypool to be used. Memory only.
     int64_t m_next_internal_index{0}; // Next index in the keypool to be used. Memory only.
 
-    static const int VERSION_HD_BASE        = 1;
+    static const int VERSION_HD_BASE = 1;
     static const int VERSION_HD_CHAIN_SPLIT = 2;
-    static const int CURRENT_VERSION        = VERSION_HD_CHAIN_SPLIT;
+    static const int CURRENT_VERSION = VERSION_HD_CHAIN_SPLIT;
     int nVersion;
 
     CHDChain() { SetNull(); }
@@ -143,15 +145,15 @@ public:
 class CKeyMetadata
 {
 public:
-    static const int VERSION_BASIC=1;
-    static const int VERSION_WITH_HDDATA=10;
+    static const int VERSION_BASIC = 1;
+    static const int VERSION_WITH_HDDATA = 10;
     static const int VERSION_WITH_KEY_ORIGIN = 12;
-    static const int CURRENT_VERSION=VERSION_WITH_KEY_ORIGIN;
+    static const int CURRENT_VERSION = VERSION_WITH_KEY_ORIGIN;
     int nVersion;
-    int64_t nCreateTime; // 0 means unknown
-    std::string hdKeypath; //optional HD/bip32 keypath. Still used to determine whether a key is a seed. Also kept for backwards compatibility
-    CKeyID hd_seed_id; //id of the HD seed used to derive this key
-    KeyOriginInfo key_origin; // Key origin info with path and fingerprint
+    int64_t nCreateTime;         // 0 means unknown
+    std::string hdKeypath;       // optional HD/bip32 keypath. Still used to determine whether a key is a seed. Also kept for backwards compatibility
+    CKeyID hd_seed_id;           // id of the HD seed used to derive this key
+    KeyOriginInfo key_origin;    // Key origin info with path and fingerprint
     bool has_key_origin = false; //!< Whether the key_origin is useful
 
     CKeyMetadata()
@@ -170,8 +172,7 @@ public:
         if (obj.nVersion >= VERSION_WITH_HDDATA) {
             READWRITE(obj.hdKeypath, obj.hd_seed_id);
         }
-        if (obj.nVersion >= VERSION_WITH_KEY_ORIGIN)
-        {
+        if (obj.nVersion >= VERSION_WITH_KEY_ORIGIN) {
             READWRITE(obj.key_origin);
             READWRITE(obj.has_key_origin);
         }
@@ -225,9 +226,8 @@ private:
     }
 
 public:
-    explicit WalletBatch(WalletDatabase &database, bool _fFlushOnClose = true) :
-        m_batch(database.MakeBatch(_fFlushOnClose)),
-        m_database(database)
+    explicit WalletBatch(WalletDatabase& database, bool _fFlushOnClose = true) : m_batch(database.MakeBatch(_fFlushOnClose)),
+                                                                                 m_database(database)
     {
     }
     WalletBatch(const WalletBatch&) = delete;
@@ -243,20 +243,25 @@ public:
     bool EraseTx(uint256 hash);
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite);
-    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
-    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
+    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta);
+    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata& keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const blsct::PublicKey& pubkey, const bool overwrite);
-    bool WriteKey(const blsct::PublicKey& vchPubKey, const blsct::PrivateKey& vchPrivKey, const CKeyMetadata &keyMeta);
-    bool WriteCryptedKey(const blsct::PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
+    bool WriteKey(const blsct::PublicKey& vchPubKey, const blsct::PrivateKey& vchPrivKey, const CKeyMetadata& keyMeta);
+    bool WriteCryptedKey(const blsct::PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata& keyMeta);
     bool WriteViewKey(const blsct::PublicKey& pubKey, const blsct::PrivateKey& privKey, const CKeyMetadata& keyMeta);
     bool WriteSpendKey(const blsct::PublicKey& pubKey);
 
-    bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+    bool WriteSubAddress(const CKeyID& hashId, const blsct::SubAddressIdentifier& index);
 
-    bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
-    bool EraseWatchOnly(const CScript &script);
+    bool ReadSubAddressPool(const blsct::SubAddressIdentifier& id, blsct::SubAddressPool& keypool);
+    bool WriteSubAddressPool(const blsct::SubAddressIdentifier& id, const blsct::SubAddressPool& keypool);
+    bool EraseSubAddressPool(const blsct::SubAddressIdentifier& id);
+
+    bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+    bool WriteWatchOnly(const CScript& script, const CKeyMetadata& keymeta);
+    bool EraseWatchOnly(const CScript& script);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
@@ -308,6 +313,7 @@ public:
     bool TxnCommit();
     //! Abort current transaction
     bool TxnAbort();
+
 private:
     std::unique_ptr<DatabaseBatch> m_batch;
     WalletDatabase& m_database;
