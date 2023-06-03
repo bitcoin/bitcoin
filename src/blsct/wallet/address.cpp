@@ -9,7 +9,6 @@ SubAddress::SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, con
 {
     if (!viewKey.IsValid() || !spendKey.IsValid()) {
         throw std::runtime_error("blsct::SubAddress::SubAddress(): no valid blsct keys");
-        return;
     }
 
     CHashWriter string(SER_GETHASH, 0);
