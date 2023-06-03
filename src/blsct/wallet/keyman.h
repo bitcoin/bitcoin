@@ -87,6 +87,7 @@ public:
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const PrivateKey& key, const PublicKey& pubkey);
     bool LoadViewKey(const PrivateKey& key, const PublicKey& pubkey);
+    bool LoadSpendKey(const PublicKey& pubkey);
     //! Adds an encrypted key to the store, and saves it to disk.
     bool AddCryptedKey(const PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret);
     //! Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)

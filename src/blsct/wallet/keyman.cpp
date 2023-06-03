@@ -12,8 +12,7 @@ bool KeyMan::IsHDEnabled() const
 
 bool KeyMan::CanGenerateKeys() const
 {
-    // A wallet can generate keys if it has an HD seed (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
-    LOCK(cs_KeyStore);
+    // A wallet can generate keys if it has an HD seed (IsHDEnabled)
     return IsHDEnabled();
 }
 
@@ -60,7 +59,6 @@ bool KeyMan::AddViewKey(const PrivateKey& secret, const PublicKey& pubkey)
         return batch.WriteViewKey(pubkey, secret,
                                   mapKeyMetadata[pubkey.GetID()]);
     }
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
@@ -69,15 +67,12 @@ bool KeyMan::AddSpendKey(const PublicKey& pubkey)
     LOCK(cs_KeyStore);
     wallet::WalletBatch batch(m_storage.GetDatabase());
     AssertLockHeld(cs_KeyStore);
-
     if (!fSpendKeyDefined) {
         KeyRing::AddSpendKey(pubkey);
-
         if (!batch.WriteSpendKey(pubkey))
             return false;
     }
 
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
@@ -103,14 +98,11 @@ bool KeyMan::AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& se
                               secret,
                               mapKeyMetadata[pubkey.GetID()]);
     }
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
 bool KeyMan::AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddressIdentifier& id, const SubAddress& subAddress)
 {
-    AssertLockHeld(cs_KeyStore);
-
     AddSubAddressPoolInner(id);
 
     return batch.WriteSubAddressPool(id, SubAddressPool(subAddress.GetKeys().GetID()));
@@ -118,7 +110,7 @@ bool KeyMan::AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddres
 
 bool KeyMan::AddSubAddressPoolInner(const SubAddressIdentifier& id)
 {
-    AssertLockHeld(cs_KeyStore);
+    LOCK(cs_KeyStore);
 
     setSubAddressPool[id.account].insert(id.address);
 
@@ -265,7 +257,6 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     AddHDChain(newHdChain);
     NotifyCanGetAddressesChanged();
     wallet::WalletBatch batch(m_storage.GetDatabase());
-    m_storage.UnsetBlankWalletFlag(batch);
 }
 
 bool KeyMan::SetupGeneration(bool force)
@@ -333,6 +324,11 @@ bool KeyMan::LoadKey(const PrivateKey& key, const PublicKey& pubkey)
 bool KeyMan::LoadViewKey(const PrivateKey& key, const PublicKey& pubkey)
 {
     return KeyRing::AddViewKey(key, pubkey);
+}
+
+bool KeyMan::LoadSpendKey(const PublicKey& pubkey)
+{
+    return KeyRing::AddSpendKey(pubkey);
 }
 
 /**

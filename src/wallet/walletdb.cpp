@@ -659,8 +659,8 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
 
-            if (!pwallet->GetOrCreateBLSCTKeyMan()->AddSpendKey(pubKey)) {
-                strErr = "Error reading wallet database: BLSCTKeyMan::AddSpendKey failed";
+            if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadSpendKey(pubKey)) {
+                strErr = "Error reading wallet database: BLSCTKeyMan::LoadSpendKey failed";
                 return false;
             }
         } else if (strType == DBKeys::MASTER_KEY) {

@@ -67,8 +67,10 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
             return witdest;
         }
     }
+    case OutputType::BLSCT: {
+        return CNoDestination();
+    }
     case OutputType::BECH32M:
-    case OutputType::BLSCT:
     case OutputType::UNKNOWN: {
     } // This function should never be used with BECH32M, BLSCT or UNKNOWN, so let it assert
     } // no default case, so the compiler can warn about missing cases
