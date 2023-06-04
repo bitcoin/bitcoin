@@ -154,6 +154,11 @@ struct TestChainDIP3BeforeActivationSetup : public TestChainSetup
     TestChainDIP3BeforeActivationSetup() : TestChainSetup(430) {}
 };
 
+struct TestChainV19BeforeActivationSetup : public TestChainSetup
+{
+    TestChainV19BeforeActivationSetup();
+};
+
 class CTxMemPoolEntry;
 
 struct TestMemPoolEntryHelper

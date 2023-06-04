@@ -117,7 +117,7 @@ static CMutableTransaction CreateProRegTx(const CTxMemPool& mempool, SimpleUTXOM
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
-    proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
+    proTx.pubKeyOperator.Set(operatorKeyRet.GetPublicKey(), bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
 

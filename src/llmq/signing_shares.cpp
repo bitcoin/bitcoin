@@ -1513,7 +1513,7 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorumCPtr& qu
     CSigShare sigShare(quorum->params.type, quorum->qc->quorumHash, id, msgHash, uint16_t(memberIdx), {});
     uint256 signHash = sigShare.buildSignHash();
 
-    sigShare.sigShare.Set(skShare.Sign(signHash));
+    sigShare.sigShare.Set(skShare.Sign(signHash), bls::bls_legacy_scheme.load());
     if (!sigShare.sigShare.Get().IsValid()) {
         LogPrintf("CSigSharesManager::%s -- failed to sign sigShare. signHash=%s, id=%s, msgHash=%s, time=%s\n", __func__,
                   signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(), t.count());

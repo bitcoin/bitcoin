@@ -675,7 +675,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
                            EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)) << " " <<
                            EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)) << " " <<
                            collateralAddressStr << " " <<
-                           dmn.pdmnState->pubKeyOperator.Get().ToString();
+                           dmn.pdmnState->pubKeyOperator.ToString();
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
@@ -697,7 +697,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             objMN.pushKV("owneraddress", EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));
             objMN.pushKV("votingaddress", EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)));
             objMN.pushKV("collateraladdress", collateralAddressStr);
-            objMN.pushKV("pubkeyoperator", dmn.pdmnState->pubKeyOperator.Get().ToString());
+            objMN.pushKV("pubkeyoperator", dmn.pdmnState->pubKeyOperator.ToString());
             obj.pushKV(strOutpoint, objMN);
         } else if (strMode == "lastpaidblock") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
@@ -714,7 +714,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             obj.pushKV(strOutpoint, EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));
         } else if (strMode == "pubkeyoperator") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
-            obj.pushKV(strOutpoint, dmn.pdmnState->pubKeyOperator.Get().ToString());
+            obj.pushKV(strOutpoint, dmn.pdmnState->pubKeyOperator.ToString());
         } else if (strMode == "status") {
             std::string strStatus = dmnToStatus(dmn);
             if (strFilter !="" && strStatus.find(strFilter) == std::string::npos &&

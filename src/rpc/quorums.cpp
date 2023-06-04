@@ -211,7 +211,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
             UniValue mo(UniValue::VOBJ);
             mo.pushKV("proTxHash", dmn->proTxHash.ToString());
             mo.pushKV("service", dmn->pdmnState->addr.ToString());
-            mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.Get().ToString());
+            mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.ToString());
             mo.pushKV("valid", quorum->qc->validMembers[i]);
             if (quorum->qc->validMembers[i]) {
                 CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);

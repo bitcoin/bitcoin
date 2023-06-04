@@ -72,6 +72,62 @@ public:
     }
 };
 
+// TODO: To remove this in the future
+class CDeterministicMNState_mntype_format
+{
+private:
+    int nPoSeBanHeight{-1};
+
+    friend class CDeterministicMNStateDiff;
+    friend class CDeterministicMNState;
+
+public:
+    int nRegisteredHeight{-1};
+    int nLastPaidHeight{0};
+    int nConsecutivePayments{0};
+    int nPoSePenalty{0};
+    int nPoSeRevivedHeight{-1};
+    uint16_t nRevocationReason{CProUpRevTx::REASON_NOT_SPECIFIED};
+    uint256 confirmedHash;
+    uint256 confirmedHashWithProRegTxHash;
+    CKeyID keyIDOwner;
+    CBLSLazyPublicKey pubKeyOperator;
+    CKeyID keyIDVoting;
+    CService addr;
+    CScript scriptPayout;
+    CScript scriptOperatorPayout;
+
+    uint160 platformNodeID{};
+    uint16_t platformP2PPort{0};
+    uint16_t platformHTTPPort{0};
+
+public:
+    CDeterministicMNState_mntype_format() = default;
+
+    SERIALIZE_METHODS(CDeterministicMNState_mntype_format, obj)
+    {
+        READWRITE(
+            obj.nRegisteredHeight,
+            obj.nLastPaidHeight,
+            obj.nConsecutivePayments,
+            obj.nPoSePenalty,
+            obj.nPoSeRevivedHeight,
+            obj.nPoSeBanHeight,
+            obj.nRevocationReason,
+            obj.confirmedHash,
+            obj.confirmedHashWithProRegTxHash,
+            obj.keyIDOwner,
+            obj.pubKeyOperator,
+            obj.keyIDVoting,
+            obj.addr,
+            obj.scriptPayout,
+            obj.scriptOperatorPayout,
+            obj.platformNodeID,
+            obj.platformP2PPort,
+            obj.platformHTTPPort);
+    }
+};
+
 class CDeterministicMNState
 {
 private:
@@ -80,6 +136,8 @@ private:
     friend class CDeterministicMNStateDiff;
 
 public:
+    int nVersion{CProRegTx::LEGACY_BLS_VERSION};
+
     int nRegisteredHeight{-1};
     int nLastPaidHeight{0};
     int nConsecutivePayments{0};
@@ -107,7 +165,9 @@ public:
 public:
     CDeterministicMNState() = default;
     explicit CDeterministicMNState(const CProRegTx& proTx) :
+        nVersion(proTx.nVersion),
         keyIDOwner(proTx.keyIDOwner),
+        pubKeyOperator(proTx.pubKeyOperator),
         keyIDVoting(proTx.keyIDVoting),
         addr(proTx.addr),
         scriptPayout(proTx.scriptPayout),
@@ -115,7 +175,6 @@ public:
         platformP2PPort(proTx.platformP2PPort),
         platformHTTPPort(proTx.platformHTTPPort)
     {
-        pubKeyOperator.Set(proTx.pubKeyOperator);
     }
     explicit CDeterministicMNState(const CDeterministicMNState_Oldformat& s) :
         nPoSeBanHeight(s.nPoSeBanHeight),
@@ -132,6 +191,27 @@ public:
         addr(s.addr),
         scriptPayout(s.scriptPayout),
         scriptOperatorPayout(s.scriptOperatorPayout) {}
+
+    explicit CDeterministicMNState(const CDeterministicMNState_mntype_format& s) :
+        nPoSeBanHeight(s.nPoSeBanHeight),
+        nRegisteredHeight(s.nRegisteredHeight),
+        nLastPaidHeight(s.nLastPaidHeight),
+        nConsecutivePayments(s.nConsecutivePayments),
+        nPoSePenalty(s.nPoSePenalty),
+        nPoSeRevivedHeight(s.nPoSeRevivedHeight),
+        nRevocationReason(s.nRevocationReason),
+        confirmedHash(s.confirmedHash),
+        confirmedHashWithProRegTxHash(s.confirmedHashWithProRegTxHash),
+        keyIDOwner(s.keyIDOwner),
+        pubKeyOperator(s.pubKeyOperator),
+        keyIDVoting(s.keyIDVoting),
+        addr(s.addr),
+        scriptPayout(s.scriptPayout),
+        scriptOperatorPayout(s.scriptOperatorPayout),
+        platformNodeID(s.platformNodeID),
+        platformP2PPort(s.platformP2PPort),
+        platformHTTPPort(s.platformHTTPPort) {}
+
     template <typename Stream>
     CDeterministicMNState(deserialize_type, Stream& s)
     {
@@ -141,6 +221,7 @@ public:
     SERIALIZE_METHODS(CDeterministicMNState, obj)
     {
         READWRITE(
+            obj.nVersion,
             obj.nRegisteredHeight,
             obj.nLastPaidHeight,
             obj.nConsecutivePayments,
@@ -151,7 +232,9 @@ public:
             obj.confirmedHash,
             obj.confirmedHashWithProRegTxHash,
             obj.keyIDOwner,
-            obj.pubKeyOperator,
+            obj.keyIDOwner);
+        READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), obj.nVersion == CProRegTx::LEGACY_BLS_VERSION));
+        READWRITE(
             obj.keyIDVoting,
             obj.addr,
             obj.scriptPayout,
@@ -163,7 +246,7 @@ public:
 
     void ResetOperatorFields()
     {
-        pubKeyOperator.Set(CBLSPublicKey());
+        pubKeyOperator.Set(CBLSPublicKey(), bls::bls_legacy_scheme.load());
         addr = CService();
         scriptOperatorPayout = CScript();
         nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
@@ -225,6 +308,7 @@ public:
         Field_platformNodeID = 0x8000,
         Field_platformP2PPort = 0x10000,
         Field_platformHTTPPort = 0x20000,
+        Field_nVersion = 0x40000,
     };
 
 #define DMN_STATE_DIFF_ALL_FIELDS                      \
@@ -245,7 +329,8 @@ public:
     DMN_STATE_DIFF_LINE(nConsecutivePayments)          \
     DMN_STATE_DIFF_LINE(platformNodeID)                \
     DMN_STATE_DIFF_LINE(platformP2PPort)               \
-    DMN_STATE_DIFF_LINE(platformHTTPPort)
+    DMN_STATE_DIFF_LINE(platformHTTPPort)              \
+    DMN_STATE_DIFF_LINE(nVersion)
 
 public:
     uint32_t fields{0};
@@ -268,8 +353,7 @@ public:
         READWRITE(VARINT(obj.fields));
 #define DMN_STATE_DIFF_LINE(f) \
         if (strcmp(#f, "pubKeyOperator") == 0 && (obj.fields & Field_pubKeyOperator)) {\
-            /* TODO: implement migration to Basic BLS after the fork */ \
-            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), true)); \
+            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == CProRegTx::LEGACY_BLS_VERSION)); \
         } else if (obj.fields & Field_##f) READWRITE(obj.state.f);
 
         DMN_STATE_DIFF_ALL_FIELDS

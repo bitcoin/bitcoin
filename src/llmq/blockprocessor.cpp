@@ -148,9 +148,6 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         return true;
     }
 
-    if (utils::IsV19Active(pindex->pprev))
-        bls::bls_legacy_scheme.store(false);
-
     llmq::utils::PreComputeQuorumMembers(pindex);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
@@ -306,9 +303,6 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-
-    if (!utils::IsV19Active(pindex->pprev))
-        bls::bls_legacy_scheme.store(true);
 
     llmq::utils::PreComputeQuorumMembers(pindex, true);
 

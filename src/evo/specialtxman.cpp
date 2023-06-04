@@ -13,6 +13,7 @@
 #include <hash.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
+#include <llmq/utils.h>
 #include <primitives/block.h>
 #include <validation.h>
 
@@ -167,6 +168,13 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         int64_t nTime6 = GetTimeMicros();
         nTimeCbTxCL += nTime6 - nTime5;
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxBestChainlock: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCbTxCL * 0.000001);
+
+        if (llmq::utils::V19ActivationIndex(pindex) == pindex) {
+            // NOTE: The block next to the activation is the one that is using new rules.
+            // V19 activated just activated, so we must switch to the new rules here.
+            bls::bls_legacy_scheme.store(false);
+            LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+        }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-procspectxsinblock");
@@ -179,7 +187,16 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
 {
     AssertLockHeld(cs_main);
 
+    auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
+
     try {
+        if (llmq::utils::V19ActivationIndex(pindex) == pindex) {
+            // NOTE: The block next to the activation is the one that is using new rules.
+            // Removing the activation block here, so we must switch back to the old rules.
+            bls::bls_legacy_scheme.store(true);
+            LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+        }
+
         for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
             const CTransaction& tx = *block.vtx[i];
             if (!UndoSpecialTx(tx, pindex)) {
@@ -195,6 +212,8 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
             return false;
         }
     } catch (const std::exception& e) {
+        bls::bls_legacy_scheme.store(bls_legacy_scheme);
+        LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
         return error(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
     }
 

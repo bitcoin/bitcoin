@@ -4345,6 +4345,8 @@ bool TestBlockValidity(BlockValidationState& state,
     assert(std::addressof(::ChainstateActive()) == std::addressof(chainstate));
     assert(pindexPrev && pindexPrev == chainstate.m_chain.Tip());
 
+    auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
+
     uint256 hash = block.GetHash();
     if (clhandler.HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
         LogPrintf("ERROR: %s: conflicting with chainlock\n", __func__);
@@ -4372,6 +4374,12 @@ bool TestBlockValidity(BlockValidationState& state,
     if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());
+
+    // we could switch to another scheme while testing, switch back to the original one
+    if (bls_legacy_scheme != bls::bls_legacy_scheme.load()) {
+        bls::bls_legacy_scheme.store(bls_legacy_scheme);
+        LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+    }
 
     return true;
 }

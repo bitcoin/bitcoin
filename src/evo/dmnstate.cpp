@@ -28,7 +28,7 @@ std::string CDeterministicMNState::ToString() const
     return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
                      "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, addr=%s, payoutAddress=%s, operatorPayoutAddress=%s)",
                      nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-                     EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.Get().ToString(), EncodeDestination(PKHash(keyIDVoting)), addr.ToStringIPPort(false), payoutAddress, operatorPayoutAddress);
+                     EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), addr.ToStringIPPort(false), payoutAddress, operatorPayoutAddress);
 }
 
 void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
@@ -55,7 +55,7 @@ void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
     if (ExtractDestination(scriptPayout, dest)) {
         obj.pushKV("payoutAddress", EncodeDestination(dest));
     }
-    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
+    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     if (ExtractDestination(scriptOperatorPayout, dest)) {
         obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }
@@ -108,7 +108,7 @@ void CDeterministicMNStateDiff::ToJson(UniValue& obj, MnType nType) const
         }
     }
     if (fields & Field_pubKeyOperator) {
-        obj.pushKV("pubKeyOperator", state.pubKeyOperator.Get().ToString());
+        obj.pushKV("pubKeyOperator", state.pubKeyOperator.ToString());
     }
     if (nType == MnType::HighPerformance) {
         if (fields & Field_platformNodeID) {
