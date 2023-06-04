@@ -743,9 +743,23 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
     uint16_t port{BaseParams().RPCPort()};
-    SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", port));
+    {
+        bool containsPort;
+        if (!SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host, &containsPort)) {
+            throw std::runtime_error(strprintf("Malformed Port in -rpcconnect: %s", gArgs.GetArg("-rpcconnect", "")));
+        }
+        if (gArgs.IsArgSet("-rpcport")) {
+            int64_t desiredRpcPort = gArgs.GetIntArg("-rpcport", port);
+            if (desiredRpcPort <= 0 || desiredRpcPort > 0xFFFF) {
+                throw std::runtime_error(strprintf("Malformed Port in -rpcport: %lld", desiredRpcPort));
+            }
+            port = static_cast<uint16_t>(desiredRpcPort);
 
+            if (containsPort) {
+                tfm::format(std::cerr, "Warning: Port specified in both -rpcconnect and -rpcport. Using %d.\n", port);
+            }
+        }
+    }
     // Obtain event base
     raii_event_base base = obtain_event_base();
 

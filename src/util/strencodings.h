@@ -101,9 +101,10 @@ std::string EncodeBase32(std::string_view str, bool pad = true);
  * @param[in] in        The socket address string to split.
  * @param[out] portOut  Port-portion of the input, if found and parsable.
  * @param[out] hostOut  Host-portion of the input, if found.
+ * @param[out] cPortOut Ignored on nullptr. True if port-portion found and parsable, otherwise false.
  * @return              true if port-portion is absent or within its allowed range, otherwise false
  */
-bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut);
+bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut, bool* cPortOut = nullptr);
 
 // LocaleIndependentAtoi is provided for backwards compatibility reasons.
 //
