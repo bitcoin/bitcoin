@@ -1170,6 +1170,14 @@ static int CommandLineRPC(int argc, char *argv[])
                 fputc('\n', stdout);
             }
         }
+        int nRh = 0;
+        if (gArgs.IsArgSet("-getinfo")) nRh++;
+        if (gArgs.GetBoolArg("-netinfo", false)) nRh++;
+        if (gArgs.GetBoolArg("-generate", false)) nRh++;
+        if (gArgs.GetBoolArg("-addrinfo", false)) nRh++;
+        if (nRh > 1) {
+            throw std::runtime_error("Only one of \"-getinfo\", \"-netinfo\", \"-generate\", and \"-addrinfo\" may be specified.");
+        }
         std::unique_ptr<BaseRequestHandler> rh;
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
