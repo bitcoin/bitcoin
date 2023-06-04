@@ -11,6 +11,10 @@ set -e
 
 source ./ci/dash/matrix.sh
 
+if [ "$RUN_SECURITY_TESTS" = "true" ]; then
+  make test-security-check
+fi
+
 if [ "$RUN_UNIT_TESTS" != "true" ] && [ "$RUN_UNIT_TESTS_SEQUENTIAL" != "true" ]; then
   echo "Skipping unit tests"
   exit 0

@@ -11,6 +11,7 @@ export HOST=x86_64-apple-darwin19
 export PIP_PACKAGES="zmq"
 export RUN_UNIT_TESTS=true
 export RUN_INTEGRATION_TESTS=false
+export RUN_SECURITY_TESTS="true"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner --enable-werror"
 # Run without depends
