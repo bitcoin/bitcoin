@@ -66,8 +66,17 @@ class DIP3V19Test(DashTestFramework):
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expected_updated)
 
+        mn_list_before = self.nodes[0].masternodelist()
+        pubkeyoperator_list_before = set([mn_list_before[e]["pubkeyoperator"] for e in mn_list_before])
+
         self.activate_v19(expected_activation_height=900)
         self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
+
+        mn_list_after = self.nodes[0].masternodelist()
+        pubkeyoperator_list_after = set([mn_list_after[e]["pubkeyoperator"] for e in mn_list_after])
+
+        self.log.info("pubkeyoperator should still be shown using legacy scheme")
+        assert_equal(pubkeyoperator_list_before, pubkeyoperator_list_after)
 
         self.move_to_next_cycle()
         self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))

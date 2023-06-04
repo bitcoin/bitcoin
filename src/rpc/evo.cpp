@@ -661,7 +661,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
-    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", specific_legacy_bls_scheme && !isHPMNrequested);
+    ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION), ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION);
     CKeyID keyIDVoting = ptx.keyIDOwner;
 
     if (request.params[paramIdx + 3].get_str() != "") {
@@ -703,7 +703,6 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         paramIdx += 3;
     }
 
-    ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
 
@@ -1041,12 +1040,12 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, co
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
-    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator.Get();
+    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
     if (request.params[1].get_str() != "") {
-        ptx.pubKeyOperator = ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", specific_legacy_bls_scheme);
+        ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", ptx.nVersion == CProUpRegTx::LEGACY_BLS_VERSION), ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION);
     }
     if (request.params[2].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[2].get_str(), "voting address");

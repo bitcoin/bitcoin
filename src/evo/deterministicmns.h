@@ -43,8 +43,10 @@ private:
     uint64_t internalId{std::numeric_limits<uint64_t>::max()};
 
 public:
-    static constexpr uint16_t CURRENT_MN_FORMAT = 0;
+    static constexpr uint16_t MN_OLD_FORMAT = 0;
     static constexpr uint16_t MN_TYPE_FORMAT = 1;
+    static constexpr uint16_t MN_VERSION_FORMAT = 2;
+    static constexpr uint16_t MN_CURRENT_FORMAT = MN_VERSION_FORMAT;
 
     CDeterministicMN() = delete; // no default constructor, must specify internalId
     explicit CDeterministicMN(uint64_t _internalId, MnType mnType = MnType::Regular) :
@@ -74,10 +76,14 @@ public:
         READWRITE(VARINT(internalId));
         READWRITE(collateralOutpoint);
         READWRITE(nOperatorReward);
-        // We need to read CDeterministicMNState using the old format only when called with CURRENT_MN_FORMAT on Unserialize()
+        // We need to read CDeterministicMNState using the old format only when called with MN_OLD_FORMAT or MN_TYPE_FORMAT on Unserialize()
         // Serialisation (writing) will be done always using new format
-        if (ser_action.ForRead() && format_version == CURRENT_MN_FORMAT) {
+        if (ser_action.ForRead() && format_version == MN_OLD_FORMAT) {
             CDeterministicMNState_Oldformat old_state;
+            READWRITE(old_state);
+            pdmnState = std::make_shared<const CDeterministicMNState>(old_state);
+        } else if (ser_action.ForRead() && format_version == MN_TYPE_FORMAT) {
+            CDeterministicMNState_mntype_format old_state;
             READWRITE(old_state);
             pdmnState = std::make_shared<const CDeterministicMNState>(old_state);
         } else {
@@ -98,11 +104,11 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        const_cast<CDeterministicMN*>(this)->SerializationOp(s, CSerActionSerialize(), MN_TYPE_FORMAT);
+        const_cast<CDeterministicMN*>(this)->SerializationOp(s, CSerActionSerialize(), MN_CURRENT_FORMAT);
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s, const uint8_t format_version = MN_TYPE_FORMAT)
+    void Unserialize(Stream& s, const uint8_t format_version = MN_CURRENT_FORMAT)
     {
         SerializationOp(s, CSerActionUnserialize(), format_version);
     }
@@ -204,14 +210,14 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_TYPE_FORMAT) {
+    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_CURRENT_FORMAT) {
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
 
         SerializationOpBase(s, CSerActionUnserialize());
 
-        bool evodb_migration = (format_version == CDeterministicMN::CURRENT_MN_FORMAT);
+        bool evodb_migration = (format_version == CDeterministicMN::MN_OLD_FORMAT || format_version == CDeterministicMN::MN_TYPE_FORMAT);
         size_t cnt = ReadCompactSize(s);
         for (size_t i = 0; i < cnt; i++) {
             if (evodb_migration) {
@@ -385,8 +391,6 @@ public:
     [[nodiscard]] CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to, bool extended) const;
     [[nodiscard]] CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
-    void RepopulateUniquePropertyMap();
-
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
     void UpdateMN(const CDeterministicMN& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
     void UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
@@ -396,12 +400,12 @@ public:
     template <typename T>
     [[nodiscard]] bool HasUniqueProperty(const T& v) const
     {
-        return mnUniquePropertyMap.count(::SerializeHash(v)) != 0;
+        return mnUniquePropertyMap.count(GetUniquePropertyHash(v)) != 0;
     }
     template <typename T>
     [[nodiscard]] CDeterministicMNCPtr GetUniquePropertyMN(const T& v) const
     {
-        auto p = mnUniquePropertyMap.find(::SerializeHash(v));
+        auto p = mnUniquePropertyMap.find(GetUniquePropertyHash(v));
         if (!p) {
             return nullptr;
         }
@@ -410,6 +414,14 @@ public:
 
 private:
     template <typename T>
+    [[nodiscard]] uint256 GetUniquePropertyHash(const T& v) const
+    {
+        if constexpr (std::is_same<T, CBLSPublicKey>()) {
+            assert(false);
+        }
+        return ::SerializeHash(v);
+    }
+    template <typename T>
     [[nodiscard]] bool AddUniqueProperty(const CDeterministicMN& dmn, const T& v)
     {
         static const T nullValue;
@@ -417,7 +429,7 @@ private:
             return false;
         }
 
-        auto hash = ::SerializeHash(v);
+        auto hash = GetUniquePropertyHash(v);
         auto oldEntry = mnUniquePropertyMap.find(hash);
         if (oldEntry != nullptr && oldEntry->first != dmn.proTxHash) {
             return false;
@@ -437,7 +449,7 @@ private:
             return false;
         }
 
-        auto oldHash = ::SerializeHash(oldValue);
+        auto oldHash = GetUniquePropertyHash(oldValue);
         auto p = mnUniquePropertyMap.find(oldHash);
         if (p == nullptr || p->first != dmn.proTxHash) {
             return false;
@@ -465,6 +477,16 @@ private:
             return false;
         }
         return true;
+    }
+
+    friend bool operator==(const CDeterministicMNList& a, const CDeterministicMNList& b)
+    {
+        return  a.blockHash == b.blockHash &&
+                a.nHeight == b.nHeight &&
+                a.nTotalRegisteredCount == b.nTotalRegisteredCount &&
+                a.mnMap == b.mnMap &&
+                a.mnInternalIdMap == b.mnInternalIdMap &&
+                a.mnUniquePropertyMap == b.mnUniquePropertyMap;
     }
 };
 
@@ -494,7 +516,7 @@ public:
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_TYPE_FORMAT)
+    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_CURRENT_FORMAT)
     {
         updatedMNs.clear();
         removedMns.clear();
@@ -504,8 +526,6 @@ public:
         tmp = ReadCompactSize(s);
         for (size_t i = 0; i < tmp; i++) {
             CDeterministicMN mn(0);
-            // Unserialise CDeterministicMN using CURRENT_MN_FORMAT and set it's type to the default value TYPE_REGULAR_MASTERNODE
-            // It will be later written with format MN_TYPE_FORMAT which includes the type field.
             mn.Unserialize(s, format_version);
             auto dmn = std::make_shared<CDeterministicMN>(mn);
             addedMNs.push_back(dmn);
@@ -594,6 +614,7 @@ public:
     bool IsDIP3Enforced(int nHeight = -1);
 
     bool MigrateDBIfNeeded();
+    bool MigrateDBIfNeeded2();
 
     void DoMaintenance();
 

@@ -4214,6 +4214,8 @@ bool TestBlockValidity(CValidationState& state, llmq::CChainLocksHandler& clhand
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == ::ChainActive().Tip());
 
+    auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
+
     uint256 hash = block.GetHash();
     if (clhandler.HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_PREV, error("%s: conflicting with chainlock", __func__), REJECT_INVALID, "bad-chainlock");
@@ -4239,6 +4241,12 @@ bool TestBlockValidity(CValidationState& state, llmq::CChainLocksHandler& clhand
     if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());
+
+    // we could switch to another scheme while testing, switch back to the original one
+    if (bls_legacy_scheme != bls::bls_legacy_scheme.load()) {
+        bls::bls_legacy_scheme.store(bls_legacy_scheme);
+        LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+    }
 
     return true;
 }
