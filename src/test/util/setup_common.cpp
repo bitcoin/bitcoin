@@ -180,9 +180,9 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman);
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*m_node.mempool, *m_node.connman, ::masternodeSync);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*m_node.mempool, *m_node.connman, *::masternodeSync);
 #ifdef ENABLE_WALLET
-    ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*m_node.connman, ::masternodeSync);
+    ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*m_node.connman, *::masternodeSync);
 #endif // ENABLE_WALLET
 
     deterministicMNManager.reset(new CDeterministicMNManager(*m_node.evodb, *m_node.connman));
@@ -231,7 +231,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, *m_node.mempool);
+    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, *m_node.evodb, *m_node.mempool);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());

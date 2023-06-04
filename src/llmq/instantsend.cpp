@@ -480,7 +480,7 @@ void CInstantSendManager::Stop()
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
-    if (!fMasternodeMode || !IsInstantSendEnabled() || !m_mn_sync->IsBlockchainSynced()) {
+    if (!fMasternodeMode || !IsInstantSendEnabled() || !m_mn_sync.IsBlockchainSynced()) {
         return;
     }
 
@@ -1138,7 +1138,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
 void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
-    if (!IsInstantSendEnabled() || !m_mn_sync->IsBlockchainSynced() || tx->vin.empty()) {
+    if (!IsInstantSendEnabled() || !m_mn_sync.IsBlockchainSynced() || tx->vin.empty()) {
         return;
     }
 
@@ -1191,7 +1191,7 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
         return;
     }
 
-    if (m_mn_sync->IsBlockchainSynced()) {
+    if (m_mn_sync.IsBlockchainSynced()) {
         for (const auto& tx : pblock->vtx) {
             if (tx->IsCoinBase() || tx->vin.empty()) {
                 // coinbase and TXs with no inputs can't be locked
@@ -1738,7 +1738,7 @@ bool CInstantSendManager::IsInstantSendMempoolSigningEnabled() const
 
 bool CInstantSendManager::RejectConflictingBlocks() const
 {
-    if (m_mn_sync == nullptr || !m_mn_sync->IsBlockchainSynced()) {
+    if (!m_mn_sync.IsBlockchainSynced()) {
         return false;
     }
     if (!spork_manager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {

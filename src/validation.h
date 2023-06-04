@@ -574,10 +574,10 @@ private:
     std::unique_ptr<CoinsViews> m_coins_views;
 
     //! Dash
-    std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
-    std::unique_ptr<llmq::CInstantSendManager>& m_isman;
-    std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
-    std::unique_ptr<CEvoDB>& m_evoDb;
+    const std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
+    const std::unique_ptr<llmq::CInstantSendManager>& m_isman;
+    const std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
+    CEvoDB& m_evoDb;
 
 public:
     //! Reference to a BlockManager instance which itself is shared across all
@@ -585,10 +585,10 @@ public:
     BlockManager& m_blockman;
 
     explicit CChainState(BlockManager& blockman,
-                         std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
-                         std::unique_ptr<llmq::CInstantSendManager>& isman,
-                         std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
-                         std::unique_ptr<CEvoDB>& evoDb,
+                         const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                         const std::unique_ptr<llmq::CInstantSendManager>& isman,
+                         const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
+                         CEvoDB& evoDb,
                          CTxMemPool& mempool,
                          uint256 from_snapshot_blockhash = uint256());
 
@@ -909,10 +909,10 @@ public:
     //                                  constructor
     //! @param[in] snapshot_blockhash   If given, signify that this chainstate
     //!                                 is based on a snapshot.
-    CChainState& InitializeChainstate(std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
-                                      std::unique_ptr<llmq::CInstantSendManager>& isman,
-                                      std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
-                                      std::unique_ptr<CEvoDB>& evoDb,
+    CChainState& InitializeChainstate(const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                                      const std::unique_ptr<llmq::CInstantSendManager>& isman,
+                                      const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
+                                      CEvoDB& evoDb,
                                       CTxMemPool& mempool,
                                       const uint256& snapshot_blockhash = uint256()) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

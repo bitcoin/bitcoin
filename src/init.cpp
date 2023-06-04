@@ -1945,8 +1945,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 #endif
 
+    assert(masternodeSync != nullptr);
+    assert(governance != nullptr);
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, ::masternodeSync, ::deterministicMNManager, ::governance, node.llmq_ctx
+        *node.connman, *::masternodeSync, ::deterministicMNManager, *::governance, node.llmq_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -2021,7 +2023,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 LOCK(cs_main);
                 node.evodb.reset();
                 node.evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
-                chainman.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, node.evodb, *Assert(node.mempool));
+                chainman.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, *node.evodb, *Assert(node.mempool));
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -2318,10 +2320,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 10a: Setup CoinJoin
 
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.mempool, *node.connman, ::masternodeSync);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.mempool, *node.connman, *::masternodeSync);
 #ifdef ENABLE_WALLET
     if (!ignores_incoming_txs) {
-        ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, ::masternodeSync);
+        ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, *::masternodeSync);
     }
 #endif // ENABLE_WALLET
 

@@ -118,7 +118,8 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
         vpwallets.push_back(wallet);
     }
     wallet->ConnectScriptPubKeyManNotifiers();
-    coinJoinClientManagers.emplace(std::make_pair(wallet->GetName(), std::make_shared<CCoinJoinClientManager>(*wallet, ::masternodeSync)));
+    assert(::masternodeSync != nullptr);
+    coinJoinClientManagers.emplace(std::make_pair(wallet->GetName(), std::make_shared<CCoinJoinClientManager>(*wallet, *::masternodeSync)));
     g_wallet_init_interface.InitCoinJoinSettings();
     return true;
 }
@@ -4793,7 +4794,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         walletInstance->database->IncrementUpdateCounter();
     }
 
-    coinJoinClientManagers.emplace(std::make_pair(walletInstance->GetName(), std::make_shared<CCoinJoinClientManager>(*walletInstance, ::masternodeSync)));
+    assert(::masternodeSync != nullptr);
+    coinJoinClientManagers.emplace(std::make_pair(walletInstance->GetName(), std::make_shared<CCoinJoinClientManager>(*walletInstance, *::masternodeSync)));
 
     {
         LOCK(cs_wallets);

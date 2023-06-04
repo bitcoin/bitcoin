@@ -1296,10 +1296,10 @@ void CoinsViews::InitCache()
 }
 
 CChainState::CChainState(BlockManager& blockman,
-                         std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
-                         std::unique_ptr<llmq::CInstantSendManager>& isman,
-                         std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
-                         std::unique_ptr<CEvoDB>& evoDb,
+                         const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                         const std::unique_ptr<llmq::CInstantSendManager>& isman,
+                         const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
+                         CEvoDB& evoDb,
                          CTxMemPool& mempool,
                          uint256 from_snapshot_blockhash)
     : m_mempool(mempool),
@@ -1730,7 +1730,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     assert(m_quorum_block_processor);
 
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
-    if (fDIP0003Active && !m_evoDb->VerifyBestBlock(pindex->GetBlockHash())) {
+    if (fDIP0003Active && !m_evoDb.VerifyBestBlock(pindex->GetBlockHash())) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
         return DISCONNECT_FAILED;
@@ -1891,7 +1891,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
-    m_evoDb->WriteBestBlock(pindex->pprev->GetBlockHash());
+    m_evoDb.WriteBestBlock(pindex->pprev->GetBlockHash());
 
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
@@ -2126,7 +2126,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     if (pindex->pprev) {
         bool fDIP0003Active = pindex->nHeight >= chainparams.GetConsensus().DIP0003Height;
-        if (fDIP0003Active && !m_evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash())) {
+        if (fDIP0003Active && !m_evoDb.VerifyBestBlock(pindex->pprev->GetBlockHash())) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
             return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
         }
@@ -2521,7 +2521,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime6 = GetTimeMicros(); nTimeIndex += nTime6 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
 
-    m_evoDb->WriteBestBlock(pindex->GetBlockHash());
+    m_evoDb.WriteBestBlock(pindex->GetBlockHash());
 
     int64_t nTime7 = GetTimeMicros(); nTimeCallbacks += nTime7 - nTime6;
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime7 - nTime6), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
@@ -2624,7 +2624,7 @@ bool CChainState::FlushStateToDisk(
         // The cache is over the limit, we have to write now.
         bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
         // The evodb cache is too large
-        bool fEvoDbCacheCritical = mode == FlushStateMode::IF_NEEDED && m_evoDb != nullptr && m_evoDb->GetMemoryUsage() >= (64 << 20);
+        bool fEvoDbCacheCritical = mode == FlushStateMode::IF_NEEDED && m_evoDb.GetMemoryUsage() >= (64 << 20);
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > nLastWrite + DATABASE_WRITE_INTERVAL;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
@@ -2689,7 +2689,7 @@ bool CChainState::FlushStateToDisk(
             // Flush the chainstate (which may refer to block index entries).
             if (!CoinsTip().Flush())
                 return AbortNode(state, "Failed to write to coin database");
-            if (!m_evoDb->CommitRootTransaction()) {
+            if (!m_evoDb.CommitRootTransaction()) {
                 return AbortNode(state, "Failed to commit EvoDB");
             }
             nLastFlush = nNow;
@@ -2818,7 +2818,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
-        auto dbTx = m_evoDb->BeginTransaction();
+        auto dbTx = m_evoDb.BeginTransaction();
 
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
@@ -2848,7 +2848,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
 
     m_chain.SetTip(pindexDelete->pprev);
 
-    UpdateTip(m_mempool, pindexDelete->pprev, chainparams, *this, *m_evoDb);
+    UpdateTip(m_mempool, pindexDelete->pprev, chainparams, *this, m_evoDb);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock, pindexDelete);
@@ -2931,7 +2931,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     int64_t nTime3;
     LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
     {
-        auto dbTx = m_evoDb->BeginTransaction();
+        auto dbTx = m_evoDb.BeginTransaction();
 
         CCoinsViewCache view(&CoinsTip());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
@@ -2960,7 +2960,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
-    UpdateTip(m_mempool, pindexNew, chainparams, *this, *m_evoDb);
+    UpdateTip(m_mempool, pindexNew, chainparams, *this, m_evoDb);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);
@@ -4939,7 +4939,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
         assert(pindexFork != nullptr);
     }
 
-    auto dbTx = m_evoDb->BeginTransaction();
+    auto dbTx = m_evoDb.BeginTransaction();
 
     // Rollback along the old branch.
     while (pindexOld != pindexFork) {
@@ -4974,7 +4974,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    m_evoDb->WriteBestBlock(pindexNew->GetBlockHash());
+    m_evoDb.WriteBestBlock(pindexNew->GetBlockHash());
     bool flushed = cache.Flush();
     assert(flushed);
     dbTx->Commit();
@@ -5658,10 +5658,10 @@ std::vector<CChainState*> ChainstateManager::GetAll()
     return out;
 }
 
-CChainState& ChainstateManager::InitializeChainstate(std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
-                                                     std::unique_ptr<llmq::CInstantSendManager>& isman,
-                                                     std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
-                                                     std::unique_ptr<CEvoDB>& evoDb,
+CChainState& ChainstateManager::InitializeChainstate(const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                                                     const std::unique_ptr<llmq::CInstantSendManager>& isman,
+                                                     const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
+                                                     CEvoDB& evoDb,
                                                      CTxMemPool& mempool,
                                                      const uint256& snapshot_blockhash)
 {

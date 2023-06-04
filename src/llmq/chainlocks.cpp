@@ -25,7 +25,7 @@ std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
 CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
                                        CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman,
-                                       const std::unique_ptr<CMasternodeSync>& mn_sync,
+                                       CMasternodeSync& mn_sync,
                                        const std::unique_ptr<PeerManager>& peerman) :
     connman(_connman),
     mempool(_mempool),
@@ -241,7 +241,7 @@ void CChainLocksHandler::TrySignChainTip()
         return;
     }
 
-    if (!m_mn_sync->IsBlockchainSynced()) {
+    if (!m_mn_sync.IsBlockchainSynced()) {
         return;
     }
 
@@ -361,7 +361,7 @@ void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, in
 
 void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
-    if (!m_mn_sync->IsBlockchainSynced()) {
+    if (!m_mn_sync.IsBlockchainSynced()) {
         return;
     }
 
@@ -628,7 +628,7 @@ bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint
 
 void CChainLocksHandler::Cleanup()
 {
-    if (!m_mn_sync->IsBlockchainSynced()) {
+    if (!m_mn_sync.IsBlockchainSynced()) {
         return;
     }
 

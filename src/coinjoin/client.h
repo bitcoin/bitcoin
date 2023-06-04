@@ -74,7 +74,7 @@ public:
 class CCoinJoinClientSession : public CCoinJoinBaseSession
 {
 private:
-    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    const CMasternodeSync& m_mn_sync;
 
     std::vector<COutPoint> vecOutPointLocked;
 
@@ -124,7 +124,7 @@ private:
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(CWallet& pwallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+    explicit CCoinJoinClientSession(CWallet& pwallet, const CMasternodeSync& mn_sync) :
         m_mn_sync(mn_sync), mixingWallet(pwallet)
     {
     }
@@ -158,10 +158,10 @@ class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 {
 private:
     CConnman& connman;
-    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    const CMasternodeSync& m_mn_sync;
 
 public:
-    explicit CCoinJoinClientQueueManager(CConnman& _connman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+    explicit CCoinJoinClientQueueManager(CConnman& _connman, const CMasternodeSync& mn_sync) :
         connman(_connman), m_mn_sync(mn_sync) {};
 
     void ProcessMessage(const CNode& peer, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
@@ -177,7 +177,7 @@ private:
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
-    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    const CMasternodeSync& m_mn_sync;
 
     mutable Mutex cs_deqsessions;
     // TODO: or map<denom, CCoinJoinClientSession> ??
@@ -207,7 +207,7 @@ public:
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
-    explicit CCoinJoinClientManager(CWallet& wallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+    explicit CCoinJoinClientManager(CWallet& wallet, const CMasternodeSync& mn_sync) :
         m_mn_sync(mn_sync), mixingWallet(wallet) {}
 
     void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);

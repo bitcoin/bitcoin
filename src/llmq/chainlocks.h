@@ -49,7 +49,7 @@ private:
     CSigSharesManager& shareman;
     CQuorumManager& qman;
 
-    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    CMasternodeSync& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
     std::unique_ptr<CScheduler> scheduler;
@@ -86,7 +86,7 @@ private:
 public:
     explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman,
-                                const std::unique_ptr<CMasternodeSync>& mn_sync,
+                                CMasternodeSync& mn_sync,
                                 const std::unique_ptr<PeerManager>& peerman);
     ~CChainLocksHandler();
 

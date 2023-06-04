@@ -28,13 +28,14 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, ChainTestingSetup)
 BOOST_AUTO_TEST_CASE(chainstatemanager)
 {
     ChainstateManager& manager = *m_node.chainman;
-    CTxMemPool &mempool = *m_node.mempool;
+    CTxMemPool& mempool = *m_node.mempool;
+    CEvoDB& evodb = *m_node.evodb;
     std::vector<CChainState*> chainstates;
     const CChainParams& chainparams = Params();
 
     // Create a legacy (IBD) chainstate.
     //
-    CChainState& c1 = *WITH_LOCK(::cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, mempool));
+    CChainState& c1 = *WITH_LOCK(::cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, evodb, mempool));
     chainstates.push_back(&c1);
     c1.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
@@ -60,7 +61,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     // Create a snapshot-based chainstate.
     //
-    CChainState& c2 = *WITH_LOCK(::cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, mempool, GetRandHash()));
+    CChainState& c2 = *WITH_LOCK(::cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, evodb, mempool, GetRandHash()));
     chainstates.push_back(&c2);
     c2.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
@@ -111,6 +112,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 {
     ChainstateManager& manager = *m_node.chainman;
     CTxMemPool& mempool = *m_node.mempool;
+    CEvoDB& evodb = *m_node.evodb;
     size_t max_cache = 10000;
     manager.m_total_coinsdb_cache = max_cache;
     manager.m_total_coinstip_cache = max_cache;
@@ -119,7 +121,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 
     // Create a legacy (IBD) chainstate.
     //
-    CChainState& c1 = *WITH_LOCK(cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, mempool));
+    CChainState& c1 = *WITH_LOCK(cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, evodb, mempool));
     chainstates.push_back(&c1);
     c1.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
@@ -137,7 +139,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 
     // Create a snapshot-based chainstate.
     //
-    CChainState& c2 = *WITH_LOCK(cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, mempool, GetRandHash()));
+    CChainState& c2 = *WITH_LOCK(cs_main, return &manager.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, evodb, mempool, GetRandHash()));
     chainstates.push_back(&c2);
     c2.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);

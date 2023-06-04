@@ -29,7 +29,7 @@ constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 void CCoinJoinServer::ProcessMessage(CNode& peer, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (!fMasternodeMode) return;
-    if (!m_mn_sync->IsBlockchainSynced()) return;
+    if (!m_mn_sync.IsBlockchainSynced()) return;
 
     if (msg_type == NetMsgType::DSACCEPT) {
         ProcessDSACCEPT(peer, vRecv);
@@ -889,7 +889,7 @@ void CCoinJoinServer::SetState(PoolState nStateNew)
 void CCoinJoinServer::DoMaintenance() const
 {
     if (!fMasternodeMode) return; // only run on masternodes
-    if (m_mn_sync == nullptr || !m_mn_sync->IsBlockchainSynced()) return;
+    if (!m_mn_sync.IsBlockchainSynced()) return;
     if (ShutdownRequested()) return;
 
     if (!coinJoinServer) return;

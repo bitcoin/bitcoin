@@ -216,7 +216,7 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                     BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
-                    CTxMemPool& pool, std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
+                    CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -305,7 +305,7 @@ private:
     CAddrMan& m_addrman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
-    std::unique_ptr<LLMQContext>& m_llmq_ctx;
+    const std::unique_ptr<LLMQContext>& m_llmq_ctx;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1463,14 +1463,14 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                                CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
+                                               const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
 {
     return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, llmq_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                  CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
+                                 const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_addrman(addrman),

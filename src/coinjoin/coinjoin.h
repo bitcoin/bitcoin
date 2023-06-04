@@ -502,8 +502,8 @@ public:
     static void AddDSTX(const CCoinJoinBroadcastTx& dstx) LOCKS_EXCLUDED(cs_mapdstx);
     static CCoinJoinBroadcastTx GetDSTX(const uint256& hash) LOCKS_EXCLUDED(cs_mapdstx);
 
-    static void UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const std::unique_ptr<CMasternodeSync>& mn_sync);
-    static void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const std::unique_ptr<CMasternodeSync>& mn_sync);
+    static void UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync);
+    static void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync);
 
     static void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_mapdstx);
     static void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_mapdstx);
