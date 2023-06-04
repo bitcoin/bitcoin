@@ -87,7 +87,7 @@ public:
     template <class It>
     void push_backV(It first, It last);
 
-    void __pushKV(std::string key, UniValue val);
+    void pushKVEnd(std::string key, UniValue val);
     void pushKV(std::string key, UniValue val);
     void pushKVs(UniValue obj);
 
