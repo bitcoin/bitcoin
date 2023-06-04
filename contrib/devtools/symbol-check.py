@@ -12,11 +12,12 @@ Example usage:
 '''
 import subprocess
 import sys
-import os
 from typing import Optional
 
 import lief
 import pixie
+
+from utils import determine_wellknown_cmd
 
 # Debian 9 (Stretch) EOL: 2022. https://wiki.debian.org/DebianReleases#Production_Releases
 #
@@ -64,7 +65,6 @@ IGNORE_EXPORTS = {
 # Used in stacktraces.cpp
 '__cxa_demangle'
 }
-CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
@@ -147,7 +147,7 @@ class CPPFilt(object):
     Use a pipe to the 'c++filt' command.
     '''
     def __init__(self):
-        self.proc = subprocess.Popen(CPPFILT_CMD, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        self.proc = subprocess.Popen(determine_wellknown_cmd('CPPFILT', 'c++filt'), stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
     def __call__(self, mangled):
         self.proc.stdin.write(mangled + '\n')
