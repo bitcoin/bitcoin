@@ -1089,8 +1089,10 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& 
     CExtKey childKey;      // key at m/0'/0'/<n>'
 
     // try to get the seed
-    if (!GetKey(hd_chain.seed_id, seed))
+    if (!GetKey(hd_chain.seed_id, seed)) {
+        assert(false);
         throw std::runtime_error(std::string(__func__) + ": seed not found");
+    }
 
     masterKey.SetSeed(seed);
 

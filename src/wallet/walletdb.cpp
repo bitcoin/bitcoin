@@ -830,66 +830,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             CKeyMetadata keyMeta;
             ssValue >> keyMeta;
             pwallet->GetOrCreateBLSCTKeyMan()->LoadKeyMetadata(vchPubKey.GetID(), keyMeta);
-
-            // Extract some CHDChain info from this metadata if it has any
-            if (keyMeta.nVersion >= CKeyMetadata::VERSION_WITH_HDDATA && !keyMeta.hd_seed_id.IsNull() && keyMeta.hdKeypath.size() > 0) {
-                // Get the path from the key origin or from the path string
-                // Not applicable when path is "s" or "m" as those indicate a seed
-                // See https://github.com/bitcoin/bitcoin/pull/12924
-                bool internal = false;
-                uint32_t index = 0;
-                if (keyMeta.hdKeypath != "spend" && keyMeta.hdKeypath != "view" && keyMeta.hdKeypath != "token") {
-                    std::vector<uint32_t> path;
-                    if (keyMeta.has_key_origin) {
-                        // We have a key origin, so pull it from its path vector
-                        path = keyMeta.key_origin.path;
-                    } else {
-                        // No key origin, have to parse the string
-                        if (!ParseHDKeypath(keyMeta.hdKeypath, path)) {
-                            strErr = "Error reading wallet database: keymeta with invalid HD keypath";
-                            return false;
-                        }
-                    }
-
-                    // Extract the index and internal from the path
-                    // Path string is m/0'/k'/i'
-                    // Path vector is [0', k', i'] (but as ints OR'd with the hardened bit
-                    // k == 0 for external, 1 for internal. i is the index
-                    if (path.size() != 3) {
-                        strErr = "Error reading wallet database: keymeta found with unexpected path";
-                        return false;
-                    }
-                    if (path[0] != 0x80000000) {
-                        strErr = strprintf("Unexpected path index of 0x%08x (expected 0x80000000) for the element at index 0", path[0]);
-                        return false;
-                    }
-                    if (path[1] != 0x80000000 && path[1] != (1 | 0x80000000)) {
-                        strErr = strprintf("Unexpected path index of 0x%08x (expected 0x80000000 or 0x80000001) for the element at index 1", path[1]);
-                        return false;
-                    }
-                    if ((path[2] & 0x80000000) == 0) {
-                        strErr = strprintf("Unexpected path index of 0x%08x (expected to be greater than or equal to 0x80000000)", path[2]);
-                        return false;
-                    }
-                    internal = path[1] == (1 | 0x80000000);
-                    index = path[2] & ~0x80000000;
-                }
-
-                // Insert a new CHDChain, or get the one that already exists
-                auto ins = wss.m_hd_chains.emplace(keyMeta.hd_seed_id, CHDChain());
-                CHDChain& chain = ins.first->second;
-                if (ins.second) {
-                    // For new chains, we want to default to VERSION_HD_BASE until we see an internal
-                    chain.nVersion = CHDChain::VERSION_HD_BASE;
-                    chain.seed_id = keyMeta.hd_seed_id;
-                }
-                if (internal) {
-                    chain.nVersion = CHDChain::VERSION_HD_CHAIN_SPLIT;
-                    chain.nInternalChainCounter = std::max(chain.nInternalChainCounter, index + 1);
-                } else {
-                    chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index + 1);
-                }
-            }
         } else if (strType == DBKeys::WATCHMETA) {
             CScript script;
             ssKey >> script;

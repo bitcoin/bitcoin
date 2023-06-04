@@ -2980,8 +2980,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             walletInstance->SetupLegacyScriptPubKeyMan();
         }
 
-        if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_BLSCT) &&
-            ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET)))) {
+        if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) ||
+            !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 walletInstance->SetupDescriptorScriptPubKeyMans();
