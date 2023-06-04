@@ -79,6 +79,7 @@ private:
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
     const unsigned int entryHeight; //!< Chain height when entering the mempool
+    const uint64_t entry_sequence;  //!< Sequence number used to determine w hether this transaction is too recent for relay
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
@@ -101,7 +102,7 @@ private:
 
 public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
-                    int64_t time, unsigned int entry_height,
+                    int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
@@ -110,6 +111,7 @@ public:
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
           entryHeight{entry_height},
+          entry_sequence{entry_sequence},
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
           m_modified_fee{nFee},
@@ -130,6 +132,7 @@ public:
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
+    uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }
     CAmount GetModifiedFee() const { return m_modified_fee; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
