@@ -127,9 +127,6 @@ bool KeyMan::LoadCryptedKey(const PublicKey& vchPubKey, const std::vector<unsign
 bool KeyMan::AddCryptedKeyInner(const PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret)
 {
     LOCK(cs_KeyStore);
-    for (const KeyMap::value_type& mKey : mapKeys) {
-        const PrivateKey& key = mKey.second;
-    }
     assert(mapKeys.empty());
 
     mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
@@ -513,6 +510,8 @@ bool KeyMan::NewSubAddressPool(const uint64_t& account)
 
 bool KeyMan::TopUp(const unsigned int& size)
 {
+    LOCK(cs_KeyStore);
+
     if (!CanGenerateKeys()) {
         return false;
     }
@@ -640,6 +639,7 @@ bool KeyMan::GetSubAddressFromPool(const uint64_t& account, CKeyID& result, SubA
 
 int KeyMan::GetSubAddressPoolSize(const uint64_t& account) const
 {
+    LOCK(cs_KeyStore);
     return setSubAddressPool.count(account) > 0 ? setSubAddressPool.at(account).size() : 0;
 }
 
