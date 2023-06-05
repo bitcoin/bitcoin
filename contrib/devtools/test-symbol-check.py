@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -23,13 +23,13 @@ def call_symbol_check(cc: List[str], source, executable, options):
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
     subprocess.run([*cc,source,'-o',executable] + env_flags + options, check=True)
-    p = subprocess.run(['./contrib/devtools/symbol-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.run([os.path.join(os.path.dirname(__file__), 'symbol-check.py'), executable], stdout=subprocess.PIPE, text=True)
     os.remove(source)
     os.remove(executable)
     return (p.returncode, p.stdout.rstrip())
 
 def get_machine(cc: List[str]):
-    p = subprocess.run([*cc,'-dumpmachine'], stdout=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.run([*cc,'-dumpmachine'], stdout=subprocess.PIPE, text=True)
     return p.stdout.rstrip()
 
 class TestSymbolChecks(unittest.TestCase):
@@ -37,31 +37,6 @@ class TestSymbolChecks(unittest.TestCase):
         source = 'test1.c'
         executable = 'test1'
         cc = determine_wellknown_cmd('CC', 'gcc')
-
-        # there's no way to do this test for RISC-V at the moment; we build for
-        # RISC-V in a glibc 2.27 environment and we allow all symbols from 2.27.
-        if 'riscv' in get_machine(cc):
-            self.skipTest("test not available for RISC-V")
-
-        # nextup was introduced in GLIBC 2.24, so is newer than our supported
-        # glibc (2.18), and available in our release build environment (2.24).
-        with open(source, 'w', encoding="utf8") as f:
-            f.write('''
-                #define _GNU_SOURCE
-                #include <math.h>
-
-                double nextup(double x);
-
-                int main()
-                {
-                    nextup(3.14);
-                    return 0;
-                }
-        ''')
-
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lm']),
-                (1, executable + ': symbol nextup from unsupported version GLIBC_2.24(3)\n' +
-                    executable + ': failed IMPORTED_SYMBOLS'))
 
         # -lutil is part of the libc6 package so a safe bet that it's installed
         # it's also out of context enough that it's unlikely to ever become a real dependency

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@
 
 ExternalSigner::ExternalSigner(const std::string& command, const std::string chain, const std::string& fingerprint, const std::string name): m_command(command), m_chain(chain), m_fingerprint(fingerprint), m_name(name) {}
 
-const std::string ExternalSigner::NetworkArg() const
+std::string ExternalSigner::NetworkArg() const
 {
     return " --chain " + m_chain;
 }
@@ -30,7 +30,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
     }
     for (const UniValue& signer : result.getValues()) {
         // Check for error
-        const UniValue& error = find_value(signer, "error");
+        const UniValue& error = signer.find_value("error");
         if (!error.isNull()) {
             if (!error.isStr()) {
                 throw std::runtime_error(strprintf("'%s' error", command));
@@ -38,11 +38,11 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
             throw std::runtime_error(strprintf("'%s' error: %s", command, error.getValStr()));
         }
         // Check if fingerprint is present
-        const UniValue& fingerprint = find_value(signer, "fingerprint");
+        const UniValue& fingerprint = signer.find_value("fingerprint");
         if (fingerprint.isNull()) {
             throw std::runtime_error(strprintf("'%s' received invalid response, missing signer fingerprint", command));
         }
-        const std::string fingerprintStr = fingerprint.get_str();
+        const std::string& fingerprintStr{fingerprint.get_str()};
         // Skip duplicate signer
         bool duplicate = false;
         for (const ExternalSigner& signer : signers) {
@@ -50,7 +50,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
         }
         if (duplicate) break;
         std::string name;
-        const UniValue& model_field = find_value(signer, "model");
+        const UniValue& model_field = signer.find_value("model");
         if (model_field.isStr() && model_field.getValStr() != "") {
             name += model_field.getValStr();
         }
@@ -97,19 +97,19 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
 
     const UniValue signer_result = RunCommandParseJSON(command, stdinStr);
 
-    if (find_value(signer_result, "error").isStr()) {
-        error = find_value(signer_result, "error").get_str();
+    if (signer_result.find_value("error").isStr()) {
+        error = signer_result.find_value("error").get_str();
         return false;
     }
 
-    if (!find_value(signer_result, "psbt").isStr()) {
+    if (!signer_result.find_value("psbt").isStr()) {
         error = "Unexpected result from signer";
         return false;
     }
 
     PartiallySignedTransaction signer_psbtx;
     std::string signer_psbt_error;
-    if (!DecodeBase64PSBT(signer_psbtx, find_value(signer_result, "psbt").get_str(), signer_psbt_error)) {
+    if (!DecodeBase64PSBT(signer_psbtx, signer_result.find_value("psbt").get_str(), signer_psbt_error)) {
         error = strprintf("TX decode failed %s", signer_psbt_error);
         return false;
     }

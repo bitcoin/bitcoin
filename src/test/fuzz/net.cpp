@@ -1,9 +1,8 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <chainparamsbase.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -12,9 +11,11 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/net.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
+#include <util/chaintype.h>
 
 #include <cstdint>
 #include <optional>
@@ -23,7 +24,7 @@
 
 void initialize_net()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::MAIN);
+    static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
 }
 
 FUZZ_TARGET_INIT(net, initialize_net)

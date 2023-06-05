@@ -6,7 +6,7 @@
 
 #include <kernel/validation_cache_sizes.h>
 
-#include <util/system.h>
+#include <common/args.h>
 
 #include <algorithm>
 #include <cstddef>

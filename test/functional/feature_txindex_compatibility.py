@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that legacy txindex will be disabled on upgrade.
@@ -14,7 +14,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class TxindexCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
@@ -33,7 +33,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
             versions=[
                 160300,  # Last release with legacy txindex
                 None,  # For MiniWallet, without migration code
-                200100,  # Any release with migration code (0.17.x - 22.x)
+                220000,  # Last release with migration code (0.17.x - 22.x)
             ],
         )
         self.start_nodes()
@@ -42,7 +42,6 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
     def run_test(self):
         mini_wallet = MiniWallet(self.nodes[1])
-        mini_wallet.rescan_utxos()
         spend_utxo = mini_wallet.get_utxo()
         mini_wallet.send_self_transfer(from_node=self.nodes[1], utxo_to_spend=spend_utxo)
         self.generate(self.nodes[1], 1)
@@ -89,4 +88,4 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    MempoolCompatibilityTest().main()
+    TxindexCompatibilityTest().main()

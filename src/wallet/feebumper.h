@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,7 +51,8 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     CAmount& old_fee,
     CAmount& new_fee,
     CMutableTransaction& mtx,
-    bool require_mine);
+    bool require_mine,
+    const std::vector<CTxOut>& outputs);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was

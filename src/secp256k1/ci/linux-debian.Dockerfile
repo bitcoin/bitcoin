@@ -1,15 +1,14 @@
 FROM debian:stable
 
-RUN dpkg --add-architecture i386
-RUN dpkg --add-architecture s390x
-RUN dpkg --add-architecture armhf
-RUN dpkg --add-architecture arm64
-RUN dpkg --add-architecture ppc64el
-RUN apt-get update
+RUN dpkg --add-architecture i386 && \
+    dpkg --add-architecture s390x && \
+    dpkg --add-architecture armhf && \
+    dpkg --add-architecture arm64 && \
+    dpkg --add-architecture ppc64el
 
 # dkpg-dev: to make pkg-config work in cross-builds
 # llvm: for llvm-symbolizer, which is used by clang's UBSan for symbolized stack traces
-RUN apt-get install --no-install-recommends --no-upgrade -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
         git ca-certificates \
         make automake libtool pkg-config dpkg-dev valgrind qemu-user \
         gcc clang llvm libc6-dbg \
@@ -19,8 +18,20 @@ RUN apt-get install --no-install-recommends --no-upgrade -y \
         gcc-arm-linux-gnueabihf libc6-dev-armhf-cross libc6-dbg:armhf \
         gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6-dbg:arm64 \
         gcc-powerpc64le-linux-gnu libc6-dev-ppc64el-cross libc6-dbg:ppc64el \
-        wine gcc-mingw-w64-x86-64 \
+        gcc-mingw-w64-x86-64-win32 wine64 wine \
+        gcc-mingw-w64-i686-win32 wine32 \
         sagemath
 
-# Run a dummy command in wine to make it set up configuration
-RUN wine64-stable xcopy || true
+WORKDIR /root
+# The "wine" package provides a convience wrapper that we need
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        git ca-certificates wine64 wine python3-simplejson python3-six msitools winbind procps && \
+    git clone https://github.com/mstorsjo/msvc-wine && \
+    mkdir /opt/msvc && \
+    python3 msvc-wine/vsdownload.py --accept-license --dest /opt/msvc Microsoft.VisualStudio.Workload.VCTools && \
+    msvc-wine/install.sh /opt/msvc
+
+# Initialize the wine environment. Wait until the wineserver process has
+# exited before closing the session, to avoid corrupting the wine prefix.
+RUN wine64 wineboot --init && \
+    while (ps -A | grep wineserver) > /dev/null; do sleep 1; done

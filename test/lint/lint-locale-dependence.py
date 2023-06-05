@@ -34,8 +34,6 @@
 #
 # See https://doc.qt.io/qt-5/qcoreapplication.html#locale-settings and
 # https://stackoverflow.com/a/34878283 for more details.
-#
-# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 
 import re
 import sys
@@ -45,10 +43,7 @@ from subprocess import check_output, CalledProcessError
 
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
-    "src/test/dbwrapper_tests.cpp:.*snprintf",
     "src/test/fuzz/locale.cpp:.*setlocale",
-    "src/test/fuzz/string.cpp:.*strtol",
-    "src/test/fuzz/string.cpp:.*strtoul",
     "src/test/util_tests.cpp:.*strtoll",
     "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
     "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`
@@ -223,7 +218,7 @@ def find_locale_dependent_function_uses():
     git_grep_output = list()
 
     try:
-        git_grep_output = check_output(git_grep_command, universal_newlines=True, encoding="utf8").splitlines()
+        git_grep_output = check_output(git_grep_command, text=True, encoding="utf8").splitlines()
     except CalledProcessError as e:
         if e.returncode > 1:
             raise e

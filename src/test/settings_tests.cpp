@@ -4,16 +4,16 @@
 
 #include <util/settings.h>
 
-#include <fs.h>
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
 
-
 #include <boost/test/unit_test.hpp>
+#include <common/args.h>
 #include <univalue.h>
+#include <util/chaintype.h>
+#include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 
 #include <fstream>
 #include <map>
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     BOOST_CHECK(values.empty());
     BOOST_CHECK(errors.empty());
 
-    // Check duplicate keys not allowed
+    // Check duplicate keys not allowed and that values returns empty if a duplicate is found.
     WriteText(path, R"({
         "dupe": "string",
         "dupe": "dupe"
@@ -88,6 +88,7 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     BOOST_CHECK(!util::ReadSettings(path, values, errors));
     std::vector<std::string> dup_keys = {strprintf("Found duplicate key dupe in settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), dup_keys.begin(), dup_keys.end());
+    BOOST_CHECK(values.empty());
 
     // Check non-kv json files not allowed
     WriteText(path, R"("non-kv")");
@@ -189,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }
 
-    const std::string& network = CBaseChainParams::MAIN;
+    const std::string& network = ChainTypeToString(ChainType::MAIN);
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool force_set,
                           bool ignore_default_section_config) {
         std::string desc;
@@ -224,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         }
 
         desc += " || ";
-        desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_name=*/false).write();
+        desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_type=*/false).write();
         desc += " |";
         for (const auto& s : GetSettingsList(settings, network, name, ignore_default_section_config)) {
             desc += " ";

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,11 +13,6 @@
 #include <limits>
 #include <string>
 #include <vector>
-
-void initialize_signature_checker()
-{
-    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
-}
 
 namespace {
 class FuzzedSignatureChecker : public BaseSignatureChecker
@@ -53,7 +48,7 @@ public:
 };
 } // namespace
 
-FUZZ_TARGET_INIT(signature_checker, initialize_signature_checker)
+FUZZ_TARGET(signature_checker)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();

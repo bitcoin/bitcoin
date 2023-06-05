@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -141,6 +141,10 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
                 info.prev_hash = &block.hashPrevBlock;
                 info.height = chain.size();
                 info.data = &block;
+                // Ensure that no blocks are skipped by the wallet by setting the chain's accumulated
+                // time to the maximum value. This ensures that the wallet's birth time is always
+                // earlier than this maximum time.
+                info.chain_time_max = std::numeric_limits<unsigned int>::max();
                 a.wallet->blockConnected(info);
                 b.wallet->blockConnected(info);
                 // Store the coins for the next block

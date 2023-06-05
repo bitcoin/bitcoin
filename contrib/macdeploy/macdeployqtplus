@@ -187,7 +187,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     if verbose:
         print(f"Inspecting with otool: {binaryPath}")
     otoolbin=os.getenv("OTOOL", "otool")
-    otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, text=True)
     if otool.returncode != 0:
         sys.stderr.write(otool.stderr)
         sys.stderr.flush()
@@ -577,17 +577,17 @@ if config.dmg is not None:
 
     tempname: str = appname + ".temp.dmg"
 
-    run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, universal_newlines=True)
+    run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, text=True)
 
     if verbose:
         print("Attaching temp image...")
-    output = run(["hdiutil", "attach", tempname, "-readwrite"], check=True, universal_newlines=True, stdout=PIPE).stdout
+    output = run(["hdiutil", "attach", tempname, "-readwrite"], check=True, text=True, stdout=PIPE).stdout
 
     print("+ Finalizing .dmg disk image +")
 
-    run(["hdiutil", "detach", f"/Volumes/{appname}"], universal_newlines=True)
+    run(["hdiutil", "detach", f"/Volumes/{appname}"], text=True)
 
-    run(["hdiutil", "convert", tempname, "-format", "UDZO", "-o", appname, "-imagekey", "zlib-level=9"], check=True, universal_newlines=True)
+    run(["hdiutil", "convert", tempname, "-format", "UDZO", "-o", appname, "-imagekey", "zlib-level=9"], check=True, text=True)
 
     os.unlink(tempname)
 

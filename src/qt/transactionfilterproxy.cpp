@@ -11,14 +11,10 @@
 #include <cstdlib>
 #include <optional>
 
-TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
-    QSortFilterProxyModel(parent),
-    m_search_string(),
-    typeFilter(ALL_TYPES),
-    watchOnlyFilter(WatchOnlyFilter_All),
-    minAmount(0),
-    limitRows(-1),
-    showInactive(true)
+TransactionFilterProxy::TransactionFilterProxy(QObject* parent)
+    : QSortFilterProxyModel(parent),
+      m_search_string(),
+      typeFilter(ALL_TYPES)
 {
 }
 
@@ -92,25 +88,8 @@ void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setLimit(int limit)
-{
-    this->limitRows = limit;
-}
-
 void TransactionFilterProxy::setShowInactive(bool _showInactive)
 {
     this->showInactive = _showInactive;
     invalidateFilter();
-}
-
-int TransactionFilterProxy::rowCount(const QModelIndex &parent) const
-{
-    if(limitRows != -1)
-    {
-        return std::min(QSortFilterProxyModel::rowCount(parent), limitRows);
-    }
-    else
-    {
-        return QSortFilterProxyModel::rowCount(parent);
-    }
 }

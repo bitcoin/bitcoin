@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -11,43 +11,45 @@
 #include <stdint.h>
 #include <immintrin.h>
 
+#include <attributes.h>
+
 namespace {
 
 alignas(__m128i) const uint8_t MASK[16] = {0x03, 0x02, 0x01, 0x00, 0x07, 0x06, 0x05, 0x04, 0x0b, 0x0a, 0x09, 0x08, 0x0f, 0x0e, 0x0d, 0x0c};
 alignas(__m128i) const uint8_t INIT0[16] = {0x8c, 0x68, 0x05, 0x9b, 0x7f, 0x52, 0x0e, 0x51, 0x85, 0xae, 0x67, 0xbb, 0x67, 0xe6, 0x09, 0x6a};
 alignas(__m128i) const uint8_t INIT1[16] = {0x19, 0xcd, 0xe0, 0x5b, 0xab, 0xd9, 0x83, 0x1f, 0x3a, 0xf5, 0x4f, 0xa5, 0x72, 0xf3, 0x6e, 0x3c};
 
-void inline  __attribute__((always_inline)) QuadRound(__m128i& state0, __m128i& state1, uint64_t k1, uint64_t k0)
+void ALWAYS_INLINE QuadRound(__m128i& state0, __m128i& state1, uint64_t k1, uint64_t k0)
 {
     const __m128i msg = _mm_set_epi64x(k1, k0);
     state1 = _mm_sha256rnds2_epu32(state1, state0, msg);
     state0 = _mm_sha256rnds2_epu32(state0, state1, _mm_shuffle_epi32(msg, 0x0e));
 }
 
-void inline  __attribute__((always_inline)) QuadRound(__m128i& state0, __m128i& state1, __m128i m, uint64_t k1, uint64_t k0)
+void ALWAYS_INLINE QuadRound(__m128i& state0, __m128i& state1, __m128i m, uint64_t k1, uint64_t k0)
 {
     const __m128i msg = _mm_add_epi32(m, _mm_set_epi64x(k1, k0));
     state1 = _mm_sha256rnds2_epu32(state1, state0, msg);
     state0 = _mm_sha256rnds2_epu32(state0, state1, _mm_shuffle_epi32(msg, 0x0e));
 }
 
-void inline  __attribute__((always_inline)) ShiftMessageA(__m128i& m0, __m128i m1)
+void ALWAYS_INLINE ShiftMessageA(__m128i& m0, __m128i m1)
 {
     m0 = _mm_sha256msg1_epu32(m0, m1);
 }
 
-void inline  __attribute__((always_inline)) ShiftMessageC(__m128i& m0, __m128i m1, __m128i& m2)
+void ALWAYS_INLINE ShiftMessageC(__m128i& m0, __m128i m1, __m128i& m2)
 {
     m2 = _mm_sha256msg2_epu32(_mm_add_epi32(m2, _mm_alignr_epi8(m1, m0, 4)), m1);
 }
 
-void inline __attribute__((always_inline)) ShiftMessageB(__m128i& m0, __m128i m1, __m128i& m2)
+void ALWAYS_INLINE ShiftMessageB(__m128i& m0, __m128i m1, __m128i& m2)
 {
     ShiftMessageC(m0, m1, m2);
     ShiftMessageA(m0, m1);
 }
 
-void inline __attribute__((always_inline)) Shuffle(__m128i& s0, __m128i& s1)
+void ALWAYS_INLINE Shuffle(__m128i& s0, __m128i& s1)
 {
     const __m128i t1 = _mm_shuffle_epi32(s0, 0xB1);
     const __m128i t2 = _mm_shuffle_epi32(s1, 0x1B);
@@ -55,7 +57,7 @@ void inline __attribute__((always_inline)) Shuffle(__m128i& s0, __m128i& s1)
     s1 = _mm_blend_epi16(t2, t1, 0xF0);
 }
 
-void inline __attribute__((always_inline)) Unshuffle(__m128i& s0, __m128i& s1)
+void ALWAYS_INLINE Unshuffle(__m128i& s0, __m128i& s1)
 {
     const __m128i t1 = _mm_shuffle_epi32(s0, 0x1B);
     const __m128i t2 = _mm_shuffle_epi32(s1, 0xB1);
@@ -63,12 +65,12 @@ void inline __attribute__((always_inline)) Unshuffle(__m128i& s0, __m128i& s1)
     s1 = _mm_alignr_epi8(t2, t1, 0x08);
 }
 
-__m128i inline  __attribute__((always_inline)) Load(const unsigned char* in)
+__m128i ALWAYS_INLINE Load(const unsigned char* in)
 {
     return _mm_shuffle_epi8(_mm_loadu_si128((const __m128i*)in), _mm_load_si128((const __m128i*)MASK));
 }
 
-void inline  __attribute__((always_inline)) Save(unsigned char* out, __m128i s)
+void ALWAYS_INLINE Save(unsigned char* out, __m128i s)
 {
     _mm_storeu_si128((__m128i*)out, _mm_shuffle_epi8(s, _mm_load_si128((const __m128i*)MASK)));
 }

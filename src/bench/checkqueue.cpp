@@ -1,14 +1,14 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 #include <checkqueue.h>
+#include <common/system.h>
 #include <key.h>
 #include <prevector.h>
 #include <pubkey.h>
 #include <random.h>
-#include <util/system.h>
 
 #include <vector>
 
@@ -25,12 +25,10 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // We shouldn't ever be running with the checkqueue on a single core machine.
     if (GetNumCores() <= 1) return;
 
-    const ECCVerifyHandle verify_handle;
     ECC_Start();
 
     struct PrevectorJob {
         prevector<PREVECTOR_SIZE, uint8_t> p;
-        PrevectorJob() = default;
         explicit PrevectorJob(FastRandomContext& insecure_rand){
             p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
         }
@@ -38,10 +36,6 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         {
             return true;
         }
-        void swap(PrevectorJob& x) noexcept
-        {
-            p.swap(x.p);
-        };
     };
     CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
     // The main thread should be counted to prevent thread oversubscription, and
@@ -61,7 +55,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         // Make insecure_rand here so that each iteration is identical.
         CCheckQueueControl<PrevectorJob> control(&queue);
         for (auto vChecks : vBatches) {
-            control.Add(vChecks);
+            control.Add(std::move(vChecks));
         }
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity

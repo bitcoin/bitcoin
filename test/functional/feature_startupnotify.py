@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test -startupnotify."""
@@ -29,9 +29,14 @@ class StartupNotifyTest(BitcoinTestFramework):
         self.wait_until(lambda: os.path.exists(tmpdir_file))
 
         self.log.info("Test -startupnotify is executed once")
-        with open(tmpdir_file, "r", encoding="utf8") as f:
-            file_content = f.read()
-            assert_equal(file_content.count(FILE_NAME), 1)
+
+        def get_count():
+            with open(tmpdir_file, "r", encoding="utf8") as f:
+                file_content = f.read()
+                return file_content.count(FILE_NAME)
+
+        self.wait_until(lambda: get_count() > 0)
+        assert_equal(get_count(), 1)
 
         self.log.info("Test node is fully started")
         assert_equal(self.nodes[0].getblockcount(), 200)

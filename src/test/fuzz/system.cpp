@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 
 #include <cstdint>
 #include <string>
@@ -55,7 +55,7 @@ FUZZ_TARGET_INIT(system, initialize_system)
             [&] {
                 const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::HIDDEN});
                 // Avoid hitting:
-                // util/system.cpp:425: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
+                // common/args.cpp:563: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
                 const std::string argument_name = GetArgumentName(fuzzed_data_provider.ConsumeRandomLengthString(16));
                 if (args_manager.GetArgFlags(argument_name) != std::nullopt) {
                     return;
@@ -64,7 +64,7 @@ FUZZ_TARGET_INIT(system, initialize_system)
             },
             [&] {
                 // Avoid hitting:
-                // util/system.cpp:425: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
+                // common/args.cpp:563: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
                 const std::vector<std::string> names = ConsumeRandomLengthStringVector(fuzzed_data_provider);
                 std::vector<std::string> hidden_arguments;
                 for (const std::string& name : names) {
@@ -108,7 +108,7 @@ FUZZ_TARGET_INIT(system, initialize_system)
     (void)args_manager.GetArgs(s1);
     (void)args_manager.GetBoolArg(s1, b);
     try {
-        (void)args_manager.GetChainName();
+        (void)args_manager.GetChainTypeString();
     } catch (const std::runtime_error&) {
     }
     (void)args_manager.GetHelpMessage();

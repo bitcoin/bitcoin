@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -134,7 +134,8 @@ extern const char* GETADDR;
 /**
  * The mempool message requests the TXIDs of transactions that the receiving
  * node has verified as valid but which have not yet appeared in a block.
- * @since protocol version 60002.
+ * @since protocol version 60002 as described by BIP35.
+ *   Only available with service bit NODE_BLOOM, see also BIP111.
  */
 extern const char* MEMPOOL;
 /**
@@ -259,9 +260,7 @@ extern const char* CFCHECKPT;
  */
 extern const char* WTXIDRELAY;
 /**
- * Contains 2 1-byte bools, a 4-byte version number and an 8-byte salt.
- * The 2 booleans indicate that a node is willing to participate in transaction
- * reconciliation, respectively as an initiator or as a receiver.
+ * Contains a 4-byte version number and an 8-byte salt.
  * The salt is used to compute short txids needed for efficient
  * txreconciliation, as described by BIP 330.
  */
@@ -280,8 +279,6 @@ enum ServiceFlags : uint64_t {
     // set by all Bitcoin Core non pruned nodes, and is unset by SPV clients or other light clients.
     NODE_NETWORK = (1 << 0),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
-    // Bitcoin Core nodes used to support this by default, without advertising this bit,
-    // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.

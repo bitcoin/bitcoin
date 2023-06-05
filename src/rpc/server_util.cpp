@@ -1,16 +1,17 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/server_util.h>
 
+#include <common/args.h>
 #include <net_processing.h>
 #include <node/context.h>
 #include <policy/fees.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <txmempool.h>
-#include <util/system.h>
+#include <util/any.h>
 #include <validation.h>
 
 #include <any>
@@ -37,6 +38,20 @@ CTxMemPool& EnsureMemPool(const NodeContext& node)
 CTxMemPool& EnsureAnyMemPool(const std::any& context)
 {
     return EnsureMemPool(EnsureAnyNodeContext(context));
+}
+
+
+BanMan& EnsureBanman(const NodeContext& node)
+{
+    if (!node.banman) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
+    }
+    return *node.banman;
+}
+
+BanMan& EnsureAnyBanman(const std::any& context)
+{
+    return EnsureBanman(EnsureAnyNodeContext(context));
 }
 
 ArgsManager& EnsureArgsman(const NodeContext& node)

@@ -18,6 +18,6 @@ FUZZ_TARGET(parse_hd_keypath)
 
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::vector<uint32_t> random_keypath = ConsumeRandomLengthIntegralVector<uint32_t>(fuzzed_data_provider);
-    (void)FormatHDKeypath(random_keypath);
+    (void)FormatHDKeypath(random_keypath, /*apostrophe=*/true); // WriteHDKeypath calls this with false
     (void)WriteHDKeypath(random_keypath);
 }

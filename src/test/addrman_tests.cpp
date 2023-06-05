@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,16 +33,16 @@ static int32_t GetCheckRatio(const NodeContext& node_ctx)
 
 static CNetAddr ResolveIP(const std::string& ip)
 {
-    CNetAddr addr;
-    BOOST_CHECK_MESSAGE(LookupHost(ip, addr, false), strprintf("failed to resolve: %s", ip));
-    return addr;
+    const std::optional<CNetAddr> addr{LookupHost(ip, false)};
+    BOOST_CHECK_MESSAGE(addr.has_value(), strprintf("failed to resolve: %s", ip));
+    return addr.value_or(CNetAddr{});
 }
 
 static CService ResolveService(const std::string& ip, uint16_t port = 0)
 {
-    CService serv;
-    BOOST_CHECK_MESSAGE(Lookup(ip, serv, port, false), strprintf("failed to resolve: %s:%i", ip, port));
-    return serv;
+    const std::optional<CService> serv{Lookup(ip, port, false)};
+    BOOST_CHECK_MESSAGE(serv.has_value(), strprintf("failed to resolve: %s:%i", ip, port));
+    return serv.value_or(CService{});
 }
 
 
@@ -67,22 +67,22 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     CNetAddr source = ResolveIP("252.2.2.2");
 
     // Test: Does Addrman respond correctly when empty.
-    BOOST_CHECK_EQUAL(addrman->size(), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 0U);
     auto addr_null = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_null.ToString(), "[::]:0");
+    BOOST_CHECK_EQUAL(addr_null.ToStringAddrPort(), "[::]:0");
 
     // Test: Does Addrman::Add work as expected.
     CService addr1 = ResolveService("250.1.1.1", 8333);
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
     auto addr_ret1 = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addr_ret1.ToStringAddrPort(), "250.1.1.1:8333");
 
     // Test: Does IP address deduplication work correctly.
     //  Expected dup IP should not be added.
     CService addr1_dup = ResolveService("250.1.1.1", 8333);
     BOOST_CHECK(!addrman->Add({CAddress(addr1_dup, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
 
     // Test: New table has one addr and we add a diff addr we should
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
     CService addr2 = ResolveService("250.1.1.2", 8333);
     BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, source));
-    BOOST_CHECK(addrman->size() >= 1);
+    BOOST_CHECK(addrman->Size() >= 1);
 
     // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
     addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
     vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
     BOOST_CHECK(addrman->Add(vAddr, source));
-    BOOST_CHECK(addrman->size() >= 1);
+    BOOST_CHECK(addrman->Size() >= 1);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
@@ -110,63 +110,62 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
-    BOOST_CHECK_EQUAL(addrman->size(), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 0U);
 
     // Test 7; Addr with same IP but diff port does not replace existing addr.
     CService addr1 = ResolveService("250.1.1.1", 8333);
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
     CService addr1_port = ResolveService("250.1.1.1", 8334);
     BOOST_CHECK(addrman->Add({CAddress(addr1_port, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 2U);
     auto addr_ret2 = addrman->Select().first;
-    BOOST_CHECK(addr_ret2.ToString() == "250.1.1.1:8333" || addr_ret2.ToString() == "250.1.1.1:8334");
+    BOOST_CHECK(addr_ret2.ToStringAddrPort() == "250.1.1.1:8333" || addr_ret2.ToStringAddrPort() == "250.1.1.1:8334");
 
     // Test: Add same IP but diff port to tried table; this converts the entry with
     // the specified port to tried, but not the other.
     addrman->Good(CAddress(addr1_port, NODE_NONE));
-    BOOST_CHECK_EQUAL(addrman->size(), 2U);
-    bool newOnly = true;
-    auto addr_ret3 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addrman->Size(), 2U);
+    bool new_only = true;
+    auto addr_ret3 = addrman->Select(new_only).first;
+    BOOST_CHECK_EQUAL(addr_ret3.ToStringAddrPort(), "250.1.1.1:8333");
 }
-
 
 BOOST_AUTO_TEST_CASE(addrman_select)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    BOOST_CHECK(!addrman->Select(false).first.IsValid());
+    BOOST_CHECK(!addrman->Select(true).first.IsValid());
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
-    // Test: Select from new with 1 addr in new.
+    // Add 1 address to the new table
     CService addr1 = ResolveService("250.1.1.1", 8333);
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
-    bool newOnly = true;
-    auto addr_ret1 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK(addrman->Select(/*new_only=*/true).first == addr1);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false).first == addr1);
 
-    // Test: move addr to tried, select from new expected nothing returned.
+    // Move address to the tried table
     BOOST_CHECK(addrman->Good(CAddress(addr1, NODE_NONE)));
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
-    auto addr_ret2 = addrman->Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret2.ToString(), "[::]:0");
 
-    auto addr_ret3 = addrman->Select().first;
-    BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true).first.IsValid());
+    BOOST_CHECK(addrman->Select().first == addr1);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
-
-
-    // Add three addresses to new table.
+    // Add one address to the new table
     CService addr2 = ResolveService("250.3.1.1", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, addr2));
+    BOOST_CHECK(addrman->Select(/*new_only=*/true).first == addr2);
+
+    // Add two more addresses to the new table
     CService addr3 = ResolveService("250.3.2.2", 9999);
     CService addr4 = ResolveService("250.3.3.3", 9999);
 
-    BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
-    BOOST_CHECK(addrman->Add({CAddress(addr3, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
+    BOOST_CHECK(addrman->Add({CAddress(addr3, NODE_NONE)}, addr2));
     BOOST_CHECK(addrman->Add({CAddress(addr4, NODE_NONE)}, ResolveService("250.4.1.1", 8333)));
 
     // Add three addresses to tried table.
@@ -174,22 +173,105 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     CService addr6 = ResolveService("250.4.5.5", 7777);
     CService addr7 = ResolveService("250.4.6.6", 8333);
 
-    BOOST_CHECK(addrman->Add({CAddress(addr5, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
+    BOOST_CHECK(addrman->Add({CAddress(addr5, NODE_NONE)}, addr3));
     BOOST_CHECK(addrman->Good(CAddress(addr5, NODE_NONE)));
-    BOOST_CHECK(addrman->Add({CAddress(addr6, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
+    BOOST_CHECK(addrman->Add({CAddress(addr6, NODE_NONE)}, addr3));
     BOOST_CHECK(addrman->Good(CAddress(addr6, NODE_NONE)));
     BOOST_CHECK(addrman->Add({CAddress(addr7, NODE_NONE)}, ResolveService("250.1.1.3", 8333)));
     BOOST_CHECK(addrman->Good(CAddress(addr7, NODE_NONE)));
 
-    // Test: 6 addrs + 1 addr from last test = 7.
-    BOOST_CHECK_EQUAL(addrman->size(), 7U);
+    // 6 addrs + 1 addr from last test = 7.
+    BOOST_CHECK_EQUAL(addrman->Size(), 7U);
 
-    // Test: Select pulls from new and tried regardless of port number.
+    // Select pulls from new and tried regardless of port number.
     std::set<uint16_t> ports;
     for (int i = 0; i < 20; ++i) {
         ports.insert(addrman->Select().first.GetPort());
     }
     BOOST_CHECK_EQUAL(ports.size(), 3U);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_select_by_network)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_IPV4).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV4).first.IsValid());
+
+    // add ipv4 address to the new table
+    CNetAddr source = ResolveIP("252.2.2.2");
+    CService addr1 = ResolveService("250.1.1.1", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_IPV4).first == addr1);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV6).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_ONION).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_I2P).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_CJDNS).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_CJDNS).first.IsValid());
+    BOOST_CHECK(addrman->Select(/*new_only=*/false).first == addr1);
+
+    // add I2P address to the new table
+    CAddress i2p_addr;
+    i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_I2P).first == i2p_addr);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_I2P).first == i2p_addr);
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_IPV6).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_ONION).first.IsValid());
+    BOOST_CHECK(!addrman->Select(/*new_only=*/false, NET_CJDNS).first.IsValid());
+
+    // bump I2P address to tried table
+    BOOST_CHECK(addrman->Good(i2p_addr));
+
+    BOOST_CHECK(!addrman->Select(/*new_only=*/true, NET_I2P).first.IsValid());
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_I2P).first == i2p_addr);
+
+    // add another I2P address to the new table
+    CAddress i2p_addr2;
+    i2p_addr2.SetSpecial("c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr2}, source));
+
+    BOOST_CHECK(addrman->Select(/*new_only=*/true, NET_I2P).first == i2p_addr2);
+
+    // ensure that both new and tried table are selected from
+    bool new_selected{false};
+    bool tried_selected{false};
+
+    while (!new_selected || !tried_selected) {
+        const CAddress selected{addrman->Select(/*new_only=*/false, NET_I2P).first};
+        BOOST_REQUIRE(selected == i2p_addr || selected == i2p_addr2);
+        if (selected == i2p_addr) {
+            tried_selected = true;
+        } else {
+            new_selected = true;
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(addrman_select_special)
+{
+    // use a non-deterministic addrman to ensure a passing test isn't due to setup
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, /*deterministic=*/false, GetCheckRatio(m_node));
+
+    CNetAddr source = ResolveIP("252.2.2.2");
+
+    // add I2P address to the tried table
+    CAddress i2p_addr;
+    i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    BOOST_CHECK(addrman->Add({i2p_addr}, source));
+    BOOST_CHECK(addrman->Good(i2p_addr));
+
+    // add ipv4 address to the new table
+    CService addr1 = ResolveService("250.1.1.3", 8333);
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+
+    // since the only ipv4 address is on the new table, ensure that the new
+    // table gets selected even if new_only is false. if the table was being
+    // selected at random, this test will sporadically fail
+    BOOST_CHECK(addrman->Select(/*new_only=*/false, NET_IPV4).first == addr1);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)
@@ -200,25 +282,25 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 
     uint32_t num_addrs{0};
 
-    BOOST_CHECK_EQUAL(addrman->size(), num_addrs);
+    BOOST_CHECK_EQUAL(addrman->Size(), num_addrs);
 
     while (num_addrs < 22) { // Magic number! 250.1.1.1 - 250.1.1.22 do not collide with deterministic key = 1
         CService addr = ResolveService("250.1.1." + ToString(++num_addrs));
         BOOST_CHECK(addrman->Add({CAddress(addr, NODE_NONE)}, source));
 
         // Test: No collision in new table yet.
-        BOOST_CHECK_EQUAL(addrman->size(), num_addrs);
+        BOOST_CHECK_EQUAL(addrman->Size(), num_addrs);
     }
 
     // Test: new table collision!
     CService addr1 = ResolveService("250.1.1." + ToString(++num_addrs));
     uint32_t collisions{1};
     BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), num_addrs - collisions);
+    BOOST_CHECK_EQUAL(addrman->Size(), num_addrs - collisions);
 
     CService addr2 = ResolveService("250.1.1." + ToString(++num_addrs));
     BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), num_addrs - collisions);
+    BOOST_CHECK_EQUAL(addrman->Size(), num_addrs - collisions);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
@@ -236,7 +318,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     }
     AddressPosition addr_pos = addrman->FindAddressEntry(addr).value();
     BOOST_CHECK_EQUAL(addr_pos.multiplicity, 1U);
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
     // if nTime increases, an addr can occur in up to 8 buckets
     // The acceptance probability decreases exponentially with existing multiplicity -
@@ -250,7 +332,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     AddressPosition addr_pos_multi = addrman->FindAddressEntry(addr).value();
     BOOST_CHECK_EQUAL(addr_pos_multi.multiplicity, 8U);
     // multiplicity doesn't affect size
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
@@ -261,7 +343,7 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
     uint32_t num_addrs{0};
 
-    BOOST_CHECK_EQUAL(addrman->size(), num_addrs);
+    BOOST_CHECK_EQUAL(addrman->Size(), num_addrs);
 
     while (num_addrs < 35) { // Magic number! 250.1.1.1 - 250.1.1.35 do not collide in tried with deterministic key = 1
         CService addr = ResolveService("250.1.1." + ToString(++num_addrs));
@@ -290,7 +372,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
 
     // Test: Sanity check, GetAddr should never return anything if addrman
     //  is empty.
-    BOOST_CHECK_EQUAL(addrman->size(), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 0U);
     std::vector<CAddress> vAddr1 = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
     BOOST_CHECK_EQUAL(vAddr1.size(), 0U);
 
@@ -336,11 +418,11 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     }
     std::vector<CAddress> vAddr = addrman->GetAddr(/*max_addresses=*/2500, /*max_pct=*/23, /*network=*/std::nullopt);
 
-    size_t percent23 = (addrman->size() * 23) / 100;
+    size_t percent23 = (addrman->Size() * 23) / 100;
     BOOST_CHECK_EQUAL(vAddr.size(), percent23);
     BOOST_CHECK_EQUAL(vAddr.size(), 461U);
-    // (Addrman.size() < number of addresses added) due to address collisions.
-    BOOST_CHECK_EQUAL(addrman->size(), 2006U);
+    // (addrman.Size() < number of addresses added) due to address collisions.
+    BOOST_CHECK_EQUAL(addrman->Size(), 2006U);
 }
 
 
@@ -681,7 +763,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     addrman->Add({new1, tried1, new2, tried2}, CNetAddr{});
     addrman->Good(tried1);
     addrman->Good(tried2);
-    BOOST_REQUIRE_EQUAL(addrman->size(), 4);
+    BOOST_REQUIRE_EQUAL(addrman->Size(), 4);
 
     stream << *addrman;
 
@@ -704,17 +786,17 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 
     addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     stream >> *addrman;
-    BOOST_CHECK_EQUAL(addrman->size(), 2);
+    BOOST_CHECK_EQUAL(addrman->Size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
-    BOOST_CHECK(addrman->size() == 0);
+    BOOST_CHECK(addrman->Size() == 0);
 
     // Empty addrman should return blank addrman info.
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // Add twenty two addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -724,7 +806,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 
         // No collisions in tried.
         BOOST_CHECK(addrman->Good(addr));
-        BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     }
 
     // Ensure Good handles duplicates well.
@@ -736,7 +818,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
         BOOST_CHECK(!addrman->Good(addr));
 
         // Verify duplicate address not marked as a collision.
-        BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     }
 }
 
@@ -758,13 +840,13 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     CService addr36 = ResolveService("250.1.1.36");
     BOOST_CHECK(addrman->Add({CAddress(addr36, NODE_NONE)}, source));
     BOOST_CHECK(!addrman->Good(addr36));
-    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.19:0");
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.19:0");
 
     // 36 should be discarded and 19 not evicted.
     // This means we keep 19 in the tried table and
     // 36 stays in the new table.
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // Lets create two collisions.
     for (unsigned int i = 37; i < 59; i++) {
@@ -778,28 +860,28 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     BOOST_CHECK(addrman->Add({CAddress(addr59, NODE_NONE)}, source));
     BOOST_CHECK(!addrman->Good(addr59));
 
-    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.10:0");
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.10:0");
 
     // Cause a second collision in the new table.
     BOOST_CHECK(!addrman->Add({CAddress(addr36, NODE_NONE)}, source));
 
     // 36 still cannot be moved from new to tried due to colliding with 19
     BOOST_CHECK(!addrman->Good(addr36));
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() != "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() != "[::]:0");
 
     // Resolve all collisions.
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 }
 
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
-    BOOST_CHECK(addrman->size() == 0);
+    BOOST_CHECK(addrman->Size() == 0);
 
     // Empty addrman should return blank addrman info.
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // Add 35 addresses
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -817,7 +899,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(!addrman->Good(addr));
 
     auto info = addrman->SelectTriedCollision().first;
-    BOOST_CHECK_EQUAL(info.ToString(), "250.1.1.19:0");
+    BOOST_CHECK_EQUAL(info.ToStringAddrPort(), "250.1.1.19:0");
 
     // Ensure test of address fails, so that it is evicted.
     // Update entry in tried by setting last good connection in the deep past.
@@ -826,7 +908,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
     // Should swap 36 for 19.
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     AddressPosition addr_pos{addrman->FindAddressEntry(CAddress(addr, NODE_NONE)).value()};
     BOOST_CHECK(addr_pos.tried);
 
@@ -835,18 +917,18 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     // We check this by verifying Good() returns false and also verifying that
     // we have no collisions.
     BOOST_CHECK(!addrman->Good(addr));
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 
     // 19 should fail as a collision (not a duplicate) if we now attempt to move
     // it to the tried table.
     CService addr19 = ResolveService("250.1.1.19");
     BOOST_CHECK(!addrman->Good(addr19));
-    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.36:0");
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.36:0");
 
     // Eviction is also successful if too much time has passed since last try
     SetMockTime(GetTime() + 4 * 60 *60);
     addrman->ResolveCollisions();
-    BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     //Now 19 is in tried again, and 36 back to new
     AddressPosition addr_pos19{addrman->FindAddressEntry(CAddress(addr19, NODE_NONE)).value()};
     BOOST_CHECK(addr_pos19.tried);
@@ -866,26 +948,31 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 {
     AddrMan addrman{EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node)};
 
-    CService addr1, addr2, addr3;
-    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
-    BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
-    BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
-    BOOST_CHECK(Lookup("250.7.3.3"s, addr3, 9999, false));
-    BOOST_CHECK(!Lookup("250.7.3.3\0example.com"s, addr3, 9999, false));
+    std::optional<CService> addr1, addr2, addr3, addr4;
+    addr1 = Lookup("250.7.1.1", 8333, false);
+    BOOST_CHECK(addr1.has_value());
+    addr2 = Lookup("250.7.2.2", 9999, false);
+    BOOST_CHECK(addr2.has_value());
+    addr3 = Lookup("250.7.3.3", 9999, false);
+    BOOST_CHECK(addr3.has_value());
+    addr3 = Lookup("250.7.3.3"s, 9999, false);
+    BOOST_CHECK(addr3.has_value());
+    addr4 = Lookup("250.7.3.3\0example.com"s, 9999, false);
+    BOOST_CHECK(!addr4.has_value());
 
     // Add three addresses to new table.
-    CService source;
-    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
-    std::vector<CAddress> addresses{CAddress(addr1, NODE_NONE), CAddress(addr2, NODE_NONE), CAddress(addr3, NODE_NONE)};
-    BOOST_CHECK(addrman.Add(addresses, source));
-    BOOST_CHECK(addrman.size() == 3);
+    const std::optional<CService> source{Lookup("252.5.1.1", 8333, false)};
+    BOOST_CHECK(source.has_value());
+    std::vector<CAddress> addresses{CAddress(addr1.value(), NODE_NONE), CAddress(addr2.value(), NODE_NONE), CAddress(addr3.value(), NODE_NONE)};
+    BOOST_CHECK(addrman.Add(addresses, source.value()));
+    BOOST_CHECK(addrman.Size() == 3);
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrman);
     bool exceptionThrown = false;
     AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
 
-    BOOST_CHECK(addrman1.size() == 0);
+    BOOST_CHECK(addrman1.Size() == 0);
     try {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
@@ -894,16 +981,16 @@ BOOST_AUTO_TEST_CASE(load_addrman)
         exceptionThrown = true;
     }
 
-    BOOST_CHECK(addrman1.size() == 3);
+    BOOST_CHECK(addrman1.Size() == 3);
     BOOST_CHECK(exceptionThrown == false);
 
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
     CDataStream ssPeers2 = AddrmanToStream(addrman);
 
     AddrMan addrman2{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
-    BOOST_CHECK(addrman2.size() == 0);
+    BOOST_CHECK(addrman2.Size() == 0);
     ReadFromStream(addrman2, ssPeers2);
-    BOOST_CHECK(addrman2.size() == 3);
+    BOOST_CHECK(addrman2.Size() == 3);
 }
 
 // Produce a corrupt peers.dat that claims 20 addrs when it only has one addr.
@@ -922,12 +1009,12 @@ static CDataStream MakeCorruptPeersDat()
     int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
     s << nUBuckets;
 
-    CService serv;
-    BOOST_CHECK(Lookup("252.1.1.1", serv, 7777, false));
-    CAddress addr = CAddress(serv, NODE_NONE);
-    CNetAddr resolved;
-    BOOST_CHECK(LookupHost("252.2.2.2", resolved, false));
-    AddrInfo info = AddrInfo(addr, resolved);
+    const std::optional<CService> serv{Lookup("252.1.1.1", 7777, false)};
+    BOOST_REQUIRE(serv.has_value());
+    CAddress addr = CAddress(serv.value(), NODE_NONE);
+    std::optional<CNetAddr> resolved{LookupHost("252.2.2.2", false)};
+    BOOST_REQUIRE(resolved.has_value());
+    AddrInfo info = AddrInfo(addr, resolved.value());
     s << info;
 
     return s;
@@ -939,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     CDataStream ssPeers1 = MakeCorruptPeersDat();
     bool exceptionThrown = false;
     AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
-    BOOST_CHECK(addrman1.size() == 0);
+    BOOST_CHECK(addrman1.Size() == 0);
     try {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
@@ -947,15 +1034,13 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     } catch (const std::exception&) {
         exceptionThrown = true;
     }
-    // Even though de-serialization failed addrman is not left in a clean state.
-    BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 
     // Test that ReadFromStream fails if peers.dat is corrupt
     CDataStream ssPeers2 = MakeCorruptPeersDat();
 
     AddrMan addrman2{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
-    BOOST_CHECK(addrman2.size() == 0);
+    BOOST_CHECK(addrman2.Size() == 0);
     BOOST_CHECK_THROW(ReadFromStream(addrman2, ssPeers2), std::ios_base::failure);
 }
 
@@ -969,7 +1054,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     const auto start_time{Now<NodeSeconds>() - 10000s};
     addr.nTime = start_time;
     BOOST_CHECK(addrman->Add({addr}, source));
-    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
     // Updating an addrman entry with a different port doesn't change it
     CAddress addr_diff_port{CAddress(ResolveService("250.1.1.1", 8334), NODE_NONE)};
@@ -988,6 +1073,44 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     BOOST_CHECK_EQUAL(vAddr2.size(), 1U);
     BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000s);
     BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_size)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+
+    // empty addrman
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/std::nullopt), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/true), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/false), 0U);
+
+    // add two ipv4 addresses, one to tried and new
+    const CAddress addr1{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    BOOST_CHECK(addrman->Add({addr1}, source));
+    BOOST_CHECK(addrman->Good(addr1));
+    const CAddress addr2{ResolveService("250.1.1.2", 8333), NODE_NONE};
+    BOOST_CHECK(addrman->Add({addr2}, source));
+
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/true), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/false), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/true), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/false), 1U);
+
+    // add one i2p address to new
+    CService i2p_addr;
+    i2p_addr.SetSpecial("UDHDrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.I2P");
+    const CAddress addr3{i2p_addr, NODE_NONE};
+    BOOST_CHECK(addrman->Add({addr3}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/std::nullopt), 3U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_I2P, /*in_new=*/std::nullopt), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_I2P, /*in_new=*/true), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/true), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/false), 1U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

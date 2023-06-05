@@ -1,0 +1,10 @@
+ARG CI_IMAGE_NAME_TAG
+FROM ${CI_IMAGE_NAME_TAG}
+
+ARG FILE_ENV
+ENV FILE_ENV=${FILE_ENV}
+
+COPY ./ci/retry/retry /usr/bin/retry
+COPY ./ci/test/00_setup_env.sh ./${FILE_ENV} ./ci/test/01_base_install.sh /ci_base_install/ci/test/
+
+RUN ["bash", "-c", "cd /ci_base_install/ && set -o errexit && source ./ci/test/00_setup_env.sh && ./ci/test/01_base_install.sh"]

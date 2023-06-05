@@ -4,15 +4,20 @@
 
 #include <node/utxo_snapshot.h>
 
-#include <fs.h>
+#include <common/args.h>
 #include <logging.h>
 #include <streams.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <txdb.h>
 #include <uint256.h>
-#include <util/system.h>
+#include <util/fs.h>
 #include <validation.h>
 
+#include <cassert>
 #include <cstdio>
 #include <optional>
+#include <string>
 
 namespace node {
 

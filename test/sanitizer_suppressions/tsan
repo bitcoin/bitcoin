@@ -13,6 +13,8 @@ race:zmq::*
 race:bitcoin-qt
 
 # deadlock (TODO fix)
+# To reproduce, see:
+# https://github.com/bitcoin/bitcoin/issues/19303#issuecomment-1514926359
 deadlock:Chainstate::ConnectTip
 
 # Intentional deadlock in tests
@@ -23,6 +25,7 @@ race:src/qt/test/*
 deadlock:src/qt/test/*
 
 # External libraries
+# https://github.com/bitcoin/bitcoin/pull/27658#issuecomment-1547639621
 deadlock:libdb
 race:libzmq
 
@@ -35,7 +38,7 @@ race:libzmq
 # https://github.com/bitcoin/bitcoin/issues/20618
 race:CZMQAbstractPublishNotifier::SendZmqMessage
 
-# https://github.com/bitcoin/bitcoin/pull/20218, https://github.com/bitcoin/bitcoin/pull/20745
+# https://github.com/bitcoin/bitcoin/pull/27498#issuecomment-1517410478
 race:epoll_ctl
 
 # https://github.com/bitcoin/bitcoin/issues/23366

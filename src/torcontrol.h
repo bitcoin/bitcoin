@@ -8,8 +8,8 @@
 #ifndef BITCOIN_TORCONTROL_H
 #define BITCOIN_TORCONTROL_H
 
-#include <fs.h>
 #include <netaddress.h>
+#include <util/fs.h>
 
 #include <boost/signals2/signal.hpp>
 
@@ -93,7 +93,7 @@ private:
     /** Libevent event base */
     struct event_base *base;
     /** Connection to control socket */
-    struct bufferevent *b_conn;
+    struct bufferevent* b_conn{nullptr};
     /** Message being received */
     TorControlReply message;
     /** Response handlers */

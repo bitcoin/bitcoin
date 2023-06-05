@@ -37,18 +37,25 @@ PATTERN_AGENT = re.compile(
     r"0.19.(0|1|2|99)|"
     r"0.20.(0|1|2|99)|"
     r"0.21.(0|1|2|99)|"
-    r"22.(0|99)|"
-    r"23.(0|99)|"
-    r"24.99"
+    r"22.(0|1|99)|"
+    r"23.(0|1|99)|"
+    r"24.(0|1|99)|"
+    r"25.99"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:
     """ Parses a line from `seeds_main.txt` into a dictionary of details for that line.
     or `None`, if the line could not be parsed.
     """
+    if line.startswith('#'):
+        # Ignore line that starts with comment
+        return None
     sline = line.split()
     if len(sline) < 11:
         # line too short to be valid, skip it.
+        return None
+    # Skip bad results.
+    if int(sline[1]) == 0:
         return None
     m = PATTERN_IPV4.match(sline[0])
     sortkey = None
@@ -83,9 +90,6 @@ def parseline(line: str) -> Union[dict, None]:
         sortkey = ip
         ipstr = m.group(1)
         port = int(m.group(6))
-    # Skip bad results.
-    if sline[1] == 0:
-        return None
     # Extract uptime %.
     uptime30 = float(sline[7][:-1])
     # Extract Unix timestamp of last success.
@@ -173,6 +177,7 @@ def ip_stats(ips: List[Dict]) -> str:
 def parse_args():
     argparser = argparse.ArgumentParser(description='Generate a list of bitcoin node seed ip addresses.')
     argparser.add_argument("-a","--asmap", help='the location of the asmap asn database file (required)', required=True)
+    argparser.add_argument("-s","--seeds", help='the location of the DNS seeds file (required)', required=True)
     return argparser.parse_args()
 
 def main():
@@ -184,7 +189,8 @@ def main():
     print('Done.', file=sys.stderr)
 
     print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
-    lines = sys.stdin.readlines()
+    with open(args.seeds, 'r', encoding='utf8') as f:
+        lines = f.readlines()
     ips = [parseline(line) for line in lines]
     print('Done.', file=sys.stderr)
 

@@ -1,9 +1,11 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
+#include <util/readwritefile.h>
+
+#include <util/fs.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -11,7 +13,7 @@
 #include <string>
 #include <utility>
 
-std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
+std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize)
 {
     FILE *f = fsbridge::fopen(filename, "rb");
     if (f == nullptr)

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,13 +8,19 @@
 #include <attributes.h>
 
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
+
+std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
 class NonFatalCheckError : public std::runtime_error
 {
 public:
-    NonFatalCheckError(const char* msg, const char* file, int line, const char* func);
+    NonFatalCheckError(std::string_view msg, std::string_view file, int line, std::string_view func);
 };
+
+#define STR_INTERNAL_BUG(msg) StrFormatInternalBug((msg), __FILE__, __LINE__, __func__)
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
@@ -45,7 +51,7 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, co
 #endif
 
 /** Helper for Assert() */
-void assertion_fail(const char* file, int line, const char* func, const char* assertion);
+void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>

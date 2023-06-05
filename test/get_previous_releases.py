@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -80,6 +80,15 @@ SHA256_SUMS = {
     "078f96b1e92895009c798ab827fb3fde5f6719eee886bd0c0e93acab18ea4865": {"tag": "v23.0", "tarball": "bitcoin-23.0-riscv64-linux-gnu.tar.gz"},
     "c816780583009a9dad426dc0c183c89be9da98906e1e2c7ebae91041c1aaaaf3": {"tag": "v23.0", "tarball": "bitcoin-23.0-x86_64-apple-darwin.tar.gz"},
     "2cca490c1f2842884a3c5b0606f179f9f937177da4eadd628e3f7fd7e25d26d0": {"tag": "v23.0", "tarball": "bitcoin-23.0-x86_64-linux-gnu.tar.gz"},
+
+    "0b48b9e69b30037b41a1e6b78fb7cbcc48c7ad627908c99686e81f3802454609": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-aarch64-linux-gnu.tar.gz"},
+    "37d7660f0277301744e96426bbb001d2206b8d4505385dfdeedf50c09aaaef60": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-arm-linux-gnueabihf.tar.gz"},
+    "90ed59e86bfda1256f4b4cad8cc1dd77ee0efec2492bcb5af61402709288b62c": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-arm64-apple-darwin.tar.gz"},
+    "7590645e8676f8b5fda62dc20174474c4ac8fd0defc83a19ed908ebf2e94dc11": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-powerpc64-linux-gnu.tar.gz"},
+    "79e89a101f23ff87816675b98769cd1ee91059f95c5277f38f48f21a9f7f8509": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-powerpc64le-linux-gnu.tar.gz"},
+    "6b163cef7de4beb07b8cb3347095e0d76a584019b1891135cd1268a1f05b9d88": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-riscv64-linux-gnu.tar.gz"},
+    "e2f751512f3c0f00eb68ba946d9c829e6cf99422a61e8f5e0a7c109c318674d0": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-x86_64-apple-darwin.tar.gz"},
+    "49df6e444515d457ea0b885d66f521f2a26ca92ccf73d5296082e633544253bf": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-x86_64-linux-gnu.tar.gz"},
 }
 
 
@@ -136,7 +145,7 @@ def download_binary(tag, args) -> int:
     tarballHash = hasher.hexdigest()
 
     if tarballHash not in SHA256_SUMS or SHA256_SUMS[tarballHash]['tarball'] != tarball:
-        if tarball in SHA256_SUMS.values():
+        if tarball in [v['tarball'] for v in SHA256_SUMS.values()]:
             print("Checksum did not match")
             return 1
 
@@ -148,10 +157,39 @@ def download_binary(tag, args) -> int:
     ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
                           '--strip-components=1',
                           'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
-    if ret:
+    if ret != 0:
+        print(f"Failed to extract the {tag} tarball")
         return ret
 
     Path(tarball).unlink()
+
+    if tag >= "v23" and platform == "arm64-apple-darwin":
+        # Starting with v23 there are arm64 binaries for ARM (e.g. M1, M2) macs, but they have to be signed to run
+        binary_path = f'{os.getcwd()}/{tag}/bin/'
+
+        for arm_binary in os.listdir(binary_path):
+            # Is it already signed?
+            ret = subprocess.run(
+                ['codesign', '-v', binary_path + arm_binary],
+                stderr=subprocess.DEVNULL,  # Suppress expected stderr output
+            ).returncode
+            if ret == 1:
+                # Have to self-sign the binary
+                ret = subprocess.run(
+                    ['codesign', '-s', '-', binary_path + arm_binary]
+                ).returncode
+                if ret != 0:
+                    print(f"Failed to self-sign {tag} {arm_binary} arm64 binary")
+                    return 1
+
+                # Confirm success
+                ret = subprocess.run(
+                    ['codesign', '-v', binary_path + arm_binary]
+                ).returncode
+                if ret != 0:
+                    print(f"Failed to verify the self-signed {tag} {arm_binary} arm64 binary")
+                    return 1
+
     return 0
 
 
@@ -260,11 +298,10 @@ if __name__ == '__main__':
                         help='download release binary.')
     parser.add_argument('-t', '--target-dir', action='store',
                         help='target directory.', default='releases')
-    parser.add_argument('tags', nargs='*', default=set(
-                            [v['tag'] for v in SHA256_SUMS.values()]
-                        ),
+    all_tags = sorted([*set([v['tag'] for v in SHA256_SUMS.values()])])
+    parser.add_argument('tags', nargs='*', default=all_tags,
                         help='release tags. e.g.: v0.18.1 v0.20.0rc2 '
-                        '(if not specified, the full list needed for'
+                        '(if not specified, the full list needed for '
                         'backwards compatibility tests will be used)'
                         )
     args = parser.parse_args()

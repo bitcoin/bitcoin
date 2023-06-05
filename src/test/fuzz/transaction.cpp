@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 #include <util/rbf.h>
 #include <validation.h>
 #include <version.h>
@@ -23,7 +24,7 @@
 
 void initialize_transaction()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET_INIT(transaction, initialize_transaction)

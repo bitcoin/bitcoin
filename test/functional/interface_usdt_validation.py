@@ -112,7 +112,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
             assert_equal(len([tx["vin"] for tx in block["tx"]]), event.inputs)
             assert_equal(0, event.sigops)  # no sigops in coinbase tx
             # only plausibility checks
-            assert(event.duration > 0)
+            assert event.duration > 0
             del expected_blocks[block_hash]
             blocks_checked += 1
 

@@ -1,18 +1,20 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <index/base.h>
 #include <interfaces/chain.h>
 #include <kernel/chain.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/database_args.h>
 #include <node/interface_ui.h>
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <util/syscall_sandbox.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
@@ -21,7 +23,7 @@
 #include <string>
 #include <utility>
 
-using node::ReadBlockFromDisk;
+using node::g_indexes_ready_to_sync;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
@@ -34,7 +36,7 @@ static void FatalError(const char* fmt, const Args&... args)
     std::string strMessage = tfm::format(fmt, args...);
     SetMiscWarning(Untranslated(strMessage));
     LogPrintf("*** %s\n", strMessage);
-    AbortError(_("A fatal internal error occurred, see debug.log for details"));
+    InitError(_("A fatal internal error occurred, see debug.log for details"));
     StartShutdown();
 }
 
@@ -48,7 +50,13 @@ CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
 }
 
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
-    CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
+    CDBWrapper{DBParams{
+        .path = path,
+        .cache_bytes = n_cache_size,
+        .memory_only = f_memory,
+        .wipe_data = f_wipe,
+        .obfuscate = f_obfuscate,
+        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
 {}
 
 bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
@@ -86,16 +94,21 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         SetBestBlockIndex(nullptr);
     } else {
-        SetBestBlockIndex(m_chainstate->FindForkInGlobalIndex(locator));
+        // Setting the best block to the locator's top block. If it is not part of the
+        // best chain, we will rewind to the fork point during index sync
+        const CBlockIndex* locator_index{m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0))};
+        if (!locator_index) {
+            return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
+        }
+        SetBestBlockIndex(locator_index);
     }
 
-    // Note: this will latch to true immediately if the user starts up with an empty
-    // datadir and an index enabled. If this is the case, indexation will happen solely
-    // via `BlockConnected` signals until, possibly, the next restart.
-    m_synced = m_best_block_index.load() == active_chain.Tip();
-    if (!m_synced) {
+    // Skip pruning check if indexes are not ready to sync (because reindex-chainstate has wiped the chain).
+    const CBlockIndex* start_block = m_best_block_index.load();
+    bool synced = start_block == active_chain.Tip();
+    if (!synced && g_indexes_ready_to_sync) {
         bool prune_violation = false;
-        if (!m_best_block_index) {
+        if (!start_block) {
             // index is not built yet
             // make sure we have all block data back to the genesis
             prune_violation = m_chainstate->m_blockman.GetFirstStoredBlock(*active_chain.Tip()) != active_chain.Genesis();
@@ -103,7 +116,7 @@ bool BaseIndex::Init()
         // in case the index has a best block set and is not fully synced
         // check if we have the required blocks to continue building the index
         else {
-            const CBlockIndex* block_to_test = m_best_block_index.load();
+            const CBlockIndex* block_to_test = start_block;
             if (!active_chain.Contains(block_to_test)) {
                 // if the bestblock is not part of the mainchain, find the fork
                 // and make sure we have all data down to the fork
@@ -127,6 +140,16 @@ bool BaseIndex::Init()
             return InitError(strprintf(Untranslated("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"), GetName()));
         }
     }
+
+    // Child init
+    if (!CustomInit(start_block ? std::make_optional(interfaces::BlockKey{start_block->GetBlockHash(), start_block->nHeight}) : std::nullopt)) {
+        return false;
+    }
+
+    // Note: this will latch to true immediately if the user starts up with an empty
+    // datadir and an index enabled. If this is the case, indexation will happen solely
+    // via `BlockConnected` signals until, possibly, the next restart.
+    m_synced = synced;
     return true;
 }
 
@@ -149,10 +172,14 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
 void BaseIndex::ThreadSync()
 {
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::TX_INDEX);
+    // Wait for a possible reindex-chainstate to finish until continuing
+    // with the index sync
+    while (!g_indexes_ready_to_sync) {
+        if (!m_interrupt.sleep_for(std::chrono::milliseconds(500))) return;
+    }
+
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
-        auto& consensus_params = Params().GetConsensus();
-
         std::chrono::steady_clock::time_point last_log_time{0s};
         std::chrono::steady_clock::time_point last_locator_write_time{0s};
         while (true) {
@@ -199,7 +226,7 @@ void BaseIndex::ThreadSync()
 
             CBlock block;
             interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
-            if (!ReadBlockFromDisk(block, pindex, consensus_params)) {
+            if (!m_chainstate->m_blockman.ReadBlockFromDisk(block, *pindex)) {
                 FatalError("%s: Failed to read block %s from disk",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
@@ -388,11 +415,6 @@ bool BaseIndex::Start()
     RegisterValidationInterface(this);
     if (!Init()) return false;
 
-    const CBlockIndex* index = m_best_block_index.load();
-    if (!CustomInit(index ? std::make_optional(interfaces::BlockKey{index->GetBlockHash(), index->nHeight}) : std::nullopt)) {
-        return false;
-    }
-
     m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { ThreadSync(); });
     return true;
 }
@@ -415,8 +437,9 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
-void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
-    assert(!node::fPruneMode || AllowPrune());
+void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
+{
+    assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
 
     if (AllowPrune() && block) {
         node::PruneLockInfo prune_lock;

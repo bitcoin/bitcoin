@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,9 +17,7 @@ static void BenchLockedPool(benchmark::Bench& bench)
     const size_t synth_size = 1024*1024;
     Arena b(synth_base, synth_size, 16);
 
-    std::vector<void*> addr;
-    for (int x=0; x<ASIZE; ++x)
-        addr.push_back(nullptr);
+    std::vector<void*> addr{ASIZE, nullptr};
     uint32_t s = 0x12345678;
     bench.run([&] {
         int idx = s & (addr.size() - 1);

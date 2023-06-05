@@ -1,14 +1,14 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/system.h>
 #include <compat/compat.h>
 #include <logging.h>
-#include <threadinterrupt.h>
 #include <tinyformat.h>
 #include <util/sock.h>
 #include <util/syserror.h>
-#include <util/system.h>
+#include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <memory>

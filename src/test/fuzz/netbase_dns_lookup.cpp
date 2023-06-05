@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #include <netbase.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
+#include <test/fuzz/util/net.h>
 
 #include <cstdint>
 #include <string>
@@ -29,33 +29,29 @@ FUZZ_TARGET(netbase_dns_lookup)
     };
 
     {
-        std::vector<CNetAddr> resolved_addresses;
-        if (LookupHost(name, resolved_addresses, max_results, allow_lookup, fuzzed_dns_lookup_function)) {
-            for (const CNetAddr& resolved_address : resolved_addresses) {
-                assert(!resolved_address.IsInternal());
-            }
+        const std::vector<CNetAddr> resolved_addresses{LookupHost(name, max_results, allow_lookup, fuzzed_dns_lookup_function)};
+        for (const CNetAddr& resolved_address : resolved_addresses) {
+            assert(!resolved_address.IsInternal());
         }
         assert(resolved_addresses.size() <= max_results || max_results == 0);
     }
     {
-        CNetAddr resolved_address;
-        if (LookupHost(name, resolved_address, allow_lookup, fuzzed_dns_lookup_function)) {
-            assert(!resolved_address.IsInternal());
+        const std::optional<CNetAddr> resolved_address{LookupHost(name, allow_lookup, fuzzed_dns_lookup_function)};
+        if (resolved_address.has_value()) {
+            assert(!resolved_address.value().IsInternal());
         }
     }
     {
-        std::vector<CService> resolved_services;
-        if (Lookup(name, resolved_services, default_port, allow_lookup, max_results, fuzzed_dns_lookup_function)) {
-            for (const CNetAddr& resolved_service : resolved_services) {
-                assert(!resolved_service.IsInternal());
-            }
+        const std::vector<CService> resolved_services{Lookup(name, default_port, allow_lookup, max_results, fuzzed_dns_lookup_function)};
+        for (const CNetAddr& resolved_service : resolved_services) {
+            assert(!resolved_service.IsInternal());
         }
         assert(resolved_services.size() <= max_results || max_results == 0);
     }
     {
-        CService resolved_service;
-        if (Lookup(name, resolved_service, default_port, allow_lookup, fuzzed_dns_lookup_function)) {
-            assert(!resolved_service.IsInternal());
+        const std::optional<CService> resolved_service{Lookup(name, default_port, allow_lookup, fuzzed_dns_lookup_function)};
+        if (resolved_service.has_value()) {
+            assert(!resolved_service.value().IsInternal());
         }
     }
     {

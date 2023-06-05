@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_ASMAP_H
 #define BITCOIN_UTIL_ASMAP_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 #include <cstdint>
 #include <vector>

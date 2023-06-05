@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@ import json
 
 def perform_pre_checks():
     mock_result_path = os.path.join(os.getcwd(), "mock_result")
-    if(os.path.isfile(mock_result_path)):
+    if os.path.isfile(mock_result_path):
         with open(mock_result_path, "r", encoding="utf8") as f:
             mock_result = f.read()
         if mock_result[0]:

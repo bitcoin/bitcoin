@@ -1,10 +1,11 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <streams.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -128,9 +129,9 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 {
-    CDataStream data(SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream data{};
 
-    BitStreamWriter<CDataStream> bit_writer(data);
+    BitStreamWriter bit_writer{data};
     bit_writer.Write(0, 1);
     bit_writer.Write(2, 2);
     bit_writer.Write(6, 3);
@@ -141,15 +142,15 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     bit_writer.Write(30497, 16);
     bit_writer.Flush();
 
-    CDataStream data_copy(data);
+    DataStream data_copy{data};
     uint32_t serialized_int1;
     data >> serialized_int1;
-    BOOST_CHECK_EQUAL(serialized_int1, (uint32_t)0x7700C35A); // NOTE: Serialized as LE
+    BOOST_CHECK_EQUAL(serialized_int1, uint32_t{0x7700C35A}); // NOTE: Serialized as LE
     uint16_t serialized_int2;
     data >> serialized_int2;
-    BOOST_CHECK_EQUAL(serialized_int2, (uint16_t)0x1072); // NOTE: Serialized as LE
+    BOOST_CHECK_EQUAL(serialized_int2, uint16_t{0x1072}); // NOTE: Serialized as LE
 
-    BitStreamReader<CDataStream> bit_reader(data_copy);
+    BitStreamReader bit_reader{data_copy};
     BOOST_CHECK_EQUAL(bit_reader.Read(1), 0U);
     BOOST_CHECK_EQUAL(bit_reader.Read(2), 2U);
     BOOST_CHECK_EQUAL(bit_reader.Read(3), 6U);
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     // Degenerate case
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0x00, 0x00});
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     // Single character key
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0xff});
         BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
     }
@@ -189,7 +190,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     in.push_back(std::byte{0x0f});
 
     {
-        CDataStream ds{in, 0, 0};
+        DataStream ds{in};
         ds.Xor({0xff, 0x0f});
         BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
     }
@@ -462,7 +463,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
                     find = fileSize - 1;
-                bf.FindByte(uint8_t(find));
+                bf.FindByte(std::byte(find));
                 // The value at each offset is the offset.
                 BOOST_CHECK_EQUAL(bf.GetPos(), find);
                 currentPos = find;
@@ -498,6 +499,20 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(streams_hashed)
+{
+    CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+    HashedSourceWriter hash_writer{stream};
+    const std::string data{"bitcoin"};
+    hash_writer << data;
+
+    CHashVerifier hash_verifier{&stream};
+    std::string result;
+    hash_verifier >> result;
+    BOOST_CHECK_EQUAL(data, result);
+    BOOST_CHECK_EQUAL(hash_writer.GetHash(), hash_verifier.GetHash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

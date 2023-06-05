@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,19 +66,7 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
 {
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
-        size_t nSizeAdded = 0;
-        auto it(node.vRecvMsg.begin());
-        for (; it != node.vRecvMsg.end(); ++it) {
-            // vRecvMsg contains only completed CNetMessage
-            // the single possible partially deserialized message are held by TransportDeserializer
-            nSizeAdded += it->m_raw_message_size;
-        }
-        {
-            LOCK(node.cs_vProcessMsg);
-            node.vProcessMsg.splice(node.vProcessMsg.end(), node.vRecvMsg, node.vRecvMsg.begin(), it);
-            node.nProcessQueueSize += nSizeAdded;
-            node.fPauseRecv = node.nProcessQueueSize > nReceiveFloodSize;
-        }
+        node.MarkReceivedMsgsForProcessing();
     }
 }
 
@@ -96,6 +84,7 @@ bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) con
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context)
 {
     std::vector<NodeEvictionCandidate> candidates;
+    candidates.reserve(n_candidates);
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
             /*id=*/id,

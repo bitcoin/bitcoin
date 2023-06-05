@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -223,6 +223,11 @@ enum class Fragment {
     // WRAP_U(X) is represented as OR_I(X,0)
 };
 
+enum class Availability {
+    NO,
+    YES,
+    MAYBE,
+};
 
 namespace internal {
 
@@ -234,6 +239,62 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
 
 //! A helper sanitizer/checker for the output of CalcType.
 Type SanitizeType(Type x);
+
+//! An object representing a sequence of witness stack elements.
+struct InputStack {
+    /** Whether this stack is valid for its intended purpose (satisfaction or dissatisfaction of a Node).
+     *  The MAYBE value is used for size estimation, when keys/preimages may actually be unavailable,
+     *  but may be available at signing time. This makes the InputStack structure and signing logic,
+     *  filled with dummy signatures/preimages usable for witness size estimation.
+     */
+    Availability available = Availability::YES;
+    //! Whether this stack contains a digital signature.
+    bool has_sig = false;
+    //! Whether this stack is malleable (can be turned into an equally valid other stack by a third party).
+    bool malleable = false;
+    //! Whether this stack is non-canonical (using a construction known to be unnecessary for satisfaction).
+    //! Note that this flag does not affect the satisfaction algorithm; it is only used for sanity checking.
+    bool non_canon = false;
+    //! Serialized witness size.
+    size_t size = 0;
+    //! Data elements.
+    std::vector<std::vector<unsigned char>> stack;
+    //! Construct an empty stack (valid).
+    InputStack() {}
+    //! Construct a valid single-element stack (with an element up to 75 bytes).
+    InputStack(std::vector<unsigned char> in) : size(in.size() + 1), stack(Vector(std::move(in))) {}
+    //! Change availability
+    InputStack& SetAvailable(Availability avail);
+    //! Mark this input stack as having a signature.
+    InputStack& SetWithSig();
+    //! Mark this input stack as non-canonical (known to not be necessary in non-malleable satisfactions).
+    InputStack& SetNonCanon();
+    //! Mark this input stack as malleable.
+    InputStack& SetMalleable(bool x = true);
+    //! Concatenate two input stacks.
+    friend InputStack operator+(InputStack a, InputStack b);
+    //! Choose between two potential input stacks.
+    friend InputStack operator|(InputStack a, InputStack b);
+};
+
+/** A stack consisting of a single zero-length element (interpreted as 0 by the script interpreter in numeric context). */
+static const auto ZERO = InputStack(std::vector<unsigned char>());
+/** A stack consisting of a single malleable 32-byte 0x0000...0000 element (for dissatisfying hash challenges). */
+static const auto ZERO32 = InputStack(std::vector<unsigned char>(32, 0)).SetMalleable();
+/** A stack consisting of a single 0x01 element (interpreted as 1 by the script interpreted in numeric context). */
+static const auto ONE = InputStack(Vector((unsigned char)1));
+/** The empty stack. */
+static const auto EMPTY = InputStack();
+/** A stack representing the lack of any (dis)satisfactions. */
+static const auto INVALID = InputStack().SetAvailable(Availability::NO);
+
+//! A pair of a satisfaction and a dissatisfaction InputStack.
+struct InputResult {
+    InputStack nsat, sat;
+
+    template<typename A, typename B>
+    InputResult(A&& in_nsat, B&& in_sat) : nsat(std::forward<A>(in_nsat)), sat(std::forward<B>(in_sat)) {}
+};
 
 //! Class whose objects represent the maximum of a list of integers.
 template<typename I>
@@ -785,6 +846,226 @@ private:
         assert(false);
     }
 
+    template<typename Ctx>
+    internal::InputResult ProduceInput(const Ctx& ctx) const {
+        using namespace internal;
+
+        // Internal function which is invoked for every tree node, constructing satisfaction/dissatisfactions
+        // given those of its subnodes.
+        auto helper = [&ctx](const Node& node, Span<InputResult> subres) -> InputResult {
+            switch (node.fragment) {
+                case Fragment::PK_K: {
+                    std::vector<unsigned char> sig;
+                    Availability avail = ctx.Sign(node.keys[0], sig);
+                    return {ZERO, InputStack(std::move(sig)).SetWithSig().SetAvailable(avail)};
+                }
+                case Fragment::PK_H: {
+                    std::vector<unsigned char> key = ctx.ToPKBytes(node.keys[0]), sig;
+                    Availability avail = ctx.Sign(node.keys[0], sig);
+                    return {ZERO + InputStack(key), (InputStack(std::move(sig)).SetWithSig() + InputStack(key)).SetAvailable(avail)};
+                }
+                case Fragment::MULTI: {
+                    // sats[j] represents the best stack containing j valid signatures (out of the first i keys).
+                    // In the loop below, these stacks are built up using a dynamic programming approach.
+                    // sats[0] starts off being {0}, due to the CHECKMULTISIG bug that pops off one element too many.
+                    std::vector<InputStack> sats = Vector(ZERO);
+                    for (size_t i = 0; i < node.keys.size(); ++i) {
+                        std::vector<unsigned char> sig;
+                        Availability avail = ctx.Sign(node.keys[i], sig);
+                        // Compute signature stack for just the i'th key.
+                        auto sat = InputStack(std::move(sig)).SetWithSig().SetAvailable(avail);
+                        // Compute the next sats vector: next_sats[0] is a copy of sats[0] (no signatures). All further
+                        // next_sats[j] are equal to either the existing sats[j], or sats[j-1] plus a signature for the
+                        // current (i'th) key. The very last element needs all signatures filled.
+                        std::vector<InputStack> next_sats;
+                        next_sats.push_back(sats[0]);
+                        for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back(sats[j] | (std::move(sats[j - 1]) + sat));
+                        next_sats.push_back(std::move(sats[sats.size() - 1]) + std::move(sat));
+                        // Switch over.
+                        sats = std::move(next_sats);
+                    }
+                    // The dissatisfaction consists of k+1 stack elements all equal to 0.
+                    InputStack nsat = ZERO;
+                    for (size_t i = 0; i < node.k; ++i) nsat = std::move(nsat) + ZERO;
+                    assert(node.k <= sats.size());
+                    return {std::move(nsat), std::move(sats[node.k])};
+                }
+                case Fragment::THRESH: {
+                    // sats[k] represents the best stack that satisfies k out of the *last* i subexpressions.
+                    // In the loop below, these stacks are built up using a dynamic programming approach.
+                    // sats[0] starts off empty.
+                    std::vector<InputStack> sats = Vector(EMPTY);
+                    for (size_t i = 0; i < subres.size(); ++i) {
+                        // Introduce an alias for the i'th last satisfaction/dissatisfaction.
+                        auto& res = subres[subres.size() - i - 1];
+                        // Compute the next sats vector: next_sats[0] is sats[0] plus res.nsat (thus containing all dissatisfactions
+                        // so far. next_sats[j] is either sats[j] + res.nsat (reusing j earlier satisfactions) or sats[j-1] + res.sat
+                        // (reusing j-1 earlier satisfactions plus a new one). The very last next_sats[j] is all satisfactions.
+                        std::vector<InputStack> next_sats;
+                        next_sats.push_back(sats[0] + res.nsat);
+                        for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back((sats[j] + res.nsat) | (std::move(sats[j - 1]) + res.sat));
+                        next_sats.push_back(std::move(sats[sats.size() - 1]) + std::move(res.sat));
+                        // Switch over.
+                        sats = std::move(next_sats);
+                    }
+                    // At this point, sats[k].sat is the best satisfaction for the overall thresh() node. The best dissatisfaction
+                    // is computed by gathering all sats[i].nsat for i != k.
+                    InputStack nsat = INVALID;
+                    for (size_t i = 0; i < sats.size(); ++i) {
+                        // i==k is the satisfaction; i==0 is the canonical dissatisfaction;
+                        // the rest are non-canonical (a no-signature dissatisfaction - the i=0
+                        // form - is always available) and malleable (due to overcompleteness).
+                        // Marking the solutions malleable here is not strictly necessary, as they
+                        // should already never be picked in non-malleable solutions due to the
+                        // availability of the i=0 form.
+                        if (i != 0 && i != node.k) sats[i].SetMalleable().SetNonCanon();
+                        // Include all dissatisfactions (even these non-canonical ones) in nsat.
+                        if (i != node.k) nsat = std::move(nsat) | std::move(sats[i]);
+                    }
+                    assert(node.k <= sats.size());
+                    return {std::move(nsat), std::move(sats[node.k])};
+                }
+                case Fragment::OLDER: {
+                    return {INVALID, ctx.CheckOlder(node.k) ? EMPTY : INVALID};
+                }
+                case Fragment::AFTER: {
+                    return {INVALID, ctx.CheckAfter(node.k) ? EMPTY : INVALID};
+                }
+                case Fragment::SHA256: {
+                    std::vector<unsigned char> preimage;
+                    Availability avail = ctx.SatSHA256(node.data, preimage);
+                    return {ZERO32, InputStack(std::move(preimage)).SetAvailable(avail)};
+                }
+                case Fragment::RIPEMD160: {
+                    std::vector<unsigned char> preimage;
+                    Availability avail = ctx.SatRIPEMD160(node.data, preimage);
+                    return {ZERO32, InputStack(std::move(preimage)).SetAvailable(avail)};
+                }
+                case Fragment::HASH256: {
+                    std::vector<unsigned char> preimage;
+                    Availability avail = ctx.SatHASH256(node.data, preimage);
+                    return {ZERO32, InputStack(std::move(preimage)).SetAvailable(avail)};
+                }
+                case Fragment::HASH160: {
+                    std::vector<unsigned char> preimage;
+                    Availability avail = ctx.SatHASH160(node.data, preimage);
+                    return {ZERO32, InputStack(std::move(preimage)).SetAvailable(avail)};
+                }
+                case Fragment::AND_V: {
+                    auto& x = subres[0], &y = subres[1];
+                    // As the dissatisfaction here only consist of a single option, it doesn't
+                    // actually need to be listed (it's not required for reasoning about malleability of
+                    // other options), and is never required (no valid miniscript relies on the ability
+                    // to satisfy the type V left subexpression). It's still listed here for
+                    // completeness, as a hypothetical (not currently implemented) satisfier that doesn't
+                    // care about malleability might in some cases prefer it still.
+                    return {(y.nsat + x.sat).SetNonCanon(), y.sat + x.sat};
+                }
+                case Fragment::AND_B: {
+                    auto& x = subres[0], &y = subres[1];
+                    // Note that it is not strictly necessary to mark the 2nd and 3rd dissatisfaction here
+                    // as malleable. While they are definitely malleable, they are also non-canonical due
+                    // to the guaranteed existence of a no-signature other dissatisfaction (the 1st)
+                    // option. Because of that, the 2nd and 3rd option will never be chosen, even if they
+                    // weren't marked as malleable.
+                    return {(y.nsat + x.nsat) | (y.sat + x.nsat).SetMalleable().SetNonCanon() | (y.nsat + x.sat).SetMalleable().SetNonCanon(), y.sat + x.sat};
+                }
+                case Fragment::OR_B: {
+                    auto& x = subres[0], &z = subres[1];
+                    // The (sat(Z) sat(X)) solution is overcomplete (attacker can change either into dsat).
+                    return {z.nsat + x.nsat, (z.nsat + x.sat) | (z.sat + x.nsat) | (z.sat + x.sat).SetMalleable().SetNonCanon()};
+                }
+                case Fragment::OR_C: {
+                    auto& x = subres[0], &z = subres[1];
+                    return {INVALID, std::move(x.sat) | (z.sat + x.nsat)};
+                }
+                case Fragment::OR_D: {
+                    auto& x = subres[0], &z = subres[1];
+                    return {z.nsat + x.nsat, std::move(x.sat) | (z.sat + x.nsat)};
+                }
+                case Fragment::OR_I: {
+                    auto& x = subres[0], &z = subres[1];
+                    return {(x.nsat + ONE) | (z.nsat + ZERO), (x.sat + ONE) | (z.sat + ZERO)};
+                }
+                case Fragment::ANDOR: {
+                    auto& x = subres[0], &y = subres[1], &z = subres[2];
+                    return {(y.nsat + x.sat).SetNonCanon() | (z.nsat + x.nsat), (y.sat + x.sat) | (z.sat + x.nsat)};
+                }
+                case Fragment::WRAP_A:
+                case Fragment::WRAP_S:
+                case Fragment::WRAP_C:
+                case Fragment::WRAP_N:
+                    return std::move(subres[0]);
+                case Fragment::WRAP_D: {
+                    auto &x = subres[0];
+                    return {ZERO, x.sat + ONE};
+                }
+                case Fragment::WRAP_J: {
+                    auto &x = subres[0];
+                    // If a dissatisfaction with a nonzero top stack element exists, an alternative dissatisfaction exists.
+                    // As the dissatisfaction logic currently doesn't keep track of this nonzeroness property, and thus even
+                    // if a dissatisfaction with a top zero element is found, we don't know whether another one with a
+                    // nonzero top stack element exists. Make the conservative assumption that whenever the subexpression is weakly
+                    // dissatisfiable, this alternative dissatisfaction exists and leads to malleability.
+                    return {InputStack(ZERO).SetMalleable(x.nsat.available != Availability::NO && !x.nsat.has_sig), std::move(x.sat)};
+                }
+                case Fragment::WRAP_V: {
+                    auto &x = subres[0];
+                    return {INVALID, std::move(x.sat)};
+                }
+                case Fragment::JUST_0: return {EMPTY, INVALID};
+                case Fragment::JUST_1: return {INVALID, EMPTY};
+            }
+            assert(false);
+            return {INVALID, INVALID};
+        };
+
+        auto tester = [&helper](const Node& node, Span<InputResult> subres) -> InputResult {
+            auto ret = helper(node, subres);
+
+            // Do a consistency check between the satisfaction code and the type checker
+            // (the actual satisfaction code in ProduceInputHelper does not use GetType)
+
+            // For 'z' nodes, available satisfactions/dissatisfactions must have stack size 0.
+            if (node.GetType() << "z"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 0);
+            if (node.GetType() << "z"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 0);
+
+            // For 'o' nodes, available satisfactions/dissatisfactions must have stack size 1.
+            if (node.GetType() << "o"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 1);
+            if (node.GetType() << "o"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 1);
+
+            // For 'n' nodes, available satisfactions/dissatisfactions must have stack size 1 or larger. For satisfactions,
+            // the top element cannot be 0.
+            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() >= 1);
+            if (node.GetType() << "n"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() >= 1);
+            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.stack.back().empty());
+
+            // For 'd' nodes, a dissatisfaction must exist, and they must not need a signature. If it is non-malleable,
+            // it must be canonical.
+            if (node.GetType() << "d"_mst) assert(ret.nsat.available != Availability::NO);
+            if (node.GetType() << "d"_mst) assert(!ret.nsat.has_sig);
+            if (node.GetType() << "d"_mst && !ret.nsat.malleable) assert(!ret.nsat.non_canon);
+
+            // For 'f'/'s' nodes, dissatisfactions/satisfactions must have a signature.
+            if (node.GetType() << "f"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.has_sig);
+            if (node.GetType() << "s"_mst && ret.sat.available != Availability::NO) assert(ret.sat.has_sig);
+
+            // For non-malleable 'e' nodes, a non-malleable dissatisfaction must exist.
+            if (node.GetType() << "me"_mst) assert(ret.nsat.available != Availability::NO);
+            if (node.GetType() << "me"_mst) assert(!ret.nsat.malleable);
+
+            // For 'm' nodes, if a satisfaction exists, it must be non-malleable.
+            if (node.GetType() << "m"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.malleable);
+
+            // If a non-malleable satisfaction exists, it must be canonical.
+            if (ret.sat.available != Availability::NO && !ret.sat.malleable) assert(!ret.sat.non_canon);
+
+            return ret;
+        };
+
+        return TreeEval<InputResult>(tester);
+    }
+
 public:
     /** Update duplicate key information in this Node.
      *
@@ -855,6 +1136,9 @@ public:
     //! Return the maximum number of ops needed to satisfy this script non-malleably.
     uint32_t GetOps() const { return ops.count + ops.sat.value; }
 
+    //! Return the number of ops in the script (not counting the dynamic ones that depend on execution).
+    uint32_t GetStaticOps() const { return ops.count; }
+
     //! Check the ops limit of this script against the consensus limit.
     bool CheckOpsLimit() const { return GetOps() <= MAX_OPS_PER_SCRIPT; }
 
@@ -874,6 +1158,47 @@ public:
             for (auto& sub: subs) if (sub) return sub;
             if (!node.IsSaneSubexpression()) return &node;
             return nullptr;
+        });
+    }
+
+    //! Determine whether a Miniscript node is satisfiable. fn(node) will be invoked for all
+    //! key, time, and hashing nodes, and should return their satisfiability.
+    template<typename F>
+    bool IsSatisfiable(F fn) const
+    {
+        // TreeEval() doesn't support bool as NodeType, so use int instead.
+        return TreeEval<int>([&fn](const Node& node, Span<int> subs) -> bool {
+            switch (node.fragment) {
+                case Fragment::JUST_0:
+                    return false;
+                case Fragment::JUST_1:
+                    return true;
+                case Fragment::PK_K:
+                case Fragment::PK_H:
+                case Fragment::MULTI:
+                case Fragment::AFTER:
+                case Fragment::OLDER:
+                case Fragment::HASH256:
+                case Fragment::HASH160:
+                case Fragment::SHA256:
+                case Fragment::RIPEMD160:
+                    return bool{fn(node)};
+                case Fragment::ANDOR:
+                    return (subs[0] && subs[1]) || subs[2];
+                case Fragment::AND_V:
+                case Fragment::AND_B:
+                    return subs[0] && subs[1];
+                case Fragment::OR_B:
+                case Fragment::OR_C:
+                case Fragment::OR_D:
+                case Fragment::OR_I:
+                    return subs[0] || subs[1];
+                case Fragment::THRESH:
+                    return static_cast<uint32_t>(std::count(subs.begin(), subs.end(), true)) >= node.k;
+                default: // wrappers
+                    assert(subs.size() == 1);
+                    return subs[0];
+            }
         });
     }
 
@@ -903,6 +1228,18 @@ public:
 
     //! Check whether this node is safe as a script on its own.
     bool IsSane() const { return IsValidTopLevel() && IsSaneSubexpression() && NeedsSignature(); }
+
+    //! Produce a witness for this script, if possible and given the information available in the context.
+    //! The non-malleable satisfaction is guaranteed to be valid if it exists, and ValidSatisfaction()
+    //! is true. If IsSane() holds, this satisfaction is guaranteed to succeed in case the node's
+    //! conditions are satisfied (private keys and hash preimages available, locktimes satsified).
+    template<typename Ctx>
+    Availability Satisfy(const Ctx& ctx, std::vector<std::vector<unsigned char>>& stack, bool nonmalleable = true) const {
+        auto ret = ProduceInput(ctx);
+        if (nonmalleable && (ret.sat.malleable || !ret.sat.has_sig)) return Availability::NO;
+        stack = std::move(ret.sat.stack);
+        return ret.sat.available;
+    }
 
     //! Equality testing.
     bool operator==(const Node<Key>& arg) const { return Compare(*this, arg) == 0; }
@@ -1378,7 +1715,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     assert(constructed.size() == 1);
     assert(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
-    const NodeRef<Key> tl_node = std::move(constructed.front());
+    NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
     return tl_node;
 }
@@ -1813,7 +2150,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
         }
     }
     if (constructed.size() != 1) return {};
-    const NodeRef<Key> tl_node = std::move(constructed.front());
+    NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
     // Note that due to how ComputeType works (only assign the type to the node if the
     // subs' types are valid) this would fail if any node of tree is badly typed.

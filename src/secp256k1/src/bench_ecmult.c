@@ -18,7 +18,7 @@
 
 #define POINTS 32768
 
-void help(char **argv) {
+static void help(char **argv) {
     printf("Benchmark EC multiplication algorithms\n");
     printf("\n");
     printf("Usage: %s <help|pippenger_wnaf|strauss_wnaf|simple>\n", argv[0]);
@@ -84,9 +84,7 @@ static void bench_ecmult_teardown_helper(bench_data* data, size_t* seckey_offset
         }
     }
     secp256k1_ecmult_gen(&data->ctx->ecmult_gen_ctx, &tmp, &sum_scalars);
-    secp256k1_gej_neg(&tmp, &tmp);
-    secp256k1_gej_add_var(&tmp, &tmp, &sum_output, NULL);
-    CHECK(secp256k1_gej_is_infinity(&tmp));
+    CHECK(secp256k1_gej_eq_var(&tmp, &sum_output));
 }
 
 static void bench_ecmult_setup(void* arg) {
@@ -308,7 +306,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     scratch_size = secp256k1_strauss_scratch_size(POINTS) + STRAUSS_SCRATCH_OBJECTS*16;
     if (!have_flag(argc, argv, "simple")) {
         data.scratch = secp256k1_scratch_space_create(data.ctx, scratch_size);

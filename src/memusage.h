@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <indirectmap.h>
 #include <prevector.h>
+#include <support/allocators/pool.h>
 
 #include <cassert>
 #include <cstdlib>
@@ -166,6 +167,25 @@ static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
     return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
 }
 
+template <class Key, class T, class Hash, class Pred, std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES>
+static inline size_t DynamicUsage(const std::unordered_map<Key,
+                                                           T,
+                                                           Hash,
+                                                           Pred,
+                                                           PoolAllocator<std::pair<const Key, T>,
+                                                                         MAX_BLOCK_SIZE_BYTES,
+                                                                         ALIGN_BYTES>>& m)
+{
+    auto* pool_resource = m.get_allocator().resource();
+
+    // The allocated chunks are stored in a std::list. Size per node should
+    // therefore be 3 pointers: next, previous, and a pointer to the chunk.
+    size_t estimated_list_node_size = MallocUsage(sizeof(void*) * 3);
+    size_t usage_resource = estimated_list_node_size * pool_resource->NumAllocatedChunks();
+    size_t usage_chunks = MallocUsage(pool_resource->ChunkSizeBytes()) * pool_resource->NumAllocatedChunks();
+    return usage_resource + usage_chunks + MallocUsage(sizeof(void*) * m.bucket_count());
 }
+
+} // namespace memusage
 
 #endif // BITCOIN_MEMUSAGE_H

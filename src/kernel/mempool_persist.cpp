@@ -6,7 +6,6 @@
 
 #include <clientversion.h>
 #include <consensus/amount.h>
-#include <fs.h>
 #include <logging.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
@@ -15,7 +14,8 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util/system.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/time.h>
 #include <validation.h>
 

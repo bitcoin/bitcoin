@@ -1,13 +1,14 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparamsbase.h>
+#include <common/args.h>
+#include <common/system.h>
 #include <external_signer.h>
+#include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
-#include <rpc/protocol.h>
 
 #include <string>
 #include <vector>
@@ -41,7 +42,7 @@ static RPCHelpMan enumeratesigners()
         {
             const std::string command = gArgs.GetArg("-signer", "");
             if (command == "") throw JSONRPCError(RPC_MISC_ERROR, "Error: restart bitcoind with -signer=<cmd>");
-            const std::string chain = gArgs.GetChainName();
+            const std::string chain = gArgs.GetChainTypeString();
             UniValue signers_res = UniValue::VARR;
             try {
                 std::vector<ExternalSigner> signers;

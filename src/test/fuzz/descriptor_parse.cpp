@@ -6,12 +6,12 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chaintype.h>
 
 void initialize_descriptor_parse()
 {
-    static const ECCVerifyHandle verify_handle;
     ECC_Start();
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(ChainType::MAIN);
 }
 
 FUZZ_TARGET_INIT(descriptor_parse, initialize_descriptor_parse)

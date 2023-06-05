@@ -50,7 +50,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 private:
-    ClientModel *clientModel;
+    ClientModel* clientModel{nullptr};
 
     //!
     //! The wallet model represents a bitcoin wallet, and offers access to
@@ -106,6 +106,9 @@ public Q_SLOTS:
 
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
+
+private Q_SLOTS:
+    void disableTransactionView(bool disable);
 
 Q_SIGNALS:
     void setPrivacy(bool privacy);

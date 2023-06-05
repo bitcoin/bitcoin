@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,9 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(netbase_tests, BasicTestingSetup)
 
 static CNetAddr ResolveIP(const std::string& ip)
 {
-    CNetAddr addr;
-    LookupHost(ip, addr, false);
-    return addr;
+    return LookupHost(ip, false).value_or(CNetAddr{});
 }
 
 static CSubNet ResolveSubNet(const std::string& subnet)
@@ -131,7 +129,7 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
 bool static TestParse(std::string src, std::string canon)
 {
     CService addr(LookupNumeric(src, 65535));
-    return canon == addr.ToString();
+    return canon == addr.ToStringAddrPort();
 }
 
 BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
@@ -155,7 +153,7 @@ BOOST_AUTO_TEST_CASE(embedded_test)
     CNetAddr addr1(ResolveIP("1.2.3.4"));
     CNetAddr addr2(ResolveIP("::FFFF:0102:0304"));
     BOOST_CHECK(addr2.IsIPv4());
-    BOOST_CHECK_EQUAL(addr1.ToString(), addr2.ToString());
+    BOOST_CHECK_EQUAL(addr1.ToStringAddr(), addr2.ToStringAddr());
 }
 
 BOOST_AUTO_TEST_CASE(subnet_test)
@@ -240,7 +238,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 
     subnet = CSubNet(tor_addr);
     BOOST_CHECK(subnet.IsValid());
-    BOOST_CHECK_EQUAL(subnet.ToString(), tor_addr.ToString());
+    BOOST_CHECK_EQUAL(subnet.ToString(), tor_addr.ToStringAddr());
     BOOST_CHECK(subnet.Match(tor_addr));
     BOOST_CHECK(
         !subnet.Match(ResolveIP("kpgvmscirrdqpekbqjsvw5teanhatztpp2gl6eee4zkowvwfxwenqaid.onion")));
@@ -477,11 +475,10 @@ BOOST_AUTO_TEST_CASE(netpermissions_test)
 
 BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
 {
-    CNetAddr addr;
-    BOOST_CHECK(LookupHost("127.0.0.1"s, addr, false));
-    BOOST_CHECK(!LookupHost("127.0.0.1\0"s, addr, false));
-    BOOST_CHECK(!LookupHost("127.0.0.1\0example.com"s, addr, false));
-    BOOST_CHECK(!LookupHost("127.0.0.1\0example.com\0"s, addr, false));
+    BOOST_CHECK(LookupHost("127.0.0.1"s, false).has_value());
+    BOOST_CHECK(!LookupHost("127.0.0.1\0"s, false).has_value());
+    BOOST_CHECK(!LookupHost("127.0.0.1\0example.com"s, false).has_value());
+    BOOST_CHECK(!LookupHost("127.0.0.1\0example.com\0"s, false).has_value());
     CSubNet ret;
     BOOST_CHECK(LookupSubNet("1.2.3.0/24"s, ret));
     BOOST_CHECK(!LookupSubNet("1.2.3.0/24\0"s, ret));

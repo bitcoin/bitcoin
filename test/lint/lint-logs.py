@@ -16,7 +16,7 @@ from subprocess import check_output
 
 
 def main():
-    logs_list = check_output(["git", "grep", "--extended-regexp", r"(LogPrintLevel|LogPrintfCategory|LogPrintf?)\(", "--", "*.cpp"], universal_newlines=True, encoding="utf8").splitlines()
+    logs_list = check_output(["git", "grep", "--extended-regexp", r"(LogPrintLevel|LogPrintfCategory|LogPrintf?)\(", "--", "*.cpp"], text=True, encoding="utf8").splitlines()
 
     unterminated_logs = [line for line in logs_list if not re.search(r'(\\n"|/\* Continued \*/)', line)]
 

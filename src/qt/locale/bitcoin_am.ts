@@ -359,6 +359,11 @@
         <translation type="unfinished">መደበኛ ዋሌት</translation>
     </message>
     <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">ዋሌት ስም</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished">እሳድግ</translation>
     </message>
@@ -482,6 +487,27 @@
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">ቢትኮይን</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>

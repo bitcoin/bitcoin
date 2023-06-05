@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
@@ -254,13 +254,6 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.nodes[0].extra_args = ["-blockfilterindex=abc"]
         msg = "Error: Unknown -blockfilterindex value abc."
         self.nodes[0].assert_start_raises_init_error(expected_msg=msg)
-
-        self.log.info("Test -blockfilterindex with -reindex-chainstate raises an error")
-        self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: -reindex-chainstate option is not compatible with -blockfilterindex. '
-            'Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.',
-            extra_args=['-blockfilterindex', '-reindex-chainstate'],
-        )
 
 def compute_last_header(prev_header, hashes):
     """Compute the last filter header from a starting header and a sequence of filter hashes."""

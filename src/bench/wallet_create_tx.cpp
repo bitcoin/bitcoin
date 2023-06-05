@@ -9,13 +9,13 @@
 #include <kernel/chain.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
 #include <validation.h>
 #include <wallet/spend.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 using wallet::CWallet;
-using wallet::CreateMockWalletDatabase;
+using wallet::CreateMockableWalletDatabase;
 using wallet::DBErrors;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 
@@ -83,7 +83,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
-    CWallet wallet{test_setup->m_node.chain.get(), "", gArgs, CreateMockWalletDatabase()};
+    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -102,7 +102,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     }
 
     // Check available balance
-    auto bal = wallet::GetAvailableBalance(wallet); // Cache
+    auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
     assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
 
     wallet::CCoinControl coin_control;
@@ -133,11 +133,52 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     });
 }
 
+static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType>& output_type)
+{
+    const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
+    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet.SetupDescriptorScriptPubKeyMans();
+        if (wallet.LoadWallet() != DBErrors::LOAD_OK) assert(false);
+    }
+
+    // Generate destinations
+    std::vector<CScript> dest_wallet;
+    dest_wallet.reserve(output_type.size());
+    for (auto type : output_type) {
+        dest_wallet.emplace_back(GetScriptForDestination(getNewDestination(wallet, type)));
+    }
+
+    // Generate chain; each coinbase will have two outputs to fill-up the wallet
+    const auto& params = Params();
+    unsigned int chain_size = 1000;
+    for (unsigned int i = 0; i < chain_size / dest_wallet.size(); ++i) {
+        for (const auto& dest : dest_wallet) {
+            generateFakeBlock(params, test_setup->m_node, wallet, dest);
+        }
+    }
+
+    // Check available balance
+    auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
+    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+
+    bench.epochIterations(2).run([&] {
+        LOCK(wallet.cs_wallet);
+        const auto& res = wallet::AvailableCoins(wallet);
+        assert(res.All().size() == (chain_size - COINBASE_MATURITY) * 2);
+    });
+}
+
 static void WalletCreateTxUseOnlyPresetInputs(benchmark::Bench& bench) { WalletCreateTx(bench, OutputType::BECH32, /*allow_other_inputs=*/false,
                                                                                         {{/*num_of_internal_inputs=*/4}}); }
 
 static void WalletCreateTxUsePresetInputsAndCoinSelection(benchmark::Bench& bench) { WalletCreateTx(bench, OutputType::BECH32, /*allow_other_inputs=*/true,
                                                                                                     {{/*num_of_internal_inputs=*/4}}); }
 
+static void WalletAvailableCoins(benchmark::Bench& bench) { AvailableCoins(bench, {OutputType::BECH32M}); }
+
 BENCHMARK(WalletCreateTxUseOnlyPresetInputs, benchmark::PriorityLevel::LOW)
 BENCHMARK(WalletCreateTxUsePresetInputsAndCoinSelection, benchmark::PriorityLevel::LOW)
+BENCHMARK(WalletAvailableCoins, benchmark::PriorityLevel::LOW);

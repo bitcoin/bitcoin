@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,11 +6,11 @@
 #define BITCOIN_DBWRAPPER_H
 
 #include <clientversion.h>
-#include <fs.h>
 #include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <util/fs.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -30,6 +30,29 @@ class Env;
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
+
+//! User-controlled performance and debug options.
+struct DBOptions {
+    //! Compact database on startup.
+    bool force_compact = false;
+};
+
+//! Application-specific storage settings.
+struct DBParams {
+    //! Location in the filesystem where leveldb data will be stored.
+    fs::path path;
+    //! Configures various leveldb cache settings.
+    size_t cache_bytes;
+    //! If true, use leveldb's memory environment.
+    bool memory_only = false;
+    //! If true, remove all existing data.
+    bool wipe_data = false;
+    //! If true, store data obfuscated via simple XOR. If false, XOR with a
+    //! zero'd byte array.
+    bool obfuscate = false;
+    //! Passed-through options.
+    DBOptions options{};
+};
 
 class dbwrapper_error : public std::runtime_error
 {
@@ -68,16 +91,16 @@ private:
     const CDBWrapper &parent;
     leveldb::WriteBatch batch;
 
-    CDataStream ssKey;
+    DataStream ssKey{};
     CDataStream ssValue;
 
-    size_t size_estimate;
+    size_t size_estimate{0};
 
 public:
     /**
      * @param[in] _parent   CDBWrapper that this batch is to be submitted to
      */
-    explicit CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION), size_estimate(0) { };
+    explicit CDBBatch(const CDBWrapper& _parent) : parent(_parent), ssValue(SER_DISK, CLIENT_VERSION){};
 
     void Clear()
     {
@@ -151,7 +174,7 @@ public:
     void SeekToFirst();
 
     template<typename K> void Seek(const K& key) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
@@ -163,7 +186,7 @@ public:
     template<typename K> bool GetKey(K& key) {
         leveldb::Slice slKey = piter->key();
         try {
-            CDataStream ssKey{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
+            DataStream ssKey{MakeByteSpan(slKey)};
             ssKey >> key;
         } catch (const std::exception&) {
             return false;
@@ -230,15 +253,7 @@ private:
     bool m_is_memory;
 
 public:
-    /**
-     * @param[in] path        Location in the filesystem where leveldb data will be stored.
-     * @param[in] nCacheSize  Configures various leveldb cache settings.
-     * @param[in] fMemory     If true, use leveldb's memory environment.
-     * @param[in] fWipe       If true, remove all existing data.
-     * @param[in] obfuscate   If true, store data obfuscated via simple XOR. If false, XOR
-     *                        with a zero'd byte array.
-     */
-    CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
+    CDBWrapper(const DBParams& params);
     ~CDBWrapper();
 
     CDBWrapper(const CDBWrapper&) = delete;
@@ -247,7 +262,7 @@ public:
     template <typename K, typename V>
     bool Read(const K& key, V& value) const
     {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
@@ -289,7 +304,7 @@ public:
     template <typename K>
     bool Exists(const K& key) const
     {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
@@ -331,7 +346,7 @@ public:
     template<typename K>
     size_t EstimateSize(const K& key_begin, const K& key_end) const
     {
-        CDataStream ssKey1(SER_DISK, CLIENT_VERSION), ssKey2(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey1{}, ssKey2{};
         ssKey1.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey2.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey1 << key_begin;

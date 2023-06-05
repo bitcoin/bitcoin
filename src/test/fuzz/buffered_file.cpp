@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +53,7 @@ FUZZ_TARGET(buffered_file)
                         return;
                     }
                     try {
-                        opt_buffered_file->FindByte(fuzzed_data_provider.ConsumeIntegral<uint8_t>());
+                        opt_buffered_file->FindByte(std::byte(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
                     } catch (const std::ios_base::failure&) {
                     }
                 },

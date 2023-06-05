@@ -4,8 +4,8 @@
 
 #include <qt/qvaluecombobox.h>
 
-QValueComboBox::QValueComboBox(QWidget *parent) :
-        QComboBox(parent), role(Qt::UserRole)
+QValueComboBox::QValueComboBox(QWidget* parent)
+    : QComboBox(parent)
 {
     connect(this, qOverload<int>(&QComboBox::currentIndexChanged), this, &QValueComboBox::handleSelectionChanged);
 }

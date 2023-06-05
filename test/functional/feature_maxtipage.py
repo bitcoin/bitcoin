@@ -22,23 +22,24 @@ class MaxTipAgeTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
-    def test_maxtipage(self, maxtipage, set_parameter=True):
+    def test_maxtipage(self, maxtipage, set_parameter=True, test_deltas=True):
         node_miner = self.nodes[0]
         node_ibd = self.nodes[1]
 
         self.restart_node(1, [f'-maxtipage={maxtipage}'] if set_parameter else None)
         self.connect_nodes(0, 1)
-
-        # tips older than maximum age -> stay in IBD
         cur_time = int(time.time())
-        node_ibd.setmocktime(cur_time)
-        for delta in [5, 4, 3, 2, 1]:
-            node_miner.setmocktime(cur_time - maxtipage - delta)
-            self.generate(node_miner, 1)
-            assert_equal(node_ibd.getblockchaininfo()['initialblockdownload'], True)
+
+        if test_deltas:
+            # tips older than maximum age -> stay in IBD
+            node_ibd.setmocktime(cur_time)
+            for delta in [5, 4, 3, 2, 1]:
+                node_miner.setmocktime(cur_time - maxtipage - delta)
+                self.generate(node_miner, 1)
+                assert_equal(node_ibd.getblockchaininfo()['initialblockdownload'], True)
 
         # tip within maximum age -> leave IBD
-        node_miner.setmocktime(cur_time - maxtipage)
+        node_miner.setmocktime(max(cur_time - maxtipage, 0))
         self.generate(node_miner, 1)
         assert_equal(node_ibd.getblockchaininfo()['initialblockdownload'], False)
 
@@ -50,6 +51,10 @@ class MaxTipAgeTest(BitcoinTestFramework):
             maxtipage = hours * 60 * 60
             self.log.info(f"Test IBD with maximum tip age of {hours} hours (-maxtipage={maxtipage}).")
             self.test_maxtipage(maxtipage)
+
+        max_long_val = 9223372036854775807
+        self.log.info(f"Test IBD with highest allowable maximum tip age ({max_long_val}).")
+        self.test_maxtipage(max_long_val, test_deltas=False)
 
 
 if __name__ == '__main__':

@@ -166,7 +166,7 @@ private:
     std::vector<Element> table;
 
     /** size stores the total available slots in the hash table */
-    uint32_t size;
+    uint32_t size{0};
 
     /** The bit_packed_atomic_flags array is marked mutable because we want
      * garbage collection to be allowed to occur from const methods */
@@ -183,7 +183,7 @@ private:
      * decremented on insert and reset to the new number of inserts which would
      * cause the epoch to reach epoch_size when it reaches zero.
      */
-    uint32_t epoch_heuristic_counter;
+    uint32_t epoch_heuristic_counter{0};
 
     /** epoch_size is set to be the number of elements supposed to be in a
      * epoch. When the number of non-erased elements in an epoch
@@ -193,12 +193,12 @@ private:
      * one "dead" which has been erased, one "dying" which has been marked to be
      * erased next, and one "living" which new inserts add to.
      */
-    uint32_t epoch_size;
+    uint32_t epoch_size{0};
 
     /** depth_limit determines how many elements insert should try to replace.
      * Should be set to log2(n).
      */
-    uint8_t depth_limit;
+    uint8_t depth_limit{0};
 
     /** hash_function is a const instance of the hash function. It cannot be
      * static or initialized at call time as it may have internal state (such as
@@ -322,8 +322,7 @@ public:
     /** You must always construct a cache with some elements via a subsequent
      * call to setup or setup_bytes, otherwise operations may segfault.
      */
-    cache() : table(), size(), collection_flags(0), epoch_flags(),
-    epoch_heuristic_counter(), epoch_size(), depth_limit(0), hash_function()
+    cache() : table(), collection_flags(0), epoch_flags(), hash_function()
     {
     }
 
@@ -344,7 +343,7 @@ public:
         collection_flags.setup(size);
         epoch_flags.resize(size);
         // Set to 45% as described above
-        epoch_size = std::max((uint32_t)1, (45 * size) / 100);
+        epoch_size = std::max(uint32_t{1}, (45 * size) / 100);
         // Initially set to wait for a whole epoch
         epoch_heuristic_counter = epoch_size;
         return size;

@@ -1,14 +1,14 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
@@ -63,7 +63,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 }
 
 //! Check if the user provided a valid feeRate
-static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
+static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
 {
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -84,15 +84,12 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
 
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
-    // Given old total fee and transaction size, calculate the old feeRate
-    const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
-    CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
-    CAmount minTotalFee = nOldFeeRate.GetFee(maxTxSize) + incrementalRelayFee.GetFee(maxTxSize);
+    CAmount minTotalFee = old_fee + incrementalRelayFee.GetFee(maxTxSize);
 
     if (new_total_fee < minTotalFee) {
         errors.push_back(strprintf(Untranslated("Insufficient total fee %s, must be at least %s (oldFee %s + incrementalFee %s)"),
-            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxTxSize)), FormatMoney(incrementalRelayFee.GetFee(maxTxSize))));
+            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(old_fee), FormatMoney(incrementalRelayFee.GetFee(maxTxSize))));
         return feebumper::Result::INVALID_PARAMETER;
     }
 
@@ -155,7 +152,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs)
 {
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
@@ -222,11 +219,21 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         return result;
     }
 
-    // Fill in recipients(and preserve a single change key if there is one)
-    // While we're here, calculate the output amount
-    std::vector<CRecipient> recipients;
+    // Calculate the old output amount.
     CAmount output_value = 0;
-    for (const auto& output : wtx.tx->vout) {
+    for (const auto& old_output : wtx.tx->vout) {
+        output_value += old_output.nValue;
+    }
+
+    old_fee = input_value - output_value;
+
+    // Fill in recipients (and preserve a single change key if there
+    // is one). If outputs vector is non-empty, replace original
+    // outputs with its contents, otherwise use original outputs.
+    std::vector<CRecipient> recipients;
+    CAmount new_outputs_value = 0;
+    const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
+    for (const auto& output : txouts) {
         if (!OutputIsChange(wallet, output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
@@ -235,22 +242,35 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
         }
-        output_value += output.nValue;
+        new_outputs_value += output.nValue;
     }
 
-    old_fee = input_value - output_value;
+    // If no recipients, means that we are sending coins to a change address
+    if (recipients.empty()) {
+        // Just as a sanity check, ensure that the change address exist
+        if (std::get_if<CNoDestination>(&new_coin_control.destChange)) {
+            errors.emplace_back(Untranslated("Unable to create transaction. Transaction must have at least one recipient"));
+            return Result::INVALID_PARAMETER;
+        }
+
+        // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
+        // If the output differs from the original tx output (because the user customized it) a new change output will be created.
+        recipients.emplace_back(CRecipient{GetScriptForDestination(new_coin_control.destChange), new_outputs_value, /*fSubtractFeeFromAmount=*/true});
+        new_coin_control.destChange = CNoDestination();
+    }
 
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
         // We need to make a temporary transaction with no input witnesses as the dummy signer expects them to be empty for external inputs
-        CMutableTransaction mtx{*wtx.tx};
-        for (auto& txin : mtx.vin) {
+        CMutableTransaction temp_mtx{*wtx.tx};
+        for (auto& txin : temp_mtx.vin) {
             txin.scriptSig.clear();
             txin.scriptWitness.SetNull();
         }
-        const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(mtx), &wallet, &new_coin_control).vsize};
-        Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
+        temp_mtx.vout = txouts;
+        const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
+        Result res = CheckFeeRate(wallet, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
         }
@@ -293,7 +313,22 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
 bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
     LOCK(wallet.cs_wallet);
-    return wallet.SignTransaction(mtx);
+
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+        // Make a blank psbt
+        PartiallySignedTransaction psbtx(mtx);
+
+        // First fill transaction with our data without signing,
+        // so external signers are not asked to sign more than once.
+        bool complete;
+        wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+        const TransactionError err = wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */);
+        if (err != TransactionError::OK) return false;
+        complete = FinalizeAndExtractPSBT(psbtx, mtx);
+        return complete;
+    } else {
+        return wallet.SignTransaction(mtx);
+    }
 }
 
 Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, uint256& bumped_txid)

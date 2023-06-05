@@ -22,7 +22,7 @@
     <ProjectReference Include="..\libminisketch\libminisketch.vcxproj">
       <Project>{542007e3-be0d-4b0d-a6b0-aa8813e2558d}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+    <ProjectReference Include="..\libbitcoin_consensus\libbitcoin_consensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">

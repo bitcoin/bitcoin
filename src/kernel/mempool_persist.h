@@ -5,7 +5,7 @@
 #ifndef BITCOIN_KERNEL_MEMPOOL_PERSIST_H
 #define BITCOIN_KERNEL_MEMPOOL_PERSIST_H
 
-#include <fs.h>
+#include <util/fs.h>
 
 class Chainstate;
 class CTxMemPool;

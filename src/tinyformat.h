@@ -508,9 +508,6 @@ class FormatArg
 {
     public:
         FormatArg()
-            : m_value(NULL),
-            m_formatImpl(NULL),
-            m_toIntImpl(NULL)
         { }
 
         template<typename T>
@@ -549,10 +546,10 @@ class FormatArg
             return convertToInt<T>::invoke(*static_cast<const T*>(value));
         }
 
-        const void* m_value;
+        const void* m_value{nullptr};
         void (*m_formatImpl)(std::ostream& out, const char* fmtBegin,
-                             const char* fmtEnd, int ntrunc, const void* value);
-        int (*m_toIntImpl)(const void* value);
+                             const char* fmtEnd, int ntrunc, const void* value){nullptr};
+        int (*m_toIntImpl)(const void* value){nullptr};
 };
 
 
@@ -1005,7 +1002,8 @@ class FormatListN : public FormatList
 // Special 0-arg version - MSVC says zero-sized C array in struct is nonstandard
 template<> class FormatListN<0> : public FormatList
 {
-    public: FormatListN() : FormatList(0, 0) {}
+public:
+    FormatListN() : FormatList(nullptr, 0) {}
 };
 
 } // namespace detail

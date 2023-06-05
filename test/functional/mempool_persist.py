@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
@@ -50,13 +50,15 @@ from test_framework.wallet import MiniWallet
 
 
 class MempoolPersistTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, legacy=False)
+
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [[], ["-persistmempool=0"], []]
 
     def run_test(self):
         self.mini_wallet = MiniWallet(self.nodes[2])
-        self.mini_wallet.rescan_utxos()
         if self.is_sqlite_compiled():
             self.nodes[2].createwallet(
                 wallet_name="watch",
@@ -189,6 +191,7 @@ class MempoolPersistTest(BitcoinTestFramework):
     def test_persist_unbroadcast(self):
         node0 = self.nodes[0]
         self.start_node(0)
+        self.start_node(2)
 
         # clear out mempool
         self.generate(node0, 1, sync_fun=self.no_op)

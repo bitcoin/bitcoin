@@ -23,7 +23,7 @@ help2man = os.getenv('HELP2MAN', 'help2man')
 # If not otherwise specified, get top directory from git.
 topdir = os.getenv('TOPDIR')
 if not topdir:
-    r = subprocess.run([git, 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE, check=True, universal_newlines=True)
+    r = subprocess.run([git, 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE, check=True, text=True)
     topdir = r.stdout.rstrip()
 
 # Get input and output directories.
@@ -36,7 +36,7 @@ versions = []
 for relpath in BINARIES:
     abspath = os.path.join(builddir, relpath)
     try:
-        r = subprocess.run([abspath, "--version"], stdout=subprocess.PIPE, check=True, universal_newlines=True)
+        r = subprocess.run([abspath, "--version"], stdout=subprocess.PIPE, check=True, text=True)
     except IOError:
         print(f'{abspath} not found or not an executable', file=sys.stderr)
         sys.exit(1)

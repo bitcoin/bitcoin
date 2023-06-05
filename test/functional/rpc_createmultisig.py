@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
@@ -8,6 +8,7 @@ import itertools
 import json
 import os
 
+from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create, drop_origins
@@ -24,12 +25,13 @@ from test_framework.wallet import (
 )
 
 class RpcCreateMultiSigTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.supports_cli = False
-        if self.is_bdb_compiled():
-            self.requires_wallet = True
 
     def get_keys(self):
         self.pub = []
@@ -50,6 +52,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.wallet = MiniWallet(test_node=node0)
 
         if self.is_bdb_compiled():
+            self.import_deterministic_coinbase_privkeys()
             self.check_addmultisigaddress_errors()
 
         self.log.info('Generating blocks ...')
@@ -191,8 +194,8 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             assert mredeemw == mredeem
             wmulti.unloadwallet()
 
-        spk = bytes.fromhex(node0.validateaddress(madd)["scriptPubKey"])
-        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=1300)
+        spk = address_to_scriptpubkey(madd)
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=1300)["txid"]
         tx = node0.getrawtransaction(txid, True)
         vout = [v["n"] for v in tx["vout"] if madd == v["scriptPubKey"]["address"]]
         assert len(vout) == 1

@@ -7,8 +7,9 @@
 #include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
-#include <chainparams.h>
+#include <common/args.h>
 #include <consensus/amount.h>
+#include <kernel/chainparams.h>
 #include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
@@ -16,7 +17,6 @@
 #include <tinyformat.h>
 #include <util/error.h>
 #include <util/moneystr.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 #include <chrono>
@@ -38,7 +38,7 @@ void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limi
 }
 }
 
-std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, MemPoolOptions& mempool_opts)
+util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, MemPoolOptions& mempool_opts)
 {
     mempool_opts.check_ratio = argsman.GetIntArg("-checkmempool", mempool_opts.check_ratio);
 
@@ -52,7 +52,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
         if (std::optional<CAmount> inc_relay_fee = ParseMoney(argsman.GetArg("-incrementalrelayfee", ""))) {
             mempool_opts.incremental_relay_feerate = CFeeRate{inc_relay_fee.value()};
         } else {
-            return AmountErrMsg("incrementalrelayfee", argsman.GetArg("-incrementalrelayfee", ""));
+            return util::Error{AmountErrMsg("incrementalrelayfee", argsman.GetArg("-incrementalrelayfee", ""))};
         }
     }
 
@@ -61,7 +61,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
             // High fee check is done afterward in CWallet::Create()
             mempool_opts.min_relay_feerate = CFeeRate{min_relay_feerate.value()};
         } else {
-            return AmountErrMsg("minrelaytxfee", argsman.GetArg("-minrelaytxfee", ""));
+            return util::Error{AmountErrMsg("minrelaytxfee", argsman.GetArg("-minrelaytxfee", ""))};
         }
     } else if (mempool_opts.incremental_relay_feerate > mempool_opts.min_relay_feerate) {
         // Allow only setting incremental fee to control both
@@ -75,7 +75,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
         if (std::optional<CAmount> parsed = ParseMoney(argsman.GetArg("-dustrelayfee", ""))) {
             mempool_opts.dust_relay_feerate = CFeeRate{parsed.value()};
         } else {
-            return AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""));
+            return util::Error{AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""))};
         }
     }
 
@@ -89,12 +89,12 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
-        return strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString());
+        return util::Error{strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString())};
     }
 
     mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);
 
     ApplyArgsManOptions(argsman, mempool_opts.limits);
 
-    return std::nullopt;
+    return {};
 }

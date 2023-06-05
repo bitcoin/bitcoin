@@ -13,21 +13,21 @@ Example usage:
 import sys
 from typing import List, Dict
 
-import lief #type:ignore
+import lief
 
-# Debian 9 (Stretch) EOL: 2022. https://wiki.debian.org/DebianReleases#Production_Releases
+# Debian 10 (Buster) EOL: 2024. https://wiki.debian.org/LTS
 #
-# - g++ version 6.3.0 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=g%2B%2B)
-# - libc version 2.24 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=libc6)
+# - libgcc version 8.3.0 (https://packages.debian.org/search?suite=buster&arch=any&searchon=names&keywords=libgcc1)
+# - libc version 2.28 (https://packages.debian.org/search?suite=buster&arch=any&searchon=names&keywords=libc6)
 #
-# Ubuntu 16.04 (Xenial) EOL: 2026. https://wiki.ubuntu.com/Releases
+# Ubuntu 18.04 (Bionic) EOL: 2028. https://wiki.ubuntu.com/ReleaseTeam
 #
-# - g++ version 5.3.1
-# - libc version 2.23
+# - libgcc version 8.4.0 (https://packages.ubuntu.com/bionic/libgcc1)
+# - libc version 2.27 (https://packages.ubuntu.com/bionic/libc6)
 #
 # CentOS Stream 8 EOL: 2024. https://wiki.centos.org/About/Product
 #
-# - g++ version 8.5.0 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
+# - libgcc version 8.5.0 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 # - libc version 2.28 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 #
 # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
@@ -35,10 +35,10 @@ import lief #type:ignore
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    lief.ELF.ARCH.x86_64: (2,18),
-    lief.ELF.ARCH.ARM:    (2,18),
-    lief.ELF.ARCH.AARCH64:(2,18),
-    lief.ELF.ARCH.PPC64:  (2,18),
+    lief.ELF.ARCH.x86_64: (2,27),
+    lief.ELF.ARCH.ARM:    (2,27),
+    lief.ELF.ARCH.AARCH64:(2,27),
+    lief.ELF.ARCH.PPC64:  (2,27),
     lief.ELF.ARCH.RISCV:  (2,27),
 },
 'LIBATOMIC': (1,0),
@@ -69,6 +69,25 @@ ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
     },
     lief.ELF.ARCH.RISCV:    {
         lief.ENDIANNESS.LITTLE: "/lib/ld-linux-riscv64-lp64d.so.1",
+    },
+}
+
+ELF_ABIS: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, List[int]]] = {
+    lief.ELF.ARCH.x86_64: {
+        lief.ENDIANNESS.LITTLE: [3,2,0],
+    },
+    lief.ELF.ARCH.ARM: {
+        lief.ENDIANNESS.LITTLE: [3,2,0],
+    },
+    lief.ELF.ARCH.AARCH64: {
+        lief.ENDIANNESS.LITTLE: [3,7,0],
+    },
+    lief.ELF.ARCH.PPC64: {
+        lief.ENDIANNESS.LITTLE: [3,10,0],
+        lief.ENDIANNESS.BIG: [3,2,0],
+    },
+    lief.ELF.ARCH.RISCV: {
+        lief.ENDIANNESS.LITTLE: [4,15,0],
     },
 }
 
@@ -242,12 +261,19 @@ def check_ELF_interpreter(binary) -> bool:
 
     return binary.concrete.interpreter == expected_interpreter
 
+def check_ELF_ABI(binary) -> bool:
+    expected_abi = ELF_ABIS[binary.header.machine_type][binary.abstract.header.endianness]
+    note = binary.concrete.get(lief.ELF.NOTE_TYPES.ABI_TAG)
+    assert note.details.abi == lief.ELF.NOTE_ABIS.LINUX
+    return note.details.version == expected_abi
+
 CHECKS = {
 lief.EXE_FORMATS.ELF: [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
     ('EXPORTED_SYMBOLS', check_exported_symbols),
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries),
     ('INTERPRETER_NAME', check_ELF_interpreter),
+    ('ABI', check_ELF_ABI),
 ],
 lief.EXE_FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),

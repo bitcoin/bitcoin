@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -10,7 +10,7 @@ Otherwise the exit status will be 1 and it will log which executables failed whi
 import sys
 from typing import List
 
-import lief #type:ignore
+import lief
 
 def check_ELF_RELRO(binary) -> bool:
     '''
@@ -34,7 +34,7 @@ def check_ELF_RELRO(binary) -> bool:
         flags = binary.get(lief.ELF.DYNAMIC_TAGS.FLAGS)
         if flags.value & lief.ELF.DYNAMIC_FLAGS.BIND_NOW:
             have_bindnow = True
-    except:
+    except Exception:
         have_bindnow = False
 
     return have_gnu_relro and have_bindnow
@@ -146,6 +146,12 @@ def check_PE_control_flow(binary) -> bool:
         return True
     return False
 
+def check_PE_Canary(binary) -> bool:
+    '''
+    Check for use of stack canary
+    '''
+    return binary.has_symbol('__stack_chk_fail')
+
 def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     Check for no undefined references.
@@ -203,6 +209,7 @@ BASE_PE = [
     ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION),
     ('CONTROL_FLOW', check_PE_control_flow),
+    ('Canary', check_PE_Canary),
 ]
 
 BASE_MACHO = [

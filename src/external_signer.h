@@ -5,8 +5,8 @@
 #ifndef BITCOIN_EXTERNAL_SIGNER_H
 #define BITCOIN_EXTERNAL_SIGNER_H
 
+#include <common/system.h>
 #include <univalue.h>
-#include <util/system.h>
 
 #include <string>
 #include <vector>
@@ -24,7 +24,7 @@ private:
     //! Bitcoin mainnet, testnet, etc
     std::string m_chain;
 
-    const std::string NetworkArg() const;
+    std::string NetworkArg() const;
 
 public:
     //! @param[in] command      the command which handles interaction with the external signer

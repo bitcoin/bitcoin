@@ -5,6 +5,63 @@ The headless daemon `bitcoind` has the JSON-RPC API enabled by default, the GUI
 option. In the GUI it is possible to execute RPC methods in the Debug Console
 Dialog.
 
+## Endpoints
+
+There are two JSON-RPC endpoints on the server:
+
+1. `/`
+2. `/wallet/<walletname>/`
+
+### `/` endpoint
+
+This endpoint is always active.
+It can always service non-wallet requests and can service wallet requests when
+exactly one wallet is loaded.
+
+### `/wallet/<walletname>/` endpoint
+
+This endpoint is only activated when the wallet component has been compiled in.
+It can service both wallet and non-wallet requests.
+It MUST be used for wallet requests when two or more wallets are loaded.
+
+This is the endpoint used by bitcoin-cli when a `-rpcwallet=` parameter is passed in.
+
+Best practice would dictate using the `/wallet/<walletname>/` endpoint for ALL
+requests when multiple wallets are in use.
+
+### Examples
+
+```sh
+# Get block count from the / endpoint when rpcuser=alice and rpcport=38332
+$ curl --user alice --data-binary '{"jsonrpc": "1.0", "id": "0", "method": "getblockcount", "params": []}' -H 'content-type: text/plain;' localhost:38332/
+
+# Get balance from the /wallet/walletname endpoint when rpcuser=alice, rpcport=38332 and rpcwallet=desc-wallet
+$ curl --user alice --data-binary '{"jsonrpc": "1.0", "id": "0", "method": "getbalance", "params": []}' -H 'content-type: text/plain;' localhost:38332/wallet/desc-wallet
+
+```
+
+## Parameter passing
+
+The JSON-RPC server supports both _by-position_ and _by-name_ [parameter
+structures](https://www.jsonrpc.org/specification#parameter_structures)
+described in the JSON-RPC specification. For extra convenience, to avoid the
+need to name every parameter value, all RPC methods accept a named parameter
+called `args`, which can be set to an array of initial positional values that
+are combined with named values.
+
+Examples:
+
+```sh
+# "params": ["mywallet", false, false, "", false, false, true]
+bitcoin-cli createwallet mywallet false false "" false false true
+
+# "params": {"wallet_name": "mywallet", "load_on_startup": true}
+bitcoin-cli -named createwallet wallet_name=mywallet load_on_startup=true
+
+# "params": {"args": ["mywallet"], "load_on_startup": true}
+bitcoin-cli -named createwallet mywallet load_on_startup=true
+```
+
 ## Versioning
 
 The RPC interface might change from one major version of Bitcoin Core to the

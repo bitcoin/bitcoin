@@ -82,6 +82,10 @@ if test -z "$enable_lto" && test -n "@lto@"; then
   enable_lto=yes
 fi
 
+if test -z "$enable_hardening" && test -n "@no_harden@"; then
+  enable_hardening=no
+fi
+
 PKG_CONFIG="$(which pkg-config) --static"
 
 PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"

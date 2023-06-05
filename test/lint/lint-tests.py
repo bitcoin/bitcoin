@@ -23,7 +23,7 @@ def grep_boost_fixture_test_suite():
         "src/test/**.cpp",
         "src/wallet/test/**.cpp",
     ]
-    return subprocess.check_output(command, universal_newlines=True, encoding="utf8")
+    return subprocess.check_output(command, text=True, encoding="utf8")
 
 
 def check_matching_test_names(test_suite_list):

@@ -144,7 +144,6 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.generate(self.wallet, 101)
 
         self.test_uncache()
         self.test_add_spent()
@@ -357,14 +356,14 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                 "size": event.size
             })
             # sanity checks only
-            assert(event.memory > 0)
-            assert(event.duration > 0)
+            assert event.memory > 0
+            assert event.duration > 0
             handle_flush_succeeds += 1
 
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
         self.log.info("stop the node to flush the UTXO cache")
-        UTXOS_IN_CACHE = 2 # might need to be changed if the eariler tests are modified
+        UTXOS_IN_CACHE = 2 # might need to be changed if the earlier tests are modified
         # A node shutdown causes two flushes. One that flushes UTXOS_IN_CACHE
         # UTXOs and one that flushes 0 UTXOs. Normally the 0-UTXO-flush is the
         # second flush, however it can happen that the order changes.

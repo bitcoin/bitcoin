@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/system.h>
 #include <net_permissions.h>
 #include <netbase.h>
 #include <util/error.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 const std::vector<std::string> NET_PERMISSIONS_DOC{
@@ -88,18 +88,18 @@ bool NetWhitebindPermissions::TryParse(const std::string& str, NetWhitebindPermi
     if (!TryParsePermissionFlags(str, flags, offset, error)) return false;
 
     const std::string strBind = str.substr(offset);
-    CService addrBind;
-    if (!Lookup(strBind, addrBind, 0, false)) {
+    const std::optional<CService> addrBind{Lookup(strBind, 0, false)};
+    if (!addrBind.has_value()) {
         error = ResolveErrMsg("whitebind", strBind);
         return false;
     }
-    if (addrBind.GetPort() == 0) {
+    if (addrBind.value().GetPort() == 0) {
         error = strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind);
         return false;
     }
 
     output.m_flags = flags;
-    output.m_service = addrBind;
+    output.m_service = addrBind.value();
     error = Untranslated("");
     return true;
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <crypto/common.h>
+#include <kernel/cs_main.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -37,8 +38,6 @@
 namespace Consensus {
 struct Params;
 }
-
-using node::ReadBlockFromDisk;
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -95,12 +94,11 @@ static bool IsZMQAddressIPV6(const std::string &zmq_address)
 {
     const std::string tcp_prefix = "tcp://";
     const size_t tcp_index = zmq_address.rfind(tcp_prefix);
-    const size_t colon_index = zmq_address.rfind(":");
+    const size_t colon_index = zmq_address.rfind(':');
     if (tcp_index == 0 && colon_index != std::string::npos) {
         const std::string ip = zmq_address.substr(tcp_prefix.length(), colon_index - tcp_prefix.length());
-        CNetAddr addr;
-        LookupHost(ip, addr, false);
-        if (addr.IsIPv6()) return true;
+        const std::optional<CNetAddr> addr{LookupHost(ip, false)};
+        if (addr.has_value() && addr.value().IsIPv6()) return true;
     }
     return false;
 }
@@ -246,19 +244,14 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     LogPrint(BCLog::ZMQ, "Publish rawblock %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    {
-        LOCK(cs_main);
-        CBlock block;
-        if(!ReadBlockFromDisk(block, pindex, consensusParams))
-        {
-            zmqError("Can't read block from disk");
-            return false;
-        }
-
-        ss << block;
+    CBlock block;
+    if (!m_get_block_by_index(block, *pindex)) {
+        zmqError("Can't read block from disk");
+        return false;
     }
+
+    ss << block;
 
     return SendZmqMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }

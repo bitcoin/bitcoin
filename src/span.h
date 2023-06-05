@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -96,7 +96,7 @@ template<typename C>
 class Span
 {
     C* m_data;
-    std::size_t m_size;
+    std::size_t m_size{0};
 
     template <class T>
     struct is_Span_int : public std::false_type {};
@@ -107,7 +107,7 @@ class Span
 
 
 public:
-    constexpr Span() noexcept : m_data(nullptr), m_size(0) {}
+    constexpr Span() noexcept : m_data(nullptr) {}
 
     /** Construct a span from a begin pointer and a size.
      *

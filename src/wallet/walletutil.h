@@ -5,8 +5,8 @@
 #ifndef BITCOIN_WALLET_WALLETUTIL_H
 #define BITCOIN_WALLET_WALLETUTIL_H
 
-#include <fs.h>
 #include <script/descriptor.h>
+#include <util/fs.h>
 
 #include <vector>
 
@@ -103,20 +103,6 @@ public:
 
     WalletDescriptor() {}
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) {}
-};
-
-class CWallet;
-class DescriptorScriptPubKeyMan;
-
-/** struct containing information needed for migrating legacy wallets to descriptor wallets */
-struct MigrationData
-{
-    CExtKey master_key;
-    std::vector<std::pair<std::string, int64_t>> watch_descs;
-    std::vector<std::pair<std::string, int64_t>> solvable_descs;
-    std::vector<std::unique_ptr<DescriptorScriptPubKeyMan>> desc_spkms;
-    std::shared_ptr<CWallet> watchonly_wallet{nullptr};
-    std::shared_ptr<CWallet> solvable_wallet{nullptr};
 };
 } // namespace wallet
 

@@ -1,16 +1,17 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
 
+#include <common/system.h>
 #include <key_io.h>
 #include <streams.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 
 #include <string>
 #include <vector>
@@ -205,8 +206,7 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
     unsigned char rnd[8];
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd);
-    uint256 hash;
-    CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);
+    uint256 hash{Hash(str, rnd)};
 
     // import the static test key
     CKey key = DecodeSecret(strSecret1C);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
 
 static CPubKey UnserializePubkey(const std::vector<uint8_t>& data)
 {
-    CDataStream stream{SER_NETWORK, INIT_PROTO_VERSION};
+    DataStream stream{};
     stream << data;
     CPubKey pubkey;
     stream >> pubkey;
@@ -251,7 +251,7 @@ static unsigned int GetLen(unsigned char chHeader)
 
 static void CmpSerializationPubkey(const CPubKey& pubkey)
 {
-    CDataStream stream{SER_NETWORK, INIT_PROTO_VERSION};
+    DataStream stream{};
     stream << pubkey;
     CPubKey pubkey2;
     stream >> pubkey2;

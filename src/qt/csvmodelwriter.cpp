@@ -8,9 +8,9 @@
 #include <QFile>
 #include <QTextStream>
 
-CSVModelWriter::CSVModelWriter(const QString &_filename, QObject *parent) :
-    QObject(parent),
-    filename(_filename), model(nullptr)
+CSVModelWriter::CSVModelWriter(const QString& _filename, QObject* parent)
+    : QObject(parent),
+      filename(_filename)
 {
 }
 

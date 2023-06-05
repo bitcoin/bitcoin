@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@ def main():
         "--",
         "*.py",
     ]
-    output = subprocess.run(command, stdout=subprocess.PIPE, universal_newlines=True)
+    output = subprocess.run(command, stdout=subprocess.PIPE, text=True)
     if len(output.stdout) > 0:
         error_msg = (
             "A mutable list or dict seems to be used as default parameter value:\n\n"

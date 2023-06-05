@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_UTIL_TXMEMPOOL_H
 
 #include <txmempool.h>
+#include <util/time.h>
 
 namespace node {
 struct NodeContext;
@@ -13,11 +14,10 @@ struct NodeContext;
 
 CTxMemPool::Options MemPoolOptionsForTest(const node::NodeContext& node);
 
-struct TestMemPoolEntryHelper
-{
+struct TestMemPoolEntryHelper {
     // Default values
     CAmount nFee{0};
-    int64_t nTime{0};
+    NodeSeconds time{};
     unsigned int nHeight{1};
     bool spendsCoinbase{false};
     unsigned int sigOpCost{4};
@@ -27,11 +27,11 @@ struct TestMemPoolEntryHelper
     CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
 
     // Change the default value
-    TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
-    TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
-    TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
+    TestMemPoolEntryHelper& Fee(CAmount _fee) { nFee = _fee; return *this; }
+    TestMemPoolEntryHelper& Time(NodeSeconds tp) { time = tp; return *this; }
+    TestMemPoolEntryHelper& Height(unsigned int _height) { nHeight = _height; return *this; }
+    TestMemPoolEntryHelper& SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
+    TestMemPoolEntryHelper& SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
 };
 
 #endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H

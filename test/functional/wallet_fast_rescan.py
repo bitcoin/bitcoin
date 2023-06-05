@@ -7,6 +7,7 @@
 import os
 from typing import List
 
+from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
@@ -21,6 +22,9 @@ NUM_BLOCKS = 6       # number of blocks to mine
 
 
 class WalletFastRescanTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, legacy=False)
+
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1']]
@@ -37,7 +41,6 @@ class WalletFastRescanTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         wallet = MiniWallet(node)
-        wallet.rescan_utxos()
 
         self.log.info("Create descriptor wallet with backup")
         WALLET_BACKUP_FILENAME = os.path.join(node.datadir, 'wallet.bak')
@@ -56,7 +59,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
                 if 'range' in desc_info:
                     start_range, end_range = desc_info['range']
                     addr = w.deriveaddresses(desc_info['desc'], [end_range, end_range])[0]
-                    spk = bytes.fromhex(w.getaddressinfo(addr)['scriptPubKey'])
+                    spk = address_to_scriptpubkey(addr)
                     self.log.info(f"-> range [{start_range},{end_range}], last address {addr}")
                 else:
                     spk = bytes.fromhex(fixed_key.p2wpkh_script)

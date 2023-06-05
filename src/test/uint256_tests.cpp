@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     BOOST_CHECK(GetSerializeSize(R1L, PROTOCOL_VERSION) == 32);
     BOOST_CHECK(GetSerializeSize(ZeroL, PROTOCOL_VERSION) == 32);
 
-    CDataStream ss(0, PROTOCOL_VERSION);
+    DataStream ss{};
     ss << R1L;
     BOOST_CHECK(ss.str() == std::string(R1Array,R1Array+32));
     ss >> TmpL;

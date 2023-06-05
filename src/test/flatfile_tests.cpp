@@ -1,12 +1,12 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
+#include <common/args.h>
 #include <flatfile.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -23,6 +23,9 @@ BOOST_AUTO_TEST_CASE(flatfile_filename)
 
     FlatFileSeq seq2(data_dir / "a", "b", 16 * 1024);
     BOOST_CHECK_EQUAL(seq2.FileName(pos), data_dir / "a" / "b00456.dat");
+
+    // Check default constructor IsNull
+    assert(FlatFilePos{}.IsNull());
 }
 
 BOOST_AUTO_TEST_CASE(flatfile_open)

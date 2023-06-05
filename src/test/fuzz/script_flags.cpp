@@ -11,12 +11,7 @@
 
 #include <test/fuzz/fuzz.h>
 
-void initialize_script_flags()
-{
-    static const ECCVerifyHandle verify_handle;
-}
-
-FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
+FUZZ_TARGET(script_flags)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {

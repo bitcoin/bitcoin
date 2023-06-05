@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2021 The Bitcoin Core developers
+# Copyright (c) 2016-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test segwit transactions and blocks on P2P network."""
@@ -622,8 +622,10 @@ class SegWitTest(BitcoinTestFramework):
         if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
-            assert_equal(
-                self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]),
+            testres3 = self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()])
+            testres3[0]["fees"].pop("effective-feerate")
+            testres3[0]["fees"].pop("effective-includes")
+            assert_equal(testres3,
                 [{
                     'txid': tx3.hash,
                     'wtxid': tx3.getwtxid(),
@@ -639,8 +641,10 @@ class SegWitTest(BitcoinTestFramework):
             tx3 = tx
             tx3.vout = [tx3_out]
             tx3.rehash()
-            assert_equal(
-                self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]),
+            testres3_replaced = self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()])
+            testres3_replaced[0]["fees"].pop("effective-feerate")
+            testres3_replaced[0]["fees"].pop("effective-includes")
+            assert_equal(testres3_replaced,
                 [{
                     'txid': tx3.hash,
                     'wtxid': tx3.getwtxid(),

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,9 +37,6 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 public Q_SLOTS:
-    /** Hide the splash screen window and schedule the splash screen object for deletion */
-    void finish();
-
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
@@ -60,7 +57,7 @@ private:
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
-    int curAlignment;
+    int curAlignment{0};
 
     interfaces::Node* m_node = nullptr;
     bool m_shutdown = false;

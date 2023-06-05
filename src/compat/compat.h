@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,15 +59,6 @@ typedef unsigned int SOCKET;
 #define WSAEAGAIN EAGAIN
 #else
 #define WSAEAGAIN WSAEWOULDBLOCK
-#endif
-#endif
-
-// Windows doesn't define S_IRUSR or S_IWUSR. We define both
-// here, with the same values as glibc (see stat.h).
-#ifdef WIN32
-#ifndef S_IRUSR
-#define S_IRUSR             0400
-#define S_IWUSR             0200
 #endif
 #endif
 

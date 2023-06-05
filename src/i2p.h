@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,11 +6,11 @@
 #define BITCOIN_I2P_H
 
 #include <compat/compat.h>
-#include <fs.h>
 #include <netaddress.h>
 #include <sync.h>
-#include <threadinterrupt.h>
+#include <util/fs.h>
 #include <util/sock.h>
+#include <util/threadinterrupt.h>
 
 #include <memory>
 #include <optional>

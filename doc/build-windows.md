@@ -6,8 +6,8 @@ Below are some notes on how to build Bitcoin Core for Windows.
 The options known to work for building Bitcoin Core on Windows are:
 
 * On Linux, using the [Mingw-w64](https://www.mingw-w64.org/) cross compiler tool chain.
-* On Windows, using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and Mingw-w64.
-* On Windows, using [Microsoft Visual Studio](https://www.visualstudio.com). See [README.md](/build_msvc/README.md).
+* On Windows, using [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/about) and Mingw-w64.
+* On Windows, using [Microsoft Visual Studio](https://visualstudio.microsoft.com). See [README.md](/build_msvc/README.md).
 
 Other options which may work, but which have not been extensively tested are (please contribute instructions):
 
@@ -16,7 +16,7 @@ Other options which may work, but which have not been extensively tested are (pl
 Installing Windows Subsystem for Linux
 ---------------------------------------
 
-Follow the upstream installation instructions, available [here](https://docs.microsoft.com/windows/wsl/install-win10).
+Follow the upstream installation instructions, available [here](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 Cross-compilation for Ubuntu and Windows Subsystem for Linux
 ------------------------------------------------------------
@@ -66,7 +66,7 @@ Note that for WSL the Bitcoin Core source path MUST be somewhere in the default 
 example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
 This means you cannot use a directory that is located directly on the host Windows file system to perform the build.
 
-Additional WSL Note: WSL support for [launching Win32 applications](https://docs.microsoft.com/en-us/archive/blogs/wsl/windows-and-ubuntu-interoperability#launching-win32-applications-from-within-wsl)
+Additional WSL Note: WSL support for [launching Win32 applications](https://learn.microsoft.com/en-us/archive/blogs/wsl/windows-and-ubuntu-interoperability#launching-win32-applications-from-within-wsl)
 results in `Autoconf` configure scripts being able to execute Windows Portable Executable files. This can cause
 unexpected behaviour during the build, such as Win32 error dialogs for missing libraries. The recommended approach
 is to temporarily disable WSL support for Win32 applications.

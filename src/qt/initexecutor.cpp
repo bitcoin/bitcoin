@@ -1,11 +1,11 @@
-// Copyright (c) 2014-2021 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/initexecutor.h>
 
 #include <interfaces/node.h>
-#include <util/system.h>
+#include <util/exception.h>
 #include <util/threadnames.h>
 
 #include <exception>

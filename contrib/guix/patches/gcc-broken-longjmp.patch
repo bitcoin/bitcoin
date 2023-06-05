@@ -29,6 +29,8 @@ Date:   Wed May 5 22:48:51 2021 +0200
     gcc/testsuite/
             * gcc.c-torture/execute/20210505-1.c: New test.
 
+    This patch can be dropped when we are building with GCC 10.4.0 or later.
+
 diff --git a/gcc/config/i386/i386.c b/gcc/config/i386/i386.c
 index 2f838840e96..06ad1b2274e 100644
 --- a/gcc/config/i386/i386.c

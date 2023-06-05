@@ -23,11 +23,15 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">बन्द गर्नुहोस्</translation>
+        <translation type="unfinished">छनौट गर्नुहोस्</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
         <translation type="unfinished">भर्खरै चयन गरेको ठेगाना सूचीबाट मेटाउनुहोस्</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">खोज्नको लागि ठेगाना वा लेबल दर्ता गर्नुहोस</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -42,20 +46,69 @@
         <translation type="unfinished">&amp;amp;मेटाउनुहोस्</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">सिक्काहरु पठाउने ठेगाना छान्नुहोस् </translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">सिक्काहरु प्राप्त गर्ने ठेगाना छान्नुहोस्</translation>
+    </message>
+    <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">छनौट गर्नुहोस्...</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">पठाउने ठेगानाहरू...</translation>
+        <translation type="unfinished">पठाउने ठेगानाहरू</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
         <translation type="unfinished">प्राप्त गर्ने ठेगानाहरू...</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">यी भुक्तानी गर्नका लागि तपाइका बिट्कोइन ठेगानाहरू हुन्। सिक्काहरू पठाउनुअघि रकम र प्राप्त गर्ने ठेगाना जाँच गर्नुहोस।</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">ठेगाना कपी गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">लेबल कपी गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">सम्पादन</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation type="unfinished">ठेगाना सुची निर्यात</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">अल्पविरामले छुट्टिएको फाइल</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">ठेगाना सुची %1मा बचत गर्ने प्रयासमा त्रुटि भएको छ। कृपया पुनः प्रयास गर्नुहोस।</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">निर्यात असफल</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">लेबल</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">ठेगाना</translation>
     </message>
     </context>
 <context>
@@ -75,6 +128,30 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation type="unfinished">नयाँ पासफ्रेज दोहोर्याउनुहोस्</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">वालेट इन्क्रिप्ट गर्नुहोस् </translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation type="unfinished">वालेट इन्क्रिप्सन सुनिश्चित गर्नुहोस</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished">वालेट इन्क्रिप्ट भयो</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">अब वालेट इन्क्रिप्ट भएको छ।</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished">वालेट इन्क्रिप्सन असफल </translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished">वालेट अनलक असफल </translation>
     </message>
     </context>
 <context>
@@ -143,10 +220,6 @@
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">त्रुटि: आगमन कनेक्सनमा सुन्ने कार्य असफल भयो (सुन्ने कार्यले त्रुटि %s फर्कायो)</translation>
-    </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation type="unfinished">maxtxfee=&amp;lt;रकम&amp;gt;: का लागि अमान्य रकम &amp;apos;%s&amp;apos; (कारोबारलाई अड्कन नदिन अनिवार्य रूपमा कम्तिमा %s को न्यूनतम रिले शुल्क हुनु पर्छ)</translation>
@@ -288,6 +361,27 @@
 <context>
     <name>Intro</name>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -339,7 +433,7 @@
     </message>
     <message>
         <source>Balances</source>
-        <translation type="unfinished">ब्यालेन्स</translation>
+        <translation type="unfinished">ब्यालेन्सहरु</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
@@ -357,6 +451,11 @@
         <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation type="unfinished">प्रयोगकर्ता एजेन्ट</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">ठेगाना</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -367,6 +466,13 @@
     <message>
         <source>Ping Time</source>
         <translation type="unfinished">पिङ समय</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">लेबल</translation>
     </message>
     </context>
 <context>
@@ -397,7 +503,7 @@
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished">बिटकोइनमा संलग्न गरिएको सन्देश: तपाईंको मध्यस्थको लागि कारोबारको साथमा भण्डारण गरिने URI । नोट: यो सन्देश बिटकोइन नेटवर्क मार्फत पठाइने छैन ।</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -429,6 +535,33 @@
     <message>
         <source>Amount</source>
         <translation type="unfinished">रकम</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">लेबल</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">अल्पविरामले छुट्टिएको फाइल</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">लेबल</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">ठेगाना</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">निर्यात असफल</translation>
     </message>
     </context>
 <context>

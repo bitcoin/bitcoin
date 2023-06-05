@@ -1,8 +1,8 @@
 package=boost
-$(package)_version=1.80.0
+$(package)_version=1.81.0
 $(package)_download_path=https://boostorg.jfrog.io/artifactory/main/release/$($(package)_version)/source/
 $(package)_file_name=boost_$(subst .,_,$($(package)_version)).tar.bz2
-$(package)_sha256_hash=1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0
+$(package)_sha256_hash=71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa
 
 define $(package)_stage_cmds
   mkdir -p $($(package)_staging_prefix_dir)/include && \

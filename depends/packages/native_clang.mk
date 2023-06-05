@@ -9,10 +9,6 @@ $(package)_file_name=clang+llvm-$($(package)_version)-x86_64-linux-gnu-ubuntu-16
 $(package)_sha256_hash=48b83ef827ac2c213d5b64f5ad7ed082c8bcb712b46644e0dc5045c6f462c231
 endif
 
-define $(package)_preprocess_cmds
-  rm -f $($(package)_extract_dir)/lib/libc++abi.so*
-endef
-
 define $(package)_stage_cmds
   mkdir -p $($(package)_staging_prefix_dir)/lib/clang/$($(package)_version)/include && \
   mkdir -p $($(package)_staging_prefix_dir)/bin && \

@@ -13,8 +13,6 @@ import os
 import random
 import unittest
 
-from .util import modinv
-
 # Point with no known discrete log.
 H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
 
@@ -78,7 +76,7 @@ class EllipticCurve:
         x1, y1, z1 = p1
         if z1 == 0:
             return None
-        inv = modinv(z1, self.p)
+        inv = pow(z1, -1, self.p)
         inv_2 = (inv**2) % self.p
         inv_3 = (inv_2 * inv) % self.p
         return ((inv_2 * x1) % self.p, (inv_3 * y1) % self.p, 1)
@@ -139,7 +137,7 @@ class EllipticCurve:
         See https://en.wikibooks.org/wiki/Cryptography/Prime_Curve/Jacobian_Coordinates - Point Addition (with affine point)"""
         x1, y1, z1 = p1
         x2, y2, z2 = p2
-        assert(z2 == 1)
+        assert z2 == 1
         # Adding to the point at infinity is a no-op
         if z1 == 0:
             return p2
@@ -262,7 +260,7 @@ class ECPubKey():
         return self.valid
 
     def get_bytes(self):
-        assert(self.valid)
+        assert self.valid
         p = SECP256K1.affine(self.p)
         if p is None:
             return None
@@ -276,7 +274,7 @@ class ECPubKey():
 
         See https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm for the
         ECDSA verifier algorithm"""
-        assert(self.valid)
+        assert self.valid
 
         # Extract r and s from the DER formatted signature. Return false for
         # any DER encoding errors.
@@ -319,7 +317,7 @@ class ECPubKey():
         z = int.from_bytes(msg, 'big')
 
         # Run verifier algorithm on r, s
-        w = modinv(s, SECP256K1_ORDER)
+        w = pow(s, -1, SECP256K1_ORDER)
         u1 = z*w % SECP256K1_ORDER
         u2 = r*w % SECP256K1_ORDER
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, u1), (self.p, u2)]))
@@ -349,7 +347,7 @@ class ECKey():
 
     def set(self, secret, compressed):
         """Construct a private key object with given 32-byte secret and compressed flag."""
-        assert(len(secret) == 32)
+        assert len(secret) == 32
         secret = int.from_bytes(secret, 'big')
         self.valid = (secret > 0 and secret < SECP256K1_ORDER)
         if self.valid:
@@ -362,7 +360,7 @@ class ECKey():
 
     def get_bytes(self):
         """Retrieve the 32-byte representation of this key."""
-        assert(self.valid)
+        assert self.valid
         return self.secret.to_bytes(32, 'big')
 
     @property
@@ -375,7 +373,7 @@ class ECKey():
 
     def get_pubkey(self):
         """Compute an ECPubKey object for this secret key."""
-        assert(self.valid)
+        assert self.valid
         ret = ECPubKey()
         p = SECP256K1.mul([(SECP256K1_G, self.secret)])
         ret.p = p
@@ -388,7 +386,7 @@ class ECKey():
 
         See https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm for the
         ECDSA signer algorithm."""
-        assert(self.valid)
+        assert self.valid
         z = int.from_bytes(msg, 'big')
         # Note: no RFC6979 by default, but a simple random nonce (some tests rely on distinct transactions for the same operation)
         if rfc6979:
@@ -397,7 +395,7 @@ class ECKey():
             k = random.randrange(1, SECP256K1_ORDER)
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, k)]))
         r = R[0] % SECP256K1_ORDER
-        s = (modinv(k, SECP256K1_ORDER) * (z + self.secret * r)) % SECP256K1_ORDER
+        s = (pow(k, -1, SECP256K1_ORDER) * (z + self.secret * r)) % SECP256K1_ORDER
         if low_s and s > SECP256K1_ORDER_HALF:
             s = SECP256K1_ORDER - s
         # Represent in DER format. The byte representations of r and s have

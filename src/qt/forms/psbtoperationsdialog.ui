@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>PSBT Operations</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
