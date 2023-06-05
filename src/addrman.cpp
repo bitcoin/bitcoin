@@ -73,6 +73,38 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
+void CAddrMan::RemoveInvalid()
+{
+    for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
+        for (size_t i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
+            const auto id = vvNew[bucket][i];
+            if (id != -1 && !mapInfo[id].IsValid()) {
+                ClearNew(bucket, i);
+            }
+        }
+    }
+
+    for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; ++bucket) {
+        for (size_t i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
+            const auto id = vvTried[bucket][i];
+            if (id == -1) {
+                continue;
+            }
+            const auto& addr_info = mapInfo[id];
+            if (addr_info.IsValid()) {
+                continue;
+            }
+            vvTried[bucket][i] = -1;
+            --nTried;
+            SwapRandom(addr_info.nRandomPos, vRandom.size() - 1);
+            vRandom.pop_back();
+            mapAddr.erase(addr_info);
+            mapInfo.erase(id);
+            m_tried_collisions.erase(id);
+        }
+    }
+}
+
 CAddrInfo* CAddrMan::Find(const CService& addr, int* pnId)
 {
     CService addr2 = addr;
@@ -500,11 +532,15 @@ int CAddrMan::Check_()
 }
 #endif
 
-void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
+void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct)
 {
-    unsigned int nNodes = ADDRMAN_GETADDR_MAX_PCT * vRandom.size() / 100;
-    if (nNodes > ADDRMAN_GETADDR_MAX)
-        nNodes = ADDRMAN_GETADDR_MAX;
+    size_t nNodes = vRandom.size();
+    if (max_pct != 0) {
+        nNodes = max_pct * nNodes / 100;
+    }
+    if (max_addresses != 0) {
+        nNodes = std::min(nNodes, max_addresses);
+    }
 
     // gather a list of random nodes, skipping those of low quality
     for (unsigned int n = 0; n < vRandom.size(); n++) {

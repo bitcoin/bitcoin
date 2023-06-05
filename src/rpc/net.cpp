@@ -90,7 +90,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                     {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
                     {RPCResult::Type::STR, "addrbind", "(ip:port) Bind address of the connection to the peer"},
                     {RPCResult::Type::STR, "addrlocal", "(ip:port) Local address as reported by the peer"},
-                    {RPCResult::Type::STR, "network", "Network (ipv4, ipv6, or onion) the peer connected through"},
+                    {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/* append_unroutable */ true), ", ") + ")"},
                     {RPCResult::Type::STR, "mapped_as", "The AS in the BGP route to the peer used for diversifying peer selection"},
                     {RPCResult::Type::STR_HEX, "services", "The services offered"},
                     {RPCResult::Type::STR_HEX, "verified_proregtx_hash", true /*optional*/, "Only present when the peer is a masternode and successfully "
@@ -506,7 +506,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::STR, "name", "network (ipv4, ipv6 or onion)"},
+                                {RPCResult::Type::STR, "name", "network (" + Join(GetNetworkNames(), ", ") + ")"},
                                 {RPCResult::Type::BOOL, "limited", "is the network limited using -onlynet?"},
                                 {RPCResult::Type::BOOL, "reachable", "is the network reachable?"},
                                 {RPCResult::Type::STR, "proxy", "(\"host:port\") the proxy that is used for this network, or empty if none"},
@@ -788,7 +788,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
             RPCHelpMan{"getnodeaddresses",
                 "\nReturn known addresses which can potentially be used to find new nodes in the network\n",
                 {
-                    {"count", RPCArg::Type::NUM, /* default */ "1", "How many addresses to return. Limited to the smaller of " + ToString(ADDRMAN_GETADDR_MAX) + " or " + ToString(ADDRMAN_GETADDR_MAX_PCT) + "% of all known addresses."},
+                    {"count", RPCArg::Type::NUM, /* default */ "1", "The maximum number of addresses to return. Specify 0 to return all known addresses."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -815,18 +815,16 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
     int count = 1;
     if (!request.params[0].isNull()) {
         count = request.params[0].get_int();
-        if (count <= 0) {
+        if (count < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
         }
     }
     // returns a shuffled list of CAddress
-    std::vector<CAddress> vAddr = node.connman->GetAddresses();
+    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0);
     UniValue ret(UniValue::VARR);
 
-    int address_return_count = std::min<int>(count, vAddr.size());
-    for (int i = 0; i < address_return_count; ++i) {
+    for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        const CAddress& addr = vAddr[i];
         obj.pushKV("time", (int)addr.nTime);
         obj.pushKV("services", (uint64_t)addr.nServices);
         obj.pushKV("address", addr.ToStringIP());
@@ -834,6 +832,54 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
         ret.push_back(obj);
     }
     return ret;
+}
+
+static UniValue addpeeraddress(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"addpeeraddress",
+        "\nAdd the address of a potential peer to the address manager. This RPC is for testing only.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address of the peer"},
+            {"port", RPCArg::Type::NUM, RPCArg::Optional::NO, "The port of the peer"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::BOOL, "success", "whether the peer address was successfully added to the address manager"},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 9999")
+    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 9999")
+        },
+    }.Check(request);
+
+    NodeContext& node = EnsureNodeContext(request.context);
+    if (!node.addrman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
+    }
+
+    UniValue obj(UniValue::VOBJ);
+
+    std::string addr_string = request.params[0].get_str();
+    uint16_t port = request.params[1].get_int();
+
+    CNetAddr net_addr;
+    if (!LookupHost(addr_string, net_addr, false)) {
+        obj.pushKV("success", false);
+        return obj;
+    }
+    CAddress address = CAddress({net_addr, port}, ServiceFlags(NODE_NETWORK));
+    address.nTime = GetAdjustedTime();
+    // The source address is set equal to the address. This is equivalent to the peer
+    // announcing itself.
+    if (!node.addrman->Add(address, address)) {
+        obj.pushKV("success", false);
+        return obj;
+    }
+
+    obj.pushKV("success", true);
+    return obj;
 }
 
 // clang-format off
@@ -854,6 +900,7 @@ static const CRPCCommand commands[] =
     { "network",            "cleardiscouraged",       &cleardiscouraged,        {} },
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
+    { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
 };
 // clang-format on
 

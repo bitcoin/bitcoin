@@ -2,17 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <netaddress.h>
+
 #include <string>
 #include <vector>
-#include <netaddress.h>
 
 #ifndef BITCOIN_NET_PERMISSIONS_H
 #define BITCOIN_NET_PERMISSIONS_H
 
 struct bilingual_str;
 
-enum NetPermissionFlags
-{
+extern const std::vector<std::string> NET_PERMISSIONS_DOC;
+
+enum NetPermissionFlags {
     PF_NONE = 0,
     // Can query bloomfilter even if -peerbloomfilters is false
     PF_BLOOMFILTER = (1U << 1),
@@ -21,15 +23,20 @@ enum NetPermissionFlags
     // Always relay transactions from this peer, even if already in mempool
     // Keep parameter interaction: forcerelay implies relay
     PF_FORCERELAY = (1U << 2) | PF_RELAY,
+    // Allow getheaders during IBD and block-download after maxuploadtarget limit
+    PF_DOWNLOAD = (1U << 6),
     // Can't be banned/disconnected/discouraged for misbehavior
-    PF_NOBAN = (1U << 4),
+    PF_NOBAN = (1U << 4) | PF_DOWNLOAD,
     // Can query the mempool
     PF_MEMPOOL = (1U << 5),
+    // Can request addrs without hitting a privacy-preserving cache
+    PF_ADDR = (1U << 7),
 
     // True if the user did not specifically set fine grained permissions
     PF_ISIMPLICIT = (1U << 31),
-    PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL,
+    PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL | PF_DOWNLOAD | PF_ADDR,
 };
+
 class NetPermissions
 {
 public:
@@ -48,6 +55,7 @@ public:
         flags = static_cast<NetPermissionFlags>(flags & ~f);
     }
 };
+
 class NetWhitebindPermissions : public NetPermissions
 {
 public:
