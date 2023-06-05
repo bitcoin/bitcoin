@@ -1175,7 +1175,7 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-netinfo", false)) {
-            if (!args.empty() && args.at(0) == "help") {
+            if (!args.empty() && (args.at(0) == "help" || args.at(0) == "h" || args.at(0) == "?")) {
                 tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
                 return 0;
             }
