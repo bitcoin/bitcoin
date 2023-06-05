@@ -139,6 +139,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         EXPECTED_ADDED_EVENTS = 1
         handled_added_events = 0
+        event = None
 
         self.log.info("Hooking into mempool:added tracepoint...")
         node = self.nodes[0]
@@ -147,11 +148,8 @@ class MempoolTracepointTest(BitcoinTestFramework):
         bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0)
 
         def handle_added_event(_, data, __):
-            nonlocal handled_added_events
+            nonlocal event, handled_added_events
             event = bpf["added_events"].event(data)
-            assert_equal(txid, bytes(event.hash)[::-1].hex())
-            assert_equal(vsize, event.vsize)
-            assert_equal(fee, event.fee)
             handled_added_events += 1
 
         bpf["added_events"].open_perf_buffer(handle_added_event)
@@ -159,9 +157,6 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.log.info("Sending transaction...")
         fee = Decimal(31200)
         tx = self.wallet.send_self_transfer(from_node=node, fee=fee / COIN)
-        # expected data
-        txid = tx["txid"]
-        vsize = tx["tx"].get_vsize()
 
         self.log.info("Polling buffer...")
         bpf.perf_buffer_poll(timeout=200)
@@ -169,10 +164,13 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.log.info("Cleaning up mempool...")
         self.generate(node, 1)
 
-        bpf.cleanup()
-
         self.log.info("Ensuring mempool:added event was handled successfully...")
         assert_equal(EXPECTED_ADDED_EVENTS, handled_added_events)
+        assert_equal(bytes(event.hash)[::-1].hex(), tx["txid"])
+        assert_equal(event.vsize, tx["tx"].get_vsize())
+        assert_equal(event.fee, fee)
+
+        bpf.cleanup()
         self.generate(self.wallet, 1)
 
     def removed_test(self):
@@ -181,6 +179,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         EXPECTED_REMOVED_EVENTS = 1
         handled_removed_events = 0
+        event = None
 
         self.log.info("Hooking into mempool:removed tracepoint...")
         node = self.nodes[0]
@@ -189,13 +188,8 @@ class MempoolTracepointTest(BitcoinTestFramework):
         bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0)
 
         def handle_removed_event(_, data, __):
-            nonlocal handled_removed_events
+            nonlocal event, handled_removed_events
             event = bpf["removed_events"].event(data)
-            assert_equal(txid, bytes(event.hash)[::-1].hex())
-            assert_equal(reason, event.reason.decode("UTF-8"))
-            assert_equal(vsize, event.vsize)
-            assert_equal(fee, event.fee)
-            assert_equal(entry_time, event.entry_time)
             handled_removed_events += 1
 
         bpf["removed_events"].open_perf_buffer(handle_removed_event)
@@ -203,10 +197,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.log.info("Sending transaction...")
         fee = Decimal(31200)
         tx = self.wallet.send_self_transfer(from_node=node, fee=fee / COIN)
-        # expected data
         txid = tx["txid"]
-        reason = "expiry"
-        vsize = tx["tx"].get_vsize()
 
         self.log.info("Fast-forwarding time to mempool expiry...")
         entry_time = node.getmempoolentry(txid)["time"]
@@ -220,10 +211,15 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.log.info("Polling buffer...")
         bpf.perf_buffer_poll(timeout=200)
 
-        bpf.cleanup()
-
         self.log.info("Ensuring mempool:removed event was handled successfully...")
         assert_equal(EXPECTED_REMOVED_EVENTS, handled_removed_events)
+        assert_equal(bytes(event.hash)[::-1].hex(), txid)
+        assert_equal(event.reason.decode("UTF-8"), "expiry")
+        assert_equal(event.vsize, tx["tx"].get_vsize())
+        assert_equal(event.fee, fee)
+        assert_equal(event.entry_time, entry_time)
+
+        bpf.cleanup()
         self.generate(self.wallet, 1)
 
     def replaced_test(self):
@@ -232,6 +228,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         EXPECTED_REPLACED_EVENTS = 1
         handled_replaced_events = 0
+        event = None
 
         self.log.info("Hooking into mempool:replaced tracepoint...")
         node = self.nodes[0]
@@ -240,15 +237,8 @@ class MempoolTracepointTest(BitcoinTestFramework):
         bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0)
 
         def handle_replaced_event(_, data, __):
-            nonlocal handled_replaced_events
+            nonlocal event, handled_replaced_events
             event = bpf["replaced_events"].event(data)
-            assert_equal(replaced_txid, bytes(event.replaced_hash)[::-1].hex())
-            assert_equal(replaced_vsize, event.replaced_vsize)
-            assert_equal(replaced_fee, event.replaced_fee)
-            assert_equal(replaced_entry_time, event.replaced_entry_time)
-            assert_equal(replacement_txid, bytes(event.replacement_hash)[::-1].hex())
-            assert_equal(replacement_vsize, event.replacement_vsize)
-            assert_equal(replacement_fee, event.replacement_fee)
             handled_replaced_events += 1
 
         bpf["replaced_events"].open_perf_buffer(handle_replaced_event)
@@ -267,21 +257,20 @@ class MempoolTracepointTest(BitcoinTestFramework):
             from_node=node, utxo_to_spend=utxo, fee=replacement_fee / COIN
         )
 
-        # expected data
-        replaced_txid = original_tx["txid"]
-        replaced_vsize = original_tx["tx"].get_vsize()
-        replaced_fee = original_fee
-        replaced_entry_time = entry_time
-        replacement_txid = replacement_tx["txid"]
-        replacement_vsize = replacement_tx["tx"].get_vsize()
-
         self.log.info("Polling buffer...")
         bpf.perf_buffer_poll(timeout=200)
 
-        bpf.cleanup()
-
         self.log.info("Ensuring mempool:replaced event was handled successfully...")
         assert_equal(EXPECTED_REPLACED_EVENTS, handled_replaced_events)
+        assert_equal(bytes(event.replaced_hash)[::-1].hex(), original_tx["txid"])
+        assert_equal(event.replaced_vsize, original_tx["tx"].get_vsize())
+        assert_equal(event.replaced_fee, original_fee)
+        assert_equal(event.replaced_entry_time, entry_time)
+        assert_equal(bytes(event.replacement_hash)[::-1].hex(), replacement_tx["txid"])
+        assert_equal(event.replacement_vsize, replacement_tx["tx"].get_vsize())
+        assert_equal(event.replacement_fee, replacement_fee)
+
+        bpf.cleanup()
         self.generate(self.wallet, 1)
 
     def rejected_test(self):
@@ -290,6 +279,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         EXPECTED_REJECTED_EVENTS = 1
         handled_rejected_events = 0
+        event = None
 
         self.log.info("Adding P2P connection...")
         node = self.nodes[0]
@@ -301,10 +291,8 @@ class MempoolTracepointTest(BitcoinTestFramework):
         bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0)
 
         def handle_rejected_event(_, data, __):
-            nonlocal handled_rejected_events
+            nonlocal event, handled_rejected_events
             event = bpf["rejected_events"].event(data)
-            assert_equal(txid, bytes(event.hash)[::-1].hex())
-            assert_equal(reason, event.reason.decode("UTF-8"))
             handled_rejected_events += 1
 
         bpf["rejected_events"].open_perf_buffer(handle_rejected_event)
@@ -313,17 +301,15 @@ class MempoolTracepointTest(BitcoinTestFramework):
         tx = self.wallet.create_self_transfer(fee_rate=Decimal(0))
         node.p2ps[0].send_txs_and_test([tx["tx"]], node, success=False)
 
-        # expected data
-        txid = tx["tx"].hash
-        reason = "min relay fee not met"
-
         self.log.info("Polling buffer...")
         bpf.perf_buffer_poll(timeout=200)
 
-        bpf.cleanup()
-
         self.log.info("Ensuring mempool:rejected event was handled successfully...")
         assert_equal(EXPECTED_REJECTED_EVENTS, handled_rejected_events)
+        assert_equal(bytes(event.hash)[::-1].hex(), tx["tx"].hash)
+        assert_equal(event.reason.decode("UTF-8"), "min relay fee not met")
+
+        bpf.cleanup()
         self.generate(self.wallet, 1)
 
     def run_test(self):
