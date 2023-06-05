@@ -129,7 +129,6 @@ bool KeyMan::AddCryptedKeyInner(const PublicKey& vchPubKey, const std::vector<un
     LOCK(cs_KeyStore);
     for (const KeyMap::value_type& mKey : mapKeys) {
         const PrivateKey& key = mKey.second;
-        PublicKey pubKey = key.GetPublicKey();
     }
     assert(mapKeys.empty());
 

@@ -93,7 +93,7 @@ public:
     //! Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, bool checksum_valid);
     bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
-    bool AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddressIdentifier& id, const SubAddress& subAddress, const bool& fLock = true) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddressIdentifier& id, const SubAddress& subAddress, const bool& fLock = true);
     bool AddSubAddressPoolInner(const SubAddressIdentifier& id, const bool& fLock = true) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* KeyRing overrides */
