@@ -58,14 +58,14 @@ bool IsUnixSocketPath(const std::string& name);
 class Proxy
 {
 public:
-    Proxy(): m_is_unix_socket(false), randomize_credentials(false) {}
-    explicit Proxy(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), m_is_unix_socket(false), randomize_credentials(_randomize_credentials) {}
-    explicit Proxy(const std::string path, bool _randomize_credentials=false): m_unix_socket_path(path), m_is_unix_socket(true), randomize_credentials(_randomize_credentials) {}
+    Proxy() : m_is_unix_socket(false), m_randomize_credentials(false) {}
+    explicit Proxy(const CService& _proxy, bool _randomize_credentials = false) : proxy(_proxy), m_is_unix_socket(false), m_randomize_credentials(_randomize_credentials) {}
+    explicit Proxy(const std::string path, bool _randomize_credentials = false) : m_unix_socket_path(path), m_is_unix_socket(true), m_randomize_credentials(_randomize_credentials) {}
 
     CService proxy;
     std::string m_unix_socket_path;
     bool m_is_unix_socket;
-    bool randomize_credentials;
+    bool m_randomize_credentials;
 
     bool IsValid() const
     {

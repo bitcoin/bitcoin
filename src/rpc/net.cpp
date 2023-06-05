@@ -608,7 +608,7 @@ static UniValue GetNetworksInfo()
         obj.pushKV("limited", !g_reachable_nets.Contains(network));
         obj.pushKV("reachable", g_reachable_nets.Contains(network));
         obj.pushKV("proxy", proxy.IsValid() ? proxy.ToString() : std::string());
-        obj.pushKV("proxy_randomize_credentials", proxy.randomize_credentials);
+        obj.pushKV("proxy_randomize_credentials", proxy.m_randomize_credentials);
         networks.push_back(obj);
     }
     return networks;
