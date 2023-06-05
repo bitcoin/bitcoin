@@ -742,6 +742,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             ssValue >> index;
 
             blsct::SubAddressIdentifier id;
+
             id.account = index.first;
             id.address = index.second;
 
