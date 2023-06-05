@@ -428,11 +428,15 @@ bool KeyMan::IsMine(const blsct::PublicKey& ephemeralKey, const blsct::PublicKey
     auto D_prime = spendingKey.GetG1Point() + dh;
     auto hashId = PublicKey(D_prime).GetID();
 
-    return HaveSubAddress(hashId);
+    {
+        LOCK(cs_KeyStore);
+        return HaveSubAddress(hashId);
+    }
 }
 
 void KeyMan::LoadSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index)
 {
+    LOCK(cs_KeyStore);
     mapSubAddresses[hashId] = index;
 }
 
@@ -442,7 +446,7 @@ bool KeyMan::AddSubAddress(const CKeyID& hashId, const SubAddressIdentifier& ind
     wallet::WalletBatch batch(m_storage.GetDatabase());
     AssertLockHeld(cs_KeyStore);
 
-    LoadSubAddress(hashId, index);
+    mapSubAddresses[hashId] = index;
 
     return batch.WriteSubAddress(hashId, index);
 }
