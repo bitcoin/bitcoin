@@ -50,9 +50,9 @@ private:
     using SubAddressPoolMapSet = std::map<uint64_t, std::set<uint64_t>>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
-    SubAddressMap mapSubAddresses;
-    SubAddressPoolMapSet setSubAddressPool;
-    SubAddressPoolMapSet setSubAddressReservePool;
+    SubAddressMap mapSubAddresses GUARDED_BY(cs_KeyStore);
+    SubAddressPoolMapSet setSubAddressPool GUARDED_BY(cs_KeyStore);
+    SubAddressPoolMapSet setSubAddressReservePool GUARDED_BY(cs_KeyStore);
 
     int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = 0;
     //! Number of pre-generated SubAddresses

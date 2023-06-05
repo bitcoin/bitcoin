@@ -100,6 +100,8 @@ bool KeyMan::AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& se
 
 bool KeyMan::AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddressIdentifier& id, const SubAddress& subAddress, const bool& fLock)
 {
+    LOCK(cs_KeyStore);
+
     AddSubAddressPoolInner(id, fLock);
 
     return batch.WriteSubAddressPool(id, SubAddressPool(subAddress.GetKeys().GetID()));
@@ -107,8 +109,6 @@ bool KeyMan::AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddres
 
 bool KeyMan::AddSubAddressPoolInner(const SubAddressIdentifier& id, const bool& fLock)
 {
-    LOCK(cs_KeyStore);
-
     setSubAddressPool[id.account].insert(id.address);
 
     return true;
