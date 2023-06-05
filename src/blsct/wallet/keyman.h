@@ -125,7 +125,7 @@ public:
     bool IsMine(const blsct::PublicKey& ephemeralKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag);
 
     /** SubAddress keypool */
-    void LoadSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    void LoadSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index);
     bool AddSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index);
     bool HaveSubAddress(const CKeyID& hashId) const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     bool NewSubAddressPool(const uint64_t& account = 0);
