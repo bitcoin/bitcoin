@@ -56,7 +56,7 @@ class WalletBackupTest(BitcoinTestFramework):
             ["-whitelist=noban@127.0.0.1", "-keypool=100", "-addresstype=bech32"],
             ["-whitelist=noban@127.0.0.1", "-keypool=100", "-addresstype=bech32"],
             ["-whitelist=noban@127.0.0.1", "-keypool=100", "-addresstype=bech32"],
-            ["-whitelist=noban@127.0.0.1"],
+            ["-whitelist=noban@127.0.0.1", "-addresstype=bech32"],
         ]
         self.rpc_timeout = 120
 
