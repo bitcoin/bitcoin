@@ -73,16 +73,29 @@ If you do not want to keep the downloaded binaries, specify the cleanup option.
 ./contrib/verify-binaries/verify.py pub --cleanup 22.0
 ```
 
-Use the bin subcommand to verify all files listed in a local checksum file
+Use the bin subcommand to verify all files listed in a local checksum file.
 
 ```sh
 ./contrib/verify-binaries/verify.py bin SHA256SUMS
 ```
 
-Verify only a subset of the files listed in a local checksum file
+Verify only a subset of the files listed in a local checksum file.
 
 ```sh
 ./contrib/verify-binaries/verify.py bin ~/Downloads/SHA256SUMS \
     ~/Downloads/bitcoin-24.0.1-x86_64-linux-gnu.tar.gz \
     ~/Downloads/bitcoin-24.0.1-arm-linux-gnueabihf.tar.gz
 ```
+
+Use the torrent subcommand to verify all files from a downloaded torrent file
+from bitcoincore.org or release email. The torrent must be downloaded manually
+first.
+
+Pass the path to the SHA256SUMS file as argument to `torrent` and files in the
+same directory will be automatically verified using an adjacent SHA256SUMS.asc
+signature file.
+
+```sh
+./contrib/verify-binaries/verify.py torrent /home/user/Downloads/bitcoin-core-24.1/SHA256SUMS
+```
+

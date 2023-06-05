@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Script for verifying Bitcoin Core release binaries.
 
+Binaries can be fetched from bitcoincore.org or bitcoin.org, or supplied
+manually either as standalone binaries or from a torrent download.
+
 This script attempts to download the sum file SHA256SUMS and corresponding
 signature file SHA256SUMS.asc from bitcoincore.org and bitcoin.org and
 compares them.
@@ -63,6 +66,7 @@ class ReturnCode(enum.IntEnum):
     NOT_ENOUGH_GOOD_SIGS = 9
     BINARY_DOWNLOAD_FAILED = 10
     BAD_VERSION = 11
+    FILE_NOT_FOUND = 12
 
 
 def set_up_logger(is_verbose: bool = True) -> logging.Logger:
@@ -637,6 +641,52 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
 
     return ReturnCode.SUCCESS
 
+def verify_torrent_handler(args: argparse.Namespace) -> ReturnCode:
+    sums_file = Path(args.sums_file)
+    if not sums_file.exists():
+        log.error(f"Provided SHA256SUMS file {sums_file} does not exist")
+        return ReturnCode.FILE_NOT_FOUND
+    parent_dir = sums_file.parent
+    sums_file_path = parent_dir / SUMS_FILENAME
+    sig_file_path = parent_dir / SIGNATUREFILENAME
+
+    files_to_verify = [file.name for file in parent_dir.glob("bitcoin-*")]
+    if not files_to_verify:
+        log.error(f"Could not find any files beginning \"bitcoin-\" in directory {parent_dir}")
+        return ReturnCode.FILE_NOT_FOUND
+
+    # Verify the signature on the SHA256SUMS file
+    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(str(sig_file_path), str(sums_file_path), args)
+    if sigs_status != ReturnCode.SUCCESS:
+        return sigs_status
+
+    # Extract hashes and filenames
+    hashes_to_verify = parse_sums_file(str(sums_file_path), files_to_verify)
+    if not hashes_to_verify:
+        log.error(f"No files in {sums_file} match the specified binaries")
+        return ReturnCode.NO_BINARIES_MATCH
+
+    # Make sure all files are accounted for
+    files_to_hash = []
+    missing_files = []
+    hashes_to_verify_files_set = set()
+    for file_hash, file in hashes_to_verify:
+        files_to_hash.append([file_hash, parent_dir / Path(file)])
+        hashes_to_verify_files_set.add(file)
+
+    for file in files_to_verify:
+        if file not in hashes_to_verify_files_set:
+            missing_files.append(file)
+
+    # verify hashes
+    hashes_status, files_to_hashes = verify_binary_hashes(files_to_hash)
+    if hashes_status != ReturnCode.SUCCESS:
+        return hashes_status
+
+    print_output(args, good_trusted, good_untrusted, unknown, bad, files_to_hashes, missing_files)
+
+    return ReturnCode.SUCCESS
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -705,6 +755,10 @@ def main():
         "binary", nargs="*",
         help="Path to a binary distribution file to verify. Can be specified multiple times for multiple files to verify."
     )
+
+    torrent_parser = subparsers.add_parser("torrent", help="Verify local torrent dir (requires manual torrent download).")
+    torrent_parser.set_defaults(func=verify_torrent_handler)
+    torrent_parser.add_argument("sums_file", help="Path to a SHA256SUMS file in a downloaded torrent directory.")
 
     args = parser.parse_args()
     if args.quiet:
