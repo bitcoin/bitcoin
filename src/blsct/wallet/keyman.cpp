@@ -80,9 +80,6 @@ bool KeyMan::AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& se
 {
     AssertLockHeld(cs_KeyStore);
 
-    // Make sure we aren't adding private keys to private key disabled wallets
-    assert(!m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-
     bool needsDB = !encrypted_batch;
     if (needsDB) {
         encrypted_batch = &batch;
@@ -158,7 +155,6 @@ bool KeyMan::AddCryptedKey(const PublicKey& vchPubKey,
 
 PrivateKey KeyMan::GenerateNewSeed()
 {
-    assert(!m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS));
     PrivateKey key(BLS12_381_KeyGen::derive_master_SK(MclScalar::Rand(true).GetVch()));
     return key;
 }
@@ -496,27 +492,23 @@ SubAddress KeyMan::GenerateNewSubAddress(const uint64_t& account, SubAddressIden
 
 bool KeyMan::NewSubAddressPool(const uint64_t& account)
 {
-    if (m_storage.IsWalletFlagSet(wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+    LOCK(cs_KeyStore);
+    wallet::WalletBatch batch(m_storage.GetDatabase());
+
+    if (setSubAddressPool.count(account)) {
+        for (uint64_t nIndex : setSubAddressPool[account])
+            batch.EraseSubAddressPool({account, nIndex});
+        setSubAddressPool[account].clear();
+    } else {
+        setSubAddressPool.insert(std::make_pair(account, std::set<uint64_t>()));
+    }
+
+    if (!TopUpAccount(account)) {
         return false;
     }
-    {
-        LOCK(cs_KeyStore);
-        wallet::WalletBatch batch(m_storage.GetDatabase());
 
-        if (setSubAddressPool.count(account)) {
-            for (uint64_t nIndex : setSubAddressPool[account])
-                batch.EraseSubAddressPool({account, nIndex});
-            setSubAddressPool[account].clear();
-        } else {
-            setSubAddressPool.insert(std::make_pair(account, std::set<uint64_t>()));
-        }
+    WalletLogPrintf("blsct::KeyMan::NewSubAddressPool rewrote keypool\n");
 
-        if (!TopUpAccount(account)) {
-            return false;
-        }
-
-        WalletLogPrintf("blsct::KeyMan::NewSubAddressPool rewrote keypool\n");
-    }
     return true;
 }
 
