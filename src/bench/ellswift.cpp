@@ -17,7 +17,7 @@ static void EllSwiftCreate(benchmark::Bench& bench)
     uint256 entropy = GetRandHash();
 
     bench.batch(1).unit("pubkey").run([&] {
-        auto ret = key.EllSwiftCreate(AsBytes(Span{entropy}));
+        auto ret = key.EllSwiftCreate(MakeByteSpan(entropy));
         /* Use the first 32 bytes of the ellswift encoded public key as next private key. */
         key.Set(UCharCast(ret.data()), UCharCast(ret.data()) + 32, true);
         assert(key.IsValid());
