@@ -907,7 +907,7 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
+                chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
                 if (chainman.m_interrupt) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;
@@ -926,7 +926,7 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             FILE* file = fsbridge::fopen(path, "rb");
             if (file) {
                 LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
-                chainman.ActiveChainstate().LoadExternalBlockFile(file);
+                chainman.LoadExternalBlockFile(file);
                 if (chainman.m_interrupt) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;

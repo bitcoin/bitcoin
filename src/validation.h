@@ -609,37 +609,6 @@ public:
     bool ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /**
-     * Import blocks from an external file
-     *
-     * During reindexing, this function is called for each block file (datadir/blocks/blk?????.dat).
-     * It reads all blocks contained in the given file and attempts to process them (add them to the
-     * block index). The blocks may be out of order within each file and across files. Often this
-     * function reads a block but finds that its parent hasn't been read yet, so the block can't be
-     * processed yet. The function will add an entry to the blocks_with_unknown_parent map (which is
-     * passed as an argument), so that when the block's parent is later read and processed, this
-     * function can re-read the child block from disk and process it.
-     *
-     * Because a block's parent may be in a later file, not just later in the same file, the
-     * blocks_with_unknown_parent map must be passed in and out with each call. It's a multimap,
-     * rather than just a map, because multiple blocks may have the same parent (when chain splits
-     * or stale blocks exist). It maps from parent-hash to child-disk-position.
-     *
-     * This function can also be used to read blocks from user-specified block files using the
-     * -loadblock= option. There's no unknown-parent tracking, so the last two arguments are omitted.
-     *
-     *
-     * @param[in]     fileIn                        FILE handle to file containing blocks to read
-     * @param[in]     dbp                           (optional) Disk block position (only for reindex)
-     * @param[in,out] blocks_with_unknown_parent    (optional) Map of disk positions for blocks with
-     *                                              unknown parent, key is parent block hash
-     *                                              (only used for reindex)
-     * */
-    void LoadExternalBlockFile(
-        FILE* fileIn,
-        FlatFilePos* dbp = nullptr,
-        std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex);
 
     /**
      * Update the on-disk chain state.
@@ -690,8 +659,6 @@ public:
         std::shared_ptr<const CBlock> pblock = nullptr)
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(::cs_main);
-
-    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
@@ -775,7 +742,6 @@ private:
 
     void InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1098,6 +1064,37 @@ public:
     }
 
     /**
+     * Import blocks from an external file
+     *
+     * During reindexing, this function is called for each block file (datadir/blocks/blk?????.dat).
+     * It reads all blocks contained in the given file and attempts to process them (add them to the
+     * block index). The blocks may be out of order within each file and across files. Often this
+     * function reads a block but finds that its parent hasn't been read yet, so the block can't be
+     * processed yet. The function will add an entry to the blocks_with_unknown_parent map (which is
+     * passed as an argument), so that when the block's parent is later read and processed, this
+     * function can re-read the child block from disk and process it.
+     *
+     * Because a block's parent may be in a later file, not just later in the same file, the
+     * blocks_with_unknown_parent map must be passed in and out with each call. It's a multimap,
+     * rather than just a map, because multiple blocks may have the same parent (when chain splits
+     * or stale blocks exist). It maps from parent-hash to child-disk-position.
+     *
+     * This function can also be used to read blocks from user-specified block files using the
+     * -loadblock= option. There's no unknown-parent tracking, so the last two arguments are omitted.
+     *
+     *
+     * @param[in]     fileIn                        FILE handle to file containing blocks to read
+     * @param[in]     dbp                           (optional) Disk block position (only for reindex)
+     * @param[in,out] blocks_with_unknown_parent    (optional) Map of disk positions for blocks with
+     *                                              unknown parent, key is parent block hash
+     *                                              (only used for reindex)
+     * */
+    void LoadExternalBlockFile(
+        FILE* fileIn,
+        FlatFilePos* dbp = nullptr,
+        std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
+
+    /**
      * Process an incoming block. This only returns after the best known valid
      * block is made active. Note that it does not, however, guarantee that the
      * specific block passed to it has been checked for validity!
@@ -1135,6 +1132,29 @@ public:
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      */
     bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+
+    /**
+     * Sufficiently validate a block for disk storage (and store on disk).
+     *
+     * @param[in]   pblock          The block we want to process.
+     * @param[in]   fRequested      Whether we requested this block from a
+     *                              peer.
+     * @param[in]   dbp             The location on disk, if we are importing
+     *                              this block from prior storage.
+     * @param[in]   min_pow_checked True if proof-of-work anti-DoS checks have
+     *                              been done by caller for headers chain
+     *
+     * @param[out]  state       The state of the block validation.
+     * @param[out]  ppindex     Optional return parameter to get the
+     *                          CBlockIndex pointer for this block.
+     * @param[out]  fNewBlock   Optional return parameter to indicate if the
+     *                          block is new to our storage.
+     *
+     * @returns   False if the block or header is invalid, or if saving to disk fails (likely a fatal error); true otherwise.
+     */
+    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
      * Try to add a transaction to the memory pool.
