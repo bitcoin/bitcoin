@@ -297,8 +297,8 @@ class ToolWalletTest(BitcoinTestFramework):
 
         assert_equal(0, out['txcount'])
         if not self.options.descriptors:
-            assert_equal(128, out['keypoolsize'])
-            assert_equal(128, out['keypoolsize_hd_internal'])
+            assert_equal(32, out['keypoolsize'])
+            assert_equal(32, out['keypoolsize_hd_internal'])
             assert_equal(True, 'hdseedid' in out)
         else:
             assert_equal(128, out['keypoolsize'])
