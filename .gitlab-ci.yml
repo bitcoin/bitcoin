@@ -35,6 +35,10 @@ builder-image:
 
 .build-depends-template:
   stage: build-depends
+  rules:
+    - when: on_success
+  needs:
+    - builder-image
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   variables:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
@@ -78,6 +82,8 @@ builder-image:
 
 .base-template:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
+  rules:
+    - when: on_success
   before_script:
     - export CACHE_DIR=$CI_PROJECT_DIR/cache
     - echo BUILD_TARGET=$BUILD_TARGET
@@ -157,7 +163,7 @@ builder-image:
   rules:
     - if: '$FAST_MODE == "true"'
       when: never
-    - when: always
+    - when: on_success
 
 ###
 
