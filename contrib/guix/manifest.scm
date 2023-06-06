@@ -11,7 +11,6 @@
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
-             (gnu packages curl)
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
@@ -257,9 +256,6 @@ and abstract ELF, PE and MachO formats.")
     (build-system cmake-build-system)
     (inputs
      `(("openssl", openssl)))
-    (arguments
-     '(#:configure-flags
-        (list "-DCMAKE_DISABLE_FIND_PACKAGE_CURL=TRUE")))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
