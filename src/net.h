@@ -800,6 +800,22 @@ public:
         }
     };
 
+    /**
+     * Loop over nodes until the provided 'func(node)' return false.
+     * @param[in] func the stop function.
+     * @param[in] random_access whether nodes should be accessed in-order or shuffled first.
+     */
+    void ForEachNodeContinueIf(const std::function<bool(CNode*)>& func, bool random_access = false)
+    {
+        LOCK(m_nodes_mutex);
+        std::vector<CNode*> nodes = m_nodes;
+        if (random_access) Shuffle(nodes.begin(), nodes.end(), FastRandomContext());
+        for (auto&& node : nodes) {
+            if (NodeFullyConnected(node))
+                if (!func(node)) break;
+        }
+    };
+
     // Addrman functions
     /**
      * Return all or many randomly selected addresses, optionally by network.

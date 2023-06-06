@@ -42,6 +42,9 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         except JSONRPCException:
             return False
 
+    def get_peer_id(self, peer_info, peer_num):
+        return next(peer for peer in peer_info if "testnode{}".format(peer_num) in peer['subver'])["id"]
+
     def run_test(self):
         self.log.info("Mine 4 blocks on Node 0")
         self.generate(self.nodes[0], 4, sync_fun=self.no_op)
@@ -164,7 +167,22 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         pruned_block_10 = self.nodes[0].getblockhash(10)
         assert_raises_rpc_error(-1, "Cannot fetch old block from a limited peer", pruned_node.getblockfrompeer, pruned_block_10, limited_peer_id)
 
+        #######################################
+        # Test fetching block from "any" peer #
+        #######################################
 
+        self.log.info("Fetch block from \"any\" peer")
+        # Disconnect only connection that can provide the block
+        self.disconnect_nodes(0, 2)
+        # Try to fetch the block from "any" peer. Which must fail as the only available peer is a NETWORK_LIMITED peer
+        assert_raises_rpc_error(-1, "No available peers to fetch the block from", pruned_node.getblockfrompeer, pruned_block_10)
+
+        # Now connect the full node and re-try to fetch the block from "any" peer. This time fetching must work.
+        self.connect_nodes(0, 2)
+        peer_id_expected = self.get_peer_id(pruned_node.getpeerinfo(), peer_num=0)
+        peer_id = pruned_node.getblockfrompeer(pruned_block_10)["peer_id"]
+        assert_equal(peer_id_expected, peer_id)
+        self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block_10), timeout=1)
 
 
 if __name__ == '__main__':

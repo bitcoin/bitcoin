@@ -514,7 +514,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    util::Result<NodeId> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
+    util::Result<NodeId> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
@@ -1776,7 +1776,7 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-util::Result<NodeId> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
+util::Result<NodeId> PeerManagerImpl::FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index)
 {
     if (m_chainman.m_blockman.LoadingBlocks()) return util::ErrorUntranslated("Loading blocks ...");
 
@@ -1786,6 +1786,21 @@ util::Result<NodeId> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockInd
     if (!active_chain.IsInitialBlockDownload()) {
         LOCK(active_chain.m_chainman.GetMutex());
         allow_limited_peers = active_chain.m_chainman.ActiveHeight() - block_index.nHeight < static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS);
+    }
+
+    NodeId peer_id = -1;
+    if (op_peer_id) peer_id = *op_peer_id;
+    else {
+        // If no peer was provided, pick one at random
+        m_connman.ForEachNodeContinueIf([this, &peer_id, allow_limited_peers](CNode* node) {
+            std::shared_ptr<Peer> peer = GetPeerRef(node->GetId());
+            if (!CanServeBlocks(*peer) || !CanServeWitnesses(*peer)) return true; // keep searching
+            if (IsLimitedPeer(*peer) && !allow_limited_peers) return true; // keep searching
+
+            peer_id = node->GetId();
+            return false;
+        }, /*random_access=*/ true);
+        if (peer_id == -1) return util::ErrorUntranslated("No available peers to fetch the block from");
     }
 
     // Ensure this peer exists and hasn't been disconnected
