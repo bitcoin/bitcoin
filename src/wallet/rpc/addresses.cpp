@@ -296,6 +296,7 @@ RPCHelpMan keypoolrefill()
             HELP_REQUIRING_PASSPHRASE,
         {
             {"newsize", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%u, or as set by -keypool", DEFAULT_KEYPOOL_SIZE)}, "The new keypool size"},
+            {"blsct", RPCArg::Type::BOOL, RPCArg::DefaultHint{strprintf("%u", true)}, "Whether it should fill the blsct subaddress pool"},
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
@@ -318,8 +319,15 @@ RPCHelpMan keypoolrefill()
                 kpSize = (unsigned int)request.params[0].getInt<int>();
             }
 
+            bool fBlsct = true;
+
+            if (!request.params[1].isNull()) {
+                if (!request.params[1].get_bool())
+                    fBlsct = false;
+            }
+
             EnsureWalletIsUnlocked(*pwallet);
-            pwallet->TopUpKeyPool(kpSize);
+            pwallet->TopUpKeyPool(kpSize, fBlsct);
 
             if (pwallet->GetKeyPoolSize() < kpSize) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");

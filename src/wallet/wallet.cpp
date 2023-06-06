@@ -2464,16 +2464,18 @@ unsigned int CWallet::GetSubAddressPoolSize(const uint64_t& account) const
     return 0;
 }
 
-bool CWallet::TopUpKeyPool(unsigned int kpSize)
+bool CWallet::TopUpKeyPool(unsigned int kpSize, bool fBlsct)
 {
     LOCK(cs_wallet);
     bool res = true;
     for (auto spk_man : GetActiveScriptPubKeyMans()) {
         res &= spk_man->TopUp(kpSize);
     }
-    auto blsct_km = GetBLSCTKeyMan();
-    if (blsct_km) {
-        res &= blsct_km->TopUp(kpSize);
+    if (fBlsct) {
+        auto blsct_km = GetBLSCTKeyMan();
+        if (blsct_km) {
+            res &= blsct_km->TopUp(kpSize);
+        }
     }
     return res;
 }
@@ -2966,14 +2968,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->InitWalletFlags(wallet_creation_flags);
 
         walletInstance->SetupBLSCTKeyMan();
-
-        {
-            auto blsct_man = walletInstance->GetBLSCTKeyMan();
-
-            if (blsct_man) {
-                blsct_man->SetupGeneration();
-            }
-        }
 
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {

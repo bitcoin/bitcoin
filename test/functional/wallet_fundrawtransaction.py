@@ -618,7 +618,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Refill the keypool.
         self.nodes[1].walletpassphrase("test", 100)
-        self.nodes[1].keypoolrefill(8) #need to refill the keypool to get an internal change address
+        self.nodes[1].keypoolrefill(8, False) #need to refill the keypool to get an internal change address
         self.nodes[1].walletlock()
 
         assert_raises_rpc_error(-13, "walletpassphrase", self.nodes[1].sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
@@ -986,7 +986,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # shouldn't use BnB and instead fall back to Knapsack but that behavior
         # is not implemented yet. For now we just check that we get an error.
         # First, force the wallet to bulk-generate the addresses we'll need.
-        recipient.keypoolrefill(1500)
+        recipient.keypoolrefill(1500, False)
         for _ in range(1500):
             outputs[recipient.getnewaddress()] = 0.1
         wallet.sendmany("", outputs)

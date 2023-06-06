@@ -123,7 +123,7 @@ class CWalletTx;
 class ReserveDestination;
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BLSCT};
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
 
 static constexpr uint64_t KNOWN_WALLET_FLAGS =
     WALLET_FLAG_AVOID_REUSE | WALLET_FLAG_BLANK_WALLET | WALLET_FLAG_KEY_ORIGIN_METADATA | WALLET_FLAG_LAST_HARDENED_XPUB_CACHED | WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_BLSCT | WALLET_FLAG_EXTERNAL_SIGNER;
@@ -700,7 +700,7 @@ public:
     std::string m_notify_tx_changed_script;
 
     size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool TopUpKeyPool(unsigned int kpSize = 0);
+    bool TopUpKeyPool(unsigned int kpSize = 0, bool fBlsct = true);
 
     std::optional<int64_t> GetOldestKeyPoolTime() const;
 

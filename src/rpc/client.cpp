@@ -174,6 +174,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblockstats", 1, "stats" },
     { "pruneblockchain", 0, "height" },
     { "keypoolrefill", 0, "newsize" },
+    { "keypoolrefill", 1, "blsct" },
     { "getrawmempool", 0, "verbose" },
     { "getrawmempool", 1, "mempool_sequence" },
     { "estimatesmartfee", 0, "conf_target" },
@@ -265,7 +266,7 @@ UniValue ParseNonRFCJSONValue(std::string_view raw)
     return parsed;
 }
 
-UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams)
 {
     UniValue params(UniValue::VARR);
 
@@ -277,12 +278,12 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
     return params;
 }
 
-UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<std::string>& strParams)
 {
     UniValue params(UniValue::VOBJ);
     UniValue positional_args{UniValue::VARR};
 
-    for (std::string_view s: strParams) {
+    for (std::string_view s : strParams) {
         size_t pos = s.find('=');
         if (pos == std::string::npos) {
             positional_args.push_back(rpcCvtTable.ArgToUniValue(s, strMethod, positional_args.size()));
@@ -290,7 +291,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         }
 
         std::string name{s.substr(0, pos)};
-        std::string_view value{s.substr(pos+1)};
+        std::string_view value{s.substr(pos + 1)};
 
         // Intentionally overwrite earlier named values with later ones as a
         // convenience for scripts and command line users that want to merge
