@@ -231,7 +231,6 @@ public:
             obj.nRevocationReason,
             obj.confirmedHash,
             obj.confirmedHashWithProRegTxHash,
-            obj.keyIDOwner,
             obj.keyIDOwner);
         READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), obj.nVersion == CProRegTx::LEGACY_BLS_VERSION));
         READWRITE(
