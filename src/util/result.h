@@ -16,6 +16,10 @@ struct Error {
     bilingual_str message;
 };
 
+static inline Error ErrorUntranslated(const std::string& err) {
+    return Error{Untranslated(err)};
+}
+
 //! The util::Result class provides a standard way for functions to return
 //! either error messages or result values.
 //!

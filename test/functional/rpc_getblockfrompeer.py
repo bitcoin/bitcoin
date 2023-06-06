@@ -88,7 +88,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Successful fetch")
         result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
         self.wait_until(lambda: self.check_for_block(node=0, hash=short_tip), timeout=1)
-        assert_equal(result, {})
+        assert_equal(result["peer_id"], peer_0_peer_1_id)
 
         self.log.info("Don't fetch blocks we already have")
         assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
@@ -137,7 +137,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         pruned_node_peer_0_id = peers[0]["id"]
         result = pruned_node.getblockfrompeer(pruned_block, pruned_node_peer_0_id)
         self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block), timeout=1)
-        assert_equal(result, {})
+        assert_equal(result["peer_id"], pruned_node_peer_0_id)
 
         self.log.info("Fetched block persists after next pruning event")
         self.generate(self.nodes[0], 250, sync_fun=self.no_op)

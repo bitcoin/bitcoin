@@ -432,12 +432,16 @@ static RPCHelpMan getblockfrompeer()
         "Peers generally ignore requests for a stale block that they never fully verified, or one that is more than a month old.\n"
         "When a peer does not respond with a block, we will disconnect.\n"
         "Note: The block could be re-pruned as soon as it is received.\n\n"
-        "Returns an empty JSON object if the request was successfully scheduled.",
+        "Returns the peer id we are requesting the block from if the request was successfully scheduled.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
             {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
         },
-        RPCResult{RPCResult::Type::OBJ, "", /*optional=*/false, "", {}},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::NUM, "peer_id", "The id of the peer from where the block is being fetched"},
+            }},
         RPCExamples{
             HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
             + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
@@ -468,10 +472,14 @@ static RPCHelpMan getblockfrompeer()
         throw JSONRPCError(RPC_MISC_ERROR, "Block already downloaded");
     }
 
-    if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
-        throw JSONRPCError(RPC_MISC_ERROR, err.value());
+    if (const auto& op_res{peerman.FetchBlock(peer_id, *index)}) {
+        UniValue ret(UniValue::VOBJ);
+        ret.pushKV("peer_id", *op_res);
+        return ret;
+    } else {
+        // Error out
+        throw JSONRPCError(RPC_MISC_ERROR, util::ErrorString(op_res).original);
     }
-    return UniValue::VOBJ;
 },
     };
 }
