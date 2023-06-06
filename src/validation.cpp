@@ -3213,17 +3213,17 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
             // Nothing to do, this block is not at the tip.
             return true;
         }
-        if (m_chain.Tip()->nChainWork > nLastPreciousChainwork) {
+        if (m_chain.Tip()->nChainWork > m_chainman.nLastPreciousChainwork) {
             // The chain has been extended since the last call, reset the counter.
-            nBlockReverseSequenceId = -1;
+            m_chainman.nBlockReverseSequenceId = -1;
         }
-        nLastPreciousChainwork = m_chain.Tip()->nChainWork;
+        m_chainman.nLastPreciousChainwork = m_chain.Tip()->nChainWork;
         setBlockIndexCandidates.erase(pindex);
-        pindex->nSequenceId = nBlockReverseSequenceId;
-        if (nBlockReverseSequenceId > std::numeric_limits<int32_t>::min()) {
+        pindex->nSequenceId = m_chainman.nBlockReverseSequenceId;
+        if (m_chainman.nBlockReverseSequenceId > std::numeric_limits<int32_t>::min()) {
             // We can't keep reducing the counter if somebody really wants to
             // call preciousblock 2**31-1 times on the same set of tips...
-            nBlockReverseSequenceId--;
+            m_chainman.nBlockReverseSequenceId--;
         }
         if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && pindex->HaveTxsDownloaded()) {
             setBlockIndexCandidates.insert(pindex);
@@ -3442,7 +3442,7 @@ void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pin
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
-            pindex->nSequenceId = nBlockSequenceId++;
+            pindex->nSequenceId = m_chainman.nBlockSequenceId++;
             if (m_chain.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, m_chain.Tip())) {
                 setBlockIndexCandidates.insert(pindex);
             }
@@ -4379,10 +4379,9 @@ bool Chainstate::NeedsRedownload() const
     return false;
 }
 
-void Chainstate::UnloadBlockIndex()
+void Chainstate::ClearBlockIndexCandidates()
 {
     AssertLockHeld(::cs_main);
-    nBlockSequenceId = 1;
     setBlockIndexCandidates.clear();
 }
 
