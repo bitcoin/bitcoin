@@ -588,7 +588,11 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-dustrelayfee=<amt>", strprintf("Fee rate (in %s/kvB) used to define dust, the value of an output such that it will cost more than its value in fees at this fee rate to spend it. (default: %s)", CURRENCY_UNIT, FormatMoney(DUST_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-bytespersigop", strprintf("Equivalent bytes per sigop in transactions for relay and mining (default: %u)", DEFAULT_BYTES_PER_SIGOP), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarrier", strprintf("Relay and mine data carrier transactions (default: %u)", DEFAULT_ACCEPT_DATACARRIER), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
-    argsman.AddArg("-datacarriersize", strprintf("Maximum size of data in data carrier transactions we relay and mine (default: %u)", MAX_OP_RETURN_RELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-datacarriersize",
+                   strprintf("Relay and mine transactions whose data-carrying raw scriptPubKey "
+                             "is of this size or less (default: %u)",
+                             MAX_OP_RETURN_RELAY),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempoolfullrbf", strprintf("Accept transaction replace-by-fee without requiring replaceability signaling (default: %u)", DEFAULT_MEMPOOL_FULL_RBF), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay non-P2SH multisig (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
