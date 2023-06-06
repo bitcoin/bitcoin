@@ -1780,12 +1780,23 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
 {
     if (m_chainman.m_blockman.LoadingBlocks()) return "Loading blocks ...";
 
+    // Only allow fetching from limited peers if the block height is within the allowed window
+    bool allow_limited_peers = false;
+    const auto& active_chain = m_chainman.ActiveChainstate();
+    if (!active_chain.IsInitialBlockDownload()) {
+        LOCK(active_chain.m_chainman.GetMutex());
+        allow_limited_peers = active_chain.m_chainman.ActiveHeight() - block_index.nHeight < static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS);
+    }
+
     // Ensure this peer exists and hasn't been disconnected
     PeerRef peer = GetPeerRef(peer_id);
     if (peer == nullptr) return "Peer does not exist";
 
     // Ignore pre-segwit peers
     if (!CanServeWitnesses(*peer)) return "Pre-SegWit peer";
+
+    // Ignore limited peers if height isn't within the allowed window
+    if (IsLimitedPeer(*peer) && !allow_limited_peers) return "Cannot fetch old block from a limited peer";
 
     LOCK(cs_main);
 
