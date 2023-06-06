@@ -11,6 +11,7 @@
 #include <llmq/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <util/hash_type.h>
 
 #include <memory>
 #include <vector>
@@ -25,6 +26,28 @@ typedef std::map<int, uint256> MapCheckpoints;
 struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
 };
+
+struct AssumeutxoHash : public BaseHash<uint256> {
+    explicit AssumeutxoHash(const uint256& hash) : BaseHash(hash) {}
+};
+
+/**
+ * Holds configuration for use during UTXO snapshot load and validation. The contents
+ * here are security critical, since they dictate which UTXO snapshots are recognized
+ * as valid.
+ */
+struct AssumeutxoData {
+    //! The expected hash of the deserialized UTXO set.
+    const AssumeutxoHash hash_serialized;
+
+    //! Used to populate the nChainTx value, which is used during BlockManager::LoadBlockIndex().
+    //!
+    //! We need to hardcode the value here because this is computed cumulatively using block data,
+    //! which we do not necessarily have at the time of snapshot load.
+    const unsigned int nChainTx;
+};
+
+using MapAssumeutxo = std::map<int, const AssumeutxoData>;
 
 /**
  * Holds various statistics on transactions within a chain. Used to estimate
@@ -97,6 +120,11 @@ public:
     int ExtCoinType() const { return nExtCoinType; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+
+    //! Get allowed assumeutxo configuration.
+    //! @see ChainstateManager
+    const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
+
     const ChainTxData& TxData() const { return chainTxData; }
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
     void UpdateDIP8Parameters(int nActivationHeight);
@@ -139,6 +167,7 @@ protected:
     bool m_is_mockable_chain;
     int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
+    MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
     int nPoolMinParticipants;
     int nPoolMaxParticipants;

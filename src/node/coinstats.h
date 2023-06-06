@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <functional>
 
+class BlockManager;
 class CCoinsView;
 
 enum class CoinStatsHashType {
@@ -36,6 +37,6 @@ struct CCoinsStats
 };
 
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, const CoinStatsHashType hash_type, const std::function<void()>& interruption_point = {});
+bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, const CoinStatsHashType hash_type, const std::function<void()>& interruption_point = {});
 
 #endif // BITCOIN_NODE_COINSTATS_H

@@ -79,7 +79,6 @@ struct BasicTestingSetup {
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
 
-private:
     std::unique_ptr<CConnman> connman;
     const fs::path m_path_root;
 };
@@ -112,7 +111,7 @@ class CScript;
 
 struct TestChainSetup : public RegTestingSetup
 {
-    TestChainSetup(int blockCount, const std::vector<const char*>& extra_args = {});
+    TestChainSetup(int num_blocks, const std::vector<const char*>& extra_args = {});
     ~TestChainSetup();
 
     /**
@@ -127,6 +126,9 @@ struct TestChainSetup : public RegTestingSetup
                        const CScript& scriptPubKey);
     CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
                        const CKey& scriptKey);
+
+    //! Mine a series of new blocks on the active chain.
+    void mineBlocks(int num_blocks);
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions

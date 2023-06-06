@@ -232,13 +232,13 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, *m_node.evodb, *m_node.mempool);
+    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.evodb, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
     ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
-    if (!::ChainstateActive().LoadGenesisBlock(chainparams)) {
+    if (!::ChainstateActive().LoadGenesisBlock()) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
 
@@ -253,20 +253,57 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 
     BlockValidationState state;
-    if (!::ChainstateActive().ActivateBestChain(state, chainparams)) {
+    if (!::ChainstateActive().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 }
 
-TestChainSetup::TestChainSetup(int blockCount, const std::vector<const char*>& extra_args)
+TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& extra_args)
     : RegTestingSetup(extra_args)
 {
-    // Generate a 100-block chain:
-    coinbaseKey.MakeNewKey(true);
+    SetMockTime(1598887952);
+    constexpr std::array<unsigned char, 32> vchKey = {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
+    coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
+
+    // Generate a num_blocks length chain:
+    this->mineBlocks(num_blocks);
+
+    CCheckpointData checkpoints{
+        {
+            /* TestChainDATSetup */
+            {   98, uint256S("0x150e127929d578d8129b77a6cb7e2e343a1379aa3feaaa9cce59e0a645756a81") },
+            /* TestChain100Setup */
+            {  100, uint256S("0x6ffb83129c19ebdf1ae3771be6a67fe34b35f4c956326b9ba152fac1649f65ae") },
+            /* TestChainDIP3BeforeActivationSetup */
+            {  430, uint256S("0x20c025ce708233d05280099f82f09def00ed5aaf5430316070e0dd8807897c41") },
+            /* TestChainDIP3Setup */
+            {  431, uint256S("0x7ca56efe77e768762cc94644828b5824a19f77568440abd851efa644079bd6eb") },
+            /* TestChainBRRBeforeActivationSetup */
+            {  497, uint256S("0x1333458713817f35d7c03677755fbcbc3e2fe253b90b5ff32b0187653c4df8db") },
+            /* TestChainV19BeforeActivationSetup */
+            {  894, uint256S("0x3516790dd9a6491f0e9462870df3d840c2a134788df39bf95fff07a91e98d26d") },
+            /* TestChainDIP3V19Setup */
+            { 1000, uint256S("0x0d6e2df0c68ca0385e48a748776ec582b85dec58ce74e9bf679976138fd6e192") },
+        }
+    };
+
+    {
+        LOCK(::cs_main);
+        auto hash = checkpoints.mapCheckpoints.find(num_blocks);
+        assert(
+            hash != checkpoints.mapCheckpoints.end() &&
+            m_node.chainman->ActiveChain().Tip()->GetBlockHash() == hash->second);
+    }
+}
+
+void TestChainSetup::mineBlocks(int num_blocks)
+{
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < blockCount; i++) {
+    for (int i = 0; i < num_blocks; i++) {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
+        SetMockTime(GetTime() + 1);
         m_coinbase_txns.push_back(b.vtx[0]);
     }
 
@@ -306,8 +343,8 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     CBlock block = BlockAssembler(
             *sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor,
             *m_node.llmq_ctx->clhandler, *m_node.llmq_ctx->isman, *m_node.evodb,
-            empty_pool, chainparams
-        ).CreateNewBlock(::ChainstateActive(), scriptPubKey)->block;
+            ::ChainstateActive(), empty_pool, chainparams
+        ).CreateNewBlock(scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {
@@ -369,6 +406,7 @@ TestChainSetup::~TestChainSetup()
     g_txindex->Interrupt();
     g_txindex->Stop();
     g_txindex.reset();
+    SetMockTime(0);
 }
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx)

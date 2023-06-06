@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <context.h>
+#include <streams.h>
 #include <sync.h>
 
 #include <stdint.h>
@@ -17,6 +18,7 @@ extern RecursiveMutex cs_main;
 class CBlock;
 class CBlockIndex;
 class CBlockPolicyEstimator;
+class CChainState;
 class CTxMemPool;
 class ChainstateManager;
 class UniValue;
@@ -60,5 +62,11 @@ CTxMemPool& EnsureMemPool(const CoreContext& context);
 ChainstateManager& EnsureChainman(const CoreContext& context);
 CBlockPolicyEstimator& EnsureFeeEstimator(const CoreContext& context);
 LLMQContext& EnsureLLMQContext(const CoreContext& context);
+
+/**
+ * Helper to create UTXO snapshots given a chainstate and a file handle.
+ * @return a UniValue map containing metadata about the snapshot.
+ */
+UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile);
 
 #endif

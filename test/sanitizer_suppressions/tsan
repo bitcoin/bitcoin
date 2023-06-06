@@ -6,6 +6,9 @@
 # Data races from zmq namespace
 race:zmq::*
 
+# race (TODO fix)
+race:validation_chainstatemanager_tests
+
 # WalletBatch (unidentified deadlock)
 deadlock:WalletBatch
 
