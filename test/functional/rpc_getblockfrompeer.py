@@ -10,6 +10,7 @@ from test_framework.messages import (
     from_hex,
     msg_headers,
     NODE_WITNESS,
+    NODE_NETWORK_LIMITED
 )
 from test_framework.p2p import (
     P2P_SERVICES,
@@ -151,6 +152,19 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         pruneheight += 250
         assert_equal(pruned_node.pruneblockchain(1000), pruneheight)
         assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
+
+        ######################################################
+        # Test reject fetching old block from a limited peer #
+        ######################################################
+
+        self.log.info("Test reject fetching old block from limited peer")
+        pruned_node.add_p2p_connection(P2PInterface(), services=NODE_NETWORK_LIMITED | NODE_WITNESS)
+        limited_peer_id = next(peer for peer in pruned_node.getpeerinfo() if peer["servicesnames"] == ['WITNESS', 'NETWORK_LIMITED'])["id"]
+
+        pruned_block_10 = self.nodes[0].getblockhash(10)
+        assert_raises_rpc_error(-1, "Cannot fetch block from a limited peer", pruned_node.getblockfrompeer, pruned_block_10, limited_peer_id)
+
+
 
 
 if __name__ == '__main__':
