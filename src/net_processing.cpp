@@ -2045,6 +2045,9 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     // Ignore pre-segwit peers
     if (!CanServeWitnesses(*peer)) return "Pre-SegWit peer";
 
+    // Ignore limited peers
+    if (IsLimitedPeer(*peer) && m_best_height - block_index.nHeight > int{NODE_NETWORK_LIMITED_MIN_BLOCKS}) return "Cannot fetch block from a limited peer";
+
     LOCK(cs_main);
 
     // Forget about all prior requests
