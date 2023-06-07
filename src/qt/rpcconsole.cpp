@@ -795,7 +795,9 @@ void RPCConsole::setFontSize(int newSize)
 {
     QSettings settings;
 
-    newSize = std::min(std::max(newSize, FONT_RANGE.width()), FONT_RANGE.height());
+    //don't allow an insane font size
+    if (newSize < FONT_RANGE.width() || newSize > FONT_RANGE.height())
+        return;
 
     // temp. store the console content
     QString str = ui->messagesWidget->toHtml();

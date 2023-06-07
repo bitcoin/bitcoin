@@ -333,7 +333,7 @@ void TransactionView::chooseType(int idx)
     if(!transactionProxyModel)
         return;
     transactionProxyModel->setTypeFilter(
-        typeWidget->itemData(idx).toInt());
+        typeWidget->itemData(idx).toUInt());
     // Persist settings
     QSettings settings;
     settings.setValue("transactionType", idx);

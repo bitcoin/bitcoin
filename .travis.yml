@@ -17,6 +17,8 @@
 # will trigger cache-invalidation and rebuilds as necessary.
 #
 
+version: ~> 1.0
+
 dist: xenial
 
 os: linux
@@ -30,9 +32,6 @@ cache:
   ccache: true
   directories:
     - $BASE_BUILD_DIR/ci/scratch/.ccache
-    # macOS
-    - $HOME/Library/Caches/Homebrew
-    - /usr/local/Homebrew
 before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 env:
@@ -205,19 +204,39 @@ after_success:
 
     - stage: test
       name: 'ARM  [GOAL: install]  [focal]  [unit tests, functional tests]'
-      arch: arm64
+      arch: arm64  # Can disable QEMU_USER_CMD and run the tests natively without qemu
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
-        QEMU_USER_CMD=""  # Can run the tests natively without qemu
+        QEMU_USER_CMD=""
+
+    - stage: test
+      name: 's390x native BE [GOAL: install] [bionic] [no depends, no GUI]'
+      arch: s390x
+      dist: bionic
+      addons:
+        apt:
+          packages:
+            - bsdmainutils
+            - libboost-filesystem-dev
+            - libboost-system-dev
+            - libboost-test-dev
+            - libboost-thread-dev
+            - libdb++-dev
+            - libdb-dev
+            - libevent-dev
+      env: >-
+        DANGER_RUN_CI_ON_HOST=true
+        CI_USE_APT_INSTALL=no
+        FILE_ENV="./ci/test/00_setup_env_s390x_host.sh"
 
 # s390 build was disabled temporarily because of disk space issues on the Travis VM
 #
 #    - stage: test
 #      name: 'S390x  [GOAL: install]  [focal]  [unit tests, functional tests]'
-#      arch: s390x
+#      arch: s390x  # Can disable QEMU_USER_CMD and run the tests natively without qemu
 #      env: >-
 #        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
-#        QEMU_USER_CMD=""  # Can run the tests natively without qemu
+#        QEMU_USER_CMD=""
 
     - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
@@ -225,7 +244,7 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [uses qt5 dev package and some depends packages] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 # x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
@@ -251,6 +270,7 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
 
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
@@ -263,8 +283,28 @@ after_success:
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
       os: osx
       # Use the most recent version:
-      # Xcode 11, macOS 10.14, JDK 12.0.1
+      # Xcode 11.3.1, macOS 10.14, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
-      osx_image: xcode11
+      osx_image: xcode11.3
+      cache:
+        directories:
+          - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+          - $TRAVIS_BUILD_DIR/releases/$HOST
+          - $HOME/Library/Caches/Homebrew
+          - /usr/local/Homebrew
+      addons:
+        homebrew:
+          packages:
+          - libtool
+          - berkeley-db4
+          - boost
+          - miniupnpc
+          - qt
+          - qrencode
+          - python3
+          - ccache
+          - zeromq
       env: >-
+        DANGER_RUN_CI_ON_HOST=true
+        CI_USE_APT_INSTALL=no
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

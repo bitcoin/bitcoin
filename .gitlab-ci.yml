@@ -252,6 +252,15 @@ linux64_fuzz-build:
   variables:
     BUILD_TARGET: linux64_fuzz
 
+#linux64_asan-build:
+#  extends:
+#    - .build-template
+#    - .skip-in-fast-mode-template
+#  needs:
+#    - x86_64-pc-linux-gnu-debug
+#  variables:
+#    BUILD_TARGET: linux64_asan
+
 linux64_tsan-build:
   extends:
     - .build-template
@@ -278,6 +287,15 @@ linux64_nowallet-build:
     - x86_64-pc-linux-gnu-nowallet
   variables:
     BUILD_TARGET: linux64_nowallet
+
+#linux64_valgrind-build:
+#  extends:
+#    - .build-template
+#    - .skip-in-fast-mode-template
+#  needs:
+#    - x86_64-pc-linux-gnu-debug
+#  variables:
+#    BUILD_TARGET: linux64_valgrind
 
 mac-build:
   extends:
@@ -306,6 +324,15 @@ linux64_sqlite-test:
   variables:
     BUILD_TARGET: linux64_sqlite
 
+#linux64_asan-test:
+#  extends:
+#    - .test-template
+#    - .skip-in-fast-mode-template
+#  needs:
+#    - linux64_asan-build
+#  variables:
+#    BUILD_TARGET: linux64_asan
+
 linux64_tsan-test:
   extends:
     - .test-template
@@ -323,3 +350,12 @@ linux64_ubsan-test:
     - linux64_ubsan-build
   variables:
     BUILD_TARGET: linux64_ubsan
+
+#linux64_valgrind-test:
+#  extends:
+#    - .test-template
+#    - .skip-in-fast-mode-template
+#  needs:
+#    - linux64_valgrind-build
+#  variables:
+#    BUILD_TARGET: linux64_valgrind
