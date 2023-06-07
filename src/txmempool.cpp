@@ -876,8 +876,17 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             }
             ++nTransactionsUpdated;
         }
+        if (delta == 0) {
+            mapDeltas.erase(hash);
+            LogPrintf("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
+        } else {
+            LogPrintf("PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
+                      hash.ToString(),
+                      it == mapTx.end() ? "not " : "",
+                      FormatMoney(nFeeDelta),
+                      FormatMoney(delta));
+        }
     }
-    LogPrintf("PrioritiseTransaction: %s fee += %s\n", hash.ToString(), FormatMoney(nFeeDelta));
 }
 
 void CTxMemPool::ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const
@@ -894,6 +903,22 @@ void CTxMemPool::ClearPrioritisation(const uint256& hash)
 {
     AssertLockHeld(cs);
     mapDeltas.erase(hash);
+}
+
+std::vector<CTxMemPool::delta_info> CTxMemPool::GetPrioritisedTransactions() const
+{
+    AssertLockNotHeld(cs);
+    LOCK(cs);
+    std::vector<delta_info> result;
+    result.reserve(mapDeltas.size());
+    for (const auto& [txid, delta] : mapDeltas) {
+        const auto iter{mapTx.find(txid)};
+        const bool in_mempool{iter != mapTx.end()};
+        std::optional<CAmount> modified_fee;
+        if (in_mempool) modified_fee = iter->GetModifiedFee();
+        result.emplace_back(delta_info{in_mempool, delta, modified_fee, txid});
+    }
+    return result;
 }
 
 const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
