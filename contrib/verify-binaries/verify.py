@@ -45,8 +45,10 @@ import textwrap
 import urllib.request
 import urllib.error
 import enum
+from distutils.util import strtobool
 from hashlib import sha256
 from pathlib import PurePath, Path
+
 
 # The primary host; this will fail if we can't retrieve files from here.
 HOST1 = "https://bitcoincore.org"
@@ -54,6 +56,8 @@ HOST2 = "https://bitcoin.org"
 VERSIONPREFIX = "bitcoin-core-"
 SUMS_FILENAME = 'SHA256SUMS'
 SIGNATUREFILENAME = f"{SUMS_FILENAME}.asc"
+SIG_REPO = "https://github.com/bitcoin-core/guix.sigs"
+REPO_SIGFILENAME = f"all.{SIGNATUREFILENAME}"
 
 
 class ReturnCode(enum.IntEnum):
@@ -67,6 +71,7 @@ class ReturnCode(enum.IntEnum):
     BINARY_DOWNLOAD_FAILED = 10
     BAD_VERSION = 11
     FILE_NOT_FOUND = 12
+    FAILED_FETCHING_GIT_SIGS = 13
 
 
 def set_up_logger(is_verbose: bool = True) -> logging.Logger:
@@ -98,6 +103,11 @@ def bool_from_env(key, default=False) -> bool:
     elif raw.lower() in ('0', 'false'):
         return False
     raise ValueError(f"Unrecognized environment value {key}={raw!r}")
+
+
+def arg_str_to_bool(value):
+    """Argument string to boolean conversion"""
+    return bool(strtobool(value))
 
 
 VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
@@ -161,6 +171,18 @@ def verify_with_gpg(
 def remove_files(filenames):
     for filename in filenames:
         os.remove(filename)
+
+
+def git_installed() -> bool:
+    result = None
+    try:
+        result = subprocess.run(["git", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        result.check_returncode()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        if result:
+            log.error(result.stderr)
+        return False
+    return True
 
 
 class SigData:
@@ -440,6 +462,17 @@ def parse_sums_file(sums_file_path: str, filename_filter: t.List[str]) -> t.List
         return [line.split()[:2] for line in hash_file if len(filename_filter) == 0 or any(f in line for f in filename_filter)]
 
 
+def parse_version_from_sums(file_path: Path) -> str:
+    ret = ""
+    with open(file_path, 'r', encoding='utf8') as f:
+        contents = f.read()
+    match = re.search(r'bitcoin-(\d+(\.\d+)*(-rc\d+)?)', contents)
+    if match:
+        # Take one
+        ret = match.group(1)
+    return ret
+
+
 def verify_binary_hashes(hashes_to_verify: t.List[t.List[str]]) -> t.Tuple[ReturnCode, t.Dict[str, str]]:
     offending_files = []
     files_to_hashes = {}
@@ -492,6 +525,65 @@ def print_output(
             print(f"MISSING: {filename}")
 
 
+def append_git_sigs(version: str, orig_sigs_path: Path) -> ReturnCode:
+    '''Make backup of file and append sigs to original.
+    Deduplicate by taking the difference between sets.
+    '''
+    SIG_END = "-----END PGP SIGNATURE-----\n"
+    backup_sigs_path = Path(f"{orig_sigs_path}.original")
+    # Don't overwrite the original backup
+    if not backup_sigs_path.is_file():
+        shutil.copyfile(orig_sigs_path, backup_sigs_path)
+
+    with open(orig_sigs_path, 'r', encoding='utf8') as f:
+        orig_sigs_content = f.read()
+        orig_sigs = set((sig + SIG_END) for sig in orig_sigs_content.split(SIG_END))
+
+    sigs_status, git_sigs = fetch_sigs_from_github(version)
+    if sigs_status != ReturnCode.SUCCESS:
+        return ReturnCode.FAILED_FETCHING_GIT_SIGS
+
+    new_sigs = git_sigs.difference(orig_sigs)
+
+    log.debug(f"Appending git signatures to {orig_sigs_path}")
+    with open(orig_sigs_path, 'a', encoding='utf8') as f:
+        f.writelines(new_sigs)
+
+    log.info(f"Appended {len(new_sigs)} new signatures from {SIG_REPO}/tree/{version}")
+    return ReturnCode.SUCCESS
+
+
+def fetch_sigs_from_github(version: str) -> t.Tuple[ReturnCode, t.Set[str]]:
+    result = None
+    code = ReturnCode.FAILED_FETCHING_GIT_SIGS
+    ret = set()
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            log.debug(f"Cloning guix.sigs repo into temporary dir {temp_dir}")
+            result = subprocess.run(["git", "clone", f"{SIG_REPO}.git"], cwd=temp_dir, capture_output=True, text=True)
+            result.check_returncode()
+        except subprocess.CalledProcessError:
+            log.error("Unable to checkout git repo")
+            if result:
+                log.error(result.stderr)
+            return (code, ret)
+
+        version_dir = Path(temp_dir) / 'guix.sigs' / version
+        if not version_dir.is_dir():
+            log.error(f"{version} directory not found in the guix.sigs repo clone")
+            return (code, ret)
+
+        for sub_dir in version_dir.iterdir():
+            sig_file_path = sub_dir / REPO_SIGFILENAME
+            if sig_file_path.is_file():
+                ret.add(sig_file_path.read_text())
+        log.debug(f"Fetched {len(ret)} signatures from {SIG_REPO}/tree/{version}")
+        code = ReturnCode.SUCCESS
+
+    return (code, ret)
+
+
 def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     WORKINGDIR = Path(tempfile.gettempdir()) / f"bitcoin_verify_binaries.{args.version}"
 
@@ -537,6 +629,16 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
         hosts, remote_sums_path, SUMS_FILENAME, args.require_all_hosts)
     if got_sums_status != ReturnCode.SUCCESS:
         return got_sums_status
+
+    # Add signatures from git repo
+    if args.signatures_from_repo:
+        if not git_installed():
+            log.error("Cannot fetch sigs from Github as git not installed")
+            return ReturnCode.FILE_GET_FAILED
+        version = parse_version_from_sums(Path(WORKINGDIR / SUMS_FILENAME))
+        append_status = append_git_sigs(version, Path(WORKINGDIR / SIGNATUREFILENAME))
+        if append_status != ReturnCode.SUCCESS:
+            return append_status
 
     # Verify the signature on the SHA256SUMS file
     sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(SIGNATUREFILENAME, SUMS_FILENAME, args)
@@ -601,6 +703,15 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
         log.info(f"No signature file specified, assuming it is {args.sums_file}.asc")
         sums_sig_path = Path(args.sums_file).with_suffix(".asc")
 
+    if args.signatures_from_repo:
+        if not git_installed():
+            log.error("Cannot fetch sigs from Github as git not installed")
+            return ReturnCode.FILE_GET_FAILED
+        version = parse_version_from_sums(sums_sig_path)
+        append_status = append_git_sigs(version, sums_sig_path)
+        if append_status != ReturnCode.SUCCESS:
+            return append_status
+
     # Verify the signature on the SHA256SUMS file
     sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(str(sums_sig_path), args.sums_file, args)
     if sigs_status != ReturnCode.SUCCESS:
@@ -649,6 +760,15 @@ def verify_torrent_handler(args: argparse.Namespace) -> ReturnCode:
     parent_dir = sums_file.parent
     sums_file_path = parent_dir / SUMS_FILENAME
     sig_file_path = parent_dir / SIGNATUREFILENAME
+
+    if args.signatures_from_repo:
+        if not git_installed():
+            log.error("Cannot fetch sigs from Github as git not installed")
+            return ReturnCode.FILE_GET_FAILED
+        version = parse_version_from_sums(sums_file_path)
+        append_status = append_git_sigs(version, sig_file_path)
+        if append_status != ReturnCode.SUCCESS:
+            return append_status
 
     files_to_verify = [file.name for file in parent_dir.glob("bitcoin-*")]
     if not files_to_verify:
@@ -746,10 +866,12 @@ def main():
             f'If set, require all hosts ({HOST1}, {HOST2}) to provide signatures. '
             '(Sometimes bitcoin.org lags behind bitcoincore.org.)')
     )
+    pub_parser.add_argument("--signatures-from-repo", action="store", default=True, type=arg_str_to_bool, help="Fetch additional signatures from the github repo. Requires git to be installed")
 
     bin_parser = subparsers.add_parser("bin", help="Verify local binaries.")
     bin_parser.set_defaults(func=verify_binaries_handler)
     bin_parser.add_argument("--sums-sig-file", "-s", help="Path to the SHA256SUMS.asc file to verify")
+    bin_parser.add_argument("--signatures-from-repo", action="store", default=True, type=arg_str_to_bool, help="Fetch additional signatures from the github repo. Requires git to be installed")
     bin_parser.add_argument("sums_file", help="Path to the SHA256SUMS file to verify")
     bin_parser.add_argument(
         "binary", nargs="*",
@@ -758,6 +880,7 @@ def main():
 
     torrent_parser = subparsers.add_parser("torrent", help="Verify local torrent dir (requires manual torrent download).")
     torrent_parser.set_defaults(func=verify_torrent_handler)
+    torrent_parser.add_argument("--signatures-from-repo", action="store", default=False, type=arg_str_to_bool, help="Fetch additional signatures from the github repo. Requires git to be installed")
     torrent_parser.add_argument("sums_file", help="Path to a SHA256SUMS file in a downloaded torrent directory.")
 
     args = parser.parse_args()
