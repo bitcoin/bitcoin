@@ -42,11 +42,11 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.4 "${BASE_SCRATCH_DIR}"/msan/llvm-project
+  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.5 "${BASE_SCRATCH_DIR}"/msan/llvm-project
 
   cmake -G Ninja -B "${BASE_SCRATCH_DIR}"/msan/clang_build/ -DLLVM_ENABLE_PROJECTS="clang" \
                                                             -DCMAKE_BUILD_TYPE=Release \
-                                                            -DLLVM_TARGETS_TO_BUILD=X86 \
+                                                            -DLLVM_TARGETS_TO_BUILD=Native \
                                                             -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
                                                             -S "${BASE_SCRATCH_DIR}"/msan/llvm-project/llvm
 
@@ -61,7 +61,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
                                                           -DLLVM_USE_SANITIZER=MemoryWithOrigins \
                                                           -DCMAKE_C_COMPILER=clang \
                                                           -DCMAKE_CXX_COMPILER=clang++ \
-                                                          -DLLVM_TARGETS_TO_BUILD=X86 \
+                                                          -DLLVM_TARGETS_TO_BUILD=Native \
                                                           -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
                                                           -DLIBCXX_ENABLE_DEBUG_MODE=ON \
                                                           -DLIBCXX_ENABLE_ASSERTIONS=ON \
