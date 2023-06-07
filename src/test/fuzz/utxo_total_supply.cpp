@@ -144,13 +144,13 @@ FUZZ_TARGET(utxo_total_supply)
                 node::RegenerateCommitments(*current_block, chainman);
                 const bool was_valid = !MineBlock(node, current_block).IsNull();
 
-                if (duplicate_coinbase_height == ActiveHeight()) {
-                    // we mined the duplicate coinbase
-                    assert(current_block->vtx.at(0)->vin.at(0).scriptSig == duplicate_coinbase_script);
-                }
-
                 const auto prev_utxo_stats = utxo_stats;
                 if (was_valid) {
+                    if (duplicate_coinbase_height == ActiveHeight()) {
+                        // we mined the duplicate coinbase
+                        assert(current_block->vtx.at(0)->vin.at(0).scriptSig == duplicate_coinbase_script);
+                    }
+
                     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
                 }
 
