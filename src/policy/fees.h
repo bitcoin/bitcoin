@@ -14,11 +14,16 @@
 #include <util/fs.h>
 
 #include <array>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
+
+
+// How often to flush fee estimates to fee_estimates.dat.
+static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
 
 class AutoFile;
 class CTxMemPoolEntry;
@@ -237,6 +242,10 @@ public:
 
     /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
     void Flush()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
+
+    /** Record current fee estimations. */
+    void FlushFeeEstimates()
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
 private:
