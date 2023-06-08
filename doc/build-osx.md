@@ -24,6 +24,9 @@ To install, run the following command from your terminal:
 xcode-select --install
 ```
 
+The above command should work on a fresh macOS installation. It is not necessary
+to download and install the full Xcode suite from the App Store.
+
 Upon running the command, you should see a popup appear.
 Click on `Install` to continue the installation process.
 
