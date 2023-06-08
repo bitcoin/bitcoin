@@ -61,6 +61,10 @@ if [ -n "$USE_VALGRIND" ]; then
     ${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh
 fi
 
+if [ "$RUN_SECURITY_TESTS" = "true" ]; then
+  make test-security-check
+fi
+
 if [ "$RUN_SYMBOL_TESTS" = "true" ]; then
   make $MAKEJOBS -C src check-symbols
 fi

@@ -85,6 +85,10 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
 (define (explicit-cross-configure package)
   (package-with-extra-configure-variable package "--build" building-on))
 
+(define (make-binutils-with-mingw-w64-disable-flags xbinutils)
+  (package-with-extra-patches xbinutils
+    (search-our-patches "binutils-mingw-w64-disable-flags.patch")))
+
 (define (make-cross-toolchain target
                               base-gcc-for-libc
                               base-kernel-headers
@@ -173,7 +177,7 @@ desirable for building Dash Core release binaries."
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (cross-binutils target))
+  (let* ((xbinutils (make-binutils-with-mingw-w64-disable-flags (cross-binutils target)))
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
@@ -580,6 +584,36 @@ inspecting signatures in Mach-O binaries.")
   (package-with-extra-patches glibc-2.27
     (search-our-patches "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch")))
 
+(define-public lief
+  (package
+   (name "python-lief")
+   (version "0.12.0")
+   (source
+    (origin
+     (method git-fetch)
+     (uri (git-reference
+           (url "https://github.com/lief-project/LIEF.git")
+           (commit version)))
+     (file-name (git-file-name name version))
+     (sha256
+      (base32
+       "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
+   (build-system python-build-system)
+   (arguments
+    `(#:phases
+      (modify-phases %standard-phases
+        (add-after 'unpack 'parallel-jobs
+          ;; build with multiple cores
+          (lambda _
+            (substitute* "setup.py" (("self.parallel if self.parallel else 1") (number->string (parallel-job-count)))))))))
+   (native-inputs
+    `(("cmake" ,cmake)))
+   (home-page "https://github.com/lief-project/LIEF")
+   (synopsis "Library to Instrument Executable Formats")
+   (description "Python library to to provide a cross platform library which can
+parse, modify and abstract ELF, PE and MachO formats.")
+   (license license:asl2.0)))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -616,6 +650,8 @@ inspecting signatures in Mach-O binaries.")
         python-3
         ;; Git
         git
+        ;; Tests
+        lief
         ;; Native gcc 7 toolchain
         gcc-toolchain-7
         (list gcc-toolchain-7 "static"))

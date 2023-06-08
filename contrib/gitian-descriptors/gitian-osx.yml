@@ -26,6 +26,7 @@ packages:
 - "python3"
 - "python3-dev"
 - "python3-setuptools"
+- "python3-pip"
 - "fonts-tuffy"
 - "ccache"
 - "cmake"
@@ -97,6 +98,8 @@ script: |
     done
   done
   }
+
+  pip3 install lief==0.12.0
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}

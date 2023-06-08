@@ -168,8 +168,8 @@ case "$HOST" in
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
                 aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
                 riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
-                powerpc64-linux-gnu)   echo /lib/ld64.so.1;;
-                powerpc64le-linux-gnu) echo /lib/ld64.so.2;;
+                powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
+                powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
                 *)                     exit 1 ;;
             esac
         )
@@ -295,10 +295,11 @@ mkdir -p "$DISTSRC"
     # Build Dash Core
     make --jobs="$JOBS" ${V:+V=1}
 
-    # Perform basic ELF security checks on a series of executables.
+    # Check that symbol/security checks tools are sane.
+    make test-security-check ${V:+V=1}
+    # Perform basic security checks on a series of executables.
     make -C src --jobs=1 check-security ${V:+V=1}
-    # Check that executables only contain allowed gcc, glibc and libstdc++
-    # version symbols for Linux distro back-compatibility.
+    # Check that executables only contain allowed version symbols.
     make -C src --jobs=1 check-symbols  ${V:+V=1}
 
     mkdir -p "$OUTDIR"
