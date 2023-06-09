@@ -6,12 +6,13 @@
 
 namespace blsct {
 
-DoublePublicKey::DoublePublicKey(const std::vector<unsigned char>& keys) {
+DoublePublicKey::DoublePublicKey(const std::vector<unsigned char>& keys)
+{
     if (keys.size() != SIZE) return;
-    std::vector<unsigned char> vkData(SIZE/2);
-    std::vector<unsigned char> skData(SIZE/2);
-    std::copy(keys.begin(), keys.begin()+SIZE/2, vkData.begin());
-    std::copy(keys.begin()+SIZE/2, keys.end(), skData.begin());
+    std::vector<unsigned char> vkData(SIZE / 2);
+    std::vector<unsigned char> skData(SIZE / 2);
+    std::copy(keys.begin(), keys.begin() + SIZE / 2, vkData.begin());
+    std::copy(keys.begin() + SIZE / 2, keys.end(), skData.begin());
     vk = vkData;
     sk = skData;
 }
@@ -91,4 +92,4 @@ std::vector<unsigned char> DoublePublicKey::GetVch() const
     return ret;
 }
 
-}  // namespace blsct
+} // namespace blsct

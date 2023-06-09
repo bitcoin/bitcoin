@@ -11,7 +11,7 @@
 
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 
-template<typename M, typename K, typename V>
+template <typename M, typename K, typename V>
 bool LookupHelper(const M& map, const K& key, V& value)
 {
     auto it = map.find(key);
@@ -110,7 +110,7 @@ void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pu
     }
 }
 
-bool FillableSigningProvider::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
+bool FillableSigningProvider::GetPubKey(const CKeyID& address, CPubKey& vchPubKeyOut) const
 {
     CKey key;
     if (!GetKey(address, key)) {
@@ -120,7 +120,7 @@ bool FillableSigningProvider::GetPubKey(const CKeyID &address, CPubKey &vchPubKe
     return true;
 }
 
-bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
+bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey& pubkey)
 {
     LOCK(cs_KeyStore);
     mapKeys[pubkey.GetID()] = key;
@@ -128,7 +128,7 @@ bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey &pubke
     return true;
 }
 
-bool FillableSigningProvider::HaveKey(const CKeyID &address) const
+bool FillableSigningProvider::HaveKey(const CKeyID& address) const
 {
     LOCK(cs_KeyStore);
     return mapKeys.count(address) > 0;
@@ -144,7 +144,7 @@ std::set<CKeyID> FillableSigningProvider::GetKeys() const
     return set_address;
 }
 
-bool FillableSigningProvider::GetKey(const CKeyID &address, CKey &keyOut) const
+bool FillableSigningProvider::GetKey(const CKeyID& address, CKey& keyOut) const
 {
     LOCK(cs_KeyStore);
     KeyMap::const_iterator mi = mapKeys.find(address);
@@ -181,12 +181,11 @@ std::set<CScriptID> FillableSigningProvider::GetCScripts() const
     return set_script;
 }
 
-bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const
+bool FillableSigningProvider::GetCScript(const CScriptID& hash, CScript& redeemScriptOut) const
 {
     LOCK(cs_KeyStore);
     ScriptMap::const_iterator mi = mapScripts.find(hash);
-    if (mi != mapScripts.end())
-    {
+    if (mi != mapScripts.end()) {
         redeemScriptOut = (*mi).second;
         return true;
     }
@@ -216,10 +215,7 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
     if (auto output_key = std::get_if<WitnessV1Taproot>(&dest)) {
         TaprootSpendData spenddata;
         CPubKey pub;
-        if (store.GetTaprootSpendData(*output_key, spenddata)
-            && !spenddata.internal_key.IsNull()
-            && spenddata.merkle_root.IsNull()
-            && store.GetPubKeyByXOnly(spenddata.internal_key, pub)) {
+        if (store.GetTaprootSpendData(*output_key, spenddata) && !spenddata.internal_key.IsNull() && spenddata.merkle_root.IsNull() && store.GetPubKeyByXOnly(spenddata.internal_key, pub)) {
             return pub.GetID();
         }
     }

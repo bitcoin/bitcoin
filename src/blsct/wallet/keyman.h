@@ -6,13 +6,13 @@
 #define NAVCOIN_BLSCT_KEYMAN_H
 
 #include <blsct/arith/mcl/mcl.h>
-#include <blsct/eip_2333/bls12_381_keygen.h>
 #include <blsct/double_public_key.h>
-#include <blsct/public_key.h>
+#include <blsct/eip_2333/bls12_381_keygen.h>
 #include <blsct/private_key.h>
+#include <blsct/public_key.h>
 #include <blsct/wallet/address.h>
-#include <blsct/wallet/keyring.h>
 #include <blsct/wallet/hdchain.h>
+#include <blsct/wallet/keyring.h>
 #include <logging.h>
 #include <wallet/crypter.h>
 #include <wallet/scriptpubkeyman.h>
@@ -26,7 +26,7 @@ protected:
 
 public:
     explicit Manager(wallet::WalletStorage& storage) : m_storage(storage) {}
-    virtual ~Manager() {};
+    virtual ~Manager(){};
 
     virtual bool SetupGeneration(bool force = false) { return false; }
 
@@ -34,25 +34,35 @@ public:
     virtual bool IsHDEnabled() const { return false; }
 };
 
-class KeyMan : public Manager, public KeyRing {
+class KeyMan : public Manager, public KeyRing
+{
 private:
     blsct::HDChain m_hd_chain;
     std::unordered_map<CKeyID, blsct::HDChain, SaltedSipHasher> m_inactive_hd_chains;
 
-    bool AddKeyPubKeyInner(const PrivateKey& key, const PublicKey &pubkey);
-    bool AddCryptedKeyInner(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddKeyPubKeyInner(const PrivateKey& key, const PublicKey& pubkey);
+    bool AddCryptedKeyInner(const PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret);
 
-    wallet::WalletBatch *encrypted_batch GUARDED_BY(cs_KeyStore) = nullptr;
+    wallet::WalletBatch* encrypted_batch GUARDED_BY(cs_KeyStore) = nullptr;
 
     using CryptedKeyMap = std::map<CKeyID, std::pair<PublicKey, std::vector<unsigned char>>>;
+    using SubAddressMap = std::map<CKeyID, SubAddressIdentifier>;
+    using SubAddressPoolMapSet = std::map<uint64_t, std::set<uint64_t>>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
+    SubAddressMap mapSubAddresses GUARDED_BY(cs_KeyStore);
+    SubAddressPoolMapSet setSubAddressPool GUARDED_BY(cs_KeyStore);
+    SubAddressPoolMapSet setSubAddressReservePool GUARDED_BY(cs_KeyStore);
 
     int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = 0;
+    //! Number of pre-generated SubAddresses
+    int64_t m_keypool_size GUARDED_BY(cs_KeyStore){wallet::DEFAULT_KEYPOOL_SIZE};
 
     bool fDecryptionThoroughlyChecked = true;
+
 public:
-    KeyMan(wallet::WalletStorage& storage) : Manager(storage), KeyRing() {}
+    KeyMan(wallet::WalletStorage& storage, int64_t keypool_size)
+        : Manager(storage), KeyRing(), m_keypool_size(keypool_size) {}
 
     bool SetupGeneration(bool force = false) override;
     bool IsHDEnabled() const override;
@@ -70,27 +80,32 @@ public:
     void SetHDSeed(const PrivateKey& key);
 
     //! Adds a key to the store, and saves it to disk.
-    bool AddKeyPubKey(const PrivateKey& key, const PublicKey &pubkey) override;
-    bool AddViewKey(const PrivateKey& key, const PublicKey &pubkey) override;
-    bool AddSpendKey(const PublicKey &pubkey) override;
+    bool AddKeyPubKey(const PrivateKey& key, const PublicKey& pubkey) override;
+    bool AddViewKey(const PrivateKey& key, const PublicKey& pubkey) override;
+    bool AddSpendKey(const PublicKey& pubkey) override;
 
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadKey(const PrivateKey& key, const PublicKey &pubkey);
-    bool LoadViewKey(const PrivateKey& key, const PublicKey &pubkey);
+    bool LoadKey(const PrivateKey& key, const PublicKey& pubkey);
+    bool LoadViewKey(const PrivateKey& key, const PublicKey& pubkey);
+    bool LoadSpendKey(const PublicKey& pubkey);
     //! Adds an encrypted key to the store, and saves it to disk.
-    bool AddCryptedKey(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddCryptedKey(const PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret);
     //! Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadCryptedKey(const PublicKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid);
+    bool LoadCryptedKey(const PublicKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, bool checksum_valid);
     bool AddKeyPubKeyWithDB(wallet::WalletBatch& batch, const PrivateKey& secret, const PublicKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool AddSubAddressPoolWithDB(wallet::WalletBatch& batch, const SubAddressIdentifier& id, const SubAddress& subAddress, const bool& fLock = true);
+    bool AddSubAddressPoolInner(const SubAddressIdentifier& id, const bool& fLock = true);
 
     /* KeyRing overrides */
-    bool HaveKey(const CKeyID &address) const override;
-    bool GetKey(const CKeyID &address, PrivateKey& keyOut) const override;
+    bool HaveKey(const CKeyID& address) const override;
+    bool GetKey(const CKeyID& address, PrivateKey& keyOut) const override;
 
     bool Encrypt(const wallet::CKeyingMaterial& master_key, wallet::WalletBatch* batch);
     bool CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool accept_no_keys);
 
-    SubAddress GetAddress(const SubAddressIdentifier& id = {0,0});
+    SubAddress GenerateNewSubAddress(const uint64_t& account, SubAddressIdentifier& id);
+    SubAddress GetSubAddress(const SubAddressIdentifier& id = {0, 0});
+    util::Result<CTxDestination> GetNewDestination(const uint64_t& account = 0);
 
     /* Set the HD chain model (chain child index counters) and writes it to the database */
     void AddHDChain(const blsct::HDChain& chain);
@@ -99,18 +114,43 @@ public:
     void AddInactiveHDChain(const blsct::HDChain& chain);
 
     //! Load metadata (used by LoadWallet)
-    void LoadKeyMetadata(const CKeyID& keyID, const wallet::CKeyMetadata &metadata);
+    void LoadKeyMetadata(const CKeyID& keyID, const wallet::CKeyMetadata& metadata);
     void UpdateTimeFirstKey(int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     bool DeleteRecords();
     bool DeleteKeys();
 
+    /** Detect ownership of outputs **/
+    bool IsMine(const CTxOut& txout) { return IsMine(txout.blsctData.ephemeralKey, txout.blsctData.spendingKey, txout.blsctData.viewTag); };
+    bool IsMine(const blsct::PublicKey& ephemeralKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag);
+
+    /** SubAddress keypool */
+    void LoadSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index);
+    bool AddSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index);
+    bool HaveSubAddress(const CKeyID& hashId) const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool NewSubAddressPool(const uint64_t& account = 0);
+    bool TopUp(const unsigned int& size = 0);
+    bool TopUpAccount(const uint64_t& account, const unsigned int& size = 0);
+    void ReserveSubAddressFromPool(const uint64_t& account, int64_t& nIndex, SubAddressPool& keypool);
+    void KeepSubAddress(const SubAddressIdentifier& id);
+    void ReturnSubAddress(const SubAddressIdentifier& id);
+    bool GetSubAddressFromPool(const uint64_t& account, CKeyID& result, SubAddressIdentifier& id);
+    int64_t GetOldestSubAddressPoolTime(const uint64_t& account);
+    int GetSubAddressPoolSize(const uint64_t& account) const;
+
     /** Keypool has new keys */
-    boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
+    boost::signals2::signal<void()> NotifyCanGetAddressesChanged;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, wallet::CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
+
+    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
+    template <typename... Params>
+    void WalletLogPrintf(std::string fmt, Params... parameters) const
+    {
+        LogPrintf(("%s " + fmt).c_str(), m_storage.GetDisplayName(), parameters...);
+    };
 };
-}
+} // namespace blsct
 
 #endif // NAVCOIN_BLSCT_KEYMAN_H

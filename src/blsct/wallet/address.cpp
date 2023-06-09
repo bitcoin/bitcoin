@@ -5,10 +5,11 @@
 #include <blsct/wallet/address.h>
 
 namespace blsct {
-SubAddress::SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, const SubAddressIdentifier &subAddressId)
+SubAddress::SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId)
 {
-    if(!viewKey.IsValid() || !spendKey.IsValid())
-        return;
+    if (!viewKey.IsValid() || !spendKey.IsValid()) {
+        throw std::runtime_error("blsct::SubAddress::SubAddress(): no valid blsct keys");
+    }
 
     CHashWriter string(SER_GETHASH, 0);
 
@@ -22,13 +23,8 @@ SubAddress::SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, con
     // D = B + M
     // C = a*D
     MclScalar m{string.GetHash()};
-    MclG1Point M, B;
-
-    if (!PrivateKey(m).GetPublicKey().GetG1Point(M))
-        return;
-
-    if (!spendKey.GetG1Point(B))
-        return;
+    MclG1Point M = MclG1Point::GetBasePoint() * m;
+    MclG1Point B = spendKey.GetG1Point();
 
     MclG1Point D = M + B;
     auto C = D * viewKey.GetScalar();
@@ -51,4 +47,4 @@ bool SubAddress::IsValid() const
 {
     return pk.IsValid();
 }
-}
+} // namespace blsct

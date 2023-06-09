@@ -24,12 +24,12 @@ public:
     static constexpr size_t SIZE = 48 * 2;
 
     DoublePublicKey() {}
-    DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
-    DoublePublicKey(const Point& vk_, const Point& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
+    DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_), sk(sk_) {}
+    DoublePublicKey(const Point& vk_, const Point& sk_) : vk(vk_), sk(sk_) {}
     DoublePublicKey(const std::vector<unsigned char>& vk_, const std::vector<unsigned char>& sk_) : vk(vk_), sk(sk_) {}
     DoublePublicKey(const std::vector<unsigned char>& keys);
 
-    SERIALIZE_METHODS(DoublePublicKey, obj) { READWRITE(obj.vk.GetVch(), obj.sk.GetVch()); }
+    SERIALIZE_METHODS(DoublePublicKey, obj) { READWRITE(obj.vk, obj.sk); }
 
     uint256 GetHash() const;
     CKeyID GetID() const;
@@ -50,6 +50,6 @@ public:
     std::vector<unsigned char> GetVch() const;
 };
 
-}
+} // namespace blsct
 
-#endif  // NAVCOIN_BLSCT_DOUBLE_PUBLIC_KEY_H
+#endif // NAVCOIN_BLSCT_DOUBLE_PUBLIC_KEY_H

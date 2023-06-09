@@ -5,14 +5,14 @@
 #include <blsct/wallet/keyring.h>
 
 namespace blsct {
-bool KeyRing::AddKeyPubKey(const PrivateKey& key, const PublicKey &pubkey)
+bool KeyRing::AddKeyPubKey(const PrivateKey& key, const PublicKey& pubkey)
 {
     LOCK(cs_KeyStore);
     mapKeys[pubkey.GetID()] = key;
     return true;
 }
 
-bool KeyRing::AddViewKey(const PrivateKey& key, const PublicKey &pubkey)
+bool KeyRing::AddViewKey(const PrivateKey& key, const PublicKey& pubkey)
 {
     LOCK(cs_KeyStore);
     viewKey = key;
@@ -21,7 +21,7 @@ bool KeyRing::AddViewKey(const PrivateKey& key, const PublicKey &pubkey)
     return true;
 }
 
-bool KeyRing::AddSpendKey(const PublicKey &pubkey)
+bool KeyRing::AddSpendKey(const PublicKey& pubkey)
 {
     LOCK(cs_KeyStore);
     spendPublicKey = pubkey;
@@ -29,13 +29,13 @@ bool KeyRing::AddSpendKey(const PublicKey &pubkey)
     return true;
 }
 
-bool KeyRing::HaveKey(const CKeyID &id) const
+bool KeyRing::HaveKey(const CKeyID& id) const
 {
     LOCK(cs_KeyStore);
     return mapKeys.count(id) > 0;
 }
 
-bool KeyRing::GetKey(const CKeyID &address, PrivateKey &keyOut) const
+bool KeyRing::GetKey(const CKeyID& address, PrivateKey& keyOut) const
 {
     LOCK(cs_KeyStore);
     KeyMap::const_iterator mi = mapKeys.find(address);
@@ -45,4 +45,4 @@ bool KeyRing::GetKey(const CKeyID &address, PrivateKey &keyOut) const
     }
     return false;
 }
-}
+} // namespace blsct

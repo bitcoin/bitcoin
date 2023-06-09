@@ -76,7 +76,7 @@ class AddressTypeTest(BitcoinTestFramework):
             ["-addresstype=p2sh-segwit"],
             ["-addresstype=p2sh-segwit", "-changetype=bech32"],
             ["-addresstype=bech32"],
-            ["-changetype=p2sh-segwit"],
+            ["-changetype=p2sh-segwit", "-addresstype=bech32"],
             [],
         ]
         # whitelist all peers to speed up tx relay / mempool sync

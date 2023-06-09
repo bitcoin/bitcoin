@@ -4,11 +4,11 @@
 
 #define BLS_ETH 1
 
+#include <algorithm>
 #include <blsct/common.h>
 #include <blsct/public_keys.h>
-#include <tinyformat.h>
-#include <algorithm>
 #include <iterator>
+#include <tinyformat.h>
 
 namespace blsct {
 
@@ -20,12 +20,10 @@ PublicKey PublicKeys::Aggregate() const
     bool isZero = true;
 
     for (auto& pk : m_pks) {
-        PublicKey::Point pkG1;
-        bool success = pk.GetG1Point(pkG1);
-        if (!success)
+        if (!pk.fValid)
             throw std::runtime_error(strprintf("%s: Vector of public keys has an invalid element", __func__));
 
-        retPoint = isZero ? pkG1 : retPoint + pkG1;
+        retPoint = isZero ? pk.GetG1Point() : retPoint + pk.GetG1Point();
         isZero = false;
     }
 
@@ -49,13 +47,13 @@ bool PublicKeys::CoreAggregateVerify(const std::vector<PublicKey::Message>& msgs
 
     // find the largest message size
     auto bls_msg_size = std::max_element(msgs.begin(), msgs.end(), [](const auto& a, const auto& b) {
-        return a.size() < b.size();
-    })->size();
+                            return a.size() < b.size();
+                        })->size();
     const size_t n = m_pks.size();
 
     // copy all msgs to a vector of message buffers of the largest message size
     std::vector<uint8_t> bls_msgs(bls_msg_size * n);
-    for (size_t i=0; i<n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         uint8_t* msg_beg = &bls_msgs[i * bls_msg_size];
         std::memset(msg_beg, 0, bls_msg_size);
         auto msg = msgs[i];
@@ -67,8 +65,7 @@ bool PublicKeys::CoreAggregateVerify(const std::vector<PublicKey::Message>& msgs
         &bls_pks[0],
         &bls_msgs[0],
         bls_msg_size,
-        n
-    );
+        n);
     return res == 1;
 }
 
@@ -80,10 +77,10 @@ bool PublicKeys::VerifyBatch(const std::vector<PublicKey::Message>& msgs, const 
     }
     std::vector<std::vector<uint8_t>> aug_msgs;
     auto msg = msgs.begin();
-    for (auto pk=m_pks.begin(),end=m_pks.end(); pk!=end; ++pk,++msg) {
+    for (auto pk = m_pks.begin(), end = m_pks.end(); pk != end; ++pk, ++msg) {
         aug_msgs.push_back(pk->AugmentMessage(*msg));
     }
     return CoreAggregateVerify(aug_msgs, sig);
 }
 
-}  // namespace blsct
+} // namespace blsct

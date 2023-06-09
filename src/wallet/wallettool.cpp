@@ -43,6 +43,14 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
         wallet_instance->SetupDescriptorScriptPubKeyMans();
     }
 
+    {
+        auto blsct_man = wallet_instance->GetOrCreateBLSCTKeyMan();
+
+        if (blsct_man) {
+            blsct_man->SetupGeneration();
+        }
+    }
+
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
 }
@@ -74,19 +82,19 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NONCRITICAL_ERROR) {
             tfm::format(std::cerr, "Error reading %s! All keys read correctly, but transaction data"
-                            " or address book entries might be missing or incorrect.",
-                name);
+                                   " or address book entries might be missing or incorrect.",
+                        name);
         } else if (load_wallet_ret == DBErrors::TOO_NEW) {
             tfm::format(std::cerr, "Error loading %s: Wallet requires newer version of %s",
-                name, PACKAGE_NAME);
+                        name, PACKAGE_NAME);
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_REWRITE) {
             tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_RESCAN) {
             tfm::format(std::cerr, "Error reading %s! Some transaction data might be missing or"
-                           " incorrect. Wallet requires a rescan.",
-                name);
+                                   " incorrect. Wallet requires a rescan.",
+                        name);
         } else {
             tfm::format(std::cerr, "Error loading %s", name);
             return nullptr;

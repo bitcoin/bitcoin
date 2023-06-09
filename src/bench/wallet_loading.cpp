@@ -7,11 +7,11 @@
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
 #include <util/translation.h>
 #include <validationinterface.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 #include <optional>
@@ -93,11 +93,17 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 }
 
 #ifdef USE_BDB
-static void WalletLoadingLegacy(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/true); }
+static void WalletLoadingLegacy(benchmark::Bench& bench)
+{
+    WalletLoading(bench, /*legacy_wallet=*/true);
+}
 BENCHMARK(WalletLoadingLegacy, benchmark::PriorityLevel::HIGH);
 #endif
 
 #ifdef USE_SQLITE
-static void WalletLoadingDescriptors(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/false); }
+static void WalletLoadingDescriptors(benchmark::Bench& bench)
+{
+    WalletLoading(bench, /*legacy_wallet=*/false);
+}
 BENCHMARK(WalletLoadingDescriptors, benchmark::PriorityLevel::HIGH);
 #endif

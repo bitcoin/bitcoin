@@ -15,7 +15,7 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 
 #include <iostream>
-#include <util/strencodings.h>  // FOR TESTING. DROP THIS!!!
+#include <util/strencodings.h> // FOR TESTING. DROP THIS!!!
 
 class MclG1Point
 {
@@ -42,6 +42,7 @@ public:
     mclBnG1 Underlying() const;
 
     static MclG1Point GetBasePoint();
+    static MclG1Point GetInfinity();
     static MclG1Point MapToG1(const std::vector<uint8_t>& vec, const Endianness e = Endianness::Little);
     static MclG1Point MapToG1(const std::string& s, const Endianness e = Endianness::Little);
     static MclG1Point HashAndMap(const std::vector<uint8_t>& vec);
@@ -51,7 +52,7 @@ public:
     bool IsZero() const;
 
     std::vector<uint8_t> GetVch() const;
-    void SetVch(const std::vector<uint8_t>& vec);
+    bool SetVch(const std::vector<uint8_t>& vec);
 
     std::string GetString(const uint8_t& radix = 16) const;
     MclScalar GetHashWithSalt(const uint64_t salt) const;
