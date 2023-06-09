@@ -4,13 +4,13 @@
 
 #include <common/args.h>
 
+#include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
-#include <util/settings.h>
 #include <util/string.h>
 
 #include <algorithm>
@@ -98,7 +98,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         std::optional<unsigned int> flags = GetArgFlags('-' + key.name);
         if (!IsConfSupported(key, error)) return false;
         if (flags) {
-            std::optional<util::SettingsValue> value = InterpretValue(key, &option.second, *flags, error);
+            std::optional<common::SettingsValue> value = InterpretValue(key, &option.second, *flags, error);
             if (!value) {
                 return false;
             }
@@ -142,9 +142,9 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         bool use_conf_file{true};
         {
             LOCK(cs_args);
-            if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
+            if (auto* includes = common::FindKey(m_settings.command_line_options, "includeconf")) {
                 // ParseParameters() fails if a non-negated -includeconf is passed on the command-line
-                assert(util::SettingsSpan(*includes).last_negated());
+                assert(common::SettingsSpan(*includes).last_negated());
                 use_conf_file = false;
             }
         }
@@ -155,9 +155,9 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             auto add_includes = [&](const std::string& network, size_t skip = 0) {
                 size_t num_values = 0;
                 LOCK(cs_args);
-                if (auto* section = util::FindKey(m_settings.ro_config, network)) {
-                    if (auto* values = util::FindKey(*section, "includeconf")) {
-                        for (size_t i = std::max(skip, util::SettingsSpan(*values).negated()); i < values->size(); ++i) {
+                if (auto* section = common::FindKey(m_settings.ro_config, network)) {
+                    if (auto* values = common::FindKey(*section, "includeconf")) {
+                        for (size_t i = std::max(skip, common::SettingsSpan(*values).negated()); i < values->size(); ++i) {
                             conf_file_names.push_back((*values)[i].get_str());
                         }
                         num_values = values->size();

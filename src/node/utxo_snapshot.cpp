@@ -4,7 +4,6 @@
 
 #include <node/utxo_snapshot.h>
 
-#include <common/args.h>
 #include <logging.h>
 #include <streams.h>
 #include <sync.h>
@@ -82,10 +81,10 @@ std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
     return base_blockhash;
 }
 
-std::optional<fs::path> FindSnapshotChainstateDir()
+std::optional<fs::path> FindSnapshotChainstateDir(const fs::path& data_dir)
 {
     fs::path possible_dir =
-        gArgs.GetDataDirNet() / fs::u8path(strprintf("chainstate%s", SNAPSHOT_CHAINSTATE_SUFFIX));
+        data_dir / fs::u8path(strprintf("chainstate%s", SNAPSHOT_CHAINSTATE_SUFFIX));
 
     if (fs::exists(possible_dir)) {
         return possible_dir;

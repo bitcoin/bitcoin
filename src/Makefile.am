@@ -143,6 +143,7 @@ BITCOIN_CORE_H = \
   compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
+  common/settings.h \
   common/system.h \
   compressor.h \
   consensus/consensus.h \
@@ -309,7 +310,6 @@ BITCOIN_CORE_H = \
   util/readwritefile.h \
   util/result.h \
   util/serfloat.h \
-  util/settings.h \
   util/sock.h \
   util/spanparsing.h \
   util/string.h \
@@ -663,6 +663,7 @@ libbitcoin_common_a_SOURCES = \
   common/init.cpp \
   common/interfaces.cpp \
   common/run_command.cpp \
+  common/settings.cpp \
   common/system.cpp \
   compressor.cpp \
   core_read.cpp \
@@ -733,7 +734,6 @@ libbitcoin_util_a_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
-  util/settings.cpp \
   util/thread.cpp \
   util/threadinterrupt.cpp \
   util/threadnames.cpp \
@@ -912,12 +912,8 @@ libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
   chain.cpp \
-  chainparamsbase.cpp \
-  chainparams.cpp \
   clientversion.cpp \
   coins.cpp \
-  common/args.cpp \
-  common/config.cpp \
   compressor.cpp \
   consensus/merkle.cpp \
   consensus/tx_check.cpp \
@@ -978,7 +974,6 @@ libbitcoinkernel_la_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/serfloat.cpp \
-  util/settings.cpp \
   util/strencodings.cpp \
   util/string.cpp \
   util/syscall_sandbox.cpp \

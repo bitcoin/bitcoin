@@ -85,7 +85,7 @@ class CheckValueTest : public TestChain100Setup
 {
 public:
     struct Expect {
-        util::SettingsValue setting;
+        common::SettingsValue setting;
         bool default_string = false;
         bool default_int = false;
         bool default_bool = false;
@@ -95,7 +95,7 @@ public:
         std::optional<std::vector<std::string>> list_value;
         const char* error = nullptr;
 
-        explicit Expect(util::SettingsValue s) : setting(std::move(s)) {}
+        explicit Expect(common::SettingsValue s) : setting(std::move(s)) {}
         Expect& DefaultString() { default_string = true; return *this; }
         Expect& DefaultInt() { default_int = true; return *this; }
         Expect& DefaultBool() { default_bool = true; return *this; }
@@ -1022,14 +1022,14 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
     // Test writing setting.
     TestArgsManager args1;
     args1.ForceSetArg("-datadir", fs::PathToString(m_path_root));
-    args1.LockSettings([&](util::Settings& settings) { settings.rw_settings["name"] = "value"; });
+    args1.LockSettings([&](common::Settings& settings) { settings.rw_settings["name"] = "value"; });
     args1.WriteSettingsFile();
 
     // Test reading setting.
     TestArgsManager args2;
     args2.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     args2.ReadSettingsFile();
-    args2.LockSettings([&](util::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
+    args2.LockSettings([&](common::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
 
     // Test error logging, and remove previously written setting.
     {

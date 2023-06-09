@@ -56,9 +56,9 @@ namespace wallet {
 
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 {
-    util::SettingsValue setting_value = chain.getRwSetting("wallet");
+    common::SettingsValue setting_value = chain.getRwSetting("wallet");
     if (!setting_value.isArray()) setting_value.setArray();
-    for (const util::SettingsValue& value : setting_value.getValues()) {
+    for (const common::SettingsValue& value : setting_value.getValues()) {
         if (value.isStr() && value.get_str() == wallet_name) return true;
     }
     setting_value.push_back(wallet_name);
@@ -67,10 +67,10 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 {
-    util::SettingsValue setting_value = chain.getRwSetting("wallet");
+    common::SettingsValue setting_value = chain.getRwSetting("wallet");
     if (!setting_value.isArray()) return true;
-    util::SettingsValue new_value(util::SettingsValue::VARR);
-    for (const util::SettingsValue& value : setting_value.getValues()) {
+    common::SettingsValue new_value(common::SettingsValue::VARR);
+    for (const common::SettingsValue& value : setting_value.getValues()) {
         if (!value.isStr() || value.get_str() != wallet_name) new_value.push_back(value);
     }
     if (new_value.size() == setting_value.size()) return true;
@@ -2832,7 +2832,7 @@ bool CWallet::SetAddressPreviouslySpent(WalletBatch& batch, const CTxDestination
         return false;
 
     if (!used) {
-        if (auto* data{util::FindKey(m_address_book, dest)}) data->previously_spent = false;
+        if (auto* data{common::FindKey(m_address_book, dest)}) data->previously_spent = false;
         return batch.WriteAddressPreviouslySpent(dest, false);
     }
 
@@ -2852,7 +2852,7 @@ void CWallet::LoadAddressReceiveRequest(const CTxDestination& dest, const std::s
 
 bool CWallet::IsAddressPreviouslySpent(const CTxDestination& dest) const
 {
-    if (auto* data{util::FindKey(m_address_book, dest)}) return data->previously_spent;
+    if (auto* data{common::FindKey(m_address_book, dest)}) return data->previously_spent;
     return false;
 }
 
