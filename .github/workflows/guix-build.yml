@@ -59,11 +59,14 @@ jobs:
             echo "Guix build failed!"
             exit 1
           fi
-      - name: Compute SHA1 checksum
+      - name: Compute SHA256 checksums for binaries
         run: |
-          sha1sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/dashd{,.exe}
-          sha1sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/qt/dash-qt{,.exe}
-      - name: Compute SHA256 checksum
+          ( \
+          SRC_PATH_PREFIX=guix-build-$(git rev-parse --short=12 HEAD)/distsrc- && \
+          sha256sum ${SRC_PATH_PREFIX}*/src/dash{d,-cli,-tx,-wallet}{,.exe} && \
+          sha256sum ${SRC_PATH_PREFIX}*/src/qt/dash-qt{,.exe} && \
+          sha256sum ${SRC_PATH_PREFIX}*/src/test/test_dash{,.exe} \
+          ) | sort -k 2
+      - name: Compute SHA256 checksums for archives
         run: |
-          sha256sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/dashd{,.exe}
-          sha256sum guix-build-$(git rev-parse --short=12 HEAD)/distsrc-*/src/qt/dash-qt{,.exe}
+          find guix-build-"$(git rev-parse --short=12 HEAD)"/output -type f | grep -v SHA256 | xargs sha256sum | sort -k 2
