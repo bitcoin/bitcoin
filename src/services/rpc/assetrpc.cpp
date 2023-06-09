@@ -485,7 +485,7 @@ static RPCHelpMan getnevmblockchaininfo()
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, state.ToString());
         }
     }
-    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    const std::vector<std::string> &cmdLine = chainman.GethCommandLine();
     std::vector<UniValue> vec;
     for(auto& cmd: cmdLine) {
         UniValue v;
@@ -942,8 +942,10 @@ static RPCHelpMan syscoinstopgeth()
     },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    if(!StopGethNode())
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if(!chainman.ActiveChainstate().StopGethNode()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
+    }
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;

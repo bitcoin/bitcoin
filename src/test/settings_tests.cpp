@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/settings.h>
+#include <common/settings.h>
 
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
@@ -21,20 +21,20 @@
 #include <system_error>
 #include <vector>
 
-inline bool operator==(const util::SettingsValue& a, const util::SettingsValue& b)
+inline bool operator==(const common::SettingsValue& a, const common::SettingsValue& b)
 {
     return a.write() == b.write();
 }
 
-inline std::ostream& operator<<(std::ostream& os, const util::SettingsValue& value)
+inline std::ostream& operator<<(std::ostream& os, const common::SettingsValue& value)
 {
     os << value.write();
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, util::SettingsValue>& kv)
+inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, common::SettingsValue>& kv)
 {
-    util::SettingsValue out(util::SettingsValue::VOBJ);
+    common::SettingsValue out(common::SettingsValue::VOBJ);
     out.__pushKV(kv.first, kv.second);
     os << out.write();
     return os;
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
         "null": null
     })");
 
-    std::map<std::string, util::SettingsValue> expected{
+    std::map<std::string, common::SettingsValue> expected{
         {"string", "string"},
         {"num", 5},
         {"bool", true},
@@ -68,15 +68,15 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     };
 
     // Check file read.
-    std::map<std::string, util::SettingsValue> values;
+    std::map<std::string, common::SettingsValue> values;
     std::vector<std::string> errors;
-    BOOST_CHECK(util::ReadSettings(path, values, errors));
+    BOOST_CHECK(common::ReadSettings(path, values, errors));
     BOOST_CHECK_EQUAL_COLLECTIONS(values.begin(), values.end(), expected.begin(), expected.end());
     BOOST_CHECK(errors.empty());
 
     // Check no errors if file doesn't exist.
     fs::remove(path);
-    BOOST_CHECK(util::ReadSettings(path, values, errors));
+    BOOST_CHECK(common::ReadSettings(path, values, errors));
     BOOST_CHECK(values.empty());
     BOOST_CHECK(errors.empty());
 
@@ -85,29 +85,29 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
         "dupe": "string",
         "dupe": "dupe"
     })");
-    BOOST_CHECK(!util::ReadSettings(path, values, errors));
+    BOOST_CHECK(!common::ReadSettings(path, values, errors));
     std::vector<std::string> dup_keys = {strprintf("Found duplicate key dupe in settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), dup_keys.begin(), dup_keys.end());
     BOOST_CHECK(values.empty());
 
     // Check non-kv json files not allowed
     WriteText(path, R"("non-kv")");
-    BOOST_CHECK(!util::ReadSettings(path, values, errors));
+    BOOST_CHECK(!common::ReadSettings(path, values, errors));
     std::vector<std::string> non_kv = {strprintf("Found non-object value \"non-kv\" in settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), non_kv.begin(), non_kv.end());
 
     // Check invalid json not allowed
     WriteText(path, R"(invalid json)");
-    BOOST_CHECK(!util::ReadSettings(path, values, errors));
+    BOOST_CHECK(!common::ReadSettings(path, values, errors));
     std::vector<std::string> fail_parse = {strprintf("Unable to parse settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), fail_parse.begin(), fail_parse.end());
 }
 
 //! Check settings struct contents against expected json strings.
-static void CheckValues(const util::Settings& settings, const std::string& single_val, const std::string& list_val)
+static void CheckValues(const common::Settings& settings, const std::string& single_val, const std::string& list_val)
 {
-    util::SettingsValue single_value = GetSetting(settings, "section", "name", false, false, false);
-    util::SettingsValue list_value(util::SettingsValue::VARR);
+    common::SettingsValue single_value = GetSetting(settings, "section", "name", false, false, false);
+    common::SettingsValue list_value(common::SettingsValue::VARR);
     for (const auto& item : GetSettingsList(settings, "section", "name", false)) {
         list_value.push_back(item);
     }
@@ -118,7 +118,7 @@ static void CheckValues(const util::Settings& settings, const std::string& singl
 // Simple settings merge test case.
 BOOST_AUTO_TEST_CASE(Simple)
 {
-    util::Settings settings;
+    common::Settings settings;
     settings.command_line_options["name"].push_back("val1");
     settings.command_line_options["name"].push_back("val2");
     settings.ro_config["section"]["name"].push_back(2);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(Simple)
     // The last given arg takes precedence when specified via commandline.
     CheckValues(settings, R"("val2")", R"(["val1","val2",2])");
 
-    util::Settings settings2;
+    common::Settings settings2;
     settings2.ro_config["section"]["name"].push_back("val2");
     settings2.ro_config["section"]["name"].push_back("val3");
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(Simple)
 // its default value.
 BOOST_AUTO_TEST_CASE(NullOverride)
 {
-    util::Settings settings;
+    common::Settings settings;
     settings.command_line_options["name"].push_back("value");
     BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false, false).write().c_str());
     settings.forced_settings["name"] = {};
@@ -195,11 +195,11 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
                           bool ignore_default_section_config) {
         std::string desc;
         int value_suffix = 0;
-        util::Settings settings;
+        common::Settings settings;
 
         const std::string& name = ignore_default_section_config ? "wallet" : "server";
         auto push_values = [&](Action action, const char* value_prefix, const std::string& name_prefix,
-                               std::vector<util::SettingsValue>& dest) {
+                               std::vector<common::SettingsValue>& dest) {
             if (action == SET || action == SECTION_SET) {
                 for (int i = 0; i < 2; ++i) {
                     dest.push_back(value_prefix + ToString(++value_suffix));

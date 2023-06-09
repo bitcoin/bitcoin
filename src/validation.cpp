@@ -12,7 +12,6 @@
 #include <auxpow.h>
 #include <chain.h>
 #include <checkqueue.h>
-#include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -143,6 +142,7 @@ std::condition_variable g_best_block_cv;
 uint256 g_best_block;
 // SYSCOIN
 std::atomic_bool fReindexGeth(false);
+unsigned int fRPCSerialVersion;
 const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
     AssertLockHeld(cs_main);
@@ -2152,7 +2152,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
             if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
                 // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
-                const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+                const std::vector<std::string> &cmdLine = m_chainman.GethCommandLine();
                 if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
                     StartShutdown();
                     return true;
@@ -2174,7 +2174,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
                         state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
                         if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
                             // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
-                            const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+                            const std::vector<std::string> &cmdLine = m_chainman.GethCommandLine();
                             if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
                                 StartShutdown();
                                 return true;
@@ -3066,7 +3066,7 @@ bool Chainstate::FlushStateToDisk(
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite) {
             // Ensure we can write block index
-            if (!CheckDiskSpace(gArgs.GetBlocksDirPath())) {
+            if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return AbortNode(state, "Disk space is too low!", _("Disk space is too low!"));
             }
             {
@@ -3112,7 +3112,7 @@ bool Chainstate::FlushStateToDisk(
             // twice (once in the log, and once in the tables). This is already
             // an overestimation, as most will delete an existing entry or
             // overwrite one. Still, use a conservative safety factor of 2.
-            if (!CheckDiskSpace(gArgs.GetDataDirNet(), 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
+            if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
                 return AbortNode(state, "Disk space is too low!", _("Disk space is too low!"));
             }
             // Flush the chainstate (which may refer to block index entries).
@@ -3737,7 +3737,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
-    int nStopAtHeight = gArgs.GetIntArg("-stopatheight", DEFAULT_STOPATHEIGHT);
     do {
         // Block until the validation queue drains. This should largely
         // never happen in normal operation, however may happen during
@@ -3812,7 +3811,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
+        if (m_chainman.StopAtHeight() && pindexNewTip && pindexNewTip->nHeight >= m_chainman.StopAtHeight()) StartShutdown();
 
         if (WITH_LOCK(::cs_main, return m_disabled)) {
             // Background chainstate has reached the snapshot base block, so exit.
@@ -6102,7 +6101,7 @@ bool ChainstateManager::ActivateSnapshot(
 
         // PopulateAndValidateSnapshot can return (in error) before the leveldb datadir
         // has been created, so only attempt removal if we got that far.
-        if (auto snapshot_datadir = node::FindSnapshotChainstateDir()) {
+        if (auto snapshot_datadir = node::FindSnapshotChainstateDir(m_options.datadir)) {
             // We have to destruct leveldb::DB in order to release the db lock, otherwise
             // DestroyDB() (in DeleteCoinsDBFromDisk()) will fail. See `leveldb::~DBImpl()`.
             // Destructing the chainstate (and so resetting the coinsviews object) does this.
@@ -6666,8 +6665,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     return written;
 }
 
-std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs::path& dataDir) {
-    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+std::vector<std::string> SanitizeGethCmdLine(const std::vector<std::string> &cmdLine, const fs::path& binaryURL, const fs::path& dataDir) {
     std::vector<std::string> cmdLineRet;
     cmdLineRet.push_back(fs::PathToString(binaryURL));
     for(const auto &cmd: cmdLine){
@@ -6788,7 +6786,7 @@ std::string GetGethFilename(){
         return "sysgeth";
     #endif
 }
-bool StartGethNode()
+bool Chainstate::StartGethNode()
 {
     LOCK(cs_geth);
 
@@ -6838,7 +6836,7 @@ bool StartGethNode()
                             LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
                             if(!fs::exists(binaryURL)) {
                                 fs::path binaryURLTmp = binaryURL;
-                                binaryURL = gArgs.GetDataDirBase() / gethFilename;
+                                binaryURL = m_chainman.m_options.datadir_base / gethFilename;
                                 binaryURL = binaryURL.make_preferred();
                                 LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
                             }
@@ -6853,9 +6851,9 @@ bool StartGethNode()
         return false;
     }
 
-    const fs::path &dataDir = gArgs.GetDataDirNet() / "geth";
-    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(binaryURL, dataDir);
-    const fs::path &log = gArgs.GetDataDirNet() / "sysgeth.log";
+    const fs::path &dataDir = m_chainman.m_options.datadir / "geth";
+    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(m_chainman.GethCommandLine(), binaryURL, dataDir);
+    const fs::path &log = m_chainman.m_options.datadir / "sysgeth.log";
 
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
@@ -6913,7 +6911,7 @@ bool StartGethNode()
         LogPrintf("%s: Geth Started with pid %d\n", __func__, gethpid);
     return true;
 }
-bool StopGethNode(bool bOnStart)
+bool Chainstate::StopGethNode(bool bOnStart)
 {
     if(!fNEVMConnection) {
         return false;
@@ -6964,7 +6962,7 @@ bool StopGethNode(bool bOnStart)
     
     return true;
 }
-bool DoGethMaintenance() {
+bool Chainstate::DoGethStartupProcedure() {
     if(ShutdownRequested()) {
         return false;
     }
@@ -6982,7 +6980,7 @@ bool DoGethMaintenance() {
         LogPrintf("%s: Stopping Geth\n", __func__); 
         StopGethNode(true);
         // copy wallet dir if exists
-        const fs::path &dataDir = gArgs.GetDataDirNet();
+        const fs::path &dataDir = m_chainman.m_options.datadir;
         const fs::path &gethDir = dataDir / "geth";
         const fs::path &gethKeyStoreDir = gethDir / "keystore";
         const fs::path &gethNodeKeyPath = gethDir / "geth" / "nodekey";
@@ -7124,14 +7122,14 @@ ChainstateManager::~ChainstateManager()
 int RPCSerializationFlags()
 {
     int flag = 0;
-    if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
+    if (fRPCSerialVersion == 0)
         flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
     return flag;
 }
 bool ChainstateManager::DetectSnapshotChainstate(CTxMemPool* mempool)
 {
     assert(!m_snapshot_chainstate);
-    std::optional<fs::path> path = node::FindSnapshotChainstateDir();
+    std::optional<fs::path> path = node::FindSnapshotChainstateDir(m_options.datadir);
     if (!path) {
         return false;
     }

@@ -154,7 +154,8 @@ using node::VerifyLoadedChainstate;
 static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
 static constexpr bool DEFAULT_REST_ENABLE{false};
 static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
-
+// SYSCOIN
+extern unsigned int fRPCSerialVersion;
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
 // accessing block files don't count towards the fd_set size limit
@@ -388,7 +389,7 @@ void Shutdown(NodeContext& node)
         client->stop();
     }
     // SYSCOIN
-    StopGethNode();
+    node.chainman->ActiveChainstate().StopGethNode();
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface.get());
@@ -1656,8 +1657,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
     fReindexGeth = fReindex || fReindexChainState;
+    fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
     if(fNEVMConnection) {
-        if(!DoGethMaintenance()) {
+        if(!node.chainman->ActiveChainstate().DoGethStartupProcedure()) {
             fNEVMConnection = false;
             LogPrintf("NEVM not detected, setting fNEVMConnection to false...\n");
         }
@@ -1680,6 +1682,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .datadir = args.GetDataDirNet(),
+        // SYSCOIN
+        .datadir_base = args.GetDataDirBase(),
         .adjusted_time_callback = GetAdjustedTime,
         .notifications = *node.notifications,
     };

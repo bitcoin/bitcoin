@@ -2,18 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_UTIL_SETTINGS_H
-#define SYSCOIN_UTIL_SETTINGS_H
+#ifndef SYSCOIN_COMMON_SETTINGS_H
+#define SYSCOIN_COMMON_SETTINGS_H
 
 #include <util/fs.h>
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
 
 class UniValue;
 
-namespace util {
+namespace common {
 
 //! Settings value type (string/integer/boolean/null variant).
 //!
@@ -109,6 +110,6 @@ auto FindKey(Map&& map, Key&& key) -> decltype(&map.at(key))
     return it == map.end() ? nullptr : &it->second;
 }
 
-} // namespace util
+} // namespace common
 
-#endif // SYSCOIN_UTIL_SETTINGS_H
+#endif // SYSCOIN_COMMON_SETTINGS_H

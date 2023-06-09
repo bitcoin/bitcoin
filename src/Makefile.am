@@ -184,6 +184,7 @@ SYSCOIN_CORE_H = \
   compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
+  common/settings.h \
   common/system.h \
   node/connection_types.h \
   consensus/consensus.h \
@@ -372,7 +373,6 @@ SYSCOIN_CORE_H = \
   util/ranges.h \
   util/result.h \
   util/serfloat.h \
-  util/settings.h \
   util/sock.h \
   util/spanparsing.h \
   util/string.h \
@@ -812,6 +812,7 @@ libsyscoin_common_a_SOURCES = \
   common/init.cpp \
   common/interfaces.cpp \
   common/run_command.cpp \
+  common/settings.cpp \
   common/system.cpp \
   core_read.cpp \
   core_write.cpp \
@@ -889,7 +890,6 @@ libsyscoin_util_a_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
-  util/settings.cpp \
   util/thread.cpp \
   util/threadinterrupt.cpp \
   util/threadnames.cpp \
@@ -1068,12 +1068,8 @@ libsyscoinkernel_la_SOURCES = \
   kernel/syscoinkernel.cpp \
   arith_uint256.cpp \
   chain.cpp \
-  chainparamsbase.cpp \
-  chainparams.cpp \
   clientversion.cpp \
   coins.cpp \
-  common/args.cpp \
-  common/config.cpp \
   consensus/merkle.cpp \
   consensus/tx_check.cpp \
   consensus/tx_verify.cpp \
@@ -1133,7 +1129,6 @@ libsyscoinkernel_la_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/serfloat.cpp \
-  util/settings.cpp \
   util/strencodings.cpp \
   util/string.cpp \
   util/syscall_sandbox.cpp \

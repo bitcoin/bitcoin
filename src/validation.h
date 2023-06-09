@@ -70,8 +70,6 @@ struct Params;
 static const int MAX_SCRIPTCHECK_THREADS = 15;
 /** -par default (number of script-checking threads, 0 = auto) */
 static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
-/** Default for -stopatheight */
-static const int DEFAULT_STOPATHEIGHT = 0;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = 6;
@@ -733,6 +731,9 @@ public:
         LOCKS_EXCLUDED(::cs_main);
     // SYSCOIN
     bool RestartGethNode();
+    bool DoGethStartupProcedure();
+    bool StartGethNode();
+    bool StopGethNode(bool bOnStart = false);
     void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) 
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(cs_main);
@@ -986,7 +987,9 @@ public:
     const arith_uint256& MinimumChainWork() const { return *Assert(m_options.minimum_chain_work); }
     const uint256& AssumedValidBlock() const { return *Assert(m_options.assumed_valid_block); }
     kernel::Notifications& GetNotifications() const { return m_options.notifications; };
-
+    int StopAtHeight() const { return m_options.stop_at_height; };
+    // SYSCOIN
+    std::vector<std::string> GethCommandLine() const { return m_options.geth_commandline; };
     /**
      * Alias for ::cs_main.
      * Should be used in new code to make it easier to make ::cs_main a member
@@ -1220,9 +1223,6 @@ public:
     bool FlushCacheToDisk(const uint32_t &nHeight);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-bool DoGethMaintenance();
-bool StartGethNode();
-bool StopGethNode(bool bOnStart = false);
 // SYSCOIN
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 int RPCSerializationFlags();
