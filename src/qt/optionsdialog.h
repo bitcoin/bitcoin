@@ -89,6 +89,7 @@ private:
     QString previousTheme;
     AppearanceWidget* appearance;
     bool fCoinJoinEnabledPrev{false};
+    bool m_enable_wallet{false};
 
     void showEvent(QShowEvent* event) override;
 };
