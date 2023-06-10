@@ -68,10 +68,155 @@ tar -xzvf ${BDB_VERSION}.tar.gz -C "$BDB_PREFIX"
 cd "${BDB_PREFIX}/${BDB_VERSION}/"
 
 # Apply a patch necessary when building with clang and c++11 (see https://community.oracle.com/thread/3952592)
-CLANG_CXX11_PATCH_URL='https://gist.githubusercontent.com/LnL7/5153b251fd525fe15de69b67e63a6075/raw/7778e9364679093a32dec2908656738e16b6bdcb/clang.patch'
-CLANG_CXX11_PATCH_HASH='7a9a47b03fd5fb93a16ef42235fa9512db9b0829cfc3bdf90edd3ec1f44d637c'
-http_get "${CLANG_CXX11_PATCH_URL}" clang.patch "${CLANG_CXX11_PATCH_HASH}"
-patch -p2 < clang.patch
+patch --ignore-whitespace -p1 << 'EOF'
+commit 3311d68f11d1697565401eee6efc85c34f022ea7
+Author: fanquake <fanquake@gmail.com>
+Date:   Mon Aug 17 20:03:56 2020 +0800
+
+    Fix C++11 compatibility
+
+diff --git a/dbinc/atomic.h b/dbinc/atomic.h
+index 0034dcc..7c11d4a 100644
+--- a/dbinc/atomic.h
++++ b/dbinc/atomic.h
+@@ -70,7 +70,7 @@ typedef struct {
+  * These have no memory barriers; the caller must include them when necessary.
+  */
+ #define	atomic_read(p)		((p)->value)
+-#define	atomic_init(p, val)	((p)->value = (val))
++#define	atomic_init_db(p, val)	((p)->value = (val))
+
+ #ifdef HAVE_ATOMIC_SUPPORT
+
+@@ -144,7 +144,7 @@ typedef LONG volatile *interlocked_val;
+ #define	atomic_inc(env, p)	__atomic_inc(p)
+ #define	atomic_dec(env, p)	__atomic_dec(p)
+ #define	atomic_compare_exchange(env, p, o, n)	\
+-	__atomic_compare_exchange((p), (o), (n))
++	__atomic_compare_exchange_db((p), (o), (n))
+ static inline int __atomic_inc(db_atomic_t *p)
+ {
+ 	int	temp;
+@@ -176,7 +176,7 @@ static inline int __atomic_dec(db_atomic_t *p)
+  * http://gcc.gnu.org/onlinedocs/gcc-4.1.0/gcc/Atomic-Builtins.html
+  * which configure could be changed to use.
+  */
+-static inline int __atomic_compare_exchange(
++static inline int __atomic_compare_exchange_db(
+ 	db_atomic_t *p, atomic_value_t oldval, atomic_value_t newval)
+ {
+ 	atomic_value_t was;
+@@ -206,7 +206,7 @@ static inline int __atomic_compare_exchange(
+ #define	atomic_dec(env, p)	(--(p)->value)
+ #define	atomic_compare_exchange(env, p, oldval, newval)		\
+ 	(DB_ASSERT(env, atomic_read(p) == (oldval)),		\
+-	atomic_init(p, (newval)), 1)
++	atomic_init_db(p, (newval)), 1)
+ #else
+ #define atomic_inc(env, p)	__atomic_inc(env, p)
+ #define atomic_dec(env, p)	__atomic_dec(env, p)
+diff --git a/mp/mp_fget.c b/mp/mp_fget.c
+index 5fdee5a..0b75f57 100644
+--- a/mp/mp_fget.c
++++ b/mp/mp_fget.c
+@@ -617,7 +617,7 @@ alloc:		/* Allocate a new buffer header and data space. */
+
+ 		/* Initialize enough so we can call __memp_bhfree. */
+ 		alloc_bhp->flags = 0;
+-		atomic_init(&alloc_bhp->ref, 1);
++		atomic_init_db(&alloc_bhp->ref, 1);
+ #ifdef DIAGNOSTIC
+ 		if ((uintptr_t)alloc_bhp->buf & (sizeof(size_t) - 1)) {
+ 			__db_errx(env,
+@@ -911,7 +911,7 @@ alloc:		/* Allocate a new buffer header and data space. */
+ 			MVCC_MPROTECT(bhp->buf, mfp->stat.st_pagesize,
+ 			    PROT_READ);
+
+-		atomic_init(&alloc_bhp->ref, 1);
++		atomic_init_db(&alloc_bhp->ref, 1);
+ 		MUTEX_LOCK(env, alloc_bhp->mtx_buf);
+ 		alloc_bhp->priority = bhp->priority;
+ 		alloc_bhp->pgno = bhp->pgno;
+diff --git a/mp/mp_mvcc.c b/mp/mp_mvcc.c
+index 34467d2..f05aa0c 100644
+--- a/mp/mp_mvcc.c
++++ b/mp/mp_mvcc.c
+@@ -276,7 +276,7 @@ __memp_bh_freeze(dbmp, infop, hp, bhp, need_frozenp)
+ #else
+ 	memcpy(frozen_bhp, bhp, SSZA(BH, buf));
+ #endif
+-	atomic_init(&frozen_bhp->ref, 0);
++	atomic_init_db(&frozen_bhp->ref, 0);
+ 	if (mutex != MUTEX_INVALID)
+ 		frozen_bhp->mtx_buf = mutex;
+ 	else if ((ret = __mutex_alloc(env, MTX_MPOOL_BH,
+@@ -428,7 +428,7 @@ __memp_bh_thaw(dbmp, infop, hp, frozen_bhp, alloc_bhp)
+ #endif
+ 		alloc_bhp->mtx_buf = mutex;
+ 		MUTEX_LOCK(env, alloc_bhp->mtx_buf);
+-		atomic_init(&alloc_bhp->ref, 1);
++		atomic_init_db(&alloc_bhp->ref, 1);
+ 		F_CLR(alloc_bhp, BH_FROZEN);
+ 	}
+
+diff --git a/mp/mp_region.c b/mp/mp_region.c
+index e6cece9..ddbe906 100644
+--- a/mp/mp_region.c
++++ b/mp/mp_region.c
+@@ -224,7 +224,7 @@ __memp_init(env, dbmp, reginfo_off, htab_buckets, max_nreg)
+ 			     MTX_MPOOL_FILE_BUCKET, 0, &htab[i].mtx_hash)) != 0)
+ 				return (ret);
+ 			SH_TAILQ_INIT(&htab[i].hash_bucket);
+-			atomic_init(&htab[i].hash_page_dirty, 0);
++			atomic_init_db(&htab[i].hash_page_dirty, 0);
+ 		}
+
+ 		/*
+@@ -269,7 +269,7 @@ __memp_init(env, dbmp, reginfo_off, htab_buckets, max_nreg)
+ 		hp->mtx_hash = (mtx_base == MUTEX_INVALID) ? MUTEX_INVALID :
+ 		    mtx_base + i;
+ 		SH_TAILQ_INIT(&hp->hash_bucket);
+-		atomic_init(&hp->hash_page_dirty, 0);
++		atomic_init_db(&hp->hash_page_dirty, 0);
+ #ifdef HAVE_STATISTICS
+ 		hp->hash_io_wait = 0;
+ 		hp->hash_frozen = hp->hash_thawed = hp->hash_frozen_freed = 0;
+diff --git a/mutex/mut_method.c b/mutex/mut_method.c
+index 2588763..5c6d516 100644
+--- a/mutex/mut_method.c
++++ b/mutex/mut_method.c
+@@ -426,7 +426,7 @@ atomic_compare_exchange(env, v, oldval, newval)
+ 	MUTEX_LOCK(env, mtx);
+ 	ret = atomic_read(v) == oldval;
+ 	if (ret)
+-		atomic_init(v, newval);
++		atomic_init_db(v, newval);
+ 	MUTEX_UNLOCK(env, mtx);
+
+ 	return (ret);
+diff --git a/mutex/mut_tas.c b/mutex/mut_tas.c
+index f3922e0..e40fcdf 100644
+--- a/mutex/mut_tas.c
++++ b/mutex/mut_tas.c
+@@ -46,7 +46,7 @@ __db_tas_mutex_init(env, mutex, flags)
+
+ #ifdef HAVE_SHARED_LATCHES
+ 	if (F_ISSET(mutexp, DB_MUTEX_SHARED))
+-		atomic_init(&mutexp->sharecount, 0);
++		atomic_init_db(&mutexp->sharecount, 0);
+ 	else
+ #endif
+ 	if (MUTEX_INIT(&mutexp->tas)) {
+@@ -486,7 +486,7 @@ __db_tas_mutex_unlock(env, mutex)
+ 			F_CLR(mutexp, DB_MUTEX_LOCKED);
+ 			/* Flush flag update before zeroing count */
+ 			MEMBAR_EXIT();
+-			atomic_init(&mutexp->sharecount, 0);
++			atomic_init_db(&mutexp->sharecount, 0);
+ 		} else {
+ 			DB_ASSERT(env, sharecount > 0);
+ 			MEMBAR_EXIT();
+EOF
 
 # The packaged config.guess and config.sub are ancient (2009) and can cause build issues.
 # Replace them with modern versions.

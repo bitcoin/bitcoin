@@ -617,9 +617,9 @@ parse, modify and abstract ELF, PE and MachO formats.")
 (packages->manifest
  (append
   (list ;; The Basics
-        bash
+        bash-minimal
         which
-        coreutils
+        coreutils-minimal
         util-linux
         ;; File(system) inspection
         file
@@ -647,7 +647,7 @@ parse, modify and abstract ELF, PE and MachO formats.")
         bison
         ;; Scripting
         perl
-        python-3
+        python-minimal ;; (3.9)
         ;; Git
         git
         ;; Tests
@@ -670,5 +670,5 @@ parse, modify and abstract ELF, PE and MachO formats.")
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake-minimal xorriso python-signapple))
           (else '())))))
