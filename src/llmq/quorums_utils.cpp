@@ -58,7 +58,7 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensu
 
 uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
 {
-    CHashWriter hw(SER_NETWORK, 0);
+    CHashWriter hw(SER_GETHASH, 0);
     hw << llmqType;
     hw << blockHash;
     hw << DYNBITSET(validMembers);
