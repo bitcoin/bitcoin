@@ -41,22 +41,22 @@ bool CCoinJoinEntry::AddScriptSig(const CTxIn& txin)
     return false;
 }
 
-uint256 CCoinJoinQueue::GetSignatureHash() const
+uint256 CCoinJoinQueue::GetSignatureHash(bool legacy) const
 {
-    return SerializeHash(*this);
+    int version = legacy ? COINJOIN_PROTX_HASH_PROTO_VERSION - 1 : PROTOCOL_VERSION;
+    return SerializeHash(*this, SER_GETHASH, version);
 }
 
 bool CCoinJoinQueue::Sign()
 {
     if (!fMasternodeMode) return false;
 
-
-    uint256 hash = GetSignatureHash();
+    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    uint256 hash = GetSignatureHash(legacy_bls_scheme);
     CBLSSignature sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(hash));
     if (!sig.IsValid()) {
         return false;
     }
-    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
     vchSig = sig.ToByteVector(legacy_bls_scheme);
 
     return true;
@@ -64,7 +64,8 @@ bool CCoinJoinQueue::Sign()
 
 bool CCoinJoinQueue::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
-    if (!CBLSSignature(vchSig).VerifyInsecure(blsPubKey, GetSignatureHash())) {
+    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    if (!CBLSSignature(vchSig).VerifyInsecure(blsPubKey, GetSignatureHash(legacy_bls_scheme))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinQueue::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
@@ -89,21 +90,22 @@ bool CCoinJoinQueue::IsTimeOutOfBounds(int64_t current_time) const
            nTime - current_time > COINJOIN_QUEUE_TIMEOUT;
 }
 
-uint256 CCoinJoinBroadcastTx::GetSignatureHash() const
+uint256 CCoinJoinBroadcastTx::GetSignatureHash(bool legacy) const
 {
-    return SerializeHash(*this);
+    int version = legacy ? COINJOIN_PROTX_HASH_PROTO_VERSION - 1 : PROTOCOL_VERSION;
+    return SerializeHash(*this, SER_GETHASH, version);
 }
 
 bool CCoinJoinBroadcastTx::Sign()
 {
     if (!fMasternodeMode) return false;
 
-    uint256 hash = GetSignatureHash();
+    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    uint256 hash = GetSignatureHash(legacy_bls_scheme);
     CBLSSignature sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(hash));
     if (!sig.IsValid()) {
         return false;
     }
-    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
     vchSig = sig.ToByteVector(legacy_bls_scheme);
 
     return true;
@@ -111,7 +113,8 @@ bool CCoinJoinBroadcastTx::Sign()
 
 bool CCoinJoinBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
-    if (!CBLSSignature(vchSig).VerifyInsecure(blsPubKey, GetSignatureHash())) {
+    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    if (!CBLSSignature(vchSig).VerifyInsecure(blsPubKey, GetSignatureHash(legacy_bls_scheme))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinBroadcastTx::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
