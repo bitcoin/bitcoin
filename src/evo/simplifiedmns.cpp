@@ -33,6 +33,7 @@ CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     isValid(!dmn.pdmnState->IsBanned()),
     scriptPayout(dmn.pdmnState->scriptPayout),
     scriptOperatorPayout(dmn.pdmnState->scriptOperatorPayout),
+    nVersion(dmn.pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION ? LEGACY_BLS_VERSION : BASIC_BLS_VERSION),
     nType(dmn.nType),
     platformHTTPPort(dmn.pdmnState->platformHTTPPort),
     platformNodeID(dmn.pdmnState->platformNodeID)
@@ -70,7 +71,7 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
     obj.pushKV("confirmedHash", confirmedHash.ToString());
     obj.pushKV("service", service.ToString(false));
-    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
+    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
     obj.pushKV("nVersion", nVersion);
@@ -104,15 +105,13 @@ CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& 
     });
 }
 
-CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList, bool isV19Active)
+CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
 {
     mnList.resize(dmnList.GetAllMNsCount());
 
     size_t i = 0;
-    dmnList.ForEachMN(false, [this, &i, isV19Active](auto& dmn) {
-        auto sme = std::make_unique<CSimplifiedMNListEntry>(dmn);
-        sme->nVersion = isV19Active ? CSimplifiedMNListEntry::BASIC_BLS_VERSION : CSimplifiedMNListEntry::LEGACY_BLS_VERSION;
-        mnList[i++] = std::move(sme);
+    dmnList.ForEachMN(false, [this, &i](auto& dmn) {
+        mnList[i++] = std::make_unique<CSimplifiedMNListEntry>(dmn);
     });
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {
@@ -239,23 +238,18 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
 
 CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, const CDeterministicMNList& to, bool extended)
 {
-    bool v19active = llmq::utils::IsV19Active(::ChainActive().Tip());
     CSimplifiedMNListDiff diffRet;
     diffRet.baseBlockHash = from.GetBlockHash();
     diffRet.blockHash = to.GetBlockHash();
-    diffRet.nVersion = v19active ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
 
     to.ForEachMN(false, [&](const auto& toPtr) {
         auto fromPtr = from.GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
             CSimplifiedMNListEntry sme(toPtr);
-            sme.nVersion = diffRet.nVersion;
             diffRet.mnList.push_back(std::move(sme));
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
-            sme1.nVersion = diffRet.nVersion;
-            sme2.nVersion = diffRet.nVersion;
             if ((sme1 != sme2) ||
                 (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
                     diffRet.mnList.push_back(std::move(sme1));

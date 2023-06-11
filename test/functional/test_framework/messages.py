@@ -32,7 +32,7 @@ from test_framework.util import hex_str_to_bytes, assert_equal
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70227  # DMN_TYPE_PROTO_VERSION
+MY_VERSION = 70228  # SMNLE_VERSIONED_PROTO_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -1095,7 +1095,7 @@ class CCbTx:
 
 
 class CSimplifiedMNListEntry:
-    __slots__ = ("proRegTxHash", "confirmedHash", "service", "pubKeyOperator", "keyIDVoting", "isValid", "version", "type", "platformHTTPPort", "platformNodeID")
+    __slots__ = ("proRegTxHash", "confirmedHash", "service", "pubKeyOperator", "keyIDVoting", "isValid", "nVersion", "type", "platformHTTPPort", "platformNodeID")
 
     def __init__(self):
         self.set_null()
@@ -1107,34 +1107,36 @@ class CSimplifiedMNListEntry:
         self.pubKeyOperator = b'\x00' * 48
         self.keyIDVoting = 0
         self.isValid = False
-        self.version = 0
+        self.nVersion = 0
         self.type = 0
         self.platformHTTPPort = 0
         self.platformNodeID = b'\x00' * 20
 
-    def deserialize(self, f, version):
-        self.version = version # memory only
+    def deserialize(self, f):
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
         self.proRegTxHash = deser_uint256(f)
         self.confirmedHash = deser_uint256(f)
         self.service.deserialize(f)
         self.pubKeyOperator = f.read(48)
         self.keyIDVoting = f.read(20)
         self.isValid = struct.unpack("<?", f.read(1))[0]
-        if self.version == 2:
+        if self.nVersion == 2:
             self.type = struct.unpack("<H", f.read(2))[0]
             if self.type == 1:
                 self.platformHTTPPort = struct.unpack("<H", f.read(2))[0]
                 self.platformNodeID = f.read(20)
 
-    def serialize(self):
+    def serialize(self, with_version = True):
         r = b""
+        if with_version:
+            r += struct.pack("<H", self.nVersion)
         r += ser_uint256(self.proRegTxHash)
         r += ser_uint256(self.confirmedHash)
         r += self.service.serialize()
         r += self.pubKeyOperator
         r += self.keyIDVoting
         r += struct.pack("<?", self.isValid)
-        if self.version == 2:
+        if self.nVersion == 2:
             r += struct.pack("<H", self.type)
             if self.type == 1:
                 r += struct.pack("<H", self.platformHTTPPort)
@@ -2021,7 +2023,7 @@ class msg_getmnlistd:
 QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
 
 class msg_mnlistdiff:
-    __slots__ = ("baseBlockHash", "blockHash", "merkleProof", "cbTx", "version", "deletedMNs", "mnList", "deletedQuorums", "newQuorums",)
+    __slots__ = ("baseBlockHash", "blockHash", "merkleProof", "cbTx", "nVersion", "deletedMNs", "mnList", "deletedQuorums", "newQuorums",)
     command = b"mnlistdiff"
 
     def __init__(self):
@@ -2029,7 +2031,7 @@ class msg_mnlistdiff:
         self.blockHash = 0
         self.merkleProof = CPartialMerkleTree()
         self.cbTx = None
-        self.version = 0
+        self.nVersion = 0
         self.deletedMNs = []
         self.mnList = []
         self.deletedQuorums = []
@@ -2042,12 +2044,12 @@ class msg_mnlistdiff:
         self.cbTx = CTransaction()
         self.cbTx.deserialize(f)
         self.cbTx.rehash()
-        self.version = struct.unpack("<H", f.read(2))[0]
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
         self.deletedMNs = deser_uint256_vector(f)
         self.mnList = []
         for i in range(deser_compact_size(f)):
             e = CSimplifiedMNListEntry()
-            e.deserialize(f, self.version)
+            e.deserialize(f)
             self.mnList.append(e)
 
         self.deletedQuorums = []

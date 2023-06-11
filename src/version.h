@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70227;
+static const int PROTOCOL_VERSION = 70228;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -48,6 +48,9 @@ static const int COINJOIN_PROTX_HASH_PROTO_VERSION = 70226;
 
 //! Masternode type was introduced in this version
 static const int DMN_TYPE_PROTO_VERSION = 70227;
+
+//! Versioned Simplified Masternode List Entries were introduced in this version
+static const int SMNLE_VERSIONED_PROTO_VERSION = 70228;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 

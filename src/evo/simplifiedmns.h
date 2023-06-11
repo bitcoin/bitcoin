@@ -39,7 +39,7 @@ public:
     uint160 platformNodeID{};
     CScript scriptPayout; // mem-only
     CScript scriptOperatorPayout; // mem-only
-    uint16_t nVersion{LEGACY_BLS_VERSION}; // mem-only
+    uint16_t nVersion{LEGACY_BLS_VERSION};
 
     CSimplifiedMNListEntry() = default;
     explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
@@ -65,6 +65,9 @@ public:
 
     SERIALIZE_METHODS(CSimplifiedMNListEntry, obj)
     {
+        if ((s.GetType() & SER_NETWORK) && s.GetVersion() >= SMNLE_VERSIONED_PROTO_VERSION) {
+            READWRITE(obj.nVersion);
+        }
         READWRITE(
                 obj.proRegTxHash,
                 obj.confirmedHash,
@@ -98,7 +101,7 @@ public:
 
     CSimplifiedMNList() = default;
     explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
-    explicit CSimplifiedMNList(const CDeterministicMNList& dmnList, bool isV19Active);
+    explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
     uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
     bool operator==(const CSimplifiedMNList& rhs) const;
@@ -121,8 +124,7 @@ public:
 class CSimplifiedMNListDiff
 {
 public:
-    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
-    static constexpr uint16_t BASIC_BLS_VERSION = 2;
+    static constexpr uint16_t CURRENT_VERSION = 1;
 
     uint256 baseBlockHash;
     uint256 blockHash;
@@ -130,7 +132,7 @@ public:
     CTransactionRef cbTx;
     std::vector<uint256> deletedMNs;
     std::vector<CSimplifiedMNListEntry> mnList;
-    uint16_t nVersion{LEGACY_BLS_VERSION};
+    uint16_t nVersion{CURRENT_VERSION};
 
     std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
