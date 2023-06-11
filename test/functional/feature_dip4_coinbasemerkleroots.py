@@ -181,7 +181,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # Verify that the merkle root matches what we locally calculate
         hashes = []
         for mn in sorted(newMNList.values(), key=lambda mn: ser_uint256(mn.proRegTxHash)):
-            hashes.append(hash256(mn.serialize()))
+            hashes.append(hash256(mn.serialize(with_version = False)))
         merkleRoot = CBlock.get_merkle_root(hashes)
         assert_equal(merkleRoot, cbtx.merkleRootMNList)
 

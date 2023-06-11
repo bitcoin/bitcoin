@@ -32,6 +32,7 @@ CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     isValid(!dmn.pdmnState->IsBanned()),
     scriptPayout(dmn.pdmnState->scriptPayout),
     scriptOperatorPayout(dmn.pdmnState->scriptOperatorPayout),
+    nVersion(dmn.pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION ? LEGACY_BLS_VERSION : BASIC_BLS_VERSION),
     nType(dmn.nType),
     platformHTTPPort(dmn.pdmnState->platformHTTPPort),
     platformNodeID(dmn.pdmnState->platformNodeID)
@@ -69,7 +70,7 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
     obj.pushKV("confirmedHash", confirmedHash.ToString());
     obj.pushKV("service", service.ToString(false));
-    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
+    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
     obj.pushKV("nVersion", nVersion);
@@ -103,15 +104,13 @@ CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& 
     });
 }
 
-CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList, bool isV19Active)
+CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
 {
     mnList.resize(dmnList.GetAllMNsCount());
 
     size_t i = 0;
-    dmnList.ForEachMN(false, [this, &i, isV19Active](auto& dmn) {
-        auto sme = std::make_unique<CSimplifiedMNListEntry>(dmn);
-        sme->nVersion = isV19Active ? CSimplifiedMNListEntry::BASIC_BLS_VERSION : CSimplifiedMNListEntry::LEGACY_BLS_VERSION;
-        mnList[i++] = std::move(sme);
+    dmnList.ForEachMN(false, [this, &i](auto& dmn) {
+        mnList[i++] = std::make_unique<CSimplifiedMNListEntry>(dmn);
     });
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {

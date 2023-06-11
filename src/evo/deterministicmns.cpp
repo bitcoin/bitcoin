@@ -405,23 +405,18 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
 
 CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDeterministicMNList& to, bool extended) const
 {
-    bool v19active = llmq::utils::IsV19Active(::ChainActive().Tip());
     CSimplifiedMNListDiff diffRet;
     diffRet.baseBlockHash = blockHash;
     diffRet.blockHash = to.blockHash;
-    diffRet.nVersion = v19active ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
 
     to.ForEachMN(false, [&](const auto& toPtr) {
         auto fromPtr = GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
             CSimplifiedMNListEntry sme(toPtr);
-            sme.nVersion = diffRet.nVersion;
             diffRet.mnList.push_back(std::move(sme));
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
-            sme1.nVersion = diffRet.nVersion;
-            sme2.nVersion = diffRet.nVersion;
             if ((sme1 != sme2) ||
                 (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
                     diffRet.mnList.push_back(std::move(sme1));

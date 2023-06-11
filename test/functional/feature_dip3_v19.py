@@ -166,7 +166,7 @@ class DIP3V19Test(DashTestFramework):
         # Verify that the merkle root matches what we locally calculate
         hashes = []
         for mn in sorted(new_mn_list.values(), key=lambda mn: ser_uint256(mn.proRegTxHash)):
-            hashes.append(hash256(mn.serialize()))
+            hashes.append(hash256(mn.serialize(with_version = False)))
         merkle_root = CBlock.get_merkle_root(hashes)
         assert_equal(merkle_root, cbtx.merkleRootMNList)
 
