@@ -459,7 +459,7 @@ def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_add
     assert bumped_result['txid'] in rbf_node.getrawmempool()
     assert parent_id not in rbf_node.getrawmempool()
     # Cleanup
-    self.restart_node(1, self.extra_args[1])
+    self.restart_node(1, ["-minrelaytxfee=0.00001000"] + self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     self.clear_mempool()

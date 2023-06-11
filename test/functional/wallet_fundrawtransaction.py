@@ -1380,7 +1380,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         do_fund_send(lower_bound)
         do_fund_send(upper_bound)
 
-        self.restart_node(0)
+        self.restart_node(0, ["-minrelaytxfee=0.00001000"])
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.connect_nodes(0, 3)

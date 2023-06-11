@@ -132,9 +132,9 @@ class MempoolLimitTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.log.info("Check a package where each parent passes the current mempoolminfee but would cause eviction before package submission terminates")
 
-        self.restart_node(0, extra_args=self.extra_args[0])
+        # Reset mempool minimum feerate
+        self.restart_node(0, ["-minrelaytxfee=0.00001000"] + self.extra_args[0])
 
-        # Restarting the node resets mempool minimum feerate
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
