@@ -183,9 +183,7 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
 static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName, bool specific_legacy_bls_scheme = false)
 {
     CBLSPublicKey pubKey;
-    bool is_bls_legacy_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
-    bool use_bls_scheme = specific_legacy_bls_scheme || is_bls_legacy_scheme;
-    if (!pubKey.SetHexStr(hexKey, use_bls_scheme)) {
+    if (!pubKey.SetHexStr(hexKey, specific_legacy_bls_scheme)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
     }
     return pubKey;
@@ -608,7 +606,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     bool isV19active = llmq::utils::IsV19Active(WITH_LOCK(cs_main, return ::ChainActive().Tip();));
-    if (mnType == MnType::HighPerformance && !isV19active) {
+    if (isHPMNrequested && !isV19active) {
         throw JSONRPCError(RPC_INVALID_REQUEST, "HPMN aren't allowed yet");
     }
 
@@ -618,12 +616,9 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
 
+    const bool use_legacy = isV19active ? specific_legacy_bls_scheme : true;
+
     CProRegTx ptx;
-    if (specific_legacy_bls_scheme && !isHPMNrequested) {
-        ptx.nVersion = CProRegTx::LEGACY_BLS_VERSION;
-    } else {
-        ptx.nVersion = CProRegTx::GetVersion(isV19active);
-    }
     ptx.nType = mnType;
 
     if (isFundRegister) {
@@ -660,7 +655,10 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
-    ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION), ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION);
+    ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", use_legacy), use_legacy);
+    ptx.nVersion = use_legacy ? CProRegTx::LEGACY_BLS_VERSION : CProRegTx::BASIC_BLS_VERSION;
+    CHECK_NONFATAL(ptx.pubKeyOperator.IsLegacy() == (ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION));
+
     CKeyID keyIDVoting = ptx.keyIDOwner;
 
     if (request.params[paramIdx + 3].get_str() != "") {
@@ -903,7 +901,6 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     }
 
     CProUpServTx ptx;
-    ptx.nVersion = CProUpServTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
     ptx.nType = mnType;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
@@ -942,6 +939,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     if (dmn->nType != mnType) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s is not a %s", ptx.proTxHash.ToString(), GetMnType(mnType).description));
     }
+    ptx.nVersion = dmn->pdmnState->nVersion;
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered public key"));
@@ -1028,24 +1026,28 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, co
     EnsureWalletIsUnlocked(wallet.get());
 
     CProUpRegTx ptx;
-    if (specific_legacy_bls_scheme) {
-        ptx.nVersion = CProUpRegTx::LEGACY_BLS_VERSION;
-    } else {
-        ptx.nVersion = CProUpRegTx::GetVersion(llmq::utils::IsV19Active(::ChainActive().Tip()));
-    }
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
-    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
+    const bool use_legacy = llmq::utils::IsV19Active(::ChainActive().Tip()) ? specific_legacy_bls_scheme : true;
+
     if (request.params[1].get_str() != "") {
-        ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", ptx.nVersion == CProUpRegTx::LEGACY_BLS_VERSION), ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION);
+        // new pubkey
+        ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", use_legacy), use_legacy);
+    } else {
+        // same pubkey, reuse as is
+        ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     }
+
+    ptx.nVersion = use_legacy ? CProUpRegTx::LEGACY_BLS_VERSION : CProUpRegTx::BASIC_BLS_VERSION;
+    CHECK_NONFATAL(ptx.pubKeyOperator.IsLegacy() == (ptx.nVersion == CProUpRegTx::LEGACY_BLS_VERSION));
+
     if (request.params[2].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[2].get_str(), "voting address");
     }
