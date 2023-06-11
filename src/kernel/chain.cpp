@@ -10,18 +10,40 @@
 class CBlock;
 
 namespace kernel {
-interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data)
-{
-    interfaces::BlockInfo info{index ? *index->phashBlock : uint256::ZERO};
-    if (index) {
-        info.prev_hash = index->pprev ? index->pprev->phashBlock : nullptr;
-        info.height = index->nHeight;
-        info.chain_time_max = index->GetBlockTimeMax();
-        LOCK(::cs_main);
-        info.file_number = index->nFile;
-        info.data_pos = index->nDataPos;
+    interfaces::BlockInfo MakeBlockInfoRecursive(const CBlockIndex* index, const CBlock* data)
+    {
+        interfaces::BlockInfo info;
+
+        if (index) {
+            const auto& indexBlock = *index;
+            const auto* pprevBlock = indexBlock.pprev;
+
+            info.hash = indexBlock.phashBlock ? *indexBlock.phashBlock : uint256::ZERO;
+            info.prev_hash = GetPreviousHash(pprevBlock);
+            info.height = indexBlock.nHeight;
+            info.chain_time_max = indexBlock.GetBlockTimeMax();
+            
+            {
+                LOCK(::cs_main);
+                info.file_number = indexBlock.nFile;
+                info.data_pos = indexBlock.nDataPos;
+            }
+        }
+        
+        info.data = data;
+        return info;
     }
-    info.data = data;
-    return info;
+
+    const uint256* GetPreviousHash(const CBlockIndex* index)
+    {
+        if (index) {
+            const auto* pprevBlock = index->pprev;
+            return pprevBlock ? (pprevBlock->phashBlock ? pprevBlock->phashBlock : GetPreviousHash(pprevBlock)) : nullptr;
+        }
+        return nullptr;
+    }
 }
-} // namespace kernel
+
+
+
+
