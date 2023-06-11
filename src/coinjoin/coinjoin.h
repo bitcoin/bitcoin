@@ -219,7 +219,7 @@ public:
     {
         READWRITE(obj.nDenom);
 
-        if (s.GetVersion() < COINJOIN_PROTX_HASH_PROTO_VERSION || (s.GetType() & SER_GETHASH)) {
+        if (s.GetVersion() < COINJOIN_PROTX_HASH_PROTO_VERSION) {
             READWRITE(obj.masternodeOutpoint);
         } else {
             READWRITE(obj.m_protxHash);
@@ -230,7 +230,7 @@ public:
         }
     }
 
-    [[nodiscard]] uint256 GetSignatureHash() const;
+    [[nodiscard]] uint256 GetSignatureHash(bool legacy) const;
     /** Sign this mixing transaction
      *  return true if all conditions are met:
      *     1) we have an active Masternode,
@@ -292,7 +292,7 @@ public:
     {
         READWRITE(obj.tx);
 
-        if (s.GetVersion() < COINJOIN_PROTX_HASH_PROTO_VERSION || (s.GetType() & SER_GETHASH)) {
+        if (s.GetVersion() < COINJOIN_PROTX_HASH_PROTO_VERSION) {
             READWRITE(obj.masternodeOutpoint);
         } else {
             READWRITE(obj.m_protxHash);
@@ -317,7 +317,7 @@ public:
         return *this != CCoinJoinBroadcastTx();
     }
 
-    [[nodiscard]] uint256 GetSignatureHash() const;
+    [[nodiscard]] uint256 GetSignatureHash(bool legacy) const;
 
     bool Sign();
     [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
