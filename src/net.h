@@ -465,6 +465,22 @@ public:
         return m_conn_type == ConnectionType::MANUAL;
     }
 
+    bool IsManualOrFullOutboundConn() const
+    {
+        switch (m_conn_type) {
+        case ConnectionType::INBOUND:
+        case ConnectionType::FEELER:
+        case ConnectionType::BLOCK_RELAY:
+        case ConnectionType::ADDR_FETCH:
+                return false;
+        case ConnectionType::OUTBOUND_FULL_RELAY:
+        case ConnectionType::MANUAL:
+                return true;
+        } // no default case, so the compiler can warn about missing cases
+
+        assert(false);
+    }
+
     bool IsBlockOnlyConn() const {
         return m_conn_type == ConnectionType::BLOCK_RELAY;
     }
@@ -1047,6 +1063,9 @@ private:
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+
+    // Stores number of full-tx connections (outbound and manual) per network
+    std::array<unsigned int, Network::NET_MAX> m_network_conn_counts GUARDED_BY(m_nodes_mutex) = {};
 
     /**
      * Cache responses to addr requests to minimize privacy leak.

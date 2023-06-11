@@ -1135,6 +1135,9 @@ void CConnman::DisconnectNodes()
                 // close socket and cleanup
                 pnode->CloseSocketDisconnect();
 
+                // update connection count by network
+                if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
+
                 // hold in disconnected pool until all refs are released
                 pnode->Release();
                 m_nodes_disconnected.push_back(pnode);
@@ -2035,6 +2038,9 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
+
+        // update connection count by network
+        if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
     }
 }
 
