@@ -29,7 +29,10 @@ struct ConnmanTestMsg : public CConnman {
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(&node);
+
+        if (node.IsManualOrFullOutboundConn()) ++m_network_conn_counts[node.addr.GetNetwork()];
     }
+
     void ClearTestNodes()
     {
         LOCK(m_nodes_mutex);
