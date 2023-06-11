@@ -537,7 +537,7 @@ public:
 constexpr int llmq_max_blocks() {
     int max_blocks{0};
     for (const auto& llmq : Consensus::available_llmqs) {
-        int blocks = llmq.useRotation ? llmq.dkgInterval * 4 : llmq.dkgInterval * llmq.signingActiveQuorumCount;
+        int blocks = (llmq.useRotation ? 1 : llmq.signingActiveQuorumCount) * llmq.dkgInterval;
         max_blocks = std::max(max_blocks, blocks);
     }
     return max_blocks;

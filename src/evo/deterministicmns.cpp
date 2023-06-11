@@ -1228,7 +1228,12 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
     std::vector<uint256> toDeleteDiffs;
     for (const auto& p : mnListsCache) {
         if (p.second.GetHeight() + LIST_DIFFS_CACHE_SIZE < nHeight) {
+            // too old, drop it
             toDeleteLists.emplace_back(p.first);
+            continue;
+        }
+        if (tipIndex != nullptr && p.first == tipIndex->GetBlockHash()) {
+            // it's a snapshot for the tip, keep it
             continue;
         }
         bool fQuorumCache = ranges::any_of(Params().GetConsensus().llmqs, [&nHeight, &p](const auto& params){
@@ -1239,13 +1244,8 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
             // at least one quorum could be using it, keep it
             continue;
         }
-        // no alive quorums using it, see if it was a cache for the tip or for a now outdated quorum
-        if (tipIndex && tipIndex->pprev && (p.first == tipIndex->pprev->GetBlockHash())) {
-            toDeleteLists.emplace_back(p.first);
-        } else if (ranges::any_of(Params().GetConsensus().llmqs,
-                                  [&p](const auto& llmqParams){ return p.second.GetHeight() % llmqParams.dkgInterval == 0; })) {
-            toDeleteLists.emplace_back(p.first);
-        }
+        // none of the above, drop it
+        toDeleteLists.emplace_back(p.first);
     }
     for (const auto& h : toDeleteLists) {
         mnListsCache.erase(h);
