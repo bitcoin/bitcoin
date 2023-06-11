@@ -519,7 +519,6 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
 {
     auto dmn = std::make_shared<CDeterministicMN>(oldDmn);
     auto oldState = dmn->pdmnState;
-    dmn->pdmnState = pdmnState;
 
     // All mnUniquePropertyMap's updates must be atomic.
     // Using this temporary map as a checkpoint to roll back to in case of any issues.
@@ -541,13 +540,14 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
                 oldDmn.proTxHash.ToString(), pdmnState->pubKeyOperator.ToString())));
     }
     if (dmn->nType == MnType::HighPerformance) {
-        if (!UpdateUniqueProperty(*dmn, oldState->platformNodeID, dmn->pdmnState->platformNodeID)) {
+        if (!UpdateUniqueProperty(*dmn, oldState->platformNodeID, pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate platformNodeID=%s", __func__,
-                                               dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
+                                               oldDmn.proTxHash.ToString(), pdmnState->platformNodeID.ToString())));
         }
     }
 
+    dmn->pdmnState = pdmnState;
     mnMap = mnMap.set(oldDmn.proTxHash, dmn);
 }
 
@@ -899,8 +899,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
                 newState->ResetOperatorFields();
                 newState->BanIfNotBanned(nHeight);
+                // we update pubKeyOperator here, make sure state version matches
+                newState->nVersion = proTx.nVersion;
+                newState->pubKeyOperator = proTx.pubKeyOperator;
             }
-            newState->pubKeyOperator = proTx.pubKeyOperator;
             newState->keyIDVoting = proTx.keyIDVoting;
             newState->scriptPayout = proTx.scriptPayout;
 
