@@ -79,14 +79,14 @@ def download_binary(tag, args) -> int:
             return 0
         shutil.rmtree(tag)
     Path(tag).mkdir()
-    bin_path = 'bin/bitcoin-core-{}'.format(tag[1:])
+    bin_path = 'releases/download/v{}'.format(tag[1:])
     match = re.compile('v(.*)(rc[0-9]+)$').search(tag)
     if match:
-        bin_path = 'bin/bitcoin-core-{}/test.{}'.format(
+        bin_path = 'releases/download/test.{}'.format(
             match.group(1), match.group(2))
-    tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
+    tarball = 'dashcore-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=args.platform)
-    tarballUrl = 'https://bitcoincore.org/{bin_path}/{tarball}'.format(
+    tarballUrl = 'https://github.com/dashpay/dash/{bin_path}/{tarball}'.format(
         bin_path=bin_path, tarball=tarball)
 
     print('Fetching: {tarballUrl}'.format(tarballUrl=tarballUrl))
@@ -98,7 +98,7 @@ def download_binary(tag, args) -> int:
         return 1
 
     curlCmds = [
-        ['curl', '--remote-name', tarballUrl]
+        ['curl', '-L', '--remote-name', tarballUrl]
     ]
 
     for cmd in curlCmds:
@@ -121,9 +121,11 @@ def download_binary(tag, args) -> int:
     print("Checksum matched")
 
     # Extract tarball
+    # special case for v17 and earlier: other name of version
+    filename = tag[1:-2] if tag[1:3] == "0." else tag[1:]
     ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
                           '--strip-components=1',
-                          'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
+                          'dashcore-{tag}'.format(tag=filename, platform=args.platform)]).returncode
     if ret:
         return ret
 
@@ -132,7 +134,7 @@ def download_binary(tag, args) -> int:
 
 
 def build_release(tag, args) -> int:
-    githubUrl = "https://github.com/bitcoin/bitcoin"
+    githubUrl = "https://github.com/dashpay/dash"
     if args.remove_dir:
         if Path(tag).is_dir():
             shutil.rmtree(tag)
@@ -176,7 +178,7 @@ def build_release(tag, args) -> int:
         # Move binaries, so they're in the same place as in the
         # release download
         Path('bin').mkdir(exist_ok=True)
-        files = ['bitcoind', 'bitcoin-cli', 'bitcoin-tx']
+        files = ['dashd', 'dash-cli', 'dash-tx']
         for f in files:
             Path('src/'+f).rename('bin/'+f)
     return 0
@@ -236,6 +238,6 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--target-dir', action='store',
                         help='target directory.', default='releases')
     parser.add_argument('tags', nargs='+',
-                        help="release tags. e.g.: v0.18.1 v0.20.0rc2")
+                        help="release tags. e.g.: v19.1.0 v19.0.0-rc.9")
     args = parser.parse_args()
     sys.exit(main(args))
