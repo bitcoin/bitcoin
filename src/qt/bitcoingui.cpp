@@ -460,7 +460,7 @@ void BitcoinGUI::createActions()
 
     // Jump directly to tabs in RPC-console
     connect(openInfoAction, &QAction::triggered, this, &BitcoinGUI::showInfo);
-    connect(openRPCConsoleAction, &QAction::triggered, this, &BitcoinGUI::showDebugWindow);
+    connect(openRPCConsoleAction, &QAction::triggered, this, &BitcoinGUI::showConsole);
     connect(openGraphAction, &QAction::triggered, this, &BitcoinGUI::showGraph);
     connect(openPeersAction, &QAction::triggered, this, &BitcoinGUI::showPeers);
     connect(openRepairAction, &QAction::triggered, this, &BitcoinGUI::showRepair);

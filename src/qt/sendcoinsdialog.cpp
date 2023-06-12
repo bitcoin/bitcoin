@@ -85,6 +85,7 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
     GUIUtil::setFont({ui->labelCoinControlFeatures
                      }, GUIUtil::FontWeight::Bold, 16);
 
+    ui->checkBoxCoinControlChange->setEnabled(!_fCoinJoin);
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
     addEntry();
