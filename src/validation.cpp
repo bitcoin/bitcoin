@@ -1993,8 +1993,6 @@ public:
     }
 };
 
-static std::array<ThresholdConditionCache, VERSIONBITS_NUM_BITS> warningcache GUARDED_BY(cs_main);
-
 static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
 {
     const Consensus::Params& consensusparams = chainman.GetConsensus();
@@ -2640,7 +2638,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(m_chainman, bit);
-            ThresholdState state = checker.GetStateFor(pindex, params.GetConsensus(), warningcache.at(bit));
+            ThresholdState state = checker.GetStateFor(pindex, params.GetConsensus(), m_chainman.m_warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {
@@ -5586,11 +5584,6 @@ ChainstateManager::~ChainstateManager()
     LOCK(::cs_main);
 
     m_versionbitscache.Clear();
-
-    // TODO: The warning cache should probably become non-global
-    for (auto& i : warningcache) {
-        i.clear();
-    }
 }
 
 bool ChainstateManager::DetectSnapshotChainstate(CTxMemPool* mempool)

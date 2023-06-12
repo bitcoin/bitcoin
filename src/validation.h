@@ -938,6 +938,8 @@ private:
     //! nullopt.
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    std::array<ThresholdConditionCache, VERSIONBITS_NUM_BITS> m_warningcache GUARDED_BY(::cs_main);
+
     //! Return true if a chainstate is considered usable.
     //!
     //! This is false when a background validation chainstate has completed its
