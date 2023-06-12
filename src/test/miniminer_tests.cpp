@@ -277,6 +277,33 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
 {
+/*      Tx graph for `miniminer_overlap` unit test:
+ *
+ *     coinbase_tx [mined]        ... block-chain
+ *  -------------------------------------------------
+ *      /   |   \          \      ... mempool
+ *     /    |    \         |
+ *   tx0   tx1   tx2      tx4
+ *  [low] [med] [high]   [high]
+ *     \    |    /         |
+ *      \   |   /         tx5
+ *       \  |  /         [low]
+ *         tx3          /     \
+ *        [high]       tx6    tx7
+ *                    [med]  [high]
+ *
+ *  NOTE:
+ *  -> "low"/"med"/"high" denote the _absolute_ fee of each tx
+ *  -> tx3 has 3 inputs and 3 outputs, all other txs have 1 input and 2 outputs
+ *  -> tx3's feerate is lower than tx2's, as tx3 has more weight (due to having more inputs and outputs)
+ *
+ *  -> tx2_FR = high / tx2_vsize
+ *  -> tx3_FR = high / tx3_vsize
+ *  -> tx3_ASFR = (low+med+high+high) / (tx0_vsize + tx1_vsize + tx2_vsize + tx3_vsize)
+ *  -> tx4_FR = high / tx4_vsize
+ *  -> tx6_ASFR = (high+low+med) / (tx4_vsize + tx5_vsize + tx6_vsize)
+ *  -> tx7_ASFR = (high+low+high) / (tx4_vsize + tx5_vsize + tx7_vsize) */
+
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(::cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
@@ -328,10 +355,16 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     const auto tx3_feerate = CFeeRate(high_fee, tx_vsizes[3]);
     // tx3's feerate is lower than tx2's. same fee, different weight.
     BOOST_CHECK(tx2_feerate > tx3_feerate);
-    const auto tx3_anc_feerate = CFeeRate(low_fee + med_fee + high_fee, tx_vsizes[0] + tx_vsizes[1] + tx_vsizes[3]);
+    const auto tx3_anc_feerate = CFeeRate(low_fee + med_fee + high_fee + high_fee, tx_vsizes[0] + tx_vsizes[1] + tx_vsizes[2] + tx_vsizes[3]);
+    const auto tx3_iter = pool.GetIter(tx3->GetHash());
+    BOOST_CHECK(tx3_anc_feerate == CFeeRate(tx3_iter.value()->GetModFeesWithAncestors(), tx3_iter.value()->GetSizeWithAncestors()));
     const auto tx4_feerate = CFeeRate(high_fee, tx_vsizes[4]);
-    const auto tx6_anc_feerate = CFeeRate(low_fee + med_fee, tx_vsizes[5] + tx_vsizes[6]);
-    const auto tx7_anc_feerate = CFeeRate(low_fee + high_fee, tx_vsizes[5] + tx_vsizes[7]);
+    const auto tx6_anc_feerate = CFeeRate(high_fee + low_fee + med_fee, tx_vsizes[4] + tx_vsizes[5] + tx_vsizes[6]);
+    const auto tx6_iter = pool.GetIter(tx6->GetHash());
+    BOOST_CHECK(tx6_anc_feerate == CFeeRate(tx6_iter.value()->GetModFeesWithAncestors(), tx6_iter.value()->GetSizeWithAncestors()));
+    const auto tx7_anc_feerate = CFeeRate(high_fee + low_fee + high_fee, tx_vsizes[4] + tx_vsizes[5] + tx_vsizes[7]);
+    const auto tx7_iter = pool.GetIter(tx7->GetHash());
+    BOOST_CHECK(tx7_anc_feerate == CFeeRate(tx7_iter.value()->GetModFeesWithAncestors(), tx7_iter.value()->GetSizeWithAncestors()));
     BOOST_CHECK(tx4_feerate > tx6_anc_feerate);
     BOOST_CHECK(tx4_feerate > tx7_anc_feerate);
 
@@ -445,12 +478,12 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     const auto cluster_501 = pool.GatherClusters({tx_501->GetHash()});
     BOOST_CHECK_EQUAL(cluster_501.size(), 0);
 
-    // Zig Zag cluster:
-    // txp0     txp1     txp2    ...  txp48  txp49
-    //    \    /    \   /   \            \   /
-    //     txc0     txc1    txc2  ...    txc48
-    // Note that each transaction's ancestor size is 1 or 3, and each descendant size is 1, 2 or 3.
-    // However, all of these transactions are in the same cluster.
+    /* Zig Zag cluster:
+     * txp0     txp1     txp2    ...  txp48  txp49
+     *    \    /    \   /   \            \   /
+     *     txc0     txc1    txc2  ...    txc48
+     * Note that each transaction's ancestor size is 1 or 3, and each descendant size is 1, 2 or 3.
+     * However, all of these transactions are in the same cluster. */
     std::vector<uint256> zigzag_txids;
     for (auto p{0}; p < 50; ++p) {
         const auto txp = make_tx({COutPoint{GetRandHash(), 0}}, /*num_outputs=*/2);
