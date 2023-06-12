@@ -56,7 +56,6 @@ implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:script/bitcoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
 implicit-integer-sign-change:serialize.h
-implicit-integer-sign-change:txmempool.cpp
 implicit-signed-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:crypto/
 shift-base:arith_uint256.cpp
