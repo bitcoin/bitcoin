@@ -23,6 +23,27 @@
 #include <utility>
 #include <vector>
 
+namespace util {
+inline void Xor(Span<std::byte> write, Span<const std::byte> key, size_t key_offset = 0)
+{
+    if (key.size() == 0) {
+        return;
+    }
+    key_offset %= key.size();
+
+    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
+        write[i] ^= key[j++];
+
+        // This potentially acts on very many bytes of data, so it's
+        // important that we calculate `j`, i.e. the `key` index in this
+        // way instead of doing a %, which would effectively be a division
+        // for each byte Xor'd -- much slower than need be.
+        if (j == key.size())
+            j = 0;
+    }
+}
+} // namespace util
+
 template<typename Stream>
 class OverrideStream
 {
@@ -316,20 +337,7 @@ public:
      */
     void Xor(const std::vector<unsigned char>& key)
     {
-        if (key.size() == 0) {
-            return;
-        }
-
-        for (size_type i = 0, j = 0; i != size(); i++) {
-            vch[i] ^= std::byte{key[j++]};
-
-            // This potentially acts on very many bytes of data, so it's
-            // important that we calculate `j`, i.e. the `key` index in this
-            // way instead of doing a %, which would effectively be a division
-            // for each byte Xor'd -- much slower than need be.
-            if (j == key.size())
-                j = 0;
-        }
+        util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
     }
 };
 
@@ -468,7 +476,6 @@ public:
         m_offset = 0;
     }
 };
-
 
 /** Non-refcounted RAII wrapper for FILE*
  *
