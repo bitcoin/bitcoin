@@ -6793,7 +6793,6 @@ bool Chainstate::StartGethNode()
     std::string binArchitectureTag;
     const fs::path &fpathDefault = FindExecPath(binArchitectureTag);
 
-    
     fs::path binaryURL = fpathDefault / "../Resources" / gethFilename;
     binaryURL = binaryURL.make_preferred();
     // current executable path
@@ -6848,7 +6847,6 @@ bool Chainstate::StartGethNode()
         LogPrintf("Could not find sysgeth\n");
         return false;
     }
-
     const fs::path &dataDir = m_chainman.m_options.datadir / "geth";
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(m_chainman.GethCommandLine(), binaryURL, dataDir);
     const fs::path &log = m_chainman.m_options.datadir / "sysgeth.log";
@@ -6879,14 +6877,14 @@ bool Chainstate::StartGethNode()
     
         // push NULL to the end of the vector (execvp expects NULL as last element)
         commandVector.push_back(nullptr);
-        char **command = commandVector.data();    
+        char **command = commandVector.data();  
         LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
         int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
         if (err == -1) {
             LogPrintf("Could not open sysgeth.log\n");
         }
         if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
-        fflush(stderr); close(err);                               
+        fflush(stderr); close(err);                            
         execvp(command[0], &command[0]);
         if (errno != 0) {
             LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));

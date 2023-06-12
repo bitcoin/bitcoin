@@ -48,8 +48,8 @@ struct ChainstateManagerOpts {
     Notifications& notifications;
     int stop_at_height{DEFAULT_STOPATHEIGHT};
     // SYSCOIN
-    std::vector<std::string> geth_commandline;
-    fs::path datadir_base;
+    std::vector<std::string> geth_commandline{std::vector<std::string>()};
+    fs::path datadir_base{};
 };
 
 } // namespace kernel

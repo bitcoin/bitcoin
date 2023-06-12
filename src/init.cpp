@@ -1674,8 +1674,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .datadir = args.GetDataDirNet(),
-        // SYSCOIN
-        .datadir_base = args.GetDataDirBase(),
         .adjusted_time_callback = GetAdjustedTime,
         .notifications = *node.notifications,
     };

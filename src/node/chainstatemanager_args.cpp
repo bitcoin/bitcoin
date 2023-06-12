@@ -38,6 +38,11 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
     if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
 
     if (auto value{args.GetIntArg("-stopatheight")}) opts.stop_at_height = *value;
+    // SYSCOIN
+    auto value{args.GetArgs("-gethcommandline")};
+    if (!value.empty()) opts.geth_commandline = value;
+
+    opts.datadir_base = args.GetDataDirBase();
 
     ReadDatabaseArgs(args, opts.block_tree_db);
     ReadDatabaseArgs(args, opts.coins_db);
