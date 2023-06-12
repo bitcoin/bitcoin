@@ -109,10 +109,7 @@ MclG1Point MclG1Point::GetInfinity()
     static mclBnG1* g = nullptr;
     if (g == nullptr) {
         g = new mclBnG1();
-        auto g_str = "0"s;
-        if (mclBnG1_setStr(g, g_str.c_str(), g_str.length(), 10) == -1) {
-            throw std::runtime_error("MclG1Point::GetInfinity(): mclBnG1_setStr failed");
-        }
+        mclBnG1_clear(g);
     }
     MclG1Point ret(*g);
     return ret;
