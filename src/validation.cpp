@@ -1992,7 +1992,10 @@ private:
 public:
     explicit WarningBitsConditionChecker(const ChainstateManager& chainman, int bit) : m_chainman{chainman}, m_bit(bit) {}
 
-    int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
+    int64_t BeginTime(const Consensus::Params& params) const override
+    {
+        return params.MinBIP9WarningTime > params.nPowTargetTimespan ? params.MinBIP9WarningTime - params.nPowTargetTimespan : params.MinBIP9WarningTime;
+    }
     int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
