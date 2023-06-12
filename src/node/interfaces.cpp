@@ -89,10 +89,11 @@ public:
     void initLogging() override { InitLogging(args()); }
     void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
+    int getExitStatus() override { return Assert(m_context)->exit_status.load(); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        if (!AppInitBasicSetup(args())) return false;
+        if (!AppInitBasicSetup(args(), Assert(context())->exit_status)) return false;
         if (!AppInitParameterInteraction(args(), /*use_syscall_sandbox=*/false)) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
@@ -105,7 +106,10 @@ public:
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {
-        return AppInitMain(*m_context, tip_info);
+        if (AppInitMain(*m_context, tip_info)) return true;
+        // Error during initialization, set exit status before continue
+        m_context->exit_status.store(EXIT_FAILURE);
+        return false;
     }
     void appShutdown() override
     {
