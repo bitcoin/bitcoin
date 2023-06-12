@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         CAmount selection_target = 16 * CENT;
         const auto& no_res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs*/true),
                                             selection_target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT);
-        BOOST_ASSERT(!no_res);
+        BOOST_REQUIRE(!no_res);
         BOOST_CHECK(util::ErrorString(no_res).original.find("The inputs size exceeds the maximum weight") != std::string::npos);
 
         // Now add same coin value with a good size and check that it gets selected

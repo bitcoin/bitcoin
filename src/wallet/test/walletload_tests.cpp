@@ -169,7 +169,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_ckey, TestingSetup)
         // Fourth test case:
         // Verify that loading up a 'ckey' with an invalid pubkey throws an error
         CPubKey invalid_key;
-        BOOST_ASSERT(!invalid_key.IsValid());
+        BOOST_CHECK(!invalid_key.IsValid());
         SerializeData key = MakeSerializeData(DBKeys::CRYPTED_KEY, invalid_key);
         records[key] = ckey_record_value;
 
