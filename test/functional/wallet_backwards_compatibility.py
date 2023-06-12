@@ -264,10 +264,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 os.path.join(node_master_wallets_dir, "u1_v16")
             )
             load_res = node_master.loadwallet("u1_v16")
-            # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
+            # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
             if int(node_master.getnetworkinfo()["version"]) >= 249900:
                 # loadwallet#warnings (added in v25) -- only present if there is a warning
-                assert "warnings" not in load_res
+                # Legacy wallets will have only a deprecation warning
+                assert_equal(load_res["warnings"], ["Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."])
             else:
                 # loadwallet#warning (deprecated in v25) -- always present, but empty string if no warning
                 assert_equal(load_res["warning"], '')
