@@ -1657,14 +1657,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
     fReindexGeth = fReindex || fReindexChainState;
-    fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
-    if(fNEVMConnection) {
-        if(!node.chainman->ActiveChainstate().DoGethStartupProcedure()) {
-            fNEVMConnection = false;
-            LogPrintf("NEVM not detected, setting fNEVMConnection to false...\n");
-        }
-    }
-    LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
     // ********************************************************* Step 7: load block chain
     if(fRegTest) {
         nMNCollateralRequired = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
@@ -1823,6 +1815,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         RegisterValidationInterface(activeMasternodeManager.get());
     }
     ChainstateManager& chainman = *Assert(node.chainman);
+    fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
+    if(fNEVMConnection) {
+        if(!node.chainman->ActiveChainstate().DoGethStartupProcedure()) {
+            fNEVMConnection = false;
+            LogPrintf("NEVM not detected, setting fNEVMConnection to false...\n");
+        }
+    }
+    LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
     if(args.IsArgSet("-hrp"))
         fNEVMConnection = false;
     if(fNEVMConnection) {
