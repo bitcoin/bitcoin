@@ -482,9 +482,10 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
+    const std::vector<std::byte> m_xor;
 
 public:
-    explicit AutoFile(std::FILE* file) : m_file{file} {}
+    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={}) : m_file{file}, m_xor{std::move(data_xor)} {}
 
     ~AutoFile() { fclose(); }
 
@@ -553,7 +554,7 @@ private:
     const int nVersion;
 
 public:
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : AutoFile{filenew}, nType(nTypeIn), nVersion(nVersionIn) {}
+    explicit CAutoFile(std::FILE* file, int type, int version, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)}, nType{type}, nVersion{version} {}
     int GetType() const          { return nType; }
     int GetVersion() const       { return nVersion; }
 
