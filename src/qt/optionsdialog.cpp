@@ -38,7 +38,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui(new Ui::OptionsDialog),
     model(nullptr),
     mapper(nullptr),
-    pageButtons(nullptr)
+    pageButtons(nullptr),
+    m_enable_wallet(enableWallet)
 {
     ui->setupUi(this);
 
@@ -108,7 +109,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnMain, pageButtons->buttons().size());
     /* Remove Wallet/CoinJoin tabs and 3rd party-URL textbox in case of -disablewallet */
-    if (!enableWallet) {
+    if (!m_enable_wallet) {
         ui->stackedWidgetOptions->removeWidget(ui->pageWallet);
         ui->btnWallet->hide();
         ui->stackedWidgetOptions->removeWidget(ui->pageCoinJoin);
@@ -396,9 +397,11 @@ void OptionsDialog::on_okButton_clicked()
     mapper->submit();
     appearance->accept();
 #ifdef ENABLE_WALLET
-    for (auto& wallet : model->node().walletClient().getWallets()) {
-        wallet->coinJoin().resetCachedBlocks();
-        wallet->markDirty();
+    if (m_enable_wallet) {
+        for (auto& wallet : model->node().walletClient().getWallets()) {
+            wallet->coinJoin().resetCachedBlocks();
+            wallet->markDirty();
+        }
     }
 #endif // ENABLE_WALLET
     accept();
