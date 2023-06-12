@@ -222,7 +222,7 @@ struct TxMempoolInfo
     CAmount fee;
 
     /** Virtual size of the transaction. */
-    size_t vsize;
+    int32_t vsize;
 
     /** The fee delta. */
     int64_t nFeeDelta;
