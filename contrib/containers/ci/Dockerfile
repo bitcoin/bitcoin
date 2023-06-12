@@ -64,13 +64,10 @@ RUN apt-get update && apt-get install $APT_ARGS \
     g++-9-multilib \
     g++-arm-linux-gnueabihf \
     g++-mingw-w64-x86-64 \
-    imagemagick \
     jq \
     libcap-dev \
-    librsvg2-bin \
     libz-dev \
     libbz2-dev \
-    libtiff-tools \
     libncurses5 \
     nsis \
     python3-zmq \
