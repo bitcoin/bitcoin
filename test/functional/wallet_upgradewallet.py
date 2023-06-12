@@ -30,6 +30,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
             ["-usehd=1"],            # v0.16.3 wallet
             ["-usehd=0"]             # v0.15.2 wallet
         ]
+        self.wallet_names = [self.default_wallet_name]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -49,6 +50,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         adjust_bitcoin_conf_for_pre_17(self.nodes[1].bitcoinconf)
         adjust_bitcoin_conf_for_pre_17(self.nodes[2].bitcoinconf)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def dumb_sync_blocks(self):
         """
