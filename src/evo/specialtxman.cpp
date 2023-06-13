@@ -154,7 +154,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         nTimeMerkle += nTime5 - nTime4;
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
 
-        if (llmq::utils::V19ActivationIndex(pindex) == pindex) {
+        if (llmq::utils::V19ActivationHeight(pindex) == pindex->nHeight + 1) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // V19 activated just activated, so we must switch to the new rules here.
             bls::bls_legacy_scheme.store(false);
@@ -175,7 +175,7 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
     auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
 
     try {
-        if (llmq::utils::V19ActivationIndex(pindex) == pindex) {
+        if (llmq::utils::V19ActivationHeight(pindex) == pindex->nHeight + 1) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // Removing the activation block here, so we must switch back to the old rules.
             bls::bls_legacy_scheme.store(true);
