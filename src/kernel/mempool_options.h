@@ -57,6 +57,7 @@ struct MemPoolOptions {
     bool require_standard{true};
     bool full_rbf{DEFAULT_MEMPOOL_FULL_RBF};
     MemPoolLimits limits{};
+    bool is_min_relay_feerate_set{false};
 };
 } // namespace kernel
 
