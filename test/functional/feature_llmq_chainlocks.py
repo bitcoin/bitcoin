@@ -52,6 +52,20 @@ class LLMQChainLocksTest(DashTestFramework):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(h))
             assert block['chainlock']
 
+        # Update spork to SPORK_19_CHAINLOCKS_ENABLED and test its behaviour
+        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 1)
+        self.wait_for_sporks_same()
+
+        # Generate new blocks and verify that they are not chainlocked
+        previous_block_hash = self.nodes[0].getbestblockhash()
+        for _ in range(2):
+            block_hash = self.nodes[0].generate(1)[0]
+            self.wait_for_chainlocked_block_all_nodes(block_hash, expected=False)
+            assert self.nodes[0].getblock(previous_block_hash)["chainlock"]
+
+        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
+
         self.log.info("Isolate node, mine on another, and reconnect")
         self.isolate_node(0)
         node0_mining_addr = self.nodes[0].getnewaddress()

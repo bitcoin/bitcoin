@@ -32,7 +32,7 @@ public:
     static SecureString Generate(int strength);    // strength in bits
     static SecureString FromData(const SecureVector& data, int len);
     static bool Check(SecureString mnemonic);
-    // passphrase must be at most 256 characters or code may crash
+    // passphrase must be at most 256 characters otherwise it would be truncated
     static void ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet);
 };
 

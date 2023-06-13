@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         std::vector<unsigned char> vecBytes{static_cast<unsigned char>(i)};
         vecBytes.resize(CBLSSecretKey::SerSize);
 
-        smle.pubKeyOperator.Set(CBLSSecretKey(vecBytes).GetPublicKey());
+        smle.pubKeyOperator.Set(CBLSSecretKey(vecBytes).GetPublicKey(), bls::bls_legacy_scheme.load());
         smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
 

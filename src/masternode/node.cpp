@@ -131,6 +131,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     activeMasternodeInfo.proTxHash = dmn->proTxHash;
     activeMasternodeInfo.outpoint = dmn->collateralOutpoint;
+    activeMasternodeInfo.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
     state = MASTERNODE_READY;
 }
 

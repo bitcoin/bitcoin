@@ -573,7 +573,7 @@ uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHa
                                         const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey,
                                         const uint256& vvecHash)
 {
-    CHashWriter hw(SER_NETWORK, 0);
+    CHashWriter hw(SER_GETHASH, 0);
     hw << llmqType;
     hw << blockHash;
     hw << DYNBITSET(validMembers);
@@ -659,16 +659,21 @@ bool IsV19Active(const CBlockIndex* pindex)
     return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) == ThresholdState::ACTIVE;
 }
 
-const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
+const int V19ActivationHeight(const CBlockIndex* pindex)
 {
     assert(pindex);
 
-    LOCK(cs_llmq_vbc);
-    if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
-        return nullptr;
-    }
-    int nHeight = VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache);
-    return pindex->GetAncestor(nHeight);
+   LOCK(cs_llmq_vbc);
+   if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
+       return -1;
+   }
+   return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache);
+}
+
+const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
+{
+    assert(pindex);
+    return pindex->GetAncestor(V19ActivationHeight(pindex));
 }
 
 bool IsInstantSendLLMQTypeShared()

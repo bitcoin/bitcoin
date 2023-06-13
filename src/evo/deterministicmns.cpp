@@ -25,8 +25,8 @@
 
 #include <memory>
 
-static const std::string DB_LIST_SNAPSHOT = "dmn_S2";
-static const std::string DB_LIST_DIFF = "dmn_D2";
+static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
+static const std::string DB_LIST_DIFF = "dmn_D3";
 
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
@@ -405,23 +405,18 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
 
 CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDeterministicMNList& to, bool extended) const
 {
-    bool v19active = llmq::utils::IsV19Active(::ChainActive().Tip());
     CSimplifiedMNListDiff diffRet;
     diffRet.baseBlockHash = blockHash;
     diffRet.blockHash = to.blockHash;
-    diffRet.nVersion = v19active ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
 
     to.ForEachMN(false, [&](const auto& toPtr) {
         auto fromPtr = GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
             CSimplifiedMNListEntry sme(toPtr);
-            sme.nVersion = diffRet.nVersion;
             diffRet.mnList.push_back(std::move(sme));
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
-            sme1.nVersion = diffRet.nVersion;
-            sme2.nVersion = diffRet.nVersion;
             if ((sme1 != sme2) ||
                 (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
                     diffRet.mnList.push_back(std::move(sme1));
@@ -463,48 +458,6 @@ CDeterministicMNList CDeterministicMNList::ApplyDiff(const CBlockIndex* pindex, 
     return result;
 }
 
-// RepopulateUniquePropertyMap clears internal mnUniquePropertyMap, and repopulate it with currently MNs unique properties.
-// This is needed when the v19 fork activates, we need to store again pubKeyOperator in the mnUniquePropertyMap.
-// pubKeyOperator don't differ between the two schemes (legacy and basic(v19)) but their serialisation do: hence their hash.
-// And because mnUniquePropertyMap store only hashes, then we need to re-calculate hashes and repopulate.
-void CDeterministicMNList::RepopulateUniquePropertyMap() {
-    decltype(mnUniquePropertyMap) mnUniquePropertyMapEmpty;
-    mnUniquePropertyMap = mnUniquePropertyMapEmpty;
-
-    for (const auto &p: mnMap) {
-        auto dmn = p.second;
-        if (!AddUniqueProperty(*dmn, dmn->collateralOutpoint)) {
-            throw (std::runtime_error(
-                    strprintf("%s: Can't add a masternode %s with a duplicate collateralOutpoint=%s", __func__,
-                              dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
-        }
-        if (dmn->pdmnState->addr != CService() && !AddUniqueProperty(*dmn, dmn->pdmnState->addr)) {
-            throw (std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
-                                                dmn->proTxHash.ToString(),
-                                                dmn->pdmnState->addr.ToStringIPPort(false))));
-        }
-        if (!AddUniqueProperty(*dmn, dmn->pdmnState->keyIDOwner)) {
-            throw (std::runtime_error(
-                    strprintf("%s: Can't add a masternode %s with a duplicate keyIDOwner=%s", __func__,
-                              dmn->proTxHash.ToString(), EncodeDestination(PKHash(dmn->pdmnState->keyIDOwner)))));
-        }
-        if (dmn->pdmnState->pubKeyOperator.Get().IsValid() &&
-            !AddUniqueProperty(*dmn, dmn->pdmnState->pubKeyOperator)) {
-            throw (std::runtime_error(
-                    strprintf("%s: Can't add a masternode %s with a duplicate pubKeyOperator=%s", __func__,
-                              dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
-        }
-
-        if (dmn->nType == MnType::HighPerformance) {
-            if (!AddUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
-                throw (std::runtime_error(
-                        strprintf("%s: Can't add a masternode %s with a duplicate platformNodeID=%s", __func__,
-                                  dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
-            }
-        }
-    }
-}
-
 void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount)
 {
     assert(dmn != nullptr);
@@ -538,7 +491,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
     if (dmn->pdmnState->pubKeyOperator.Get().IsValid() && !AddUniqueProperty(*dmn, dmn->pdmnState->pubKeyOperator)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate pubKeyOperator=%s", __func__,
-                dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
+                dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.ToString())));
     }
 
     if (dmn->nType == MnType::HighPerformance) {
@@ -561,7 +514,6 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
 {
     auto dmn = std::make_shared<CDeterministicMN>(oldDmn);
     auto oldState = dmn->pdmnState;
-    dmn->pdmnState = pdmnState;
 
     // All mnUniquePropertyMap's updates must be atomic.
     // Using this temporary map as a checkpoint to roll back to in case of any issues.
@@ -580,16 +532,17 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
     if (!UpdateUniqueProperty(*dmn, oldState->pubKeyOperator, pdmnState->pubKeyOperator)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate pubKeyOperator=%s", __func__,
-                oldDmn.proTxHash.ToString(), pdmnState->pubKeyOperator.Get().ToString())));
+                oldDmn.proTxHash.ToString(), pdmnState->pubKeyOperator.ToString())));
     }
     if (dmn->nType == MnType::HighPerformance) {
-        if (!UpdateUniqueProperty(*dmn, oldState->platformNodeID, dmn->pdmnState->platformNodeID)) {
+        if (!UpdateUniqueProperty(*dmn, oldState->platformNodeID, pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate platformNodeID=%s", __func__,
-                                               dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
+                                               oldDmn.proTxHash.ToString(), pdmnState->platformNodeID.ToString())));
         }
     }
 
+    dmn->pdmnState = pdmnState;
     mnMap = mnMap.set(oldDmn.proTxHash, dmn);
 }
 
@@ -639,7 +592,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     if (dmn->pdmnState->pubKeyOperator.Get().IsValid() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->pubKeyOperator)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a pubKeyOperator=%s", __func__,
-                proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
+                proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.ToString())));
     }
 
     if (dmn->nType == MnType::HighPerformance) {
@@ -687,19 +640,11 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
         newList.SetBlockHash(block.GetHash());
 
-        // If the fork is active for pindex block, then we need to repopulate property map
-        // (Check documentation of CDeterministicMNList::RepopulateUniquePropertyMap()).
-        // This is needed only when base list is pre-v19 fork and pindex is post-v19 fork.
-        bool v19_just_activated = pindex == llmq::utils::V19ActivationIndex(pindex);
-        if (v19_just_activated) {
-            newList.RepopulateUniquePropertyMap();
-        }
-
         oldList = GetListForBlock(pindex->pprev);
         diff = oldList.BuildDiff(newList);
 
         m_evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
-        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1 || v19_just_activated) {
+        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1) {
             m_evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
             mnListsCache.emplace(newList.GetBlockHash(), newList);
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
@@ -940,12 +885,14 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return _state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-hash");
             }
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            if (newState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+            if (newState->pubKeyOperator != proTx.pubKeyOperator) {
                 // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
                 newState->ResetOperatorFields();
                 newState->BanIfNotBanned(nHeight);
+                // we update pubKeyOperator here, make sure state version matches
+                newState->nVersion = proTx.nVersion;
+                newState->pubKeyOperator = proTx.pubKeyOperator;
             }
-            newState->pubKeyOperator.Set(proTx.pubKeyOperator);
             newState->keyIDVoting = proTx.keyIDVoting;
             newState->scriptPayout = proTx.scriptPayout;
 
@@ -1228,7 +1175,12 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
     std::vector<uint256> toDeleteDiffs;
     for (const auto& p : mnListsCache) {
         if (p.second.GetHeight() + LIST_DIFFS_CACHE_SIZE < nHeight) {
+            // too old, drop it
             toDeleteLists.emplace_back(p.first);
+            continue;
+        }
+        if (tipIndex != nullptr && p.first == tipIndex->GetBlockHash()) {
+            // it's a snapshot for the tip, keep it
             continue;
         }
         bool fQuorumCache = ranges::any_of(Params().GetConsensus().llmqs, [&nHeight, &p](const auto& params){
@@ -1239,13 +1191,8 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
             // at least one quorum could be using it, keep it
             continue;
         }
-        // no alive quorums using it, see if it was a cache for the tip or for a now outdated quorum
-        if (tipIndex && tipIndex->pprev && (p.first == tipIndex->pprev->GetBlockHash())) {
-            toDeleteLists.emplace_back(p.first);
-        } else if (ranges::any_of(Params().GetConsensus().llmqs,
-                                  [&p](const auto& llmqParams){ return p.second.GetHeight() % llmqParams.dkgInterval == 0; })) {
-            toDeleteLists.emplace_back(p.first);
-        }
+        // none of the above, drop it
+        toDeleteLists.emplace_back(p.first);
     }
     for (const auto& h : toDeleteLists) {
         mnListsCache.erase(h);
@@ -1266,6 +1213,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
     static const std::string DB_OLD_LIST_SNAPSHOT = "dmn_S";
     static const std::string DB_OLD_LIST_DIFF = "dmn_D";
     static const std::string DB_OLD_BEST_BLOCK = "b_b2";
+    static const std::string DB_OLD_BEST_BLOCK2 = "b_b3";
 
     LOCK(cs_main);
 
@@ -1277,9 +1225,15 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
         return m_evoDb.IsEmpty();
     }
 
-    if (m_evoDb.GetRawDB().Exists(EVODB_BEST_BLOCK)) {
+    if (m_evoDb.GetRawDB().Exists(EVODB_BEST_BLOCK) || m_evoDb.GetRawDB().Exists(DB_OLD_BEST_BLOCK2)) {
         LogPrintf("CDeterministicMNManager::%s -- migration already done. skipping.\n", __func__);
         return true;
+    }
+
+    if (::ChainActive().Tip()->pprev != nullptr && llmq::utils::IsV19Active(::ChainActive().Tip()->pprev)) {
+        // too late
+        LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
+        return false;
     }
 
     // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
@@ -1304,15 +1258,15 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
 
     for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, ::ChainActive().Height() + 1)) {
         auto pindex = ::ChainActive()[nHeight];
-        // Unserialise CDeterministicMNListDiff using CURRENT_MN_FORMAT and set it's type to the default value TYPE_REGULAR_MASTERNODE
-        // It will be later written with format MN_TYPE_FORMAT which includes the type field.
+        // Unserialise CDeterministicMNListDiff using MN_OLD_FORMAT and set it's type to the default value TYPE_REGULAR_MASTERNODE
+        // It will be later written with format MN_CURRENT_FORMAT which includes the type field and MN state bls version.
         CDataStream diff_data(SER_DISK, CLIENT_VERSION);
         if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_DIFF, pindex->GetBlockHash()), diff_data)) {
             LogPrintf("CDeterministicMNManager::%s -- missing CDeterministicMNListDiff at height %d\n", __func__, nHeight);
             return false;
         }
         CDeterministicMNListDiff mndiff;
-        mndiff.Unserialize(diff_data, CDeterministicMN::CURRENT_MN_FORMAT);
+        mndiff.Unserialize(diff_data, CDeterministicMN::MN_OLD_FORMAT);
         batch.Write(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), mndiff);
         CDataStream snapshot_data(SER_DISK, CLIENT_VERSION);
         if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot_data)) {
@@ -1320,7 +1274,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
             continue;
         }
         CDeterministicMNList mnList;
-        mnList.Unserialize(snapshot_data, CDeterministicMN::CURRENT_MN_FORMAT);
+        mnList.Unserialize(snapshot_data, CDeterministicMN::MN_OLD_FORMAT);
         batch.Write(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), mnList);
         m_evoDb.GetRawDB().WriteBatch(batch);
         batch.Clear();
@@ -1329,7 +1283,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
 
     m_evoDb.GetRawDB().WriteBatch(batch);
 
-    // Writing EVODB_BEST_BLOCK (which is b_b3 now) marks the DB as upgraded
+    // Writing EVODB_BEST_BLOCK (which is b_b4 now) marks the DB as upgraded
     auto dbTx = m_evoDb.BeginTransaction();
     m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
     dbTx->Commit();
@@ -1344,6 +1298,111 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
     m_evoDb.GetRawDB().CompactFull();
 
     LogPrintf("CDeterministicMNManager::%s -- done compacting database\n", __func__);
+
+    // flush it to disk
+    if (!m_evoDb.CommitRootTransaction()) {
+        LogPrintf("CDeterministicMNManager::%s -- failed to commit to evoDB\n", __func__);
+        return false;
+    }
+
+    return true;
+}
+
+bool CDeterministicMNManager::MigrateDBIfNeeded2()
+{
+    static const std::string DB_OLD_LIST_SNAPSHOT = "dmn_S2";
+    static const std::string DB_OLD_LIST_DIFF = "dmn_D2";
+    static const std::string DB_OLD_BEST_BLOCK = "b_b3";
+
+    LOCK(cs_main);
+
+    LogPrintf("CDeterministicMNManager::%s -- upgrading DB to migrate MN state bls version\n", __func__);
+
+    if (::ChainActive().Tip() == nullptr) {
+        // should have no records
+        LogPrintf("CDeterministicMNManager::%s -- Chain empty. evoDB:%d.\n", __func__, m_evoDb.IsEmpty());
+        return m_evoDb.IsEmpty();
+    }
+
+    if (m_evoDb.GetRawDB().Exists(EVODB_BEST_BLOCK)) {
+        LogPrintf("CDeterministicMNManager::%s -- migration already done. skipping.\n", __func__);
+        return true;
+    }
+
+    if (::ChainActive().Tip()->pprev != nullptr && llmq::utils::IsV19Active(::ChainActive().Tip()->pprev)) {
+        // too late
+        LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
+        return false;
+    }
+
+    // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
+    // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
+    // then we must assume that the upgrade process was already running before but was interrupted.
+    if (::ChainActive().Height() > 1 && !m_evoDb.GetRawDB().Exists(DB_OLD_BEST_BLOCK)) {
+        LogPrintf("CDeterministicMNManager::%s -- previous migration attempt failed.\n", __func__);
+        return false;
+    }
+    m_evoDb.GetRawDB().Erase(DB_OLD_BEST_BLOCK);
+
+    if (::ChainActive().Height() < Params().GetConsensus().DIP0003Height) {
+        // not reached DIP3 height yet, so no upgrade needed
+        LogPrintf("CDeterministicMNManager::%s -- migration not needed. dip3 not reached\n", __func__);
+        auto dbTx = m_evoDb.BeginTransaction();
+        m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
+        dbTx->Commit();
+        return true;
+    }
+
+    CDBBatch batch(m_evoDb.GetRawDB());
+
+    for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, ::ChainActive().Height() + 1)) {
+        auto pindex = ::ChainActive()[nHeight];
+        // Unserialise CDeterministicMNListDiff using MN_TYPE_FORMAT and set MN state bls version to LEGACY_BLS_VERSION.
+        // It will be later written with format MN_CURRENT_FORMAT which includes the type field.
+        CDataStream diff_data(SER_DISK, CLIENT_VERSION);
+        if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_DIFF, pindex->GetBlockHash()), diff_data)) {
+            LogPrintf("CDeterministicMNManager::%s -- missing CDeterministicMNListDiff at height %d\n", __func__, nHeight);
+            return false;
+        }
+        CDeterministicMNListDiff mndiff;
+        mndiff.Unserialize(diff_data, CDeterministicMN::MN_TYPE_FORMAT);
+        batch.Write(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), mndiff);
+        CDataStream snapshot_data(SER_DISK, CLIENT_VERSION);
+        if (!m_evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_OLD_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot_data)) {
+            // it's ok, we write snapshots every DISK_SNAPSHOT_PERIOD blocks only
+            continue;
+        }
+        CDeterministicMNList mnList;
+        mnList.Unserialize(snapshot_data, CDeterministicMN::MN_TYPE_FORMAT);
+        batch.Write(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), mnList);
+        m_evoDb.GetRawDB().WriteBatch(batch);
+        batch.Clear();
+        LogPrintf("CDeterministicMNManager::%s -- wrote snapshot at height %d\n", __func__, nHeight);
+    }
+
+    m_evoDb.GetRawDB().WriteBatch(batch);
+
+    // Writing EVODB_BEST_BLOCK (which is b_b4 now) marks the DB as upgraded
+    auto dbTx = m_evoDb.BeginTransaction();
+    m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
+    dbTx->Commit();
+
+    LogPrintf("CDeterministicMNManager::%s -- done migrating\n", __func__);
+
+    m_evoDb.GetRawDB().Erase(DB_OLD_LIST_DIFF);
+    m_evoDb.GetRawDB().Erase(DB_OLD_LIST_SNAPSHOT);
+
+    LogPrintf("CDeterministicMNManager::%s -- done cleaning old data\n", __func__);
+
+    m_evoDb.GetRawDB().CompactFull();
+
+    LogPrintf("CDeterministicMNManager::%s -- done compacting database\n", __func__);
+
+    // flush it to disk
+    if (!m_evoDb.CommitRootTransaction()) {
+        LogPrintf("CDeterministicMNManager::%s -- failed to commit to evoDB\n", __func__);
+        return false;
+    }
 
     return true;
 }

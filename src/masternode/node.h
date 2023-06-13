@@ -28,6 +28,7 @@ struct CActiveMasternodeInfo {
     uint256 proTxHash;
     COutPoint outpoint;
     CService service;
+    bool legacy{true};
 };
 
 

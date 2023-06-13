@@ -21,6 +21,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
+#include <llmq/utils.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -103,7 +104,7 @@ static CMutableTransaction CreateProRegTx(const CTxMemPool& mempool, SimpleUTXOM
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
-    proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
+    proTx.pubKeyOperator.Set(operatorKeyRet.GetPublicKey(), bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
 
@@ -143,7 +144,7 @@ static CMutableTransaction CreateProUpRegTx(const CTxMemPool& mempool, SimpleUTX
     CProUpRegTx proTx;
     proTx.nVersion = CProUpRegTx::GetVersion(!bls::bls_legacy_scheme);
     proTx.proTxHash = proTxHash;
-    proTx.pubKeyOperator = pubKeyOperator;
+    proTx.pubKeyOperator.Set(pubKeyOperator, bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = keyIDVoting;
     proTx.scriptPayout = scriptPayout;
 
@@ -262,6 +263,136 @@ void FuncDIP3Activation(TestChainSetup& setup)
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
     BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+};
+
+void FuncV19Activation(TestChainSetup& setup)
+{
+    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+
+    // create
+    auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
+    CKey owner_key;
+    CBLSSecretKey operator_key;
+    CKey collateral_key;
+    collateral_key.MakeNewKey(false);
+    auto collateralScript = GetScriptForDestination(PKHash(collateral_key.GetPubKey()));
+    auto tx_reg = CreateProRegTx(*(setup.m_node.mempool), utxos, 1, collateralScript, setup.coinbaseKey, owner_key, operator_key);
+    auto tx_reg_hash = tx_reg.GetHash();
+
+    int nHeight = ::ChainActive().Height();
+
+    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey));
+    BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    ++nHeight;
+    BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
+    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    deterministicMNManager->DoMaintenance();
+    auto tip_list = deterministicMNManager->GetListAtChainTip();
+    BOOST_ASSERT(tip_list.HasMN(tx_reg_hash));
+    auto pindex_create = ::ChainActive().Tip();
+    auto base_list = deterministicMNManager->GetListForBlock(pindex_create);
+    std::vector<CDeterministicMNListDiff> diffs;
+
+    // update
+    CBLSSecretKey operator_key_new;
+    operator_key_new.MakeNewKey();
+    auto tx_upreg = CreateProUpRegTx(*(setup.m_node.mempool), utxos, tx_reg_hash, owner_key, operator_key_new.GetPublicKey(), owner_key.GetPubKey().GetID(), collateralScript, setup.coinbaseKey);
+
+    block = std::make_shared<CBlock>(setup.CreateBlock({tx_upreg}, setup.coinbaseKey));
+    BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    ++nHeight;
+    BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
+    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    deterministicMNManager->DoMaintenance();
+    tip_list = deterministicMNManager->GetListAtChainTip();
+    BOOST_ASSERT(tip_list.HasMN(tx_reg_hash));
+    diffs.push_back(base_list.BuildDiff(tip_list));
+
+    // spend
+    CMutableTransaction tx_spend;
+    COutPoint collateralOutpoint(tx_reg_hash, 0);
+    tx_spend.vin.emplace_back(collateralOutpoint);
+    tx_spend.vout.emplace_back(999.99 * COIN, collateralScript);
+
+    FillableSigningProvider signing_provider;
+    signing_provider.AddKeyPubKey(collateral_key, collateral_key.GetPubKey());
+    BOOST_ASSERT(SignSignature(signing_provider, CTransaction(tx_reg), tx_spend, 0, SIGHASH_ALL));
+    block = std::make_shared<CBlock>(setup.CreateBlock({tx_spend}, setup.coinbaseKey));
+    BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    ++nHeight;
+    BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
+    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    deterministicMNManager->DoMaintenance();
+    diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
+    tip_list = deterministicMNManager->GetListAtChainTip();
+    BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
+    BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+
+    // mine another block so that it's not the last one before V19
+    setup.CreateAndProcessBlock({}, setup.coinbaseKey);
+    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    ++nHeight;
+    BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
+    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    deterministicMNManager->DoMaintenance();
+    diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
+    tip_list = deterministicMNManager->GetListAtChainTip();
+    BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
+    BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+
+    // this block should activate V19
+    setup.CreateAndProcessBlock({}, setup.coinbaseKey);
+    BOOST_ASSERT(llmq::utils::IsV19Active(::ChainActive().Tip()));
+    ++nHeight;
+    BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
+    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    deterministicMNManager->DoMaintenance();
+    diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
+    tip_list = deterministicMNManager->GetListAtChainTip();
+    BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
+    BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+
+    // check mn list/diff
+    CDeterministicMNListDiff dummy_diff = base_list.BuildDiff(tip_list);
+    CDeterministicMNList dummmy_list = base_list.ApplyDiff(::ChainActive().Tip(), dummy_diff);
+    // Lists should match
+    BOOST_ASSERT(dummmy_list == tip_list);
+
+    // mine 10 more blocks
+    for (int i = 0; i < 10; ++i)
+    {
+        setup.CreateAndProcessBlock({}, setup.coinbaseKey);
+        BOOST_ASSERT(llmq::utils::IsV19Active(::ChainActive().Tip()));
+        BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1 + i);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        deterministicMNManager->DoMaintenance();
+        diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
+        tip_list = deterministicMNManager->GetListAtChainTip();
+        BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
+        BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+    }
+
+    // check mn list/diff
+    const CBlockIndex* v19_index = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
+    auto v19_list = deterministicMNManager->GetListForBlock(v19_index);
+    dummy_diff = v19_list.BuildDiff(tip_list);
+    dummmy_list = v19_list.ApplyDiff(::ChainActive().Tip(), dummy_diff);
+    BOOST_ASSERT(dummmy_list == tip_list);
+
+    // NOTE: this fails on v19/v19.1 with errors like:
+    // "RemoveMN: Can't delete a masternode ... with a pubKeyOperator=..."
+    dummy_diff = base_list.BuildDiff(tip_list);
+    dummmy_list = base_list.ApplyDiff(::ChainActive().Tip(), dummy_diff);
+    BOOST_ASSERT(dummmy_list == tip_list);
+
+    dummmy_list = base_list;
+    for (const auto& diff : diffs) {
+        dummmy_list = dummmy_list.ApplyDiff(::ChainActive().Tip(), diff);
+    }
+    BOOST_ASSERT(dummmy_list == tip_list);
 };
 
 void FuncDIP3Protx(TestChainSetup& setup)
@@ -481,7 +612,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
     payload.nVersion = CProRegTx::GetVersion(!bls::bls_legacy_scheme);
     payload.addr = LookupNumeric("1.1.1.1", 1);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
-    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
     payload.scriptPayout = scriptPayout;
 
@@ -550,7 +681,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 2);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
-    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
     payload.scriptPayout = scriptPayout;
 
@@ -612,7 +743,7 @@ void FuncVerifyDB(TestChainSetup& setup)
     payload.nVersion = CProRegTx::GetVersion(!bls::bls_legacy_scheme);
     payload.addr = LookupNumeric("1.1.1.1", 1);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
-    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
     payload.scriptPayout = scriptPayout;
 
@@ -665,6 +796,13 @@ BOOST_AUTO_TEST_CASE(dip3_activation_legacy)
 {
     TestChainDIP3BeforeActivationSetup setup;
     FuncDIP3Activation(setup);
+}
+
+// V19 can only be activated with legacy scheme
+BOOST_AUTO_TEST_CASE(v19_activation_legacy)
+{
+    TestChainV19BeforeActivationSetup setup;
+    FuncV19Activation(setup);
 }
 
 BOOST_AUTO_TEST_CASE(dip3_protx_legacy)

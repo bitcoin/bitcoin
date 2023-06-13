@@ -734,14 +734,14 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-pushversion", "Protocol version to report to other nodes", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-sporkaddr=<dashaddress>", "Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-sporkkey=<privatekey>", "Set the private key to be used for signing spork messages.", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-sporkkey=<privatekey>", "Set the private key to be used for signing spork messages.", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-uacomment=<cmt>", "Append comment to the user agent string", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
     SetupChainParamsBaseOptions(argsman);
 
     argsman.AddArg("-llmq-data-recovery=<n>", strprintf("Enable automated quorum data recovery (default: %u)", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY), ArgsManager::ALLOW_ANY, OptionsCategory::MASTERNODE);
     argsman.AddArg("-llmq-qvvec-sync=<quorum_name>:<mode>", strprintf("Defines from which LLMQ type the masternode should sync quorum verification vectors. Can be used multiple times with different LLMQ types. <mode>: %d (sync always from all quorums of the type defined by <quorum_name>), %d (sync from all quorums of the type defined by <quorum_name> if a member of any of the quorums)", (int32_t)llmq::QvvecSyncMode::Always, (int32_t)llmq::QvvecSyncMode::OnlyIfTypeMember), ArgsManager::ALLOW_ANY, OptionsCategory::MASTERNODE);
-    argsman.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key and enable the client to act as a masternode", ArgsManager::ALLOW_ANY, OptionsCategory::MASTERNODE);
+    argsman.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key and enable the client to act as a masternode", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::MASTERNODE);
     argsman.AddArg("-platform-user=<user>", "Set the username for the \"platform user\", a restricted user intended to be used by Dash Platform, to the specified username.", ArgsManager::ALLOW_ANY, OptionsCategory::MASTERNODE);
 
     argsman.AddArg("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", !testnetChainParams->RequireStandard()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
@@ -1702,7 +1702,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
             activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
         }
-        LogPrintf("MASTERNODE:\n  blsPubKeyOperator: %s\n", activeMasternodeInfo.blsPubKeyOperator->ToString());
+        // We don't know the actual scheme at this point, print both
+        LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
+                activeMasternodeInfo.blsPubKeyOperator->ToString(true),
+                activeMasternodeInfo.blsPubKeyOperator->ToString(false));
     } else {
         LOCK(activeMasternodeInfoCs);
         activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
@@ -2016,6 +2019,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 LOCK(cs_main);
                 node.evodb.reset();
                 node.evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
+
+                chainman.Reset();
                 chainman.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, node.evodb, *Assert(node.mempool));
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
@@ -2168,6 +2173,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     strLoadError = _("Error upgrading evo database");
                     break;
                 }
+                if (!deterministicMNManager->MigrateDBIfNeeded2()) {
+                    strLoadError = _("Error upgrading evo database");
+                    break;
+                }
 
                 if (!llmq::quorumBlockProcessor->UpgradeDB()) {
                     strLoadError = _("Error upgrading evo database");
@@ -2192,8 +2201,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             break;
                         }
 
-                        if (llmq::utils::IsV19Active(tip))
+                        bool v19active = llmq::utils::IsV19Active(tip);
+                        if (llmq::utils::IsV19Active(tip)) {
                             bls::bls_legacy_scheme.store(false);
+                            LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+                        }
 
                         // Only verify the DB of the active chainstate. This is fixed in later
                         // work when we allow VerifyDB to be parameterized by chainstate.
@@ -2207,6 +2219,14 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             failed_verification = true;
                             break;
                         }
+
+                        // VerifyDB() disconnects blocks which might result in us switching back to legacy.
+                        // Make sure we use the right scheme.
+                        if (v19active && bls::bls_legacy_scheme.load()) {
+                            bls::bls_legacy_scheme.store(false);
+                            LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+                        }
+
                     } else {
                         // TODO: CEvoDB instance should probably be a part of CChainState
                         // (for multiple chainstates to actually work in parallel)

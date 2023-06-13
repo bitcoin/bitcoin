@@ -1,9 +1,9 @@
 AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 19)
-define(_CLIENT_VERSION_MINOR, 1)
+define(_CLIENT_VERSION_MINOR, 2)
 define(_CLIENT_VERSION_BUILD, 0)
-define(_CLIENT_VERSION_RC, 0)
-define(_CLIENT_VERSION_IS_RELEASE, true)
+define(_CLIENT_VERSION_RC, 1)
+define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2023)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Dash Core]])
@@ -711,6 +711,12 @@ case $host in
          if test x$qt5_prefix != x; then
            PKG_CONFIG_PATH="$qt5_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
            export PKG_CONFIG_PATH
+         fi
+
+         gmp_prefix=$($BREW --prefix gmp 2>/dev/null)
+         if test x$gmp_prefix != x; then
+           CPPFLAGS="$CPPFLAGS -I$gmp_prefix/include"
+           LDFLAGS="$LDFLAGS -L$gmp_prefix/lib"
          fi
 
          case $host in

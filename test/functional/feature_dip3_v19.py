@@ -66,8 +66,17 @@ class DIP3V19Test(DashTestFramework):
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expected_updated)
 
+        mn_list_before = self.nodes[0].masternodelist()
+        pubkeyoperator_list_before = set([mn_list_before[e]["pubkeyoperator"] for e in mn_list_before])
+
         self.activate_v19(expected_activation_height=900)
         self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
+
+        mn_list_after = self.nodes[0].masternodelist()
+        pubkeyoperator_list_after = set([mn_list_after[e]["pubkeyoperator"] for e in mn_list_after])
+
+        self.log.info("pubkeyoperator should still be shown using legacy scheme")
+        assert_equal(pubkeyoperator_list_before, pubkeyoperator_list_after)
 
         self.move_to_next_cycle()
         self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
@@ -101,8 +110,22 @@ class DIP3V19Test(DashTestFramework):
         self.test_revoke_protx(revoke_protx, revoke_keyoperator)
 
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
+        # revoking a MN results in disconnects, reconnect it back to let sync_blocks finish correctly
+        self.connect_nodes(hpmn_info_3.nodeIdx, 0)
 
-        return
+        self.log.info("Checking that adding more regular MNs after v19 doesn't break DKGs and IS/CLs")
+
+        for i in range(6):
+            new_mn = self.dynamically_add_masternode(hpmn=False, rnd=(10 + i))
+            assert new_mn is not None
+
+        # mine more quorums and make sure everything still works
+        prev_quorum = None
+        for _ in range(5):
+            quorum = self.mine_quorum()
+            assert prev_quorum != quorum
+
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
     def test_revoke_protx(self, revoke_protx, revoke_keyoperator):
         funds_address = self.nodes[0].getnewaddress()
@@ -143,7 +166,7 @@ class DIP3V19Test(DashTestFramework):
         # Verify that the merkle root matches what we locally calculate
         hashes = []
         for mn in sorted(new_mn_list.values(), key=lambda mn: ser_uint256(mn.proRegTxHash)):
-            hashes.append(hash256(mn.serialize()))
+            hashes.append(hash256(mn.serialize(with_version = False)))
         merkle_root = CBlock.get_merkle_root(hashes)
         assert_equal(merkle_root, cbtx.merkleRootMNList)
 

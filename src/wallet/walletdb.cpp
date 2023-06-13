@@ -486,7 +486,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             strErr = "Found unsupported 'wkey' record, try loading with version 0.17";
             return false;
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
-                   strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY && strType != DBKeys::VERSION) {
+                   strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
+                   strType != DBKeys::VERSION &&
+                   strType != DBKeys::PRIVATESEND_SALT && strType != DBKeys::COINJOIN_SALT) {
             wss.m_unknown_records++;
         }
     } catch (const std::exception& e) {

@@ -418,10 +418,7 @@ public:
     CBLSLazyWrapper() :
             vecBytes(BLSObject::SerSize, 0),
             bufLegacyScheme(bls::bls_legacy_scheme.load())
-    {
-        // the all-zero buf is considered a valid buf, but the resulting object will return false for IsValid
-        bufValid = true;
-    }
+    {}
 
     explicit CBLSLazyWrapper(const CBLSLazyWrapper& r)
     {
@@ -437,6 +434,7 @@ public:
         if (r.bufValid) {
             vecBytes = r.vecBytes;
         } else {
+            vecBytes.resize(BLSObject::SerSize);
             std::fill(vecBytes.begin(), vecBytes.end(), 0);
         }
         objInitialized = r.objInitialized;
@@ -459,12 +457,9 @@ public:
     {
         std::unique_lock<std::mutex> l(mutex);
         if (!objInitialized && !bufValid) {
-            // the all-zero buf is considered a valid buf
+            vecBytes.resize(BLSObject::SerSize);
             std::fill(vecBytes.begin(), vecBytes.end(), 0);
-            bufLegacyScheme = specificLegacyScheme;
-            bufValid = true;
-        }
-        if (!bufValid || (bufLegacyScheme != specificLegacyScheme)) {
+        } else if (!bufValid || (bufLegacyScheme != specificLegacyScheme)) {
             vecBytes = obj.ToByteVector(specificLegacyScheme);
             bufValid = true;
             bufLegacyScheme = specificLegacyScheme;
@@ -476,7 +471,7 @@ public:
     template<typename Stream>
     inline void Serialize(Stream& s) const
     {
-        Serialize(s, bls::bls_legacy_scheme.load());
+        Serialize(s, bufLegacyScheme);
     }
 
     template<typename Stream>
@@ -493,13 +488,14 @@ public:
     template<typename Stream>
     inline void Unserialize(Stream& s) const
     {
-        Unserialize(s, bls::bls_legacy_scheme.load());
+        Unserialize(s, bufLegacyScheme);
     }
 
-    void Set(const BLSObject& _obj)
+    void Set(const BLSObject& _obj, const bool specificLegacyScheme)
     {
         std::unique_lock<std::mutex> l(mutex);
         bufValid = false;
+        bufLegacyScheme = specificLegacyScheme;
         objInitialized = true;
         obj = _obj;
         hash.SetNull();
@@ -514,21 +510,14 @@ public:
         if (!objInitialized) {
             obj.SetByteVector(vecBytes, bufLegacyScheme);
             if (!obj.IsValid()) {
-                // If setting of BLS object using one scheme failed, then we need to attempt again with the opposite scheme.
-                // This is due to the fact that LazyBLSWrapper receives a serialised buffer but attempts to create actual BLS object when needed.
-                // That could happen when the fork has been activated and the enforced scheme has switched.
-                obj.SetByteVector(vecBytes, !bufLegacyScheme);
-                if (obj.IsValid()) {
-                    bufLegacyScheme = !bufLegacyScheme;
-                }
+                bufValid = false;
+                return invalidObj;
             }
             if (!obj.CheckMalleable(vecBytes, bufLegacyScheme)) {
                 bufValid = false;
-                objInitialized = false;
-                obj = invalidObj;
-            } else {
-                objInitialized = true;
+                return invalidObj;
             }
+            objInitialized = true;
         }
         return obj;
     }
@@ -549,13 +538,16 @@ public:
         return !(*this == r);
     }
 
-    uint256 GetHash(const bool specificLegacyScheme = bls::bls_legacy_scheme.load()) const
+    uint256 GetHash() const
     {
         std::unique_lock<std::mutex> l(mutex);
-        if (!bufValid || bufLegacyScheme != specificLegacyScheme) {
-            vecBytes = obj.ToByteVector(specificLegacyScheme);
+        if (!objInitialized && !bufValid) {
+            vecBytes.resize(BLSObject::SerSize);
+            std::fill(vecBytes.begin(), vecBytes.end(), 0);
+            hash.SetNull();
+        } else if (!bufValid) {
+            vecBytes = obj.ToByteVector(bufLegacyScheme);
             bufValid = true;
-            bufLegacyScheme = specificLegacyScheme;
             hash.SetNull();
         }
         if (hash.IsNull()) {
@@ -564,6 +556,21 @@ public:
             hash = ss.GetHash();
         }
         return hash;
+    }
+
+    bool IsLegacy() const
+    {
+        return bufLegacyScheme;
+    }
+
+    void SetLegacy(bool specificLegacyScheme)
+    {
+        bufLegacyScheme = specificLegacyScheme;
+    }
+
+    std::string ToString() const
+    {
+        return Get().ToString(bufLegacyScheme);
     }
 };
 using CBLSLazySignature = CBLSLazyWrapper<CBLSSignature>;
