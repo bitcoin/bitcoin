@@ -25,10 +25,14 @@ static util::Result<SelectionResult> ErrorMaxWeightExceeded()
                          "Please try sending a smaller amount or manually consolidating your wallet's UTXOs")};
 }
 
-// Descending order comparator
+// Sort by descending (effective) value prefer lower waste on tie
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
     {
+        if (a.GetSelectionAmount() == b.GetSelectionAmount()) {
+            // Lower waste is better when effective_values are tied
+            return (a.fee - a.long_term_fee) < (b.fee - b.long_term_fee);
+        }
         return a.GetSelectionAmount() > b.GetSelectionAmount();
     }
 } descending;
