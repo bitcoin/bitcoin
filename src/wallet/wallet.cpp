@@ -4253,7 +4253,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         // Migration successful, unload the wallet locally, then reload it.
         assert(local_wallet.use_count() == 1);
         local_wallet.reset();
-        LoadWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+        res.wallet = LoadWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
         res.wallet_name = wallet_name;
     } else {
         // Migration failed, cleanup
