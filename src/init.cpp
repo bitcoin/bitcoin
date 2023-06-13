@@ -366,6 +366,8 @@ void Shutdown(NodeContext& node)
     {
         LOCK(cs_main);
         if (node.chainman) {
+            // SYSCOIN
+            node.chainman->ActiveChainstate().StopGethNode();
             for (Chainstate* chainstate : node.chainman->GetAll()) {
                 if (chainstate->CanFlushToDisk()) {
                     chainstate->ForceFlushStateToDisk();
@@ -388,8 +390,6 @@ void Shutdown(NodeContext& node)
     for (const auto& client : node.chain_clients) {
         client->stop();
     }
-    // SYSCOIN
-    node.chainman->ActiveChainstate().StopGethNode();
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface.get());
