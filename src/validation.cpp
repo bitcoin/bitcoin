@@ -1026,7 +1026,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // check special TXs after all the other checks. If we'd do this before the other checks, we might end up
     // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
     // mined
-    if (!CheckSpecialTx(m_active_chainstate.m_blockman, tx, m_active_chainstate.m_chain.Tip(), state, m_active_chainstate.CoinsTip(), true))
+    if (!CheckSpecialTx(m_active_chainstate.m_blockman, tx, m_active_chainstate.m_chain.Tip(), state, m_active_chainstate.CoinsTip(), true, true))
         return false;
 
     if (m_pool.existsProviderTxConflict(tx)) {

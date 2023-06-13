@@ -2069,6 +2069,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
+    node.scheduler->scheduleEvery([&] { deterministicMNManager->DoMaintenance(); }, std::chrono::seconds{10});
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 

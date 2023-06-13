@@ -112,7 +112,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValida
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs)
 {
     AssertLockHeld(cs_main);
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_REGISTER) {
@@ -204,7 +204,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     if (!keyForPayloadSig.IsNull()) {
         // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
-        if (!CheckStringSig(ptx, keyForPayloadSig, state, fJustCheck)) {
+        if (check_sigs && !CheckStringSig(ptx, keyForPayloadSig, state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
@@ -218,7 +218,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     return true;
 }
 
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck, bool check_sigs)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
@@ -267,7 +267,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state, fJustCheck)) {
+        if (check_sigs && !CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
@@ -276,7 +276,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
@@ -335,7 +335,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state, fJustCheck)) {
+        if (check_sigs && !CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
@@ -344,7 +344,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck, bool check_sigs)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
@@ -369,7 +369,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state, fJustCheck)) {
+        if (check_sigs && !CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }

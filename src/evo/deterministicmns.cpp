@@ -610,11 +610,6 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
 }
 
-CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
-    evoDb(_evoDb)
-{
-}
-
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& _state, const CCoinsViewCache& view, bool fJustCheck)
 {
     const auto& consensusParams = Params().GetConsensus();
@@ -678,10 +673,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     // always update interface for payment detail changes
     uiInterface.NotifyMasternodeListChanged(newList);
     
-    {
-        LOCK(cs);
-        CleanupCache(nHeight);
-    }
+    if (nHeight > to_cleanup) to_cleanup = nHeight;
     return true;
 }
 
@@ -998,7 +990,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)
 {
     std::vector<uint256> toDecrease;
-    toDecrease.reserve(mnList.GetValidMNsCount() / 10);
+    toDecrease.reserve(mnList.GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
     mnList.ForEachMN(true /* onlyValid */, [&toDecrease](auto& dmn) {
@@ -1167,4 +1159,12 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
     for (const auto& h : toDeleteDiffs) {
         mnListDiffsCache.erase(h);
     }
+}
+void CDeterministicMNManager::DoMaintenance() {
+    LOCK(cs_cleanup);
+    int loc_to_cleanup = to_cleanup.load();
+    if (loc_to_cleanup <= did_cleanup) return;
+    LOCK(cs);
+    CleanupCache(loc_to_cleanup);
+    did_cleanup = loc_to_cleanup;
 }

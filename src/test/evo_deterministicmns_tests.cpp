@@ -292,8 +292,8 @@ void FuncDIP3Protx(TestChain100Setup& setup)
             auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
             TxValidationState dummyState;
             // Technically, the payload is still valid...
-            assert(CheckProRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
-            assert(CheckProRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
+            assert(CheckProRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
+            assert(CheckProRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
             // But the signature should not verify anymore
             assert(CheckTransactionSignature(setup.m_node, tx));
             assert(!CheckTransactionSignature(setup.m_node, tx2));
@@ -427,8 +427,8 @@ void FuncDIP3Protx(TestChain100Setup& setup)
         // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
         auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
         TxValidationState dummyState;
-        assert(CheckProUpRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
-        assert(!CheckProUpRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
+        assert(CheckProUpRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
+        assert(!CheckProUpRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
         assert(CheckTransactionSignature(setup.m_node, tx));
         assert(!CheckTransactionSignature(setup.m_node, tx2));
     }

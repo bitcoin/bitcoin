@@ -16,19 +16,19 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 class CCoinsViewCache;
-bool CheckSpecialTx(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
+bool CheckSpecialTx(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs)
 {
 
     try {
         switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_MN_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state, view, fJustCheck);
+            return CheckProRegTx(tx, pindexPrev, state, view, fJustCheck, check_sigs);
         case SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state, fJustCheck);
+            return CheckProUpServTx(tx, pindexPrev, state, fJustCheck, check_sigs);
         case SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state, view, fJustCheck);
+            return CheckProUpRegTx(tx, pindexPrev, state, view, fJustCheck, check_sigs);
         case SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state, fJustCheck);
+            return CheckProUpRevTx(tx, pindexPrev, state, fJustCheck, check_sigs);
         case SYSCOIN_TX_VERSION_MN_COINBASE:
             return CheckCbTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT:
@@ -61,7 +61,7 @@ bool IsSpecialTx(const CTransaction& tx)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
+bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerkleRoots)
 {
     try {
         static SteadyClock::duration nTimeLoop{};
@@ -73,7 +73,7 @@ bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block,
 
         for (const auto& ptr_tx : block.vtx) {
             TxValidationState txstate;
-            if (!CheckSpecialTx(blockman, *ptr_tx, pindex->pprev, txstate, view, false)) {
+            if (!CheckSpecialTx(blockman, *ptr_tx, pindex->pprev, txstate, view, false, fCheckCbTxMerkleRoots)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason());
             }
         }
@@ -81,7 +81,7 @@ bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block,
         auto nTime2 = SystemClock::now(); nTimeLoop += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n",  Ticks<MillisecondsDouble>(nTime2 - nTime1), Ticks<SecondsDouble>(nTimeLoop));
 
-        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck)) {
+        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerkleRoots)) {
             // pass the state returned by the function above
             return false;
         }
@@ -97,7 +97,7 @@ bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block,
         auto nTime4 = SystemClock::now(); nTimeDMN += nTime4 - nTime3;
         LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n",  Ticks<MillisecondsDouble>(nTime4 - nTime3), Ticks<SecondsDouble>(nTimeDMN));
 
-        if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, *llmq::quorumBlockProcessor, state, view)) {
+        if (fCheckCbTxMerkleRoots && !CheckCbTxMerkleRoots(block, pindex, *llmq::quorumBlockProcessor, state, view)) {
             // pass the state returned by the function above
             return false;
         }

@@ -608,13 +608,20 @@ public:
     Mutex cs;
 
 private:
+    Mutex cs_cleanup;
+    // We have performed CleanupCache() on this height.
+    int did_cleanup GUARDED_BY(cs_cleanup) {0};
+
+    // Main thread has indicated we should perform cleanup up to this height
+    std::atomic<int> to_cleanup {0};
     CEvoDB& evoDb;
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
     std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
     const CBlockIndex* tipIndex{};
 
 public:
-    explicit CDeterministicMNManager(CEvoDB& _evoDb);
+    explicit CDeterministicMNManager(CEvoDB& _evoDb) : evoDb(_evoDb) {}
+    ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state,
                       const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !cs);
@@ -635,6 +642,7 @@ public:
 
     bool IsDIP3Enforced(int nHeight = -1) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cleanup);
 private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
     CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
