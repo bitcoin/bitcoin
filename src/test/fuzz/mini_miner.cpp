@@ -118,10 +118,11 @@ FUZZ_TARGET_INIT(mini_miner_selection, initialize_miner)
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {
         CMutableTransaction mtx = CMutableTransaction();
-        const size_t num_inputs = 2;
+        assert(!available_coins.empty());
+        const size_t num_inputs = std::min(size_t{2}, available_coins.size());
         const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 5);
         for (size_t n{0}; n < num_inputs; ++n) {
-            auto prevout = available_coins.front();
+            auto prevout = available_coins.at(0);
             mtx.vin.push_back(CTxIn(prevout, CScript()));
             available_coins.pop_front();
         }
