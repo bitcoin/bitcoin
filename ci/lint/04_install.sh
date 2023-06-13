@@ -6,6 +6,8 @@
 
 export LC_ALL=C
 
+export PIP_ROOT_USER_ACTION=ignore
+
 ${CI_RETRY_EXE} apt-get update
 # Lint dependencies:
 # - curl/xz-utils (to install shellcheck)
