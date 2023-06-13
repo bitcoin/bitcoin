@@ -11,13 +11,11 @@
 
 #include <logging.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <util/fs.h>
 #include <util/getuniquepath.h>
 #include <util/syserror.h>
 
 #include <cerrno>
-#include <filesystem>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -41,7 +39,7 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #else
-#include <io.h> /* For _get_osfhandle, _chsize */
+#include <io.h>     /* For _get_osfhandle */
 #include <shlobj.h> /* For SHGetSpecialFolderPathW */
 #endif // WIN32
 
@@ -160,13 +158,11 @@ void DirectoryCommit(const fs::path& dirname)
 #endif
 }
 
-bool TruncateFile(FILE* file, unsigned int length)
+bool ResizeFile(const fs::path& file, unsigned int length)
 {
-#if defined(WIN32)
-    return _chsize(_fileno(file), length) == 0;
-#else
-    return ftruncate(fileno(file), length) == 0;
-#endif
+    std::error_code ec;
+    fs::resize_file(file, length, ec);
+    return !ec;
 }
 
 /**

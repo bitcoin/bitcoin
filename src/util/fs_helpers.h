@@ -25,7 +25,7 @@ bool FileCommit(FILE* file);
  */
 void DirectoryCommit(const fs::path& dirname);
 
-bool TruncateFile(FILE* file, unsigned int length);
+bool ResizeFile(const fs::path& file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length);
 

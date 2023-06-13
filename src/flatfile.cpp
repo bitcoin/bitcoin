@@ -84,7 +84,7 @@ bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
     if (!file) {
         return error("%s: failed to open file %d", __func__, pos.nFile);
     }
-    if (finalize && !TruncateFile(file, pos.nPos)) {
+    if (finalize && !ResizeFile(FileName(pos), pos.nPos)) {
         fclose(file);
         return error("%s: failed to truncate file %d", __func__, pos.nFile);
     }

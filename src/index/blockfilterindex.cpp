@@ -181,7 +181,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
             LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
             return 0;
         }
-        if (!TruncateFile(last_file.Get(), pos.nPos)) {
+        if (!ResizeFile(m_filter_fileseq->FileName(pos), pos.nPos)) {
             LogPrintf("%s: Failed to truncate filter file %d\n", __func__, pos.nFile);
             return 0;
         }
