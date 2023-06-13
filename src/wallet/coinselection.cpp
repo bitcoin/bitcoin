@@ -68,6 +68,7 @@ struct {
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
+ * @param int max_weight The maximum weight available for the input set.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
