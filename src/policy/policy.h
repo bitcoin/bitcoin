@@ -24,7 +24,7 @@ static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT - 4000};
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1000};
 /** The maximum weight for transactions we're willing to relay/mine */
-static constexpr unsigned int MAX_STANDARD_TX_WEIGHT{400000};
+static constexpr int32_t MAX_STANDARD_TX_WEIGHT{400000};
 /** The minimum non-witness size for transactions we're willing to relay/mine: one larger than 64  */
 static constexpr unsigned int MIN_STANDARD_TX_NONWITNESS_SIZE{65};
 /** Maximum number of signature check operations in an IsStandard() P2SH script */

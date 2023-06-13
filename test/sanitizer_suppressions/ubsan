@@ -60,7 +60,6 @@ implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:script/syscoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
 implicit-integer-sign-change:serialize.h
-implicit-integer-sign-change:txmempool.cpp
 implicit-signed-integer-truncation,implicit-integer-sign-change:serialize.h
 implicit-signed-integer-truncation:crypto/
 implicit-signed-integer-truncation:serialize.h
