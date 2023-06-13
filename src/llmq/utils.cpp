@@ -712,19 +712,21 @@ bool IsV19Active(const CBlockIndex* pindex)
     return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) == ThresholdState::ACTIVE;
 }
 
-const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
+const int V19ActivationHeight(const CBlockIndex* pindex)
 {
     assert(pindex);
 
-    auto opt_height = [&pindex]() -> std::optional<int> {
-       LOCK(cs_llmq_vbc);
-       if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
-           return std::nullopt;
-       }
-       return {VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache)};
-    }();
-    if (opt_height == std::nullopt) return nullptr;
-    return pindex->GetAncestor(*opt_height);
+   LOCK(cs_llmq_vbc);
+   if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
+       return -1;
+   }
+   return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache);
+}
+
+const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
+{
+    assert(pindex);
+    return pindex->GetAncestor(V19ActivationHeight(pindex));
 }
 
 bool IsV20Active(const CBlockIndex* pindex)

@@ -611,13 +611,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         oldList = GetListForBlockInternal(pindex->pprev);
         diff = oldList.BuildDiff(newList);
 
-        // NOTE: The block next to the activation is the one that is using new rules.
-        // If the fork was activated at pindex->prev block then current one is the first one
-        // using new rules. Save mn list snapsot for this block.
-        bool v19_just_activated = pindex->pprev == llmq::utils::V19ActivationIndex(pindex);
-
         m_evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
-        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1 || v19_just_activated) {
+        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1) {
             m_evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
             mnListsCache.emplace(newList.GetBlockHash(), newList);
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
