@@ -27,7 +27,7 @@ PROGRAM = """
 struct added_event
 {
   u8    hash[HASH_LENGTH];
-  u64   vsize;
+  s32   vsize;
   s64   fee;
 };
 
@@ -35,7 +35,7 @@ struct removed_event
 {
   u8    hash[HASH_LENGTH];
   char  reason[MAX_REMOVAL_REASON_LENGTH];
-  u64   vsize;
+  s32   vsize;
   s64   fee;
   u64   entry_time;
 };
@@ -49,11 +49,11 @@ struct rejected_event
 struct replaced_event
 {
   u8    replaced_hash[HASH_LENGTH];
-  u64   replaced_vsize;
+  s32   replaced_vsize;
   s64   replaced_fee;
   u64   replaced_entry_time;
   u8    replacement_hash[HASH_LENGTH];
-  u64   replacement_vsize;
+  s32   replacement_vsize;
   s64   replacement_fee;
 };
 

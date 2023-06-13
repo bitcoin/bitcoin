@@ -145,7 +145,7 @@ class BlockValidationState : public ValidationState<BlockValidationResult> {};
 // using only serialization with and without witness data. As witness_size
 // is equal to total_size - stripped_size, this formula is identical to:
 // weight = (stripped_size * 3) + total_size.
-static inline int64_t GetTransactionWeight(const CTransaction& tx)
+static inline int32_t GetTransactionWeight(const CTransaction& tx)
 {
     return ::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, PROTOCOL_VERSION);
 }
