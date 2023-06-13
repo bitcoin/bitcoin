@@ -95,7 +95,7 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         self.log.info('Fail to generate block with invalid raw tx')
         invalid_raw_tx = '0000'
-        assert_raises_rpc_error(-22, 'Transaction decode failed for ' + invalid_raw_tx, self.generateblock, node, address, [invalid_raw_tx])
+        assert_raises_rpc_error(-22, 'Transaction decode failed for ' + invalid_raw_tx + '. Make sure the tx has at least one input.', self.generateblock, node, address, [invalid_raw_tx])
 
         self.log.info('Fail to generate block with invalid address/descriptor')
         assert_raises_rpc_error(-5, 'Invalid address or descriptor', self.generateblock, node, '1234', [])
