@@ -550,7 +550,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-maxrecsigsage=<n>", strprintf("Number of seconds to keep LLMQ recovery sigs (default: %u)", DEFAULT_MAX_RECOVERED_SIGS_AGE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::OPTIONS);
     argsman.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -558,7 +558,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-dip19params=<n:m>", "DIP19 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::OPTIONS);
     argsman.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-pushversion=<n>", "Specify running with a protocol version. Only useful for regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blockfilterindex=<type>",
