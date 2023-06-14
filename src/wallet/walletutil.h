@@ -53,9 +53,17 @@ enum WalletFlags : uint64_t {
     //! Flag set when a wallet contains no HD seed and no private keys, scripts,
     //! addresses, and other watch only things, and is therefore "blank."
     //!
-    //! The only function this flag serves is to distinguish a blank wallet from
+    //! The main function this flag serves is to distinguish a blank wallet from
     //! a newly created wallet when the wallet database is loaded, to avoid
     //! initialization that should only happen on first run.
+    //!
+    //! A secondary function of this flag, which applies to descriptor wallets
+    //! only, is to serve as an ongoing indication that descriptors in the
+    //! wallet should be created manually, and that the wallet should not
+    //! generate automatically generate new descriptors if it is later
+    //! encrypted. To support this behavior, descriptor wallets unlike legacy
+    //! wallets do not automatically unset the BLANK flag when things are
+    //! imported.
     //!
     //! This flag is also a mandatory flag to prevent previous versions of
     //! bitcoin from opening the wallet, thinking it was newly created, and
