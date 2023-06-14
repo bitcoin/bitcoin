@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2013-2019 The Bitcoin Core developers
+# Copyright (c) 2013-2023 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ check_libtoolize() {
 
 # Run autoreconf
 run_autoreconf() {
-  command -V autoreconf >/dev/null || { echo "Error: autoreconf not found."; exit 1; }
+  [ -x "$(command -v autoreconf)" ] >/dev/null || { echo "Error: autoreconf not found or not executable."; exit 1; }
   autoreconf --install --force --warnings=all || { echo "Error: autoreconf failed"; exit 1; }
 }
 
