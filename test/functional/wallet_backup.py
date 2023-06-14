@@ -249,7 +249,7 @@ class WalletBackupTest(BitcoinTestFramework):
         # Backup to source wallet file must fail
         sourcePaths = [
             os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename),
-            os.path.join(self.nodes[0].datadir, self.chain, '.', 'wallets', self.default_wallet_name, self.wallet_data_filename),
+            os.path.join(self.nodes[0].datadir, self.chain, 'wallets', '.', self.default_wallet_name, self.wallet_data_filename),
             os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name),
             os.path.join(self.nodes[0].datadir, self.chain, 'wallets')]
 

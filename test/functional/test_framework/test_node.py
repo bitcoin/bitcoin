@@ -413,6 +413,10 @@ class TestNode():
     def debug_log_path(self) -> Path:
         return self.chain_path / 'debug.log'
 
+    @property
+    def wallets_path(self) -> Path:
+        return self.chain_path / "wallets"
+
     def debug_log_bytes(self) -> int:
         with open(self.debug_log_path, encoding='utf-8') as dl:
             dl.seek(0, 2)
