@@ -528,7 +528,7 @@ bool CBlockPolicyEstimator::_removeTx(const uint256& hash, bool inBlock)
     }
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath)
+CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates)
     : m_estimation_filepath{estimation_filepath}, nBestSeenHeight{0}, firstRecordedHeight{0}, historicalFirst{0}, historicalBest{0}, trackedTxs{0}, untrackedTxs{0}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
@@ -556,7 +556,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
 
     std::chrono::hours file_age = GetFeeEstimatorFileAge();
     // fee estimate file must not be too old to avoid wrong fee estimates.
-    if (file_age > MAX_FILE_AGE) {
+    if (file_age > MAX_FILE_AGE && !read_stale_estimates) {
         LogPrintf("Fee estimation file %s too old (age=%lld > %lld hours) and will not be used to avoid serving stale estimates.\n", fs::PathToString(m_estimation_filepath), Ticks<std::chrono::hours>(file_age), Ticks<std::chrono::hours>(MAX_FILE_AGE));
         return;
     }

@@ -30,6 +30,9 @@ static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
  */
 static constexpr std::chrono::hours MAX_FILE_AGE{60};
 
+// Whether we allow importing a fee_estimates file older than MAX_FILE_AGE.
+static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
+
 class AutoFile;
 class CTxMemPoolEntry;
 class TxConfirmStats;
@@ -193,7 +196,7 @@ private:
     const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const fs::path& estimation_filepath);
+    CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates);
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
