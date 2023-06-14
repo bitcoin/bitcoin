@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Set error handling
-set -e
+set -euo pipefail
 
 # If verbose is non-zero, print messages
 verbose=1
