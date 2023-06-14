@@ -318,11 +318,11 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'macOS 10.15 [gui, no tests] [focal]'
+  name: 'macOS 10.15 [gui, no tests] [jammy]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:focal
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
       FILE_ENV: "./ci/test/00_setup_env_mac.sh"
   << : *CREDITS_TEMPLATE
   macos_sdk_cache:
