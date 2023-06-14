@@ -168,14 +168,19 @@ Based on a patch originally by Claude Heiland-Allen <claude@mathr.co.uk>
  	default:
  	  gcc_unreachable ();
  	}
---- a/gcc/config/i386/i386.c
-+++ b/gcc/config/i386/i386.c
-@@ -4981,13 +4981,13 @@
-       switch (type)
+--- a/gcc/config/i386/i386.cc
++++ b/gcc/config/i386/i386.cc
+@@ -5418,17 +5418,15 @@ ix86_get_ssemov (rtx *operands, unsigned size,
  	{
  	case opcode_int:
--	  opcode = misaligned_p ? "vmovdqu32" : "vmovdqa32";
-+	  opcode = "vmovdqu32";
+ 	  if (scalar_mode == E_HFmode)
+-	    opcode = (misaligned_p
+-		      ? (TARGET_AVX512BW ? "vmovdqu16" : "vmovdqu64")
+-		      : "vmovdqa64");
++	    opcode = TARGET_AVX512BW ? "vmovdqu16" : "vmovdqu64";
+ 	  else
+-	    opcode = misaligned_p ? "vmovdqu32" : "vmovdqa32";
++	    opcode = "vmovdqu32";
  	  break;
  	case opcode_float:
 -	  opcode = misaligned_p ? "vmovups" : "vmovaps";
@@ -187,9 +192,24 @@ Based on a patch originally by Claude Heiland-Allen <claude@mathr.co.uk>
  	  break;
  	}
      }
-@@ -4996,16 +4996,16 @@
-       switch (scalar_mode)
+@@ -5438,29 +5436,21 @@ ix86_get_ssemov (rtx *operands, unsigned size,
  	{
+ 	case E_HFmode:
+ 	  if (evex_reg_p)
+-	    opcode = (misaligned_p
+-		      ? (TARGET_AVX512BW
+-			 ? "vmovdqu16"
+-			 : "vmovdqu64")
+-		      : "vmovdqa64");
++	    opcode = TARGET_AVX512BW ? "vmovdqu16" : "vmovdqu64";
+ 	  else
+-	    opcode = (misaligned_p
+-		      ? (TARGET_AVX512BW
+-			 ? "vmovdqu16"
+-			 : "%vmovdqu")
+-		      : "%vmovdqa");
++	    opcode = TARGET_AVX512BW ? "vmovdqu16" : "%vmovdqu";
+ 	  break;
  	case E_SFmode:
 -	  opcode = misaligned_p ? "%vmovups" : "%vmovaps";
 +	  opcode = "%vmovups";
@@ -208,7 +228,7 @@ Based on a patch originally by Claude Heiland-Allen <claude@mathr.co.uk>
  	  break;
  	default:
  	  gcc_unreachable ();
-@@ -5017,48 +5017,32 @@
+@@ -5472,48 +5462,32 @@ ix86_get_ssemov (rtx *operands, unsigned size,
  	{
  	case E_QImode:
  	  if (evex_reg_p)
