@@ -2884,26 +2884,28 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-validation-failed");
     }
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
-    const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
-    CAmount nMNSeniorityRet = 0;
-    CAmount nMNFloorDiffRet = 0;
-    // detect MN was paid properly, accounting for seniority which is added to subsidy
-    if (!IsBlockPayeeValid(m_chain, *block.vtx[0], pindex->nHeight, blockReward, nFees, nMNSeniorityRet, nMNFloorDiffRet)) {
-        LogPrintf("ERROR: ConnectBlock(): couldn't find masternode or superblock payments\n");
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-payee");
-    }
-
-    std::string strError;
-    // add seniority to reward when checking for limit
-    if (!fTestSetting && !IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet, strError) && (fRegTest || pindex->nHeight >= params.GetConsensus().DIP0003EnforcementHeight)) {
-        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet);
-        // hack for feature_signet.py to pass which uses bitcoin blocks signed by the signet witness
-        if(!fSigNet || pindex->nHeight > 100) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
+    if(fScriptChecks) {
+        const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
+        CAmount nMNSeniorityRet = 0;
+        CAmount nMNFloorDiffRet = 0;
+        // detect MN was paid properly, accounting for seniority which is added to subsidy
+        if (!IsBlockPayeeValid(m_chain, *block.vtx[0], pindex->nHeight, blockReward, nFees, nMNSeniorityRet, nMNFloorDiffRet)) {
+            LogPrintf("ERROR: ConnectBlock(): couldn't find masternode or superblock payments\n");
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-payee");
         }
-    }
-    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-        return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+
+        std::string strError;
+        // add seniority to reward when checking for limit
+        if (!fTestSetting && !IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet, strError) && (fRegTest || pindex->nHeight >= params.GetConsensus().DIP0003EnforcementHeight)) {
+            LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet);
+            // hack for feature_signet.py to pass which uses bitcoin blocks signed by the signet witness
+            if(!fSigNet || pindex->nHeight > 100) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
+            }
+        }
+        if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+        }
     }
     // END SYSCOIN
     const auto time_4{SteadyClock::now()};
