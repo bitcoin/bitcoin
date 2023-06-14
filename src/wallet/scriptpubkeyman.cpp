@@ -757,12 +757,12 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
         RemoveWatchOnly(script);
     }
 
+    m_storage.UnsetBlankWalletFlag(batch);
     if (!m_storage.HasEncryptionKeys()) {
         return batch.WriteKey(pubkey,
                                                  secret.GetPrivKey(),
                                                  mapKeyMetadata[pubkey.GetID()]);
     }
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 

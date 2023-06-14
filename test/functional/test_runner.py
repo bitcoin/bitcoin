@@ -176,6 +176,8 @@ BASE_SCRIPTS = [
     'feature_llmqsimplepose.py',
     'wallet_hd.py --legacy-wallet',
     'wallet_hd.py --descriptors',
+    'wallet_blank.py --legacy-wallet',
+    'wallet_blank.py --descriptors',
     'wallet_keypool_topup.py --legacy-wallet',
     'wallet_keypool_topup.py --descriptors',
     'wallet_fast_rescan.py --descriptors',
