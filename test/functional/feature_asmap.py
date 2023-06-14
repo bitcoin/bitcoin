@@ -113,7 +113,7 @@ class AsmapTest(BitcoinTestFramework):
 
     def run_test(self):
         self.node = self.nodes[0]
-        self.datadir = os.path.join(self.node.datadir, self.chain)
+        self.datadir = self.node.chain_path
         self.default_asmap = os.path.join(self.datadir, DEFAULT_ASMAP_FILENAME)
         self.asmap_raw = os.path.join(os.path.dirname(os.path.realpath(__file__)), ASMAP)
 

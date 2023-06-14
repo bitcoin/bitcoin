@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
 
-import os
 import random
 import shutil
 from test_framework.descriptors import descsum_create
@@ -35,7 +34,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.skip_if_no_bdb()
 
     def assert_is_sqlite(self, wallet_name):
-        wallet_file_path = os.path.join(self.nodes[0].datadir, "regtest/wallets", wallet_name, self.wallet_data_filename)
+        wallet_file_path = self.nodes[0].wallets_path / wallet_name / self.wallet_data_filename
         with open(wallet_file_path, 'rb') as f:
             file_magic = f.read(16)
             assert_equal(file_magic, b'SQLite format 3\x00')
@@ -458,11 +457,11 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
-        wallet_file_path = os.path.join(self.nodes[0].datadir, "regtest", "wallets", "notloaded2")
+        wallet_file_path = self.nodes[0].wallets_path / "notloaded2"
         self.nodes[0].migratewallet(wallet_file_path)
 
         # Because we gave the name by full path, the loaded wallet's name is that path too.
-        wallet = self.nodes[0].get_wallet_rpc(wallet_file_path)
+        wallet = self.nodes[0].get_wallet_rpc(str(wallet_file_path))
 
         info = wallet.getwalletinfo()
         assert_equal(info["descriptors"], True)
@@ -485,12 +484,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         wallet = self.create_legacy_wallet("plainfile")
         wallet.unloadwallet()
 
-        wallets_dir = os.path.join(self.nodes[0].datadir, "regtest", "wallets")
-        wallet_path = os.path.join(wallets_dir, "plainfile")
-        wallet_dat_path = os.path.join(wallet_path, "wallet.dat")
-        shutil.copyfile(wallet_dat_path, os.path.join(wallets_dir, "plainfile.bak"))
+        wallets_dir = self.nodes[0].wallets_path
+        wallet_path = wallets_dir / "plainfile"
+        wallet_dat_path = wallet_path / "wallet.dat"
+        shutil.copyfile(wallet_dat_path, wallets_dir / "plainfile.bak")
         shutil.rmtree(wallet_path)
-        shutil.move(os.path.join(wallets_dir, "plainfile.bak"), wallet_path)
+        shutil.move(wallets_dir / "plainfile.bak", wallet_path)
 
         self.nodes[0].loadwallet("plainfile")
         info = wallet.getwalletinfo()
@@ -502,8 +501,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["descriptors"], True)
         assert_equal(info["format"], "sqlite")
 
-        assert os.path.isdir(wallet_path)
-        assert os.path.isfile(wallet_dat_path)
+        assert wallet_path.is_dir()
+        assert wallet_dat_path.is_file()
 
     def run_test(self):
         self.generate(self.nodes[0], 101)
