@@ -25,6 +25,11 @@
 // How often to flush fee estimates to fee_estimates.dat.
 static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
 
+/** fee_estimates.dat that are more than 60 hours (2.5 days) will not be read,
+ * as the estimates in the file are stale.
+ */
+static constexpr std::chrono::hours MAX_FILE_AGE{60};
+
 class AutoFile;
 class CTxMemPoolEntry;
 class TxConfirmStats;
@@ -247,6 +252,9 @@ public:
     /** Record current fee estimations. */
     void FlushFeeEstimates()
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
+
+    /** Calculates the age of the file, since last modified */
+    std::chrono::hours GetFeeEstimatorFileAge();
 
 private:
     mutable Mutex m_cs_fee_estimator;
