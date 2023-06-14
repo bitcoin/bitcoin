@@ -25,7 +25,7 @@ check_libtoolize() {
 # Run autoreconf
 run_autoreconf() {
   [ -x "$(command -v autoreconf)" ] >/dev/null || { echo "Error: autoreconf not found or not executable."; exit 1; }
-  autoreconf --install --force --warnings=all || { echo "Error: autoreconf failed"; exit 1; }
+  autoreconf --install --force --warnings=all || { echo "Error: autoreconf failed to execute. Please ensure autoreconf is installed and available in your PATH."; exit 1; }
 }
 
 # Copy file if newer
