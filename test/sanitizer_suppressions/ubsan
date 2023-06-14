@@ -50,7 +50,6 @@ unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
 # SYSCOIN
 unsigned-integer-overflow:primitives/transaction.cpp
-unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:xoroshiro128plusplus.h
 implicit-integer-sign-change:compat/stdin.cpp
 implicit-integer-sign-change:primitives/transaction.h

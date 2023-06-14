@@ -57,7 +57,7 @@ struct CompareIteratorByHash {
  * ("descendant" transactions).
  *
  * When a new entry is added to the mempool, we update the descendant state
- * (nCountWithDescendants, nSizeWithDescendants, and nModFeesWithDescendants) for
+ * (m_count_with_descendants, nSizeWithDescendants, and nModFeesWithDescendants) for
  * all ancestors of the newly added transaction.
  *
  */
@@ -87,13 +87,13 @@ private:
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
     // descendants as well.
-    uint64_t nCountWithDescendants{1}; //!< number of descendant transactions
+    int64_t m_count_with_descendants{1}; //!< number of descendant transactions
     // Using int64_t instead of int32_t to avoid signed integer overflow issues.
     int64_t nSizeWithDescendants;      //!< ... and size
     CAmount nModFeesWithDescendants;   //!< ... and total fees (all including us)
 
     // Analogous statistics for ancestor transactions
-    uint64_t nCountWithAncestors{1};
+    int64_t m_count_with_ancestors{1};
     // Using int64_t instead of int32_t to avoid signed integer overflow issues.
     int64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
@@ -153,13 +153,13 @@ public:
         lockPoints = lp;
     }
 
-    uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
+    uint64_t GetCountWithDescendants() const { return m_count_with_descendants; }
     int64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
     CAmount GetModFeesWithDescendants() const { return nModFeesWithDescendants; }
 
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
 
-    uint64_t GetCountWithAncestors() const { return nCountWithAncestors; }
+    uint64_t GetCountWithAncestors() const { return m_count_with_ancestors; }
     int64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
