@@ -191,7 +191,7 @@ task:
     - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=99999999 --jobs=6 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
-  name: 'ARM [unit tests, no functional tests] [bullseye]'
+  name: 'new cache for ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
     cpu: 2
