@@ -18,10 +18,8 @@ set_environment_variables() {
 
 # Check for libtoolize and set LIBTOOLIZE variable
 check_libtoolize() {
-  if [ -z "${LIBTOOLIZE}" ] && LIBTOOLIZE="$(command -v libtoolize)"; then
-    LIBTOOLIZE="${LIBTOOLIZE}"
-    export LIBTOOLIZE
-  fi
+  LIBTOOLIZE="${LIBTOOLIZE:=$(command -v libtoolize)}"
+  export LIBTOOLIZE
 }
 
 # Run autoreconf
