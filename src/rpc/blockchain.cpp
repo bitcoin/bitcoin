@@ -2343,7 +2343,7 @@ static RPCHelpMan scanblocks()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
-    if (request.params[0].get_str() == "status") {
+    if (request.params["action"].get_str() == "status") {
         BlockFiltersScanReserver reserver;
         if (reserver.reserve()) {
             // no scan in progress
@@ -2352,7 +2352,7 @@ static RPCHelpMan scanblocks()
         ret.pushKV("progress", g_scanfilter_progress.load());
         ret.pushKV("current_height", g_scanfilter_progress_height.load());
         return ret;
-    } else if (request.params[0].get_str() == "abort") {
+    } else if (request.params["action"].get_str() == "abort") {
         BlockFiltersScanReserver reserver;
         if (reserver.reserve()) {
             // reserve was possible which means no scan was running
@@ -2361,19 +2361,19 @@ static RPCHelpMan scanblocks()
         // set the abort flag
         g_scanfilter_should_abort_scan = true;
         return true;
-    } else if (request.params[0].get_str() == "start") {
+    } else if (request.params["action"].get_str() == "start") {
         BlockFiltersScanReserver reserver;
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
         }
-        const std::string filtertype_name{request.params[4].isNull() ? "basic" : request.params[4].get_str()};
+        const std::string filtertype_name{request.params["filtertype"].isNull() ? "basic" : request.params["filtertype"].get_str()};
 
         BlockFilterType filtertype;
         if (!BlockFilterTypeByName(filtertype_name, filtertype)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown filtertype");
         }
 
-        UniValue options{request.params[5].isNull() ? UniValue::VOBJ : request.params[5]};
+        UniValue options{request.params["options"].isNull() ? UniValue::VOBJ : request.params["options"]};
         bool filter_false_positives{options.exists("filter_false_positives") ? options["filter_false_positives"].get_bool() : false};
 
         BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
@@ -2392,14 +2392,14 @@ static RPCHelpMan scanblocks()
             CChain& active_chain = chainman.ActiveChain();
             start_index = active_chain.Genesis();
             stop_block = active_chain.Tip(); // If no stop block is provided, stop at the chain tip.
-            if (!request.params[2].isNull()) {
-                start_index = active_chain[request.params[2].getInt<int>()];
+            if (!request.params["start_height"].isNull()) {
+                start_index = active_chain[request.params["start_height"].getInt<int>()];
                 if (!start_index) {
                     throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
                 }
             }
-            if (!request.params[3].isNull()) {
-                stop_block = active_chain[request.params[3].getInt<int>()];
+            if (!request.params["stop_height"].isNull()) {
+                stop_block = active_chain[request.params["stop_height"].getInt<int>()];
                 if (!stop_block || stop_block->nHeight < start_index->nHeight) {
                     throw JSONRPCError(RPC_MISC_ERROR, "Invalid stop_height");
                 }
@@ -2410,7 +2410,7 @@ static RPCHelpMan scanblocks()
 
         // loop through the scan objects, add scripts to the needle_set
         GCSFilter::ElementSet needle_set;
-        for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
+        for (const UniValue& scanobject : request.params["scanobjects"].get_array().getValues()) {
             FlatSigningProvider provider;
             std::vector<CScript> scripts = EvalDescriptorStringOrObject(scanobject, provider);
             for (const CScript& script : scripts) {
@@ -2479,7 +2479,7 @@ static RPCHelpMan scanblocks()
         ret.pushKV("completed", completed);
     }
     else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params[0].get_str()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params["action"].get_str()));
     }
     return ret;
 },

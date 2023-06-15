@@ -609,8 +609,8 @@ RPCHelpMan listsinceblock()
     isminefilter filter = ISMINE_SPENDABLE;
 
     uint256 blockId;
-    if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
-        blockId = ParseHashV(request.params[0], "blockhash");
+    if (!request.params["blockhash"].isNull() && !request.params["blockhash"].get_str().empty()) {
+        blockId = ParseHashV(request.params["blockhash"], "blockhash");
         height = int{};
         altheight = int{};
         if (!wallet.chain().findCommonAncestor(blockId, wallet.GetLastBlockHash(), /*ancestor_out=*/FoundBlock().height(*height), /*block1_out=*/FoundBlock().height(*altheight))) {
@@ -618,24 +618,24 @@ RPCHelpMan listsinceblock()
         }
     }
 
-    if (!request.params[1].isNull()) {
-        target_confirms = request.params[1].getInt<int>();
+    if (!request.params["target_confirmations"].isNull()) {
+        target_confirms = request.params["target_confirmations"].getInt<int>();
 
         if (target_confirms < 1) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
         }
     }
 
-    if (ParseIncludeWatchonly(request.params[2], wallet)) {
+    if (ParseIncludeWatchonly(request.params["include_watchonly"], wallet)) {
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
-    bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
+    bool include_removed = (request.params["include_removed"].isNull() || request.params["include_removed"].get_bool());
+    bool include_change = (!request.params["include_change"].isNull() && request.params["include_change"].get_bool());
 
     // Only set it if 'label' was provided.
     std::optional<std::string> filter_label;
-    if (!request.params[5].isNull()) filter_label.emplace(LabelFromValue(request.params[5]));
+    if (!request.params["label"].isNull()) filter_label.emplace(LabelFromValue(request.params["label"]));
 
     int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
 

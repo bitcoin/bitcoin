@@ -272,32 +272,32 @@ RPCHelpMan sendtoaddress()
 
     // Wallet comments
     mapValue_t mapValue;
-    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
-        mapValue["comment"] = request.params[2].get_str();
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        mapValue["to"] = request.params[3].get_str();
+    if (!request.params["comment"].isNull() && !request.params["comment"].get_str().empty())
+        mapValue["comment"] = request.params["comment"].get_str();
+    if (!request.params["comment_to"].isNull() && !request.params["comment_to"].get_str().empty())
+        mapValue["to"] = request.params["comment_to"].get_str();
 
     bool fSubtractFeeFromAmount = false;
-    if (!request.params[4].isNull()) {
-        fSubtractFeeFromAmount = request.params[4].get_bool();
+    if (!request.params["subtractfeefromamount"].isNull()) {
+        fSubtractFeeFromAmount = request.params["subtractfeefromamount"].get_bool();
     }
 
     CCoinControl coin_control;
-    if (!request.params[5].isNull()) {
-        coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
+    if (!request.params["replaceable"].isNull()) {
+        coin_control.m_signal_bip125_rbf = request.params["replaceable"].get_bool();
     }
 
-    coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(*pwallet, request.params[8]);
+    coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(*pwallet, request.params["avoid_reuse"]);
     // We also enable partial spend avoidance if reuse avoidance is set.
     coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
 
-    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[9], /*override_min_fee=*/false);
+    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params["conf_target"], /*estimate_mode=*/request.params["estimate_mode"], /*fee_rate=*/request.params["fee_rate"], /*override_min_fee=*/false);
 
     EnsureWalletIsUnlocked(*pwallet);
 
     UniValue address_amounts(UniValue::VOBJ);
-    const std::string address = request.params[0].get_str();
-    address_amounts.pushKV(address, request.params[1]);
+    const std::string address = request.params["address"].get_str();
+    address_amounts.pushKV(address, request.params["amount"]);
     UniValue subtractFeeFromAmount(UniValue::VARR);
     if (fSubtractFeeFromAmount) {
         subtractFeeFromAmount.push_back(address);
@@ -305,7 +305,7 @@ RPCHelpMan sendtoaddress()
 
     std::vector<CRecipient> recipients;
     ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
-    const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
+    const bool verbose{request.params["verbose"].isNull() ? false : request.params["verbose"].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
 },
@@ -379,29 +379,29 @@ RPCHelpMan sendmany()
 
     LOCK(pwallet->cs_wallet);
 
-    if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
+    if (!request.params["dummy"].isNull() && !request.params["dummy"].get_str().empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"\"");
     }
-    UniValue sendTo = request.params[1].get_obj();
+    UniValue sendTo = request.params["amounts"].get_obj();
 
     mapValue_t mapValue;
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        mapValue["comment"] = request.params[3].get_str();
+    if (!request.params["comment"].isNull() && !request.params["comment"].get_str().empty())
+        mapValue["comment"] = request.params["comment"].get_str();
 
     UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (!request.params[4].isNull())
-        subtractFeeFromAmount = request.params[4].get_array();
+    if (!request.params["subtractfeefrom"].isNull())
+        subtractFeeFromAmount = request.params["subtractfeefrom"].get_array();
 
     CCoinControl coin_control;
-    if (!request.params[5].isNull()) {
-        coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
+    if (!request.params["replaceable"].isNull()) {
+        coin_control.m_signal_bip125_rbf = request.params["replaceable"].get_bool();
     }
 
-    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[8], /*override_min_fee=*/false);
+    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params["conf_target"], /*estimate_mode=*/request.params["estimate_mode"], /*fee_rate=*/request.params["fee_rate"], /*override_min_fee=*/false);
 
     std::vector<CRecipient> recipients;
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
-    const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
+    const bool verbose{request.params["verbose"].isNull() ? false : request.params["verbose"].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
 },

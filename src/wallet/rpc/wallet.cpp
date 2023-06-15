@@ -368,25 +368,25 @@ static RPCHelpMan createwallet()
 {
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
-    if (!request.params[1].isNull() && request.params[1].get_bool()) {
+    if (!request.params["disable_private_keys"].isNull() && request.params["disable_private_keys"].get_bool()) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
+    if (!request.params["blank"].isNull() && request.params["blank"].get_bool()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
     SecureString passphrase;
     passphrase.reserve(100);
     std::vector<bilingual_str> warnings;
-    if (!request.params[3].isNull()) {
-        passphrase = std::string_view{request.params[3].get_str()};
+    if (!request.params["passphrase"].isNull()) {
+        passphrase = std::string_view{request.params["passphrase"].get_str()};
         if (passphrase.empty()) {
             // Empty string means unencrypted
             warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
         }
     }
 
-    if (!request.params[4].isNull() && request.params[4].get_bool()) {
+    if (!request.params["avoid_reuse"].isNull() && request.params["avoid_reuse"].get_bool()) {
         flags |= WALLET_FLAG_AVOID_REUSE;
     }
     if (self.Arg<bool>(5)) {
@@ -400,7 +400,7 @@ static RPCHelpMan createwallet()
                                                  " In this release it can be re-enabled temporarily with the -deprecatedrpc=create_bdb setting.");
         }
     }
-    if (!request.params[7].isNull() && request.params[7].get_bool()) {
+    if (!request.params["external_signer"].isNull() && request.params["external_signer"].get_bool()) {
 #ifdef ENABLE_EXTERNAL_SIGNER
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
 #else
@@ -421,8 +421,8 @@ static RPCHelpMan createwallet()
     options.create_flags = flags;
     options.create_passphrase = passphrase;
     bilingual_str error;
-    std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
-    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+    std::optional<bool> load_on_start = request.params["load_on_startup"].isNull() ? std::nullopt : std::optional<bool>(request.params["load_on_startup"].get_bool());
+    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params["wallet_name"].get_str(), load_on_start, options, status, error, warnings);
     if (!wallet) {
         RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
         throw JSONRPCError(code, error.original);
