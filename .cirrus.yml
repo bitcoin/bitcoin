@@ -314,11 +314,11 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'macOS 10.15 [gui, no tests] [focal]'
+  name: 'macOS 10.15 [gui, no tests] [jammy]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:focal
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
       FILE_ENV: "./ci/test/00_setup_env_mac.sh"
   << : *CREDITS_TEMPLATE
   macos_sdk_cache:
@@ -333,7 +333,7 @@ task:
   name: 'macOS 13 native arm64 [gui, sqlite only] [no depends]'
   macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.1  # https://cirrus-ci.org/guide/macOS
+    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.3.1  # https://cirrus-ci.org/guide/macOS
   << : *BASE_TEMPLATE
   check_clang_script:
     - clang --version
