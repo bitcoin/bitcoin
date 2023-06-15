@@ -27,6 +27,14 @@ public:
     virtual void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) {}
     virtual void progress(const bilingual_str& title, int progress_percent, bool resume_possible) {}
     virtual void warning(const bilingual_str& warning) {}
+
+    //! The flush error notification is sent to notify the user that an error
+    //! occurred while flushing block data to disk. Kernel code may ignore flush
+    //! errors that don't affect the immediate operation it is trying to
+    //! perform. Applications can choose to handle the flush error notification
+    //! by logging the error, or notifying the user, or triggering an early
+    //! shutdown as a precaution against causing more errors.
+    virtual void flushError(const std::string& debug_message) {}
 };
 } // namespace kernel
 

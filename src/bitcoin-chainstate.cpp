@@ -97,6 +97,11 @@ int main(int argc, char* argv[])
         {
             std::cout << "Warning: " << warning.original << std::endl;
         }
+        void flushError(const std::string& debug_message) override
+        {
+            std::cerr << "Error flushing block data to disk: " << debug_message << std::endl;
+        }
+
     };
     auto notifications = std::make_unique<KernelNotifications>();
 
@@ -112,6 +117,7 @@ int main(int argc, char* argv[])
     const node::BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = abs_datadir / "blocks",
+        .notifications = chainman_opts.notifications,
     };
     ChainstateManager chainman{kernel_context.interrupt, chainman_opts, blockman_opts};
 
