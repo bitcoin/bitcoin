@@ -1253,7 +1253,7 @@ public:
     //! directories are moved or deleted.
     //!
     //! @sa node/chainstate:LoadChainstate()
-    bool ValidatedSnapshotCleanup() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Result<void, kernel::FatalError> ValidatedSnapshotCleanup() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! @returns the chainstate that indexes should consult when ensuring that an
     //!   index is synced with a chain where we can expect block index entries to have

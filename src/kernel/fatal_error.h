@@ -11,7 +11,10 @@ namespace kernel {
 
 enum class FatalError {
     BlockFileImportFailed,
+    ChainstateRenameFailed,
     ConnectBestBlockFailed,
+    NoChainstatePaths,
+    SnapshotAlreadyValidated,
     SnapshotChainstateDirRemovalFailed,
 };
 
