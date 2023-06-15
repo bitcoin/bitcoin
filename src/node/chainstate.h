@@ -48,7 +48,7 @@ enum class ChainstateLoadError {
     INTERRUPTED,
 };
 
-util::Result<void, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
+[[nodiscard]] util::Result<void, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
                                                        const ChainstateLoadOptions& options);
 util::Result<void, ChainstateLoadError> VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
 } // namespace node
