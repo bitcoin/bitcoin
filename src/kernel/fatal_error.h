@@ -12,6 +12,7 @@ namespace kernel {
 enum class FatalError {
     BlockFileImportFailed,
     ConnectBestBlockFailed,
+    SnapshotChainstateDirRemovalFailed,
 };
 
 template <typename T>
