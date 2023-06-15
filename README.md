@@ -1,7 +1,7 @@
 Leecoin integration/staging tree
 =====================================
 
-https://Leecoin.org
+http://127.0.0.1:7700
 
 For an immediately usable, binary version of the Bitcoin Core software, see
 https://Leecoin.org/en/download/.
