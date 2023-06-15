@@ -19,6 +19,7 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/hasher.h>
+#include <util/result.h>
 
 #include <array>
 #include <atomic>
@@ -38,6 +39,9 @@ class BlockValidationState;
 class CBlockUndo;
 class Chainstate;
 class ChainstateManager;
+namespace kernel {
+enum class FatalError;
+}
 namespace Consensus {
 struct Params;
 }
@@ -370,7 +374,7 @@ public:
     void CleanupBlockRevFiles() const;
 };
 
-void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles);
+[[nodiscard]] util::Result<void, kernel::FatalError> ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H

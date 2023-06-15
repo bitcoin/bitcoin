@@ -5,6 +5,9 @@
 #ifndef BITCOIN_NODE_ABORT_H
 #define BITCOIN_NODE_ABORT_H
 
+#include <kernel/fatal_error.h>
+#include <util/result.h>
+
 #include <atomic>
 
 struct bilingual_str;
@@ -14,7 +17,22 @@ class SignalInterrupt;
 } // namespace util
 
 namespace node {
-void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& message);
+void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& user_message);
+
+template <typename T>
+[[nodiscard]] T CheckFatal(const util::Result<T, kernel::FatalError> result, util::SignalInterrupt* shutdown, std::atomic<int>& exit_status)
+{
+    if (IsFatal(result)) {
+        AbortNode(shutdown, exit_status, ErrorString(result));
+    }
+    if constexpr (std::is_same_v<T, bool>) {
+        if (!result) {
+            return false;
+        }
+        return result.value();
+    }
+}
+
 } // namespace node
 
 #endif // BITCOIN_NODE_ABORT_H
