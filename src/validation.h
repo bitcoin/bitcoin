@@ -52,6 +52,9 @@ class DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
 struct AssumeutxoData;
+namespace kernel {
+enum class FatalError;
+} // namespace kernel
 namespace node {
 class SnapshotMetadata;
 } // namespace node
@@ -1132,7 +1135,7 @@ public:
      *                                              unknown parent, key is parent block hash
      *                                              (only used for reindex)
      * */
-    void LoadExternalBlockFile(
+    [[nodiscard]] util::Result<void, kernel::FatalError> LoadExternalBlockFile(
         AutoFile& file_in,
         FlatFilePos* dbp = nullptr,
         std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);

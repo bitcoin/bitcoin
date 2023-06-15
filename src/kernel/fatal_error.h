@@ -10,6 +10,7 @@
 namespace kernel {
 
 enum class FatalError {
+    BlockFileImportFailed,
     ConnectBestBlockFailed,
 };
 

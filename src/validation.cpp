@@ -26,6 +26,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/coinstats.h>
 #include <kernel/disconnected_transactions.h>
+#include <kernel/fatal_error.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
@@ -4858,7 +4859,7 @@ bool Chainstate::LoadGenesisBlock()
     return true;
 }
 
-void ChainstateManager::LoadExternalBlockFile(
+util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(
     AutoFile& file_in,
     FlatFilePos* dbp,
     std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent)
@@ -4868,6 +4869,7 @@ void ChainstateManager::LoadExternalBlockFile(
 
     const auto start{SteadyClock::now()};
     const CChainParams& params{GetParams()};
+    util::Result<void, kernel::FatalError> result{};
 
     int nLoaded = 0;
     try {
@@ -4876,7 +4878,7 @@ void ChainstateManager::LoadExternalBlockFile(
         // such as a block fails to deserialize.
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
-            if (m_interrupt) return;
+            if (m_interrupt || IsFatal(result)) return result;
 
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
@@ -5031,9 +5033,10 @@ void ChainstateManager::LoadExternalBlockFile(
             }
         }
     } catch (const std::runtime_error& e) {
-        GetNotifications().fatalError(strprintf(_("System error while loading external block file: %s"), e.what()));
+        result.Set({util::Error{strprintf(_("Fatal error: %s"), e.what())}, kernel::FatalError::BlockFileImportFailed});
     }
     LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+    return result;
 }
 
 void ChainstateManager::CheckBlockIndex()

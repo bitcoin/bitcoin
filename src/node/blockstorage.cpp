@@ -1198,7 +1198,7 @@ util::Result<void, kernel::FatalError> ImportBlocks(ChainstateManager& chainman,
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
+                result.Set(chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent));
                 if (chainman.m_interrupt || IsFatal(result)) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return result;
@@ -1217,7 +1217,7 @@ util::Result<void, kernel::FatalError> ImportBlocks(ChainstateManager& chainman,
             AutoFile file{fsbridge::fopen(path, "rb")};
             if (!file.IsNull()) {
                 LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
-                chainman.LoadExternalBlockFile(file);
+                result.Set(chainman.LoadExternalBlockFile(file));
                 if (chainman.m_interrupt || IsFatal(result)) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return result;

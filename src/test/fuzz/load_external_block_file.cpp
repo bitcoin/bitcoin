@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <flatfile.h>
+#include <kernel/fatal_error.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -36,9 +37,9 @@ FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_fil
         // Corresponds to the -reindex case (track orphan blocks across files).
         FlatFilePos flat_file_pos;
         std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
-        g_setup->m_node.chainman->LoadExternalBlockFile(fuzzed_block_file, &flat_file_pos, &blocks_with_unknown_parent);
+        UnwrapFatalError(g_setup->m_node.chainman->LoadExternalBlockFile(fuzzed_block_file, &flat_file_pos, &blocks_with_unknown_parent));
     } else {
         // Corresponds to the -loadblock= case (orphan blocks aren't tracked across files).
-        g_setup->m_node.chainman->LoadExternalBlockFile(fuzzed_block_file);
+        UnwrapFatalError(g_setup->m_node.chainman->LoadExternalBlockFile(fuzzed_block_file));
     }
 }
