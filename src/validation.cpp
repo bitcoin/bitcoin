@@ -2058,6 +2058,12 @@ bool FatalError(Notifications& notifications, BlockValidationState& state, const
     return state.Error(message.original);
 }
 
+util::Result<bool, kernel::FatalError> ValidationFatalError(BlockValidationState& state, const bilingual_str& message, kernel::FatalError result)
+{
+    state.Error(message.original);
+    return {util::Error{message}, result};
+}
+
 /**
  * Restore the UTXO in a Coin at a given COutPoint
  * @param undo The Coin to be restored.
@@ -4273,7 +4279,7 @@ void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t 
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
+util::Result<bool, kernel::FatalError> ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
 {
     const CBlock& block = *pblock;
 
@@ -4351,7 +4357,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
-        return FatalError(GetNotifications(), state, strprintf(_("System error while saving block to disk: %s"), e.what()));
+        return ValidationFatalError(state, strprintf(_("System error while saving block to disk: %s"), e.what()), kernel::FatalError::AcceptBlockFailed);
     }
 
     // TODO: FlushStateToDisk() handles flushing of both block and chainstate
@@ -4368,8 +4374,9 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     return true;
 }
 
-bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
+util::Result<bool, kernel::FatalError> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
 {
+    util::Result<bool, kernel::FatalError> result{true};
     AssertLockNotHeld(cs_main);
 
     {
@@ -4389,14 +4396,18 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         bool ret = CheckBlock(*block, state, GetConsensus());
         if (ret) {
             // Store to disk
-            ret = AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
+            result.Set(AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked));
+            ret = result && result.value();
         }
         if (!ret) {
             if (m_options.signals) {
                 m_options.signals->BlockChecked(*block, state);
             }
-            LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
-            return false;
+            if (result) {
+                LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
+                result.Set(false);
+            }
+            return result;
         }
     }
 
@@ -4405,17 +4416,19 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActiveChainstate().ActivateBestChain(state, block)) {
         LogError("%s: ActivateBestChain failed (%s)\n", __func__, state.ToString());
-        return false;
+        result.Set(false);
+        return result;
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return BackgroundSyncInProgress() ? m_ibd_chainstate.get() : nullptr)};
     BlockValidationState bg_state;
     if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
         LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
-        return false;
+        result.Set(false);
+        return result;
      }
 
-    return true;
+     return result;
 }
 
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
@@ -4943,9 +4956,11 @@ util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(
                         nRewind = blkdat.GetPos();
 
                         BlockValidationState state;
-                        if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr, true)) {
+                        const auto res{AcceptBlock(pblock, state, nullptr, true, dbp, nullptr, true)};
+                        if (res && res.value()) {
                             nLoaded++;
                         }
+                        result.MoveMessages(res);
                         if (state.IsError()) {
                             break;
                         }
@@ -5010,10 +5025,13 @@ util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(
                                     head.ToString());
                             LOCK(cs_main);
                             BlockValidationState dummy;
-                            if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, true)) {
+                            // TODO (fatal error): Add reason why continuing processing here after a fatal error is fine.
+                            const auto res{AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, true)};
+                            if (res && res.value()) {
                                 nLoaded++;
                                 queue.push_back(pblockrecursive->GetHash());
                             }
+                            result.MoveMessages(res);
                         }
                         range.first++;
                         blocks_with_unknown_parent->erase(it);
@@ -5886,11 +5904,9 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
         assert(!this->IsUsable(m_snapshot_chainstate.get()));
         assert(this->IsUsable(m_ibd_chainstate.get()));
 
-        auto rename_result = m_snapshot_chainstate->InvalidateCoinsDBOnDisk();
-        if (!rename_result) {
-            user_error = strprintf(Untranslated("%s\n%s"), user_error, util::ErrorString(rename_result));
-        }
-        return {util::Error{user_error}, fatal};
+        util::Result<SnapshotCompletionResult, kernel::FatalError> result{util::Error{user_error}, fatal};
+        result.MoveMessages(m_snapshot_chainstate->InvalidateCoinsDBOnDisk());
+        return result;
     };
 
     if (index_new.GetBlockHash() != snapshot_blockhash) {
@@ -6106,7 +6122,7 @@ static fs::path GetSnapshotCoinsDBPath(Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(
     return *storage_path_maybe;
 }
 
-util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
+util::Result<void, kernel::FatalError> Chainstate::InvalidateCoinsDBOnDisk()
 {
     fs::path snapshot_datadir = GetSnapshotCoinsDBPath(*this);
 
@@ -6129,12 +6145,13 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
 
         LogPrintf("%s: error renaming file '%s' -> '%s': %s\n",
                 __func__, src_str, dest_str, e.what());
-        return util::Error{strprintf(_(
+        return {util::Error{strprintf(_(
             "Rename of '%s' -> '%s' failed. "
             "You should resolve this by manually moving or deleting the invalid "
             "snapshot directory %s, otherwise you will encounter the same error again "
             "on the next startup."),
-            src_str, dest_str, src_str)};
+            src_str, dest_str, src_str)},
+            kernel::FatalError::ChainstateRenameFailed};
     }
     return {};
 }

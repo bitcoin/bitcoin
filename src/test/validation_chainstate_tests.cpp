@@ -4,6 +4,7 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <random.h>
 #include <rpc/blockchain.h>
 #include <sync.h>
@@ -123,8 +124,8 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         LOCK(::cs_main);
         bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
         BOOST_CHECK(checked);
-        bool accepted = chainman.AcceptBlock(
-            pblockone, state, &pindex, true, nullptr, &newblock, true);
+        bool accepted = UnwrapFatalError(chainman.AcceptBlock(
+            pblockone, state, &pindex, true, nullptr, &newblock, true));
         BOOST_CHECK(accepted);
     }
 

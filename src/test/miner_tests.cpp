@@ -8,6 +8,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
+#include <kernel/fatal_error.h>
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <test/util/random.h>
@@ -635,7 +636,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             pblock->nNonce = bi.nonce;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr));
+        BOOST_CHECK(UnwrapFatalError(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr)));
         pblock->hashPrevBlock = pblock->GetHash();
     }
 

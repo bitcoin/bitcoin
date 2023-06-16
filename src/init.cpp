@@ -1643,6 +1643,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
                                      node.banman.get(), chainman,
+                                     node.shutdown, node.exit_status,
                                      *node.mempool, peerman_opts);
     validation_signals.RegisterValidationInterface(node.peerman.get());
 
