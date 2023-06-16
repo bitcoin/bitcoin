@@ -628,7 +628,7 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
                 return RESTERR(req, HTTP_BAD_REQUEST, "Block not found");
             }
 
-            jsonRequest.params.pushKV("blockhash", hash_str);
+            jsonRequest.params.push_back(hash_str);
         }
 
         req->WriteHeader("Content-Type", "application/json");

@@ -40,7 +40,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
-    systemctl restart docker
+    podman container stop --all  # Similar to "systemctl restart docker"
+    echo "Prune all dangling images"
+    docker image prune --force
   fi
 
   # shellcheck disable=SC2086
