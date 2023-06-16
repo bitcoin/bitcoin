@@ -407,6 +407,7 @@ const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& start_bl
 {
     AssertLockHeld(::cs_main);
     const CBlockIndex* last_block = &start_block;
+    assert(last_block->nStatus & BLOCK_HAVE_DATA);
     while (last_block->pprev && (last_block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         last_block = last_block->pprev;
     }

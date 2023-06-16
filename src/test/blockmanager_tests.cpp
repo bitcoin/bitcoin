@@ -90,4 +90,35 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_scan_unlink_already_pruned_files, TestChain
     BOOST_CHECK(!AutoFile(blockman.OpenBlockFile(new_pos, true)).IsNull());
 }
 
+BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
+{
+    LOCK(::cs_main);
+    auto& chainman = m_node.chainman;
+    auto& blockman = chainman->m_blockman;
+    const CBlockIndex& tip = *chainman->ActiveTip();
+
+    // Function to prune all blocks from 'last_pruned_block' down to the genesis block
+    const auto& func_prune_blocks = [&](CBlockIndex* last_pruned_block)
+    {
+        LOCK(::cs_main);
+        CBlockIndex* it = last_pruned_block;
+        while (it != nullptr && it->nStatus & BLOCK_HAVE_DATA) {
+            it->nStatus &= ~BLOCK_HAVE_DATA;
+            it = it->pprev;
+        }
+    };
+
+    // 1) Return genesis block when all blocks are available
+    BOOST_CHECK_EQUAL(blockman.GetFirstStoredBlock(tip), chainman->ActiveChain()[0]);
+
+    // Prune half of the blocks
+    int height_to_prune = tip.nHeight / 2;
+    CBlockIndex* first_available_block = chainman->ActiveChain()[height_to_prune + 1];
+    CBlockIndex* last_pruned_block = first_available_block->pprev;
+    func_prune_blocks(last_pruned_block);
+
+    // 2) The last block not pruned is in-between upper-block and the genesis block
+    BOOST_CHECK_EQUAL(blockman.GetFirstStoredBlock(tip), first_available_block);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
