@@ -52,7 +52,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         # Specifying a path to an existing or invalid file will fail.
         assert_raises_rpc_error(
             -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME)
-        invalid_path = str(Path(node.datadir) / "invalid" / "path")
+        invalid_path = node.datadir_path / "invalid" / "path"
         assert_raises_rpc_error(
             -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path)
 
