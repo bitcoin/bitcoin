@@ -73,4 +73,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
  */
 void SetupServerArgs(ArgsManager& argsman);
 
+/** Validates requirements to run the indexes and spawns each index initial sync thread */
+bool StartIndexes(node::NodeContext& node);
+
 #endif // BITCOIN_INIT_H
