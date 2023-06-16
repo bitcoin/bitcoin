@@ -25,7 +25,6 @@ class CreateWalletTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-deprecatedrpc=walletwarningfield"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -164,7 +163,6 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_equal(walletinfo['keypoolsize_hd_internal'], keys)
         # Allow empty passphrase, but there should be a warning
         resp = self.nodes[0].createwallet(wallet_name='w7', disable_private_keys=False, blank=False, passphrase='')
-        assert_equal(resp["warning"], EMPTY_PASSPHRASE_MSG if self.options.descriptors else f"{EMPTY_PASSPHRASE_MSG}\n{LEGACY_WALLET_MSG}")
         assert_equal(resp["warnings"], [EMPTY_PASSPHRASE_MSG] if self.options.descriptors else [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG])
 
         w7 = node.get_wallet_rpc('w7')
@@ -184,20 +182,13 @@ class CreateWalletTest(BitcoinTestFramework):
             result = self.nodes[0].createwallet(wallet_name="legacy_w0", descriptors=False, passphrase=None)
             assert_equal(result, {
                 "name": "legacy_w0",
-                "warning": LEGACY_WALLET_MSG,
                 "warnings": [LEGACY_WALLET_MSG],
             })
             result = self.nodes[0].createwallet(wallet_name="legacy_w1", descriptors=False, passphrase="")
             assert_equal(result, {
                 "name": "legacy_w1",
-                "warning": f"{EMPTY_PASSPHRASE_MSG}\n{LEGACY_WALLET_MSG}",
                 "warnings": [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG],
             })
-
-        self.log.info('Test "warning" field deprecation, i.e. not returned without -deprecatedrpc=walletwarningfield')
-        self.restart_node(0, extra_args=[])
-        result = self.nodes[0].createwallet(wallet_name="w7_again", disable_private_keys=False, blank=False, passphrase="")
-        assert "warning" not in result
 
 
 if __name__ == '__main__':
