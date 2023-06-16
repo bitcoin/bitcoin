@@ -2987,7 +2987,7 @@ public:
  *
  * The block is added to connectTrace if connection succeeds.
  */
-bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool)
+bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) // NOLINT(bitcoin-fatal-error)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -3078,7 +3078,10 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     if (this != &m_chainman.ActiveChainstate()) {
         // This call may set `m_disabled`, which is referenced immediately afterwards in
         // ActivateBestChain, so that we stop connecting blocks past the snapshot base.
-        m_chainman.MaybeCompleteSnapshotValidation();
+        // FIXME: Add proper abort handling.
+        if (auto err = m_chainman.MaybeCompleteSnapshotValidation(); !err) { // NOLINT(bitcoin-fatal-error)
+            LogPrintf("Chainstate snapshot validation failed.");
+        }
     }
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
@@ -5836,7 +5839,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 //      through IsUsable() checks, or
 //
 //  (ii) giving each chainstate its own lock instead of using cs_main for everything.
-SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
+util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::MaybeCompleteSnapshotValidation()
 {
     AssertLockHeld(cs_main);
     if (m_ibd_chainstate.get() == &this->ActiveChainstate() ||
@@ -5859,7 +5862,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     assert(SnapshotBlockhash());
     uint256 snapshot_blockhash = *Assert(SnapshotBlockhash());
 
-    auto handle_invalid_snapshot = [&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    auto handle_invalid_snapshot = [&](kernel::FatalError fatal) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> util::Result<SnapshotCompletionResult, kernel::FatalError> {
         bilingual_str user_error = strprintf(_(
             "%s failed to validate the -assumeutxo snapshot state. "
             "This indicates a hardware problem, or a bug in the software, or a "
@@ -5887,16 +5890,14 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
         if (!rename_result) {
             user_error = strprintf(Untranslated("%s\n%s"), user_error, util::ErrorString(rename_result));
         }
-
-        GetNotifications().fatalError(user_error);
+        return {util::Error{user_error}, fatal};
     };
 
     if (index_new.GetBlockHash() != snapshot_blockhash) {
         LogPrintf("[snapshot] supposed base block %s does not match the "
           "snapshot base block %s (height %d). Snapshot is not valid.\n",
           index_new.ToString(), snapshot_blockhash.ToString(), snapshot_base_height);
-        handle_invalid_snapshot();
-        return SnapshotCompletionResult::BASE_BLOCKHASH_MISMATCH;
+        return handle_invalid_snapshot(kernel::FatalError::SnapshotBaseBlockhashMismatch);
     }
 
     assert(index_new.nHeight == snapshot_base_height);
@@ -5915,8 +5916,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     if (!maybe_au_data) {
         LogPrintf("[snapshot] assumeutxo data not found for height "
             "(%d) - refusing to validate snapshot\n", curr_height);
-        handle_invalid_snapshot();
-        return SnapshotCompletionResult::MISSING_CHAINPARAMS;
+        return handle_invalid_snapshot(kernel::FatalError::SnapshotMissingChainparams);
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
@@ -5939,8 +5939,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
         // While this isn't a problem with the snapshot per se, this condition
         // prevents us from validating the snapshot, so we should shut down and let the
         // user handle the issue manually.
-        handle_invalid_snapshot();
-        return SnapshotCompletionResult::STATS_FAILED;
+        return handle_invalid_snapshot(kernel::FatalError::SnapshotStatsFailed);
     }
     const auto& ibd_stats = *maybe_ibd_stats;
 
@@ -5954,8 +5953,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
         LogPrintf("[snapshot] hash mismatch: actual=%s, expected=%s\n",
             ibd_stats.hashSerialized.ToString(),
             au_data.hash_serialized.ToString());
-        handle_invalid_snapshot();
-        return SnapshotCompletionResult::HASH_MISMATCH;
+        return handle_invalid_snapshot(kernel::FatalError::SnapshotHashMismatch);
     }
 
     LogPrintf("[snapshot] snapshot beginning at %s has been fully validated\n",
