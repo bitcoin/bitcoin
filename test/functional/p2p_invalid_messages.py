@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
 
+import random
 import struct
 import time
 
@@ -75,6 +76,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_oversized_getdata_msg()
         self.test_oversized_headers_msg()
         self.test_invalid_pow_headers_msg()
+        self.test_noncontinuous_headers_msg()
         self.test_resource_exhaustion()
 
     def test_buffer(self):
@@ -282,6 +284,25 @@ class InvalidMessagesTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['Misbehaving', 'header with invalid proof of work']):
             peer.send_message(msg_headers([blockheader]))
             peer.wait_for_disconnect()
+
+    def test_noncontinuous_headers_msg(self):
+        self.log.info("Test headers message with non-continuous headers sequence is logged as misbehaving")
+        block_hashes = self.generate(self.nodes[0], 10)
+        block_headers = []
+        for block_hash in block_hashes:
+            block_headers.append(from_hex(CBlockHeader(), self.nodes[0].getblockheader(block_hash, False)))
+
+        # continuous headers sequence should be fine
+        MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS = ['Misbehaving', 'non-continuous headers sequence']
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS):
+            peer.send_and_ping(msg_headers(block_headers))
+
+        # delete arbitrary block header somewhere in the middle to break link
+        del block_headers[random.randrange(1, len(block_headers)-1)]
+        with self.nodes[0].assert_debug_log(expected_msgs=MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS):
+            peer.send_and_ping(msg_headers(block_headers))
+        self.nodes[0].disconnect_p2ps()
 
     def test_resource_exhaustion(self):
         self.log.info("Test node stays up despite many large junk messages")
