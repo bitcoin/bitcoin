@@ -68,14 +68,13 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
     obj.clear();
     obj.setObject();
     obj.pushKV("nVersion", nVersion);
+    obj.pushKV("nType", ToUnderlying(nType));
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
     obj.pushKV("confirmedHash", confirmedHash.ToString());
     obj.pushKV("service", service.ToString(false));
     obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
-    obj.pushKV("nVersion", nVersion);
-    obj.pushKV("nType", ToUnderlying(nType));
     if (nType == MnType::HighPerformance) {
         obj.pushKV("platformHTTPPort", platformHTTPPort);
         obj.pushKV("platformNodeID", platformNodeID.ToString());
@@ -186,6 +185,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
 {
     obj.setObject();
 
+    obj.pushKV("nVersion", nVersion);
     obj.pushKV("baseBlockHash", baseBlockHash.ToString());
     obj.pushKV("blockHash", blockHash.ToString());
 
@@ -208,7 +208,6 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
         mnListArr.push_back(eObj);
     }
     obj.pushKV("mnList", mnListArr);
-    obj.pushKV("nVersion", nVersion);
 
     UniValue deletedQuorumsArr(UniValue::VARR);
     for (const auto& e : deletedQuorums) {
