@@ -1,0 +1,1434 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: http://www.unicode.org/versions/Unicode10.0.0/
+Subject: Unicode 10.0.0
+Date: Tue, 4 Apr 2023 23:49:47 -0000
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI----"
+
+
+------MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI----
+Content-Type: text/html
+Content-ID: <frame-405D4963CFBA4D51EDDE7803A41E0EBA@mhtml.blink>
+Content-Transfer-Encoding: binary
+Content-Location: http://www.unicode.org/versions/Unicode10.0.0/
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"><html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><link rel="stylesheet" type="text/css" href="cid:css-9a53d553-7c59-4aef-ba08-f320c0cc3241@mhtml.blink" />
+
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="VI60_defaultClientScript" content="JavaScript">
+<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
+<meta name="keywords" content="Unicode Standard">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Unicode 10.0.0</title>
+<link rel="stylesheet" type="text/css" href="http://www.unicode.org/webscripts/standard_styles.css">
+
+</head>
+
+<body>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tbody><tr>
+      <td colspan="2">
+      <table width="100%" border="0" cellpadding="0" cellspacing="0">
+        <tbody><tr>
+          <td class="icon"><a href="http://www.unicode.org/"><img border="0" src="http://www.unicode.org/webscripts/logo60s2.gif" align="middle" alt="[Unicode]" width="34" height="33"></a>&nbsp;&nbsp;<a class="bar" href="http://www.unicode.org/versions/Unicode10.0.0/"><font size="3">Unicode 
+            10.0.0</font></a></td>
+          <td class="bar"><a href="http://www.unicode.org/" class="bar">Home</a> 
+          | <a href="http://www.unicode.org/sitemap/" class="bar">Site Map</a> |
+          <a href="http://www.unicode.org/search" class="bar">Search</a></td>
+        </tr>
+      </tbody></table>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" class="gray">&nbsp;</td>
+    </tr>
+    <tr>
+      <td valign="top" width="25%" class="navCol">
+      <table class="navColTable" border="0" width="100%" cellspacing="4" cellpadding="0">
+        <tbody><tr>
+          <td class="navColTitle" colspan="2" height="26">
+          <a name="Core_Specification_nb">10.0.0 Core Specification</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+            All Chapters and Appendices Together:</td>
+        </tr>
+        <!-- Prepublication notice -->
+        <!--
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+                    Available June 2017</td>
+        </tr>
+        -->
+        <!-- Published pdf for release -->
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/UnicodeStandard-10.0.pdf">
+              Full Text pdf for Viewing</a> (12 MB)
+          </td>
+        </tr>
+        <tr>
+          <td class="navColTitle" colspan="2" height="26">10.0.0 Front Matter</td> 
+        </tr>
+        <!-- Prepublication notice -->
+        <!--
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+                    Available June 2017</td>
+        </tr>
+        -->
+        <!-- Published pdf for release -->
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/Title.pdf">
+              Title and Copyright
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/UnicodeBookTOC.pdf">
+              Contents
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/bookmarks.html">
+              Unicode 10.0 Web Bookmarks
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/UnicodeBookLOF.pdf">
+              List of Figures
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/UnicodeBookLOT.pdf">
+              List of Tables
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/Preface.pdf">
+              Preface
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColTitle" colspan="2" height="26"><a name="Chapters_nb">10.0.0 Chapters</a></td>
+        </tr>
+        <!-- Prepublication notice -->
+        <!--
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+                    Available June 2017</td>
+        </tr>
+        -->
+        <!-- Published pdf for release -->
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">1</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch01.pdf">
+              Introduction
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">2</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch02.pdf">
+              General Structure
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">3</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf">
+              Conformance
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">4</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch04.pdf">
+              Character Properties
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">5</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch05.pdf">
+              Implementation Guidelines
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">6</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch06.pdf">
+              Writing systems and Punctuation
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">7</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch07.pdf">
+              Europe-I
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">8</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch08.pdf">
+              Europe-II
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">9</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch09.pdf">
+              Middle East-I
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">10</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch10.pdf">
+              Middle East-II
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">11</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch11.pdf">
+              Cuneiform and Hieroglyphs
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">12</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch12.pdf">
+              South and Central Asia-I
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">13</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch13.pdf">
+              South and Central Asia-II
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">14</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch14.pdf">
+              South and Central Asia-III
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">15</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch15.pdf">
+              South and Central Asia-IV
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">16</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch16.pdf">
+              Southeast Asia
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">17</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch17.pdf">
+              Indonesia and Oceania
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">18</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch18.pdf">
+              East Asia
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">19</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch19.pdf">
+              Africa
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">20</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch20.pdf">
+              Americas
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">21</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch21.pdf">
+              Notational Systems
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">22</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch22.pdf">
+              Symbols
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">23</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch23.pdf">
+              Special Areas and Format Characters
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">24</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/ch24.pdf">
+              About the Code Charts
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColTitle" colspan="2" height="26">
+          <a name="Appendices_nb">10.0.0 Appendices and Back Matter</a></td>
+        </tr>
+        <!-- Prepublication notice -->
+        <!--
+        <tr>
+          <td class="navColCell" valign="top" height="17"></td>
+          <td class="navColCell" valign="top" height="17">
+                    Available June 2017</td>
+        </tr>
+        -->
+        <!-- Published pdf for release -->
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">A</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/appA.pdf">
+              Notational Conventions
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">B</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/appB.pdf">
+              Unicode Publications and Resources
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">C</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/appC.pdf">
+              Relationship to ISO/IEC 10646
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">D</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/appD.pdf">
+              Version History of the Standard
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">E</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/appE.pdf">
+              Han Unification History
+            </a>
+          </td>
+        </tr>
+         <tr>
+          <td class="navColCell" valign="top" height="17" align="right">F</td>
+          <td class="navColCell" valign="top" height="17">     
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/appF.pdf">
+              Documentation of CJK Strokes
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17">&nbsp;</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/References.pdf">
+              References
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17">&nbsp;</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/UnicodeBookIX.pdf">
+              Index
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17">&nbsp;</td>
+          <td class="navColCell" valign="top" height="17">
+            <a href="http://www.unicode.org/versions/Unicode10.0.0/Colophon.pdf">
+              Colophon
+            </a>
+          </td>
+        </tr>
+	      <tr>
+          <td class="navColTitle" colspan="2" height="26">
+          <a name="Code_Charts_nb">Code Charts</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+		<a href="http://www.unicode.org/charts/">Latest Code Charts</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+	  <a href="http://www.unicode.org/charts/PDF/Unicode-10.0/">
+          Delta Code Charts</a> (additions to 10.0.0 highlighted)</td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+          <a href="http://www.unicode.org/Public/10.0.0/charts/">Archival Code 
+          Charts</a> (10.0.0)</td>
+        </tr>
+	      <tr>
+          <td class="navColTitle" colspan="2" height="26">
+          <a name="Han_Radical_Stroke_Index_nb">Han Radical-Stroke Indices</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+			<a href="http://www.unicode.org/charts/unihanrsindex.html">Interactive Han Radical-Stroke Index</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+      <a href="http://www.unicode.org/versions/IICoreRSIndex.pdf">IICore Radical-Stroke Index</a> (3.2 MB)</td>
+        </tr>
+        <tr>
+          <td class="navColCell" valign="top" height="17" align="right">â€¢</td>
+          <td class="navColCell" valign="top" height="17">
+          <a href="http://www.unicode.org/Public/10.0.0/charts/RSIndex.pdf">Full Han Radical-Stroke Index</a> (32 MB)</td>
+        </tr>
+         <tr>
+          <td class="navColTitle" colspan="2" height="26">
+          <a name="Unicode_Standard_Annexes_nb">10.0.0 Unicode Standard Annexes</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr9/tr9-37.html">UAX #9: The  
+          Unicode Bidirectional Algorithm</a></td> 
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr11/tr11-33.html">UAX  
+          #11: East Asian Width</a></td> 
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr14/tr14-39.html">UAX #14: 
+          Unicode Line Breaking Algorithm</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr15/tr15-45.html">UAX #15: 
+          Unicode Normalization Forms</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr24/tr24-27.html">UAX #24: 
+          Unicode Script Property</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr29/tr29-31.html">UAX #29: 
+          Unicode Text Segmentation</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr31/tr31-27.html">UAX #31: 
+          Unicode Identifier and Pattern Syntax</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr34/tr34-22.html">UAX #34: 
+          Unicode Named Character Sequences</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr38/tr38-23.html">UAX #38: 
+			     Unicode Han Database (Unihan)</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr41/tr41-21.html">UAX #41: 
+          Common References for Unicode Standard Annexes</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr42/tr42-21.html">UAX #42: Unicode Character Database in XML</a></td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr44/tr44-20.html">UAX #44: Unicode Character Database</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr45/tr45-17.html">UAX #45: U-Source Ideographs</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/tr50/tr50-19.html">UAX #50: Unicode Vertical Text Layout</a></td>
+        </tr>
+        <tr>
+          <td class="navColTitle" colspan="2" height="26"><a name="UCD_nb">10.0.0 UCD</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          10.0.0 (<a href="http://www.unicode.org/Public/10.0.0/">files</a>) (<a href="http://www.unicode.org/reports/tr44/tr44-20.html">about</a>) </td>
+        </tr>
+		    <tr>
+          <td class="navColCell" colspan="2" height="17">
+          10.0.0 <a href="http://www.unicode.org/Public/zipped/10.0.0/">Zipped files (for bulk download)</a></td>
+        </tr>
+        <tr>
+          <td class="navColTitle" colspan="2" height="26">Related Links</td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17"><a href="http://www.unicode.org/acknowledgements/">Unicode Acknowledgements </a></td>
+        </tr><tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/versions/enumeratedversions.html">Archive of Unicode Versions</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/versions/index.html">About Versions</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/errata/">Updates and Errata</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/glossary/">Glossary of Unicode Terms</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/charts/charindex.html">Unicode Character Name Index</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/reports/">Technical Reports</a></td>
+        </tr>
+        <tr>
+          <td class="navColCell" colspan="2" height="17">
+          <a href="http://www.unicode.org/emoji/">Unicode Emoji</a></td>
+        </tr>
+      </tbody></table>
+      </td>
+      <!-- BEGIN CONTENTS -->
+      <td>
+      <table>
+        <tbody><tr>
+          <td valign="top" class="contents">
+          <blockquote>
+            <h1>UnicodeÂ® 10.0.0</h1>
+            <h3 align="center" style="margin-top:1em">2017 June 20 (<a href="http://blog.unicode.org/2017/06/announcing-unicode-standard-version-100.html">Announcement</a>)</h3>
+            
+            <p><em>Version 10.0.0 has been superseded by the <a href="http://www.unicode.org/versions/latest/">latest version</a> of the Unicode Standard.</em></p>
+            <p>This page summarizes the important changes for the Unicode Standard, Version 10.0.0. 
+              This version supersedes all previous versions of the Unicode Standard.</p>
+            <!--
+            <div align="center">
+              <table class="simple" width="80%">
+                <tr>
+                  <td>The Unicode Character Database, Code Charts, and Annexes for Version 10.0
+                   <span class="changedspan">will be</span> released on June <span class="changedspan">XX</span>, 2017. The <a href="http://www.unicode.org/glossary/#core_specification">core specification</a> (the PDF chapters) of Version 10.0 is still pending publication due to the extensive editorial work required for the new content additions. Until final publication, the links to individual chapters of the core specification will not be activated. An announcement will be made when the core specification for Version 10.0 is available. In the meantime, implementers can continue to reference the relevant sections of the <a href="http://www.unicode.org/versions/Unicode9.0.0/">most recent version of the core specification</a>.</td>
+                  </tr>
+                </table>
+              </div>
+              -->
+            <blockquote>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Summary">A. Summary</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Technical_Overview">B. Technical Overview</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Stability_Policy">C. Stability Policy Update</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Character_Additions">D. Textual Changes and Character Additions</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Conformance_Changes">E. Conformance Changes</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Database_Changes">F. Changes in the Unicode Character Database</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#UAX_Changes">G. Changes in the Unicode Standard Annexes</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#UTS_Changes">H. Changes in Synchronized Unicode Technical Standards</a><br>
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Migration">M. Implications for Migration</a>
+              </blockquote>
+            
+            <h2><a name="Summary">A. Summary</a></h2>
+            <p>Unicode 10.0 adds 8,518 characters, for a total of 136,690 characters. 
+            These additions include <a href="http://www.unicode.org/versions/Unicode10.0.0/#New_Scripts">4 new scripts</a>,
+            for a total of 139 scripts, as well as 56 new emoji characters.</p>
+            <p>The  new scripts and characters in Version 10.0 add support for lesser-used  languages and unique written requirements worldwide, including:</p>
+            <ul type="disc">
+              <li>Masaram Gondi, used to write Gondi in Central and Southeast India</li>
+              <li>NÃ¼shu, used by women in China to write poetry and other discourses until the late twentieth century</li>
+              <li>Soyombo and Zanabazar Square, used in historic Buddhist texts to write Sanskrit, Tibetan, and Mongolian</li>
+              <li>Syriac letters used for writing Suriyani Malayalam, also known as Garshuni and as Syriac Malayalam</li>
+              <li>Gujarati signs used for the transliteration of the Arabic script into Gujarati by Ismaili Khoja communities</li>
+              <li>A set of 285 Hentaigana characters used in Japan (historic variants of Hiragana characters)</li>
+              <li>CJK Extension F (7,473 Han characters)</li>
+            </ul>
+            <p>Important symbol additions include:</p>
+            <ul type="disc">
+              <li>Bitcoin sign</li>
+              <li>56 emoji characters (<a href="http://www.unicode.org/emoji/charts/emoji-versions.html#2017">full list</a>)</li>
+              <li>A set of Typicon marks and symbols</li>
+            </ul>
+            <p>For statistics regarding emoji associated with Unicode 10.0, 
+              see <a href="http://www.unicode.org/reports/tr51/tr51-12.html#Emoji_Counts">Emoji Counts</a>.</p>
+            <h3>Synchronization</h3>
+            <p>Several other important Unicode specifications have been updated for Version 10.0. 
+              The following three Unicode Technical Standards are versioned in
+                synchrony with the Unicode Standard, because their data files cover the same repertoire.
+                All have been updated to Version 10.0:</p>
+            <ul>				
+              <li><a href="http://www.unicode.org/reports/tr10/tr10-36.html">UTS #10, Unicode Collation Algorithm</a> â€” sorting Unicode text</li>
+              <li><a href="http://www.unicode.org/reports/tr39/tr39-15.html">UTS #39, Unicode Security Mechanisms</a>&nbsp;â€” reducing Unicode spoofing</li>			
+              <li><a href="http://www.unicode.org/reports/tr46/tr46-19.html">UTS #46, Unicode IDNA Compatibility Processing</a> â€” compatible processing of non-ASCII URLs</li>
+            </ul>
+
+            <p>Additionally, Version 10.0 of the Unicode Standard makes use of the
+              emoji-related data and behavior specified in Version 5.0 of UTS #51:</p>
+
+              <ul>
+                <li><a href="http://www.unicode.org/reports/tr51/tr51-12.html">UTS #51, Unicode Emoji</a></li>
+              </ul>
+
+<p>Some of the changes in Version 10.0 and associated Unicode Technical Standards 
+  may require modifications 
+  to implementations. For more information, see the migration and modification sections of UTS #10, UTS #39, UTS #46, and UTS #51.</p>
+<p>This version of the Unicode Standard is also synchronized with 10646:2017, fifth edition, plus the following additions from Amendment 1 to the fifth edition:</p>
+<ul>
+  <li>56 emoji characters</li>
+  <li>285 hentaigana</li>
+  <li>3 additional Zanabazar Square characters</li>
+</ul>
+<p>See Sections D through H below for additional details regarding the changes in this version of
+  the Unicode Standard, its associated annexes, and the other synchronized Unicode specifications.</p>
+            
+<h2><a name="Technical_Overview">B. Technical Overview</a></h2>
+
+            <p>Version 10.0 of the Unicode Standard consists of:</p>
+            <ul>
+              <li>The core specification</li>
+              <li>The code charts (delta and archival) for this version</li>
+              <li>The Unicode Standard Annexes</li>
+              <li>The Unicode Character Database (UCD)</li>
+            </ul>
+
+            <p>The core specification gives the general principles, 
+              requirements for conformance, and guidelines for implementers. The 
+              code charts show representative glyphs for all the Unicode 
+              characters. The Unicode Standard Annexes supply detailed normative 
+              information about particular aspects of the standard. The Unicode 
+              Character Database supplies normative and informative data for 
+              implementers to allow them to implement the Unicode Standard.</p>
+
+<h3><a name="Core_Specification">Core Specification</a></h3>
+
+            <p>The core specification is available as
+              a <a href="http://www.unicode.org/versions/Unicode10.0.0/UnicodeStandard-10.0.pdf">single pdf for viewing</a>. 
+              (12 MB)
+              Links are also available
+              in the navigation bar on the left of this page to access
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Chapters_nb">individual chapters</a> and <a href="http://www.unicode.org/versions/Unicode10.0.0/#Appendices_nb">appendices</a>
+               of the core specification.</p>
+			  
+<h3><a name="Code_Charts">Code Charts</a></h3>
+            
+            <p>Several sets of code charts are available. They serve different 
+              purposes:</p>
+            <ul>
+              <li>The <a href="http://www.unicode.org/charts/">latest set of code charts</a> for the Unicode Standard is available online. Those charts are always the most current code charts available, and may be updated at any time. The charts are organized by scripts and blocks for easy reference. An online <a href="http://www.unicode.org/charts/charindex.html">index by character name</a> is also provided.</li>
+              </ul>    
+            
+            <p>For Unicode 10.0.0 in particular two additional sets of code chart pages are provided:</p>
+            <ul>
+              <li>A <a href="http://www.unicode.org/charts/PDF/Unicode-10.0/">set of delta code charts</a> showing the
+                new blocks and any blocks in which characters were added for Unicode 10.0.0. The new characters are visually highlighted in the charts.</li>
+              <li>A <a href="http://www.unicode.org/Public/10.0.0/charts/">set of archival code charts</a> that represents
+                the entire set of characters, names and representative glyphs at the time of publication of Unicode 10.0.0.</li>
+              </ul>    
+            <p>The delta and archival code charts are a stable part of this release of the Unicode Standard. They will never be updated.</p>
+
+<h3><a name="Annexes">Unicode Standard Annexes</a></h3>
+
+            <p>Links to the individual 
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Unicode_Standard_Annexes_nb">Unicode Standard Annexes</a> are available in
+              the navigation bar on the left of this page. The list of signification changes
+              in the content of the Unicode Standard Annexes for Version 10.0 can be found
+              in <a href="http://www.unicode.org/versions/Unicode10.0.0/#UAX_Changes">Section G</a> below.</p>
+
+<h3><a name="UCD">Unicode Character Database</a></h3>
+
+            <p><a href="http://www.unicode.org/Public/10.0.0/">Data files</a> for Version 10.0 of
+              the Unicode Character Database are available. The ReadMe.txt in that directory provides a roadmap
+              to the functions of the various subdirectories.
+              <a href="http://www.unicode.org/Public/zipped/10.0.0/">Zipped versions</a> of the UCD
+              for bulk download are available, as well.</p>
+
+<h3><a name="Version_Specification">Version References</a></h3>
+
+            <p>Version 10.0.0 of the Unicode Standard 
+              should be referenced as:</p>
+            <blockquote>
+              <p>The Unicode Consortium. <em>The Unicode Standard, Version 10.0.0</em>,&nbsp;(Mountain View, CA: The Unicode Consortium, 
+                2017. ISBN 978-1-936213-16-0)<br>
+                <a href="http://www.unicode.org/versions/Unicode10.0.0/">http://www.unicode.org/versions/Unicode10.0.0/</a></p>
+              </blockquote>
+            <p>The terms â€œVersion 10.0â€ or â€œUnicode 10.0â€ are abbreviations for the full version reference, Version 10.0.0.</p>
+            <p>The citation and permalink for the latest published version of the Unicode Standard is:</p>
+            <blockquote>
+              <p>The Unicode Consortium. <em>The Unicode Standard</em>.<br>
+                <a href="http://www.unicode.org/versions/latest/">http://www.unicode.org/versions/latest/</a></p>
+            </blockquote>
+
+            <p>A complete specification of the contributory files for Unicode 
+              10.0 is found on the page <a href="http://www.unicode.org/versions/components-10.0.0.html">Components for 10.0.0</a>.
+              That page also provides the recommended reference format for Unicode Standard Annexes. For examples of how to cite particular portions of the Unicode Standard, see also the <a href="http://www.unicode.org/versions/#References">Reference Examples</a>.</p>
+              
+<h3><a name="Errata">Errata</a></h3>
+
+            <p>Errata incorporated into Unicode 10.0 are listed by date in 
+              a <a href="http://www.unicode.org/versions/Unicode10.0.0/erratafixed.html">separate table</a>. For corrigenda and errata after the release of Unicode 10.0, see the list of current  
+              <a href="http://www.unicode.org/errata/">Updates and Errata</a>.</p>
+
+            <h2><a name="Stability_Policy">C. Stability Policy Update</a></h2>
+            <p>There were no significant changes to the Stability Policy of the core specification between Unicode 9.0 and Unicode 10.0.</p>
+
+<h2><a name="Character_Additions">D. Textual Changes and Character Additions</a></h2>
+
+            <p><a name="New_Scripts"></a>Four new
+              scripts were added with accompanying new block descriptions:</p>
+            <div align="center">
+              <table class="simple">
+                <tbody><tr>
+                  <th>Script</th>
+                  <th>Number of<br>Characters</th>
+                </tr>
+                <tr>
+                  <td>Masaram Gondi</td>
+                  <td style="text-align:right">75</td>
+                </tr>
+                <tr>
+                  <td>Nushu</td>
+                  <td style="text-align:right">396</td>
+                </tr>
+                <tr>
+                  <td>Soyombo</td>
+                  <td style="text-align:right">80</td>
+                </tr>
+                <tr>
+                  <td>Zanabazar Square</td>
+                  <td style="text-align:right">72</td>
+                </tr>
+                </tbody></table>
+            </div>
+            <p> Changes in the Unicode Standard Annexes are listed in <a href="http://www.unicode.org/versions/Unicode10.0.0/#UAX_Changes">Section G</a>.</p>
+            
+            <h3>Character Assignment Overview</h3>
+            
+            <p>8,518 characters have been added.
+             Most character additions are in new blocks, but there are also character additions to a number of existing blocks. For details, see <a href="http://www.unicode.org/charts/PDF/Unicode-10.0/">
+          Delta Code Charts</a>.</p>
+
+            <h2><a name="Conformance_Changes">E. Conformance Changes</a></h2>
+            <p>A formal definition of "block" has been added to the Conformance chapter
+              of the core specification for Unicode 10.0 as D10b.</p>
+            <h2><a name="Database_Changes">F. Changes in the Unicode Character Database</a></h2>
+            <p>The detailed listing of all changes to the contributory data files of the Unicode Character Database 
+              for Version 10.0 can be found in 
+              <a href="http://www.unicode.org/reports/tr44/tr44-20.html#Unicode_10.0.0">UAX #44, Unicode Character Database</a>. 
+              The changes listed there include character additions and property revisions to existing characters that will affect implementations.
+              Some of the important impacts on implementations migrating from earlier versions of the standard are highlighted in 
+              <a href="http://www.unicode.org/versions/Unicode10.0.0/#Migration">Section M</a>.</p>
+
+<h2><a name="UAX_Changes">G. Changes in the Unicode Standard Annexes</a></h2>
+            <p>In Version 10.0, some of the Unicode Standard Annexes have had significant revisions. The most important of these changes are listed below. For the full details of all changes, see the Modifications section 
+              of each UAX, linked directly from the following list of UAXes.</p>
+            <div align="center">
+              <center>
+                <table class="subtle">
+                  <tbody><tr>
+                    <th nowrap="">Unicode Standard Annex</th>
+                    <th>Changes</th>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr9/tr9-37.html#Modifications">UAX #9</a><br>Unicode Bidirectional Algorithm           
+                      </td>
+                    <td>Clarified the equivalence between directional formatting characters and HTML5 markup, pointing out the differences from HTML4.0. Updated the table in Section 2.7,
+                      Markup and Formatting Characters with explicit directional formatting characters and equivalent CSS.</td>
+                    </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr11/tr11-33.html#Modifications">UAX 
+                        #11</a><br>East Asian Width</td>
+                    <td>Referred to the new Regional_Indicator property. Updated references to UTS #51, Unicode Emoji, and terminology derived from that UTS.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr14/tr14-39.html#Modifications">UAX 
+                        #14</a><br>Unicode Line Breaking Algorithm</td>
+                    <td>Removed Section 7, Pair Table Based Implementation, and other references to it. Strengthened the recommendation to use tailorings based on CLDR rules and emoji properties, for improved line breaking behavior of emoji zwj sequences. Made corrections to descriptions of ID and NS classes.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr15/tr15-45.html#Modifications">UAX 
+                        #15</a><br>Unicode Normalization Forms
+                      </td>
+                    <td><font color="#B0B0B0">No significant changes in this version.</font></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr24/tr24-27.html#Modifications">UAX 
+                        #24</a><br>Unicode Script Property
+                      </td>
+                    <td><font color="#B0B0B0">No significant changes in this version.</font></td>
+                    </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr29/tr29-31.html#Modifications">UAX 
+                        #29</a><br>Unicode Text Segmentation</td>
+                    <td>Strengthened the recommendation to use tailorings based on CLDR rules and
+                      emoji properties, for improved segmentation behavior of emoji zwj sequences. 
+                      Changed the derivation of the Word_Break property value ALetter to include a 
+                      set of 35 phonetic modifiers, to prevent word boundaries between those 
+                      characters and alphabetic letters.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr31/tr31-27.html#Modifications">UAX 
+                        #31</a><br>Unicode Identifier and Pattern Syntax
+                      </td>
+                    <td>Withdrew the table of aspirational use scripts, moving the contents to
+                      the table of limited use scripts, and added a note explaining the reason.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr34/tr34-22.html#Modifications">UAX 
+                        #34</a><br>Unicode Named Character Sequences</td>
+                    <td><font color="#B0B0B0">No significant changes in this version.</font></td>
+                    </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr38/tr38-23.html#Modifications">UAX 
+                        #38</a><br>Unicode Han Database (Unihan)</td>
+                    <td>Updated the regular expression for the kIRG_HSource field, updated terminology
+                      to reflect the difference between the IRG's U-source and the UTC-source,
+                      and added references to the CJK Unified Ideographs Extension F block.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr41/tr41-21.html">UAX 
+                      #41</a><br>Common References for Unicode Standard Annexes</td>
+                    <td>Updated all references for Unicode 10.0.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr42/tr42-21.html#Modifications">UAX 
+                      #42</a><br>Unicode Character Database in XML</td>
+                    <td>Added new code point attributes, values, and patterns.</td>
+                  </tr>
+                  <tr>
+                    <td><a href="http://www.unicode.org/reports/tr44/tr44-20.html#Modifications">UAX 
+                      #44</a><br>
+                      Unicode Character Database </td>
+                    <td>Updated the description of the Name property value.
+                    Updated the discussion of immutable properties and the list of those 
+                    properties in Table 19.
+                  Added new Section 5.13 Property APIs.
+                  Added discussion of new data file DerivedName.txt to Section 5.4, 
+                  Derived Extracted Properties.
+                  Added new Section 2.1.3, Properties Dependent on External Specifications to 
+                  discuss the dependency of UCD segmentation properties on the non-UCD emoji properties.
+                  Added new Section 5.14, Character Age to further explain the details of the 
+                  Age property and its derivation.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr45/tr45-17.html#Modifications">UAX #45</a><br>
+                      U-Source Ideographs</td>
+                    <td>Updated terminology to reflect the difference between the IRG's U-source
+                      and the UTC-source. Updates to contents and status values.</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="http://www.unicode.org/reports/tr50/tr50-19.html#Modifications">UAX #50</a><br>
+                      Unicode Vertical Text Layout</td>
+                    <td>Newly added as an annex in 10.0, converted from an earlier, approved UTR.</td>
+                  </tr>
+                  </tbody></table>
+                </center>
+              
+            </div>
+            
+            <h2><a name="UTS_Changes">H. Changes in Synchronized Unicode Technical Standards</a></h2>
+            
+            <p>There are also significant revisions in the Unicode Technical Standards whose
+              versions are synchronized with the Unicode Standard. The most important of these changes are listed below. 
+              For the full details of all changes, see the Modifications section 
+              of each UTS, linked directly from the following list of UTSes.</p>
+            
+            <div align="center">
+              <center>
+                <table class="subtle">
+                  <tbody><tr>
+                    <th nowrap="">Unicode Technical Standard</th>
+                    <th>Changes</th>
+                  </tr>
+                  <tr>
+                    <td><a href="http://www.unicode.org/reports/tr10/tr10-36.html#Migration">UTS #10</a><br>Unicode Collation Algorithm</td>
+                    <td>The specification underwent a major rewrite to add formal definitions and to clarify the statement of
+                      the main algorithm. The rewrite did not change the algorithm itself or the
+                      expected results for any given input data and version level of DUCET.
+                      Added NÃ¼shu to the list of siniform ideographic 
+                      scripts given implicit primary weights similar to Han ideographs.</td>
+                  </tr>
+                  <tr>
+                    <td><a href="http://www.unicode.org/reports/tr39/tr39-15.html#Modifications">UTS #39</a><br>Unicode Security Mechanisms</td>
+                    <td>Removed references to aspirational use scripts because that category has been merged with limited use scripts. That change impacted the results from Section 5.2, Restriction-Level Detection, for the five affected scripts. Extensively reformulated the text in Section 4, Confusable Detection and Section 5, Detection Mechanisms, for clarity and precision. Removed subparts 4 through 6 of conformance clause C2.</td>
+                  </tr>
+                  <tr>
+                    <td><a href="http://www.unicode.org/reports/tr46/tr46-19.html#Modifications">UTS #46</a><br>Unicode IDNA Compatibility Processing</td>
+                    <td>Added three new parameters which allow implementations to reflect current practice in browsers: CheckHyphens, CheckBidi, and CheckJoiners. Updated the counts in Table 4, IDNA Comparisons for Version 10.0, and improved the explanation of the divergence from IDNA2008.</td>
+                  </tr>
+                  </tbody></table>
+                </center>
+              
+            </div>
+
+            <h2><a name="Migration">M. Implications for Migration</a></h2>
+
+            <p>There are a significant number of changes in Unicode 10.0 which may impact implementations which are upgrading to Version 10.0 from earlier versions of the standard. The most important of these are listed and explained here, to help focus on the issues most likely to cause unexpected trouble during upgrades.</p>
+
+            <h3>Script-related  Changes</h3>
+              <p>Version 10.0 adds four new scripts, so implementations which process script data 
+                should be carefully checked. Some of these scripts have particular attributes 
+                which may cause issues for implementations.</p>
+        <p>Zanabazar Square and Soyombo are complex, historic abugidas. They were modeled
+          on Tibetan, and used to write Mongolian, Tibetan, and Sanskrit. The implementation
+          of these scripts poses challenges, in particular for rendering.</p>
+        <p>Masaram Gondi is another newly added complex script, inspired by the Brahmi model, but
+          with its own, distinct rendering issues.</p>
+        <p>A large collection of Japanese hentaigana has been added. These are effectively
+          historic variants of Hiragana syllables. However, they are not encoded with
+          normative decompositions, nor using variation sequences. For collation,
+          hentaigana syllables do not have default weights the same as the standard Hiragana syllables
+          they are equivalent to. Instead, they are sorted in a separate range following
+          all the standard Hiragana syllables.</p>
+
+          <h3>Shaping Issues</h3>
+
+          <p>The letters in the Syriac Supplement block, added for Malayalam Garshuni, 
+            include one which can be found with different joining behavior in different sources. 
+            Thus, U+0868 SYRIAC LETTER MALAYALAM LLA can sometimes be found joining on both sides and 
+            sometimes joining only on the right. To help implementations handle both situations, 
+            U+0868 was assigned the Joining_Type property value Dual_Joining. In the cases where
+             U+0868 needs to be treated as right-joining, U+200C ZERO WIDTH NON-JOINER should be 
+             used to prevent joining to the visual left of the letter.</p>
+
+          <p>The alternative approach of assigning a Joining_Type property value of Right_Joining would 
+            have been more onerous for implementations, incurring additional ligatures and contextual forms. 
+            The choice of Joining_Type for U+0868 is also not new: an example of a character with 
+            similar classification and joining behavior is U+10AC0 MANICHAEAN LETTER ALEPH.</p>
+
+          <p>Several previously encoded Tai Tham characters and one Javanese mark, 
+            U+A9BF JAVANESE CONSONANT SIGN CAKRA, changed their classification in 
+            Indic_Syllabic_Category and Indic_Positional_Category, respectively. 
+            Shaping implementations that use Indic properties should be aware of the changes, 
+            as they may affect the rendering of the affected characters.</p>
+
+          <p>Six Gujarati nonspacing combining marks used for transliteration of Arabic were 
+            added at the end of the Gujarati block: U+0AFA GUJARATI SIGN SUKUN .. 
+            U+0AFF GUJARATI SIGN TWO-CIRCLE NUKTA ABOVE. Some of those marks may occur in 
+            combinations with a single base letter. For example, a <i>nukta</i> or <i>shadda</i> may appear 
+            in combination with <i>sukun</i> over the same letter, and the two marks are usually strung horizontally. 
+            Implementations should handle such sequences so as to avoid unintended visual overlapping. 
+            Similar treatment should be given to U+0AFD GUJARATI SIGN THREE-DOT NUKTA ABOVE when 
+            it appears in combination with a vowel sign that extends above the same base consonant.</p>
+
+            <h3>Segmentation-related Changes</h3>
+
+              <p>A set of 35 phonetic modifiers, which includes U+02D7 MODIFIER LETTER MINUS SIGN, were 
+                assigned the Word_Break property value ALetter. As a result of this change, there will no 
+                longer be word boundaries between alphabetic letters and adjacent phonetic modifiers from that set. 
+                This behavior is consistent with the way other IPA modifiers, such as 
+                U+02D0 MODIFIER LETTER TRIANGULAR COLON, attach to letters in word segments. 
+                Implementations of text segmentation will find fewer word boundaries 
+                in the affected sequences. Such sequences are, however, rare edge cases in
+                standard language orthographies, and are mostly found in specialized transcription
+                systems.</p>
+
+              <p>Note that the reclassification of the 35 phonetic modifiers was done by direct inclusion 
+                in the set of characters with the Word_Break property value ALetter, 
+                without changing their General_Category property values, which continue to
+                be Modifier_Symbol (gc = Sk).</p>
+
+            <p>The UCD properties for line breaking and text segmentation have dependencies 
+              on properties of emoji characters specified in Version 5.0 of UTS #51, <i>Unicode Emoji</i>,
+              such as the binary 
+              properties Emoji and Emoji_Modifier_Base. Implementations should be aware of 
+              changes in line breaking and text segmentation behavior for some of the emoji 
+              symbols in Unicode 10.0, as a result of emoji data changes in UTS #51 Version 5.0. 
+              (Some of those changes had been introduced in UTR #51 Version 4.0 and carried 
+              forward in UTS #51 Version 5.0.)</p>
+
+            <p>For line breaking, the characters that appear as bases in valid emoji modifier 
+              sequences as of Version 5.0 of UTS #51, <i>Unicode Emoji</i>, were assigned the Line_Break property 
+              value E_Baseâ€”a change from the previous value Ideographic. This applies to 
+              five previously encoded emoji symbols (U+1F3C2, U+1F3C7, U+1F3CC, U+1F574, 
+              and U+1F6CC), as well as to 16 of the 56 newly encoded emoji symbols. 
+              According to the Unicode Line Breaking Algorithm, line breaks are prevented 
+              between E_Base characters and emoji modifiers for skin tone.</p>
+
+            <p>Conversely, two previously encoded emoji symbols (U+1F91D and U+1F93C) 
+              changed their Line_Break property value from E_Base to Ideographic, because 
+              they no longer appear in valid emoji modifier sequences as of UTS #51 Version 5.0. 
+              That change leads to the introduction of line breaking opportunities after 
+              those two characters.</p>
+
+            <p>For text segmentation, three symbols which have long been in the standard, U+2640 FEMALE SIGN,
+             U+2642 MALE SIGN, and U+2695 STAFF OF AESCULAPIUS were assigned the 
+             value Glue_After_Zwj for both their Grapheme_Cluster_Break and Word_Break properties. 
+             The change reflects the new use of those symbols in valid emoji zwj sequences for
+             genders and roles; the change prevents grapheme cluster and word boundaries between a ZWJ 
+             character and each of those symbols.</p>
+
+            <p>Other emoji symbols, some existing and some newly encoded, were assigned the 
+              Grapheme_Cluster_Break and Word_Break property values E_Base or Glue_After_Zwj, 
+              to prevent grapheme cluster and word boundaries around them in emoji sequences.</p>
+
+            <h3>CJK/Unihan Changes</h3>
+
+            <p>Unicode 10.0 introduces the new CJK Unified Ideographs Extension F block, 
+              as well as 21 new ideographs at the end of the CJK Unified Ideographs block.
+              Implementations often have
+          hard-coded ranges for CJK ideographs, so should be checked carefully to
+          ensure they pick up the new end range (U+9FEA) for the CJK Unified Ideographs block, 
+          as well as the range for the new CJK Extension F. For the latter, UnicodeData.txt provides 
+          a range of code points using the established syntax for large ranges of characters with 
+          algorithmically derived names, with the identifiers &lt;CJK Ideograph Extension F, First&gt; 
+          and &lt;CJK Ideograph Extension F, Last&gt;.</p>
+
+        <p>CJK Extension F contains mostly rare characters, but also includes a number of personal
+          and placename characters important for government specifications in Japan, in
+          particular.</p>
+
+             <h3>Standardized Variation Sequences</h3>
+
+      <p>There have been significant changes to StandardizedVariants.txt and regarding the
+        documentation of variation sequences involving emoji, which are now known more specifically as
+        <i>emoji presentation sequences</i> and <i>text presentation sequences</i>.</p>
+
+        <p>All of the emoji and text presentation sequences were moved from the UCD file 
+          StandardizedVariants.txt to the UTS #51 data file emoji-variation-sequences.txt.
+          The latter is a new data file accompanying Version 5.0 of UTS #51, <i>Unicode Emoji</i>, 
+          whose emoji character repertoire corresponds to Unicode 10.0. 
+          New emoji and text presentation sequences are also included in emoji-variation-sequences.txt.
+          Implementations should be prepared to consume such sequence data from the new file and, 
+          in general, to use Unicode Emoji Version 5.0 data (or later) in conjunction with UCD 10.0 data.</p>
+        <p>Other changes in StandardizedVariants.txt include corrections to the labels of a 
+          few Mongolian standardized variation sequences, but without changes to the actual 
+          character sequences. These changes are reflected in the Unicode code charts.</p>
+        <p>The documentation file StandardizedVariants.html has been removed
+          altogether from the UCD, as its function has been superseded by other documentation.
+          Representative glyphs for the standardized variation sequences are still shown
+          in the Unicode code charts, but emoji and text presentation sequences 
+          are now displayed in the emoji charts, instead.</p>
+
+
+            <h3>New Data Files Added to the UCD</h3>
+
+      <p>Several new data files have been added to the UCD. Implementations which parse
+        the UCD files may need to be adjusted, depending on whether they require this
+        new data or not.</p>
+
+       <p><b>NushuSources.txt</b>. This file contains normative information on the source references 
+          for NÃ¼shu characters. The file format is similar to the format of the Unihan data 
+          files and TangutSources.txt. Implementations which support that format for Unihan or 
+          Tangut data should be able to add support for NÃ¼shu data in a similar manner.</p>
+        <p><b>VerticalOrientation.txt</b>. Starting with Version 10.0.0 of the Unicode Standard, this 
+          data file, which lists the Vertical_Orientation property values, is formally included 
+          in the Unicode Character Database. The file format has not changed, but certain lines
+           of data have been updated for consistency with other UCD files.</p>
+        <p><b>DerivedName.txt</b> (in the "extracted/" subdirectory). This file provides a complete 
+          listing of the formal Name 
+          property values of characters. In the case of algorithmically derived names, 
+          only those names that follow a simple pattern of a prefix followed by a code 
+          point value are abbreviated. The names of Hangul syllable characters, 
+          as well as all other character names, are listed individually. 
+          Implementations can use this file to conveniently retrieve the formal character
+           names instead of independently deriving the names.</p>
+
+            <h3>New Properties</h3>
+
+        <p>The enumerated property <b>Vertical_Orientation</b> has been incorporated in the UCD, 
+          as part of the change in status of UTR #50 to UAX #50, <i>Unicode Vertical Text Layout</i>. 
+          See VerticalOrientation.txt, noted above.</p>
+        <p>A new normative binary property <b>Regional_Indicator</b> has been introduced. 
+          This property is referenced in the line breaking and text segmentation algorithms, 
+          to assist in the determination of correct text boundaries around emoji flag sequences.</p>
+
+            <h3>Code Charts</h3>
+
+              <p>There are numerous changes in the representative glyphs, some backed by 
+                <a href="http://www.unicode.org/versions/Unicode10.0.0/erratafixed.html">explicit errata</a>. 
+                There are also glyph changes in the text presentation of a number of emoji and emoticons. 
+                Some of those changes reflect an attempt to make the text presentation glyphs for
+                emoji converge on common practice among vendors for the emoji presentation glyphs.
+                Such glyph changes are highlighted in violet in the 
+                <a href="http://www.unicode.org/charts/PDF/Unicode-10.0/">delta charts</a> for Version 10.0.</p>
+
+              <h3>&nbsp;</h3>
+</blockquote>
+          <hr width="50%">
+             
+          <div align="center">
+            <center>
+            <table cellspacing="0" cellpadding="0" border="0">
+              <tbody><tr>
+                <td><a href="http://www.unicode.org/copyright.html">
+                <img src="http://www.unicode.org/img/hb_notice.gif" border="0" alt="Access to Copyright and terms of use" width="216" height="50"></a></td>
+              </tr>
+            </tbody></table>
+            <font size="-3">Last updated:&nbsp;
+- 2â€/4â€/2019 3:54:33 Øµ
+ - <a href="http://www.unicode.org/contacts.html">Contact Us</a>
+</font>
+
+            </center>
+          </div>
+          </td>
+        </tr>
+      </tbody></table>
+      </td>
+    </tr>
+  </tbody></table>
+
+
+
+</body></html>
+------MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI----
+Content-Type: text/css
+Content-Transfer-Encoding: binary
+Content-Location: cid:css-9a53d553-7c59-4aef-ba08-f320c0cc3241@mhtml.blink
+
+@charset "utf-8";
+
+td.critical { background-color: rgb(255, 51, 51); }
+
+td.caution { background-color: rgb(255, 255, 51); }
+
+td.itemdone { background-color: rgb(102, 255, 136); }
+
+td.ready { background-color: rgb(51, 255, 255); }
+
+table.myclass td { padding: 4px; }
+
+table.myclass th { padding: 4px; }
+
+.highlight { color: rgb(17, 0, 17); background-color: rgb(170, 136, 85); }
+------MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI----
+Content-Type: text/css
+Content-Transfer-Encoding: binary
+Content-Location: http://www.unicode.org/webscripts/standard_styles.css
+
+@charset "utf-8";
+
+body { margin: 0px; color: rgb(0, 0, 0); font-family: Arial, Geneva, sans-serif; }
+
+div.body { margin: 1em; }
+
+p { color: rgb(0, 0, 0); font-family: Arial, Geneva, sans-serif; }
+
+td { color: rgb(0, 0, 0); font-family: Arial, Geneva, sans-serif; }
+
+li { color: rgb(0, 0, 0); font-family: Arial, Geneva, sans-serif; margin-top: 0.25em; margin-bottom: 0.25em; }
+
+a:link { color: rgb(26, 26, 153); text-decoration: none; }
+
+a:visited { color: rgb(26, 26, 153); text-decoration: none; }
+
+a:active { color: rgb(26, 26, 153); }
+
+a:hover { text-decoration: underline; }
+
+h1 { font-weight: bold; }
+
+h2 { font-weight: bold; }
+
+h3 { font-weight: bold; }
+
+h4 { font-weight: bold; }
+
+h1 { margin-top: 12px; font-size: 180%; font-family: Arial, Geneva, sans-serif; text-align: center; }
+
+h2 { margin-top: 2em; font-size: 120%; line-height: 100%; font-family: Arial, Geneva, sans-serif; }
+
+h3 { margin-top: 2em; font-size: 105%; font-family: Arial, Geneva, sans-serif; }
+
+h4 { margin-top: 2em; font-size: 95%; font-family: Arial, Geneva, sans-serif; }
+
+td.bar { padding: 4px; font-weight: bold; font-size: 100%; color: white; font-family: Arial, Geneva, sans-serif; background-color: rgb(85, 85, 255); text-align: right; }
+
+p.bar { padding: 4px; font-weight: bold; font-size: 100%; color: white; font-family: Arial, Geneva, sans-serif; background-color: rgb(85, 85, 255); text-align: right; }
+
+td.icon { padding: 2px; font-weight: bold; font-size: 100%; color: white; font-family: Arial, Geneva, sans-serif; background-color: rgb(85, 85, 255); text-align: left; }
+
+td.gray { padding: 0px; font-size: 50%; color: white; background-color: rgb(238, 238, 254); }
+
+a.bar { font-size: 100%; }
+
+a.bar:link { font-size: 90%; color: white; }
+
+a.bar:visited { font-size: 90%; color: white; }
+
+a.bar:active { font-size: 90%; color: white; }
+
+a.bar:hover { font-size: 90%; color: rgb(176, 176, 176); }
+
+td.navCol { padding: 4px; background-color: rgb(238, 238, 254); }
+
+table.navColTable { background-color: rgb(238, 238, 254); }
+
+td.navColTitle { padding: 4px; font-weight: bold; font-size: 95%; color: white; font-family: Arial, Geneva, sans-serif; background-color: rgb(85, 85, 255); text-align: center; }
+
+td.navColCell { font-size: 90%; background-color: rgb(238, 238, 254); }
+
+td.currentPage { font-weight: bold; font-size: 90%; font-style: italic; background-color: rgb(238, 238, 254); }
+
+td.contents { }
+
+table.sidebar { padding: 0px; float: right; margin: 4px 4px 4px 1em; width: 40%; background-color: rgb(238, 238, 254); }
+
+td.sidebarTitle { padding: 0px; font-weight: bold; font-size: 95%; color: white; font-family: Arial, Geneva, sans-serif; background-color: rgb(85, 85, 255); }
+
+td.sidebar { padding: 2px; font-size: 90%; color: rgb(0, 0, 0); background-color: rgb(238, 238, 254); }
+
+p.q { font-weight: bold; font-style: italic; font-family: "Century Schoolbook", serif; }
+
+p.a { margin-left: 16px; margin-right: 16px; font-family: "Century Schoolbook", serif; }
+
+p.source { font-size: 90%; margin-right: 16px; font-family: "Century Schoolbook", serif; text-align: right; }
+
+unknown { color: rgb(255, 255, 238); }
+
+table.light { color: rgb(51, 0, 0); background-color: rgb(255, 255, 238); }
+
+td.dark { font-size: 200%; color: rgb(255, 255, 238); font-family: "Century Schoolbook", serif; background-color: rgb(170, 0, 0); }
+
+h1 { font-size: 150%; margin: 2px 0px; line-height: 100%; font-family: Arial, Geneva, sans-serif; text-align: center; }
+
+h4 { color: rgb(0, 0, 0); font-family: Arial, Geneva, sans-serif; font-weight: bold; font-size: 95%; margin-bottom: -15px; }
+
+td.head { padding: 0px; font-size: 100%; font-weight: bold; color: white; background-color: rgb(152, 152, 250); }
+
+ul.one { font-size: 90%; margin-left: 20px; text-decoration: none; list-style-type: none; }
+
+ul.two { font-size: 85%; text-decoration: none; text-align: left; list-style-type: none; margin-left: 20px; }
+
+span.changedspan { background-color: rgb(255, 255, 0); border-style: dotted; border-width: 1px; }
+
+span.removedspan { text-decoration: line-through; background-color: rgb(255, 255, 0); border-style: dotted; border-width: 1px; }
+
+table.simple { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); border-collapse: collapse; padding: 0.2em; font-size: 1em; }
+
+table.simple th { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); font-weight: bold; padding: 5px; text-align: left; }
+
+table.simple td { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); padding: 5px; text-align: left; }
+
+table.subtle { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); border-collapse: collapse; padding: 0.2em; font-size: 1em; }
+
+table.subtle th { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); font-weight: bold; padding: 5px; text-align: left; }
+
+table.subtle td { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); padding: 5px; text-align: left; }
+
+table.subtle-nb { border-style: none; border-width: 0px; border-collapse: collapse; }
+
+table.subtle-nb th { border: 1px solid rgb(242, 242, 242); font-weight: bold; padding: 5px; text-align: left; }
+
+table.subtle-nb td { border-style: none; font-weight: normal; padding: 5px; text-align: left; }
+
+table.subtle-nb table.subtle th { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); }
+
+table.subtle-nb table.subtle td { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); }
+
+table.subtle-nb table.simple th { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); }
+
+table.subtle-nb table.simple td { border-width: 1px; border-style: solid; border-color: rgb(160, 160, 160); }
+
+table.subtle table.simple th { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); }
+
+table.subtle th { color: rgb(96, 96, 96); background-color: rgb(250, 250, 250); }
+
+table.subtle-nb th { color: rgb(128, 128, 128); background-color: rgb(248, 248, 248); }
+
+table.subtle th p { color: rgb(128, 128, 128); background-color: rgb(248, 248, 248); }
+
+table.subtle-nb tr th p { color: rgb(128, 128, 128); background-color: rgb(248, 248, 248); }
+
+table.simple th p { margin: 0px; }
+
+table.subtle th p { margin: 0px; }
+
+table.subtle-nb th p { margin: 0px; }
+
+table.simple td > p:first-child { margin: 0px; }
+
+table.simple td > p { margin-top: 1.5em; }
+
+table.subtle td > p:first-child { margin: 0px; }
+
+table.subtle td > p { margin-top: 1.5em; }
+
+table.subtle-nb td > p:first-child { margin: 0px; }
+
+table.subtle-nb td > p { margin-top: 1.5em; }
+
+table.simple td > ul:first-child { margin-top: 0px; margin-bottom: 0px; }
+
+table.simple td > ol:first-child { margin-top: 0px; margin-bottom: 0px; }
+
+table.simple td > ul { margin-top: 1.5em; margin-bottom: 0.5em; }
+
+table.simple td > ol { margin-top: 1.5em; margin-bottom: 0.5em; }
+
+table.subtle td > ul:first-child { margin-top: 0px; margin-bottom: 0px; }
+
+table.subtle td > ol:first-child { margin-top: 0px; margin-bottom: 0px; }
+
+table.subtle td > ul { margin-top: 1.5em; margin-bottom: 0.5em; }
+
+table.subtle td > ol { margin-top: 1.5em; margin-bottom: 0.5em; }
+
+table.subtle-nb td > ul:first-child { margin-top: 0px; margin-bottom: 0px; }
+
+table.subtle-nb td > ol:first-child { margin-top: 0px; margin-bottom: 0px; }
+
+table.subtle-nb td > ul { margin-top: 1.5em; margin-bottom: 0.5em; }
+
+table.subtle-nb td > ol { margin-top: 1.5em; margin-bottom: 0.5em; }
+
+td.navColCell:first-child { padding-left: 0.6em; text-indent: -0.6em; }
+
+.changed { background-color: rgb(255, 255, 0); border-style: dotted; border-width: 1px; }
+
+.removed { text-decoration: line-through; background-color: rgb(255, 255, 0); border-style: dotted; border-width: 1px; }
+
+.reviewnote { background-color: rgb(255, 255, 128); color: rgb(204, 0, 0); border-style: dashed; border-width: 1px; }
+------MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI----
+Content-Type: image/gif
+Content-Transfer-Encoding: binary
+Content-Location: http://www.unicode.org/webscripts/logo60s2.gif
+
+GIF89a" ! Ä  €€ÿÕÕÿ``ÿêêÿuuÿôôÿjjÿßßÿÊÊÿŸŸÿ••ÿŠŠÿ¿¿ÿµµÿªªÿÿÿÿUUÿÿÿÿ                                          !ù   ,    " !  Í $dihª®lë¾p,Ïtm«8)á÷3”$•|ğJ€æQr4Ìä“•bG„Â#jnGİ&f6¥›A‘ÀáH”µnur€nŞyIi
+"ig…~I†Y€P~m'm“I"Œ—&™\~f %¢#V›"M
+¤'bS&¯­´²&‹IF#¼$¬R)HI_ªÃR)ÒÓR$±É)Ä×K&àÔ8åÚ&Dk-Á7ôõö÷øùú,! ;
+------MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI----
+Content-Type: image/gif
+Content-Transfer-Encoding: binary
+Content-Location: http://www.unicode.org/img/hb_notice.gif
+
+GIF89a°d ÷  ¬¬¬yyyˆˆˆjjjSTıìììIIIAAA÷÷÷õõı,,şÄÄÄ………JJüËËú““ı»ºûMMM¸¸¸QQQ]]]EEE¢¢¢ŞŞŞşşúƒƒü999¾¾¾ÚÚÚáááæææjkü´´´êêê¢¢ûXXXü´³ûññıÊÊÊááüœœû¶¶¶èèè»»»˜˜˜ÆÆÆÂÂÂÜÜÜÎÎÎmmm===âââôôúªªª---äääÈÈÈ555ÒÒÒ¼¼¼23ıaaaÔÔÔ%%%×××ØØØ   ¥¥¥CCüÌÌÌÀÀÀtsú^^ş²²²šššììû”””bcü)))ĞĞĞ®®®##üúùı°°°pppÅÅşœœœ~~~bbb!!!dddtttZZZrrr–––ŒŒŒTTT111gggş|{ûwwwÖÖşóôıÇÇù99ı<=ıØØı			­­û{{{ğñúÎÏûÙÚúışüÓÏùôòşĞÑı’’’Şİú_`ıéçüÿÿúöøü/0ü¿Àü:<üşıüÂÆşğïıøøûáßü99ûÖÖúüüûŞŞı§ªúÅÃıHGıŒúXZú>@ıYZıA?ı•”ø68ü¿¾ûGHü&(üPNıùúüúøû‡†ıhfû/.ü‰‰úÒÑûopûOPû‰Šüüşú÷öü)(şÛÜûÖÙûÕÓû<<ûwwûµµø!û76üghüÿ€ü\\øşşşğğğWWW¨¨¨ïïïñññ§§§ùùùıııÿÿıõõõúúúVVVÿÿüÿÿşîîîôôôòòòüüüûûûóóó¦¦¦øøø©©©şÿÿşşışÿüşÿışşÿÿşşşşüÿşüÿşıÿşÿÃÃıüûıııûışıışÿşüüùüııúúûŒıúúùôóüØ×úŸü†ˆıøûùÿıüûùù`_üúûûûúûüüş§¦úóôüÂÂûÃÄúûıüÒÔş±°üŞÛş\\üûüû;=üVWü   ÿÿÿ!ÿXMP DataXMP<?xpacket begin="ï»¿" id="W5M0MpCehiHzreSzNTczkc9d"?> <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 9.0-c000 79.171c27fab, 2022/08/16-22:35:41        "> <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"> <rdf:Description rdf:about="" xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/" xmlns:stRef="http://ns.adobe.com/xap/1.0/sType/ResourceRef#" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmpMM:DocumentID="xmp.did:7359C2608B8211EDBFAACEEC9DEECC83" xmpMM:InstanceID="xmp.iid:7359C25F8B8211EDBFAACEEC9DEECC83" xmp:CreatorTool="Adobe Photoshop 2023 Windows"> <xmpMM:DerivedFrom stRef:instanceID="711175CA3E341AF772667526F3950E05" stRef:documentID="711175CA3E341AF772667526F3950E05"/> </rdf:Description> </rdf:RDF> </x:xmpmeta> <?xpacket end="r"?>ÿşıüûúùø÷öõôóòñğïîíìëêéèçæåäãâáàßŞİÜÛÚÙØ×ÖÕÔÓÒÑĞÏÎÍÌËÊÉÈÇÆÅÄÃÂÁÀ¿¾½¼»º¹¸·¶µ´³²±°¯®­¬«ª©¨§¦¥¤£¢¡ Ÿœ›š™˜—–•”“’‘Œ‹Š‰ˆ‡†…„ƒ‚€~}|{zyxwvutsrqponmlkjihgfedcba`_^]\[ZYXWVUTSRQPONMLKJIHGFEDCBA@?>=<;:9876543210/.-,+*)('&%$#"! 
+	  !ù     ,    °d  ÿ ÿ	H° Áƒ*\È°¡Ã‡#Ô%±¢Å‹)b„¨q£Ç…uI²¤É“(#ê¢¤°_»”LùQ—°]¾ˆ‰$æë×L†ÚÄIì'Í£‹á¶)R»Î¤ØÔ U§Ff=Hl—ÏÎvcxÄÉw9yÄb×¯(ƒíŠú¢Z¶ƒ<pò«`×¹»š,$a
+ï¶õ¨&LºN?xğ @ä”Òèp2dÃFA|à…ceSyŒ	ØQ—"±)ih,0˜b/Rb@cL¶@‘ÿ0|0%ªÆİ½c€-Hš)6–Ôër¼7øó7Á£¯í,Rÿ‡\’˜˜;.Ôı÷İ_ø¶û*¨÷Áv:lïÚúƒí½gP/tàĞ]wl7D<üw™Dl§Şƒ%má.üÓ`Pp5lçOõ"¢?àöCœøÅ@WT!â5Ã .®—B‚Û9Áš8ŠøA])Ğqâ$ÁvÉÔ¢¹u† ùb/-éO“'‰ ¢€»\)/(’ß‰"r! a(±•ş¤ĞvÀ8”š"fH¡DGl×Ë ùàı`Å? ø3†ADœˆ¥@lWB/KjÑşÑ‹ Ûq 'ş©P0=ø3Àl—Â?ÌÄáÏèÿpá?Å”zjªş¬ÚNH…şèÀLAd> ™ş<ÊÓ°ÿĞUUkÍ']³=Û×?®>:™	kœ/93í?7{ĞşPğ â6+æ?Ş‹b¾X+'JÍõÏ/ö…!P»	±»  3u¦?ø2ÂÀöPPÃ1\í@Ä0[—R×îB»ÓZ³8\­Ê<ø	èGUlğ<:ñÏşHÃØWÂ@Ş1Üıƒ£eÿ ±@Ğì"…ËZıMwÿ  ¡,lWÀ?lg`0TCsµ@#õOÛ™=P¼!û¨^F`pÀÌ°¦Z ıÏ=€ÿ¡ÃAÀ`Àºeì…ƒvÚ¡S0ï.t<àA/Ch†Âu°†` wBF&‘*Ò?ÊöÚşh1ÛEs¶Np‰ƒ¬Z<`Pö	Cæ›ÿƒÛAñ2\¸Z»8l_¡ı€2]ğxä!¯<óQZp1Ö?“ó0°Æ
+DÃTÿøÿõ²AèP$XçË%êÁ.ş Ã.0 “ÅÖÏ‚$>øÇvôÔ':øG ^ò‡¨ò,ØÇx Ò@’#)Ä>8øO3¬ £2dunÈ’\%¢8+BşP3pµ-£VhzÑ?ÿ
+ ,áèQ_@•¯;ùÃH""ƒ@|@<HQ!-º ç®d©Lòr@Ğ©hiÿ ÃvJÀ*0Å>ö‘şá4Ñ‡Ûñ A¶(XÀq0YOD¥¢IIÒ[!1ü‘;W`R]€•‡RDK´Ğ‰p´?şYd`øÇrX
+ÈÌ ©ˆ¶Ã…(mi²Ú@.À£èÄDdˆM(Ò'à«³ú×¥ÓKıcq4Ãob0¶-N_L–È”«àòOƒ$C €¯<P
+h¦?’ğ3lxÁo@Oa GóÉÊäŠømiÑr@ÿ„glE €æ38¬TÂË™¬»ƒ6,-¥XÇÛF)Â.‚¡÷Ô4Fé3$ƒè?`Ğçùc½èÅ¶3 v‚ÁS2ÀÑ?–!R’’‹hjúGˆêå¡¿øÅv¶ÀN(ÃíZâª8p e “'/B³€ÊS)ƒbP÷HVøN$#0ØÒšPÓÅğŒ¶¶Õ@M}ZúL½gÀBÃÉäj*‚àĞÆƒş‘†Ö¡Q Ú1ßA 	lç3¸lÂ?ZD¢£Eï!^$«ø	Dt$&À#‰`°™œ}\ø`2VÛIáÆ"+ÿìÛQAWÍ9á_d¬•Ü1pb­k£’5°`„ÀªÂLæ ‡¡©óQ£SIk$è"ºÓH×ü1p şhK4¶SÉhœ²X·[Zø@"ıGqs9ÕŠtÀÅÀ™t‘åLV`¨|—FDP  ]k˜¢Œ1øÃ	ÔE+ÿ!+4‰"ÍÕó€r	¢‘@˜!bD)>ˆÏ¶FsŞAm-º"™´ ®lçÎP‚èJ‘e$(ÂŸUÔ?ÔÇ_€VKhšhF¢Z°6ªŒÍ §42.ÿã¿FÜ2w‹Ğ/‚!ÈÚp±‚ÒÌHÿY|kÑû€ùtÃ>`£/f'ğ"A@Ì™ğd„äYÿøë‰Â³Ş¢i¤[Å¡âƒ'+$a;Tkt'ÍÕß„ÄÁ|ÀÑ?FàX\ìà?ì³i¶}Å4hàV·v Ä!CKª@ÄÀ¶šÿhF®wÍ´àÌ²#ÈT%_Gn±Q¹¦†%Û¢Sş¦Eaı‡fı1$'¸g  E—~ğƒ	ğ`)ö”Yg¬.ªÎ!õ‡l—£„
+xÊ­„`L‰1µ­¬]¬­€x8,™ÛİK=iÄèòÇ¦&0ûc‰+w¹ÏMcCG<;Ø0,@ÿN¶@<Àx»ÿÈ¸6>aŒ·Ğb…®ÀéN¤¸ŸIA	¸0‚_„Î Áìc Ø€"Wà„*‡"ŠM°ÁÊ¸"4PŞH7B”Qª; c0H3"Åm ×	Ù+ûÙa@Îˆ˜¥“4–gêÑè0¾ ­á?IÛœşÈ.`oúœâ´[aÁ0€Ê‹¸õ‡Âš5‰a#pP•ßı Á¸JMØÊ5¹y‚¤ê # /8åÖØç AAïPğ ÛÑÏbı"øb$Jæi`ƒaåÁ2¾HĞ¶å³g‚!ôãşYŸÏ¥ĞHeÿ4¤%m‚”
+½øäÚvZ–8Q Â#ÿ4WQÀc>WÈÓÒ`·àà•U´w"CUäz²R'‚@¡g˜”ÁĞ"ÛA<hÁQ"â)("Ä#j„&H&€xB(AióCêC…¶("#ĞèBd0xòˆ'"§äm‰W”Ö$"C’4V'B"%ñkzµrÛA„@^°qàbƒÆ%4„”6,öAd@a€hÑDH‚´‚ƒšWhrƒ·ÛA„)°Åh"3u"w X@x"ha‚ñuş0Gá†'rJzx"êqii“! œ±Â7ÿ 	VÂÀ°.0+Ñy #@?‘*¨82o‘èA`°ŠĞyR +5@5ŠëÂŠ[ó°Š b¡F`”q &4{Ñ“QäCHón@Y8@=Á08…#eÿğ CĞP€‰öGP§õG +’{Ë°‹{!-<À’XÏÕU v3F€ä4= ?_¶aÅ°>b€FA×²öQIìÈÿĞShB±´s-E è¾ğ©ò(ç0ê8—*rŞºP /ğ‘%À{†FRh`ŒÊXÿ ‰Zàÿ’(¢’q:p wÈØ@ hˆ\r21~€ÎPp-PÉ+£Ê0•8qAVñ^‰Ì 2–5–àBlË@½è0£m^AıÂÁ .Åğ,Òâ y¹K9q1$HÅ€Ó+!–Ô£o¡/Úf6^-8á 3OûÑUñãO‡ à" °Nàà/°<Eq<^!•Ilìá˜½HU±@™ÛBbÑ"›ÑXùu¹L±n1[ÿ¢›qXP2‘˜ÿÄ”ĞÒ9ÿàÚaLÓY paÒ‚Cg˜àâÿ9{Â	2:ä)î÷‚qéùğŸòé^ "ó5Ö°pX÷ùŸ  : Z z š 
+
+ŸÏ¹Ğ~¼ã0À·AyX¡úÏùO¡¨%j¡zWX¥KZÄ¤Q +± Æ°¡‘J0ñ4ĞäÚ±%BFş |‘6p¡Aú” º ¼`³Ášá£æó¢
+¤·'J=)šü›§è«‰NdmJ§é*–4Z³> ÀsXÊ¡„wå—1U zÃ[±¦múJ[Jq:§%~š!âƒÿú¥ip€!{š4ÑUš§IÔn4?¡j‡ÚLíª½x¢º•ÑRU²&èbŠŒYxÑ©Ü²2aVª6Q¤j’SfŸšªœÖeuz¨»ŠªVa¬v:[¯ê¬!h»ªj	²@Ê©`ä¤Tb‰4 3ÄÀ0oÉğ%°°8`n`j‘P<€« †U\FB0¼P8§m%€%@e YëQ `F0	²Aÿ Z²ÆĞèµºğ¼  øÇdP­7ÚÚnÜ*Vğ­u<ãª ±càêŠ(Pà®¦¦òÿJ¯öº&ùz‰:RÆ…'SRÀ £@5ìJ³ñ½0 ÆÀ gH¡«i¥ø: -JRûT«"W«¯´2´P¼@ò°í¢x§10±Æ Ñ¼ñQk«‚iàµ;[?%àBÀ8:²QAF`@MÆlWYI@CeE”„Ñ„5„"M‚ xÄ‡áx"r ‚áD¡öXº¹`ğ°^'¢&d¢+kë=à¥a¸ÿpš‰«Œ»¹şà)’{"$–ë„˜[5›ûBÄZb'¢ÖFHú5¹ş0¼1^"ò ¼"kğJø’¼ÿÁ½Şûx4¼Ğ‹'T²¨Qqy"‚<h¢&0¹w¥ÚÑ½Ûñ½'Â¹˜""Ş¦-›
+5–F¸äk°¿T0^T öq Ğ#€#N€û‹©HÕ:PÀ8ò cQXC “áQ:SÀ•K»PDÀ	b1ä»d€4±> €kp(GMwÀ2â‚µ”ç©¢L%Àö:ÀkPXçn£¶ÀüÀ- Á¼–áwZÁÜÁ™Âö1ÂÁe&æ¶Şv¡™Ò‘äGàS|aPPÁatä*D¨ºî!0+õÁ!Æ|ÜÅ!Ü h<jüX[ÿCgÿàìµ cº %Û‘Ã0‹şP.àMt0,Šk ƒ6~üÅÿ`¹0ä¿ŠC˜*[wM‚KÏ– .„ÀXÛñ\ñu<Éa'%JÛ¥XÆC%èrEãÂ8²(Ë`ÙæoÍÂJÀ±_vPwĞÿĞhDU*\ôş #ÁÊñÊ±¼³leÂä?óuTÃ@ÔË±Ì",ÃìD<÷Ç,/ê^Á"3€#4"#˜ ³ÁË1ÏÆ9D¥-¡º²où¼Ï 'oºQÌúœƒ2BW¤üŒLSş@Ôª_¹%ød$«BMÑèA!RQ}ÿšAùÀ¦aÏEÀâ!ÍÌÎÿ@ªQXÿ&=núoÃ‡×5[O@4”.3e‹LBÎEC>Ôü ¼cP·§• Š´äaÓ·za&ƒK;İÓQÔÍôo®æ@±RŒ¥4ÿæZÇ”oÆán^¤4:0@ˆrD=rM0± ”†#w0%½´Ô½7‘}"ñØ# ;ö«(".zx QŠKûSX¸y-ùæ!À‚`Î ,ª ƒÎ±$§$m©ôÓ?ƒÆw0vmÏ€”ÑŒ×daî!Àc°_DR€F‚%?Mzÿ`ÕáHÜ›h^ÍnÑ&k	¢Æÿ` °d …`ölfôË¶zÛÕ‡6BC½ıQ1×óÍXVŞPÉMe­› ~3^x"í¥ÛUt 6Ø½‡>àZh´cí‘ø­ßFÀß<&nÜú=ŒØ^"4ædÀ#«‚C‹)P Ê°Ã­Ó.w†ßÈmÀÂZÿàÚ4l®2D°[€#hÛbİÛL¹ÿ@ÿÀªlF"'…=Úñ ŠyNv
+f§¥	İïQ¼4{Óª‘Am/¸„©ñ‘×ËÚ;Şã[ ‘¢Ş^ÔhÃ‹äJN#ÎMON.Q>åşp„º\`ùÖt GËæ<ÿ7bp*ĞqkŒçM^²¢X2öàÎDj>Q,×‚é€nl‹~Ş{}±*U“ Ô\*!€z=jT¾Od íEúWqä¶‘u'XbËÁÖa #¤À#0A=„F—×%PµC‰’)”æEÀ¾XÔ³¿:½@Fl÷ ÀsÁªa@vlZÀ DU¸¾f…áRåëëŒ%Å ìÄşÆÎ#H®ìÛÁì­ÓÏíN—f¦j U0G‚"¸‚±gB300pÂ°ïÛsá@CíVîŸ²FoğwjUkÄÒ>ñ!ñ(ÁåR% ºÿâDâŞ&i \T,y9ğÒ~ÎÆµ¨¶~ h EÁ¢a¹úáDñÓU Pæ§… L|ôë¡8)Lc`ô= ¡¡NÛ1˜Òôl(¸²5Äpí_`$ú1/À#ƒ+M¢ôáÑK[E/":pÍvÏvfÿ*õS_õõYïx\ïõ-ğ,x´Ñ›fãÔ,0Gõ~o`áXƒÔ$t2]/"=ğø‘öqúkz˜&:€ä¸BğH­“BjÊ#m±â´|ÈúMáú²ñ<Re¯ ¿0À`êëaÀ zT  ³aı½`ŸGÿıÑŞ/º TÓÀ@lÄ09`K§
+şR Ş¯ı*À  Ä9°50ĞzÿÑK]0z(öÏC¯^ş›lÆDŒÿ–¹ –£`ÿĞÆH ÀL,¢R .\¾„)LÄÀ€5HlB4‰ÿ`\b¯™‹v˜ÈAK…1%*ÜñWf Ì•‡
+l FÎ^,ä9Ô'Ğ—‹2Äè3‡JFZõ` |ØÄWÚ;€± 1ğáe/×jvÂ[À/îJšÑòeÌ™5oæÜÙógĞ¡E&]ÚôéÌÁüùú¯Š?.¨e_Ví®ÿÀ!°gïæİÛ÷oàÁ…'ş¯Ù†Õ€ñ§£@qÒÌûSÎÜ9tìÙµoçŞİ{çddÄ¬Ö!€ñwÎá7Şı{øñåÃßšì¼Ğù˜}İÏßßÿ ÄL—­ÔÊ@/#°4a~Ù…˜‹ƒÆ—]"”m™Ä`Zp@+«4]ô…ú`â³_*f_x*Î¬‰ìC÷ŠQŒ"œ1ÇŒQ«9óÅ‰ÂØœø…·*xàğÓE
+‡Òe™]”IÑ²#œØ 0Óv!2Ñ¦ÜåwëòË2aà ­Á,‡j†B-Ó¥˜0âp#ÈÌ`³Hú5@œÿáh*ô@“YM‚Œ,´ROÏ†"cµC{ì,ÂftXÍŸ &
+"É%ªá2ìŸéXÀ¯±õ%¹J9;Õ‰]<-m:œ6ÊŠ~è‚Õ.ğuYm•"8å|u«[W;¯‰dx4×j)Å¨˜<tx@.0ˆØF·¨€¤€ÆÇ¡nÚe·4ôxùÔÕZ1(Íòğç^cL4Ç‰Xí‹_lÈ NÊÍ uÿé EXH|õb
+şE-"ã­J^fµ#&æàj)†d9ü€0”h5`ôÔª<FL^üiYÁ¡DX-ÑƒµÓÿ°ÒÈr¤3›S£T1J5|1R¦™‰‚ñÅ™f'"†Ë|øŸ`ºşg—¾øĞdF°ZÍˆ!±1hX­‰Œš&x 5Êş‡J´ÿéTæEŞJd±¢Ãñ&ÏLñ^ëfûñ¹ÚåÄ_¦îeÒ’G]°¦`ë—ıiôõŒ<7½ãRX­¡|é4U{…XMŠ]ş‡˜È3ÿ‡l£À0¾ˆæÊx7ö¬wqærâašşv™;ì‰|QŞ=!6õ€DxÀ˜¸x  Àú
+¬ƒ2$	È1š* -p!1;{@FP‚l@"kĞÂ¦ `Ä€¯xòÿ&úÙo
+FXëAäIƒ|8éxá?  45`tŒsÜ©Œ€D°† Ğ‚¤õô :øÀ»‚€!€á ÊÂ HÀ9:¸ fvø&	ü‚ì¢@ `€;haDÈÈÀ0Ñ‚iŸÒàwÜ ãD´Øœ2îs¾óğ~A‡<dZƒ‚ 'üãTb@*°ŠtÂ 9÷°<f¤ïû‡ô—G
+\ä UF’‡õH€½£ õÊÀ‚ÒugJóÇşñ21X`5"x/ï —hAiÌ)@RÀœQõ !È‚æj†ğšQÿDÕ\‚¬`®fx¼Ã?F*òò³úÇ3—é(M:˜Èç1ˆ‘mTq€²ü¡,f@it F0’¦´/¬K™£b¦@ô¦´Œ}®’¤%W“•é)í$˜ñ§²¨iQdE)«¦/ÉÉË>tT¤Ñ	¼j¹o5d ¥?ş‘QhBáIàf‚¡‹d.ó“6$ÏF0œ)­ÿ€1š¥æ £ºHx¹\nGÌ ¾$P€çôbTyè…30@†ü#ÌAÃ?Ì°4x ˜eÆzbó¬­vCøAVC‡Ì•¦ÿxAD7ås‰u5dıÅ«à²­AÿbNÓ‡ÂŒõa3„)¬f
+ß›ˆ¼'Æ¥A MË—X;ËÚí¡dè  Ì êI¡òòGêW¹®¦™3 ^£dÀÌ%n¢ŠuK‘Õl`f<æ:w¦ZáªWÁúÅòõ¹Äƒq‘›>Ş9s5Ï¸ÛBŸÀñ&Š[hWó‚Cã¹«@Ç¸b`®Ñ3ÖV£¦»şøês’@†Â¬Õ:ı…F„£~Àj`æ¥á;„Õ\U#2+à²Åb¤ OXÃjÆğQÁO ÊÔ!§à4LŠÅÉ†)|©v I€‚@ı!'Åæa nÿğ‡^Óƒ‰Œzy0­Úy<ĞaÁjd…‘4øC£ƒ•?è÷L >ş'x÷Ü,u Â˜˜@Àœ„Æx Êlæ¦âÀ	p`s)ÄÌKè ÿƒÉ`øšf®ëf :k11Š#äIûĞ‚¾´ ­"+ ínøjæ?*G¶)î/lş2!ã4 Æşñ?hl(ˆê¯`ªôDFÀbæ|úÔZÈxÒƒ	„VÂˆA7¿l¯îø‚Ô–®nŒìª¼˜*’ıÇ/¦-^â*«‘Ó¸¬e
+ù¹¹ÃzÚÌã¨´É½2Ñ©Ws€ÂÅŸÁb³²j<Œ øËÍÿ`Ó¬…Ää`½vÁ?¨"ëü"Û/Q¦¶ıñânOÛÂá¦âeMnt—-ÌÄîÌ£+§e¤#ÒöG©	ò_Üzã¼ìø?èl—›]tÔ8Oó–´ÃÚEC ^·]¶-˜u""0r©v1í˜\›*ŞüÇÈ—änj//Ğ§ªë§ûÃH9ùëÖÃíÍ½x=O³uËÿá‚Õ0€ºXÀM^ö°ë«Ù—6^!!ğ<TzÕp Lª«×RÈòj<òïŒœa5¾ıD+÷êîş@\n|9çÜ<íÎşøÀ?Öc³¶7³ÅZøÁ&‚	<çpSîâ´°÷™zˆÿ‘Í/ï	ûØ_î÷Üÿcõ­}ì1"Ğ!„«)ÌğÿAßëOô«1ÖÛã>÷0eí{VºHîoz[ìqFd5ç¸‘cpsàÁ\l Ó9ê{t1 ¶<sZ' ,áÊ>0˜˜>·k†Í)¸†‚	¾Ó¹ƒğ…Zò»Gs(êi€x†(Y%¨™É¬Í1€›œX*x†^Ğµ*Ë¼¿ÛÁ·ò*» 90Ğ-Şºˆ0[ÀLÀ¤òØ  1Ø€´šˆC>ŞIªğ€˜Ø¾²{4ëÓ
+ ÀL¾%lBË-¨€ÿhÀªø<ëÃ¾Ú% (†f ›2@›	ˆ#d@,5˜`†·² #è… `uú¿æ ]è€/œ«R00¸‚£b21p¥Ê‹	7€pó¦€ÃJÁÉ™Çq7¥¡˜sâ%oQ‚p+Œ¢¨6«™€E£Å;,èÀd`†p3vr'†ò]ü‘›
+·ü‡û‹YœEe€ªQf˜ª…¹¤¢ó–•Ïs7%›qÆœ±Å š+G\™ˆgÇtœˆRŒ> `GˆmŒ®Œ^ƒ"GY’p	U,\Œªè;†šühaºªó(Å`i¤yü;\Ğÿ]aL3¥ñø(.p0h™	ˆ– ‚¸à 4`g2€‚&€—x$¨4X’7‰òÉ_‚!¸cğğÉ<"$q‚¿õ ]˜ '¡5Æƒ!¢¡'4IË0‚¤|€¸JØ•^YÊŸ”–e ƒ(ªHŒb€")ÆŞI™¤Ég¹ az€ ´#ÔË$)K“t–x 1 6ê€!Ğ,Œ0K³ÊšÔ
+I’L¡ü¦¼ÜKËh† Pƒ$)ÿAºÌÜ•ÖÙ•T!	¸ƒˆ¨›ÜL• Ë&ÀÉˆhH"Ù€/ ½‘I)rˆÿ”Ô°Ë%ƒ•@€pñ‡!0!ø+€×7h÷Šbø]˜ıX9ÓÁ»éñ¤ô	†dØ]¨›]h]pÁŠÑA€YÏ]8£9“¡˜ŠºÑ“4œoIÏŸšÉe¸Of°OõTõœWé”™­Iìü¸ÃIP4¡›ûd:ÉÎé‘\Z‘ÓYOáù)a`‘øŒÿü‡	9Qf¸Ïêœµü¤•÷|8“™!†*™üÜŠ`@Ó	ÏQ_QÒ¡è_ĞMŸ¸É-éƒÙŠªÉ*dd'³²Wá¡œÔùÒ-e'›«R{¶’Éÿ@Q©”K¹Œ¹ÑÒ/-+%0šmIS,},Õ1-Sx9TD]`#JTG}THTDÕ'ÈŠ.•TLÍTMİTNíTOıTPD1TM½ÔP=UTí]X ^0óà… ¨QLÕX°ÓTİU^õÃñ‡ôŒd°‡10ÙK_ ÖÌ –^mVgõUa¨0ÈØ¡a ƒFÍˆ'PÉ*{VqWáh‚²óqºVê¹Ñ IW=%Wx×‚œ^(¹\Ğ— ƒ2Ø‚´( 0#pª ¼Y€ ‚#R‚Û c•4Û ]x^ ÿ¸
+ ƒKbÈWÉá‚0(˜ğ…'(1pÖù€cpƒYº^à…å^°$ğØ}-ÄQ«†}ØˆU`ÙÀ€‘ÊØ#0…E 5•W¨MT±#¸)€Õ°7TÄ }ª(¿K0²{Û•ØH35ÆÄ›ÚÕè±Z˜}:$ØZÛQ«…ZRA@X'·]*IiC¥‰™2à¥ØÀš5h*¸Û[P[`Ûå™Õ° ßŒZËuÔ3ˆØ#¼[¨àª€²022@}2ØèÀĞ°Ió)ó‡58‚âÈ;Ø ÕĞ–x\À	(šJºÕ¨Yÿ_Ã—;ø 7€fæè¤”Èc¹fòİÏİ‚|İØ}!Ö¢2‘`¯Ü½1Şı‡Ğû3€4ÕË=ßùà æ,õ{#¶]X»Ò^ƒAÜbŠÔ¹ÕÊ££27Mšû‡ğ1	|y€7ˆxò‡/ˆ®!Qñ¥x´Â²Y|yšZÒÙ;‘b-K*AC.àÖ²+ Uô]a ywcôÃ—V9µr*`–
+6ØgpW6šl’Ã£K£Š¬Ã´35›ˆø¿z ïó¡S?}Áàõ3µ<
+«sÍ>'Åj8"æ%hĞ¹ƒXóea4~ÿ:¸5)î_'^\B[\ƒÕ^BÃcZ$4-Ö¼t¥
+0€50ºÁ—OÃˆ È£¡á\:ø/ì´[£bÙ!âc &³.>?à0€5 ˜€Sƒ¢Õ4^åï€	I¼´m*›8ÖâÇ™`]ƒı…nˆkí]'Ì[.ƒ9›ˆdH/Œ¨¼e#se\ØÕÒŞ(Ù¾N¯úeu=-H“b¶cE¸¨ :$V.g«QYkb%úQ¿33-é@ÈHÔm`5há¿} Ha [8â³° 0@œ°;³oÑµxF™”\Wr[0Xæ ÿ*nç‰r[-Øç0-‘Q,öúg-( ƒj*5¨€¤‰ƒHÔ:sniîxhƒZ‚Ÿj‘1#{b`¥/Ø&Ä4X(:`)Â¢$#1²dø¢Và€Œ¤ÄùÛZ;˜9'@3òø
+¸¡ûÚš¾70jøÖÕ(êÕ8ê¡[ş¦N¡3F¸ˆ 
+¨\—¾kâè€gxh—†”X ˜XŒ¡€x¼h!½‚-°Á@Á	`ğ€­¨U¢›¿Ö‘“œ‰4Á
+Õ±Ég`
+p	’p‰UÍ‹ŸjB`8ˆ„@íÿÑ	Ê2‹ Œ †‚	 €3ÆkŞÿ§T?åÓŠAKyÚK+µ3ímænnç~nènénê®në¾nìÎní†TdØnïşnÑ˜†i†c(„p oôNoÌ8†a(FÈ†BPoùæT{€ƒ¸oü†CÀù8T  XkP„øC¸ˆ‡?€ƒwèîùp yP €L`‚A`‚L¨„%È ùÈM8~Ğ;ˆj¸Rx„Màïx@9(jpÏ@8„GĞ„Jh OĞ„VĞ‡ah€„P†y  p…cˆ{ˆ@¯q+‡¸‡7Ø}¨\°ƒSp…j8dH€,†ÿaø†k=H€†@}@`o`o4O€o@slĞ…öÎF óAsd@`ïo8†FPx(„ ˆp`ƒJ˜ƒz€tdF‡a@ñFó8òÎk¸rUAhødètĞ€TèH€B(„z¨UÈ€M¨ƒY„Z…(B(K°ğ(„(„Ø„Lh TÀƒ?˜ˆö T *H‡v(„chƒ:  HxrIg‚J¿tO˜J`ïY Op‡pl(xH‡\ Y@‡BØ†UøŞ€u¿… †B°ƒJ PXø%jè„ÿO°…60p GP€KH…Vˆ…Z[À‚Z˜ƒGxj‡6À‚  Z¨B˜ˆc‡RhO ,X‚f÷Dè ‚t€ğH u·txƒvï‚c8VĞ„~ˆÀ‡Bh„% ‡qÿMàtx­?‚¯ô7W[ …8mpèdXL¨„X N`…=ĞL?€€JH„\ğƒY …CH‡cPLà„Y(@p€Hßs;HN(ˆ€ø(„y `G`…jHò®'úÀô9ƒapÀ…B8‡@x ‡hjÀÀ…¬ßzÙÍ/zL@‚ğX°ÿZxõ.¨ƒ9ˆ|öî„X˜(„=˜ãÏu}P€r@†?È,èH7ñaH €y w\h[†a€€V„7Ÿ@†sh~
+;h wG†M ‡TH€ôn 0H ˆ='8¹Ëòï Â„
+2lèğ!Äˆ'R¬hñ"ÆŒ7rìè±!&
+ØüC“:Ÿ>ÕÂ‚kX—:uöûvŒ’Ì.Çbò“3ŒÕ å!“„ê8$é¨<6L]+RÚ	[¡ S‚al0I€ÙÁBûB´b3¬äMHökA“‰Z²àtë—ªA«O‡€4Hğñ/àÀ‚.lø0à#Kÿ:¨ƒdŸ=vö*´H&·ƒ0s"ãÆYñ-§…
+ñaƒ¤U§aÒ²JàÆ°c¸>Ùvlk×„ÈµQ@ª²B“¥Š2u<—À±)Då.W{N½9¥1öìÚ·sïîİ¢b’ÇD¹ûd*Ë°7
+»\'ó?˜üøuéüYdèB$èKĞ‹<ÃhcÍ0|ÄÂ‰%*DĞÀ'$ƒn~!DM'‚„%”àÓ² CM'$sŒà rL:àP¡Q„rÌw1Ê8#5Ú˜€3Êƒ…ì-˜ĞJ"Q‚È!‡ 2Œ.Ã ©¤“I"‚Ì9:ªC&|B (
+¤BÈ?×lóÿÏ1ò”ò‰'@`J0pè†Ì;²´R
+¥´Ò …èÑ€	ÀÉ!d“@X”B &ÌRÈ‘J:)¥•Ft)slR6Ø"‰)—€²Ä$ç"‡'È‘;ÃÈÑ@%õœšêª7Ø¢i!Qà³(à¢X* P‘9gıÁ¶H¨(+ØÒ;¸TöM0r¨Ó(¨tRˆ6…4’-ÆBàH6–ª».»íb'77 `HŞèòÕx°V;ïÌƒ9}d0N(( °"ä 0ÂŞük;ìs+¬{Ğ7/Ã5Ã2ÎA† €5I3ŒÇŒ42ZÓŒvTL(„Ãš6} \
+(s»=ûü3Ğ}Å2c"$Í?%ôÑ
+]üÓIc´EáHƒLÔ-lIA{ı5Øa‹=6Ùe›}6Úi«½6Ûm»ıöE ;
+------MultipartBoundary--3dBzDWiUZtM9HhuTJurtx1Mwg9AL6sw6dc6J3dstXI------

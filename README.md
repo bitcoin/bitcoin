@@ -1,78 +1,29 @@
-Bitcoin Core integration/staging tree
-=====================================
+[![Build Status](https://travis-ci.com/watermelon503/bitly.svg?token=uPXx2RMyux8y6zxLL8f6&branch=main)](https://travis-ci.com/watermelon503/bitly)
+# WordPress Bitly Integration Plugin #
+This plugin is used to integrate WordPress posts with [Bitly](https://bitly.com/) by generating a Bitly shortlink for selected post types. It has been tested up to WordPress version 5.8.
+##  Installation ##
+Note: you must have a Bitly account in order to use this plugin. Any level of account will work.
+* Either install automatically through the WordPress admin, or download the .zip file, unzip to a folder, and upload the folder to your /wp-content/plugins/ directory. Read Installing Plugins in the WordPress Codex for details.
+* Activate the plugin through the Plugins menu in WordPress.
+## Configuration ##
+Settings for this plugin are found on the Settings->Writing page. You can also access this page directly via the Settings link under this plugin on the Plugins page.
 
-https://bitcoincore.org
+To begin using this plugin, you must first obtain an Authorization Token. 
+To do so, in a separate browser tab login to the Bitly account to which you would like to connect. 
+Back on the WordPress Writing Settings page, simply click the large Authorize button next 
+to "Connect with Bitly". If that works successfully the "Bitly OAuth Token" field will be populated with an Authorization Token string.
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+Once you have an Authorization Token in place, you can proceed with the related configuration settings.
+* **Post Types:** Check which available post types will automatically have shortlinks created automatically upon creation. 
+* **Default Group:** This select box will allow users with [Enterprise] (https://bitly.com/pages/pricing) level accounts to choose which Group the shortlinks will be associated with. Other account levels will just see their default Group listed.
+* **Default Domain:** This select box will allow users with [Basic or Enterprise] (https://bitly.com/pages/pricing) level accounts to choose the shortlink domain that will be used for link creation. By default (and the only option for Free users) this is bit.ly.
+* **Debug WP Bitly:** Checking this will create a debug log in /wp-content/plugins/wp-bitly/log/debug.txt.
+## Creating Shortlinks ##
+There are two ways to create shortlinks:
+* **Using the Post Type Configuration Option:** If all posts of a certain post type are to have shortlinks, simply check that post type's box in the Settings page to automatically create shortlinks for that post type on publish.
+* **Using the Supplied Shortcode:** If a post type is not checked but a shortlink is to be created for a particular post, simply add the shortcode [wpbitly] in the post content. Upon publish a shortlink will be created. Alternatively, click on the red "Generate new Shortlink" link within the WP Bitly meta box on any published item without an existing shortlink.
+Regardless of what method is chosen, the created shortlink can be accessed in the WP Bitly section of the post in the main post attributes part of the screen. Clicking on the "Get Shortlink" button will create a popup of the created shortlink. In addition, statistics relating to the shortlink will appear to include the number of clicks today, the total number clicks over time, and a graph of the number of clicks over the last 7 days.
 
-What is Bitcoin Core?
----------------------
+The screenshot below shows the meta box created for a post that has an associated shortlink. The post edit page may need to be refreshed to see it.
 
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
-validate blocks and transactions. It also includes a wallet and graphical user
-interface, which can be optionally built.
-
-Further information about Bitcoin Core is available in the [doc folder](/doc).
-
-License
--------
-
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
-
-Development Process
--------------------
-
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
-
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
-
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
-
-Testing
--------
-
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
-
-### Automated Testing
-
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
-
-There are also [regression and integration tests](/test), written
-in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
-
-The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
-and that unit/sanity tests are run automatically.
-
-### Manual Quality Assurance (QA) Testing
-
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
-
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+![bityly_metabox](https://user-images.githubusercontent.com/1296721/102672953-29850900-4147-11eb-92ce-2133241ab94b.jpg)
