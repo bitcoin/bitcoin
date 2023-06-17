@@ -868,7 +868,7 @@ public:
     }
 };
 
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
+void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
 {
     ScheduleBatchPriority();
 

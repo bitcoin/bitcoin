@@ -287,7 +287,7 @@ epilogue:
     // Without this precise shutdown sequence, there will be a lot of nullptr
     // dereferencing and UB.
     scheduler.stop();
-    if (chainman.m_load_block.joinable()) chainman.m_load_block.join();
+    if (chainman.m_thread_load.joinable()) chainman.m_thread_load.join();
     StopScriptCheckWorkerThreads();
 
     GetMainSignals().FlushBackgroundCallbacks();
