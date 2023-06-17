@@ -10,6 +10,8 @@
 #include <chainparams.h>
 #include <core_io.h>
 #include <kernel/mempool_entry.h>
+#include <node/abort.h>
+#include <node/context.h>
 #include <node/mempool_persist_args.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -28,8 +30,10 @@
 
 using kernel::DumpMempool;
 
+using node::CheckFatal;
 using node::DEFAULT_MAX_BURN_AMOUNT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::HandleFatalError;
 using node::MempoolPath;
 using node::NodeContext;
 
@@ -181,9 +185,14 @@ static RPCHelpMan testmempoolaccept()
             Chainstate& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{});
-                return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
-                                                  chainman.ProcessTransaction(txns[0], /*test_accept=*/true));
+                if (txns.size() > 1) {
+                    auto res{HandleFatalError(ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{}), node.shutdown, node.exit_status)};
+                    if (!res) throw JSONRPCError(RPC_INTERNAL_ERROR, "Fatal internal error.");
+                    return res.value();
+                }
+                auto res{HandleFatalError(chainman.ProcessTransaction(txns[0], /*test_accept=*/true), node.shutdown, node.exit_status)};
+                if (!res) throw JSONRPCError(RPC_INTERNAL_ERROR, "Fatal internal error.");
+                return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(), res.value());
             }();
 
             UniValue rpc_result(UniValue::VARR);
@@ -742,7 +751,7 @@ static RPCHelpMan importmempool()
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{HelpExampleCli("importmempool", "/path/to/mempool.dat") + HelpExampleRpc("importmempool", "/path/to/mempool.dat")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+            NodeContext& node{EnsureAnyNodeContext(request.context)};
 
             CTxMemPool& mempool{EnsureMemPool(node)};
             ChainstateManager& chainman = EnsureChainman(node);
@@ -762,7 +771,7 @@ static RPCHelpMan importmempool()
                 .apply_unbroadcast_set = apply_unbroadcast.isNull() ? false : apply_unbroadcast.get_bool(),
             };
 
-            if (!kernel::LoadMempool(mempool, load_path, chainstate, std::move(opts))) {
+            if (!CheckFatal(kernel::LoadMempool(mempool, load_path, chainstate, std::move(opts)), node.shutdown, node.exit_status)) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Unable to import mempool file, see debug.log for details.");
             }
 
@@ -906,7 +915,9 @@ static RPCHelpMan submitpackage()
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
             Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
-            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false, client_maxfeerate));
+            const auto res = WITH_LOCK(::cs_main, return HandleFatalError(ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false, client_maxfeerate), node.shutdown, node.exit_status));
+            if (!res) throw JSONRPCError(RPC_INTERNAL_ERROR, "Fatal internal error.");
+            const auto& package_result{res.value()};
 
             std::string package_msg = "success";
 

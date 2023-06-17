@@ -55,6 +55,7 @@
 #include <utility>
 
 using node::CheckFatal;
+using node::HandleFatalError;
 
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
@@ -3174,7 +3175,9 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     CTransactionRef porphanTx = nullptr;
 
     while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id)) {
-        const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
+        auto res{HandleFatalError(m_chainman.ProcessTransaction(porphanTx), m_shutdown, m_exit_status)};
+        if (!res) break;
+        const MempoolAcceptResult result = res.value();
         const TxValidationState& state = result.m_state;
         const Txid& orphanHash = porphanTx->GetHash();
         const Wtxid& orphan_wtxid = porphanTx->GetWitnessHash();
@@ -4363,7 +4366,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx);
+        auto res{HandleFatalError(m_chainman.ProcessTransaction(ptx), m_shutdown, m_exit_status)};
+        if (!res) return;
+
+        const MempoolAcceptResult result = res.value();
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {

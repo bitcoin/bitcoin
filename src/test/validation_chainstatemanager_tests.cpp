@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     {
         LOCK(::cs_main);
         c1.InitCoinsCache(1 << 23);
-        manager.MaybeRebalanceCaches();
+        UnwrapFatalError(manager.MaybeRebalanceCaches());
     }
 
     BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, max_cache);
@@ -152,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     {
         LOCK(::cs_main);
         c2.InitCoinsCache(1 << 23);
-        manager.MaybeRebalanceCaches();
+        UnwrapFatalError(manager.MaybeRebalanceCaches());
     }
 
     BOOST_CHECK_CLOSE(c1.m_coinstip_cache_size_bytes, max_cache * 0.05, 1);
@@ -371,7 +371,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             for (Chainstate* cs : chainman.GetAll()) {
                 LOCK(::cs_main);
-                cs->ForceFlushStateToDisk();
+                UnwrapFatalError(cs->ForceFlushStateToDisk());
             }
             // Process all callbacks referring to the old manager before wiping it.
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
@@ -576,7 +576,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     BlockValidationState unused_state;
     {
         LOCK2(::cs_main, bg_chainstate.MempoolMutex());
-        BOOST_CHECK(bg_chainstate.DisconnectTip(unused_state, &unused_pool));
+        BOOST_CHECK(UnwrapFatalError(bg_chainstate.DisconnectTip(unused_state, &unused_pool)));
         unused_pool.clear();  // to avoid queuedTx assertion errors on teardown
     }
     BOOST_CHECK_EQUAL(bg_chainstate.m_chain.Height(), 109);

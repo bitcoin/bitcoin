@@ -5,7 +5,9 @@
 #ifndef BITCOIN_KERNEL_MEMPOOL_PERSIST_H
 #define BITCOIN_KERNEL_MEMPOOL_PERSIST_H
 
+#include <kernel/fatal_error.h>
 #include <util/fs.h>
+#include <util/result.h>
 
 class Chainstate;
 class CTxMemPool;
@@ -23,8 +25,9 @@ struct ImportMempoolOptions {
     bool apply_fee_delta_priority{true};
     bool apply_unbroadcast_set{true};
 };
+
 /** Import the file and attempt to add its contents to the mempool. */
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
+[[nodiscard]] util::Result<bool, FatalError> LoadMempool(CTxMemPool& pool, const fs::path& load_path,
                  Chainstate& active_chainstate,
                  ImportMempoolOptions&& opts);
 

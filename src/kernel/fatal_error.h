@@ -12,8 +12,12 @@ namespace kernel {
 enum class FatalError {
     AcceptBlockFailed,
     BlockFileImportFailed,
+    BlockIndexWriteFailed,
     ChainstateRenameFailed,
+    CoinDatabaseWriteFailed,
+    DiskSpaceTooLow,
     DisconnectBlockFailed,
+    FlushStateToDiskFailed,
     NoChainstatePaths,
     ReadBlockFailed,
     SnapshotAlreadyValidated,

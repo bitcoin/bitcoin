@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <key.h>
 #include <random.h>
 #include <script/sign.h>
@@ -37,7 +38,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
     const auto ToMemPool = [this](const CMutableTransaction& tx) {
         LOCK(cs_main);
 
-        const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(tx));
+        const MempoolAcceptResult result = UnwrapFatalError(m_node.chainman->ProcessTransaction(MakeTransactionRef(tx)));
         return result.m_result_type == MempoolAcceptResult::ResultType::VALID;
     };
 

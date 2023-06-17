@@ -5,8 +5,9 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
-#include <test/util/setup_common.h>
+#include <kernel/fatal_error.h>
 #include <script/solver.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
     auto* orig_tip = active.Tip();
     for (int i = 0; i < 10; ++i) {
         BlockValidationState state;
-        m_node.chainman->ActiveChainstate().InvalidateBlock(state, active.Tip());
+        (void)UnwrapFatalError(m_node.chainman->ActiveChainstate().InvalidateBlock(state, active.Tip()));
     }
     BOOST_CHECK_EQUAL(active.Height(), orig_tip->nHeight - 10);
     coinbaseKey.MakeNewKey(true);

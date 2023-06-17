@@ -799,6 +799,7 @@ static RPCHelpMan pruneblockchain()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!chainman.m_blockman.IsPruneMode()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
@@ -835,7 +836,7 @@ static RPCHelpMan pruneblockchain()
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(active_chainstate, height);
+    (void)CheckFatal(PruneBlockFilesManual(active_chainstate, height), node.shutdown, node.exit_status);
     const CBlockIndex& block{*CHECK_NONFATAL(active_chain.Tip())};
     return block.nStatus & BLOCK_HAVE_DATA ? active_chainstate.m_blockman.GetFirstStoredBlock(block)->nHeight - 1 : block.nHeight;
 },
@@ -949,7 +950,7 @@ static RPCHelpMan gettxoutsetinfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    active_chainstate.ForceFlushStateToDisk();
+    (void)CheckFatal(active_chainstate.ForceFlushStateToDisk(), node.shutdown, node.exit_status);
 
     CCoinsView* coins_view;
     BlockManager* blockman;
@@ -1570,7 +1571,7 @@ static RPCHelpMan invalidateblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
+    (void)CheckFatal(chainman.ActiveChainstate().InvalidateBlock(state, pblockindex), node.shutdown, node.exit_status);
 
     if (state.IsValid()) {
         (void)CheckFatal(chainman.ActiveChainstate().ActivateBestChain(state), node.shutdown, node.exit_status);
@@ -2234,7 +2235,7 @@ static RPCHelpMan scantxoutset()
             ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
             Chainstate& active_chainstate = chainman.ActiveChainstate();
-            active_chainstate.ForceFlushStateToDisk();
+            (void)CheckFatal(active_chainstate.ForceFlushStateToDisk(), node.shutdown, node.exit_status);
             pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
@@ -2679,7 +2680,7 @@ UniValue CreateUTXOSnapshot(
         //
         LOCK(::cs_main);
 
-        chainstate.ForceFlushStateToDisk();
+        (void)CheckFatal(chainstate.ForceFlushStateToDisk(), node.shutdown, node.exit_status);
 
         maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, node.rpc_interruption_point);
         if (!maybe_stats) {

@@ -326,7 +326,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                (void)CheckFatal(chainstate->ForceFlushStateToDisk(), node.shutdown, node.exit_status);
             }
         }
     }
@@ -352,7 +352,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                (void)CheckFatal(chainstate->ForceFlushStateToDisk(), node.shutdown, node.exit_status);
                 chainstate->ResetCoinsViews();
             }
         }
@@ -1683,7 +1683,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LOCK(cs_main);
             for (Chainstate* chainstate : chainman.GetAll()) {
                 uiInterface.InitMessage(_("Pruning blockstore…").translated);
-                chainstate->PruneAndFlush();
+                (void)CheckFatal(chainstate->PruneAndFlush(), node.shutdown, node.exit_status);
             }
         }
     } else {
@@ -1769,7 +1769,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Load mempool from disk
         if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
-            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
+            (void)CheckFatal(LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {}), node.shutdown, node.exit_status);
             pool->SetLoadTried(!chainman.m_interrupt);
         }
     });

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
@@ -277,12 +278,12 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         auto single_submit = txs.size() == 1 && fuzzed_data_provider.ConsumeBool();
 
         const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, /*client_maxfeerate=*/{}));
+                                    return UnwrapFatalError(ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, /*client_maxfeerate=*/{})));
 
         // Always set bypass_limits to false because it is not supported in ProcessNewPackage and
         // can be a source of divergence.
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, txs.back(), GetTime(),
-                                   /*bypass_limits=*/false, /*test_accept=*/!single_submit));
+        const auto res = WITH_LOCK(::cs_main, return UnwrapFatalError(AcceptToMemoryPool(chainstate, txs.back(), GetTime(),
+                                   /*bypass_limits=*/false, /*test_accept=*/!single_submit)));
         const bool passed = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
 
         node.validation_signals->SyncWithValidationInterfaceQueue();

@@ -156,9 +156,10 @@ static util::Result<void, ChainstateLoadError> CompleteChainstateInitialization(
     // Now that chainstates are loaded and we're able to flush to
     // disk, rebalance the coins caches to desired levels based
     // on the condition of each chainstate.
-    chainman.MaybeRebalanceCaches();
+    util::Result<void, ChainstateLoadError> result{};
+    result.MoveMessages(chainman.MaybeRebalanceCaches());
 
-    return {};
+    return result;
 }
 
 util::Result<void, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
