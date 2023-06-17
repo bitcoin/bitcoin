@@ -70,8 +70,12 @@ static RPCArg GetRpcArg(const std::string& strParamName)
         },
         {"ipAndPort",
             {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "IP and port in the form \"IP:PORT\".\n"
-                "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."}
+                "IP and port in the form \"IP:PORT\". Must be unique on the network.\n"
+                "Can be set to an empty string, which will require a ProUpServTx afterwards."}
+        },
+        {"ipAndPort_update",
+            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
+                "IP and port in the form \"IP:PORT\". Must be unique on the network."}
         },
         {"operatorKey",
             {"operatorKey", RPCArg::Type::STR, RPCArg::Optional::NO,
@@ -85,31 +89,31 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "If set to an empty string, the currently active payout address is reused."}
         },
         {"operatorPubKey_register",
-            {"operatorPubKey_register", RPCArg::Type::STR, RPCArg::Optional::NO,
+            {"operatorPubKey", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The operator BLS public key. The BLS private key does not have to be known.\n"
                 "It has to match the BLS private key which is later used when operating the masternode."}
         },
         {"operatorPubKey_register_legacy",
-                {"operatorPubKey_register", RPCArg::Type::STR, RPCArg::Optional::NO,
-                        "The operator BLS public key in legacy scheme. The BLS private key does not have to be known.\n"
-                        "It has to match the BLS private key which is later used when operating the masternode.\n"}
+            {"operatorPubKey", RPCArg::Type::STR, RPCArg::Optional::NO,
+                "The operator BLS public key in legacy scheme. The BLS private key does not have to be known.\n"
+                "It has to match the BLS private key which is later used when operating the masternode.\n"}
         },
         {"operatorPubKey_update",
-            {"operatorPubKey_update", RPCArg::Type::STR, RPCArg::Optional::NO,
+            {"operatorPubKey", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The operator BLS public key. The BLS private key does not have to be known.\n"
                 "It has to match the BLS private key which is later used when operating the masternode.\n"
                 "If set to an empty string, the currently active operator BLS public key is reused."}
         },
         {"operatorPubKey_update_legacy",
-                {"operatorPubKey_update", RPCArg::Type::STR, RPCArg::Optional::NO,
-                        "The operator BLS public key in legacy scheme. The BLS private key does not have to be known.\n"
-                        "It has to match the BLS private key which is later used when operating the masternode.\n"
-                        "If set to an empty string, the currently active operator BLS public key is reused."}
+            {"operatorPubKey", RPCArg::Type::STR, RPCArg::Optional::NO,
+                "The operator BLS public key in legacy scheme. The BLS private key does not have to be known.\n"
+                "It has to match the BLS private key which is later used when operating the masternode.\n"
+                "If set to an empty string, the currently active operator BLS public key is reused."}
         },
         {"operatorReward",
             {"operatorReward", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The fraction in %% to share with the operator. The value must be\n"
-                "between 0.00 and 100.00."}
+                "The fraction in %% to share with the operator.\n"
+                "The value must be between 0 and 10000."}
         },
         {"ownerAddress",
             {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
@@ -118,11 +122,11 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "The address must be unused and must differ from the collateralAddress."}
         },
         {"payoutAddress_register",
-            {"payoutAddress_register", RPCArg::Type::STR, RPCArg::Optional::NO,
+            {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The dash address to use for masternode reward payments."}
         },
         {"payoutAddress_update",
-            {"payoutAddress_update", RPCArg::Type::STR, RPCArg::Optional::NO,
+            {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The dash address to use for masternode reward payments.\n"
                 "If set to an empty string, the currently active payout address is reused."}
         },
@@ -139,13 +143,13 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "If true, the resulting transaction is sent to the network."}
         },
         {"votingAddress_register",
-            {"votingAddress_register", RPCArg::Type::STR, RPCArg::Optional::NO,
+            {"votingAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The voting key address. The private key does not have to be known by your wallet.\n"
                 "It has to match the private key which is later used when voting on proposals.\n"
                 "If set to an empty string, ownerAddress will be used."}
         },
         {"votingAddress_update",
-            {"votingAddress_update", RPCArg::Type::STR, RPCArg::Optional::NO,
+            {"votingAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The voting key address. The private key does not have to be known by your wallet.\n"
                 "It has to match the private key which is later used when voting on proposals.\n"
                 "If set to an empty string, the currently active voting key address is reused."}
@@ -504,7 +508,7 @@ static void protx_register_fund_hpmn_help(const JSONRPCRequest& request)
                       RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
-            HelpExampleCli("protx", "register_fund_hpmn \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" 1000 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
+            HelpExampleCli("protx", "register_fund_hpmn \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
     }.Check(request);
 }
 
@@ -671,7 +675,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be a number");
     }
     if (operatorReward < 0 || operatorReward > 10000) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0.00 and 100.00");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 10000");
     }
     ptx.nOperatorReward = operatorReward;
 
@@ -843,7 +847,7 @@ static void protx_update_service_help(const JSONRPCRequest& request)
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("ipAndPort_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("operatorPayoutAddress"),
             GetRpcArg("feeSourceAddress"),
@@ -867,7 +871,7 @@ static void protx_update_service_hpmn_help(const JSONRPCRequest& request)
             HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("ipAndPort_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("platformNodeID"),
             GetRpcArg("platformP2PPort"),
