@@ -198,10 +198,10 @@ public:
 
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000082094584a23266cbb5f8"); // 1850400
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000008677827656704520eb39"); // 1889000
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00000000000000261bdbe99c01fcba992e577efa6cc41aae564b8ca9f112b2a3"); // 1850400
+        consensus.defaultAssumeValid = uint256S("0x00000000000000075300e852d5bf5380f905b2768241f8b442498442084807a7"); // 1889000
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -307,6 +307,7 @@ public:
                 {1450000, uint256S("0x00000000000000105cfae44a995332d8ec256850ea33a1f7b700474e3dad82bc")},
                 {1796500, uint256S("0x000000000000001d531f36005159f19351bd49ca676398a561e55dcccb84eacd")},
                 {1850400, uint256S("0x00000000000000261bdbe99c01fcba992e577efa6cc41aae564b8ca9f112b2a3")},
+                {1889000, uint256S("0x00000000000000075300e852d5bf5380f905b2768241f8b442498442084807a7")},
             }
         };
 
@@ -314,12 +315,12 @@ public:
          // TODO to be specified in a future patch.
         };
 
-        // getchaintxstats 17280 00000000000000261bdbe99c01fcba992e577efa6cc41aae564b8ca9f112b2a3
+        // getchaintxstats 17280 00000000000000075300e852d5bf5380f905b2768241f8b442498442084807a7
         chainTxData = ChainTxData{
-                1680866408, // * UNIX timestamp of last known number of transactions (Block 1718597)
-                47139357,   // * total number of transactions between genesis and that timestamp
+                1687008680, // * UNIX timestamp of last known number of transactions (Block 1889000)
+                48071282,   // * total number of transactions between genesis and that timestamp
                             //   (the tx=... number in the ChainStateFlushed debug.log lines)
-                0.168014362704521,      // * estimated number of transactions per second after that timestamp
+                0.1420701358442986,      // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -393,10 +394,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nFalloffCoeff = 5;            // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000002d68c6dc9ca04f3"); // 840000
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000002d68c8cc1b8e54b"); // 851000
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000000cd7c3084499912ae893125c13e8c3c656abb6e511dcec6619c3d65a510"); // 840000
+        consensus.defaultAssumeValid = uint256S("0x0000014d3b875540ff75517b7fbb1714e25d50ce92f65d7086cfce357928bb02"); // 851000
 
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
@@ -477,6 +478,7 @@ public:
                 {794950, uint256S("0x000001860e4c7248a9c5cc3bc7106041750560dc5cd9b3a2641b49494bcff5f2")},
                 {808000, uint256S("0x00000104cb60a2b5e00a8a4259582756e5bf0dca201c0993c63f0e54971ea91a")},
                 {840000, uint256S("0x000000cd7c3084499912ae893125c13e8c3c656abb6e511dcec6619c3d65a510")},
+                {851000, uint256S("0x0000014d3b875540ff75517b7fbb1714e25d50ce92f65d7086cfce357928bb02")},
             }
         };
 
@@ -484,12 +486,12 @@ public:
             // TODO to be specified in a future patch.
         };
 
-        // getchaintxstats 17280 000000cd7c3084499912ae893125c13e8c3c656abb6e511dcec6619c3d65a510
+        // getchaintxstats 17280 0000014d3b875540ff75517b7fbb1714e25d50ce92f65d7086cfce357928bb02
         chainTxData = ChainTxData{
-                1676885923, // * UNIX timestamp of last known number of transactions (Block 840000)
-                5776047,    // * total number of transactions between genesis and that timestamp
+                1686952567, // * UNIX timestamp of last known number of transactions (Block 851000)
+                5800114,    // * total number of transactions between genesis and that timestamp
                             //   (the tx=... number in the ChainStateFlushed debug.log lines)
-                0.01120953982471268,       // * estimated number of transactions per second after that timestamp
+                0.003166265599662275,       // * estimated number of transactions per second after that timestamp
         };
     }
 };
