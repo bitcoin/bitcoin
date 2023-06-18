@@ -706,13 +706,6 @@ public:
     /** Find the last common block of this chain and a locator. */
     const CBlockIndex* FindForkInGlobalIndex(const CBlockLocator& locator) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /**
-     * Make various assertions about the state of the block index.
-     *
-     * By default this only executes fully when using the Regtest chain; see: m_options.check_block_index.
-     */
-    void CheckBlockIndex();
-
     /** Load the persisted mempool from disk */
     void LoadMempool(const fs::path& load_path, fsbridge::FopenFn mockable_fopen_function = fsbridge::fopen);
 
@@ -926,6 +919,13 @@ public:
     const arith_uint256& MinimumChainWork() const { return *Assert(m_options.minimum_chain_work); }
     const uint256& AssumedValidBlock() const { return *Assert(m_options.assumed_valid_block); }
     kernel::Notifications& GetNotifications() const { return m_options.notifications; };
+
+    /**
+     * Make various assertions about the state of the block index.
+     *
+     * By default this only executes fully when using the Regtest chain; see: m_options.check_block_index.
+     */
+    void CheckBlockIndex();
 
     /**
      * Alias for ::cs_main.
