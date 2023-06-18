@@ -952,7 +952,7 @@ util::Result<bool, kernel::FatalError> BlockManager::FindBlockPos(FlatFilePos& p
     return result;
 }
 
-bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
+util::Result<bool, kernel::FatalError> BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
 {
     pos.nFile = nFile;
 
@@ -965,7 +965,7 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     bool out_of_space;
     size_t bytes_allocated = UndoFileSeq().Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        return FatalError(m_opts.notifications, state, _("Disk space is too low!"));
+        return ValidationFatalError(state, _("Disk space is too low!"), kernel::FatalError::DiskSpaceTooLow);
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
         m_check_for_pruning = true;
@@ -1009,9 +1009,10 @@ util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos _pos;
-        if (!FindUndoPos(state, block.nFile, _pos, ::GetSerializeSize(blockundo) + 40)) {
+        result.Set(FindUndoPos(state, block.nFile, _pos, ::GetSerializeSize(blockundo) + 40));
+        if (!result || !result.value()) {
             LogError("ConnectBlock(): FindUndoPos failed\n");
-            return false;
+            return result;
         }
         if (!UndoWriteToDisk(blockundo, _pos, block.pprev->GetBlockHash())) {
             return ValidationFatalError(state, _("Failed to write undo data"), kernel::FatalError::WriteUndoDataFailed);

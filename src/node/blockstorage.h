@@ -161,7 +161,7 @@ private:
 
     [[nodiscard]] util::Result<bool, kernel::FatalError> FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
     [[nodiscard]] util::Result<bool, kernel::FatalError> FlushChainstateBlockFile(int tip_height);
-    bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
+    [[nodiscard]] util::Result<bool, kernel::FatalError> FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     FlatFileSeq BlockFileSeq() const;
     FlatFileSeq UndoFileSeq() const;
