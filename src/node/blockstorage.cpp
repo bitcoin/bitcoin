@@ -738,12 +738,11 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     return true;
 }
 
-bool BlockManager::FlushUndoFile(int block_file, bool finalize)
+util::Result<bool, kernel::FatalError> BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
-        m_opts.notifications.flushError(_("Flushing undo file to disk failed. This is likely the result of an I/O error."));
-        return false;
+        return {util::Error{_("Flushing undo file to disk failed. This is likely the result of an I/O error.")}, kernel::FatalError::FlushUndoFileFailed};
     }
     return true;
 }
@@ -770,8 +769,11 @@ util::Result<bool, kernel::FatalError> BlockManager::FlushBlockFile(int blockfil
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,
     // e.g. during IBD or a sync after a node going offline
     if (!fFinalize || finalize_undo) {
-        if (!FlushUndoFile(blockfile_num, finalize_undo)) {
-            result.Set(false);
+        auto res{FlushUndoFile(blockfile_num, finalize_undo)};
+        if (!res || !res.value()) {
+            result.Set(std::move(res));
+        } else {
+            result.MoveMessages(res);
         }
     }
     return result;
@@ -1002,6 +1004,7 @@ util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const
     AssertLockHeld(::cs_main);
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
     auto& cursor = *Assert(WITH_LOCK(cs_LastBlockFile, return m_blockfile_cursors[type]));
+    util::Result<bool, kernel::FatalError> result{true};
 
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
@@ -1024,7 +1027,9 @@ util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const
             // the caller would assume the undo data not to be written, when in
             // fact it is. Note though, that a failed flush might leave the data
             // file untrimmed.
-            if (!FlushUndoFile(_pos.nFile, true)) {
+            auto res{FlushUndoFile(_pos.nFile, true)};
+            result.MoveMessages(res);
+            if (!res || !res.value()) {
                 LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", _pos.nFile);
             }
         } else if (_pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
@@ -1036,7 +1041,7 @@ util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const
         m_dirty_blockindex.insert(&block);
     }
 
-    return true;
+    return result;
 }
 
 bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) const

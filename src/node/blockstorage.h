@@ -157,7 +157,7 @@ private:
     [[nodiscard]] util::Result<bool, kernel::FatalError> FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo);
 
     /** Return false if undo file flushing fails. */
-    [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
+    [[nodiscard]] util::Result<bool, kernel::FatalError> FlushUndoFile(int block_file, bool finalize = false);
 
     [[nodiscard]] util::Result<bool, kernel::FatalError> FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
     [[nodiscard]] util::Result<bool, kernel::FatalError> FlushChainstateBlockFile(int tip_height);

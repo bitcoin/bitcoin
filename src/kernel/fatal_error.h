@@ -21,6 +21,7 @@ enum class FatalError {
     DisconnectBlockFailed,
     FlushBlockFileFailed,
     FlushStateToDiskFailed,
+    FlushUndoFileFailed,
     NoChainstatePaths,
     ReadBlockFailed,
     SnapshotAlreadyValidated,
