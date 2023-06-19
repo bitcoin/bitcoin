@@ -238,11 +238,7 @@ AC_ARG_ENABLE([lcov],
   [use_lcov=$enableval],
   [use_lcov=no])
 
-AC_ARG_ENABLE([zmq],
-  [AS_HELP_STRING([--disable-zmq],
-  [disable ZMQ notifications])],
-  [use_zmq=$enableval],
-  [use_zmq=yes])
+AX_ZMQ(,[use_zmq=yes],[use_zmq=no])
 
 AC_ARG_WITH([libmultiprocess],
   [AS_HELP_STRING([--with-libmultiprocess=yes|no|auto],
@@ -1390,20 +1386,12 @@ if test "$use_qr" != "no"; then
   BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
 fi
 
-dnl ZMQ check
-
 if test "$use_zmq" = "yes"; then
-  PKG_CHECK_MODULES([ZMQ], [libzmq >= 4],
-    AC_DEFINE([ENABLE_ZMQ], [1], [Define this symbol to enable ZMQ functions]),
-    [AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
-    use_zmq=no])
-fi
-
-if test "$use_zmq" = "yes"; then
+  AC_DEFINE(ENABLE_ZMQ, [1], [build with ZMQ subscription])
   dnl Assume libzmq was built for static linking
   case $host in
     *mingw*)
-      ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
+      ZMQ_CPPFLAGS="$ZMQ_CPPFLAGS -DZMQ_STATIC"
     ;;
   esac
 fi
