@@ -1,14 +1,13 @@
-# Dash Core version v19.2.0
+# Dash Core version v19.1.0
 
 Release is now available from:
 
   <https://www.dash.org/downloads/#wallets>
 
-This is a new minor version release, bringing various bugfixes and other
-improvements.
+This is a new minor version release, bringing various bugfixes and other improvements.
 
-This release is mandatory for all nodes. This release resolves issues around the
-v19 Hard Fork activation. All nodes must upgrade to continue syncing properly.
+This release is mandatory for all nodes. This release delays v19 hard fork activation and
+will effectively hard fork the network. v19.0.0 nodes must upgrade to continue syncing properly.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -27,102 +26,46 @@ using version < 0.13 you will have to reindex (start with -reindex-chainstate
 or -reindex) to make sure your wallet has all the new data synced. Upgrading
 from version 0.13 should not require any additional actions.
 
-At the first startup Dash Core will run a migration process which can take
-anywhere from a few minutes to thirty minutes to finish. After the migration,
-a downgrade to an older version is only possible with a reindex.
-
-Please note that seamless migration is only possible on nodes which did not
-reach the v19 fork block. Nodes that reached it can either rewind a couple
-of blocks back to a pre-v19 block using `invalidateblock` RPC while still
-running the old version or they can reindex instead.
+When upgrading from a version prior to 18.0.1, the
+first startup of Dash Core will run a migration process which can take anywhere
+from a few minutes to thirty minutes to finish. After the migration, a
+downgrade to an older version is only possible with a reindex
+(or reindex-chainstate).
 
 ## Downgrade warning
 
-### Downgrade to a version < v19.2.0
+### Downgrade to a version < v19.1.0
+Downgrading below v19.1.0 is not supported as v19.0.0 will attempt to hard fork, however this hardfork is problematic
+and is being delayed with this version
 
-Downgrading to a version older than v19.2.0 is not supported due to changes
-in the evodb database. If you need to use an older version, you must either
-reindex or re-sync the whole chain.
+### Downgrade to a version < v19.0.0
+Downgrading to a version older than v19.0.0 is not supported due to changes in the evodb database. If you need to use an older version, you must either reindex or re-sync the whole chain.
 
 # Notable changes
 
-## Resolve v19 Hard Fork Issues
+## Delaying v19 Hard Fork
 
-One of the goals for the v19 Hard Fork was to activate basic BLS scheme and
-start using it in various on-chain and p2p messages. The motivation behind this
-change is the need to be aligned with IETF standards. Unfortunately, a few edge
-cases were missed in our functional tests and were not caught on testnet either.
-v19 activation attempt on mainnet hit one of these edge cases and mainnet
-stopped producing blocks. As an intermediate solution v19.1.0 was released which
-delayed the start of the signaling for the v19 Hard Fork until June 14th.
+The start date for the v19 Hard Fork has been delayed until June 14th. The earliest hard fork date will be roughly two
+weeks after that date. A new version will be required before this date to ensure a smooth hard fork.
 
-To resolve these issues we had to rework the way BLS public keys are handled
-including the way they are serialized in the internal database. This made it
-incompatible with older versions of Dash Core, so a db migration path was
-implemented for all recent versions.
+# v19.1.0 Change log
 
-## Improve migration and historical data support on light clients
-
-As a side-effect, the solution implemented to resolve v19 Hard Fork issues
-opened a path to simplify v19 migration for mobile wallets.
-
-With previous implementation mobile wallets would have to convert 4k+ pubkeys
-at the v19 fork point and that can easily take 10-15 seconds if not more.
-Also, after the v19 Hard Fork, if a masternode list is requested from a block
-before the v19 Hard Fork, the operator keys were coming in basic BLS scheme,
-but the masternode merkleroot hash stored in coinbase transaction at that time
-was calculated with legacy BLS scheme. Hence it was impossible to verify the
-merkleroot hash.
-
-To fix these issues a new field `nVersion` was introduced for every entry in
-`mnlistdiff` p2p message. This field indicates which BLS scheme should be used
-when deserialising the message - legacy or basic. `nVersion` of the `mnlistdiff`
-message itself will no longer indicate the scheme and must always be set to `1`.
-
-## Improve mixing support on light clients
-
-Recent changes to `dsq` and `dstx` messages allowed mobile clients that get
-masternode lists from `mnlistdiff` message to determine the masternode related
-to these messages because the `proTxHash` was used instead of the
-`masternodeOutpoint`. Once the v19 Hard Fork activates the signature of `dsq`
-and `dstx` messages will be based on the `proTxHash` which should make it
-possible for mobile clients to verify it.
-
-## Allow keeping Chainlocks enabled without signing new ones
-
-Before this version Chainlocks were either enabled or disabled. Starting with
-this version it's possible to set `SPORK_19_CHAINLOCKS_ENABLED` to a non-zero
-value to disable the signing of new Chainlocks while still enforcing the best
-known one.
-
-## Other changes
-
-There were a few other minor changes too, specifically:
-- reindex on DB corruption should now start properly in Qt
-- a mnemonic passphrase longer than 256 symbols no longer crashes the wallet
-- a Qt node running with `-disablewawllet` flag should not crash in Settings now
-- `-masternodeblsprivkey` and `-sporkkey` values are no longer printed in
-`debug.log`
-- should use less memory in the long run comparing to older versions
-- gmp library detection should work better on macos
-- fixed a couple of typos
-
-# v19.2.0 Change log
-
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v19.1.0...dashpay:v19.2.0).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v19.0.0...dashpay:v19.1.0).
 
 # Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- Kittywhiskers Van Gogh (kittywhiskers)
 - Konstantin Akimov (knst)
-- Nathan Marley (nmarley)
+- Odysseas Gabrielides (ogabrielides)
+- Oleg Girko (OlegGirko)
 - PastaPastaPasta
 - thephez
 - UdjinM6
+- Vijay Das Manikpuri (vijaydasmp)
 
-As well as everyone that submitted issues, reviewed pull requests and helped
-debug the release candidates.
+As well as everyone that submitted issues, reviewed pull requests, helped debug the release candidates, and write DIPs that were implemented in this release.
 
 # Older releases
 
@@ -146,7 +89,6 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v19.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-19.0.0.md) released May/22/2023
 - [v19.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-19.0.0.md) released Apr/14/2023
 - [v18.2.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.2.2.md) released Mar/21/2023
 - [v18.2.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-18.2.1.md) released Jan/17/2023
