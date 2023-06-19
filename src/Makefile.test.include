@@ -210,6 +210,7 @@ SYSCOIN_TESTS += wallet/test/db_tests.cpp
 endif
 
 FUZZ_WALLET_SRC = \
+ wallet/test/fuzz/coincontrol.cpp \
  wallet/test/fuzz/coinselection.cpp \
  wallet/test/fuzz/fees.cpp \
  wallet/test/fuzz/parse_iso8601.cpp
