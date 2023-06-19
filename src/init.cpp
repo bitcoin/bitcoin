@@ -281,12 +281,16 @@ void Shutdown(NodeContext& node)
     node.addrman.reset();
     node.netgroupman.reset();
 
-    if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
-        DumpMempool(*node.mempool, MempoolPath(*node.args));
+    CAmount mempool_min_fee{0};
+    if (node.mempool) {
+        mempool_min_fee = node.mempool->GetMempoolMinFee();
+        if (node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
+            DumpMempool(*node.mempool, MempoolPath(*node.args));
+        }
     }
 
-    // Drop transactions we were still watching, and record fee estimations.
-    if (node.fee_estimator) node.fee_estimator->Flush();
+    // Drop transactions we were still watching, record fee estimations and mempool minimum fee.
+    if (node.fee_estimator) node.fee_estimator->Flush(mempool_min_fee);
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
@@ -1240,10 +1244,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
         }
         node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);
-
-        // Flush estimates to disk periodically
-        CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
-        node.scheduler->scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
     }
 
     // Check port numbers
@@ -1564,6 +1564,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return InitError(error);
             }
         }
+    }
+    if (node.mempool && node.fee_estimator) {
+        // Flush fee estimates and Mempool minimum fee to disk periodically
+        CTxMemPool* mempool = node.mempool.get();
+        node.scheduler->scheduleEvery([mempool] { mempool->FlushFeeEstimatesAndMempoolMinFee(); }, FEE_FLUSH_INTERVAL);
     }
 
     // As LoadBlockIndex can take several minutes, it's possible the user

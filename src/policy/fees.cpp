@@ -553,9 +553,9 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
         return;
     }
 
-    std::chrono::hours file_age = GetFeeEstimatorFileAge();
-    if (file_age > MAX_FILE_AGE && !read_stale_estimates) {
-        LogPrintf("Fee estimation file %s too old (age=%lld > %lld hours) and will not be used to avoid serving stale estimates.\n", fs::PathToString(m_estimation_filepath), Ticks<std::chrono::hours>(file_age), Ticks<std::chrono::hours>(MAX_FILE_AGE));
+    fee_estimates_age = GetFeeEstimatorFileAge();
+    if (fee_estimates_age > MAX_FILE_AGE && !read_stale_estimates) {
+        LogPrintf("Fee estimation file %s too old (age=%lld > %lld hours) and will not be used to avoid serving stale estimates.\n", fs::PathToString(m_estimation_filepath), Ticks<std::chrono::hours>(fee_estimates_age), Ticks<std::chrono::hours>(MAX_FILE_AGE));
         return;
     }
 
@@ -913,13 +913,15 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     return CFeeRate(llround(median));
 }
 
-void CBlockPolicyEstimator::Flush() {
+void CBlockPolicyEstimator::Flush(const CAmount& mempool_min_fee)
+{
     FlushUnconfirmed();
-    FlushFeeEstimates();
+    FlushFeeEstimates(mempool_min_fee);
 }
 
-void CBlockPolicyEstimator::FlushFeeEstimates()
+void CBlockPolicyEstimator::FlushFeeEstimates(const CAmount& mempool_min_fee)
 {
+    m_mempool_min_fee = mempool_min_fee;
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
@@ -945,6 +947,11 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
         feeStats->Write(fileout);
         shortStats->Write(fileout);
         longStats->Write(fileout);
+
+        if (m_mempool_min_fee > 0) {
+            fileout << m_mempool_min_fee;
+            LogPrintf("Mempool minimum fee flushed to %s.\n", fs::PathToString(m_estimation_filepath.filename()));
+        }
     }
     catch (const std::exception&) {
         LogPrintf("CBlockPolicyEstimator::Write(): unable to write policy estimator data (non-fatal)\n");
@@ -1006,6 +1013,20 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
             nBestSeenHeight = nFileBestSeenHeight;
             historicalFirst = nFileHistoricalFirst;
             historicalBest = nFileHistoricalBest;
+
+            if (fee_estimates_age > MAX_MEMPOOL_MIN_FEE_AGE) {
+                LogPrintf("Mempool minimum fee from %s too old (age=%lld > %lld hour) and will not be used.\n", fs::PathToString(m_estimation_filepath.filename()), Ticks<std::chrono::hours>(fee_estimates_age), Ticks<std::chrono::hours>(MAX_MEMPOOL_MIN_FEE_AGE));
+                return true;
+            }
+            CAmount mempool_min_fee;
+            filein >> mempool_min_fee;
+            // Ensure that the Mempool minimum fee is not corrupt
+            if (mempool_min_fee < 0) {
+                LogPrintf("Mempool minimum fee corrupt. \n");
+                return true;
+            }
+            m_mempool_min_fee = mempool_min_fee;
+            LogPrintf("Mempool minimum fee read from %s. \n", fs::PathToString(m_estimation_filepath.filename()));
         }
     }
     catch (const std::exception& e) {

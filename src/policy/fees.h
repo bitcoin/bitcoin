@@ -34,6 +34,9 @@ static constexpr std::chrono::hours MAX_FILE_AGE{60};
 // Whether we allow importing a fee_estimates file older than MAX_FILE_AGE.
 static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
 
+// Mempool minimum fee whose age is more 1 hour will be ignored.
+static constexpr std::chrono::hours MAX_MEMPOOL_MIN_FEE_AGE{1};
+
 class AutoFile;
 class CTxMemPoolEntry;
 class TxConfirmStats;
@@ -195,6 +198,11 @@ private:
     static constexpr double FEE_SPACING = 1.05;
 
     const fs::path m_estimation_filepath;
+
+    CAmount m_mempool_min_fee{0};
+
+    std::chrono::hours fee_estimates_age;
+
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates);
@@ -233,11 +241,11 @@ public:
                             EstimationResult* result = nullptr) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
-    /** Write estimation data to a file */
+    /** Write estimation and mempool minimum fee data to a file */
     bool Write(AutoFile& fileout) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
-    /** Read estimation data from a file */
+    /** Read estimation and mempool minimum fee data from a file */
     bool Read(AutoFile& filein)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
@@ -249,16 +257,22 @@ public:
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
-    /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
-    void Flush()
+    /** Drop still unconfirmed transactions and record current estimations and mempool minimum fee, if the fee estimation file is present. */
+    void Flush(const CAmount& mempool_min_fee)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
-    /** Record current fee estimations. */
-    void FlushFeeEstimates()
+    /** Record current fee estimations and mempool minimum fee. */
+    void FlushFeeEstimates(const CAmount& mempool_min_fee)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Calculates the age of the file, since last modified */
     std::chrono::hours GetFeeEstimatorFileAge();
+
+    /** Return the mempool minimum fee read from file */
+    CAmount GetReadMempoolMinfee() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator)
+    {
+        return m_mempool_min_fee;
+    }
 
 private:
     mutable Mutex m_cs_fee_estimator;

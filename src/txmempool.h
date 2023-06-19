@@ -734,6 +734,13 @@ public:
         return m_sequence_number;
     }
 
+    /** Flush fee estimates and mempool minimum fee to file */
+    void FlushFeeEstimatesAndMempoolMinFee() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    void SetMempoolMinFee() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    CAmount GetMempoolMinFee() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
 private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the

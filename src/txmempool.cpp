@@ -414,6 +414,32 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_full_rbf{opts.full_rbf},
       m_limits{opts.limits}
 {
+    if (opts.is_min_relay_feerate_set) {
+        LogPrintf("minrelaytxfee fee has been set, will be used as mempool minimum fee.\n");
+        return;
+    }
+    SetMempoolMinFee();
+}
+
+void CTxMemPool::FlushFeeEstimatesAndMempoolMinFee() const
+{
+    CAmount mempool_min_fee = GetMempoolMinFee();
+    minerPolicyEstimator->FlushFeeEstimates(mempool_min_fee);
+}
+
+void CTxMemPool::SetMempoolMinFee() const
+{
+    LOCK(cs);
+    if (minerPolicyEstimator != nullptr) {
+        CAmount mempool_min_fee = minerPolicyEstimator->GetReadMempoolMinfee();
+        rollingMinimumFeeRate = std::max(mempool_min_fee, GetMinFee().GetFeePerK());
+    }
+}
+
+CAmount CTxMemPool::GetMempoolMinFee() const
+{
+    LOCK(cs);
+    return std::max(GetMinFee(), m_min_relay_feerate).GetFeePerK();
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
