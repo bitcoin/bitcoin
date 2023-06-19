@@ -309,6 +309,7 @@ BASE_SCRIPTS = [
     'wallet_encryption.py --descriptors',
     'feature_dersig.py',
     'feature_cltv.py',
+    'feature_mempool_min_fee_persist.py --descriptors',
     'rpc_uptime.py',
     'feature_discover.py',
     'wallet_resendwallettransactions.py --legacy-wallet',
