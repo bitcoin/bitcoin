@@ -115,8 +115,10 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v19.1.0...
 
 Thanks to everyone who directly contributed to this release:
 
+- Kittywhiskers Van Gogh (kittywhiskers)
 - Konstantin Akimov (knst)
 - Nathan Marley (nmarley)
+- Odysseas Gabrielides (ogabrielides)
 - PastaPastaPasta
 - thephez
 - UdjinM6
