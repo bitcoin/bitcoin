@@ -200,7 +200,9 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         const char* argv_test[] = {"bitcoind", "-loglevel=debug"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
-        init::SetLoggingLevel(args);
+
+        auto result = init::SetLoggingLevel(args);
+        BOOST_REQUIRE(result);
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
     }
 
@@ -212,7 +214,9 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         const char* argv_test[] = {"bitcoind", "-loglevel=net:trace"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
-        init::SetLoggingLevel(args);
+
+        auto result = init::SetLoggingLevel(args);
+        BOOST_REQUIRE(result);
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::DEFAULT_LOG_LEVEL);
 
         const auto& category_levels{LogInstance().CategoryLevels()};
@@ -229,7 +233,9 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:trace", "-loglevel=http:info"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(4, argv_test, err));
-        init::SetLoggingLevel(args);
+
+        auto result = init::SetLoggingLevel(args);
+        BOOST_REQUIRE(result);
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
 
         const auto& category_levels{LogInstance().CategoryLevels()};
