@@ -179,9 +179,9 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimit
         staged_ancestors.erase(stage);
         totalSizeWithAncestors += stageit->GetTxSize();
 
-        if (stageit->GetSizeWithDescendants() + entry_size > static_cast<uint64_t>(limits.descendant_size_vbytes)) {
+        if (static_cast<uint64_t>(stageit->GetSizeWithDescendants() + entry_size) > static_cast<uint64_t>(limits.descendant_size_vbytes)) {
             return util::Error{Untranslated(strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_size_vbytes))};
-        } else if (stageit->GetCountWithDescendants() + entry_count > static_cast<uint64_t>(limits.descendant_count)) {
+        } else if (static_cast<uint64_t>(stageit->GetCountWithDescendants() + entry_count) > static_cast<uint64_t>(limits.descendant_count)) {
             return util::Error{Untranslated(strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_count))};
         } else if (totalSizeWithAncestors > static_cast<uint64_t>(limits.ancestor_size_vbytes)) {
             return util::Error{Untranslated(strprintf("exceeds ancestor size limit [limit: %u]", limits.ancestor_size_vbytes))};
