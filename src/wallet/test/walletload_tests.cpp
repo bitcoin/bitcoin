@@ -20,7 +20,7 @@ public:
     explicit DummyDescriptor(const std::string& descriptor) : desc(descriptor) {};
     ~DummyDescriptor() = default;
 
-    std::string ToString() const override { return desc; }
+    std::string ToString(bool compat_format) const override { return desc; }
     std::optional<OutputType> GetOutputType() const override { return OutputType::UNKNOWN; }
 
     bool IsRange() const override { return false; }
