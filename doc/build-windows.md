@@ -41,7 +41,7 @@ To install WSL on Windows 10 with Fall Creators Update installed (version >= 162
   * Open Microsoft Store and search for "Ubuntu 20.04" or use [this link](https://www.microsoft.com/store/productId/9MTTCL66CPXJ)
   * Click Install
 3. Complete Installation
-  * Open a cmd prompt and type "Ubuntu1804"
+  * Open a cmd prompt and type "Ubuntu2004"
   * Create a new UNIX user account (this is a separate account from your Windows account)
 
 After the bash shell is active, you can follow the instructions below, starting
