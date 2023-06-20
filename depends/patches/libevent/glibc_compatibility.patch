@@ -1,0 +1,14 @@
+Avoid getrandom@GLIBC_2.25 symbol.
+
+--- old/config.h.in
++++ new/config.h.in
+@@ -101,9 +101,6 @@
+ /* Define to 1 if you have the `getprotobynumber' function. */
+ #undef HAVE_GETPROTOBYNUMBER
+ 
+-/* Define to 1 if you have the `getrandom' function. */
+-#undef HAVE_GETRANDOM
+-
+ /* Define to 1 if you have the `getservbyname' function. */
+ #undef HAVE_GETSERVBYNAME
+ 
