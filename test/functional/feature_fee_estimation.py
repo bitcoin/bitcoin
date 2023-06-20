@@ -421,7 +421,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Restarting node with fresh estimation")
         self.stop_node(0)
-        fee_dat = os.path.join(self.nodes[0].datadir, self.chain, "fee_estimates.dat")
+        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
         os.remove(fee_dat)
         self.start_node(0)
         self.connect_nodes(0, 1)
