@@ -31,7 +31,7 @@ void initialize_policy_estimator()
 FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args)};
+    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
