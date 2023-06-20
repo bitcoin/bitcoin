@@ -101,7 +101,14 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)AreInputsStandard(tx, coins_view_cache);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
-    UniValue u(UniValue::VOBJ);
-    TxToUniv(tx, /*block_hash=*/uint256::ZERO, /*entry=*/u);
-    TxToUniv(tx, /*block_hash=*/uint256::ONE, /*entry=*/u);
+    if (tx.GetTotalSize() < 250'000) { // Avoid high memory usage (with msan) due to json encoding
+        {
+            UniValue u{UniValue::VOBJ};
+            TxToUniv(tx, /*block_hash=*/uint256::ZERO, /*entry=*/u);
+        }
+        {
+            UniValue u{UniValue::VOBJ};
+            TxToUniv(tx, /*block_hash=*/uint256::ONE, /*entry=*/u);
+        }
+    }
 }
