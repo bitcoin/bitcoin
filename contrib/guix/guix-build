@@ -121,7 +121,7 @@ else
 fi
 
 ################
-# When building for darwin, the macOS SDK should exists
+# When building for darwin, the macOS SDK should exist
 ################
 
 for host in $HOSTS; do
@@ -130,6 +130,7 @@ for host in $HOSTS; do
             OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=@@g')"
             if [ -e "$OSX_SDK" ]; then
                 echo "Found macOS SDK at '${OSX_SDK}', using..."
+                break
             else
                 echo "macOS SDK does not exist at '${OSX_SDK}', please place the extracted, untarred SDK there to perform darwin builds, exiting..."
                 exit 1
