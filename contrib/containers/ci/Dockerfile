@@ -33,13 +33,32 @@ RUN apt-get update && apt-get install $APT_ARGS \
     libtool \
     m4 \
     pkg-config \
-    python3 \
-    python3-dev \
-    python3-pip \
-    python3-setuptools \
     zlib1g-dev
 
-# Python stuff
+# Python setup
+# PYTHON_VERSION should match the value in .python-version
+ARG PYTHON_VERSION=3.8.16
+RUN apt-get update && apt-get install $APT_ARGS \
+    ca-certificates \
+    libbz2-dev \
+    libffi-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    llvm \
+    make \
+    tk-dev \
+    xz-utils
+ENV PYENV_ROOT "/usr/local/pyenv"
+ENV PATH "${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
+RUN curl https://pyenv.run | bash \
+    && pyenv update \
+    && pyenv install $PYTHON_VERSION \
+    && pyenv global $PYTHON_VERSION \
+    && pyenv rehash
 RUN pip3 install \
     codespell==1.17.1 \
     flake8==3.8.3 \
