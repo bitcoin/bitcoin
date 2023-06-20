@@ -56,7 +56,7 @@ FUZZ_TARGET_INIT(wallet_fees, initialize_setup)
         coin_control.m_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     }
     if (fuzzed_data_provider.ConsumeBool()) {
-        coin_control.m_confirm_target = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+        coin_control.m_confirm_target = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 999'000);
     }
 
     FeeCalculation fee_calculation;
