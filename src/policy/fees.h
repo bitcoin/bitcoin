@@ -14,11 +14,24 @@
 #include <util/fs.h>
 
 #include <array>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
+
+
+// How often to flush fee estimates to fee_estimates.dat.
+static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
+
+/** fee_estimates.dat that are more than 60 hours (2.5 days) will not be read,
+ * as the estimates in the file are stale.
+ */
+static constexpr std::chrono::hours MAX_FILE_AGE{60};
+
+// Whether we allow importing a fee_estimates file older than MAX_FILE_AGE.
+static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
 
 class AutoFile;
 class CTxMemPoolEntry;
@@ -183,7 +196,7 @@ private:
     const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const fs::path& estimation_filepath);
+    CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates);
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
@@ -238,6 +251,13 @@ public:
     /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
     void Flush()
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
+
+    /** Record current fee estimations. */
+    void FlushFeeEstimates()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
+
+    /** Calculates the age of the file, since last modified */
+    std::chrono::hours GetFeeEstimatorFileAge();
 
 private:
     mutable Mutex m_cs_fee_estimator;
