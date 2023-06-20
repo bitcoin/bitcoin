@@ -55,6 +55,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
 
   update-alternatives --install /usr/bin/clang++ clang++ "${BASE_SCRATCH_DIR}"/msan/clang_build/bin/clang++ 100
   update-alternatives --install /usr/bin/clang clang "${BASE_SCRATCH_DIR}"/msan/clang_build/bin/clang 100
+  update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer "${BASE_SCRATCH_DIR}"/msan/clang_build/bin/llvm-symbolizer 100
 
   cmake -G Ninja -B "${BASE_SCRATCH_DIR}"/msan/cxx_build/ -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' \
                                                           -DCMAKE_BUILD_TYPE=Release \
