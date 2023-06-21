@@ -292,6 +292,15 @@ BOOST_AUTO_TEST_CASE(class_methods)
     CDataStream ss2(SER_DISK, PROTOCOL_VERSION, intval, boolval, stringval, charstrval, txval);
     ss2 >> methodtest3;
     BOOST_CHECK(methodtest3 == methodtest4);
+    {
+        DataStream ds;
+        const std::string in{"ab"};
+        ds << Span{in};
+        std::array<std::byte, 2> out;
+        ds >> Span{out};
+        BOOST_CHECK_EQUAL(out.at(0), std::byte{'a'});
+        BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
