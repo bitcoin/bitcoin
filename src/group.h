@@ -51,6 +51,12 @@ static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const se
  *  for Y. Return value indicates whether the result is valid. */
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd);
 
+/** Determine whether x is a valid X coordinate on the curve. */
+static int secp256k1_ge_x_on_curve_var(const secp256k1_fe *x);
+
+/** Determine whether fraction xn/xd is a valid X coordinate on the curve (xd != 0). */
+static int secp256k1_ge_x_frac_on_curve_var(const secp256k1_fe *xn, const secp256k1_fe *xd);
+
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_ge_is_infinity(const secp256k1_ge *a);
 
@@ -163,5 +169,11 @@ static void secp256k1_gej_rescale(secp256k1_gej *r, const secp256k1_fe *b);
  * function checks whether a point that is on the curve is in fact also in that subgroup.
  */
 static int secp256k1_ge_is_in_correct_subgroup(const secp256k1_ge* ge);
+
+/** Check invariants on an affine group element (no-op unless VERIFY is enabled). */
+static void secp256k1_ge_verify(const secp256k1_ge *a);
+
+/** Check invariants on a Jacobian group element (no-op unless VERIFY is enabled). */
+static void secp256k1_gej_verify(const secp256k1_gej *a);
 
 #endif /* SECP256K1_GROUP_H */

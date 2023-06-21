@@ -279,9 +279,6 @@ static void secp256k1_ecmult_strauss_wnaf(const struct secp256k1_strauss_state *
          */
         tmp = a[np];
         if (no) {
-#ifdef VERIFY
-            secp256k1_fe_normalize_var(&Z);
-#endif
             secp256k1_gej_rescale(&tmp, &Z);
         }
         secp256k1_ecmult_odd_multiples_table(ECMULT_TABLE_SIZE(WINDOW_A), state->pre_a + no * ECMULT_TABLE_SIZE(WINDOW_A), state->aux + no * ECMULT_TABLE_SIZE(WINDOW_A), &Z, &tmp);
@@ -683,7 +680,7 @@ static int secp256k1_ecmult_pippenger_batch(const secp256k1_callback* error_call
     }
     state_space->ps = (struct secp256k1_pippenger_point_state *) secp256k1_scratch_alloc(error_callback, scratch, entries * sizeof(*state_space->ps));
     state_space->wnaf_na = (int *) secp256k1_scratch_alloc(error_callback, scratch, entries*(WNAF_SIZE(bucket_window+1)) * sizeof(int));
-    buckets = (secp256k1_gej *) secp256k1_scratch_alloc(error_callback, scratch, (1<<bucket_window) * sizeof(*buckets));
+    buckets = (secp256k1_gej *) secp256k1_scratch_alloc(error_callback, scratch, ((size_t)1 << bucket_window) * sizeof(*buckets));
     if (state_space->ps == NULL || state_space->wnaf_na == NULL || buckets == NULL) {
         secp256k1_scratch_apply_checkpoint(error_callback, scratch, scratch_checkpoint);
         return 0;
@@ -773,14 +770,12 @@ static size_t secp256k1_pippenger_max_points(const secp256k1_callback* error_cal
  * require a scratch space */
 static int secp256k1_ecmult_multi_simple_var(secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n_points) {
     size_t point_idx;
-    secp256k1_scalar szero;
     secp256k1_gej tmpj;
 
-    secp256k1_scalar_set_int(&szero, 0);
     secp256k1_gej_set_infinity(r);
     secp256k1_gej_set_infinity(&tmpj);
     /* r = inp_g_sc*G */
-    secp256k1_ecmult(r, &tmpj, &szero, inp_g_sc);
+    secp256k1_ecmult(r, &tmpj, &secp256k1_scalar_zero, inp_g_sc);
     for (point_idx = 0; point_idx < n_points; point_idx++) {
         secp256k1_ge point;
         secp256k1_gej pointj;
@@ -828,9 +823,7 @@ static int secp256k1_ecmult_multi_var(const secp256k1_callback* error_callback, 
     if (inp_g_sc == NULL && n == 0) {
         return 1;
     } else if (n == 0) {
-        secp256k1_scalar szero;
-        secp256k1_scalar_set_int(&szero, 0);
-        secp256k1_ecmult(r, r, &szero, inp_g_sc);
+        secp256k1_ecmult(r, r, &secp256k1_scalar_zero, inp_g_sc);
         return 1;
     }
     if (scratch == NULL) {
