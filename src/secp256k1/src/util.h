@@ -7,6 +7,8 @@
 #ifndef SECP256K1_UTIL_H
 #define SECP256K1_UTIL_H
 
+#include "../include/secp256k1.h"
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,6 +18,38 @@
 #define STR(x) STR_(x)
 #define DEBUG_CONFIG_MSG(x) "DEBUG_CONFIG: " x
 #define DEBUG_CONFIG_DEF(x) DEBUG_CONFIG_MSG(#x "=" STR(x))
+
+/* Debug helper for printing arrays of unsigned char. */
+#define PRINT_BUF(buf, len) do { \
+    printf("%s[%lu] = ", #buf, (unsigned long)len); \
+    print_buf_plain(buf, len); \
+} while(0)
+
+static void print_buf_plain(const unsigned char *buf, size_t len) {
+    size_t i;
+    printf("{");
+    for (i = 0; i < len; i++) {
+        if (i % 8 == 0) {
+            printf("\n    ");
+        } else {
+            printf(" ");
+        }
+        printf("0x%02X,", buf[i]);
+    }
+    printf("\n}\n");
+}
+
+# if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
+#  if SECP256K1_GNUC_PREREQ(2,7)
+#   define SECP256K1_INLINE __inline__
+#  elif (defined(_MSC_VER))
+#   define SECP256K1_INLINE __inline
+#  else
+#   define SECP256K1_INLINE
+#  endif
+# else
+#  define SECP256K1_INLINE inline
+# endif
 
 typedef struct {
     void (*fn)(const char *text, void* data);
@@ -317,6 +351,30 @@ SECP256K1_INLINE static void secp256k1_write_be32(unsigned char* p, uint32_t x) 
     p[2] = x >>  8;
     p[1] = x >> 16;
     p[0] = x >> 24;
+}
+
+/* Read a uint64_t in big endian */
+SECP256K1_INLINE static uint64_t secp256k1_read_be64(const unsigned char* p) {
+    return (uint64_t)p[0] << 56 |
+           (uint64_t)p[1] << 48 |
+           (uint64_t)p[2] << 40 |
+           (uint64_t)p[3] << 32 |
+           (uint64_t)p[4] << 24 |
+           (uint64_t)p[5] << 16 |
+           (uint64_t)p[6] << 8  |
+           (uint64_t)p[7];
+}
+
+/* Write a uint64_t in big endian */
+SECP256K1_INLINE static void secp256k1_write_be64(unsigned char* p, uint64_t x) {
+    p[7] = x;
+    p[6] = x >>  8;
+    p[5] = x >> 16;
+    p[4] = x >> 24;
+    p[3] = x >> 32;
+    p[2] = x >> 40;
+    p[1] = x >> 48;
+    p[0] = x >> 56;
 }
 
 #endif /* SECP256K1_UTIL_H */

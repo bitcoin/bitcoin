@@ -15,7 +15,7 @@
 #if (defined(_MSC_VER) && _MSC_VER >= 1900)
 #  include <time.h>
 #else
-#  include "sys/time.h"
+#  include <sys/time.h>
 #endif
 
 static int64_t gettime_i64(void) {

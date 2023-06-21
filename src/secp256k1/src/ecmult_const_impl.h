@@ -29,7 +29,7 @@ static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(secp256k1_ge *p
 #define ECMULT_CONST_TABLE_GET_GE(r,pre,n,w) do { \
     int m = 0; \
     /* Extract the sign-bit for a constant time absolute-value. */ \
-    int mask = (n) >> (sizeof(n) * CHAR_BIT - 1); \
+    int volatile mask = (n) >> (sizeof(n) * CHAR_BIT - 1); \
     int abs_n = ((n) + mask) ^ mask; \
     int idx_n = abs_n >> 1; \
     secp256k1_fe neg_y; \
@@ -130,7 +130,7 @@ static int secp256k1_wnaf_const(int *wnaf, const secp256k1_scalar *scalar, int w
     return skew;
 }
 
-static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, const secp256k1_scalar *scalar, int size) {
+static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, const secp256k1_scalar *scalar) {
     secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
     secp256k1_ge tmpa;
     secp256k1_fe Z;
@@ -144,19 +144,16 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
 
     int i;
 
-    /* build wnaf representation for q. */
-    int rsize = size;
-    if (size > 128) {
-        rsize = 128;
-        /* split q into q_1 and q_lam (where q = q_1 + q_lam*lambda, and q_1 and q_lam are ~128 bit) */
-        secp256k1_scalar_split_lambda(&q_1, &q_lam, scalar);
-        skew_1   = secp256k1_wnaf_const(wnaf_1,   &q_1,   WINDOW_A - 1, 128);
-        skew_lam = secp256k1_wnaf_const(wnaf_lam, &q_lam, WINDOW_A - 1, 128);
-    } else
-    {
-        skew_1   = secp256k1_wnaf_const(wnaf_1, scalar, WINDOW_A - 1, size);
-        skew_lam = 0;
+    if (secp256k1_ge_is_infinity(a)) {
+        secp256k1_gej_set_infinity(r);
+        return;
     }
+
+    /* build wnaf representation for q. */
+    /* split q into q_1 and q_lam (where q = q_1 + q_lam*lambda, and q_1 and q_lam are ~128 bit) */
+    secp256k1_scalar_split_lambda(&q_1, &q_lam, scalar);
+    skew_1   = secp256k1_wnaf_const(wnaf_1,   &q_1,   WINDOW_A - 1, 128);
+    skew_lam = secp256k1_wnaf_const(wnaf_lam, &q_lam, WINDOW_A - 1, 128);
 
     /* Calculate odd multiples of a.
      * All multiples are brought to the same Z 'denominator', which is stored
@@ -170,28 +167,23 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
     for (i = 0; i < ECMULT_TABLE_SIZE(WINDOW_A); i++) {
         secp256k1_fe_normalize_weak(&pre_a[i].y);
     }
-    if (size > 128) {
-        for (i = 0; i < ECMULT_TABLE_SIZE(WINDOW_A); i++) {
-            secp256k1_ge_mul_lambda(&pre_a_lam[i], &pre_a[i]);
-        }
-
+    for (i = 0; i < ECMULT_TABLE_SIZE(WINDOW_A); i++) {
+        secp256k1_ge_mul_lambda(&pre_a_lam[i], &pre_a[i]);
     }
 
     /* first loop iteration (separated out so we can directly set r, rather
      * than having it start at infinity, get doubled several times, then have
      * its new value added to it) */
-    i = wnaf_1[WNAF_SIZE_BITS(rsize, WINDOW_A - 1)];
+    i = wnaf_1[WNAF_SIZE_BITS(128, WINDOW_A - 1)];
     VERIFY_CHECK(i != 0);
     ECMULT_CONST_TABLE_GET_GE(&tmpa, pre_a, i, WINDOW_A);
     secp256k1_gej_set_ge(r, &tmpa);
-    if (size > 128) {
-        i = wnaf_lam[WNAF_SIZE_BITS(rsize, WINDOW_A - 1)];
-        VERIFY_CHECK(i != 0);
-        ECMULT_CONST_TABLE_GET_GE(&tmpa, pre_a_lam, i, WINDOW_A);
-        secp256k1_gej_add_ge(r, r, &tmpa);
-    }
+    i = wnaf_lam[WNAF_SIZE_BITS(128, WINDOW_A - 1)];
+    VERIFY_CHECK(i != 0);
+    ECMULT_CONST_TABLE_GET_GE(&tmpa, pre_a_lam, i, WINDOW_A);
+    secp256k1_gej_add_ge(r, r, &tmpa);
     /* remaining loop iterations */
-    for (i = WNAF_SIZE_BITS(rsize, WINDOW_A - 1) - 1; i >= 0; i--) {
+    for (i = WNAF_SIZE_BITS(128, WINDOW_A - 1) - 1; i >= 0; i--) {
         int n;
         int j;
         for (j = 0; j < WINDOW_A - 1; ++j) {
@@ -202,12 +194,10 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
         ECMULT_CONST_TABLE_GET_GE(&tmpa, pre_a, n, WINDOW_A);
         VERIFY_CHECK(n != 0);
         secp256k1_gej_add_ge(r, r, &tmpa);
-        if (size > 128) {
-            n = wnaf_lam[i];
-            ECMULT_CONST_TABLE_GET_GE(&tmpa, pre_a_lam, n, WINDOW_A);
-            VERIFY_CHECK(n != 0);
-            secp256k1_gej_add_ge(r, r, &tmpa);
-        }
+        n = wnaf_lam[i];
+        ECMULT_CONST_TABLE_GET_GE(&tmpa, pre_a_lam, n, WINDOW_A);
+        VERIFY_CHECK(n != 0);
+        secp256k1_gej_add_ge(r, r, &tmpa);
     }
 
     {
@@ -218,17 +208,15 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
         secp256k1_gej_add_ge(&tmpj, r, &tmpa);
         secp256k1_gej_cmov(r, &tmpj, skew_1);
 
-        if (size > 128) {
-            secp256k1_ge_neg(&tmpa, &pre_a_lam[0]);
-            secp256k1_gej_add_ge(&tmpj, r, &tmpa);
-            secp256k1_gej_cmov(r, &tmpj, skew_lam);
-        }
+        secp256k1_ge_neg(&tmpa, &pre_a_lam[0]);
+        secp256k1_gej_add_ge(&tmpj, r, &tmpa);
+        secp256k1_gej_cmov(r, &tmpj, skew_lam);
     }
 
     secp256k1_fe_mul(&r->z, &r->z, &Z);
 }
 
-static int secp256k1_ecmult_const_xonly(secp256k1_fe* r, const secp256k1_fe *n, const secp256k1_fe *d, const secp256k1_scalar *q, int bits, int known_on_curve) {
+static int secp256k1_ecmult_const_xonly(secp256k1_fe* r, const secp256k1_fe *n, const secp256k1_fe *d, const secp256k1_scalar *q, int known_on_curve) {
 
     /* This algorithm is a generalization of Peter Dettman's technique for
      * avoiding the square root in a random-basepoint x-only multiplication
@@ -346,7 +334,7 @@ static int secp256k1_ecmult_const_xonly(secp256k1_fe* r, const secp256k1_fe *n, 
 #ifdef VERIFY
     VERIFY_CHECK(!secp256k1_scalar_is_zero(q));
 #endif
-    secp256k1_ecmult_const(&rj, &p, q, bits);
+    secp256k1_ecmult_const(&rj, &p, q);
 #ifdef VERIFY
     VERIFY_CHECK(!secp256k1_gej_is_infinity(&rj));
 #endif
