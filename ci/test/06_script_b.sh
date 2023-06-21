@@ -170,5 +170,5 @@ if [ "${RUN_TIDY}" = "true" ]; then
 fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
-  bash -c "LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN}"
+  bash -c "LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN} --empty_min_time=60"
 fi
