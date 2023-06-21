@@ -8,7 +8,7 @@ from decimal import Decimal
 from itertools import product
 
 from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey, H_POINT
+from test_framework.key import H_POINT
 from test_framework.messages import (
     COutPoint,
     CTransaction,
@@ -43,8 +43,8 @@ from test_framework.util import (
     random_bytes,
 )
 from test_framework.wallet_util import (
-    bytes_to_wif,
-    get_generate_key
+    generate_keypair,
+    get_generate_key,
 )
 
 import json
@@ -710,9 +710,7 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("Test that we can fund psbts with external inputs specified")
 
-        eckey = ECKey()
-        eckey.generate()
-        privkey = bytes_to_wif(eckey.get_bytes())
+        privkey, _ = generate_keypair(wif=True)
 
         self.nodes[1].createwallet("extfund")
         wallet = self.nodes[1].get_wallet_rpc("extfund")
@@ -825,11 +823,9 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name="scriptwatchonly", disable_private_keys=True)
         watchonly = self.nodes[1].get_wallet_rpc("scriptwatchonly")
 
-        eckey = ECKey()
-        eckey.generate()
-        privkey = bytes_to_wif(eckey.get_bytes())
+        privkey, pubkey = generate_keypair(wif=True)
 
-        desc = descsum_create("wsh(pkh({}))".format(eckey.get_pubkey().get_bytes().hex()))
+        desc = descsum_create("wsh(pkh({}))".format(pubkey.hex()))
         if self.options.descriptors:
             res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
@@ -846,11 +842,9 @@ class PSBTTest(BitcoinTestFramework):
 
         # Same test but for taproot
         if self.options.descriptors:
-            eckey = ECKey()
-            eckey.generate()
-            privkey = bytes_to_wif(eckey.get_bytes())
+            privkey, pubkey = generate_keypair(wif=True)
 
-            desc = descsum_create("tr({},pk({}))".format(H_POINT, eckey.get_pubkey().get_bytes().hex()))
+            desc = descsum_create("tr({},pk({}))".format(H_POINT, pubkey.hex()))
             res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
             assert res[0]["success"]
             addr = self.nodes[0].deriveaddresses(desc)[0]

@@ -97,6 +97,7 @@ from test_framework.util import (
     assert_equal,
     random_bytes,
 )
+from test_framework.wallet_util import generate_keypair
 from test_framework.key import (
     generate_privkey,
     compute_xonly_pubkey,
@@ -1186,11 +1187,8 @@ def spenders_taproot_active():
 
     # Also add a few legacy spends into the mix, so that transactions which combine taproot and pre-taproot spends get tested too.
     for compressed in [False, True]:
-        eckey1 = ECKey()
-        eckey1.set(generate_privkey(), compressed)
-        pubkey1 = eckey1.get_pubkey().get_bytes()
-        eckey2 = ECKey()
-        eckey2.set(generate_privkey(), compressed)
+        eckey1, pubkey1 = generate_keypair(compressed=compressed)
+        eckey2, _ = generate_keypair(compressed=compressed)
         for p2sh in [False, True]:
             for witv0 in [False, True]:
                 for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:

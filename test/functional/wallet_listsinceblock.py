@@ -7,7 +7,6 @@
 from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
@@ -15,7 +14,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
-from test_framework.wallet_util import bytes_to_wif
+from test_framework.wallet_util import generate_keypair
 
 from decimal import Decimal
 
@@ -202,10 +201,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.sync_all()
 
         # share utxo between nodes[1] and nodes[2]
-        eckey = ECKey()
-        eckey.generate()
-        privkey = bytes_to_wif(eckey.get_bytes())
-        address = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
+        privkey, pubkey = generate_keypair(wif=True)
+        address = key_to_p2wpkh(pubkey)
         self.nodes[2].sendtoaddress(address, 10)
         self.generate(self.nodes[2], 6)
         self.nodes[2].importprivkey(privkey)

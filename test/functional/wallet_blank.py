@@ -10,11 +10,10 @@ from test_framework.address import (
     ADDRESS_BCRT1_UNSPENDABLE,
     ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR,
 )
-from test_framework.key import ECKey
 from test_framework.util import (
     assert_equal,
 )
-from test_framework.wallet_util import bytes_to_wif
+from test_framework.wallet_util import generate_keypair
 
 
 class WalletBlankTest(BitcoinTestFramework):
@@ -50,10 +49,8 @@ class WalletBlankTest(BitcoinTestFramework):
             assert_equal(info["descriptors"], False)
             assert_equal(info["blank"], True)
 
-            eckey = ECKey()
-            eckey.generate(compressed=comp)
-
-            wallet.importpubkey(eckey.get_pubkey().get_bytes().hex())
+            _, pubkey = generate_keypair(compressed=comp)
+            wallet.importpubkey(pubkey.hex())
             assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importprivkey(self):
@@ -67,10 +64,7 @@ class WalletBlankTest(BitcoinTestFramework):
             assert_equal(info["descriptors"], False)
             assert_equal(info["blank"], True)
 
-            eckey = ECKey()
-            eckey.generate(compressed=comp)
-            wif = bytes_to_wif(eckey.get_bytes(), eckey.is_compressed)
-
+            wif, _ = generate_keypair(compressed=comp, wif=True)
             wallet.importprivkey(wif)
             assert_equal(wallet.getwalletinfo()["blank"], False)
 
