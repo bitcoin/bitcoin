@@ -677,11 +677,11 @@ RPCHelpMan getaddressesbylabel()
             CHECK_NONFATAL(unique);
             // UniValue::pushKV checks if the key exists in O(N)
             // and since duplicate addresses are unexpected (checked with
-            // std::set in O(log(N))), UniValue::__pushKV is used instead,
+            // std::set in O(log(N))), UniValue::pushKVEnd is used instead,
             // which currently is O(1).
             UniValue value(UniValue::VOBJ);
             value.pushKV("purpose", _purpose ? PurposeToString(*_purpose) : "unknown");
-            ret.__pushKV(address, value);
+            ret.pushKVEnd(address, value);
         }
     });
 
