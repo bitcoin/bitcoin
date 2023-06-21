@@ -307,6 +307,10 @@ bool BlockManager::LoadBlockIndex()
             pindex->nStatus |= BLOCK_FAILED_CHILD;
             m_dirty_blockindex.insert(pindex);
         }
+        if (!(pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_CONFLICT_CHAINLOCK)) {
+            pindex->nStatus |= BLOCK_CONFLICT_CHAINLOCK;
+            m_dirty_blockindex.insert(pindex);
+        }
         if (pindex->pprev) {
             // SYSCOIN build mapPrevBlockIndex
             m_prev_block_index.emplace(pindex->pprev->GetBlockHash(), pindex);
