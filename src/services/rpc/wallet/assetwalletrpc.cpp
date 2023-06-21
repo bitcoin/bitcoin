@@ -169,7 +169,7 @@ static RPCHelpMan syscoincreatenevmblob()
     int64_t mpt = -1;
     if(pnevmdatadb->ReadMTP(vchVersionHash, mpt) && !bOverwrite) {
         UniValue resObj(UniValue::VOBJ);
-        resObj.__pushKV("versionhash", HexStr(vchVersionHash));
+        resObj.pushKVEnd("versionhash", HexStr(vchVersionHash));
         return resObj;
     }
 
@@ -187,8 +187,8 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!resObj.find_value("txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.__pushKV("versionhash", HexStr(vchVersionHash));
-            resObj.__pushKV("datasize", vchData.size());
+            resObj.pushKVEnd("versionhash", HexStr(vchVersionHash));
+            resObj.pushKVEnd("datasize", vchData.size());
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   

@@ -130,12 +130,12 @@ void CAuxFeeDetails::ToJson(UniValue& value, const uint32_t& nBaseAsset) const {
     UniValue feeStruct(UniValue::VARR);
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeObj(UniValue::VOBJ);
-        auxfeeObj.__pushKV("bound", ValueFromAmount(auxfee.nBound, nBaseAsset));
-        auxfeeObj.__pushKV("percentage", strprintf("%.5f", auxfee.nPercent / 100000.0));
+        auxfeeObj.pushKVEnd("bound", ValueFromAmount(auxfee.nBound, nBaseAsset));
+        auxfeeObj.pushKVEnd("percentage", strprintf("%.5f", auxfee.nPercent / 100000.0));
         feeStruct.push_back(auxfeeObj);
     }
-    value.__pushKV("auxfee_address", vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{vchAuxFeeKeyID})));
-    value.__pushKV("fee_struct", feeStruct);
+    value.pushKVEnd("auxfee_address", vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{vchAuxFeeKeyID})));
+    value.pushKVEnd("fee_struct", feeStruct);
 }
 
 void CNotaryDetails::ToJson(UniValue& value) const {

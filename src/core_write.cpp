@@ -27,9 +27,9 @@
 #include <math.h>
 bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, UniValue &entry) {
     const uint256& txHash = tx.GetHash();
-    entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
-    entry.__pushKV("txid", txHash.GetHex());
-    entry.__pushKV("blockhash", hashBlock.GetHex());  
+    entry.pushKVEnd("txtype", stringFromSyscoinTx(tx.nVersion));
+    entry.pushKVEnd("txid", txHash.GetHex());
+    entry.pushKVEnd("blockhash", hashBlock.GetHex());  
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
    
     for(const auto &it: tx.voutAssets) {
@@ -37,27 +37,27 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint64_t &nAsset = it.key;
         const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-        oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
+        oAssetAllocationReceiversObj.pushKVEnd("asset_guid", UniValue(nAsset).write());
         if(!it.vchNotarySig.empty()) {
-            oAssetAllocationReceiversObj.__pushKV("notary_sig", HexStr(it.vchNotarySig));
+            oAssetAllocationReceiversObj.pushKVEnd("notary_sig", HexStr(it.vchNotarySig));
         }
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
         for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
-            oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
+            oAssetAllocationReceiverOutputObj.pushKVEnd("n", voutAsset.n);
+            oAssetAllocationReceiverOutputObj.pushKVEnd("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
-        oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
+        oAssetAllocationReceiversObj.pushKVEnd("outputs", oAssetAllocationReceiverOutputsArray); 
+        oAssetAllocationReceiversObj.pushKVEnd("total", ValueFromAmount(nTotal, nBaseAsset));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
-    entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+    entry.pushKVEnd("allocations", oAssetAllocationReceiversArray);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM){
          CBurnSyscoin burnSyscoin(tx);
-         entry.__pushKV("nevm_destination", "0x" + HexStr(burnSyscoin.vchNEVMAddress));
+         entry.pushKVEnd("nevm_destination", "0x" + HexStr(burnSyscoin.vchNEVMAddress));
     }
     return true;
 }
@@ -66,40 +66,40 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry) {
     CMintSyscoin mintSyscoin(tx);
     if (!mintSyscoin.IsNull()) {
-        entry.__pushKV("txtype", "assetallocationmint");
-        entry.__pushKV("txid", txHash.GetHex());
-        entry.__pushKV("blockhash", hashBlock.GetHex());  
+        entry.pushKVEnd("txtype", "assetallocationmint");
+        entry.pushKVEnd("txid", txHash.GetHex());
+        entry.pushKVEnd("blockhash", hashBlock.GetHex());  
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txhash", mintSyscoin.nTxHash.GetHex());  
-        oSPVProofObj.__pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
-        oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
-        oSPVProofObj.__pushKV("txroot", mintSyscoin.nTxRoot.GetHex()); 
-        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
-        oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
-        oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt);  
-        oSPVProofObj.__pushKV("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
-        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
-        entry.__pushKV("spv_proof", oSPVProofObj);
+        oSPVProofObj.pushKVEnd("txhash", mintSyscoin.nTxHash.GetHex());  
+        oSPVProofObj.pushKVEnd("blockhash", mintSyscoin.nBlockHash.GetHex());  
+        oSPVProofObj.pushKVEnd("postx", mintSyscoin.posTx);
+        oSPVProofObj.pushKVEnd("txroot", mintSyscoin.nTxRoot.GetHex()); 
+        oSPVProofObj.pushKVEnd("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
+        oSPVProofObj.pushKVEnd("txpath", HexStr(mintSyscoin.vchTxPath)); 
+        oSPVProofObj.pushKVEnd("posReceipt", mintSyscoin.posReceipt);  
+        oSPVProofObj.pushKVEnd("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
+        oSPVProofObj.pushKVEnd("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
+        entry.pushKVEnd("spv_proof", oSPVProofObj);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         for(const auto &it: mintSyscoin.voutAssets) {
             CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             const uint64_t &nAsset = it.key;
             const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-            oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
+            oAssetAllocationReceiversObj.pushKVEnd("asset_guid", UniValue(nAsset).write());
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
             for(const auto& voutAsset: it.values){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
-                oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
+                oAssetAllocationReceiverOutputObj.pushKVEnd("n", voutAsset.n);
+                oAssetAllocationReceiverOutputObj.pushKVEnd("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
-            oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
+            oAssetAllocationReceiversObj.pushKVEnd("outputs", oAssetAllocationReceiverOutputsArray); 
+            oAssetAllocationReceiversObj.pushKVEnd("total", ValueFromAmount(nTotal, nBaseAsset));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
-        entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+        entry.pushKVEnd("allocations", oAssetAllocationReceiversArray);
         return true;
     } 
     return false;
@@ -108,62 +108,62 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 	CAsset asset(tx);
 	if(asset.IsNull())
 		return false;
-    entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
-    entry.__pushKV("txid", tx.GetHash().GetHex());  
-    entry.__pushKV("blockhash", hashBlock.GetHex());
+    entry.pushKVEnd("txtype", stringFromSyscoinTx(tx.nVersion));
+    entry.pushKVEnd("txid", tx.GetHash().GetHex());  
+    entry.pushKVEnd("blockhash", hashBlock.GetHex());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     for(const auto &it: tx.voutAssets) {
         CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint64_t &nAsset = it.key;
         const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-        oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
+        oAssetAllocationReceiversObj.pushKVEnd("asset_guid", UniValue(nAsset).write());
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
         for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
-            oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
+            oAssetAllocationReceiverOutputObj.pushKVEnd("n", voutAsset.n);
+            oAssetAllocationReceiverOutputObj.pushKVEnd("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
-        oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
+        oAssetAllocationReceiversObj.pushKVEnd("outputs", oAssetAllocationReceiverOutputsArray); 
+        oAssetAllocationReceiversObj.pushKVEnd("total", ValueFromAmount(nTotal, nBaseAsset));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
-    entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+    entry.pushKVEnd("allocations", oAssetAllocationReceiversArray); 
     if(asset.nUpdateMask & ASSET_INIT) {
         auto decoded = DecodeBase64(asset.strSymbol);
-		entry.__pushKV("symbol", std::string{(*decoded).begin(), (*decoded).end()});
-        entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, GetBaseAssetID(tx.voutAssets[0].key)));
-		entry.__pushKV("precision", asset.nPrecision);
+		entry.pushKVEnd("symbol", std::string{(*decoded).begin(), (*decoded).end()});
+        entry.pushKVEnd("max_supply", ValueFromAmount(asset.nMaxSupply, GetBaseAssetID(tx.voutAssets[0].key)));
+		entry.pushKVEnd("precision", asset.nPrecision);
     }
 
 	if(asset.nUpdateMask & ASSET_UPDATE_DATA) 
-		entry.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
+		entry.pushKVEnd("public_value", AssetPublicDataToJson(asset.strPubData));
 
 	if(asset.nUpdateMask & ASSET_UPDATE_CONTRACT) 
-		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+		entry.pushKVEnd("contract", "0x" + HexStr(asset.vchContract));
     
     if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) 
-		entry.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "": EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
+		entry.pushKVEnd("notary_address", asset.vchNotaryKeyID.empty()? "": EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
     if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
         UniValue value(UniValue::VOBJ);
         asset.notaryDetails.ToJson(value);
-        entry.__pushKV("notary_details", value);
+        entry.pushKVEnd("notary_details", value);
     }
 
     if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
         UniValue value(UniValue::VOBJ);
         asset.auxFeeDetails.ToJson(value, GetBaseAssetID(tx.voutAssets[0].key));
-        entry.__pushKV("auxfee", value);
+        entry.pushKVEnd("auxfee", value);
     }
     
     if(asset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) 
-		entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
+		entry.pushKVEnd("updatecapability_flags", asset.nUpdateCapabilityFlags);
 
-    entry.__pushKV("update_flags", asset.nUpdateMask);
+    entry.pushKVEnd("update_flags", asset.nUpdateMask);
 
     return true;
 }

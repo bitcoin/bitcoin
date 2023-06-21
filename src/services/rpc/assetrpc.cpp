@@ -25,26 +25,26 @@
 using node::GetTransaction;
 extern RecursiveMutex cs_setethstatus;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
-    oAsset.__pushKV("asset_guid", UniValue(nBaseAsset).write());
+    oAsset.pushKVEnd("asset_guid", UniValue(nBaseAsset).write());
     auto decoded = DecodeBase64(asset.strSymbol);
-    oAsset.__pushKV("symbol", std::string{(*decoded).begin(), (*decoded).end()});
-	oAsset.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
-    oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
-    oAsset.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
+    oAsset.pushKVEnd("symbol", std::string{(*decoded).begin(), (*decoded).end()});
+	oAsset.pushKVEnd("public_value", AssetPublicDataToJson(asset.strPubData));
+    oAsset.pushKVEnd("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
+    oAsset.pushKVEnd("notary_address", asset.vchNotaryKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
     if (!asset.notaryDetails.IsNull()) {
         UniValue value(UniValue::VOBJ);
         asset.notaryDetails.ToJson(value);
-        oAsset.__pushKV("notary_details", value);
+        oAsset.pushKVEnd("notary_details", value);
     }
     if (!asset.auxFeeDetails.IsNull()) {
         UniValue value(UniValue::VOBJ);
         asset.auxFeeDetails.ToJson(value, nBaseAsset);
-		oAsset.__pushKV("auxfee", value);
+		oAsset.pushKVEnd("auxfee", value);
     }
-	oAsset.__pushKV("total_supply", ValueFromAmount(asset.nTotalSupply, nBaseAsset));
-	oAsset.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nBaseAsset));
-	oAsset.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
-	oAsset.__pushKV("precision", asset.nPrecision);
+	oAsset.pushKVEnd("total_supply", ValueFromAmount(asset.nTotalSupply, nBaseAsset));
+	oAsset.pushKVEnd("max_supply", ValueFromAmount(asset.nMaxSupply, nBaseAsset));
+	oAsset.pushKVEnd("updatecapability_flags", asset.nUpdateCapabilityFlags);
+	oAsset.pushKVEnd("precision", asset.nPrecision);
 	return true;
 }
 bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
@@ -112,11 +112,11 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
     const auto & mapCache = pnevmdatadb.GetMapCache();
     for (auto const& [key, val] :mapCache) {
         UniValue oBlob(UniValue::VOBJ);
-        oBlob.__pushKV("versionhash",  HexStr(key));
-        oBlob.__pushKV("mpt", val.second);
-        oBlob.__pushKV("datasize", (uint32_t)val.first.size());
+        oBlob.pushKVEnd("versionhash",  HexStr(key));
+        oBlob.pushKVEnd("mpt", val.second);
+        oBlob.pushKVEnd("datasize", (uint32_t)val.first.size());
         if(getdata) {
-            oBlob.__pushKV("data", HexStr(val.first));
+            oBlob.pushKVEnd("data", HexStr(val.first));
         }
         index += 1;
         if (index <= from) {
@@ -138,19 +138,19 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
                     UniValue oBlob(UniValue::VOBJ);
                     uint64_t nMedianTime;
                     if(pcursor->GetValue(nMedianTime)) {
-                        oBlob.__pushKV("versionhash",  HexStr(key.first));
-                        oBlob.__pushKV("mpt", nMedianTime);
+                        oBlob.pushKVEnd("versionhash",  HexStr(key.first));
+                        oBlob.pushKVEnd("mpt", nMedianTime);
                         uint32_t nSize = 0;
                         std::vector<uint8_t> vchData;
                         if(!pnevmdatadb.ReadDataSize(key.first, nSize)) {
                            pnevmdatadb.ReadData(key.first, vchData);
                         }
-                        oBlob.__pushKV("datasize", nSize);
+                        oBlob.pushKVEnd("datasize", nSize);
                         if(getdata) {
                             if(vchData.empty()) {
                                 pnevmdatadb.ReadData(key.first, vchData);
                             }
-                            oBlob.__pushKV("data", HexStr(vchData));
+                            oBlob.pushKVEnd("data", HexStr(vchData));
                         }
                         oRes.push_back(oBlob); 
                     }
@@ -370,7 +370,7 @@ static RPCHelpMan assetallocationverifyzdag()
 	uint256 txid;
 	txid.SetHex(params[0].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-    oAssetAllocationStatus.__pushKV("status", VerifyTransactionGraph(mempool, txid));
+    oAssetAllocationStatus.pushKVEnd("status", VerifyTransactionGraph(mempool, txid));
 	return oAssetAllocationStatus;
 },
     };
@@ -493,17 +493,17 @@ static RPCHelpMan getnevmblockchaininfo()
         vec.push_back(v);
     }
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
-    oNEVM.__pushKV("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
-    oNEVM.__pushKV("txroot", "0x" + evmBlock.nTxRoot.GetHex());
-    oNEVM.__pushKV("receiptroot", "0x" + evmBlock.nReceiptRoot.GetHex());
-    oNEVM.__pushKV("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
-    oNEVM.__pushKV("blocksize", (int)block.vchNEVMBlockData.size());
+    oNEVM.pushKVEnd("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
+    oNEVM.pushKVEnd("txroot", "0x" + evmBlock.nTxRoot.GetHex());
+    oNEVM.pushKVEnd("receiptroot", "0x" + evmBlock.nReceiptRoot.GetHex());
+    oNEVM.pushKVEnd("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
+    oNEVM.pushKVEnd("blocksize", (int)block.vchNEVMBlockData.size());
     UniValue arrVec(UniValue::VARR);
     arrVec.push_backV(vec);
-    oNEVM.__pushKV("commandline", arrVec);
+    oNEVM.pushKVEnd("commandline", arrVec);
     bool bResponse = false;
     GetMainSignals().NotifyNEVMComms("status", bResponse);
-    oNEVM.__pushKV("status", bResponse? "online": "offline");
+    oNEVM.pushKVEnd("status", bResponse? "online": "offline");
     return oNEVM;
 },
     };
@@ -574,18 +574,18 @@ static RPCHelpMan getnevmblobdata()
     if(!pnevmdatadb->ReadDataSize(vchVH, nSize)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data size for versionhash %s", HexStr(vchVH)));
     }
-    oNEVM.__pushKV("versionhash", HexStr(vchVH));
-    oNEVM.__pushKV("mpt", mpt);
-    oNEVM.__pushKV("datasize", nSize);
+    oNEVM.pushKVEnd("versionhash", HexStr(vchVH));
+    oNEVM.pushKVEnd("mpt", mpt);
+    oNEVM.pushKVEnd("datasize", nSize);
     if(pblockindex != nullptr) {
-        oNEVM.__pushKV("blockhash", pblockindex->GetBlockHash().GetHex());
-        oNEVM.__pushKV("height", pblockindex->nHeight);
+        oNEVM.pushKVEnd("blockhash", pblockindex->GetBlockHash().GetHex());
+        oNEVM.pushKVEnd("height", pblockindex->nHeight);
     }
     if(bGetData) {
         if(!pnevmdatadb->ReadData(vchVH, vchData)) {
             throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find payload for versionhash %s", HexStr(vchVH)));
         }
-        oNEVM.__pushKV("data", HexStr(vchData));
+        oNEVM.pushKVEnd("data", HexStr(vchData));
     }
     return oNEVM;
 },
@@ -652,7 +652,7 @@ static RPCHelpMan assetinfo()
     if(!BuildAssetJson(txPos, nBaseAsset, oAsset))
         oAsset.clear();
     if(nAsset != nBaseAsset) {
-        oAsset.__pushKV("NFTID", UniValue(GetNFTID(nAsset)).write());
+        oAsset.pushKVEnd("NFTID", UniValue(GetNFTID(nAsset)).write());
     }
     return oAsset;
 },
@@ -895,11 +895,11 @@ static RPCHelpMan syscoingetspvproof()
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(*node.chainman);
     const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
-    res.__pushKV("transaction",rawTx);
-    res.__pushKV("blockhash", hashBlock.GetHex());
+    res.pushKVEnd("transaction",rawTx);
+    res.pushKVEnd("blockhash", hashBlock.GetHex());
     const auto bytesVec = MakeUCharSpan(ssBlock);
     // get first 80 bytes of header (non auxpow part)
-    res.__pushKV("header", HexStr(std::vector<unsigned char>(bytesVec.begin(), bytesVec.begin()+80)));
+    res.pushKVEnd("header", HexStr(std::vector<unsigned char>(bytesVec.begin(), bytesVec.begin()+80)));
     UniValue siblings(UniValue::VARR);
     // store the index of the transaction we are looking for within the block
     int nIndex = 0;
@@ -909,18 +909,18 @@ static RPCHelpMan syscoingetspvproof()
             nIndex = i;
         siblings.push_back(txHashFromBlock.GetHex());
     }
-    res.__pushKV("siblings", siblings);
-    res.__pushKV("index", nIndex);  
+    res.pushKVEnd("siblings", siblings);
+    res.pushKVEnd("index", nIndex);  
     CNEVMHeader evmBlock;
     BlockValidationState state;
     if(!GetNEVMData(state, block, evmBlock)) {
         throw JSONRPCError(RPC_MISC_ERROR, state.ToString());
     }  
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
-    res.__pushKV("nevm_blockhash", evmBlock.nBlockHash.GetHex());
+    res.pushKVEnd("nevm_blockhash", evmBlock.nBlockHash.GetHex());
     // SYSCOIN
     if(llmq::chainLocksHandler)
-        res.__pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(pblockindex->nHeight, hashBlock));
+        res.pushKVEnd("chainlock", llmq::chainLocksHandler->HasChainLock(pblockindex->nHeight, hashBlock));
     return res;
 },
     };
@@ -947,7 +947,7 @@ static RPCHelpMan syscoinstopgeth()
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
     }
     UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", "success");
+    ret.pushKVEnd("status", "success");
     return ret;
 },
     };
@@ -980,7 +980,7 @@ static RPCHelpMan syscoinstartgeth()
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
     }
     UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", "success");
+    ret.pushKVEnd("status", "success");
     return ret;
 },
     };
