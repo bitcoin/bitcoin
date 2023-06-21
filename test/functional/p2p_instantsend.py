@@ -35,7 +35,9 @@ class InstantSendTest(DashTestFramework):
 
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
-        self.nodes[0].sendtoaddress(sender_addr, 1)
+        is_id = self.nodes[0].sendtoaddress(sender_addr, 1)
+        for node in self.nodes:
+            self.wait_for_instantlock(is_id, node)
         self.bump_mocktime(1)
         self.nodes[0].generate(2)
         self.sync_all()
@@ -54,11 +56,15 @@ class InstantSendTest(DashTestFramework):
         for node in connected_nodes:
             self.wait_for_instantlock(is_id, node)
         # send doublespend transaction to isolated node
-        isolated.sendrawtransaction(dblspnd_tx['hex'])
+        dblspnd_txid = isolated.sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
+        self.bump_mocktime(599)
+        wrong_early_block = isolated.generate(1)[0]
+        assert not "confirmation" in isolated.getrawtransaction(dblspnd_txid, 1)
+        isolated.invalidateblock(wrong_early_block)
         self.bump_mocktime(1)
-        isolated.generate(1)
-        wrong_block = isolated.getbestblockhash()
+        wrong_block = isolated.generate(1)[0]
+        assert_equal(isolated.getrawtransaction(dblspnd_txid, 1)["confirmations"], 1)
         # connect isolated block to network
         self.reconnect_isolated_node(self.isolated_idx, 0)
         # check doublespend block is rejected by other nodes
@@ -90,7 +96,9 @@ class InstantSendTest(DashTestFramework):
 
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
-        self.nodes[0].sendtoaddress(sender_addr, 1)
+        is_id = self.nodes[0].sendtoaddress(sender_addr, 1)
+        for node in self.nodes:
+            self.wait_for_instantlock(is_id, node)
         self.bump_mocktime(1)
         self.nodes[0].generate(2)
         self.sync_all()

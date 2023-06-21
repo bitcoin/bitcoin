@@ -449,17 +449,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
 
 bool CChainLocksHandler::IsTxSafeForMining(const CInstantSendManager& isman, const uint256& txid) const
 {
-    if (!isman.RejectConflictingBlocks()) {
-        return true;
-    }
-    if (!isEnabled || !isEnforced) {
-        return true;
-    }
-
-    if (!isman.IsInstantSendEnabled()) {
-        return true;
-    }
-    if (isman.IsLocked(txid)) {
+    if (!isman.RejectConflictingBlocks() || !isman.IsInstantSendEnabled() || isman.IsLocked(txid)) {
         return true;
     }
 

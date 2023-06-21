@@ -44,6 +44,12 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
 
     def run_test(self):
+        # No IS or Chainlocks in this test
+        self.bump_mocktime(1)
+        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
+        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
 
         self.confirm_mns()
@@ -85,20 +91,13 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
         self.nodes[0].generate(1)
         oldhash = self.nodes[0].getbestblockhash()
-        # Have to disable ChainLocks here because they won't let you to invalidate already locked blocks
-        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
-        self.wait_for_sporks_same()
+
         # Test DIP8 activation once with a pre-existing quorum and once without (we don't know in which order it will activate on mainnet)
         self.test_dip8_quorum_merkle_root_activation(True)
         for n in self.nodes:
             n.invalidateblock(oldhash)
         self.sync_all()
         first_quorum = self.test_dip8_quorum_merkle_root_activation(False, True)
-
-        # Re-enable ChainLocks again
-        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 0)
-        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.wait_for_sporks_same()
 
         # Verify that the first quorum appears in MNLISTDIFF
         expectedDeleted = []
