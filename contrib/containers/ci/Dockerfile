@@ -37,7 +37,7 @@ RUN pip3 install \
     codespell==1.17.1 \
     flake8==3.8.3 \
     jinja2 \
-    lief==0.12.0 \
+    lief==0.12.1 \
     pyzmq \
     vulture==2.3 \
     yq \
