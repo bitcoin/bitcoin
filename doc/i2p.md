@@ -10,7 +10,7 @@ started with I2P terminology.
 ## Run Bitcoin Core with an I2P router (proxy)
 
 A running I2P router (proxy) is required with the [SAM](https://geti2p.net/en/docs/api/samv3)
-application bridge enabled. Options include:
+application bridge enabled. The following routers are recommended for use with Bitcoin Core:
 
 - [i2prouter (I2P Router)](https://geti2p.net), the official implementation in
   Java. The SAM bridge is not enabled by default; it must be started manually,
@@ -19,8 +19,6 @@ application bridge enabled. Options include:
 - [i2pd (I2P Daemon)](https://github.com/PurpleI2P/i2pd)
   ([documentation](https://i2pd.readthedocs.io/en/latest)), a lighter
   alternative in C++. It enables the SAM bridge by default.
-- [i2p-zero](https://github.com/i2p-zero/i2p-zero)
-- [other alternatives](https://en.wikipedia.org/wiki/I2P#Routers)
 
 Note the IP address and port the SAM proxy is listening to; usually, it is
 `127.0.0.1:7656`.
