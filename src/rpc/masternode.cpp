@@ -37,6 +37,7 @@ static void masternode_list_help(const JSONRPCRequest& request)
         "Available modes:\n"
         "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
         "  recent         - Print info in JSON format for active and recently banned masternodes (can be additionally filtered, partial match)\n"
+        "  hpmn           - Print info in JSON format for HPMNs only\n"
         "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
         "                   (can be additionally filtered, partial match)\n"
         "  info           - Print info in format 'status payee IP'\n"
@@ -581,7 +582,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
                 strMode != "owneraddress" && strMode != "votingaddress" &&
                 strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
                 strMode != "payee" && strMode != "pubkeyoperator" &&
-                strMode != "status" && strMode != "recent"))
+                strMode != "status" && strMode != "recent" && strMode != "hpmn"))
     {
         masternode_list_help(request);
     }
@@ -609,12 +610,16 @@ static UniValue masternodelist(const JSONRPCRequest& request)
     };
 
     bool showRecentMnsOnly = strMode == "recent";
+    bool showHPMNsOnly = strMode == "hpmn";
     int tipHeight = WITH_LOCK(cs_main, return ::ChainActive().Tip()->nHeight);
     mnList.ForEachMN(false, [&](auto& dmn) {
         if (showRecentMnsOnly && mnList.IsMNPoSeBanned(dmn)) {
             if (tipHeight - dmn.pdmnState->GetBannedHeight() > Params().GetConsensus().nSuperblockCycle) {
                 return;
             }
+        }
+        if (showHPMNsOnly && dmn.nType != MnType::HighPerformance) {
+            return;
         }
 
         std::string strOutpoint = dmn.collateralOutpoint.ToStringShort();
@@ -663,7 +668,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strInfo);
-        } else if (strMode == "json" || strMode == "recent") {
+        } else if (strMode == "json" || strMode == "recent" || strMode == "hpmn") {
             std::ostringstream streamInfo;
             streamInfo <<  dmn.proTxHash.ToString() << " " <<
                            dmn.pdmnState->addr.ToString() << " " <<

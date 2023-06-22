@@ -1203,6 +1203,7 @@ static void protx_list_help(const JSONRPCRequest& request)
                 "  registered   - List all ProTx which are registered at the given chain height.\n"
                 "                 This will also include ProTx which failed PoSe verification.\n"
                 "  valid        - List only ProTx which are active/valid at the given chain height.\n"
+                "  hpmn         - List only ProTx corresponding to HPMNs at the given chain height.\n"
 #ifdef ENABLE_WALLET
                 "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
                 "                 This will also include ProTx which failed PoSe verification.\n"
@@ -1348,7 +1349,7 @@ static UniValue protx_list(const JSONRPCRequest& request)
             }
         });
 #endif
-    } else if (type == "valid" || type == "registered") {
+    } else if (type == "valid" || type == "registered" || type == "hpmn") {
         if (request.params.size() > 3) {
             protx_list_help(request);
         }
@@ -1364,7 +1365,9 @@ static UniValue protx_list(const JSONRPCRequest& request)
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         bool onlyValid = type == "valid";
+        bool onlyHPMN = type == "hpmn";
         mnList.ForEachMN(onlyValid, [&](const auto& dmn) {
+            if (onlyHPMN && dmn.nType != MnType::HighPerformance) return;
             ret.push_back(BuildDMNListEntry(wallet.get(), dmn, detailed));
         });
     } else {
