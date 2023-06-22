@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
 #ifdef USE_BDB
@@ -141,12 +142,10 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
 {
     // Test each supported db
     for (const auto& database : TestDatabases(m_path_root)) {
-        BOOST_ASSERT(database);
-
         std::vector<std::string> prefixes = {"", "FIRST", "SECOND", "P\xfe\xff", "P\xff\x01", "\xff\xff"};
 
         // Write elements to it
-        std::unique_ptr<DatabaseBatch> handler = database->MakeBatch();
+        std::unique_ptr<DatabaseBatch> handler = Assert(database)->MakeBatch();
         for (unsigned int i = 0; i < 10; i++) {
             for (const auto& prefix : prefixes) {
                 BOOST_CHECK(handler->Write(std::make_pair(prefix, i), i));
@@ -162,7 +161,7 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
             DataStream value;
             for (int i = 0; i < 10; i++) {
                 DatabaseCursor::Status status = cursor->Next(key, value);
-                BOOST_ASSERT(status == DatabaseCursor::Status::MORE);
+                BOOST_CHECK_EQUAL(status, DatabaseCursor::Status::MORE);
 
                 std::string key_back;
                 unsigned int i_back;
