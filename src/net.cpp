@@ -1637,6 +1637,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     auto next_extra_block_relay = GetExponentialRand(start, EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
     const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
     bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
+    const bool use_seednodes{gArgs.IsArgSet("-seednode")};
 
     if (!add_fixed_seeds) {
         LogPrintf("Fixed seeds are disabled\n");
@@ -1666,12 +1667,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
             }
 
-            // Checking !dnsseed is cheaper before locking 2 mutexes.
-            if (!add_fixed_seeds_now && !dnsseed) {
-                LOCK2(m_addr_fetches_mutex, m_added_nodes_mutex);
-                if (m_addr_fetches.empty() && m_added_nodes.empty()) {
+            // Perform cheap checks before locking a mutex.
+            else if (!dnsseed && !use_seednodes) {
+                LOCK(m_added_nodes_mutex);
+                if (m_added_nodes.empty()) {
                     add_fixed_seeds_now = true;
-                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet), -addnode is not provided and all -seednode(s) attempted\n");
+                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
                 }
             }
 
