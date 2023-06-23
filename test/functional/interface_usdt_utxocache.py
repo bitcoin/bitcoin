@@ -353,9 +353,13 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                 "size": event.size
             })
             # sanity checks only
-            assert event.memory > 0
-            assert event.duration > 0
-            handle_flush_succeeds += 1
+            try:
+                assert event.memory > 0
+                assert event.duration > 0
+            except AssertionError:
+                self.log.exception("Assertion error")
+            else:
+                handle_flush_succeeds += 1
 
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
