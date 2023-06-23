@@ -258,37 +258,33 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         expected_utxocache_spents = []
         expected_utxocache_adds = []
 
+        def compare_utxo_with_event(utxo, event):
+            """Returns 1 if a utxo is identical to the event produced by BPF, otherwise"""
+            try:
+                assert_equal(utxo["txid"], bytes(event.txid[::-1]).hex())
+                assert_equal(utxo["index"], event.index)
+                assert_equal(utxo["height"], event.height)
+                assert_equal(utxo["value"], event.value)
+                assert_equal(utxo["is_coinbase"], event.is_coinbase)
+            except AssertionError:
+                self.log.exception("Assertion failed")
+                return 0
+            else:
+                return 1
+
         def handle_utxocache_add(_, data, __):
             nonlocal handle_add_succeeds
             event = ctypes.cast(data, ctypes.POINTER(UTXOCacheChange)).contents
             self.log.info(f"handle_utxocache_add(): {event}")
             add = expected_utxocache_adds.pop(0)
-            try:
-                assert_equal(add["txid"], bytes(event.txid[::-1]).hex())
-                assert_equal(add["index"], event.index)
-                assert_equal(add["height"], event.height)
-                assert_equal(add["value"], event.value)
-                assert_equal(add["is_coinbase"], event.is_coinbase)
-            except AssertionError:
-                self.log.exception("Assertion failed")
-            else:
-                handle_add_succeeds += 1
+            handle_add_succeeds += compare_utxo_with_event(add, event)
 
         def handle_utxocache_spent(_, data, __):
             nonlocal handle_spent_succeeds
             event = ctypes.cast(data, ctypes.POINTER(UTXOCacheChange)).contents
             self.log.info(f"handle_utxocache_spent(): {event}")
             spent = expected_utxocache_spents.pop(0)
-            try:
-                assert_equal(spent["txid"], bytes(event.txid[::-1]).hex())
-                assert_equal(spent["index"], event.index)
-                assert_equal(spent["height"], event.height)
-                assert_equal(spent["value"], event.value)
-                assert_equal(spent["is_coinbase"], event.is_coinbase)
-            except AssertionError:
-                self.log.exception("Assertion failed")
-            else:
-                handle_spent_succeeds += 1
+            handle_spent_succeeds += compare_utxo_with_event(spent, event)
 
         bpf["utxocache_add"].open_perf_buffer(handle_utxocache_add)
         bpf["utxocache_spent"].open_perf_buffer(handle_utxocache_spent)
