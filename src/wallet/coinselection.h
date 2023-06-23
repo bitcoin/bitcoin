@@ -421,7 +421,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * @param[in]  max_weight The maximum allowed weight for a selection result to be valid
  * @returns If successful, a valid SelectionResult, otherwise, util::Error
  */
-util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng,
+util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
                                              int max_weight);
 
 // Original coin selection algorithm as a fallback
