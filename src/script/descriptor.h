@@ -182,4 +182,9 @@ std::string GetDescriptorChecksum(const std::string& descriptor);
  */
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
 
+/** Unique identifier that may not change over time, unless explicitly marked as not backwards compatible.
+*   This is not part of BIP 380, not guaranteed to be interoperable and should not be exposed to the user.
+*/
+uint256 DescriptorID(const Descriptor& desc);
+
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H

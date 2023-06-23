@@ -1778,6 +1778,14 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
     return InferScript(script, ParseScriptContext::TOP, provider);
 }
 
+uint256 DescriptorID(const Descriptor& desc)
+{
+    std::string desc_str = desc.ToString();
+    uint256 id;
+    CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
+    return id;
+}
+
 void DescriptorCache::CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub)
 {
     m_parent_xpubs[key_exp_pos] = xpub;
