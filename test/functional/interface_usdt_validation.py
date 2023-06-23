@@ -97,7 +97,6 @@ class ValidationTracepointTest(BitcoinTestFramework):
                   usdt_contexts=[ctx], debug=0)
 
         def handle_blockconnected(_, data, __):
-            nonlocal events
             event = ctypes.cast(data, ctypes.POINTER(Block)).contents
             self.log.info(f"handle_blockconnected(): {event}")
             events.append(event)

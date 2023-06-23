@@ -139,7 +139,6 @@ class NetTracepointTest(BitcoinTestFramework):
                     checked_outbound_version_msg += 1
 
         def handle_inbound(_, data, __):
-            nonlocal events
             event = ctypes.cast(data, ctypes.POINTER(P2PMessage)).contents
             events.append((event, True))
 
