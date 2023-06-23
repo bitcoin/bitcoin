@@ -215,9 +215,21 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     {
         WITH_LOCK(g_requests_mutex, g_requests.insert(req));
         g_requests_cv.notify_all();
+
+        auto conn{evhttp_request_get_connection(req)};
+
+        // Close callback to clear active but running request. This is also
+        // called if the connection is closed after a successful request, but
+        // complete callback set below already cleared the state.
+        evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+            auto req{static_cast<evhttp_request*>(arg)};
+            WITH_LOCK(g_requests_mutex, g_requests.erase(req));
+            g_requests_cv.notify_all();
+        }, req);
+
+        // Clear state after successful request.
         evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
-            auto n{WITH_LOCK(g_requests_mutex, return g_requests.erase(req))};
-            assert(n == 1);
+            WITH_LOCK(g_requests_mutex, g_requests.erase(req));
             g_requests_cv.notify_all();
         }, nullptr);
     }
