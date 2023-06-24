@@ -74,10 +74,10 @@ RUN usermod -aG sudo ${USERNAME} && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Copy required files to container
-COPY ./motd.txt           /etc/motd
-COPY ./scripts/entrypoint /usr/local/bin/entrypoint
-COPY ./scripts/guix-check /usr/local/bin/guix-check
-COPY ./scripts/guix-start /usr/local/bin/guix-start
+COPY --from=docker_root ./motd.txt           /etc/motd
+COPY --from=docker_root ./scripts/entrypoint /usr/local/bin/entrypoint
+COPY --from=docker_root ./scripts/guix-check /usr/local/bin/guix-check
+COPY --from=docker_root ./scripts/guix-start /usr/local/bin/guix-start
 
 # Create directory for mounting and grant necessary permissions
 RUN mkdir -p /src/dash && \
