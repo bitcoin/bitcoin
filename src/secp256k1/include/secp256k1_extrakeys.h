@@ -185,9 +185,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_sec(
 /** Get the public key from a keypair.
  *
  *  Returns: 1 always.
- *  Args:    ctx: pointer to a context object.
- *  Out: pubkey: pointer to a pubkey object. If 1 is returned, it is set to
- *               the keypair public key. If not, it's set to an invalid value.
+ *  Args:   ctx: pointer to a context object.
+ *  Out: pubkey: pointer to a pubkey object, set to the keypair public key.
  *  In: keypair: pointer to a keypair.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
@@ -203,9 +202,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
  *
  *  Returns: 1 always.
  *  Args:   ctx: pointer to a context object.
- *  Out: pubkey: pointer to an xonly_pubkey object. If 1 is returned, it is set
- *               to the keypair public key after converting it to an
- *               xonly_pubkey. If not, it's set to an invalid value.
+ *  Out: pubkey: pointer to an xonly_pubkey object, set to the keypair
+ *               public key after converting it to an xonly_pubkey.
  *    pk_parity: Ignored if NULL. Otherwise, pointer to an integer that will be set to the
  *               pk_parity argument of secp256k1_xonly_pubkey_from_pubkey.
  *  In: keypair: pointer to a keypair.

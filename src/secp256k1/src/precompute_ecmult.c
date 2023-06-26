@@ -68,7 +68,6 @@ int main(void) {
     fprintf(fp, "/* This file contains an array secp256k1_pre_g with odd multiples of the base point G and\n");
     fprintf(fp, " * an array secp256k1_pre_g_128 with odd multiples of 2^128*G for accelerating the computation of a*P + b*G.\n");
     fprintf(fp, " */\n");
-    fprintf(fp, "#include \"../include/secp256k1.h\"\n");
     fprintf(fp, "#include \"group.h\"\n");
     fprintf(fp, "#include \"ecmult.h\"\n");
     fprintf(fp, "#include \"precomputed_ecmult.h\"\n");

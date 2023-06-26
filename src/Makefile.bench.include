@@ -20,6 +20,7 @@ bench_bench_syscoin_SOURCES = \
   bench/bls.cpp \
   bench/bls_dkg.cpp \
   bench/bench_syscoin.cpp \
+  bench/bip324_ecdh.cpp \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
@@ -31,6 +32,7 @@ bench_bench_syscoin_SOURCES = \
   bench/data.h \
   bench/descriptors.cpp \
   bench/duplicate_inputs.cpp \
+  bench/ellswift.cpp \
   bench/examples.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \

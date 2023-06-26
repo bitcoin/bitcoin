@@ -29,9 +29,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     git clone https://github.com/mstorsjo/msvc-wine && \
     mkdir /opt/msvc && \
     python3 msvc-wine/vsdownload.py --accept-license --dest /opt/msvc Microsoft.VisualStudio.Workload.VCTools && \
-    msvc-wine/install.sh /opt/msvc
-
-# Initialize the wine environment. Wait until the wineserver process has
-# exited before closing the session, to avoid corrupting the wine prefix.
-RUN wine64 wineboot --init && \
+# Since commit 2146cbfaf037e21de56c7157ec40bb6372860f51, the
+# msvc-wine effectively initializes the wine prefix when running
+# the install.sh script.
+    msvc-wine/install.sh /opt/msvc && \
+# Wait until the wineserver process has exited before closing the session,
+# to avoid corrupting the wine prefix.
     while (ps -A | grep wineserver) > /dev/null; do sleep 1; done

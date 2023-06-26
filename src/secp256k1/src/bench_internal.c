@@ -65,10 +65,10 @@ static void bench_setup(void* arg) {
 
     secp256k1_scalar_set_b32(&data->scalar[0], init[0], NULL);
     secp256k1_scalar_set_b32(&data->scalar[1], init[1], NULL);
-    secp256k1_fe_set_b32(&data->fe[0], init[0]);
-    secp256k1_fe_set_b32(&data->fe[1], init[1]);
-    secp256k1_fe_set_b32(&data->fe[2], init[2]);
-    secp256k1_fe_set_b32(&data->fe[3], init[3]);
+    secp256k1_fe_set_b32_limit(&data->fe[0], init[0]);
+    secp256k1_fe_set_b32_limit(&data->fe[1], init[1]);
+    secp256k1_fe_set_b32_limit(&data->fe[2], init[2]);
+    secp256k1_fe_set_b32_limit(&data->fe[3], init[3]);
     CHECK(secp256k1_ge_set_xo_var(&data->ge[0], &data->fe[0], 0));
     CHECK(secp256k1_ge_set_xo_var(&data->ge[1], &data->fe[1], 1));
     secp256k1_gej_set_ge(&data->gej[0], &data->ge[0]);

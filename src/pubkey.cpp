@@ -7,6 +7,7 @@
 
 #include <hash.h>
 #include <secp256k1.h>
+#include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
@@ -333,6 +334,20 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     secp256k1_ec_pubkey_serialize(secp256k1_context_static, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
     pubkeyChild.Set(pub, pub + publen);
     return true;
+}
+
+CPubKey EllSwiftPubKey::Decode() const
+{
+    secp256k1_pubkey pubkey;
+    secp256k1_ellswift_decode(secp256k1_context_static, &pubkey, UCharCast(m_pubkey.data()));
+
+    size_t sz = CPubKey::COMPRESSED_SIZE;
+    std::array<uint8_t, CPubKey::COMPRESSED_SIZE> vch_bytes;
+
+    secp256k1_ec_pubkey_serialize(secp256k1_context_static, vch_bytes.data(), &sz, &pubkey, SECP256K1_EC_COMPRESSED);
+    assert(sz == vch_bytes.size());
+
+    return CPubKey{vch_bytes.begin(), vch_bytes.end()};
 }
 
 void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
