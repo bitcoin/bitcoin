@@ -17,6 +17,7 @@ bench_bench_dash_SOURCES = \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/bip324_ecdh.cpp \
   bench/block_assemble.cpp \
   bench/bls.cpp \
   bench/bls_dkg.cpp \
@@ -26,6 +27,7 @@ bench_bench_dash_SOURCES = \
   bench/data.cpp \
   bench/duplicate_inputs.cpp \
   bench/ecdsa.cpp \
+  bench/ellswift.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/chacha20.cpp \

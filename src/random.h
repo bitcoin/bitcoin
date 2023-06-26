@@ -8,6 +8,7 @@
 
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
+#include <span.h>
 #include <uint256.h>
 
 #include <cassert>
@@ -188,6 +189,9 @@ public:
 
     /** Generate random bytes. */
     std::vector<unsigned char> randbytes(size_t len);
+
+    /** Fill a byte Span with random bytes. */
+    void fillrand(Span<std::byte> output);
 
     /** Generate a random 32-bit integer. */
     uint32_t rand32() noexcept { return randbits(32); }

@@ -17,7 +17,13 @@
  */
 
 #if defined(_WIN32)
+/*
+ * The defined WIN32_NO_STATUS macro disables return code definitions in
+ * windows.h, which avoids "macro redefinition" MSVC warnings in ntstatus.h.
+ */
+#define WIN32_NO_STATUS
 #include <windows.h>
+#undef WIN32_NO_STATUS
 #include <ntstatus.h>
 #include <bcrypt.h>
 #elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)
@@ -77,7 +83,7 @@ static void print_hex(unsigned char* data, size_t size) {
 #include <Windows.h>
 #endif
 /* Cleanses memory to prevent leaking sensitive info. Won't be optimized out. */
-static SECP256K1_INLINE void secure_erase(void *ptr, size_t len) {
+static void secure_erase(void *ptr, size_t len) {
 #if defined(_MSC_VER)
     /* SecureZeroMemory is guaranteed not to be optimized out by MSVC. */
     SecureZeroMemory(ptr, len);
