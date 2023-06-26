@@ -32,7 +32,7 @@ from test_framework.util import hex_str_to_bytes, assert_equal
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70228  # SMNLE_VERSIONED_PROTO_VERSION
+MY_VERSION = 70229  # MNLISTDIFF_VERSION_ORDER
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -2038,13 +2038,13 @@ class msg_mnlistdiff:
         self.newQuorums = []
 
     def deserialize(self, f):
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
         self.baseBlockHash = deser_uint256(f)
         self.blockHash = deser_uint256(f)
         self.merkleProof.deserialize(f)
         self.cbTx = CTransaction()
         self.cbTx.deserialize(f)
         self.cbTx.rehash()
-        self.nVersion = struct.unpack("<H", f.read(2))[0]
         self.deletedMNs = deser_uint256_vector(f)
         self.mnList = []
         for i in range(deser_compact_size(f)):
