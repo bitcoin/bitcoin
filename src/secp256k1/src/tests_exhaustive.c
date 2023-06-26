@@ -13,13 +13,19 @@
 #define EXHAUSTIVE_TEST_ORDER 13
 #endif
 
+#ifdef USE_EXTERNAL_DEFAULT_CALLBACKS
+    #pragma message("Ignoring USE_EXTERNAL_CALLBACKS in exhaustive_tests.")
+    #undef USE_EXTERNAL_DEFAULT_CALLBACKS
+#endif
 #include "secp256k1.c"
+
 #include "../include/secp256k1.h"
 #include "assumptions.h"
 #include "group.h"
 #include "testrand_impl.h"
 #include "ecmult_compute_table_impl.h"
 #include "ecmult_gen_compute_table_impl.h"
+#include "util.h"
 
 static int count = 2;
 
@@ -54,7 +60,7 @@ static void random_fe(secp256k1_fe *x) {
     unsigned char bin[32];
     do {
         secp256k1_testrand256(bin);
-        if (secp256k1_fe_set_b32(x, bin)) {
+        if (secp256k1_fe_set_b32_limit(x, bin)) {
             return;
         }
     } while(1);
@@ -192,7 +198,7 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
     }
 
     for (j = 0; j < EXHAUSTIVE_TEST_ORDER; j++) {
-        for (i = 1; i < EXHAUSTIVE_TEST_ORDER; i++) {
+        for (i = 0; i < EXHAUSTIVE_TEST_ORDER; i++) {
             int ret;
             secp256k1_gej tmp;
             secp256k1_fe xn, xd, tmpf;
@@ -203,19 +209,19 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
             secp256k1_scalar_set_int(&ng, j);
 
             /* Test secp256k1_ecmult_const. */
-            secp256k1_ecmult_const(&tmp, &group[i], &ng, 256);
+            secp256k1_ecmult_const(&tmp, &group[i], &ng);
             ge_equals_gej(&group[(i * j) % EXHAUSTIVE_TEST_ORDER], &tmp);
 
-            if (j != 0) {
+            if (i != 0 && j != 0) {
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, and xd=NULL. */
-                ret = secp256k1_ecmult_const_xonly(&tmpf, &group[i].x, NULL, &ng, 256, 0);
+                ret = secp256k1_ecmult_const_xonly(&tmpf, &group[i].x, NULL, &ng, 0);
                 CHECK(ret);
                 CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
 
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, with random xd. */
                 random_fe_non_zero(&xd);
                 secp256k1_fe_mul(&xn, &xd, &group[i].x);
-                ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 256, 0);
+                ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 0);
                 CHECK(ret);
                 CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
             }

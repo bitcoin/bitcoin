@@ -12,12 +12,40 @@ It is best if the maintainers are present during the release, so they can help e
 
 This process also assumes that there will be no minor releases for old major releases.
 
+We aim to cut a regular release every 3-4 months, approximately twice as frequent as major Bitcoin Core releases. Every second release should be published one month before the feature freeze of the next major Bitcoin Core release, allowing sufficient time to update the library in Core.
+
+## Sanity Checks
+Perform these checks before creating a release:
+
+1. Ensure `make distcheck` doesn't fail.
+```shell
+./autogen.sh && ./configure --enable-dev-mode && make distcheck
+```
+2. Check installation with autotools:
+```shell
+dir=$(mktemp -d)
+./autogen.sh && ./configure --prefix=$dir && make clean && make install && ls -l $dir/include $dir/lib
+gcc -o ecdsa examples/ecdsa.c $(PKG_CONFIG_PATH=$dir/lib/pkgconfig pkg-config --cflags --libs libsecp256k1) -Wl,-rpath,"$dir/lib" && ./ecdsa
+```
+3. Check installation with CMake:
+```shell
+dir=$(mktemp -d)
+build=$(mktemp -d)
+cmake -B $build -DCMAKE_INSTALL_PREFIX=$dir && cmake --build $build --target install && ls -l $dir/include $dir/lib*
+gcc -o ecdsa examples/ecdsa.c -I $dir/include -L $dir/lib*/ -l secp256k1 -Wl,-rpath,"$dir/lib",-rpath,"$dir/lib64" && ./ecdsa
+```
+
 ## Regular release
 
 1. Open a PR to the master branch with a commit (using message `"release: prepare for $MAJOR.$MINOR.$PATCH"`, for example) that
-   * finalizes the release notes in [CHANGELOG.md](../CHANGELOG.md) (make sure to include an entry for `### ABI Compatibility`),
-   * updates `_PKG_VERSION_*` and `_LIB_VERSION_*` and sets `_PKG_VERSION_IS_RELEASE` to `true` in `configure.ac`, and
-   * updates `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_*` in `CMakeLists.txt`.
+   * finalizes the release notes in [CHANGELOG.md](../CHANGELOG.md) by
+       * adding a section for the release (make sure that the version number is a link to a diff between the previous and new version),
+       * removing the `[Unreleased]` section header, and
+       * including an entry for `### ABI Compatibility` if it doesn't exist that mentions the library soname of the release,
+   * sets `_PKG_VERSION_IS_RELEASE` to `true` in `configure.ac`, and
+   * if this is not a patch release
+       * updates `_PKG_VERSION_*` and `_LIB_VERSION_*`  in `configure.ac` and
+       * updates `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_*` in `CMakeLists.txt`.
 2. After the PR is merged, tag the commit and push it:
    ```
    RELEASE_COMMIT=<merge commit of step 1>
@@ -25,8 +53,9 @@ This process also assumes that there will be no minor releases for old major rel
    git push git@github.com:bitcoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
    ```
 3. Open a PR to the master branch with a commit (using message `"release cleanup: bump version after $MAJOR.$MINOR.$PATCH"`, for example) that
-   * sets `_PKG_VERSION_IS_RELEASE` to `false` and increments `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac`, and
-   * increments the `$PATCH` component of `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_REVISION` in `CMakeLists.txt`.
+   * sets `_PKG_VERSION_IS_RELEASE` to `false` and increments `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac`,
+   * increments the `$PATCH` component of `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_REVISION` in `CMakeLists.txt`, and
+   * adds an `[Unreleased]` section header to the [CHANGELOG.md](../CHANGELOG.md).
 
    If other maintainers are not present to approve the PR, it can be merged without ACKs.
 4. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
@@ -35,14 +64,14 @@ This process also assumes that there will be no minor releases for old major rel
 
 Note that bugfixes only need to be backported to releases for which no compatible release without the bug exists.
 
-1. If `$PATCH = 1`, create maintenance branch `$MAJOR.$MINOR`:
+1. If there's no maintenance branch `$MAJOR.$MINOR`, create one:
    ```
-   git checkout -b $MAJOR.$MINOR v$MAJOR.$MINOR.0
+   git checkout -b $MAJOR.$MINOR v$MAJOR.$MINOR.$((PATCH - 1))
    git push git@github.com:bitcoin-core/secp256k1.git $MAJOR.$MINOR
    ```
 2. Open a pull request to the `$MAJOR.$MINOR` branch that
    * includes the bugfixes,
-   * finalizes the release notes,
+   * finalizes the release notes similar to a regular release,
    * increments `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac`
      and the `$PATCH` component of `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_REVISION` in `CMakeLists.txt`
      (with commit message `"release: bump versions for $MAJOR.$MINOR.$PATCH"`, for example).

@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#include "ecmult.h"
 #include "group.h"
 #if defined(EXHAUSTIVE_TEST_ORDER)
 #    if EXHAUSTIVE_TEST_ORDER == 7

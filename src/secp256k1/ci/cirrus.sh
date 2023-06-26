@@ -36,8 +36,7 @@ case "$WRAPPER_CMD" in
     *wine*)
         # Make sure to shutdown wineserver whenever we exit.
         trap "wineserver -k || true" EXIT INT HUP
-        # This is apparently only reliable when we run a dummy command such as "hh.exe" afterwards.
-        wineserver -p && wine hh.exe
+        wineserver -p
         ;;
 esac
 
@@ -62,6 +61,7 @@ fi
     --with-ecmult-window="$ECMULTWINDOW" \
     --with-ecmult-gen-precision="$ECMULTGENPRECISION" \
     --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" \
+    --enable-module-ellswift="$ELLSWIFT" \
     --enable-module-schnorrsig="$SCHNORRSIG" \
     --enable-examples="$EXAMPLES" \
     --enable-ctime-tests="$CTIMETESTS" \

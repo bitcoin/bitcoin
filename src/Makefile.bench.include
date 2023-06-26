@@ -18,6 +18,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/bench.cpp \
   bench/bench.h \
   bench/bench_bitcoin.cpp \
+  bench/bip324_ecdh.cpp \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
@@ -29,6 +30,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/data.h \
   bench/descriptors.cpp \
   bench/duplicate_inputs.cpp \
+  bench/ellswift.cpp \
   bench/examples.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \

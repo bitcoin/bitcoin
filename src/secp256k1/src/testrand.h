@@ -7,6 +7,8 @@
 #ifndef SECP256K1_TESTRAND_H
 #define SECP256K1_TESTRAND_H
 
+#include "util.h"
+
 /* A non-cryptographic RNG used only for test infrastructure. */
 
 /** Seed the pseudorandom number generator for testing. */
