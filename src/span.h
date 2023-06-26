@@ -244,7 +244,7 @@ T& SpanPopBack(Span<T>& span)
 }
 
 //! Convert a data pointer to a std::byte data pointer.
-//! Where possible, please use the safer AsBytes helpers.
+//! Where possible, please use the safer ByteSpanCast or MakeByteSpan helpers.
 inline const std::byte* AsBytePtr(const void* data) { return reinterpret_cast<const std::byte*>(data); }
 inline std::byte* AsBytePtr(void* data) { return reinterpret_cast<std::byte*>(data); }
 
@@ -260,17 +260,6 @@ Span<std::byte> AsWritableBytes(Span<T> s) noexcept
     return {AsBytePtr(s.data()), s.size_bytes()};
 }
 
-template <typename V>
-Span<const std::byte> MakeByteSpan(V&& v) noexcept
-{
-    return AsBytes(Span{std::forward<V>(v)});
-}
-template <typename V>
-Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
-{
-    return AsWritableBytes(Span{std::forward<V>(v)});
-}
-
 // Helper functions to safely cast to unsigned char pointers.
 inline unsigned char* UCharCast(char* c) { return (unsigned char*)c; }
 inline unsigned char* UCharCast(unsigned char* c) { return c; }
@@ -281,8 +270,25 @@ inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_c
 
 // Helper function to safely convert a Span to a Span<[const] unsigned char>.
 template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
+// Helper function to safely convert a Span to a Span<[const] std::byte>.
+template <typename B>
+auto ByteSpanCast(Span<B> s)
+{
+    return Span{AsBytePtr(UCharCast(s.data())), s.size_bytes()}; // Use UCharCast to enforce B is a byte-like type.
+}
 
 /** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(Span{std::forward<V>(v)})) { return UCharSpanCast(Span{std::forward<V>(v)}); }
+
+template <typename V>
+Span<const std::byte> MakeByteSpan(V&& v) noexcept
+{
+    return ByteSpanCast(Span{std::forward<V>(v)});
+}
+template <typename V>
+Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
+{
+    return ByteSpanCast(Span{std::forward<V>(v)});
+}
 
 #endif // BITCOIN_SPAN_H
