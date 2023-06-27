@@ -314,7 +314,7 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'macOS 10.15 [gui, no tests] [jammy]'
+  name: 'macOS 11.0 [gui, no tests] [jammy]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
     docker_arguments:
