@@ -19,7 +19,6 @@
 #include <undo.h>
 #include <util/batchpriority.h>
 #include <util/fs.h>
-#include <util/syscall_sandbox.h>
 #include <validation.h>
 // SYSCOIN
 #include <evo/deterministicmns.h>
@@ -932,7 +931,6 @@ public:
 
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const fs::path& mempool_path, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, std::unique_ptr<CActiveMasternodeManager> &activeMasternodeManager, const WalletInitInterface &g_wallet_init_interface, node::NodeContext& node)
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_LOAD_BLOCKS);
     ScheduleBatchPriority();
 
     {
