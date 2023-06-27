@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  guix_ubuntu:
+    build:
+      context: '../../..'
+      additional_contexts:
+        - docker_root=.
+      dockerfile: './contrib/containers/guix/Dockerfile'
+      args:
+        USER_ID: 1000   # set this to $(id -u) of the host
+        GROUP_ID: 1000  # set this to $(id -g) of the host
+    container_name: guix_ubuntu
+    tty: true
+    stdin_open: true
+    privileged: true
+    network_mode: host
+    volumes:
+      - "../../..:/src/dash:rw"

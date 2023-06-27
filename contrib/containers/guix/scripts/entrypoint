@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Read instructions
+cat /etc/motd
+
+# Start the Guix daemon
+sudo env PATH=${PATH} guix-daemon \
+  --build-users-group='guixbuild' \
+  --substitute-urls='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org' < /dev/null 2>&1 |
+  sudo tee /var/log/guix.log > /dev/null &
+
+# Hand over control
+exec bash
