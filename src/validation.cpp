@@ -1579,6 +1579,13 @@ Chainstate::Chainstate(
       m_chainman(chainman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
+const CBlockIndex* Chainstate::SnapshotBase()
+{
+    if (!m_from_snapshot_blockhash) return nullptr;
+    if (!m_cached_snapshot_base) m_cached_snapshot_base = Assert(m_chainman.m_blockman.LookupBlockIndex(*m_from_snapshot_blockhash));
+    return m_cached_snapshot_base;
+}
+
 void Chainstate::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
@@ -3434,7 +3441,7 @@ void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
         // For the background chainstate, we only consider connecting blocks
         // towards the snapshot base (which can't be nullptr or else we'll
         // never make progress).
-        const CBlockIndex* snapshot_base = Assert(m_chainman.GetSnapshotBaseBlock());
+        const CBlockIndex* snapshot_base{Assert(m_chainman.GetSnapshotBaseBlock())};
         if (snapshot_base->GetAncestor(pindex->nHeight) == pindex) {
             setBlockIndexCandidates.insert(pindex);
         }
@@ -5704,9 +5711,7 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
 
 const CBlockIndex* ChainstateManager::GetSnapshotBaseBlock() const
 {
-    const auto blockhash_op = this->SnapshotBlockhash();
-    if (!blockhash_op) return nullptr;
-    return Assert(m_blockman.LookupBlockIndex(*blockhash_op));
+    return m_active_chainstate ? m_active_chainstate->SnapshotBase() : nullptr;
 }
 
 std::optional<int> ChainstateManager::GetSnapshotBaseHeight() const

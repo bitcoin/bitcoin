@@ -500,6 +500,9 @@ protected:
     //! is set to true on the snapshot chainstate.
     bool m_disabled GUARDED_BY(::cs_main) {false};
 
+    //! Cached result of LookupBlockIndex(*m_from_snapshot_blockhash)
+    const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main) {nullptr};
+
 public:
     //! Reference to a BlockManager instance which itself is shared across all
     //! Chainstate instances.
@@ -550,6 +553,13 @@ public:
      * std::nullopt if this chainstate was not created from a snapshot.
      */
     const std::optional<uint256> m_from_snapshot_blockhash;
+
+    /**
+     * The base of the snapshot this chainstate was created from.
+     *
+     * nullptr if this chainstate was not created from a snapshot.
+     */
+    const CBlockIndex* SnapshotBase() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Return true if this chainstate relies on blocks that are assumed-valid. In
     //! practice this means it was created based on a UTXO snapshot.
