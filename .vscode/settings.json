@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "__locale": "cpp",
+        "*.h++": "cpp"
+    }
+}
