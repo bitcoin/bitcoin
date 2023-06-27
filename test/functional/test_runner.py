@@ -246,6 +246,7 @@ BASE_SCRIPTS = [
     'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'rpc_platform_filter.py',
+    'rpc_wipewallettxes.py',
     'feature_dip0020_activation.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',

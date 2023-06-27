@@ -114,7 +114,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
         }
-    } else if (command == "info" || command == "salvage") {
+    } else if (command == "info" || command == "salvage" || command == "wipetxes") {
         if (command == "info") {
             std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, /* create= */ false);
             if (!wallet_instance) return false;
@@ -136,6 +136,32 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             return ret;
 #else
             tfm::format(std::cerr, "Salvage command is not available as BDB support is not compiled");
+            return false;
+#endif
+        } else if (command == "wipetxes") {
+#ifdef USE_BDB
+            std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, /* create= */ false);
+            if (wallet_instance == nullptr) return false;
+
+            std::vector<uint256> vHash;
+            std::vector<uint256> vHashOut;
+
+            LOCK(wallet_instance->cs_wallet);
+
+            for (auto& [txid, _] : wallet_instance->mapWallet) {
+                vHash.push_back(txid);
+            }
+
+            if (wallet_instance->ZapSelectTx(vHash, vHashOut) != DBErrors::LOAD_OK) {
+                tfm::format(std::cerr, "Could not properly delete transactions");
+                wallet_instance->Close();
+                return false;
+            }
+
+            wallet_instance->Close();
+            return vHashOut.size() == vHash.size();
+#else
+            tfm::format(std::cerr, "Wipetxes command is not available as BDB support is not compiled");
             return false;
 #endif
         }

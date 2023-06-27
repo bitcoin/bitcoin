@@ -228,6 +228,31 @@ class ToolWalletTest(BitcoinTestFramework):
 
         self.assert_tool_output('', '-wallet=salvage', 'salvage')
 
+    def test_wipe(self):
+        out = textwrap.dedent('''\
+            Wallet info
+            ===========
+            Encrypted: no
+            HD (hd seed available): yes
+            Keypool Size: 2
+            Transactions: 1
+            Address Book: 1
+        ''')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
+
+        self.assert_tool_output('', '-wallet=' + self.default_wallet_name, 'wipetxes')
+
+        out = textwrap.dedent('''\
+            Wallet info
+            ===========
+            Encrypted: no
+            HD (hd seed available): yes
+            Keypool Size: 2
+            Transactions: 0
+            Address Book: 1
+        ''')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
+
     def run_test(self):
         self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename)
         self.test_invalid_tool_commands_and_args()
@@ -238,6 +263,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_getwalletinfo_on_different_wallet()
         if self.is_bdb_compiled():
             self.test_salvage()
+            self.test_wipe()
 
 if __name__ == '__main__':
     ToolWalletTest().main()

@@ -31,6 +31,7 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
 
     // Hidden
     argsman.AddArg("salvage", "Attempt to recover private keys from a corrupt wallet", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    argsman.AddArg("wipetxes", "Wipe all transactions from a wallet", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
 }
 
 static bool WalletAppInit(int argc, char* argv[])

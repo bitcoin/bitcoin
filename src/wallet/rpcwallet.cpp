@@ -3550,6 +3550,74 @@ static UniValue rescanblockchain(const JSONRPCRequest& request)
     return response;
 }
 
+static UniValue wipewallettxes(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"wipewallettxes",
+        "\nWipe wallet transactions.\n"
+        "Note: Use \"rescanblockchain\" to initiate the scanning progress and recover wallet transactions.\n",
+        {
+            {"keep_confirmed", RPCArg::Type::BOOL, /* default */ "false", "Do not wipe confirmed transactions"},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            HelpExampleCli("wipewallettxes", "")
+    + HelpExampleRpc("wipewallettxes", "")
+        },
+    }.Check(request);
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    WalletRescanReserver reserver(pwallet);
+    if (!reserver.reserve()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort rescan or wait.");
+    }
+
+    LOCK(pwallet->cs_wallet);
+
+    bool keep_confirmed{false};
+    if (!request.params[0].isNull()) {
+        keep_confirmed = request.params[0].get_bool();
+    }
+
+    const size_t WALLET_SIZE{pwallet->mapWallet.size()};
+    const size_t STEPS{20};
+    const size_t BATCH_SIZE = std::max(WALLET_SIZE / STEPS, size_t(1000));
+
+    pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 0);
+
+    for (size_t progress = 0; progress < STEPS; ++progress) {
+        std::vector<uint256> vHashIn;
+        std::vector<uint256> vHashOut;
+        size_t count{0};
+
+        for (auto& [txid, wtx] : pwallet->mapWallet) {
+            if (progress < STEPS - 1 && ++count > BATCH_SIZE) break;
+            if (keep_confirmed && wtx.m_confirm.status == CWalletTx::CONFIRMED) continue;
+            vHashIn.push_back(txid);
+        }
+
+        if (vHashIn.size() > 0 && pwallet->ZapSelectTx(vHashIn, vHashOut) != DBErrors::LOAD_OK) {
+            pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 100);
+            throw JSONRPCError(RPC_WALLET_ERROR, "Could not properly delete transactions.");
+        }
+
+        CHECK_NONFATAL(vHashOut.size() == vHashIn.size());
+
+        if (pwallet->IsAbortingRescan() || pwallet->chain().shutdownRequested()) {
+            pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 100);
+            throw JSONRPCError(RPC_MISC_ERROR, "Wiping was aborted by user.");
+        }
+
+        pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), std::max(1, std::min(99, int(progress * 100 / STEPS))));
+    }
+
+    pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 100);
+
+    return NullUniValue;
+}
+
 class DescribeWalletAddressVisitor
 {
 public:
@@ -4169,6 +4237,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout","mixingonly"} },
     { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
     { "wallet",             "walletcreatefundedpsbt",           &walletcreatefundedpsbt,        {"inputs","outputs","locktime","options","bip32derivs"} },
+    { "wallet",             "wipewallettxes",                   &wipewallettxes,                {"keep_confirmed"} },
 };
 // clang-format on
 
