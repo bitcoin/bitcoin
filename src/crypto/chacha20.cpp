@@ -47,16 +47,12 @@ ChaCha20Aligned::ChaCha20Aligned(const unsigned char* key32)
     SetKey32(key32);
 }
 
-void ChaCha20Aligned::SetIV(uint64_t iv)
+void ChaCha20Aligned::Seek64(Nonce96 nonce, uint32_t block_counter)
 {
-    input[10] = iv;
-    input[11] = iv >> 32;
-}
-
-void ChaCha20Aligned::Seek64(uint64_t pos)
-{
-    input[8] = pos;
-    input[9] = pos >> 32;
+    input[8] = block_counter;
+    input[9] = nonce.first;
+    input[10] = nonce.second;
+    input[11] = nonce.second >> 32;
 }
 
 inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
