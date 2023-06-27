@@ -316,7 +316,7 @@ task:
 #     FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libsyscoinkernel.sh"
 
 task:
-  name: 'macOS 10.15 [gui, no tests] [jammy]'
+  name: 'macOS 11.0 [gui, no tests] [jammy]'
   << : *CONTAINER_DEPENDS_TEMPLATE
   container:
     docker_arguments:
