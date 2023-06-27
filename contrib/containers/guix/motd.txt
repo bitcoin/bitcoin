@@ -1,0 +1,4 @@
+#####################################################
+To get started, run 'guix-start' and then calculate
+hashes using 'guix-check'
+#####################################################

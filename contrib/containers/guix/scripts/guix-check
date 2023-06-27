@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+cd /src/dash
+COMMIT_ID=$(git rev-parse --short=12 HEAD)
+
+printf "Binaries:\n"
+( \
+SRC_PATH_PREFIX=guix-build-${COMMIT_ID}/distsrc- && \
+sha256sum ${SRC_PATH_PREFIX}*/src/dash{d,-cli,-tx,-wallet}{,.exe} && \
+sha256sum ${SRC_PATH_PREFIX}*/src/qt/dash-qt{,.exe} && \
+sha256sum ${SRC_PATH_PREFIX}*/src/test/test_dash{,.exe} \
+) | sort -k 2
+
+printf "Archives:\n"
+find guix-build-"${COMMIT_ID}"/output -type f | grep -v SHA256 | xargs sha256sum | sort -k 2

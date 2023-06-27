@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+XCODE_VERSION="12.1"
+XCODE_RELEASE="12A7403"
+XCODE_ARCHIVE="Xcode-${XCODE_VERSION}-${XCODE_RELEASE}-extracted-SDK-with-libcxx-headers"
+
+# Check if macOS SDK is present, if not, download it
+if [ ! -d "/src/dash/depends/SDKs/${XCODE_ARCHIVE}" ]
+then
+    mkdir -p /src/dash/depends/SDKs
+    curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C /src/dash/depends/SDKs
+fi
+
+cd /src/dash
+git status >> /dev/null
+git config --global --add safe.directory /src/dash
+
+./contrib/guix/guix-build
