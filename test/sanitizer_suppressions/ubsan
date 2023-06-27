@@ -23,6 +23,7 @@ implicit-integer-sign-change:crc32c/
 # implicit-integer-sign-change in FuzzedDataProvider's ConsumeIntegralInRange
 implicit-integer-sign-change:FuzzedDataProvider.h
 implicit-integer-sign-change:minisketch/
+implicit-signed-integer-truncation:*/include/c++/
 implicit-signed-integer-truncation:leveldb/
 implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:leveldb/
