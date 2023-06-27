@@ -654,7 +654,7 @@ private:
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
 
-    std::atomic<bool> fAbortRescan{false};
+    std::atomic<bool> fAbortRescan{false}; // reset by WalletRescanReserver::reserve()
     std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
     std::atomic<int64_t> m_scanning_start{0};
     std::atomic<double> m_scanning_progress{0};
@@ -1306,6 +1306,7 @@ public:
         }
         m_wallet->m_scanning_start = GetTimeMillis();
         m_wallet->m_scanning_progress = 0;
+        m_wallet->fAbortRescan = false;
         m_could_reserve = true;
         return true;
     }
