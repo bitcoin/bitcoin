@@ -18,11 +18,6 @@ static const char *HEADER_END = "HEADER=END";
 static const char *DATA_END = "DATA=END";
 typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
 
-static bool KeyFilter(const std::string& type)
-{
-    return WalletBatch::IsKeyType(type) || type == DBKeys::HDCHAIN;
-}
-
 class DummyCursor : public DatabaseCursor
 {
     Status Next(DataStream& key, DataStream& value) override { return Status::FAIL; }
@@ -186,17 +181,24 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */
         DataStream ssKey{row.first};
-        CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
+        DataStream ssValue(row.second);
         std::string strType, strErr;
-        bool fReadOK;
-        {
-            // Required in LoadKeyMetadata():
-            LOCK(dummyWallet.cs_wallet);
-            fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue, strType, strErr, KeyFilter);
-        }
-        if (!KeyFilter(strType)) {
+
+        // We only care about KEY, MASTER_KEY, CRYPTED_KEY, and HDCHAIN types
+        ssKey >> strType;
+        bool fReadOK = false;
+        if (strType == DBKeys::KEY) {
+            fReadOK = LoadKey(&dummyWallet, ssKey, ssValue, strErr);
+        } else if (strType == DBKeys::CRYPTED_KEY) {
+            fReadOK = LoadCryptedKey(&dummyWallet, ssKey, ssValue, strErr);
+        } else if (strType == DBKeys::MASTER_KEY) {
+            fReadOK = LoadEncryptionKey(&dummyWallet, ssKey, ssValue, strErr);
+        } else if (strType == DBKeys::HDCHAIN) {
+            fReadOK = LoadHDChain(&dummyWallet, ssValue, strErr);
+        } else {
             continue;
         }
+
         if (!fReadOK)
         {
             warnings.push_back(strprintf(Untranslated("WARNING: WalletBatch::Recover skipping %s: %s"), strType, strErr));
