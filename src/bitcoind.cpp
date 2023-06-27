@@ -24,7 +24,6 @@
 #include <util/check.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
-#include <util/syscall_sandbox.h>
 #include <util/syserror.h>
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
@@ -242,7 +241,6 @@ static bool AppInit(NodeContext& node)
         daemon_ep.Close();
     }
 #endif
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::SHUTOFF);
     return fRet;
 }
 

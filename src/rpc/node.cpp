@@ -21,7 +21,6 @@
 #include <univalue.h>
 #include <util/any.h>
 #include <util/check.h>
-#include <util/syscall_sandbox.h>
 
 #include <stdint.h>
 #ifdef HAVE_MALLOC_INFO
@@ -69,27 +68,6 @@ static RPCHelpMan setmocktime()
 },
     };
 }
-
-#if defined(USE_SYSCALL_SANDBOX)
-static RPCHelpMan invokedisallowedsyscall()
-{
-    return RPCHelpMan{
-        "invokedisallowedsyscall",
-        "\nInvoke a disallowed syscall to trigger a syscall sandbox violation. Used for testing purposes.\n",
-        {},
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("invokedisallowedsyscall", "") + HelpExampleRpc("invokedisallowedsyscall", "")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            if (!Params().IsTestChain()) {
-                throw std::runtime_error("invokedisallowedsyscall is used for testing only.");
-            }
-            TestDisallowedSandboxCall();
-            return UniValue::VNULL;
-        },
-    };
-}
-#endif // USE_SYSCALL_SANDBOX
 
 static RPCHelpMan mockscheduler()
 {
@@ -428,9 +406,6 @@ void RegisterNodeRPCCommands(CRPCTable& t)
         {"hidden", &echo},
         {"hidden", &echojson},
         {"hidden", &echoipc},
-#if defined(USE_SYSCALL_SANDBOX)
-        {"hidden", &invokedisallowedsyscall},
-#endif // USE_SYSCALL_SANDBOX
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

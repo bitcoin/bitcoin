@@ -7,7 +7,6 @@
 
 #include <sync.h>
 #include <tinyformat.h>
-#include <util/syscall_sandbox.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
@@ -149,7 +148,6 @@ public:
         for (int n = 0; n < threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
                 util::ThreadRename(strprintf("scriptch.%i", n));
-                SetSyscallSandboxPolicy(SyscallSandboxPolicy::VALIDATION_SCRIPT_CHECK);
                 Loop(false /* worker thread */);
             });
         }

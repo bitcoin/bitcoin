@@ -14,7 +14,6 @@
 #include <node/interface_ui.h>
 #include <shutdown.h>
 #include <tinyformat.h>
-#include <util/syscall_sandbox.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
@@ -167,7 +166,6 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
 
 void BaseIndex::ThreadSync()
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::TX_INDEX);
     // Wait for a possible reindex-chainstate to finish until continuing
     // with the index sync
     while (!g_indexes_ready_to_sync) {
