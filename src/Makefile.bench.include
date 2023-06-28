@@ -22,7 +22,6 @@ bench_bench_bitcoin_SOURCES = \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
-  bench/chacha_poly_aead.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/crypto_hash.cpp \
