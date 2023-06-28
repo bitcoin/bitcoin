@@ -184,26 +184,25 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
 
 static void TestPoly1305(const std::string &hexmessage, const std::string &hexkey, const std::string& hextag)
 {
-    std::vector<unsigned char> key = ParseHex(hexkey);
-    std::vector<unsigned char> m = ParseHex(hexmessage);
-    std::vector<unsigned char> tag = ParseHex(hextag);
-    std::vector<unsigned char> tagres;
-    tagres.resize(POLY1305_TAGLEN);
-    poly1305_auth(tagres.data(), m.data(), m.size(), key.data());
+    auto key = ParseHex<std::byte>(hexkey);
+    auto m = ParseHex<std::byte>(hexmessage);
+    auto tag = ParseHex<std::byte>(hextag);
+    std::vector<std::byte> tagres(Poly1305::TAGLEN);
+    Poly1305{key}.Update(m).Finalize(tagres);
     BOOST_CHECK(tag == tagres);
 
     // Test incremental interface
     for (int splits = 0; splits < 10; ++splits) {
         for (int iter = 0; iter < 10; ++iter) {
-            auto data = MakeByteSpan(m);
-            Poly1305 poly1305{MakeByteSpan(key)};
+            auto data = Span{m};
+            Poly1305 poly1305{key};
             for (int chunk = 0; chunk < splits; ++chunk) {
                 size_t now = InsecureRandRange(data.size() + 1);
                 poly1305.Update(data.first(now));
                 data = data.subspan(now);
             }
-            tagres.assign(POLY1305_TAGLEN, 0);
-            poly1305.Update(data).Finalize(MakeWritableByteSpan(tagres));
+            tagres.assign(Poly1305::TAGLEN, std::byte{});
+            poly1305.Update(data).Finalize(tagres);
             BOOST_CHECK(tag == tagres);
         }
     }
@@ -858,7 +857,7 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
     std::vector<unsigned char> expected_ciphertext_and_mac = ParseHex(hex_encrypted_message);
     std::vector<unsigned char> expected_ciphertext_and_mac_sequence999 = ParseHex(hex_encrypted_message_seq_999);
 
-    std::vector<unsigned char> ciphertext_buf(plaintext_buf.size() + POLY1305_TAGLEN, 0);
+    std::vector<unsigned char> ciphertext_buf(plaintext_buf.size() + Poly1305::TAGLEN, 0);
     std::vector<unsigned char> plaintext_buf_new(plaintext_buf.size(), 0);
     std::vector<unsigned char> cmp_ctx_buffer(64);
     uint32_t out_len = 0;

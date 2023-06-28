@@ -14,11 +14,11 @@ FUZZ_TARGET(crypto_poly1305)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    const std::vector<uint8_t> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, POLY1305_KEYLEN);
+    const std::vector<uint8_t> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, Poly1305::KEYLEN);
     const std::vector<uint8_t> in = ConsumeRandomLengthByteVector(fuzzed_data_provider);
 
-    std::vector<uint8_t> tag_out(POLY1305_TAGLEN);
-    poly1305_auth(tag_out.data(), in.data(), in.size(), key.data());
+    std::vector<std::byte> tag_out(Poly1305::TAGLEN);
+    Poly1305{MakeByteSpan(key)}.Update(MakeByteSpan(in)).Finalize(tag_out);
 }
 
 

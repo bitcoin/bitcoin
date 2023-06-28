@@ -221,11 +221,3 @@ void poly1305_update(poly1305_context *st, const unsigned char *m, size_t bytes)
 }
 
 }  // namespace poly1305_donna
-
-void poly1305_auth(unsigned char mac[16], const unsigned char *m, size_t bytes, const unsigned char key[32]) {
-    using namespace poly1305_donna;
-    poly1305_context ctx;
-    poly1305_init(&ctx, key);
-    poly1305_update(&ctx, m, bytes);
-    poly1305_finish(&ctx, mac);
-}
