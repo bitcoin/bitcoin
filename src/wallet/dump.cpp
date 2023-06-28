@@ -57,12 +57,12 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
     // Write out a magic string with version
     std::string line = strprintf("%s,%u\n", DUMP_MAGIC, DUMP_VERSION);
     dump_file.write(line.data(), line.size());
-    hasher.write(MakeByteSpan(line));
+    hasher << Span{line};
 
     // Write out the file format
     line = strprintf("%s,%s\n", "format", db.Format());
     dump_file.write(line.data(), line.size());
-    hasher.write(MakeByteSpan(line));
+    hasher << Span{line};
 
     if (ret) {
 
@@ -83,7 +83,7 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
             std::string value_str = HexStr(ss_value);
             line = strprintf("%s,%s\n", key_str, value_str);
             dump_file.write(line.data(), line.size());
-            hasher.write(MakeByteSpan(line));
+            hasher << Span{line};
         }
     }
 
@@ -160,7 +160,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         return false;
     }
     std::string magic_hasher_line = strprintf("%s,%s\n", magic_key, version_value);
-    hasher.write(MakeByteSpan(magic_hasher_line));
+    hasher << Span{magic_hasher_line};
 
     // Get the stored file format
     std::string format_key;
@@ -191,7 +191,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         warnings.push_back(strprintf(_("Warning: Dumpfile wallet format \"%s\" does not match command line specified format \"%s\"."), format_value, file_format));
     }
     std::string format_hasher_line = strprintf("%s,%s\n", format_key, format_value);
-    hasher.write(MakeByteSpan(format_hasher_line));
+    hasher << Span{format_hasher_line};
 
     DatabaseOptions options;
     DatabaseStatus status;
@@ -236,7 +236,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
             }
 
             std::string line = strprintf("%s,%s\n", key, value);
-            hasher.write(MakeByteSpan(line));
+            hasher << Span{line};
 
             if (key.empty() || value.empty()) {
                 continue;

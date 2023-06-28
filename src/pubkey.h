@@ -142,14 +142,14 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s.write(AsBytes(Span{vch, len}));
+        s << Span{vch, len};
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
-            s.read(AsWritableBytes(Span{vch, len}));
+            s >> Span{vch, len};
             if (len != size()) {
                 Invalidate();
             }
