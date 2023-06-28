@@ -182,6 +182,46 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
     }
 }
 
+static void TestFSChaCha20(const std::string& hex_plaintext, const std::string& hexkey, uint32_t rekey_interval, const std::string& ciphertext_after_rotation)
+{
+    auto key = ParseHex<std::byte>(hexkey);
+    BOOST_CHECK_EQUAL(FSChaCha20::KEYLEN, key.size());
+
+    auto plaintext = ParseHex<std::byte>(hex_plaintext);
+
+    auto fsc20 = FSChaCha20{key, rekey_interval};
+    auto c20 = ChaCha20{UCharCast(key.data())};
+
+    std::vector<std::byte> fsc20_output;
+    fsc20_output.resize(plaintext.size());
+
+    std::vector<std::byte> c20_output;
+    c20_output.resize(plaintext.size());
+
+    for (size_t i = 0; i < rekey_interval; i++) {
+        fsc20.Crypt(plaintext, fsc20_output);
+        c20.Crypt(UCharCast(plaintext.data()), UCharCast(c20_output.data()), plaintext.size());
+        BOOST_CHECK(c20_output == fsc20_output);
+    }
+
+    // At the rotation interval, the outputs will no longer match
+    fsc20.Crypt(plaintext, fsc20_output);
+    auto c20_copy = c20;
+    c20.Crypt(UCharCast(plaintext.data()), UCharCast(c20_output.data()), plaintext.size());
+    BOOST_CHECK(c20_output != fsc20_output);
+
+    std::byte new_key[FSChaCha20::KEYLEN];
+    c20_copy.Keystream(UCharCast(new_key), sizeof(new_key));
+    c20.SetKey32(UCharCast(new_key));
+    c20.Seek64({0, 1}, 0);
+
+    // Outputs should match again after simulating key rotation
+    c20.Crypt(UCharCast(plaintext.data()), UCharCast(c20_output.data()), plaintext.size());
+    BOOST_CHECK(c20_output == fsc20_output);
+
+    BOOST_CHECK_EQUAL(HexStr(fsc20_output), ciphertext_after_rotation);
+}
+
 static void TestPoly1305(const std::string &hexmessage, const std::string &hexkey, const std::string& hextag)
 {
     auto key = ParseHex<std::byte>(hexkey);
@@ -696,6 +736,20 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                  "fd565dea5addbdb914208fde7950f23e0385f9a727143f6a6ac51d84b1c0fb3e"
                  "2e3b00b63d6841a1cc6d1538b1d3a74bef1eb2f54c7b7281e36e484dba89b351"
                  "c8f572617e61e342879f211b0e4c515df50ea9d0771518fad96cd0baee62deb6");
+
+    // Forward secure ChaCha20
+    TestFSChaCha20("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                   "0000000000000000000000000000000000000000000000000000000000000000",
+                   256,
+                   "a93df4ef03011f3db95f60d996e1785df5de38fc39bfcb663a47bb5561928349");
+    TestFSChaCha20("01",
+                   "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                   5,
+                   "ea");
+    TestFSChaCha20("e93fdb5c762804b9a706816aca31e35b11d2aa3080108ef46a5b1f1508819c0a",
+                   "8ec4c3ccdaea336bdeb245636970be01266509b33f3d2642504eaf412206207a",
+                   4096,
+                   "8bfaa4eacff308fdb4a94a5ff25bd9d0c1f84b77f81239f67ff39d6e1ac280c9");
 }
 
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
