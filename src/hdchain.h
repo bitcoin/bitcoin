@@ -42,6 +42,8 @@ private:
     std::map<uint32_t, CHDAccount> GUARDED_BY(cs) mapAccounts;
 
 public:
+    /** Default for -mnemonicbits */
+    static constexpr int DEFAULT_MNEMONIC_BITS = 128; // 128 bits == 12 words
 
     CHDChain() = default;
     CHDChain(const CHDChain& other) :

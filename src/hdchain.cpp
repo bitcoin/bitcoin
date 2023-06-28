@@ -88,7 +88,7 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
 
         // empty mnemonic i.e. "generate a new one"
         if (ssMnemonic.empty()) {
-            ssMnemonicTmp = CMnemonic::Generate(256);
+            ssMnemonicTmp = CMnemonic::Generate(gArgs.GetArg("-mnemonicbits", DEFAULT_MNEMONIC_BITS));
         }
         // NOTE: default mnemonic passphrase is an empty string
 

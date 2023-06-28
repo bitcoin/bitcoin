@@ -91,7 +91,7 @@ bool CMnemonic::Check(SecureString mnemonic)
     }
     nWordCount++;
     // check number of words
-    if (nWordCount != 12 && nWordCount != 18 && nWordCount != 24) {
+    if (nWordCount % 3 != 0 || nWordCount < 12 || nWordCount > 24) {
         return false;
     }
 
@@ -133,18 +133,10 @@ bool CMnemonic::Check(SecureString mnemonic)
     bits[32] = bits[nWordCount * 4 / 3];
     CSHA256().Write(bits.data(), nWordCount * 4 / 3).Finalize(bits.data());
 
-    bool fResult = 0;
-    if (nWordCount == 12) {
-        fResult = (bits[0] & 0xF0) == (bits[32] & 0xF0); // compare first 4 bits
-    } else
-    if (nWordCount == 18) {
-        fResult = (bits[0] & 0xFC) == (bits[32] & 0xFC); // compare first 6 bits
-    } else
-    if (nWordCount == 24) {
-        fResult = bits[0] == bits[32]; // compare 8 bits
-    }
+    const char checksum_length = nWordCount / 3;
+    const char mask = (2 ^ checksum_length) << (8 - checksum_length);
 
-    return fResult;
+    return (bits[0] & mask) == (bits[32] & mask);
 }
 
 // passphrase must be at most 256 characters otherwise it would be truncated
