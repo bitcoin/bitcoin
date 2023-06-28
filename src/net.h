@@ -8,8 +8,8 @@
 
 #include <chainparams.h>
 #include <common/bloom.h>
+#include <common/sock.h>
 #include <compat/compat.h>
-#include <node/connection_types.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
 #include <hash.h>
@@ -18,6 +18,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/connection_types.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -26,7 +27,6 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
-#include <util/sock.h>
 #include <util/threadinterrupt.h>
 
 #include <atomic>

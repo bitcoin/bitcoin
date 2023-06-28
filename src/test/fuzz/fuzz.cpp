@@ -4,12 +4,12 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <common/sock.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/fs.h>
-#include <util/sock.h>
 #include <util/time.h>
 
 #include <csignal>

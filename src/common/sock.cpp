@@ -2,11 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/sock.h>
+
 #include <common/system.h>
 #include <compat/compat.h>
 #include <logging.h>
 #include <tinyformat.h>
-#include <util/sock.h>
 #include <util/syserror.h>
 #include <util/threadinterrupt.h>
 #include <util/time.h>

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_NET_H
 #define BITCOIN_TEST_FUZZ_UTIL_NET_H
 
+#include <common/sock.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -15,7 +16,6 @@
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <threadsafety.h>
-#include <util/sock.h>
 
 #include <chrono>
 #include <cstdint>

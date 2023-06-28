@@ -9,10 +9,10 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <common/sock.h>
 #include <compat/compat.h>
 #include <netaddress.h>
 #include <serialize.h>
-#include <util/sock.h>
 
 #include <functional>
 #include <memory>
