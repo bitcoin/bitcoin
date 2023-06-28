@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CI_IMAGE_NAME_TAG="ubuntu:23.04" # Version 23.04 will reach EOL in Jan 2024, and can be replaced by "ubuntu:24.04" (or anything else that ships the wanted clang version).
 export CONTAINER_NAME=ci_native_fuzz
-export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev python3 libevent-dev bsdmainutils libboost-dev libsqlite3-dev"
+export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev libevent-dev libboost-dev libsqlite3-dev"
 export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
