@@ -22,6 +22,7 @@
              (gnu packages moreutils)
              (gnu packages pkg-config)
              (gnu packages python)
+             ((gnu packages python-build) #:select (python-tomli))
              (gnu packages python-crypto)
              (gnu packages python-web)
              (gnu packages shells)
@@ -203,38 +204,44 @@ chain for " target " development."))
     (search-our-patches "nsis-gcc-10-memmove.patch"
                         "nsis-disable-installer-reloc.patch")))
 
-(define (fix-ppc64-nx-default lief)
-  (package-with-extra-patches lief
-    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
-
-;; Our python-lief package can be removed once we are using
-;; guix 83bfdb409787cb2737e68b093a319b247b7858e6 or later.
-;; Note we currently use cmake-minimal.
+;; While LIEF is packaged in Guix, we maintain our own package,
+;; to simplify building, and more easily apply updates.
+;; Moreover, the Guix's package uses cmake, which caused build
+;; failure; see https://github.com/bitcoin/bitcoin/pull/27296.
 (define-public python-lief
   (package
     (name "python-lief")
-    (version "0.12.3")
+    (version "0.13.2")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://github.com/lief-project/LIEF")
                     (commit version)))
               (file-name (git-file-name name version))
+              (modules '((guix build utils)))
+              (snippet
+               '(begin
+                  ;; Configure build for Python bindings.
+                  (substitute* "api/python/config-default.toml"
+                    (("(ninja         = )true" all m)
+                     (string-append m "false"))
+                    (("(parallel-jobs = )0" all m)
+                     (string-append m (number->string (parallel-job-count)))))))
               (sha256
                (base32
-                "11i6hqmcjh56y554kqhl61698n9v66j2qk1c1g63mv2w07h2z661"))))
+                "0y48x358ppig5xp97ahcphfipx7cg9chldj2q5zrmn610fmi4zll"))))
     (build-system python-build-system)
-    (native-inputs (list cmake-minimal))
+    (native-inputs (list cmake-minimal python-tomli))
     (arguments
      (list
       #:tests? #f                  ;needs network
       #:phases #~(modify-phases %standard-phases
+                   (add-before 'build 'change-directory
+                     (lambda _
+                       (chdir "api/python")))
                    (replace 'build
                      (lambda _
-                       (invoke
-                        "python" "setup.py" "--sdk" "build"
-                        (string-append
-                         "-j" (number->string (parallel-job-count)))))))))
+                       (invoke "python" "setup.py" "build"))))))
     (home-page "https://github.com/lief-project/LIEF")
     (synopsis "Library to instrument executable formats")
     (description
@@ -596,7 +603,7 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git-minimal
         ;; Tests
-        (fix-ppc64-nx-default python-lief))
+        python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
