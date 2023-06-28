@@ -215,6 +215,25 @@ void UniValue::checkType(const VType& expected) const
     }
 }
 
+void UniValue::checkTypeMultiValue() const
+{
+    if (typ != UniValue::VARR
+        && typ != UniValue::VOBJ
+        && typ != UniValue::VNULL) {
+        throw type_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not a multi value type."};
+    }
+}
+
+void UniValue::checkTypeSingleValue() const
+{
+    if (typ != UniValue::VBOOL
+        && typ != UniValue::VSTR
+        && typ != UniValue::VNUM
+        && typ != UniValue::VNULL) {
+        throw type_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not a single value type."};
+    }
+}
+
 const char *uvTypeName(UniValue::VType t)
 {
     switch (t) {

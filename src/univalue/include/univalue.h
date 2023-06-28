@@ -62,10 +62,10 @@ public:
     void setObject();
 
     enum VType getType() const { return typ; }
-    const std::string& getValStr() const { return val; }
-    bool empty() const { return (values.size() == 0); }
+    const std::string& getValStr() const { checkTypeSingleValue(); return val; }
+    bool empty() const { return size() == 0; }
 
-    size_t size() const { return values.size(); }
+    size_t size() const { checkTypeMultiValue(); return values.size(); }
 
     void getObjMap(std::map<std::string,UniValue>& kv) const;
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes) const;
@@ -105,6 +105,8 @@ private:
     std::vector<UniValue> values;
 
     void checkType(const VType& expected) const;
+    void checkTypeMultiValue() const;
+    void checkTypeSingleValue() const;
     bool findKey(const std::string& key, size_t& retIdx) const;
     void writeArray(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
     void writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
