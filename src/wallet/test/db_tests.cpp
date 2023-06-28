@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_byte_test)
     for (const auto& database : TestDatabases(m_path_root)) {
         std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
         for (const auto& [k, v] : {e, p, ps, f, fs, ff, ffs}) {
-            batch->Write(MakeUCharSpan(k), MakeUCharSpan(v));
+            batch->Write(Span{k}, Span{v});
         }
         CheckPrefix(*batch, StringBytes(""), {e, p, ps, f, fs, ff, ffs});
         CheckPrefix(*batch, StringBytes("prefix"), {p, ps});
