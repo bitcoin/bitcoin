@@ -21,6 +21,7 @@ export declare class BasicSchemeMPL {
   static deriveChildSk(sk: PrivateKey, index: number): PrivateKey;
   static deriveChildSkUnhardened(sk: PrivateKey, index: number): PrivateKey;
   static deriveChildPkUnhardened(pk: G1Element, index: number): G1Element;
+  static verifySecure(pk: G1Element, sig: G2Element, msg: Uint8Array): boolean;
 }
 
 export declare class PopSchemeMPL {

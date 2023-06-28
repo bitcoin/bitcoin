@@ -81,6 +81,15 @@ template <typename SchemeMPL> class SchemeMPLWrapper : public JSWrapper<SchemeMP
     return G1ElementWrapper(mpl.DeriveChildPkUnhardened(pk.GetWrappedInstance(), index));
   }
 
+  static bool VerifySecure(val pubkeyArray, const G2ElementWrapper &signature, val messageVal) {
+    std::vector<G1Element> pubkeys = G1ElementWrapper::Unwrap
+        (helpers::toVectorFromJSArray<G1ElementWrapper>(pubkeyArray));
+
+    std::vector <uint8_t> message = helpers::toVector(messageVal);
+
+    return mpl.VerifySecure(pubkeys, signature.GetWrappedInstance(), message);
+  }
+
 protected:
   static inline SchemeMPL mpl;
 };
