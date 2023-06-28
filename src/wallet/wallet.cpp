@@ -1001,7 +1001,7 @@ void CWallet::LoadToWallet(CWalletTx& wtxIn)
     }
 }
 
-bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, bool fUpdate)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool fUpdate)
 {
     const CTransaction& tx = *ptx;
     {
@@ -1030,17 +1030,16 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
              * the mostly recently created transactions from newer versions of the wallet.
              */
 
-            WalletBatch batch(*database);
+            std::optional<int64_t> block_time;
+            if (!confirm.hashBlock.IsNull()) {
+                int64_t block_time_tmp;
+                bool found_block = chain().findBlock(confirm.hashBlock, FoundBlock().maxTime(block_time_tmp));
+                assert(found_block);
+                block_time = block_time_tmp;
+            }
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 for (const auto& spk_man_pair : m_spk_managers) {
-                    std::optional<int64_t> block_time;
-                    if (!confirm.hashBlock.IsNull()) {
-                        int64_t block_time_tmp;
-                        bool found_block = chain().findBlock(confirm.hashBlock, FoundBlock().maxTime(block_time_tmp));
-                        assert(found_block);
-                        block_time = block_time_tmp;
-                    }
                     spk_man_pair.second->MarkUnusedAddresses(batch, txout.scriptPubKey, block_time);
                 }
             }
@@ -1205,9 +1204,9 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
     fAnonymizableTallyCachedNonDenom = false;
 }
 
-void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, bool update_tx)
+void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool update_tx)
 {
-    if (!AddToWalletIfInvolvingMe(ptx, confirm, update_tx))
+    if (!AddToWalletIfInvolvingMe(ptx, confirm, batch, update_tx))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1222,7 +1221,8 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Confirmatio
 void CWallet::transactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime) {
     LOCK(cs_wallet);
     CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, /* block_height */ 0, {}, /* nIndex */ 0);
-    SyncTransaction(ptx, confirm);
+    WalletBatch batch(*database);
+    SyncTransaction(ptx, confirm, batch);
 
     auto it = mapWallet.find(ptx->GetHash());
     if (it != mapWallet.end()) {
@@ -1247,9 +1247,10 @@ void CWallet::blockConnected(const CBlock& block, int height)
 
     m_last_block_processed_height = height;
     m_last_block_processed = block_hash;
+    WalletBatch batch(*database);
     for (size_t index = 0; index < block.vtx.size(); index++) {
         CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, height, block_hash, index);
-        SyncTransaction(block.vtx[index], confirm);
+        SyncTransaction(block.vtx[index], confirm, batch);
         transactionRemovedFromMempool(block.vtx[index], MemPoolRemovalReason::MANUAL);
     }
 
@@ -1268,9 +1269,10 @@ void CWallet::blockDisconnected(const CBlock& block, int height)
     // future with a stickier abandoned state or even removing abandontransaction call.
     m_last_block_processed_height = height - 1;
     m_last_block_processed = block.hashPrevBlock;
+    WalletBatch batch(*database);
     for (const CTransactionRef& ptx : block.vtx) {
         CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, /* block_height */ 0, {}, /* nIndex */ 0);
-        SyncTransaction(ptx, confirm);
+        SyncTransaction(ptx, confirm, batch);
     }
 
     // reset cache to make sure no longer mature coins are excluded
@@ -1926,6 +1928,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     double progress_end = chain().guessVerificationProgress(end_hash);
     double progress_current = progress_begin;
     int block_height = start_height;
+    WalletBatch batch(*database);
     while (!fAbortRescan && !chain().shutdownRequested()) {
         if (progress_end - progress_begin > 0.0) {
             m_scanning_progress = (progress_current - progress_begin) / (progress_end - progress_begin);
@@ -1962,7 +1965,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             }
             for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                 CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, block_height, block_hash, posInBlock);
-                SyncTransaction(block.vtx[posInBlock], confirm, fUpdate);
+                SyncTransaction(block.vtx[posInBlock], confirm, batch, fUpdate);
             }
             // scan succeeded, record block as most recent successfully scanned
             result.last_scanned_block = block_hash;
