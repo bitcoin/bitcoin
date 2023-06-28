@@ -3,27 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <index/coinstatsindex.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
-#include <chrono>
-
-
 BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
-
-static void IndexWaitSynced(BaseIndex& index)
-{
-    // Allow the CoinStatsIndex to catch up with the block index that is syncing
-    // in a background thread.
-    const auto timeout = GetTime<std::chrono::seconds>() + 120s;
-    while (!index.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(timeout > GetTime<std::chrono::milliseconds>());
-        UninterruptibleSleep(100ms);
-    }
-}
 
 BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 {

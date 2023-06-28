@@ -17,8 +17,8 @@
 #include <script/standard.h>
 #include <spork.h>
 #include <test/util/blockfilter.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
-#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -141,12 +141,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     BOOST_REQUIRE(filter_index.Start(::ChainstateActive()));
 
     // Allow filter index to catch up with the block index.
-    constexpr auto timeout{10s};
-    const auto time_start{SteadyClock::now()};
-    while (!filter_index.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(time_start + timeout > SteadyClock::now());
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-    }
+    IndexWaitSynced(filter_index);
 
     // Check that filter index has all blocks that were in the chain before it started.
     {

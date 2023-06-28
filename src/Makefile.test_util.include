@@ -9,6 +9,7 @@ EXTRA_LIBRARIES += \
 
 TEST_UTIL_H = \
     test/util/blockfilter.h \
+    test/util/index.h \
     test/util/logging.h \
     test/util/mining.h \
     test/util/net.h \
@@ -21,6 +22,7 @@ libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAG
 libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libtest_util_a_SOURCES = \
   test/util/blockfilter.cpp \
+  test/util/index.cpp \
   test/util/logging.cpp \
   test/util/mining.cpp \
   test/util/net.cpp \
