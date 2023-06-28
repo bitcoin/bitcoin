@@ -7,6 +7,7 @@
 #include <logging.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <shutdown.h>
 #include <ui_interface.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
@@ -1414,14 +1415,27 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
         {
             // don't create extra internal keys
             missingInternal = 0;
-        } else {
-            nTargetSize *= 2;
         }
+
+        const int64_t total_missing = missingInternal + missingExternal;
+        if (total_missing == 0) return true;
+
+        constexpr int64_t PROGRESS_REPORT_INTERVAL = 1; // in seconds
+        const bool should_show_progress = total_missing > 100;
+        const std::string strMsg = _("Topping up keypool...").translated;
+
+        int64_t progress_report_time = GetTime();
+        WalletLogPrintf("%s\n", strMsg);
+        if (should_show_progress) {
+            uiInterface.ShowProgress(strMsg, 0, false);
+        }
+
         bool fInternal = false;
+        int64_t current_index{0};
         WalletBatch batch(m_storage.GetDatabase());
-        for (int64_t i = missingInternal + missingExternal; i--;)
-        {
-            if (i < missingInternal) {
+
+        for (current_index = 0; current_index < total_missing; ++current_index) {
+            if (current_index == missingExternal) {
                 fInternal = true;
             }
 
@@ -1429,15 +1443,20 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
             CPubKey pubkey(GenerateNewKey(batch, 0, fInternal));
             AddKeypoolPubkeyWithDB(pubkey, fInternal, batch);
 
-            if (missingInternal + missingExternal > 0) {
-                WalletLogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n",
-                          missingInternal + missingExternal, missingInternal,
-                          setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
+            if (GetTime() >= progress_report_time + PROGRESS_REPORT_INTERVAL) {
+                const double dProgress = 100.f * current_index / total_missing;
+                progress_report_time = GetTime();
+                WalletLogPrintf("Still topping up. At key %lld. Progress=%f\n", current_index, dProgress);
+                if (should_show_progress) {
+                    uiInterface.ShowProgress(strMsg, static_cast<int>(dProgress), false);
+                }
             }
-
-            double dProgress = 100.f * m_max_keypool_index / (nTargetSize + 1);
-            std::string strMsg = strprintf(_("Loading wallet... (%3.2f %%)").translated, dProgress);
-            uiInterface.InitMessage(strMsg);
+            if (ShutdownRequested()) break;
+        }
+        WalletLogPrintf("Keypool added %d keys, size=%u (%u internal)\n",
+                  current_index + 1, setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
+        if (should_show_progress) {
+            uiInterface.ShowProgress("", 100, false);
         }
     }
     NotifyCanGetAddressesChanged();
