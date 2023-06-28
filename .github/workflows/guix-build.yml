@@ -51,11 +51,11 @@ jobs:
         run: |
           docker run --privileged -d --rm -t \
             --name guix-daemon \
-            -e ADDITIONAL_GUIX_COMMON_FLAGS='--max-jobs=32' \
+            -e ADDITIONAL_GUIX_COMMON_FLAGS="--max-jobs=$(nproc --all)" \
             -v ${{ github.workspace }}:/src/dash \
             -w /src/dash \
             guix_ubuntu:latest && \
-          docker exec guix-daemon bash -c "/usr/local/bin/guix-start"
+          docker exec guix-daemon bash -c '/usr/local/bin/guix-start'
 
       - name: Ensure build passes
         run: |
@@ -63,14 +63,7 @@ jobs:
             echo "Guix build failed!"
             exit 1
           fi
-      - name: Compute SHA256 checksums for binaries
+
+      - name: Compute SHA256 checksums
         run: |
-          ( \
-          SRC_PATH_PREFIX=guix-build-$(git rev-parse --short=12 HEAD)/distsrc- && \
-          sha256sum ${SRC_PATH_PREFIX}*/src/dash{d,-cli,-tx,-wallet}{,.exe} && \
-          sha256sum ${SRC_PATH_PREFIX}*/src/qt/dash-qt{,.exe} && \
-          sha256sum ${SRC_PATH_PREFIX}*/src/test/test_dash{,.exe} \
-          ) | sort -k 2
-      - name: Compute SHA256 checksums for archives
-        run: |
-          find guix-build-"$(git rev-parse --short=12 HEAD)"/output -type f | grep -v SHA256 | xargs sha256sum | sort -k 2
+          ./contrib/containers/guix/scripts/guix-check ${{ github.workspace }}

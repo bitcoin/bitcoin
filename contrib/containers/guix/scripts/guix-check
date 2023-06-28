@@ -2,16 +2,27 @@
 
 set -eo pipefail
 
-cd /src/dash
-COMMIT_ID=$(git rev-parse --short=12 HEAD)
+if [[ -n "${1}" ]]; then
+    WORKSPACE_PATH="$1"
+else
+    WORKSPACE_PATH="/src/dash"
+fi
 
-printf "Binaries:\n"
+if [[ ! -d "$WORKSPACE_PATH" ]]; then
+    echo "$0: $WORKSPACE_PATH is not a valid directory, exiting!"
+    exit 1
+fi
+
+cd "$WORKSPACE_PATH"
+COMMIT_ID="$(git rev-parse --short=12 HEAD)"
+
+printf "\nBinaries:\n\n"
 ( \
-SRC_PATH_PREFIX=guix-build-${COMMIT_ID}/distsrc- && \
+SRC_PATH_PREFIX="guix-build-${COMMIT_ID}/distsrc-" && \
 sha256sum ${SRC_PATH_PREFIX}*/src/dash{d,-cli,-tx,-wallet}{,.exe} && \
 sha256sum ${SRC_PATH_PREFIX}*/src/qt/dash-qt{,.exe} && \
 sha256sum ${SRC_PATH_PREFIX}*/src/test/test_dash{,.exe} \
 ) | sort -k 2
 
-printf "Archives:\n"
-find guix-build-"${COMMIT_ID}"/output -type f | grep -v SHA256 | xargs sha256sum | sort -k 2
+printf "\nArchives:\n\n"
+find "guix-build-${COMMIT_ID}/output" -type f | grep -v SHA256 | xargs sha256sum | sort -k 2
