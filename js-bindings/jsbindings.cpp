@@ -42,7 +42,8 @@ EMSCRIPTEN_BINDINGS(blsjs) {
         .class_function("aggregateVerify", &SchemeMPLWrapper<BasicSchemeMPL>::AggregateVerify)
         .class_function("deriveChildSk", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildSk)
         .class_function("deriveChildSkUnhardened", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildSkUnhardened)
-        .class_function("deriveChildPkUnhardened", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildPkUnhardened);
+        .class_function("deriveChildPkUnhardened", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildPkUnhardened)
+        .class_function("verifySecure", &SchemeMPLWrapper<BasicSchemeMPL>::VerifySecure);
 
     class_<PopSchemeMPLWrapper>("PopSchemeMPL")
         .class_function("skToG1", &PopSchemeMPLWrapper::SkToG1)
