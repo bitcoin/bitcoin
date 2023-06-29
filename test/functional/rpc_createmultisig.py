@@ -157,7 +157,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                 try:
                     node1.loadwallet('wmulti')
                 except JSONRPCException as e:
-                    path = os.path.join(self.options.tmpdir, "node1", "regtest", "wallets", "wmulti")
+                    path = self.nodes[1].wallets_path / "wmulti"
                     if e.error['code'] == -18 and "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path) in e.error['message']:
                         node1.createwallet(wallet_name='wmulti', disable_private_keys=True)
                     else:

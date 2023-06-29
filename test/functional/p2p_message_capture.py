@@ -58,7 +58,7 @@ class MessageCaptureTest(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
-        capturedir = os.path.join(self.nodes[0].datadir, "regtest/message_capture")
+        capturedir = self.nodes[0].chain_path / "message_capture"
         # Connect a node so that the handshake occurs
         self.nodes[0].add_p2p_connection(P2PDataStore())
         self.nodes[0].disconnect_p2ps()

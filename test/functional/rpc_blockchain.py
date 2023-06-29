@@ -49,7 +49,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
-    get_datadir_path,
 )
 from test_framework.wallet import MiniWallet
 
@@ -572,16 +571,15 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test that getblock with verbosity 3 includes prevout")
         assert_vin_contains_prevout(3)
 
-        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
-        datadir = get_datadir_path(self.options.tmpdir, 0)
-
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")
 
+        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
+
         def move_block_file(old, new):
-            old_path = os.path.join(datadir, self.chain, 'blocks', old)
-            new_path = os.path.join(datadir, self.chain, 'blocks', new)
-            os.rename(old_path, new_path)
+            old_path = self.nodes[0].chain_path / "blocks" / old
+            new_path = self.nodes[0].chain_path / "blocks" / new
+            old_path.rename(new_path)
 
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')

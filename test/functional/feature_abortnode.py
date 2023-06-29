@@ -9,10 +9,7 @@
 - Mine a fork that requires disconnecting the tip.
 - Verify that bitcoind AbortNode's.
 """
-
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_datadir_path
-import os
 
 
 class AbortNodeTest(BitcoinTestFramework):
@@ -26,10 +23,9 @@ class AbortNodeTest(BitcoinTestFramework):
 
     def run_test(self):
         self.generate(self.nodes[0], 3, sync_fun=self.no_op)
-        datadir = get_datadir_path(self.options.tmpdir, 0)
 
         # Deleting the undo file will result in reorg failure
-        os.unlink(os.path.join(datadir, self.chain, 'blocks', 'rev00000.dat'))
+        (self.nodes[0].chain_path / "blocks" / "rev00000.dat").unlink()
 
         # Connecting to a node with a more work chain will trigger a reorg
         # attempt.

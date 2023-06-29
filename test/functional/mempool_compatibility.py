@@ -55,8 +55,8 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.stop_node(1)
 
         self.log.info("Move mempool.dat from old to new node")
-        old_node_mempool = os.path.join(old_node.datadir, self.chain, 'mempool.dat')
-        new_node_mempool = os.path.join(new_node.datadir, self.chain, 'mempool.dat')
+        old_node_mempool = os.path.join(old_node.chain_path, 'mempool.dat')
+        new_node_mempool = os.path.join(new_node.chain_path, 'mempool.dat')
         os.rename(old_node_mempool, new_node_mempool)
 
         self.log.info("Start new node and verify mempool contains the tx")

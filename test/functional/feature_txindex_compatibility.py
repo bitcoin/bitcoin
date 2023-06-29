@@ -50,10 +50,10 @@ class TxindexCompatibilityTest(BitcoinTestFramework):
         self.nodes[0].getrawtransaction(txid=spend_utxo["txid"])  # Requires -txindex
 
         self.stop_nodes()
-        legacy_chain_dir = os.path.join(self.nodes[0].datadir, self.chain)
+        legacy_chain_dir = self.nodes[0].chain_path
 
         self.log.info("Migrate legacy txindex")
-        migrate_chain_dir = os.path.join(self.nodes[2].datadir, self.chain)
+        migrate_chain_dir = self.nodes[2].chain_path
         shutil.rmtree(migrate_chain_dir)
         shutil.copytree(legacy_chain_dir, migrate_chain_dir)
         with self.nodes[2].assert_debug_log([
@@ -64,7 +64,7 @@ class TxindexCompatibilityTest(BitcoinTestFramework):
         self.nodes[2].getrawtransaction(txid=spend_utxo["txid"])  # Requires -txindex
 
         self.log.info("Drop legacy txindex")
-        drop_index_chain_dir = os.path.join(self.nodes[1].datadir, self.chain)
+        drop_index_chain_dir = self.nodes[1].chain_path
         shutil.rmtree(drop_index_chain_dir)
         shutil.copytree(legacy_chain_dir, drop_index_chain_dir)
         self.nodes[1].assert_start_raises_init_error(

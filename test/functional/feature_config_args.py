@@ -32,7 +32,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.stop_node(0)
 
         # Check that startup fails if conf= is set in bitcoin.conf or in an included conf file
-        bad_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_bad.conf')
+        bad_conf_file_path = self.nodes[0].datadir_path / "bitcoin_bad.conf"
         util.write_config(bad_conf_file_path, n=0, chain='', extra_config=f'conf=some.conf\n')
         conf_in_config_file_err = 'Error: Error reading configuration file: conf cannot be set in the configuration file; use includeconf= if you want to include additional config files'
         self.nodes[0].assert_start_raises_init_error(
@@ -75,7 +75,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 conf.write("wallet=foo\n")
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: Config setting for -wallet only applied on {self.chain} network when in [{self.chain}] section.')
 
-        main_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_main.conf')
+        main_conf_file_path = self.nodes[0].datadir_path / "bitcoin_main.conf"
         util.write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('acceptnonstdtxn=1\n')

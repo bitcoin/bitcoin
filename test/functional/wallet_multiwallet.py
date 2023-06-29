@@ -62,7 +62,7 @@ class MultiWalletTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        data_dir = lambda *p: os.path.join(node.datadir, self.chain, *p)
+        data_dir = lambda *p: os.path.join(node.chain_path, *p)
         wallet_dir = lambda *p: data_dir('wallets', *p)
         wallet = lambda name: node.get_wallet_rpc(name)
 
@@ -299,7 +299,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].listwallets()), set(wallet_names))
 
         # Fail to load if wallet doesn't exist
-        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "wallets")
+        path = wallet_dir("wallets")
         assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path), self.nodes[0].loadwallet, 'wallets')
 
         # Fail to load duplicate wallets
@@ -307,7 +307,7 @@ class MultiWalletTest(BitcoinTestFramework):
         if not self.options.descriptors:
             # This tests the default wallet that BDB makes, so SQLite wallet doesn't need to test this
             # Fail to load duplicate wallets by different ways (directory and filepath)
-            path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "wallet.dat")
+            path = wallet_dir("wallet.dat")
             assert_raises_rpc_error(-35, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, 'wallet.dat')
 
             # Only BDB doesn't open duplicate wallet files. SQLite does not have this limitation. While this may be desired in the future, it is not necessary
@@ -322,13 +322,13 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # Fail to load if a directory is specified that doesn't contain a wallet
         os.mkdir(wallet_dir('empty_wallet_dir'))
-        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "empty_wallet_dir")
+        path = wallet_dir("empty_wallet_dir")
         assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), self.nodes[0].loadwallet, 'empty_wallet_dir')
 
         self.log.info("Test dynamic wallet creation.")
 
         # Fail to create a wallet if it already exists.
-        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "w2")
+        path = wallet_dir("w2")
         assert_raises_rpc_error(-4, "Failed to create database path '{}'. Database already exists.".format(path), self.nodes[0].createwallet, 'w2')
 
         # Successfully create a wallet with a new name
