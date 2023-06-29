@@ -24,7 +24,7 @@ from pathlib import Path
 
 from .authproxy import (
     JSONRPCException,
-    EncodeDecimal,
+    serialization_fallback,
 )
 from .descriptors import descsum_create
 from .p2p import P2P_SUBVERSION
@@ -714,7 +714,7 @@ def arg_to_cli(arg):
     elif arg is None:
         return 'null'
     elif isinstance(arg, dict) or isinstance(arg, list):
-        return json.dumps(arg, default=EncodeDecimal)
+        return json.dumps(arg, default=serialization_fallback)
     else:
         return str(arg)
 
