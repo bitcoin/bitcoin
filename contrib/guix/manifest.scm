@@ -137,26 +137,19 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
-;; Building glibc with stack smashing protector first landed in glibc 2.25, use
-;; this function to disable for older glibcs
-;;
-;; From glibc 2.25 changelog:
-;;
-;;   * Most of glibc can now be built with the stack smashing protector enabled.
-;;     It is recommended to build glibc with --enable-stack-protector=strong.
-;;     Implemented by Nick Alcock (Oracle).
-(define (make-glibc-without-ssp xglibc)
-  (package-with-extra-configure-variable
-   (package-with-extra-configure-variable
-    xglibc "libc_cv_ssp" "no")
-   "libc_cv_ssp_strong" "no"))
+;; https://gcc.gnu.org/install/configure.html
+(define (hardened-gcc gcc)
+  (package-with-extra-configure-variable (
+    package-with-extra-configure-variable gcc
+    "--enable-default-ssp" "yes")
+    "--enable-default-pie" "yes"))
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-ssp (make-glibc-without-werror glibc-2.24)))
-                                       (base-gcc (make-gcc-rpath-link base-gcc)))
+                                       (base-libc (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.24)))
+                                       (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Dash Core release binaries."
   (make-cross-toolchain target
@@ -498,8 +491,7 @@ and endian independent.")
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
          ("python-requests" ,python-requests)
-         ("python-macholib" ,python-macholib)
-         ("libcrypto" ,openssl)))
+         ("python-macholib" ,python-macholib)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
       (arguments '(#:tests? #f))
@@ -511,6 +503,12 @@ inspecting signatures in Mach-O binaries.")
 
 (define (make-glibc-without-werror glibc)
   (package-with-extra-configure-variable glibc "enable_werror" "no"))
+
+(define (make-glibc-with-stack-protector glibc)
+  (package-with-extra-configure-variable glibc "--enable-stack-protector" "all"))
+
+(define (make-glibc-with-bind-now glibc)
+  (package-with-extra-configure-variable glibc "--enable-bind-now" "yes"))
 
 (define-public glibc-2.24
   (package
@@ -550,10 +548,14 @@ inspecting signatures in Mach-O binaries.")
                                            "glibc-2.27-dont-redefine-nss-database.patch"
                                            "glibc-2.27-guix-prefix.patch"))))))
 
+(define (fix-ppc64-nx-default lief)
+  (package-with-extra-patches lief
+    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
+
 (define-public lief
   (package
    (name "python-lief")
-   (version "0.12.0")
+   (version "0.12.1")
    (source
     (origin
      (method git-fetch)
@@ -563,7 +565,7 @@ inspecting signatures in Mach-O binaries.")
      (file-name (git-file-name name version))
      (sha256
       (base32
-       "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
+       "1xzbh3bxy4rw1yamnx68da1v5s56ay4g081cyamv67256g0qy2i1"))))
    (build-system python-build-system)
    (arguments
     `(#:phases
@@ -606,8 +608,8 @@ parse, modify and abstract ELF, PE and MachO formats.")
         (list zlib "static")
         ;; Build tools
         gnu-make
-        libtool
-        autoconf
+        libtool-2.4.7
+        autoconf-2.71
         automake
         pkg-config
         bison
@@ -620,7 +622,7 @@ parse, modify and abstract ELF, PE and MachO formats.")
         ;; Git
         git
         ;; Tests
-        lief)
+        (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
@@ -631,8 +633,8 @@ parse, modify and abstract ELF, PE and MachO formats.")
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
-                                                      #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)
-                                                      #:base-kernel-headers base-linux-kernel-headers))
+                                                      #:base-libc (make-glibc-with-stack-protector
+                                                        (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.27/bitcoin-patched)))))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")

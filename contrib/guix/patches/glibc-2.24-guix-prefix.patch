@@ -15,7 +15,7 @@ when we being using newer versions of glibc.
  CFLAGS-.oS = $(CFLAGS-.o) $(PIC-ccflag)
 +
 +# Map Guix store paths to /usr
-+CFLAGS-.oS += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -fdebug-prefix-map={}=/usr" \;`
++CFLAGS-.oS += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;`
 +
  CPPFLAGS-.oS = $(CPPFLAGS-.o) -DPIC -DLIBC_NONSHARED=1
  libtype.oS = lib%_nonshared.a
