@@ -264,6 +264,41 @@ static void TestChaCha20Poly1305(const std::string& plain_hex, const std::string
     bool ret = aead.Decrypt(cipher, aad, nonce, decipher);
     BOOST_CHECK(ret);
     BOOST_CHECK(decipher == plain);
+
+    std::vector<std::byte> keystream(plain.size());
+    aead.Keystream(nonce, keystream);
+    for (size_t i = 0; i < plain.size(); ++i) {
+        BOOST_CHECK_EQUAL(plain[i] ^ keystream[i], cipher[i]);
+    }
+}
+
+static void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::string& aad_hex, const std::string& key_hex, uint64_t msg_idx, const std::string& cipher_hex)
+{
+    auto plain = ParseHex<std::byte>(plain_hex);
+    auto aad = ParseHex<std::byte>(aad_hex);
+    auto key = ParseHex<std::byte>(key_hex);
+    auto expected_cipher = ParseHex<std::byte>(cipher_hex);
+    std::vector<std::byte> cipher(plain.size() + FSChaCha20Poly1305::EXPANSION);
+
+    FSChaCha20Poly1305 enc_aead{key, 224};
+    for (uint64_t i = 0; i < msg_idx; ++i) {
+        std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
+        enc_aead.Encrypt(Span{dummy_tag}.first(0), Span{dummy_tag}.first(0), dummy_tag);
+    }
+
+    enc_aead.Encrypt(plain, aad, cipher);
+    BOOST_CHECK(cipher == expected_cipher);
+
+    FSChaCha20Poly1305 dec_aead{key, 224};
+    for (uint64_t i = 0; i < msg_idx; ++i) {
+        std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
+        dec_aead.Decrypt(dummy_tag, Span{dummy_tag}.first(0), Span{dummy_tag}.first(0));
+    }
+
+    std::vector<std::byte> decipher(cipher.size() - AEADChaCha20Poly1305::EXPANSION);
+    bool ret = dec_aead.Decrypt(cipher, aad, decipher);
+    BOOST_CHECK(ret);
+    BOOST_CHECK(decipher == plain);
 }
 
 static void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex, const std::string &info_hex, const std::string &okm_check_hex) {
@@ -947,6 +982,29 @@ BOOST_AUTO_TEST_CASE(chacha20poly1305_testvectors)
                          "77adda51d6730b9ad6c995658cbd49f581b2547e7c0c08fcc24ceec797461021",
                          {0x1f90da88, 0x75dafa3ef84471a4},
                          "aaae5bb81e8407c94b2ae86ae0c7efbe");
+
+    // FSChaCha20Poly1305 tests.
+    TestFSChaCha20Poly1305("d6a4cb04ef0f7c09c1866ed29dc24d820e75b0491032a51b4c3366f9ca35c19e"
+                           "a3047ec6be9d45f9637b63e1cf9eb4c2523a5aab7b851ebeba87199db0e839cf"
+                           "0d5c25e50168306377aedbe9089fd2463ded88b83211cf51b73b150608cc7a60"
+                           "0d0f11b9a742948482e1b109d8faf15b450aa7322e892fa2208c6691e3fecf4c"
+                           "711191b14d75a72147",
+                           "786cb9b6ebf44288974cf0",
+                           "5c9e1c3951a74fba66708bf9d2c217571684556b6a6a3573bff2847d38612654",
+                           500,
+                           "9dcebbd3281ea3dd8e9a1ef7d55a97abd6743e56ebc0c190cb2c4e14160b385e"
+                           "0bf508dddf754bd02c7c208447c131ce23e47a4a14dfaf5dd8bc601323950f75"
+                           "4e05d46e9232f83fc5120fbbef6f5347a826ec79a93820718d4ec7a2b7cfaaa4"
+                           "4b21e16d726448b62f803811aff4f6d827ed78e738ce8a507b81a8ae13131192"
+                           "8039213de18a5120dc9b7370baca878f50ff254418de3da50c");
+    TestFSChaCha20Poly1305("8349b7a2690b63d01204800c288ff1138a1d473c832c90ea8b3fc102d0bb3adc"
+                           "44261b247c7c3d6760bfbe979d061c305f46d94c0582ac3099f0bf249f8cb234",
+                           "",
+                           "3bd2093fcbcb0d034d8c569583c5425c1a53171ea299f8cc3bbf9ae3530adfce",
+                           60000,
+                           "30a6757ff8439b975363f166a0fa0e36722ab35936abd704297948f45083f4d4"
+                           "99433137ce931f7fca28a0acd3bc30f57b550acbc21cbd45bbef0739d9caf30c"
+                           "14b94829deb27f0b1923a2af704ae5d6");
 }
 
 BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
