@@ -7,6 +7,8 @@
 WARNING: This code is slow and uses bad randomness.
 Do not use for anything but tests."""
 
+import csv
+import os
 import random
 import unittest
 
@@ -128,3 +130,34 @@ class TestFrameworkEllSwift(unittest.TestCase):
             shared_secret1 = ellswift_ecdh_xonly(encoding1, privkey2)
             shared_secret2 = ellswift_ecdh_xonly(encoding2, privkey1)
             self.assertEqual(shared_secret1, shared_secret2)
+
+    def test_elligator_encode_testvectors(self):
+        """Implement the BIP324 test vectors for ellswift encoding (read from xswiftec_inv_test_vectors.csv)."""
+        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xswiftec_inv_test_vectors.csv')
+        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                u = FE.from_bytes(bytes.fromhex(row['u']))
+                x = FE.from_bytes(bytes.fromhex(row['x']))
+                for case in range(8):
+                    ret = xswiftec_inv(x, u, case)
+                    if ret is None:
+                        self.assertEqual(row[f"case{case}_t"], "")
+                    else:
+                        self.assertEqual(row[f"case{case}_t"], ret.to_bytes().hex())
+                        self.assertEqual(xswiftec(u, ret), x)
+
+    def test_elligator_decode_testvectors(self):
+        """Implement the BIP324 test vectors for ellswift decoding (read from ellswift_decode_test_vectors.csv)."""
+        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ellswift_decode_test_vectors.csv')
+        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                encoding = bytes.fromhex(row['ellswift'])
+                assert len(encoding) == 64
+                expected_x = FE(int(row['x'], 16))
+                u = FE(int.from_bytes(encoding[:32], 'big'))
+                t = FE(int.from_bytes(encoding[32:], 'big'))
+                x = xswiftec(u, t)
+                self.assertEqual(x, expected_x)
+                self.assertTrue(GE.is_valid_x(x))
