@@ -4,7 +4,11 @@
       "include_only_existing_source": true,
       "paths_to_include": [],
       "paths_to_exclude": [
-        "src/leveldb"
+        "src/crc32c",
+        "src/crypto/ctaes",
+        "src/leveldb",
+        "src/minisketch",
+        "src/secp256k1"
       ]
     },
     "format": {
