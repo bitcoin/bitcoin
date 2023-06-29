@@ -1844,7 +1844,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
             if (!fFeeler && outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) {
-                break;
+                continue;
             }
 
             // if we selected an invalid or local address, restart
