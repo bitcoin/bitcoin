@@ -11,9 +11,9 @@
 #include <script/standard.h>
 #include <util/underlying.h>
 
-maybe_error CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+maybe_error CProRegTx::IsTriviallyValid(bool is_basic_scheme_active) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
     if (!IsValidMnType(nType)) {
@@ -87,9 +87,9 @@ std::string CProRegTx::ToString() const
                      nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
-maybe_error CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+maybe_error CProUpServTx::IsTriviallyValid(bool is_basic_scheme_active) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
 
@@ -108,9 +108,9 @@ std::string CProUpServTx::ToString() const
                      nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
-maybe_error CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+maybe_error CProUpRegTx::IsTriviallyValid(bool is_basic_scheme_active) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
     if (nMode != 0) {
@@ -141,9 +141,9 @@ std::string CProUpRegTx::ToString() const
         nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), payee);
 }
 
-maybe_error CProUpRevTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
+maybe_error CProUpRevTx::IsTriviallyValid(bool is_basic_scheme_active) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
 
