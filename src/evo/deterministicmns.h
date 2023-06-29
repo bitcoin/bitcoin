@@ -235,22 +235,22 @@ public:
 
     [[nodiscard]] size_t GetValidMNsCount() const
     {
-        return ranges::count_if(mnMap, [](const auto& p){ return IsMNValid(*p.second); });
+        return ranges::count_if(mnMap, [this](const auto& p){ return IsMNValid(*p.second); });
     }
 
     [[nodiscard]] size_t GetAllHPMNsCount() const
     {
-        return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance; });
+        return ranges::count_if(mnMap, [this](const auto& p) { return p.second->nType == MnType::HighPerformance; });
     }
 
     [[nodiscard]] size_t GetValidHPMNsCount() const
     {
-        return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::HighPerformance && IsMNValid(*p.second); });
+        return ranges::count_if(mnMap, [this](const auto& p) { return p.second->nType == MnType::HighPerformance && IsMNValid(*p.second); });
     }
 
     [[nodiscard]] size_t GetValidWeightedMNsCount() const
     {
-        return std::accumulate(mnMap.begin(), mnMap.end(), 0, [](auto res, const auto& p) {
+        return std::accumulate(mnMap.begin(), mnMap.end(), 0, [this](auto res, const auto& p) {
                                                                 if (!IsMNValid(*p.second)) return res;
                                                                 return res + GetMnType(p.second->nType).voting_weight;
                                                             });
