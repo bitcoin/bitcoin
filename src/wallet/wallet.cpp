@@ -1197,7 +1197,7 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
         auto it = mapWallet.find(txin.prevout.hash);
         if (it != mapWallet.end()) {
             CWalletTx& prevtx = it->second;
-            if (auto* prev = prevtx.state<TxStateConflicted>()) {
+            if (auto* prev = prevtx.state<TxStateBlockConflicted>()) {
                 MarkConflicted(prev->conflicting_block_hash, prev->conflicting_block_height, wtx.GetHash());
             }
         }
@@ -1309,7 +1309,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
         assert(!wtx.isConfirmed());
         assert(!wtx.InMempool());
         // If already conflicted or abandoned, no need to set abandoned
-        if (!wtx.isConflicted() && !wtx.isAbandoned()) {
+        if (!wtx.isBlockConflicted() && !wtx.isAbandoned()) {
             wtx.m_state = TxStateInactive{/*abandoned=*/true};
             return TxUpdate::NOTIFY_CHANGED;
         }
@@ -1346,7 +1346,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
         if (conflictconfirms < GetTxDepthInMainChain(wtx)) {
             // Block is 'more conflicted' than current confirm; update.
             // Mark transaction as conflicted with this block.
-            wtx.m_state = TxStateConflicted{hashBlock, conflicting_height};
+            wtx.m_state = TxStateBlockConflicted{hashBlock, conflicting_height};
             return TxUpdate::CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1506,11 +1506,11 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
             for (TxSpends::const_iterator _it = range.first; _it != range.second; ++_it) {
                 CWalletTx& wtx = mapWallet.find(_it->second)->second;
 
-                if (!wtx.isConflicted()) continue;
+                if (!wtx.isBlockConflicted()) continue;
 
                 auto try_updating_state = [&](CWalletTx& tx) {
-                    if (!tx.isConflicted()) return TxUpdate::UNCHANGED;
-                    if (tx.state<TxStateConflicted>()->conflicting_block_height >= disconnect_height) {
+                    if (!tx.isBlockConflicted()) return TxUpdate::UNCHANGED;
+                    if (tx.state<TxStateBlockConflicted>()->conflicting_block_height >= disconnect_height) {
                         tx.m_state = TxStateInactive{};
                         return TxUpdate::CHANGED;
                     }
@@ -2725,7 +2725,7 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanning_old
     std::optional<uint256> block_hash;
     if (auto* conf = wtx.state<TxStateConfirmed>()) {
         block_hash = conf->confirmed_block_hash;
-    } else if (auto* conf = wtx.state<TxStateConflicted>()) {
+    } else if (auto* conf = wtx.state<TxStateBlockConflicted>()) {
         block_hash = conf->conflicting_block_hash;
     }
 
@@ -3315,7 +3315,7 @@ int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
     if (auto* conf = wtx.state<TxStateConfirmed>()) {
         assert(conf->confirmed_block_height >= 0);
         return GetLastBlockHeight() - conf->confirmed_block_height + 1;
-    } else if (auto* conf = wtx.state<TxStateConflicted>()) {
+    } else if (auto* conf = wtx.state<TxStateBlockConflicted>()) {
         assert(conf->conflicting_block_height >= 0);
         return -1 * (GetLastBlockHeight() - conf->conflicting_block_height + 1);
     } else {
