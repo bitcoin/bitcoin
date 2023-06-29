@@ -14,3 +14,5 @@ export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
 export CCACHE_SIZE=300M
+export RUN_FUZZ_TESTS=true
+export FUZZ_TESTS_CONFIG="--exclude banman"  # https://github.com/bitcoin/bitcoin/issues/27924
