@@ -39,6 +39,7 @@ from http import HTTPStatus
 import http.client
 import json
 import logging
+import pathlib
 import socket
 import time
 import urllib.parse
@@ -61,6 +62,8 @@ class JSONRPCException(Exception):
 
 def EncodeDecimal(o):
     if isinstance(o, decimal.Decimal):
+        return str(o)
+    if isinstance(o, pathlib.Path):
         return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
 
