@@ -145,12 +145,10 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
     auto mid = SteadyClock::now();
 
     try {
-        FILE* filestr{mockable_fopen_function(dump_path + ".new", "wb")};
-        if (!filestr) {
+        CAutoFile file{mockable_fopen_function(dump_path + ".new", "wb"), SER_DISK, CLIENT_VERSION};
+        if (file.IsNull()) {
             return false;
         }
-
-        CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
 
         uint64_t version = MEMPOOL_DUMP_VERSION;
         file << version;

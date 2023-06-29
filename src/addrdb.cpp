@@ -55,8 +55,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
 
     // open temp output file, and associate with CAutoFile
     fs::path pathTmp = gArgs.GetDataDirNet() / fs::u8path(tmpfn);
-    FILE *file = fsbridge::fopen(pathTmp, "wb");
-    CAutoFile fileout(file, SER_DISK, version);
+    CAutoFile fileout{fsbridge::fopen(pathTmp, "wb"), SER_DISK, version};
     if (fileout.IsNull()) {
         fileout.fclose();
         remove(pathTmp);
