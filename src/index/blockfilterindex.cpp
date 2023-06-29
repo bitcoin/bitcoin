@@ -132,11 +132,7 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
     const FlatFilePos& pos = m_next_filter_pos;
 
     // Flush current filter file to disk.
-    AutoFile file{m_filter_fileseq->Open(pos)};
-    if (file.IsNull()) {
-        return error("%s: Failed to open filter file %d", __func__, pos.nFile);
-    }
-    if (!FileCommit(file.Get())) {
+    if (!FileCommit(m_filter_fileseq->FileName(pos))) {
         return error("%s: Failed to commit filter file %d", __func__, pos.nFile);
     }
 
@@ -176,16 +172,11 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
-        AutoFile last_file{m_filter_fileseq->Open(pos)};
-        if (last_file.IsNull()) {
-            LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
-            return 0;
-        }
         if (!ResizeFile(m_filter_fileseq->FileName(pos), pos.nPos)) {
             LogPrintf("%s: Failed to truncate filter file %d\n", __func__, pos.nFile);
             return 0;
         }
-        if (!FileCommit(last_file.Get())) {
+        if (!FileCommit(m_filter_fileseq->FileName(pos))) {
             LogPrintf("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
             return 0;
         }

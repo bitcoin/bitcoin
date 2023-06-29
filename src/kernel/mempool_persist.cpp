@@ -145,6 +145,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
     auto mid = SteadyClock::now();
 
     try {
+        {
         CAutoFile file{mockable_fopen_function(dump_path + ".new", "wb"), SER_DISK, CLIENT_VERSION};
         if (file.IsNull()) {
             return false;
@@ -165,10 +166,11 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
         LogPrintf("Writing %d unbroadcast transactions to disk.\n", unbroadcast_txids.size());
         file << unbroadcast_txids;
+        } // file
 
-        if (!skip_file_commit && !FileCommit(file.Get()))
+        if (!skip_file_commit && !FileCommit(dump_path + ".new")) {
             throw std::runtime_error("FileCommit failed");
-        file.fclose();
+        }
         if (!RenameOver(dump_path + ".new", dump_path)) {
             throw std::runtime_error("Rename failed");
         }

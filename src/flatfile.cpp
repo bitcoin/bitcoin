@@ -6,7 +6,9 @@
 #include <stdexcept>
 
 #include <flatfile.h>
+
 #include <logging.h>
+#include <streams.h>
 #include <tinyformat.h>
 #include <util/fs_helpers.h>
 
@@ -80,20 +82,16 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
 
 bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
 {
-    FILE* file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
-    if (!file) {
-        return error("%s: failed to open file %d", __func__, pos.nFile);
+    {
+        AutoFile{Open(FlatFilePos{pos.nFile, 0})}; // Avoid fseek to nPos, Call Open to create missing file
     }
     if (finalize && !ResizeFile(FileName(pos), pos.nPos)) {
-        fclose(file);
         return error("%s: failed to truncate file %d", __func__, pos.nFile);
     }
-    if (!FileCommit(file)) {
-        fclose(file);
+    if (!FileCommit(FileName(pos))) {
         return error("%s: failed to commit file %d", __func__, pos.nFile);
     }
     DirectoryCommit(m_dir);
 
-    fclose(file);
     return true;
 }

@@ -55,6 +55,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
 
     // open temp output file, and associate with CAutoFile
     fs::path pathTmp = gArgs.GetDataDirNet() / fs::u8path(tmpfn);
+    {
     CAutoFile fileout{fsbridge::fopen(pathTmp, "wb"), SER_DISK, version};
     if (fileout.IsNull()) {
         fileout.fclose();
@@ -68,12 +69,11 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
         remove(pathTmp);
         return false;
     }
-    if (!FileCommit(fileout.Get())) {
-        fileout.fclose();
+    } // fileout
+    if (!FileCommit(pathTmp)) {
         remove(pathTmp);
         return error("%s: Failed to flush file %s", __func__, fs::PathToString(pathTmp));
     }
-    fileout.fclose();
 
     // replace existing file, if any, with new file
     if (!RenameOver(pathTmp, path)) {

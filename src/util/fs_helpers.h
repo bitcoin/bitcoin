@@ -16,8 +16,9 @@
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
  * feature analogous to fsync().
+ * The call site is resposible to flush prior, for example by closing the file.
  */
-bool FileCommit(FILE* file);
+bool FileCommit(const fs::path& file_path);
 
 /**
  * Sync directory contents. This is required on some environments to ensure that

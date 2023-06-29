@@ -10,12 +10,14 @@
 #endif
 
 #include <logging.h>
+#include <streams.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <util/getuniquepath.h>
 #include <util/syserror.h>
 
 #include <cerrno>
+#include <cstdio>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -116,10 +118,12 @@ std::streampos GetFileSize(const char* path, std::streamsize max)
     return file.gcount();
 }
 
-bool FileCommit(FILE* file)
+bool FileCommit(const fs::path& file_path)
 {
-    if (fflush(file) != 0) { // harmless if redundantly called
-        LogPrintf("fflush failed: %s\n", SysErrorString(errno));
+    AutoFile auto_file{fsbridge::fopen(file_path, "rb+")};
+    std::FILE* file{auto_file.Get()};
+    if (!file) {
+        LogPrintf("Failed to open file to commit: %s\n", fs::PathToString(file_path));
         return false;
     }
 #ifdef WIN32
