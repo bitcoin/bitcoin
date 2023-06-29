@@ -24,6 +24,12 @@
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
+static Span<const std::byte> SpanFromBlob(sqlite3_stmt* stmt, int col)
+{
+    return {reinterpret_cast<const std::byte*>(sqlite3_column_blob(stmt, col)),
+            static_cast<size_t>(sqlite3_column_bytes(stmt, col))};
+}
+
 static void ErrorLogCallback(void* arg, int code, const char* msg)
 {
     // From sqlite3_config() documentation for the SQLITE_CONFIG_LOG option:
@@ -434,10 +440,8 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
         return false;
     }
     // Leftmost column in result is index 0
-    const std::byte* data{AsBytePtr(sqlite3_column_blob(m_read_stmt, 0))};
-    size_t data_size(sqlite3_column_bytes(m_read_stmt, 0));
     value.clear();
-    value.write({data, data_size});
+    value.write(SpanFromBlob(m_read_stmt, 0));
 
     sqlite3_clear_bindings(m_read_stmt);
     sqlite3_reset(m_read_stmt);
@@ -527,12 +531,8 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
     value.clear();
 
     // Leftmost column in result is index 0
-    const std::byte* key_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 0))};
-    size_t key_data_size(sqlite3_column_bytes(m_cursor_stmt, 0));
-    key.write({key_data, key_data_size});
-    const std::byte* value_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 1))};
-    size_t value_data_size(sqlite3_column_bytes(m_cursor_stmt, 1));
-    value.write({value_data, value_data_size});
+    key.write(SpanFromBlob(m_cursor_stmt, 0));
+    value.write(SpanFromBlob(m_cursor_stmt, 1));
     return Status::MORE;
 }
 
