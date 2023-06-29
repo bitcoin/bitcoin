@@ -11,9 +11,9 @@
 #include <script/standard.h>
 #include <util/underlying.h>
 
-bool CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
+bool CProRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
     if (!IsValidMnType(nType)) {
@@ -87,9 +87,9 @@ std::string CProRegTx::ToString() const
                      nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
-bool CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
+bool CProUpServTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
 
@@ -108,9 +108,9 @@ std::string CProUpServTx::ToString() const
                      nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToString(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
-bool CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
+bool CProUpRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
     if (nMode != 0) {
@@ -141,9 +141,9 @@ std::string CProUpRegTx::ToString() const
         nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), payee);
 }
 
-bool CProUpRevTx::IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const
+bool CProUpRevTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
+    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
 
