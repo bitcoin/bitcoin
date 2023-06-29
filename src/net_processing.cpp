@@ -3500,7 +3500,15 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
-        int64_t nTimeOffset = nTime - GetTime();
+/*  Begin queue receive delay time offset fix
+    The receive time is not the time this message is processed, it it the time
+    it was put in the queue "time_received".
+    Observed queue delays of 30 seconds or more are introduced
+    on hosts with restricted resources during "tip" folloowing and chain
+    re-org operations. This delay corrupts AdjustedTime/
+*/
+//        int64_t nTimeOffset = nTime - GetTime();
+        int64_t nTimeOffset = nTime - ((std::uint64_t)time_received.count()/1000000);
         pfrom.nTimeOffset = nTimeOffset;
         if (!pfrom.IsInboundConn()) {
             // Don't use timedata samples from inbound peers to make it

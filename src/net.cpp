@@ -27,6 +27,7 @@
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <timedata.h>
 #include <util/fs.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
@@ -37,10 +38,16 @@
 
 #ifdef WIN32
 #include <string.h>
+#else
+#include <fcntl.h>
 #endif
 
 #if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
 #include <ifaddrs.h>
+#endif
+
+#ifdef USE_POLL
+#include <poll.h>
 #endif
 
 #include <algorithm>
@@ -824,6 +831,55 @@ size_t CConnman::SocketSendData(CNode& node) const
 {
     auto it = node.vSendMsg.begin();
     size_t nSentSize = 0;
+
+/*  Begin queue send delay time offset fix
+    The Sendtime is not the time this message was put in the queue,
+    it is Now(). Observed queue delays of 30 seconds or more are introduced
+    on hosts with restricted resources during "tip" folloowing and chain
+    re-org operations. This delay corrupts AdjustedTime on the receiving host
+
+    format of VERSION message in std::deque, not contiguous
+    (4)     message start
+    (12)    command = version
+    (4)     size
+    (4)     checksum
+------- chunk 2 -------
+    (4)     nVersion
+    (8)     nServiceInt
+    (8)     nTime
+    (x)     CAddress    addrMe
+    (x)     CAddress    addrFrom
+    (8)     nNonce
+    ........ and so on...
+*/
+    const int bigint = 1;
+    auto& sh = *it;
+// at front of deque, hdrbuf is first
+    CMessageHeader * shdr = reinterpret_cast<CMessageHeader*>(sh.data());
+    std::string strCommand = shdr->GetCommand();
+    if (strCommand == NetMsgType::VERSION) {
+/*  do not increment "it", it corrupts deque
+    header and message are in 2 sequential non-contiguious chunks in the deque, see:
+    void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
+    ...
+        pnode->vSendMsg.push_back(std::move(serializedHeader));
+        if (nMessageSize)
+            pnode->vSendMsg.push_back(std::move(msg.data));
+*/
+        auto& sd = *(std::next(it, 1)); // point to next data chunk
+        int64_t * pnsTime = reinterpret_cast<int64_t*>(sd.data() + 12);
+        int64_t nSendtime = *pnsTime;
+        int64_t nNow = GetTime();
+        if (node.IsInboundConn()) nNow += GetTimeOffset();	// GetAdjustedTime() in int64_t seconds
+        int64_t nNewSendtime = nNow;
+        if (! *(char *)&bigint) {       // if bigendian
+            nSendtime = bswap_64(*pnsTime);
+            nNewSendtime = bswap_64(nNow);
+        }
+//        LogPrintf("HACK %s size %d %" PRId64 " %" PRId64 "\n", strCommand.c_str(), shdr->nMessageSize, nSendtime
+        if (nSendtime != nNow) *pnsTime = nNewSendtime;
+    }
+// end time offset fix
 
     while (it != node.vSendMsg.end()) {
         const auto& data = *it;
@@ -2927,13 +2983,13 @@ void CaptureMessageToFile(const CAddress& addr,
     AutoFile f{fsbridge::fopen(path, "ab")};
 
     ser_writedata64(f, now.count());
-    f << Span{msg_type};
+    f.write(MakeByteSpan(msg_type));
     for (auto i = msg_type.length(); i < CMessageHeader::COMMAND_SIZE; ++i) {
         f << uint8_t{'\0'};
     }
     uint32_t size = data.size();
     ser_writedata32(f, size);
-    f << data;
+    f.write(AsBytes(data));
 }
 
 std::function<void(const CAddress& addr,
