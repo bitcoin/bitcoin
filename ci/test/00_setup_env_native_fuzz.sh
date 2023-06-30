@@ -11,7 +11,7 @@ export CONTAINER_NAME=ci_native_fuzz
 export PACKAGES="clang llvm python3 libevent-dev bsdmainutils libboost-filesystem-dev libboost-test-dev libboost-thread-dev"
 export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
-export CXXFLAGS="-Werror -Wno-unused-command-line-argument -Wno-unused-value"
+export CXXFLAGS="-Werror -Wno-unused-command-line-argument -Wno-unused-value -Wno-deprecated-builtins"
 export PYZMQ=true
 export RUN_UNIT_TESTS=false
 export RUN_INTEGRATION_TESTS=false
