@@ -1250,7 +1250,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         "-onion",
         "-proxy",
         "-rpcbind",
-        "-torcontrol",
         "-whitebind",
         "-zmqpubhashblock",
         "-zmqpubhashtx",
@@ -1264,6 +1263,19 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             if (!SplitHostPort(socket_addr, port_out, host_out)) {
                 return InitError(InvalidPortErrMsg(port_option, socket_addr));
             }
+        }
+    }
+
+    for (const std::string& socket_addr : args.GetArgs("-torcontrol")) {
+        std::string host_out;
+        uint16_t port_out{0};
+        size_t colon = socket_addr.find_last_of(':');
+        bool fHaveColon = colon != socket_addr.npos;
+        if(!fHaveColon){
+            return InitError(strprintf(_("Invalid %s host (%s) no ':' specified"), "-torcontrol", socket_addr));
+        }
+        if (!SplitHostPort(socket_addr, port_out, host_out)) {
+            return InitError(InvalidPortErrMsg("-torcontrol", socket_addr));
         }
     }
 
