@@ -548,6 +548,8 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/aes.h \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
+  crypto/chacha20poly1305.h \
+  crypto/chacha20poly1305.cpp \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
