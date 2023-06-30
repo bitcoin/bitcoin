@@ -35,8 +35,8 @@ Test and Verify Tools
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Syscoin tests.
 
-### [Verify Binaries](/contrib/verifybinaries) ###
-This script attempts to download and verify the signature file SHA256SUMS.asc from syscoin.org.
+### [Verify-Binaries](/contrib/verify-binaries) ###
+This script attempts to download and verify the signature file SHA256SUMS.asc from syscoincore.org.
 
 Command Line Tools
 ---------------------
