@@ -8,6 +8,7 @@ architectures:
 - "amd64"
 packages:
 - "curl"
+- "cmake"
 - "g++"
 - "git"
 - "pkg-config"
@@ -23,6 +24,7 @@ packages:
 - "ca-certificates"
 - "python3"
 - "python3-pip"
+- "python3-setuptools"
 - "ccache"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
@@ -115,6 +117,7 @@ script: |
   done
   }
 
+  pip3 install --upgrade pip setuptools wheel
   pip3 install lief==0.12.1
 
   # Faketime for depends so intermediate results are comparable

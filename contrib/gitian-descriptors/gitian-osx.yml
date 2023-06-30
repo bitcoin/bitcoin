@@ -96,6 +96,7 @@ script: |
   done
   }
 
+  pip3 install --upgrade pip setuptools wheel
   pip3 install lief==0.12.1
 
   # Faketime for depends so intermediate results are comparable
