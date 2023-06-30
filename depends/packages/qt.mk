@@ -14,7 +14,6 @@ $(package)_patches += dont_hardcode_x86_64.patch
 $(package)_patches+= fix_lib_paths.patch fix_android_pch.patch
 $(package)_patches+= fix_limits_header.patch
 $(package)_patches+= fix_montery_include.patch
-$(package)_patches += glibc_compatibility.patch
 $(package)_patches+= qtbase-moc-ignore-gcc-macro.patch
 $(package)_patches += fast_fixed_dtoa_no_optimize.patch
 
@@ -142,8 +141,6 @@ $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -fontconfig
 $(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_linux += -no-feature-vulkan
-$(package)_config_opts_linux += -no-feature-getentropy
-$(package)_config_opts_linux += -no-feature-renameat2
 $(package)_config_opts_linux += -dbus-runtime
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
@@ -242,7 +239,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_lib_paths.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
-  patch -p1 -i $($(package)_patch_dir)/glibc_compatibility.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
