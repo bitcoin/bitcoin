@@ -757,16 +757,14 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::option
 
         // Iterate over the positions of that bucket, starting at the initial one,
         // and looping around.
-        int i;
+        int i, position, node_id;
         for (i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
-            int position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
-            int node_id = GetEntry(search_tried, bucket, position);
+            position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
+            node_id = GetEntry(search_tried, bucket, position);
             if (node_id != -1) {
                 if (network.has_value()) {
                     const auto it{mapInfo.find(node_id)};
-                    assert(it != mapInfo.end());
-                    const auto info{it->second};
-                    if (info.GetNetwork() == *network) break;
+                    if (Assume(it != mapInfo.end()) && it->second.GetNetwork() == *network) break;
                 } else {
                     break;
                 }
@@ -777,9 +775,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::option
         if (i == ADDRMAN_BUCKET_SIZE) continue;
 
         // Find the entry to return.
-        int position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
-        int nId = GetEntry(search_tried, bucket, position);
-        const auto it_found{mapInfo.find(nId)};
+        const auto it_found{mapInfo.find(node_id)};
         assert(it_found != mapInfo.end());
         const AddrInfo& info{it_found->second};
 
@@ -798,15 +794,17 @@ int AddrManImpl::GetEntry(bool use_tried, size_t bucket, size_t position) const
 {
     AssertLockHeld(cs);
 
-    assert(position < ADDRMAN_BUCKET_SIZE);
-
     if (use_tried) {
-        assert(bucket < ADDRMAN_TRIED_BUCKET_COUNT);
-        return vvTried[bucket][position];
+        if (Assume(position < ADDRMAN_BUCKET_SIZE) && Assume(bucket < ADDRMAN_TRIED_BUCKET_COUNT)) {
+            return vvTried[bucket][position];
+        }
     } else {
-        assert(bucket < ADDRMAN_NEW_BUCKET_COUNT);
-        return vvNew[bucket][position];
+        if (Assume(position < ADDRMAN_BUCKET_SIZE) && Assume(bucket < ADDRMAN_NEW_BUCKET_COUNT)) {
+            return vvNew[bucket][position];
+        }
     }
+
+    return -1;
 }
 
 std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const

@@ -255,7 +255,7 @@ private:
 
     /** Helper to generalize looking up an addrman entry from either table.
      *
-     *  @return  int The nid of the entry or -1 if the addrman position is empty.
+     *  @return  int The nid of the entry. If the addrman position is empty or not found, returns -1.
      * */
     int GetEntry(bool use_tried, size_t bucket, size_t position) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
