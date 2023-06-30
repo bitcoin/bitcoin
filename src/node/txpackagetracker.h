@@ -21,6 +21,7 @@ enum PackageRelayVersions : uint64_t {
     PKG_RELAY_NONE = 0,
     // BIP331 Ancestor Package Information
     PKG_RELAY_ANCPKG = (1 << 0),
+    PKG_RELAY_PKGTXNS = (1 << 1),
 };
 
 class TxPackageTracker {
@@ -70,6 +71,9 @@ public:
     void ReceivedSendpackages(NodeId nodeid, PackageRelayVersions versions);
     // Finalize the registration state.
     bool ReceivedVerack(NodeId nodeid, bool inbound, bool txrelay, bool wtxidrelay);
+
+    /** Whether the peer supports any of these versions of package relay. */
+    bool PeerSupportsVersion(NodeId nodeid, PackageRelayVersions versions) const;
 
     /** Received an announcement from this peer for a tx we already know is an orphan; should be
      * called for every peer that announces the tx, even if they are not a package relay peer.

@@ -141,7 +141,7 @@ class TxPackageTracker::Impl {
             m_versions_supported{versions},
             m_max_orphans_to_protect{is_inbound ? MAX_ORPHANAGE_PROTECTION_INBOUND : MAX_ORPHANAGE_PROTECTION_OUTBOUND}
         {}
-        bool SupportsVersion(PackageRelayVersions version) { return m_versions_supported & version; }
+        bool SupportsVersion(PackageRelayVersions version) const { return m_versions_supported & version; }
         size_t AvailableProtectionTokens() {
             if (m_max_orphans_to_protect < m_protected_orphans_size) {
                 Assume(false);
@@ -220,7 +220,7 @@ public:
     size_t OrphanageSize() { return m_orphanage.Size(); }
     PackageRelayVersions GetSupportedVersions() const
     {
-        return PKG_RELAY_ANCPKG;
+        return PackageRelayVersions(PKG_RELAY_PKGTXNS | PKG_RELAY_ANCPKG);
     }
 
     void ReceivedVersion(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -257,6 +257,15 @@ public:
         }
         registration_states.erase(it);
         return final_state;
+    }
+
+    bool PeerSupportsVersion(NodeId nodeid, PackageRelayVersions versions) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
+        auto it_peer_info = info_per_peer.find(nodeid);
+        // Peer does not support package relay at all.
+        if (it_peer_info == info_per_peer.end()) return false;
+        return it_peer_info->second.SupportsVersion(versions);
     }
 
     void AddOrphanTx(NodeId nodeid, const uint256& wtxid, const CTransactionRef& tx, bool is_preferred, std::chrono::microseconds reqtime)
@@ -637,6 +646,7 @@ void TxPackageTracker::ReceivedSendpackages(NodeId nodeid, PackageRelayVersions 
 bool TxPackageTracker::ReceivedVerack(NodeId nodeid, bool inbound, bool txrelay, bool wtxidrelay) {
     return m_impl->ReceivedVerack(nodeid, inbound, txrelay, wtxidrelay);
 }
+bool TxPackageTracker::PeerSupportsVersion(NodeId nodeid, PackageRelayVersions versions) const { return m_impl->PeerSupportsVersion(nodeid, versions); }
 void TxPackageTracker::AddOrphanTx(NodeId nodeid, const uint256& wtxid, const CTransactionRef& tx, bool is_preferred, std::chrono::microseconds reqtime)
 {
     m_impl->AddOrphanTx(nodeid, wtxid, tx, is_preferred, reqtime);

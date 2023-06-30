@@ -4442,7 +4442,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         } else {
             const auto& request_list{std::get<std::vector<uint256>>(result)};
             if (!request_list.empty()) {
-                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETPKGTXNS, request_list));
+                if (m_txpackagetracker->PeerSupportsVersion(pfrom.GetId(), node::PKG_RELAY_PKGTXNS)) {
+                    // If this peer supports it, request transactions in a batch so they can be
+                    // submitted as a package without hitting the orphanage.
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETPKGTXNS, request_list));
+                } else {
+                    const auto current_time{GetTime<std::chrono::microseconds>()};
+                    // Otherwise, treat these ancestors as individual transaction announcements.
+                    for (const auto& wtxid : request_list) {
+                        AddTxAnnouncement(pfrom, GenTxid::Wtxid(wtxid), current_time);
+                    }
+                }
             }
         }
         return;
@@ -5047,6 +5057,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::GETPKGTXNS) {
+        if (!m_txpackagetracker->PeerSupportsVersion(pfrom.GetId(), node::PKG_RELAY_PKGTXNS)) {
+            LogPrint(BCLog::NET, "\ngetpkgtxns not negotiated, disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         unsigned int num_txns = ReadCompactSize(vRecv);
         if (num_txns == 0) return;
         if (num_txns > node::MAX_PKGTXNS_COUNT) {
@@ -5089,7 +5104,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             pfrom.fDisconnect = true;
             return;
         }
-        if (!m_txpackagetracker) return;
+        if (!m_txpackagetracker->PeerSupportsVersion(pfrom.GetId(), node::PKG_RELAY_PKGTXNS)) {
+            LogPrint(BCLog::NET, "\npkgtxns not negotiated, disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         unsigned int num_txns = ReadCompactSize(vRecv);
         if (num_txns == 0) return;
         if (num_txns > node::MAX_PKGTXNS_COUNT) {

@@ -36,6 +36,7 @@ from test_framework.messages import (
     msg_verack,
     msg_wtxidrelay,
     PKG_RELAY_ANCPKG,
+    PKG_RELAY_PKGTXNS,
 )
 from test_framework.p2p import (
     NONPREF_PEER_TX_DELAY,
@@ -74,6 +75,8 @@ TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + 2 * TXID_RELAY_DELAY + OVERLOADED_
 # (though nothing should since state should be cleared) in p2p data structures.
 LONG_TIME_SKIP = 12 * 60 * 60
 
+PKG_RELAY_ALL_SUPPORTED = PKG_RELAY_PKGTXNS | PKG_RELAY_ANCPKG
+
 def cleanup(func):
     def wrapper(self):
         assert len(self.nodes[0].getpeerinfo()) == 0
@@ -89,11 +92,12 @@ def cleanup(func):
     return wrapper
 
 class PackageRelayer(P2PTxInvStore):
-    def __init__(self, send_sendpackages=True, send_wtxidrelay=True):
+    def __init__(self, send_sendpackages=True, send_wtxidrelay=True, versions=PKG_RELAY_ALL_SUPPORTED):
         super().__init__()
         # List versions of each sendpackages received
         self._sendpackages_received = []
         self._send_sendpackages = send_sendpackages
+        self._versions = versions
         self._send_wtxidrelay = send_wtxidrelay
         self._ancpkginfo_received = []
         self._tx_received = []
@@ -124,7 +128,7 @@ class PackageRelayer(P2PTxInvStore):
             self.send_message(msg_wtxidrelay())
         if self._send_sendpackages:
             sendpackages_message = msg_sendpackages()
-            sendpackages_message.versions = PKG_RELAY_ANCPKG
+            sendpackages_message.versions = self._versions
             self.send_message(sendpackages_message)
         self.send_message(msg_verack())
         self.nServices = message.nServices
@@ -228,7 +232,7 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_normal = node.add_p2p_connection(PackageRelayer())
         assert_equal(node.getpeerinfo()[0]["bytesrecv_per_msg"]["sendpackages"], 32)
         assert_equal(node.getpeerinfo()[0]["bytessent_per_msg"]["sendpackages"], 32)
-        assert_equal(peer_normal.sendpackages_received, [PKG_RELAY_ANCPKG])
+        assert_equal(peer_normal.sendpackages_received, [PKG_RELAY_PKGTXNS | PKG_RELAY_ANCPKG])
         assert node.getpeerinfo()[0]["relaytxpackages"]
         node.disconnect_p2ps()
 
@@ -237,7 +241,7 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_no_wtxidrelay = node.add_p2p_connection(PackageRelayer(send_wtxidrelay=False))
         assert_equal(node.getpeerinfo()[0]["bytesrecv_per_msg"]["sendpackages"], 32)
         assert_equal(node.getpeerinfo()[0]["bytessent_per_msg"]["sendpackages"], 32)
-        assert_equal(peer_no_wtxidrelay.sendpackages_received, [PKG_RELAY_ANCPKG])
+        assert_equal(peer_no_wtxidrelay.sendpackages_received, [PKG_RELAY_PKGTXNS | PKG_RELAY_ANCPKG])
         assert not node.getpeerinfo()[0]["relaytxpackages"]
         node.disconnect_p2ps()
 
@@ -247,7 +251,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # Sendpackages should still be sent
         assert_equal(node.getpeerinfo()[0]["bytessent_per_msg"]["sendpackages"], 32)
         assert "sendpackages" not in node.getpeerinfo()[0]["bytesrecv_per_msg"]
-        assert_equal(peer_no_sendpackages.sendpackages_received, [PKG_RELAY_ANCPKG])
+        assert_equal(peer_no_sendpackages.sendpackages_received, [PKG_RELAY_PKGTXNS | PKG_RELAY_ANCPKG])
         assert not node.getpeerinfo()[0]["relaytxpackages"]
         node.disconnect_p2ps()
 
@@ -618,6 +622,45 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_requester_101.wait_for_disconnect()
 
     @cleanup
+    def test_pkg_relay_pkgtxns(self):
+        node = self.nodes[0]
+        self.log.info("Test that node behavior with PKG_RELAY_ANCPKG but not PKG_RELAY_PKGTXNS")
+        package_hex, package_txns, package_wtxids = self.create_package(cpfp=False)
+        ancpkginfo_message = msg_ancpkginfo([int(wtxid, 16) for wtxid in package_wtxids])
+        getpkgtxns_request = msg_getpkgtxns([int(wtxid, 16) for wtxid in package_wtxids])
+        pkgtxns_full = msg_pkgtxns(txns=package_txns)
+        package_invs = [CInv(t=MSG_WTX, h=int(wtxid, 16)) for wtxid in package_wtxids]
+
+        self.log.info("Test that node requests transactions from ancpkginfo individually")
+        peer_no_pkgtxns_ancpkginfo = node.add_p2p_connection(PackageRelayer(versions=PKG_RELAY_ANCPKG))
+
+        peer_no_pkgtxns_ancpkginfo.send_and_ping(msg_inv([package_invs[-1]]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_no_pkgtxns_ancpkginfo.wait_for_getdata([int(package_wtxids[-1], 16)])
+        peer_no_pkgtxns_ancpkginfo.send_and_ping(msg_tx(package_txns[-1]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_no_pkgtxns_ancpkginfo.wait_for_getancpkginfo(int(package_wtxids[-1], 16))
+        peer_no_pkgtxns_ancpkginfo.send_and_ping(ancpkginfo_message)
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_no_pkgtxns_ancpkginfo.sync_with_ping()
+        with p2p_lock:
+            assert "getpkgtxns" not in peer_no_pkgtxns_ancpkginfo.last_message
+            assert package_invs[0] in peer_no_pkgtxns_ancpkginfo.last_message["getdata"].inv
+            assert package_invs[1] in peer_no_pkgtxns_ancpkginfo.last_message["getdata"].inv
+
+        self.log.info("Test that node disconnects any sender of getpkgtxns or pkgtxns")
+        # Any getpkgtxns should result in disconnection
+        peer_no_pkgtxns_getpkgtxns = node.add_p2p_connection(PackageRelayer(versions=PKG_RELAY_ANCPKG))
+        peer_no_pkgtxns_getpkgtxns.send_message(getpkgtxns_request)
+        peer_no_pkgtxns_getpkgtxns.wait_for_disconnect()
+
+        # Any pkgtxns should result in disconnection
+        peer_no_pkgtxns_pkgtxns = node.add_p2p_connection(PackageRelayer(versions=PKG_RELAY_ANCPKG))
+        peer_no_pkgtxns_pkgtxns.send_message(pkgtxns_full)
+        peer_no_pkgtxns_pkgtxns.wait_for_disconnect()
+
+
+    @cleanup
     def test_announcements(self):
         node = self.nodes[0]
         package_hex, package_txns, package_wtxids = self.create_package()
@@ -715,6 +758,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_ancpkginfo_invalid_ancestors()
         self.test_low_fee_caching()
         self.test_pkgtxns()
+        self.test_pkg_relay_pkgtxns()
         self.test_announcements()
         self.test_orphanage_dos()
 

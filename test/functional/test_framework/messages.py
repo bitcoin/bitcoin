@@ -77,6 +77,7 @@ MAX_OP_RETURN_RELAY = 83
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
 
 PKG_RELAY_ANCPKG = 1
+PKG_RELAY_PKGTXNS = 1 << 1
 
 def sha256(s):
     return hashlib.sha256(s).digest()
