@@ -818,13 +818,13 @@ void BlockManager::UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const
 
 AutoFile BlockManager::OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{m_block_file_seq.Open(pos, fReadOnly)};
+    return AutoFile{m_block_file_seq.Open(pos, fReadOnly), m_xor_key};
 }
 
 /** Open an undo file (rev?????.dat) */
 AutoFile BlockManager::OpenUndoFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly)};
+    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly), m_xor_key};
 }
 
 fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
@@ -1143,6 +1143,14 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
     }
     return blockPos;
 }
+
+BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
+    : m_prune_mode{opts.prune_target > 0},
+      m_xor_key{},
+      m_opts{std::move(opts)},
+      m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
+      m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
+      m_interrupt{interrupt} {}
 
 class ImportingNow
 {
