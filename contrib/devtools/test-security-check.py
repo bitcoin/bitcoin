@@ -28,7 +28,7 @@ def clean_files(source, executable):
     os.remove(source)
     os.remove(executable)
 
-def call_security_check(cc, source, executable, options):
+def call_security_check(cc: str, source: str, executable: str, options) -> tuple:
     # This should behave the same as AC_TRY_LINK, so arrange well-known flags
     # in the same order as autoconf would.
     #
