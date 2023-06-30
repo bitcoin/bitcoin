@@ -463,8 +463,8 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     }
     const auto vec_iters_zigzag = pool.GetIterVec(zigzag_txids);
     // It doesn't matter which tx we calculate cluster for, everybody is in it.
-    const std::vector<size_t> indeces{0, 22, 72, zigzag_txids.size() - 1};
-    for (const auto index : indeces) {
+    const std::vector<size_t> indices{0, 22, 72, zigzag_txids.size() - 1};
+    for (const auto index : indices) {
         const auto cluster = pool.GatherClusters({zigzag_txids[index]});
         BOOST_CHECK_EQUAL(cluster.size(), zigzag_txids.size());
         CTxMemPool::setEntries clusterset{cluster.begin(), cluster.end()};
