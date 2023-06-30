@@ -36,5 +36,5 @@ Test and Verify Tools
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Dash tests.
 
-### [Verify Binaries](/contrib/verifybinaries) ###
+### [Verify-Binaries](/contrib/verify-binaries) ###
 This script attempts to download and verify the signature file SHA256SUMS.asc from bitcoin.org.
