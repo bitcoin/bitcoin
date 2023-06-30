@@ -15,4 +15,4 @@ else
   export TEST_RUNNER_EXTRA="--exclude rpc_bind"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 fi
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang CXX=clang++"  # TODO enable GUI
+export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang-15 CXX=clang++-15"  # TODO enable GUI
