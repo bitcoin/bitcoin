@@ -211,7 +211,8 @@ public:
     }
 
     /** Generate random bytes. */
-    std::vector<unsigned char> randbytes(size_t len);
+    template <typename B = unsigned char>
+    std::vector<B> randbytes(size_t len);
 
     /** Fill a byte Span with random bytes. */
     void fillrand(Span<std::byte> output);
