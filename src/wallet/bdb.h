@@ -21,14 +21,7 @@
 
 struct bilingual_str;
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-override"
-#endif
 #include <db_cxx.h>
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 namespace wallet {
 struct WalletDatabaseFileId {
