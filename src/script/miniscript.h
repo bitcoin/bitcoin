@@ -1161,6 +1161,9 @@ public:
         return true;
     }
 
+    //! Whether no satisfaction exists for this node.
+    bool IsNotSatisfiable() const { return !GetStackSize(); }
+
     //! Return the expression type.
     Type GetType() const { return typ; }
 
