@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([libdashbls],[1.2.4])
+AC_INIT([libdashbls],[1.3.0])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -783,3 +783,4 @@ AC_OUTPUT
 
 dnl Peplace conflict-prone PACKAGE-prefixed macros with DASHBLS
 sed -i.old 's/PACKAGE/DASHBLS/g' depends/relic/include/relic_conf.h
+sed -i.old 's/PACKAGE/DASHBLS/g' config.status
