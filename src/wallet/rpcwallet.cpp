@@ -2665,67 +2665,66 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
     }
 
-    LOCK(pwallet->cs_wallet);
-
-    // Do not do anything to HD wallets
-    if (pwallet->IsHDEnabled()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot upgrade a wallet to HD if it is already upgraded to HD.");
-    }
-
-    if (!pwallet->SetMaxVersion(FEATURE_HD)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot downgrade wallet");
-    }
-
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
-    }
-
-    bool prev_encrypted = pwallet->IsCrypted();
-
-    SecureString secureWalletPassphrase;
-    secureWalletPassphrase.reserve(100);
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-    if (request.params[2].isNull()) {
-        if (prev_encrypted) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Cannot upgrade encrypted wallet to HD without the wallet passphrase");
-        }
-    } else {
-        secureWalletPassphrase = request.params[2].get_str().c_str();
-        if (!pwallet->Unlock(secureWalletPassphrase)) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-        }
-    }
-
     bool generate_mnemonic = request.params[0].isNull() || request.params[0].get_str().empty();
 
-    SecureString secureMnemonic;
-    secureMnemonic.reserve(256);
-    if (!generate_mnemonic) {
-        if (pwallet->chain().isInitialBlockDownload()) {
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cannot set mnemonic while still in Initial Block Download");
+    {
+        LOCK(pwallet->cs_wallet);
+
+        // Do not do anything to HD wallets
+        if (pwallet->IsHDEnabled()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot upgrade a wallet to HD if it is already upgraded to HD.");
         }
-        secureMnemonic = request.params[0].get_str().c_str();
-    }
 
-    SecureString secureMnemonicPassphrase;
-    secureMnemonicPassphrase.reserve(256);
-    if (!request.params[1].isNull()) {
-        secureMnemonicPassphrase = request.params[1].get_str().c_str();
-    }
-
-    pwallet->WalletLogPrintf("Upgrading wallet to HD\n");
-    pwallet->SetMinVersion(FEATURE_HD);
-
-    if (prev_encrypted) {
-        if (!pwallet->GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
+        if (!pwallet->SetMaxVersion(FEATURE_HD)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot downgrade wallet");
         }
-    } else {
-        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
-        if (!secureWalletPassphrase.empty()) {
-            if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
-                throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
+
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+        }
+
+        bool prev_encrypted = pwallet->IsCrypted();
+
+        SecureString secureWalletPassphrase;
+        secureWalletPassphrase.reserve(100);
+        // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+        // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+        if (request.params[2].isNull()) {
+            if (prev_encrypted) {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Cannot upgrade encrypted wallet to HD without the wallet passphrase");
+            }
+        } else {
+            secureWalletPassphrase = request.params[2].get_str().c_str();
+            if (!pwallet->Unlock(secureWalletPassphrase)) {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
+            }
+        }
+
+        SecureString secureMnemonic;
+        secureMnemonic.reserve(256);
+        if (!generate_mnemonic) {
+            secureMnemonic = request.params[0].get_str().c_str();
+        }
+
+        SecureString secureMnemonicPassphrase;
+        secureMnemonicPassphrase.reserve(256);
+        if (!request.params[1].isNull()) {
+            secureMnemonicPassphrase = request.params[1].get_str().c_str();
+        }
+
+        pwallet->WalletLogPrintf("Upgrading wallet to HD\n");
+        pwallet->SetMinVersion(FEATURE_HD);
+
+        if (prev_encrypted) {
+            if (!pwallet->GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
+            }
+        } else {
+            spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+            if (!secureWalletPassphrase.empty()) {
+                if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
+                    throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
+                }
             }
         }
     }
@@ -2737,7 +2736,16 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
-        pwallet->ScanForWalletTransactions(pwallet->chain().getBlockHash(0), 0, {}, reserver, true);
+        CWallet::ScanResult result = pwallet->ScanForWalletTransactions(pwallet->chain().getBlockHash(0), 0, {}, reserver, true);
+        switch (result.status) {
+        case CWallet::ScanResult::SUCCESS:
+            break;
+        case CWallet::ScanResult::FAILURE:
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
+        case CWallet::ScanResult::USER_ABORT:
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
+            // no default case, so the compiler can warn about missing cases
+        }
     }
 
     return true;
