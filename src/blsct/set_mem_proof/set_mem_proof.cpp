@@ -7,25 +7,7 @@
 
 bool SetMemProof::operator==(const SetMemProof& other) const
 {
-    return phi == other.phi
-        && A1 == other.A1
-        && A2 == other.A2
-        && S1 == other.S1
-        && S2 == other.S2
-        && S3 == other.S3
-        && T1 == other.T1
-        && T2 == other.T2
-        && tau_x == other.tau_x
-        && mu == other.mu
-        && z_alpha == other.z_alpha
-        && z_tau == other.z_tau
-        && z_beta == other.z_beta
-        && t == other.t
-        && Ls == other.Ls
-        && Rs == other.Rs
-        && a == other.a
-        && b == other.b
-        && omega == other.omega;
+    return phi == other.phi && A1 == other.A1 && A2 == other.A2 && S1 == other.S1 && S2 == other.S2 && S3 == other.S3 && T1 == other.T1 && T2 == other.T2 && tau_x == other.tau_x && mu == other.mu && z_alpha == other.z_alpha && z_tau == other.z_tau && z_beta == other.z_beta && t == other.t && Ls == other.Ls && Rs == other.Rs && a == other.a && b == other.b && omega == other.omega;
 }
 
 bool SetMemProof::operator!=(const SetMemProof& other) const
@@ -56,31 +38,15 @@ void SetMemProof::Serialize(Stream& st) const
        << b
        << omega;
 }
-template
-void SetMemProof::Serialize(CDataStream& st) const;
+template void SetMemProof::Serialize(CDataStream& st) const;
 
 template <typename Stream>
 void SetMemProof::Unserialize(Stream& st)
 {
-    st >> phi
-       >> A1
-       >> A2
-       >> S1
-       >> S2
-       >> S3
-       >> T1
-       >> T2
-       >> tau_x
-       >> mu
-       >> z_alpha
-       >> z_tau
-       >> z_beta
-       >> t
-       >> Ls
-       >> Rs
-       >> a
-       >> b
-       >> omega;
+    st >> phi >> A1 >> A2 >> S1 >> S2 >> S3 >> T1 >> T2 >> tau_x >> mu >> z_alpha >> z_tau >> z_beta >> t >> Ls >> Rs >> a >> b >> omega;
+
+    if (Ls.HasZero() || Rs.HasZero() || A1.IsZero() || A2.IsZero() || S1.IsZero() || S2.IsZero() || S3.IsZero() || T1.IsZero() || T2.IsZero())
+        throw std::runtime_error("SetMemProof::Unserialize: Invalid proof, at least one point is infinity");
 }
-template
-void SetMemProof::Unserialize(CDataStream& st);
+
+template void SetMemProof::Unserialize(CDataStream& st);

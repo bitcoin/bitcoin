@@ -33,6 +33,8 @@ public:
     bool Empty() const;
     std::vector<uint8_t> GetVch() const;
 
+    bool HasZero() const;
+
     void ConfirmIndexInsideRange(const uint32_t& index) const;
     void ConfirmSizesMatch(const size_t& other_size) const;
     static Elements<T> FirstNPow(const T& k, const size_t& n, const size_t& from_index = 0);
