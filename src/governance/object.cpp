@@ -308,7 +308,9 @@ bool CGovernanceObject::Sign(const CBLSSecretKey& key)
     if (!sig.IsValid()) {
         return false;
     }
-    vchSig = sig.ToByteVector();
+    const auto pindex = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
+    bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->pprev->nTime;
+    vchSig = sig.ToByteVector(is_bls_legacy_scheme);
     return true;
 }
 

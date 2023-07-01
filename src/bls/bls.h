@@ -59,7 +59,7 @@ public:
     explicit CBLSWrapper() = default;
     explicit CBLSWrapper(const std::vector<unsigned char>& vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
     {
-        SetByteVector(vecBytes);
+        SetByteVector(vecBytes, bls::bls_legacy_scheme.load());
     }
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
@@ -119,11 +119,6 @@ public:
         cachedHash.SetNull();
     }
 
-    void SetByteVector(const std::vector<uint8_t>& vecBytes)
-    {
-        SetByteVector(vecBytes, bls::bls_legacy_scheme.load());
-    }
-
     std::vector<uint8_t> ToByteVector(const bool specificLegacyScheme) const
     {
         if (!fValid) {
@@ -158,11 +153,6 @@ public:
         }
         SetByteVector(b, specificLegacyScheme);
         return IsValid();
-    }
-
-    bool SetHexStr(const std::string& str)
-    {
-        return SetHexStr(str, bls::bls_legacy_scheme.load());
     }
 
     inline void Serialize(CSizeComputer& s) const

@@ -17,7 +17,6 @@
 #include <addressindex.h>
 #include <spentindex.h>
 #include <amount.h>
-#include <bls/bls.h>
 #include <coins.h>
 #include <crypto/siphash.h>
 #include <indirectmap.h>
@@ -37,6 +36,11 @@
 class CBlockIndex;
 class CChainState;
 extern RecursiveMutex cs_main;
+
+// Forward declation for CBLSLazyPublicKey:
+template<typename T> class CBLSLazyWrapper;
+class CBLSPublicKey;
+using CBLSLazyPublicKey = CBLSLazyWrapper<CBLSPublicKey>;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;

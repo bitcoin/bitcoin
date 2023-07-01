@@ -7,6 +7,7 @@
 
 #include <batchedlogger.h>
 
+#include <bls/bls.h>
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
 
