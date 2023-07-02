@@ -6,7 +6,6 @@
 
 export LC_ALL=C.UTF-8
 
-
 export HOST=arm-linux-gnueabihf
 # The host arch is unknown, so we run the tests through qemu.
 # If the host is arm and wants to run the tests natively, it can set QEMU_USER_CMD to the empty string.
