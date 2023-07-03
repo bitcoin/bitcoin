@@ -192,8 +192,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # Unload wallets and copy to older nodes:
         node_master_wallets_dir = node_master.wallets_path
-        node_v17_wallets_dir = node_v17.wallets_path
-        node_v16_wallets_dir = node_v16.wallets_path
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
         node_master.unloadwallet("w3")
@@ -293,79 +291,81 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
             assert_raises_rpc_error(-1, "map::at", node_v21.loadwallet, "w1")
 
-        # Create upgrade wallet in v0.16
-        self.restart_node(node_v16.index, extra_args=["-wallet=u1_v16"])
-        wallet = node_v16.get_wallet_rpc("u1_v16")
-        v16_addr = wallet.getnewaddress('', "bech32")
-        v16_info = wallet.validateaddress(v16_addr)
-        v16_pubkey = v16_info['pubkey']
-        self.stop_node(node_v16.index)
+        self.log.info("Test that a wallet can upgrade to and downgrade from master, from:")
+        for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
+            self.log.info(f"- {node.version}")
+            wallet_name = f"up_{node.version}"
+            if self.major_version_less_than(node, 17):
+                # createwallet is only available in 0.17+
+                self.restart_node(node.index, extra_args=[f"-wallet={wallet_name}"])
+                wallet_prev = node.get_wallet_rpc(wallet_name)
+                address = wallet_prev.getnewaddress('', "bech32")
+                addr_info = wallet_prev.validateaddress(address)
+            else:
+                if self.major_version_at_least(node, 21):
+                    node.rpc.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
+                else:
+                    node.rpc.createwallet(wallet_name=wallet_name)
+                wallet_prev = node.get_wallet_rpc(wallet_name)
+                address = wallet_prev.getnewaddress('', "bech32")
+                addr_info = wallet_prev.getaddressinfo(address)
 
-        self.log.info("Test wallet upgrade path...")
-        # u1: regular wallet, created with v0.17
-        node_v17.rpc.createwallet(wallet_name="u1_v17")
-        wallet = node_v17.get_wallet_rpc("u1_v17")
-        address = wallet.getnewaddress("bech32")
-        v17_info = wallet.getaddressinfo(address)
-        hdkeypath = v17_info["hdkeypath"].replace("'", "h")
-        pubkey = v17_info["pubkey"]
+            hdkeypath = addr_info["hdkeypath"].replace("'", "h")
+            pubkey = addr_info["pubkey"]
 
-        if self.is_bdb_compiled():
-            # Old wallets are BDB and will only work if BDB is compiled
-            # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
-            shutil.copyfile(
-                os.path.join(node_v16_wallets_dir, "u1_v16"),
-                os.path.join(node_master_wallets_dir, "u1_v16")
-            )
-            load_res = node_master.loadwallet("u1_v16")
+            # Make a backup of the wallet file
+            backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
+            wallet_prev.backupwallet(backup_path)
+
+            # Remove the wallet from old node
+            if self.major_version_at_least(node, 17):
+                wallet_prev.unloadwallet()
+            else:
+                self.stop_node(node.index)
+
+            # Restore the wallet to master
+            load_res = node_master.restorewallet(wallet_name, backup_path)
+
             # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
-            if int(node_master.getnetworkinfo()["version"]) >= 249900:
-                # loadwallet#warnings (added in v25) -- only present if there is a warning
+            if not self.options.descriptors:
                 # Legacy wallets will have only a deprecation warning
                 assert_equal(load_res["warnings"], ["Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."])
             else:
-                # loadwallet#warning (deprecated in v25) -- always present, but empty string if no warning
-                assert_equal(load_res["warning"], '')
-            wallet = node_master.get_wallet_rpc("u1_v16")
-            info = wallet.getaddressinfo(v16_addr)
-            descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{v16_pubkey})"
-            assert_equal(info["desc"], descsum_create(descriptor))
+                assert "warnings" not in load_res
 
-            # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
-            node_master.unloadwallet("u1_v16")
-            os.remove(os.path.join(node_v16_wallets_dir, "u1_v16"))
-            shutil.copyfile(
-                os.path.join(node_master_wallets_dir, "u1_v16"),
-                os.path.join(node_v16_wallets_dir, "u1_v16")
-            )
-            self.start_node(node_v16.index, extra_args=["-wallet=u1_v16"])
-            wallet = node_v16.get_wallet_rpc("u1_v16")
-            info = wallet.validateaddress(v16_addr)
-            assert_equal(info, v16_info)
-
-            # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
-            node_v17.unloadwallet("u1_v17")
-            shutil.copytree(
-                os.path.join(node_v17_wallets_dir, "u1_v17"),
-                os.path.join(node_master_wallets_dir, "u1_v17")
-            )
-            node_master.loadwallet("u1_v17")
-            wallet = node_master.get_wallet_rpc("u1_v17")
+            wallet = node_master.get_wallet_rpc(wallet_name)
             info = wallet.getaddressinfo(address)
             descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
             assert_equal(info["desc"], descsum_create(descriptor))
 
-            # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
-            node_master.unloadwallet("u1_v17")
-            shutil.rmtree(os.path.join(node_v17_wallets_dir, "u1_v17"))
-            shutil.copytree(
-                os.path.join(node_master_wallets_dir, "u1_v17"),
-                os.path.join(node_v17_wallets_dir, "u1_v17")
-            )
-            node_v17.loadwallet("u1_v17")
-            wallet = node_v17.get_wallet_rpc("u1_v17")
-            info = wallet.getaddressinfo(address)
-            assert_equal(info, v17_info)
+            # Make backup so the wallet can be copied back to old node
+            down_wallet_name = f"re_down_{node.version}"
+            down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
+            wallet.backupwallet(down_backup_path)
+            wallet.unloadwallet()
+
+            # Check that no automatic upgrade broke the downgrading the wallet
+            if self.major_version_less_than(node, 17):
+                # loadwallet is only available in 0.17+
+                shutil.copyfile(
+                    down_backup_path,
+                    node.wallets_path / down_wallet_name
+                )
+                self.start_node(node.index, extra_args=[f"-wallet={down_wallet_name}"])
+                wallet_res = node.get_wallet_rpc(down_wallet_name)
+                info = wallet_res.validateaddress(address)
+                assert_equal(info, addr_info)
+            else:
+                target_dir = node.wallets_path / down_wallet_name
+                os.makedirs(target_dir, exist_ok=True)
+                shutil.copyfile(
+                    down_backup_path,
+                    target_dir / "wallet.dat"
+                )
+                node.loadwallet(down_wallet_name)
+                wallet_res = node.get_wallet_rpc(down_wallet_name)
+                info = wallet_res.getaddressinfo(address)
+                assert_equal(info, addr_info)
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()
