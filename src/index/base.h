@@ -139,9 +139,12 @@ public:
 
     void Interrupt();
 
-    /// Start initializes the sync state and registers the instance as a
-    /// ValidationInterface so that it stays in sync with blockchain updates.
-    [[nodiscard]] bool Start();
+    /** Start initializes the sync state and registers the instance as a
+     *  ValidationInterface so that it stays in sync with blockchain updates.
+     * @param async If true, performs the chain sync process in a background
+     *              thread or, if false, in the caller's thread synchronously.
+     */
+    [[nodiscard]] bool Start(bool async=true);
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();

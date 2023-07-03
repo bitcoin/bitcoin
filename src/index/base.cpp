@@ -399,7 +399,7 @@ void BaseIndex::Interrupt()
     m_interrupt();
 }
 
-bool BaseIndex::Start()
+bool BaseIndex::Start(bool async)
 {
     // m_chainstate member gives indexing code access to node internals. It is
     // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
@@ -409,7 +409,12 @@ bool BaseIndex::Start()
     RegisterValidationInterface(this);
     if (!Init()) return false;
 
-    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { ThreadSync(); });
+    if (async) {
+        m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { ThreadSync(); });
+    } else {
+        // Execute chain sync process synchronously
+        ThreadSync();
+    }
     return true;
 }
 

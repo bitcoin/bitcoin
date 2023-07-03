@@ -12,7 +12,6 @@
 #include <pow.h>
 #include <script/standard.h>
 #include <test/util/blockfilter.h>
-#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -139,10 +138,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(filter_index.Start());
-
-    // Allow filter index to catch up with the block index.
-    IndexWaitSynced(filter_index);
+    BOOST_REQUIRE(filter_index.Start(/*async=*/false));
 
     // Check that filter index has all blocks that were in the chain before it started.
     {
