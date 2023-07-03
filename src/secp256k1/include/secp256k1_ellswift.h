@@ -159,7 +159,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ellswift_create(
 /** Given a private key, and ElligatorSwift public keys sent in both directions,
  *  compute a shared secret using x-only Elliptic Curve Diffie-Hellman (ECDH).
  *
- *  Returns: 1: shared secret was succesfully computed
+ *  Returns: 1: shared secret was successfully computed
  *           0: secret was invalid or hashfp returned 0
  *  Args:    ctx:       pointer to a context object.
  *  Out:     output:    pointer to an array to be filled by hashfp.

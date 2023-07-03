@@ -192,14 +192,14 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b);
 
 /** Set a field element equal to a provided 32-byte big endian value, reducing it.
  *
- * On input, r does not need to be initalized. a must be a pointer to an initialized 32-byte array.
+ * On input, r does not need to be initialized. a must be a pointer to an initialized 32-byte array.
  * On output, r = a (mod p). It will have magnitude 1, and not be normalized.
  */
 static void secp256k1_fe_set_b32_mod(secp256k1_fe *r, const unsigned char *a);
 
 /** Set a field element equal to a provided 32-byte big endian value, checking for overflow.
  *
- * On input, r does not need to be initalized. a must be a pointer to an initialized 32-byte array.
+ * On input, r does not need to be initialized. a must be a pointer to an initialized 32-byte array.
  * On output, r = a if (a < p), it will be normalized with magnitude 1, and 1 is returned.
  * If a >= p, 0 is returned, and r will be made invalid (and must not be used without overwriting).
  */
