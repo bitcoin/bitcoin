@@ -86,7 +86,7 @@ bool CCrypter::SetIV(const std::vector<unsigned char>& chNewIV)
 
 bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const
 {
-    if (!fKeySet)
+    if (!fKeySet && !m_iv_set)
         return false;
 
     // max ciphertext len for a n bytes of plaintext is
@@ -104,7 +104,7 @@ bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned
 
 bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext) const
 {
-    if (!fKeySet)
+    if (!fKeySet && !m_iv_set)
         return false;
 
     // plaintext will always be equal to or lesser than length of ciphertext
