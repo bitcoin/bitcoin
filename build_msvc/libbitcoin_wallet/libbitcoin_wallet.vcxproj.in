@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\wallet\bdb.cpp" />
+    <ClCompile Include="..\..\src\wallet\encrypted_db.cpp" />
     <ClCompile Include="..\..\src\wallet\salvage.cpp" />
     <ClCompile Include="..\..\src\wallet\sqlite.cpp" />
 @SOURCE_FILES@

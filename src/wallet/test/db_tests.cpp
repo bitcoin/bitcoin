@@ -13,6 +13,7 @@
 #endif
 #ifdef USE_SQLITE
 #include <wallet/sqlite.h>
+#include <wallet/encrypted_db.h>
 #endif
 #include <wallet/test/util.h>
 #include <wallet/walletutil.h> // for WALLET_FLAG_DESCRIPTORS
@@ -126,6 +127,7 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
 {
     std::vector<std::unique_ptr<WalletDatabase>> dbs;
     DatabaseOptions options;
+    options.require_create = true;
     DatabaseStatus status;
     bilingual_str error;
 #ifdef USE_BDB
@@ -133,6 +135,8 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
 #endif
 #ifdef USE_SQLITE
     dbs.emplace_back(MakeSQLiteDatabase(path_root / "sqlite", options, status, error));
+    options.db_passphrase = "pass";
+    dbs.emplace_back(MakeEncryptedSQLiteDatabase(path_root / "enc_sqlite", options, status, error));
 #endif
     dbs.emplace_back(CreateMockableWalletDatabase());
     return dbs;

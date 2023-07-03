@@ -20,6 +20,11 @@ class ArgsManager;
 struct bilingual_str;
 
 namespace wallet {
+// BytePrefix compares equality with other byte spans that begin with the same prefix.
+struct BytePrefix { Span<const std::byte> prefix; };
+bool operator<(BytePrefix a, Span<const std::byte> b);
+bool operator<(Span<const std::byte> a, BytePrefix b);
+
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
 class DatabaseCursor
@@ -195,7 +200,8 @@ struct DatabaseOptions {
     bool require_create = false;
     std::optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
-    SecureString create_passphrase;
+    SecureString create_passphrase; //!< The passphrase for wallet-level encryption
+    SecureString db_passphrase;     //!< The passphrase for database-level encryption
 
     // Specialized options. Not every option is supported by every backend.
     bool verify = true;             //!< Check data integrity on load.
