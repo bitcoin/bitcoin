@@ -59,13 +59,28 @@ bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::v
 
 bool CCrypter::SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigned char>& chNewIV)
 {
-    if (chNewKey.size() != WALLET_CRYPTO_KEY_SIZE || chNewIV.size() != WALLET_CRYPTO_IV_SIZE)
+    return SetKey(chNewKey) && SetIV(chNewIV);
+}
+
+bool CCrypter::SetKey(const CKeyingMaterial& chNewKey)
+{
+    if (chNewKey.size() != WALLET_CRYPTO_KEY_SIZE)
         return false;
 
     memcpy(vchKey.data(), chNewKey.data(), chNewKey.size());
-    memcpy(vchIV.data(), chNewIV.data(), chNewIV.size());
 
     fKeySet = true;
+    return true;
+}
+
+bool CCrypter::SetIV(const std::vector<unsigned char>& chNewIV)
+{
+    if (chNewIV.size() != WALLET_CRYPTO_IV_SIZE)
+        return false;
+
+    memcpy(vchIV.data(), chNewIV.data(), chNewIV.size());
+
+    m_iv_set = true;
     return true;
 }
 
