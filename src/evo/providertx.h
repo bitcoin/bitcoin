@@ -167,7 +167,7 @@ public:
         }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(
-                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION), true)
+                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION))
             );
         }
     }
@@ -305,7 +305,7 @@ public:
         );
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(
-                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION), true)
+                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION))
             );
         }
     }
