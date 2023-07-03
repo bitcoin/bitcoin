@@ -135,7 +135,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17 = self.nodes[self.num_nodes - 2]
         node_v16 = self.nodes[self.num_nodes - 1]
 
-        legacy_nodes = self.nodes[2:]
+        legacy_nodes = self.nodes[2:] # Nodes that support legacy wallets
+        legacy_only_nodes = self.nodes[-5:] # Nodes that only support legacy wallets
+        descriptors_nodes = self.nodes[2:-5] # Nodes that support descriptor wallets
 
         self.generatetoaddress(node_miner, COINBASE_MATURITY + 1, node_miner.getnewaddress())
 
@@ -209,52 +211,60 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         self.test_v19_addmultisigaddress()
 
-        if not self.options.descriptors:
-            # Descriptor wallets break compatibility, only run this test for legacy wallet
-            # Load modern wallet with older nodes
-            for node in legacy_nodes:
-                for wallet_name in ["w1", "w2", "w3"]:
-                    if node.version < 170000:
-                        # loadwallet was introduced in v0.17.0
-                        continue
-                    if node.version < 180000 and wallet_name == "w3":
-                        # Blank wallets were introduced in v0.18.0. We test the loading error below.
-                        continue
-                    node.loadwallet(wallet_name)
-                    wallet = node.get_wallet_rpc(wallet_name)
-                    info = wallet.getwalletinfo()
-                    if wallet_name == "w1":
-                        assert info['private_keys_enabled'] == True
-                        assert info['keypoolsize'] > 0
-                        txs = wallet.listtransactions()
-                        assert_equal(len(txs), 5)
-                        assert_equal(txs[1]["txid"], tx1_id)
-                        assert_equal(txs[2]["walletconflicts"], [tx1_id])
-                        assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-                        assert not txs[1]["abandoned"]
-                        assert_equal(txs[1]["confirmations"], -1)
-                        assert_equal(txs[2]["blockindex"], 1)
-                        assert txs[3]["abandoned"]
-                        assert_equal(txs[4]["walletconflicts"], [tx3_id])
-                        assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-                        assert not hasattr(txs[3], "blockindex")
-                    elif wallet_name == "w2":
-                        assert info['private_keys_enabled'] == False
-                        assert info['keypoolsize'] == 0
-                    else:
-                        assert info['private_keys_enabled'] == True
-                        assert info['keypoolsize'] == 0
-        else:
-            for node in legacy_nodes:
-                # Descriptor wallets appear to be corrupted wallets to old software
-                # and loadwallet is introduced in v0.17.0
-                if node.version >= 170000 and node.version < 210000:
-                    for wallet_name in ["w1", "w2", "w3"]:
-                        assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
+        self.log.info("Test that a wallet made on master can be opened on:")
+        # In descriptors wallet mode, run this test on the nodes that support descriptor wallets
+        # In legacy wallets mode, run this test on the nodes that support legacy wallets
+        for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
+            if self.major_version_less_than(node, 17):
+                # loadwallet was introduced in v0.17.0
+                continue
+            self.log.info(f"- {node.version}")
+            for wallet_name in ["w1", "w2", "w3"]:
+                if self.major_version_less_than(node, 18) and wallet_name == "w3":
+                    # Blank wallets were introduced in v0.18.0. We test the loading error below.
+                    continue
+                if self.major_version_less_than(node, 22) and wallet_name == "w1" and self.options.descriptors:
+                    # Descriptor wallets created after 0.21 have taproot descriptors which 0.21 does not support, tested below
+                    continue
+                node.loadwallet(wallet_name)
+                wallet = node.get_wallet_rpc(wallet_name)
+                info = wallet.getwalletinfo()
+                if wallet_name == "w1":
+                    assert info['private_keys_enabled'] == True
+                    assert info['keypoolsize'] > 0
+                    txs = wallet.listtransactions()
+                    assert_equal(len(txs), 5)
+                    assert_equal(txs[1]["txid"], tx1_id)
+                    assert_equal(txs[2]["walletconflicts"], [tx1_id])
+                    assert_equal(txs[1]["replaced_by_txid"], tx2_id)
+                    assert not txs[1]["abandoned"]
+                    assert_equal(txs[1]["confirmations"], -1)
+                    assert_equal(txs[2]["blockindex"], 1)
+                    assert txs[3]["abandoned"]
+                    assert_equal(txs[4]["walletconflicts"], [tx3_id])
+                    assert_equal(txs[3]["replaced_by_txid"], tx4_id)
+                    assert not hasattr(txs[3], "blockindex")
+                elif wallet_name == "w2":
+                    assert info['private_keys_enabled'] == False
+                    assert info['keypoolsize'] == 0
+                else:
+                    assert info['private_keys_enabled'] == True
+                    assert info['keypoolsize'] == 0
 
-        # RPC loadwallet failure causes bitcoind to exit, in addition to the RPC
-        # call failure, so the following test won't work:
-        # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3')
+        # Check that descriptor wallets don't work on legacy only nodes
+        if self.options.descriptors:
+            self.log.info("Test descriptor wallet incompatibility on:")
+            for node in legacy_only_nodes:
+                # RPC loadwallet failure causes bitcoind to exit in <= 0.17, in addition to the RPC
+                # call failure, so the following test won't work:
+                # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3')
+                if self.major_version_less_than(node, 18):
+                    continue
+                self.log.info(f"- {node.version}")
+                # Descriptor wallets appear to be corrupted wallets to old software
+                assert self.major_version_at_least(node, 18) and self.major_version_less_than(node, 21)
+                for wallet_name in ["w1", "w2", "w3"]:
+                    assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
 
         # Instead, we stop node and try to launch it with the wallet:
         self.stop_node(node_v17.index)
