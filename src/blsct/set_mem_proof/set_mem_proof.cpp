@@ -7,7 +7,25 @@
 
 bool SetMemProof::operator==(const SetMemProof& other) const
 {
-    return phi == other.phi && A1 == other.A1 && A2 == other.A2 && S1 == other.S1 && S2 == other.S2 && S3 == other.S3 && T1 == other.T1 && T2 == other.T2 && tau_x == other.tau_x && mu == other.mu && z_alpha == other.z_alpha && z_tau == other.z_tau && z_beta == other.z_beta && t == other.t && Ls == other.Ls && Rs == other.Rs && a == other.a && b == other.b && omega == other.omega;
+  return phi == other.phi
+        && A1 == other.A1
+        && A2 == other.A2
+        && S1 == other.S1
+        && S2 == other.S2
+        && S3 == other.S3
+        && T1 == other.T1
+        && T2 == other.T2
+        && tau_x == other.tau_x
+        && mu == other.mu
+        && z_alpha == other.z_alpha
+        && z_tau == other.z_tau
+        && z_beta == other.z_beta
+        && t == other.t
+        && Ls == other.Ls
+        && Rs == other.Rs
+        && a == other.a
+        && b == other.b
+        && omega == other.omega;
 }
 
 bool SetMemProof::operator!=(const SetMemProof& other) const
