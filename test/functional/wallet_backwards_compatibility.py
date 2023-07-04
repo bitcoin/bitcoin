@@ -72,11 +72,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
 
-    def nodes_wallet_dir(self, node):
-        if node.version < 170000:
-            return node.chain_path
-        return node.wallets_path
-
     def split_version(self, node):
         major = node.version // 10000
         minor = (node.version % 10000) // 100
@@ -178,7 +173,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_master_wallets_dir = node_master.wallets_path
         node_v19_wallets_dir = node_v19.wallets_path
         node_v17_wallets_dir = node_v17.wallets_path
-        node_v16_wallets_dir = node_v16.chain_path
+        node_v16_wallets_dir = node_v16.wallets_path
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
         node_master.unloadwallet("w3")
@@ -186,10 +181,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         for node in legacy_nodes:
             # Copy wallets to previous version
             for wallet in os.listdir(node_master_wallets_dir):
-                shutil.copytree(
-                    os.path.join(node_master_wallets_dir, wallet),
-                    os.path.join(self.nodes_wallet_dir(node), wallet)
-                )
+                dest = node.wallets_path / wallet
+                source = node_master_wallets_dir / wallet
+                if self.major_version_equals(node, 16):
+                    # 0.16 node expect the wallet to be in the wallet dir but as a plain file rather than in directories
+                    shutil.copyfile(source / "wallet.dat", dest)
+                else:
+                    shutil.copytree(source, dest)
 
         if not self.options.descriptors:
             # Descriptor wallets break compatibility, only run this test for legacy wallet
@@ -249,13 +247,14 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
         self.start_node(node_v17.index)
 
-        if not self.options.descriptors:
-            # Descriptor wallets break compatibility, only run this test for legacy wallets
-            # Open most recent wallet in v0.16 (no loadwallet RPC)
-            self.restart_node(node_v16.index, extra_args=["-wallet=w2"])
-            wallet = node_v16.get_wallet_rpc("w2")
-            info = wallet.getwalletinfo()
-            assert info['keypoolsize'] == 1
+        # No wallet created in master can be opened in 0.16
+        self.log.info("Test that wallets created in master are too new for 0.16")
+        self.stop_node(node_v16.index)
+        for wallet_name in ["w1", "w2", "w3"]:
+            if self.options.descriptors:
+                node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: {wallet_name} corrupt, salvage failed")
+            else:
+                node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: Error loading {wallet_name}: Wallet requires newer version of Bitcoin Core")
 
         # Create upgrade wallet in v0.16
         self.restart_node(node_v16.index, extra_args=["-wallet=u1_v16"])
@@ -278,7 +277,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             # Old wallets are BDB and will only work if BDB is compiled
             # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
             shutil.copyfile(
-                os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
+                os.path.join(node_v16_wallets_dir, "u1_v16"),
                 os.path.join(node_master_wallets_dir, "u1_v16")
             )
             load_res = node_master.loadwallet("u1_v16")
@@ -297,10 +296,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
             node_master.unloadwallet("u1_v16")
-            os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
+            os.remove(os.path.join(node_v16_wallets_dir, "u1_v16"))
             shutil.copyfile(
                 os.path.join(node_master_wallets_dir, "u1_v16"),
-                os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
+                os.path.join(node_v16_wallets_dir, "u1_v16")
             )
             self.start_node(node_v16.index, extra_args=["-wallet=u1_v16"])
             wallet = node_v16.get_wallet_rpc("u1_v16")
