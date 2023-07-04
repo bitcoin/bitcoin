@@ -1043,7 +1043,8 @@ private:
     std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
     mutable Mutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
-    std::list<CNode*> m_nodes_disconnected;
+    GlobalMutex m_nodes_disconnected_mutex;
+    std::list<CNode*> m_nodes_disconnected GUARDED_BY(m_nodes_disconnected_mutex);
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
