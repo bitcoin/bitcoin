@@ -226,30 +226,41 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 if self.major_version_less_than(node, 22) and wallet_name == "w1" and self.options.descriptors:
                     # Descriptor wallets created after 0.21 have taproot descriptors which 0.21 does not support, tested below
                     continue
-                node.loadwallet(wallet_name)
-                wallet = node.get_wallet_rpc(wallet_name)
-                info = wallet.getwalletinfo()
-                if wallet_name == "w1":
-                    assert info['private_keys_enabled'] == True
-                    assert info['keypoolsize'] > 0
-                    txs = wallet.listtransactions()
-                    assert_equal(len(txs), 5)
-                    assert_equal(txs[1]["txid"], tx1_id)
-                    assert_equal(txs[2]["walletconflicts"], [tx1_id])
-                    assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-                    assert not txs[1]["abandoned"]
-                    assert_equal(txs[1]["confirmations"], -1)
-                    assert_equal(txs[2]["blockindex"], 1)
-                    assert txs[3]["abandoned"]
-                    assert_equal(txs[4]["walletconflicts"], [tx3_id])
-                    assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-                    assert not hasattr(txs[3], "blockindex")
-                elif wallet_name == "w2":
-                    assert info['private_keys_enabled'] == False
-                    assert info['keypoolsize'] == 0
-                else:
-                    assert info['private_keys_enabled'] == True
-                    assert info['keypoolsize'] == 0
+                # Also try to reopen on master after opening on old
+                for n in [node, node_master]:
+                    n.loadwallet(wallet_name)
+                    wallet = n.get_wallet_rpc(wallet_name)
+                    info = wallet.getwalletinfo()
+                    if wallet_name == "w1":
+                        assert info['private_keys_enabled'] == True
+                        assert info['keypoolsize'] > 0
+                        txs = wallet.listtransactions()
+                        assert_equal(len(txs), 5)
+                        assert_equal(txs[1]["txid"], tx1_id)
+                        assert_equal(txs[2]["walletconflicts"], [tx1_id])
+                        assert_equal(txs[1]["replaced_by_txid"], tx2_id)
+                        assert not txs[1]["abandoned"]
+                        assert_equal(txs[1]["confirmations"], -1)
+                        assert_equal(txs[2]["blockindex"], 1)
+                        assert txs[3]["abandoned"]
+                        assert_equal(txs[4]["walletconflicts"], [tx3_id])
+                        assert_equal(txs[3]["replaced_by_txid"], tx4_id)
+                        assert not hasattr(txs[3], "blockindex")
+                    elif wallet_name == "w2":
+                        assert info['private_keys_enabled'] == False
+                        assert info['keypoolsize'] == 0
+                    else:
+                        assert info['private_keys_enabled'] == True
+                        assert info['keypoolsize'] == 0
+
+                    # Copy back to master
+                    wallet.unloadwallet()
+                    if n == node:
+                        shutil.rmtree(node_master.wallets_path / wallet_name)
+                        shutil.copytree(
+                            n.wallets_path / wallet_name,
+                            node_master.wallets_path / wallet_name,
+                        )
 
         # Check that descriptor wallets don't work on legacy only nodes
         if self.options.descriptors:
