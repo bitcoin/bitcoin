@@ -6,7 +6,14 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 # Build and base stuff
 # (zlib1g-dev is needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
-RUN dpkg --add-architecture i386
+
+
+# Install packages for i386; disabled on aarch64 and arm64 hosts
+RUN (dpkg --print-architecture | grep -Eq 'aarch64|arm64' || dpkg --add-architecture i386)
+RUN (dpkg --print-architecture | grep -Eq 'aarch64|arm64' || (apt-get update && apt-get install $APT_ARGS \
+    g++-9-multilib \
+    wine32) && rm -rf /var/lib/apt/lists/*)
+
 RUN apt-get update && apt-get install $APT_ARGS \
     autotools-dev \
     automake \
@@ -61,7 +68,6 @@ RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash
 RUN apt-get update && apt-get install $APT_ARGS \
     bc \
     gawk \
-    g++-9-multilib \
     g++-arm-linux-gnueabihf \
     g++-mingw-w64-x86-64 \
     jq \
@@ -74,7 +80,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     parallel \
     valgrind \
     wine-stable \
-    wine32 \
     wine64 \
     xorriso
 
