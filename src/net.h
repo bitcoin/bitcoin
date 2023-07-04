@@ -936,6 +936,8 @@ private:
                                       const CAddress& addr_bind,
                                       const CAddress& addr);
 
+    void DeleteDisconnectedNode(CNode* pnode);
+    void DisconnectAndReleaseNode(CNode* pnode);
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
