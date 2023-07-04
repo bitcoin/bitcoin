@@ -56,7 +56,7 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
         // "rb" is "binary, O_RDONLY", positioned to the start of the file.
         // The file will be closed by LoadExternalBlockFile().
         CAutoFile file{fsbridge::fopen(blkfile, "rb"), CLIENT_VERSION};
-        testing_setup->m_node.chainman->LoadExternalBlockFile(file.Get(), &pos, &blocks_with_unknown_parent);
+        testing_setup->m_node.chainman->LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
     });
     fs::remove(blkfile);
 }

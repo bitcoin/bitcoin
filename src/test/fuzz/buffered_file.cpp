@@ -21,7 +21,7 @@ FUZZ_TARGET(buffered_file)
     std::optional<BufferedFile> opt_buffered_file;
     CAutoFile fuzzed_file{fuzzed_file_provider.open(), 0};
     try {
-        opt_buffered_file.emplace(fuzzed_file.Get(), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegral<int>());
+        opt_buffered_file.emplace(fuzzed_file, fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096));
     } catch (const std::ios_base::failure&) {
     }
     if (opt_buffered_file && !fuzzed_file.IsNull()) {

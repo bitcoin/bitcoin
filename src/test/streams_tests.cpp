@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // The buffer size (second arg) must be greater than the rewind
     // amount (third arg).
     try {
-        BufferedFile bfbad{file.Get(), 25, 25, 333};
+        BufferedFile bfbad{file, 25, 25};
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    BufferedFile bf{file.Get(), 25, 10, 333};
+    BufferedFile bf{file, 25, 10};
     BOOST_CHECK(!bf.eof());
 
     // This member has no functional effect.
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     std::rewind(file.Get());
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    BufferedFile bf{file.Get(), 25, 10, 333};
+    BufferedFile bf{file, 25, 10};
 
     uint8_t i;
     // This is like bf >> (7-byte-variable), in that it will cause data
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
         size_t bufSize = InsecureRandRange(300) + 1;
         size_t rewindSize = InsecureRandRange(bufSize);
-        BufferedFile bf{file.Get(), bufSize, rewindSize, 333};
+        BufferedFile bf{file, bufSize, rewindSize};
         size_t currentPos = 0;
         size_t maxPos = 0;
         for (int step = 0; step < 100; ++step) {
