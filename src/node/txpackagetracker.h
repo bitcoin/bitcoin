@@ -20,8 +20,8 @@ static constexpr size_t MAX_PKGTXNS_COUNT{100};
 enum PackageRelayVersions : uint64_t {
     PKG_RELAY_NONE = 0,
     // BIP331 Ancestor Package Information
-    PKG_RELAY_ANCPKG = (1 << 0),
-    PKG_RELAY_PKGTXNS = (1 << 1),
+    PKG_RELAY_ANCPKG = (1 << 1),
+    PKG_RELAY_PKGTXNS = (1 << 0),
 };
 
 class TxPackageTracker {
