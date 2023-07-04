@@ -131,6 +131,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
+        node_v21 = self.nodes[self.num_nodes - 6]
         node_v17 = self.nodes[self.num_nodes - 2]
         node_v16 = self.nodes[self.num_nodes - 1]
 
@@ -276,6 +277,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: {wallet_name} corrupt, salvage failed")
             else:
                 node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: Error loading {wallet_name}: Wallet requires newer version of Bitcoin Core")
+
+        # When descriptors are enabled, w1 cannot be opened by 0.21 since it contains a taproot descriptor
+        if self.options.descriptors:
+            self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
+            assert_raises_rpc_error(-1, "map::at", node_v21.loadwallet, "w1")
 
         # Create upgrade wallet in v0.16
         self.restart_node(node_v16.index, extra_args=["-wallet=u1_v16"])
