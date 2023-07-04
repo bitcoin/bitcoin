@@ -129,17 +129,12 @@ public:
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
     void UpdateDIP8Parameters(int nActivationHeight);
     void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
-    void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
-    void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
     void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
-    void UpdateLLMQTestParams(int size, int threshold);
-    void UpdateLLMQDevnetParams(int size, int threshold);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
-    bool BIP9CheckMasternodesUpgraded() const { return fBIP9CheckMasternodesUpgraded; }
     std::optional<Consensus::LLMQParams> GetLLMQ(Consensus::LLMQType llmqType) const;
 
 protected:
@@ -174,7 +169,6 @@ protected:
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
-    bool fBIP9CheckMasternodesUpgraded;
     uint16_t nDefaultPlatformP2PPort;
     uint16_t nDefaultPlatformHTTPPort;
 

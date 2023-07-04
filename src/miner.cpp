@@ -134,7 +134,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
     bool fDIP0008Active_context = nHeight >= chainparams.GetConsensus().DIP0008Height;
 
-    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), chainparams.BIP9CheckMasternodesUpgraded());
+    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
     // Non-mainnet only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (Params().NetworkIDString() != CBaseChainParams::MAIN)

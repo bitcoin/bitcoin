@@ -274,7 +274,6 @@ public:
 
         vSporkAddresses = {"Xgtyuk76vhuFW2iT7UAiHgNdWXCf3J34wh"};
         nMinSporkKeys = 1;
-        fBIP9CheckMasternodesUpgraded = true;
 
         checkpointData = {
             {
@@ -464,7 +463,6 @@ public:
 
         vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
         nMinSporkKeys = 1;
-        fBIP9CheckMasternodesUpgraded = true;
 
         checkpointData = {
             {
@@ -644,8 +642,6 @@ public:
 
         vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
         nMinSporkKeys = 1;
-        // devnets are started with no blocks and no MN, so we can't check for upgraded MN (as there are none)
-        fBIP9CheckMasternodesUpgraded = false;
 
         checkpointData = (CCheckpointData) {
             {
@@ -846,8 +842,6 @@ public:
         // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK
         vSporkAddresses = {"yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"};
         nMinSporkKeys = 1;
-        // regtest usually has no masternodes in most tests, so don't check for upgraged MNs
-        fBIP9CheckMasternodesUpgraded = false;
 
         checkpointData = {
             {
