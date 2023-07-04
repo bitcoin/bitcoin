@@ -803,6 +803,12 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         }
         pwallet->LoadDescriptorScriptPubKeyMan(id, desc);
 
+        // Prior to doing anything with this spkm, verify ID compatibility
+        if (id != pwallet->GetDescriptorScriptPubKeyMan(desc)->GetID()) {
+            strErr = "The descriptor ID calculated by the wallet differs from the one in DB";
+            return DBErrors::CORRUPT;
+        }
+
         DescriptorCache cache;
 
         // Get key cache for this descriptor

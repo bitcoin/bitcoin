@@ -106,7 +106,7 @@ struct Descriptor {
     virtual bool IsSolvable() const = 0;
 
     /** Convert the descriptor back to a string, undoing parsing. */
-    virtual std::string ToString() const = 0;
+    virtual std::string ToString(bool compat_format=false) const = 0;
 
     /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
@@ -181,5 +181,10 @@ std::string GetDescriptorChecksum(const std::string& descriptor);
  * - Failing that, a "raw()" descriptor is returned.
  */
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
+
+/** Unique identifier that may not change over time, unless explicitly marked as not backwards compatible.
+*   This is not part of BIP 380, not guaranteed to be interoperable and should not be exposed to the user.
+*/
+uint256 DescriptorID(const Descriptor& desc);
 
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H
