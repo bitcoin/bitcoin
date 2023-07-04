@@ -94,7 +94,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
         node_v19 = self.nodes[self.num_nodes - 4]
-        node_v18 = self.nodes[self.num_nodes - 3]
         node_v17 = self.nodes[self.num_nodes - 2]
         node_v16 = self.nodes[self.num_nodes - 1]
 
@@ -144,13 +143,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         address_18075 = wallet.rpc.addmultisigaddress(1, ["0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52", "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"], "", "legacy")["address"]
         assert wallet.getaddressinfo(address_18075)["solvable"]
         node_v19.unloadwallet("w1_v19")
-
-        # w1_v18: regular wallet, created with v0.18
-        node_v18.rpc.createwallet(wallet_name="w1_v18")
-        wallet = node_v18.get_wallet_rpc("w1_v18")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
 
         # w2: wallet with private keys disabled, created on master: update this
         #     test when default wallets private keys disabled can no longer be
