@@ -863,6 +863,12 @@ void RPCConsole::removeWallet(WalletModel * const walletModel)
         ui->wallet_path->clear();
     }
 }
+
+void RPCConsole::setCurrentWallet(WalletModel* const wallet_model)
+{
+    QVariant data = QVariant::fromValue(wallet_model);
+    ui->WalletSelector->setCurrentIndex(ui->WalletSelector->findData(data));
+}
 #endif
 
 static QString categoryClass(int category)
