@@ -637,24 +637,7 @@ public:
         src = fileIn;
     }
 
-    ~BufferedFile()
-    {
-        fclose();
-    }
-
-    // Disallow copies
-    BufferedFile(const BufferedFile&) = delete;
-    BufferedFile& operator=(const BufferedFile&) = delete;
-
     int GetVersion() const { return nVersion; }
-
-    void fclose()
-    {
-        if (src) {
-            ::fclose(src);
-            src = nullptr;
-        }
-    }
 
     //! check whether we're at the end of the source file
     bool eof() const {
