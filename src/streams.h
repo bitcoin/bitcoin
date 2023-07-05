@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstddef>
 #include <cstdio>
 #include <ios>
 #include <limits>
@@ -520,37 +521,15 @@ public:
      */
     bool IsNull() const { return m_file == nullptr; }
 
+    /** Implementation detail, only used internally. */
+    std::size_t detail_fread(Span<std::byte> dst);
+
     //
     // Stream subset
     //
-    void read(Span<std::byte> dst)
-    {
-        if (!m_file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
-        if (std::fread(dst.data(), 1, dst.size(), m_file) != dst.size()) {
-            throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
-        }
-    }
-
-    void ignore(size_t nSize)
-    {
-        if (!m_file) throw std::ios_base::failure("AutoFile::ignore: file handle is nullptr");
-        unsigned char data[4096];
-        while (nSize > 0) {
-            size_t nNow = std::min<size_t>(nSize, sizeof(data));
-            if (std::fread(data, 1, nNow, m_file) != nNow) {
-                throw std::ios_base::failure(feof() ? "AutoFile::ignore: end of file" : "AutoFile::ignore: fread failed");
-            }
-            nSize -= nNow;
-        }
-    }
-
-    void write(Span<const std::byte> src)
-    {
-        if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
-        if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
-            throw std::ios_base::failure("AutoFile::write: write failed");
-        }
-    }
+    void read(Span<std::byte> dst);
+    void ignore(size_t nSize);
+    void write(Span<const std::byte> src);
 
     template <typename T>
     AutoFile& operator<<(const T& obj)
