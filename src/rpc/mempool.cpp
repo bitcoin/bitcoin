@@ -702,12 +702,14 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHi
             const CAmount afees{e.GetModFeesWithAncestors()}, dfees{e.GetModFeesWithDescendants()};
             const uint32_t asize{uint32_t(e.GetSizeWithAncestors())}, dsize{uint32_t(e.GetSizeWithDescendants())};
 
-            const CAmount fpb{CFeeRate{fee, size}.GetFee(1)};     // Fee rate per byte
-            const CAmount afpb{CFeeRate{afees, asize}.GetFee(1)}; // Fee rate per byte including ancestors
-            const CAmount dfpb{CFeeRate{dfees, dsize}.GetFee(1)}; // Fee rate per byte including descendants
+            // Do not use CFeeRate here, since it rounds up, and this should be rounding down
+            const CAmount fpb{fee / size};     // Fee rate per byte
+            const CAmount afpb{afees / asize}; // Fee rate per byte including ancestors
+            const CAmount dfpb{dfees / dsize}; // Fee rate per byte including descendants
 
             // Fee rate per byte including ancestors & descendants
-            const CAmount tfpb{CFeeRate{afees + dfees - fee, asize + dsize - size}.GetFee(1)};
+            // (fee/size are included in both, so subtracted to avoid double-counting)
+            const CAmount tfpb{(afees + dfees - fee) / (asize + dsize - size)};
 
             const CAmount fee_rate{std::max(std::min(dfpb, tfpb), std::min(fpb, afpb))};
 
