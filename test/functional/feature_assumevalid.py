@@ -32,7 +32,6 @@ Start three nodes:
 import time
 
 from test_framework.blocktools import (
-    COINBASE_MATURITY,
     create_block,
     create_coinbase,
 )

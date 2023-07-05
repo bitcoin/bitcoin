@@ -1300,7 +1300,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
         vSporkAddresses = args.GetArgs("-sporkaddr");
-    // if HRP is overrided don't bother setting spork addresses as they will be wrong format
+    // if HRP is overridden don't bother setting spork addresses as they will be wrong format
     } else if(!args.IsArgSet("-hrp")){
         vSporkAddresses = Params().SporkAddresses();
     }

@@ -314,7 +314,7 @@ BASE_SCRIPTS = [
     'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'rpc_estimatefee.py',
-    # renable with SYS data
+    # re-enable with SYS data
     #'rpc_getblockstats.py',
     'feature_bind_port_externalip.py',
     'wallet_create_tx.py --legacy-wallet',
@@ -331,7 +331,7 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py --descriptors',
     'feature_filelock.py',
     'feature_loadblock.py',
-    # renable with SYS data
+    # re-enable with SYS data
     #'p2p_dos_header_tree.py',
     'p2p_add_connections.py',
     'feature_bind_port_discover.py',
