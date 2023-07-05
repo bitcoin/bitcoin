@@ -159,7 +159,7 @@ dist/
 /guix-build-*
 
 # cppcheck cache-directory
-.cppcheck/*
+test/lint/.cppcheck/*
 
 # flake8 cache location
 .cache/*
