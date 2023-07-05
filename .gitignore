@@ -43,6 +43,10 @@ src/config/stamp-h1
 src/obj
 share/setup.nsi
 share/qt/Info.plist
+src/secp256k1/src/libsecp256k1-config.h
+src/secp256k1/src/libsecp256k1-config.h.in
+src/secp256k1/src/stamp-h1
+
 
 src/qt/*.moc
 src/qt/moc_*.cpp
