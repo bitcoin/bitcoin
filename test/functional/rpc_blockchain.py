@@ -127,25 +127,6 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
-        {
-           'testdummy': {
-              'type': 'bip9',
-              'bip9': {
-                 'status': 'started',
-                 'bit': 28,
-                 'start_time': 0,
-                 'timeout': 999999999999,
-                 'since': 144,
-                 'statistics': {
-                    'period': 144,
-                    'threshold': 108,
-                    'elapsed': 57,
-                    'count': 57,
-                    'possible': True
-                 }
-              },
-              'active': False}
-        }
         assert_equal(res['softforks'], {
             'bip34': {'type': 'buried', 'active': False, 'height': 500},
             'bip66': {'type': 'buried', 'active': False, 'height': 1251},
