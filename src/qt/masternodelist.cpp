@@ -19,17 +19,6 @@
 #include <QTableWidgetItem>
 #include <QtGui/QClipboard>
 
-int GetOffsetFromUtc()
-{
-#if QT_VERSION < 0x050200
-    const QDateTime dateTime1 = QDateTime::currentDateTime();
-    const QDateTime dateTime2 = QDateTime(dateTime1.date(), dateTime1.time(), Qt::UTC);
-    return dateTime1.secsTo(dateTime2);
-#else
-    return QDateTime::currentDateTime().offsetFromUtc();
-#endif
-}
-
 template <typename T>
 class CMasternodeListWidgetItem : public QTableWidgetItem
 {
