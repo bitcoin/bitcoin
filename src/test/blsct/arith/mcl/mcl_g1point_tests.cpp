@@ -218,6 +218,27 @@ BOOST_AUTO_TEST_CASE(test_is_zero)
     BOOST_CHECK_EQUAL(p.IsZero(), true);
 }
 
+BOOST_AUTO_TEST_CASE(test_infinity)
+{
+    auto g = MclG1Point::GetInfinity();
+    BOOST_CHECK_EQUAL(g.IsZero(), true);
+
+    mclBnG1 g0;
+    auto g_str = "0"s;
+    if (mclBnG1_setStr(&g0, g_str.c_str(), g_str.length(), 10) == -1) {
+        throw std::runtime_error("MclG1Point::GetInfinity(): mclBnG1_setStr failed");
+    }
+    MclG1Point g0p(g0);
+
+    BOOST_CHECK(g == g0p);
+
+    auto p = MclG1Point::GetBasePoint();
+    BOOST_CHECK_EQUAL(p.IsZero(), false);
+
+    auto q = p + g;
+    BOOST_CHECK_EQUAL(q == p, true);
+}
+
 BOOST_AUTO_TEST_CASE(test_get_set_vch)
 {
     MclG1Point p(uint256::ONE);
@@ -226,7 +247,7 @@ BOOST_AUTO_TEST_CASE(test_get_set_vch)
     MclG1Point q;
     BOOST_CHECK(p != q);
 
-    q.SetVch(vec);
+    BOOST_CHECK(q.SetVch(vec) == true);
     BOOST_CHECK(p == q);
 }
 

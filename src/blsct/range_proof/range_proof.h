@@ -69,6 +69,9 @@ struct RangeProof {
         ::Unserialize(s, a);
         ::Unserialize(s, b);
         ::Unserialize(s, t_hat);
+
+        if (Vs.HasZero() || Ls.HasZero() || Rs.HasZero() || A.IsZero() || S.IsZero() || T1.IsZero() || T2.IsZero())
+            throw std::runtime_error("RangeProof::Unserialize: Invalid proof, at least one point is infinity");
     }
 };
 

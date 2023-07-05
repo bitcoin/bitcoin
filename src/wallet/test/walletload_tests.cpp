@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <test/util/setup_common.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
-#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -12,11 +12,13 @@ namespace wallet {
 
 BOOST_AUTO_TEST_SUITE(walletload_tests)
 
-class DummyDescriptor final : public Descriptor {
+class DummyDescriptor final : public Descriptor
+{
 private:
     std::string desc;
+
 public:
-    explicit DummyDescriptor(const std::string& descriptor) : desc(descriptor) {};
+    explicit DummyDescriptor(const std::string& descriptor) : desc(descriptor){};
     ~DummyDescriptor() = default;
 
     std::string ToString() const override { return desc; }
@@ -82,7 +84,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
         return db;
     };
 
-    {   // Context setup.
+    { // Context setup.
         // Create and encrypt legacy wallet
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockWalletDatabase()));
         LOCK(wallet->cs_wallet);
@@ -99,7 +101,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
         wallet->Flush();
 
         DatabaseOptions options;
-        for (int i=0; i < NUMBER_OF_TESTS; i++) {
+        for (int i = 0; i < NUMBER_OF_TESTS; i++) {
             dbs.emplace_back(DuplicateMockDatabase(wallet->GetDatabase(), options));
         }
     }
@@ -204,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         return db;
     };
 
-    {   // Context setup.
+    { // Context setup.
         // Create and encrypt blsct wallet
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockWalletDatabase(options)));
         LOCK(wallet->cs_wallet);
@@ -213,7 +215,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
 
         // Get the keys in the wallet before encryption
         auto masterKeysMetadata = blsct_km->GetHDChain();
-        blsct::SubAddress recvAddress = blsct_km->GetAddress();
+        blsct::SubAddress recvAddress = blsct_km->GetSubAddress();
         dest = recvAddress.GetKeys();
         viewKey = blsct_km->viewKey;
         BOOST_CHECK(viewKey.IsValid());
@@ -224,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         BOOST_CHECK(wallet->EncryptWallet("encrypt"));
         wallet->Flush();
 
-        for (int i=0; i < NUMBER_OF_TESTS; i++) {
+        for (int i = 0; i < NUMBER_OF_TESTS; i++) {
             dbs.emplace_back(DuplicateMockDatabase(wallet->GetDatabase(), options));
         }
     }
@@ -326,7 +328,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
 
         // Get the keys in the wallet before encryption
         auto masterKeysMetadata = blsct_km->GetHDChain();
-        blsct::SubAddress recvAddress = blsct_km->GetAddress();
+        blsct::SubAddress recvAddress = blsct_km->GetSubAddress();
         blsct::DoublePublicKey dest2 = recvAddress.GetKeys();
         viewKey2 = blsct_km->viewKey;
         BOOST_CHECK(viewKey.IsValid());

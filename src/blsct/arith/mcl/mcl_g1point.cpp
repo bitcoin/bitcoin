@@ -104,6 +104,18 @@ MclG1Point MclG1Point::GetBasePoint()
     return ret;
 }
 
+MclG1Point MclG1Point::GetInfinity()
+{
+    static mclBnG1* g = nullptr;
+    if (g == nullptr) {
+        g = new mclBnG1();
+        mclBnG1_clear(g);
+    }
+    MclG1Point ret(*g);
+    return ret;
+}
+
+
 MclG1Point MclG1Point::MapToG1(const std::vector<uint8_t>& vec, const Endianness e)
 {
     if (vec.size() == 0) {
@@ -179,13 +191,15 @@ std::vector<uint8_t> MclG1Point::GetVch() const
     return b;
 }
 
-void MclG1Point::SetVch(const std::vector<uint8_t>& b)
+bool MclG1Point::SetVch(const std::vector<uint8_t>& b)
 {
     if (mclBnG1_deserialize(&m_p, &b[0], b.size()) == 0) {
         mclBnG1 x;
         mclBnG1_clear(&x);
         m_p = x;
+        return false;
     }
+    return true;
 }
 
 std::string MclG1Point::GetString(const uint8_t& radix) const

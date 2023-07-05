@@ -82,7 +82,7 @@ static void AddKey(CWallet& wallet, const CKey& key)
     LOCK(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
-    std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+    std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/false);
     assert(desc);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     if (!wallet.AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
@@ -261,14 +261,14 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
 
         UniValue response = importmulti().HandleRequest(request);
         BOOST_CHECK_EQUAL(response.write(),
-            strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Rescan failed for key with creation "
-                      "timestamp %d. There was an error reading a block from time %d, which is after or within %d "
-                      "seconds of key creation, and could contain transactions pertaining to the key. As a result, "
-                      "transactions and coins using this key may not appear in the wallet. This error could be caused "
-                      "by pruning or data corruption (see bitcoind log for details) and could be dealt with by "
-                      "downloading and rescanning the relevant blocks (see -reindex option and rescanblockchain "
-                      "RPC).\"}},{\"success\":true}]",
-                              0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
+                          strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Rescan failed for key with creation "
+                                    "timestamp %d. There was an error reading a block from time %d, which is after or within %d "
+                                    "seconds of key creation, and could contain transactions pertaining to the key. As a result, "
+                                    "transactions and coins using this key may not appear in the wallet. This error could be caused "
+                                    "by pruning or data corruption (see bitcoind log for details) and could be dealt with by "
+                                    "downloading and rescanning the relevant blocks (see -reindex option and rescanblockchain "
+                                    "RPC).\"}},{\"success\":true}]",
+                                    0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
         RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
     }
 }
@@ -373,7 +373,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     // credit amount is calculated.
     wtx.MarkDirty();
     AddKey(wallet, coinbaseKey);
-    BOOST_CHECK_EQUAL(CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE), 50*COIN);
+    BOOST_CHECK_EQUAL(CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE), 50 * COIN);
 }
 
 static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
@@ -394,12 +394,13 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         state = TxStateConfirmed{hash, block->nHeight, /*index=*/0};
     }
     return wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {
-        // Assign wtx.m_state to simplify test and avoid the need to simulate
-        // reorg events. Without this, AddToWallet asserts false when the same
-        // transaction is confirmed in different blocks.
-        wtx.m_state = state;
-        return true;
-    })->nTimeSmart;
+                     // Assign wtx.m_state to simplify test and avoid the need to simulate
+                     // reorg events. Without this, AddToWallet asserts false when the same
+                     // transaction is confirmed in different blocks.
+                     wtx.m_state = state;
+                     return true;
+                 })
+        ->nTimeSmart;
 }
 
 // Simple test to verify assignment of CWalletTx::nSmartTime value. Could be
@@ -525,7 +526,7 @@ static void TestWatchOnlyPubKey(LegacyScriptPubKeyMan* spk_man, const CPubKey& a
 static void PollutePubKey(CPubKey& pubkey)
 {
     std::vector<unsigned char> pubkey_raw(pubkey.begin(), pubkey.end());
-    std::fill(pubkey_raw.begin()+1, pubkey_raw.end(), 0);
+    std::fill(pubkey_raw.begin() + 1, pubkey_raw.end(), 0);
     pubkey = CPubKey(pubkey_raw);
     assert(!pubkey.IsFullyValid());
     assert(pubkey.IsValid());
@@ -670,20 +671,25 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
                      std::map<OutputType, size_t>& expected_coins_sizes)
 {
     LOCK(context.wallet->cs_wallet);
+    if (out_type == OutputType::BLSCT) return;
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
     CWalletTx& wtx = context.AddTx(CRecipient{{GetScriptForDestination(*dest)}, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
     // Lock outputs so they are not spent in follow-up transactions
-    for (uint32_t i = 0; i < wtx.tx->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i});
-    for (const auto& [type, size] : expected_coins_sizes) BOOST_CHECK_EQUAL(size, available_coins.coins[type].size());
+    for (uint32_t i = 0; i < wtx.tx->vout.size(); i++)
+        context.wallet->LockCoin({wtx.GetHash(), i});
+    for (const auto& [type, size] : expected_coins_sizes)
+        BOOST_CHECK_EQUAL(size, available_coins.coins[type].size());
 }
 
 BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
 {
     std::map<OutputType, size_t> expected_coins_sizes;
-    for (const auto& out_type : OUTPUT_TYPES) { expected_coins_sizes[out_type] = 0U; }
+    for (const auto& out_type : OUTPUT_TYPES) {
+        expected_coins_sizes[out_type] = 0U;
+    }
 
     // Verify our wallet has one usable coinbase UTXO before starting
     // This UTXO is a P2PK, so it should show up in the Other bucket
@@ -701,6 +707,7 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
 
     for (const auto& out_type : OUTPUT_TYPES) {
         if (out_type == OutputType::UNKNOWN) continue;
+        if (out_type == OutputType::BLSCT) continue;
         expected_coins_sizes[out_type] = 2U;
         TestCoinsResult(*this, out_type, 1 * COIN, expected_coins_sizes);
     }
@@ -886,14 +893,14 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     // as soon as possible.
     addtx_count = 0;
     auto handler = HandleLoadWallet(context, [&](std::unique_ptr<interfaces::Wallet> wallet) {
-            BOOST_CHECK(rescan_completed);
-            m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
-            block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-            m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
-            mempool_tx = TestSimpleSpend(*m_coinbase_txns[3], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-            BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, false, error));
-            SyncWithValidationInterfaceQueue();
-        });
+        BOOST_CHECK(rescan_completed);
+        m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+        block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
+        m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+        mempool_tx = TestSimpleSpend(*m_coinbase_txns[3], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
+        BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, false, error));
+        SyncWithValidationInterfaceQueue();
+    });
     wallet = TestLoadWallet(context);
     BOOST_CHECK_EQUAL(addtx_count, 2);
     {
@@ -941,7 +948,7 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
         BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 1u);
 
-        std::vector<uint256> vHashIn{ block_hash }, vHashOut;
+        std::vector<uint256> vHashIn{block_hash}, vHashOut;
         BOOST_CHECK_EQUAL(wallet->ZapSelectTx(vHashIn, vHashOut), DBErrors::LOAD_OK);
 
         BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
@@ -985,10 +992,10 @@ class FailDatabase : public WalletDatabase
 public:
     bool m_pass{true}; // false when this db should fail
 
-    void Open() override {};
+    void Open() override{};
     void AddRef() override {}
     void RemoveRef() override {}
-    bool Rewrite(const char* pszSkip=nullptr) override { return true; }
+    bool Rewrite(const char* pszSkip = nullptr) override { return true; }
     bool Backup(const std::string& strDest) const override { return true; }
     void Close() override {}
     void Flush() override {}

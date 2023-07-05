@@ -270,7 +270,7 @@ class ToolWalletTest(BitcoinTestFramework):
         shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling create: {}'.format(timestamp_before))
-        out = "Topping up keypool...\n" + self.get_expected_info_output(name="foo", keypool=2000)
+        out = "Topping up keypool...\n" + self.get_expected_info_output(name="foo", keypool=64)
         self.assert_tool_output(out, '-wallet=foo', 'create')
         shasum_after = self.wallet_shasum()
         timestamp_after = self.wallet_timestamp()
@@ -297,12 +297,12 @@ class ToolWalletTest(BitcoinTestFramework):
 
         assert_equal(0, out['txcount'])
         if not self.options.descriptors:
-            assert_equal(1000, out['keypoolsize'])
-            assert_equal(1000, out['keypoolsize_hd_internal'])
+            assert_equal(32, out['keypoolsize'])
+            assert_equal(32, out['keypoolsize_hd_internal'])
             assert_equal(True, 'hdseedid' in out)
         else:
-            assert_equal(4000, out['keypoolsize'])
-            assert_equal(4000, out['keypoolsize_hd_internal'])
+            assert_equal(128, out['keypoolsize'])
+            assert_equal(128, out['keypoolsize_hd_internal'])
 
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
         assert_equal(timestamp_before, timestamp_after)

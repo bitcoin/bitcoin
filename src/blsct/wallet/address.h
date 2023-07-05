@@ -13,6 +13,22 @@
 namespace blsct {
 static const std::string subAddressHeader = "SubAddress\0";
 
+class SubAddressPool
+{
+public:
+    int64_t nTime;
+    CKeyID hashId;
+
+    SubAddressPool() : nTime(GetTime()){};
+    SubAddressPool(const CKeyID& hashIdIn) : nTime(GetTime()), hashId(hashIdIn){};
+
+
+    SERIALIZE_METHODS(SubAddressPool, obj)
+    {
+        READWRITE(obj.nTime, obj.hashId);
+    }
+};
+
 struct SubAddressIdentifier {
     uint64_t account;
     uint64_t address;
@@ -22,9 +38,10 @@ class SubAddress
 {
 private:
     DoublePublicKey pk;
+
 public:
-    SubAddress(const PrivateKey &viewKey, const PublicKey &spendKey, const SubAddressIdentifier &subAddressId);
-    SubAddress(const DoublePublicKey& pk) : pk(pk) {};
+    SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId);
+    SubAddress(const DoublePublicKey& pk) : pk(pk){};
 
     bool IsValid() const;
 
@@ -32,6 +49,6 @@ public:
     CTxDestination GetDestination() const;
     DoublePublicKey GetKeys() const { return pk; };
 };
-}
+} // namespace blsct
 
 #endif // NAVCOIN_BLSCT_ADDRESS_H

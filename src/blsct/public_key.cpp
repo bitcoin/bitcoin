@@ -4,33 +4,29 @@
 
 #define BLS_ETH 1
 
+#include <blsct/common.h> // causes mutual dependency issue if included in the public_key header
 #include <blsct/public_key.h>
-#include <blsct/common.h>  // causes mutual dependency issue if included in the public_key header
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
 namespace blsct {
+using Point = MclG1Point;
 
 uint256 PublicKey::GetHash() const
 {
     CHashWriter ss(SER_GETHASH, 0);
-    ss << data;
+    ss << GetVch();
     return ss.GetHash();
 }
 
 CKeyID PublicKey::GetID() const
 {
-    return CKeyID(Hash160(data));
+    return CKeyID(Hash160(GetVch()));
 }
 
-bool PublicKey::GetG1Point(Point& ret) const
+Point PublicKey::GetG1Point() const
 {
-    try {
-        ret = Point(data);
-    } catch (...) {
-        return false;
-    }
-    return true;
+    return point;
 }
 
 std::string PublicKey::ToString() const
@@ -50,27 +46,21 @@ bool PublicKey::operator!=(const PublicKey& rhs) const
 
 bool PublicKey::IsValid() const
 {
-    if (data.size() == 0) return false;
-
-    Point g1;
-
-    if (!GetG1Point(g1)) return false;
-
-    return g1.IsValid();
+    if (fValid == -1) {
+        if (point.IsValid())
+            const_cast<PublicKey*>(this)->fValid = 1;
+    }
+    return fValid == 1;
 }
 
 std::vector<unsigned char> PublicKey::GetVch() const
 {
-    return data;
+    return point.GetVch();
 }
 
 blsPublicKey PublicKey::ToBlsPublicKey() const
 {
-    MclG1Point p;
-    if (!GetG1Point(p)) {
-      throw std::runtime_error("Failed to convert PublicKey to MclG1Point");
-    }
-    blsPublicKey bls_pk { p.Underlying() };
+    blsPublicKey bls_pk{point.Underlying()};
     return bls_pk;
 }
 
@@ -100,4 +90,4 @@ bool PublicKey::Verify(const Message& msg, const Signature& sig) const
     return CoreVerify(aug_msg, sig);
 }
 
-}  // namespace blsct
+} // namespace blsct

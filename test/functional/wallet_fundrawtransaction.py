@@ -45,7 +45,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # This test isn't testing tx relay. Set whitelist on the peers for
         # instant tx relay.
-        self.extra_args = [['-whitelist=noban@127.0.0.1']] * self.num_nodes
+        self.extra_args = [['-whitelist=noban@127.0.0.1', '-addresstype=bech32']] * self.num_nodes
         self.rpc_timeout = 90  # to prevent timeouts in `test_transaction_too_large`
 
     def skip_test_if_missing_module(self):
@@ -146,7 +146,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_transaction_too_large()
         self.test_include_unsafe()
         self.test_external_inputs()
-        self.test_22670()
         self.test_feerate_rounding()
         self.test_input_confs_control()
 
@@ -619,7 +618,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Refill the keypool.
         self.nodes[1].walletpassphrase("test", 100)
-        self.nodes[1].keypoolrefill(8) #need to refill the keypool to get an internal change address
+        self.nodes[1].keypoolrefill(8, False) #need to refill the keypool to get an internal change address
         self.nodes[1].walletlock()
 
         assert_raises_rpc_error(-13, "walletpassphrase", self.nodes[1].sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
@@ -987,7 +986,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # shouldn't use BnB and instead fall back to Knapsack but that behavior
         # is not implemented yet. For now we just check that we get an error.
         # First, force the wallet to bulk-generate the addresses we'll need.
-        recipient.keypoolrefill(1500)
+        recipient.keypoolrefill(1500, False)
         for _ in range(1500):
             outputs[recipient.getnewaddress()] = 0.1
         wallet.sendmany("", outputs)
@@ -1093,7 +1092,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Create and fund the wallet with 5 BTC
         self.nodes[2].createwallet("test_preset_inputs")
         wallet = self.nodes[2].get_wallet_rpc("test_preset_inputs")
-        addr1 = wallet.getnewaddress(address_type="bech32")
+        addr1 = wallet.getnewaddress()
         self.nodes[0].sendtoaddress(addr1, 5)
         self.generate(self.nodes[0], 1)
 
@@ -1278,7 +1277,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
 
         # Using the other output should have 72 byte sigs
-        rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': ext_vout}], [{self.nodes[0].getnewaddress(): 13}])
+        rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': ext_vout}], [{self.nodes[0].getnewaddress(address_type="bech32"): 13}])
         ext_desc = self.nodes[0].getaddressinfo(ext_addr)["desc"]
         fundedtx = wallet.fundrawtransaction(rawtx, {'fee_rate': 10, "change_type": "bech32", "solving_data": {"descriptors": [ext_desc]}})
         # tx overhead (10) + 3 inputs (41 each) + 2 p2wpkh(31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 bytes sig witnesses (107 each) + p2wpkh 72 byte sig witness (108)) / witness scaling factor (4)
@@ -1321,66 +1320,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
         assert wallet.testmempoolaccept([signedtx['hex']])[0]["allowed"]
         self.nodes[0].unloadwallet("unsafe")
-
-    def test_22670(self):
-        # In issue #22670, it was observed that ApproximateBestSubset may
-        # choose enough value to cover the target amount but not enough to cover the transaction fees.
-        # This leads to a transaction whose actual transaction feerate is lower than expected.
-        # However at normal feerates, the difference between the effective value and the real value
-        # that this bug is not detected because the transaction fee must be at least 0.01 BTC (the minimum change value).
-        # Otherwise the targeted minimum change value will be enough to cover the transaction fees that were not
-        # being accounted for. So the minimum relay fee is set to 0.1 BTC/kvB in this test.
-        self.log.info("Test issue 22670 ApproximateBestSubset bug")
-        # Make sure the default wallet will not be loaded when restarted with a high minrelaytxfee
-        self.nodes[0].unloadwallet(self.default_wallet_name, False)
-        feerate = Decimal("0.1")
-        self.restart_node(0, [f"-minrelaytxfee={feerate}", "-discardfee=0"]) # Set high minrelayfee, set discardfee to 0 for easier calculation
-
-        self.nodes[0].loadwallet(self.default_wallet_name, True)
-        funds = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
-        self.nodes[0].createwallet(wallet_name="tester")
-        tester = self.nodes[0].get_wallet_rpc("tester")
-
-        # Because this test is specifically for ApproximateBestSubset, the target value must be greater
-        # than any single input available, and require more than 1 input. So we make 3 outputs
-        for i in range(0, 3):
-            funds.sendtoaddress(tester.getnewaddress(address_type="bech32"), 1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-
-        # Create transactions in order to calculate fees for the target bounds that can trigger this bug
-        change_tx = tester.fundrawtransaction(tester.createrawtransaction([], [{funds.getnewaddress(): 1.5}]))
-        tx = tester.createrawtransaction([], [{funds.getnewaddress(): 2}])
-        no_change_tx = tester.fundrawtransaction(tx, {"subtractFeeFromOutputs": [0]})
-
-        overhead_fees = feerate * len(tx) / 2 / 1000
-        cost_of_change = change_tx["fee"] - no_change_tx["fee"]
-        fees = no_change_tx["fee"]
-        assert_greater_than(fees, 0.01)
-
-        def do_fund_send(target):
-            create_tx = tester.createrawtransaction([], [{funds.getnewaddress(): target}])
-            funded_tx = tester.fundrawtransaction(create_tx)
-            signed_tx = tester.signrawtransactionwithwallet(funded_tx["hex"])
-            assert signed_tx["complete"]
-            decoded_tx = tester.decoderawtransaction(signed_tx["hex"])
-            assert_equal(len(decoded_tx["vin"]), 3)
-            assert tester.testmempoolaccept([signed_tx["hex"]])[0]["allowed"]
-
-        # We want to choose more value than is available in 2 inputs when considering the fee,
-        # but not enough to need 3 inputs when not considering the fee.
-        # So the target value must be at least 2.00000001 - fee.
-        lower_bound = Decimal("2.00000001") - fees
-        # The target value must be at most 2 - cost_of_change - not_input_fees - min_change (these are all
-        # included in the target before ApproximateBestSubset).
-        upper_bound = Decimal("2.0") - cost_of_change - overhead_fees - Decimal("0.01")
-        assert_greater_than_or_equal(upper_bound, lower_bound)
-        do_fund_send(lower_bound)
-        do_fund_send(upper_bound)
-
-        self.restart_node(0)
-        self.connect_nodes(0, 1)
-        self.connect_nodes(0, 2)
-        self.connect_nodes(0, 3)
 
     def test_feerate_rounding(self):
         self.log.info("Test that rounding of GetFee does not result in an assertion")

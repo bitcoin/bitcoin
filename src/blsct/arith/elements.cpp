@@ -5,8 +5,8 @@
 #include <blsct/arith/elements.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <tinyformat.h>
 #include <deque>
+#include <tinyformat.h>
 
 template <typename T>
 Elements<T>::Elements()
@@ -52,7 +52,7 @@ template <typename T>
 std::vector<uint8_t> Elements<T>::GetVch() const
 {
     std::vector<uint8_t> aggr_vec;
-    for (T x: m_vec) {
+    for (T x : m_vec) {
         auto vec = x.GetVch();
         aggr_vec.insert(aggr_vec.end(), vec.begin(), vec.end());
     }
@@ -72,6 +72,19 @@ T Elements<T>::Sum() const
 }
 template MclScalar Elements<MclScalar>::Sum() const;
 template MclG1Point Elements<MclG1Point>::Sum() const;
+
+template <typename T>
+bool Elements<T>::HasZero() const
+{
+    for (T s : m_vec) {
+        if (s.IsZero()) return true;
+    }
+
+    return false;
+}
+template bool Elements<MclScalar>::HasZero() const;
+template bool Elements<MclG1Point>::HasZero() const;
+
 
 template <typename T>
 void Elements<T>::ConfirmIndexInsideRange(const uint32_t& index) const
@@ -315,11 +328,11 @@ Elements<T> Elements<T>::Invert() const
     // build:
     // - elem_inverses = (x_1, x_2, ..., x_n)^-1
     // - extract_factors = [1, x_1, x_1*x_2, ..., x_1*...*x_n]
-    Elements<T> extract_factors;  // cumulative product sequence used to cancel out inverses
-    T elem_inverse_prod;  // product of all element inverses
+    Elements<T> extract_factors; // cumulative product sequence used to cancel out inverses
+    T elem_inverse_prod;         // product of all element inverses
     {
         T n(1);
-        for (auto& x: m_vec) {
+        for (auto& x : m_vec) {
             extract_factors.Add(n);
             n = n * x;
         }
@@ -328,7 +341,7 @@ Elements<T> Elements<T>::Invert() const
 
     // calculate inverses of all elements
     std::deque<T> q;
-    size_t i = m_vec.size()-1;
+    size_t i = m_vec.size() - 1;
     for (;;) {
         // extract x_i^-1 by multiplying x_1*...*x_{i-1}
         T x = elem_inverse_prod * extract_factors[i];
@@ -341,7 +354,7 @@ Elements<T> Elements<T>::Invert() const
         --i;
     }
 
-    Elements<T> ret({ q.begin(), q.end() });
+    Elements<T> ret({q.begin(), q.end()});
     return ret;
 }
 template Elements<MclScalar> Elements<MclScalar>::Invert() const;

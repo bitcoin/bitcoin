@@ -5,13 +5,13 @@
 #define BOOST_UNIT_TEST
 #define BLS_ETH 1
 
-#include <boost/test/unit_test.hpp>
-#include <test/util/setup_common.h>
-#include <util/strencodings.h>
+#include <blsct/common.h>
 #include <blsct/private_key.h>
 #include <blsct/public_key.h>
 #include <blsct/public_keys.h>
-#include <blsct/common.h>
+#include <boost/test/unit_test.hpp>
+#include <test/util/setup_common.h>
+#include <util/strencodings.h>
 
 namespace blsct {
 
@@ -28,8 +28,7 @@ BOOST_AUTO_TEST_CASE(test_compatibility_bet_bls_keys_and_blsct_keys)
 
     // public key
     blsct::PublicKey blsct_pk = blsct_sk.GetPublicKey();
-    MclG1Point blsct_g1_point;
-    blsct_pk.GetG1Point(blsct_g1_point);
+    MclG1Point blsct_g1_point = blsct_pk.GetG1Point();
 
     blsPublicKey bls_pk;
     blsGetPublicKey(&bls_pk, &bls_sk);
@@ -54,11 +53,11 @@ BOOST_AUTO_TEST_CASE(test_sign_verify_balance_batch)
     blsct::PrivateKey sk1(1);
     blsct::PrivateKey sk2(12345);
 
-    std::vector<blsct::Signature> sigs {
+    std::vector<blsct::Signature> sigs{
         sk1.SignBalance(),
         sk2.SignBalance(),
     };
-    PublicKeys pks(std::vector<blsct::PublicKey> {
+    PublicKeys pks(std::vector<blsct::PublicKey>{
         sk1.GetPublicKey(),
         sk2.GetPublicKey(),
     });
@@ -70,17 +69,17 @@ BOOST_AUTO_TEST_CASE(test_sign_verify_balance_batch)
 
 BOOST_AUTO_TEST_CASE(test_sign_verify_balance_batch_bad_inputs)
 {
-    PublicKeys pks(std::vector<blsct::PublicKey> {});
+    PublicKeys pks(std::vector<blsct::PublicKey>{});
     blsct::Signature aggr_sig;
     BOOST_CHECK_THROW(pks.VerifyBalanceBatch(aggr_sig), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(test_augment_message)
 {
-    std::vector<uint8_t> pk_data(blsct::PublicKey::SIZE);
-    auto pk = blsct::PublicKey(pk_data);
-    auto msg = std::vector<uint8_t> { 1, 2, 3, 4, 5 };
-    auto act = pk.AugmentMessage(msg);
+    auto pk = MclG1Point::GetBasePoint();
+    std::vector<uint8_t> pk_data = pk.GetVch();
+    auto msg = std::vector<uint8_t>{1, 2, 3, 4, 5};
+    auto act = PublicKey(pk).AugmentMessage(msg);
 
     auto exp = std::vector<uint8_t>(pk_data);
     exp.insert(exp.end(), msg.begin(), msg.end());
@@ -91,7 +90,7 @@ BOOST_AUTO_TEST_CASE(test_sign_verify)
 {
     blsct::PrivateKey sk(1);
     auto pk = sk.GetPublicKey();
-    std::vector<uint8_t> msg {'m', 's', 'g'};
+    std::vector<uint8_t> msg{'m', 's', 'g'};
 
     auto sig = sk.Sign(msg);
     auto res = pk.Verify(msg, sig);
@@ -103,15 +102,15 @@ BOOST_AUTO_TEST_CASE(test_verify_batch)
     blsct::PrivateKey sk1(1);
     blsct::PrivateKey sk2(12345);
 
-    PublicKeys pks(std::vector<blsct::PublicKey> {
+    PublicKeys pks(std::vector<blsct::PublicKey>{
         sk1.GetPublicKey(),
         sk2.GetPublicKey(),
     });
-    std::vector<std::vector<uint8_t>> msgs {
-        std::vector<uint8_t> {'m', 's', 'g', '1'},
-        std::vector<uint8_t> {'m', 's', 'g', '2'},
+    std::vector<std::vector<uint8_t>> msgs{
+        std::vector<uint8_t>{'m', 's', 'g', '1'},
+        std::vector<uint8_t>{'m', 's', 'g', '2'},
     };
-    std::vector<blsct::Signature> sigs {
+    std::vector<blsct::Signature> sigs{
         sk1.Sign(msgs[0]),
         sk2.Sign(msgs[1]),
     };
@@ -126,15 +125,15 @@ BOOST_AUTO_TEST_CASE(test_verify_batch_bad_inputs)
     blsct::Signature sig;
     {
         // empty pks
-        PublicKeys empty_pks(std::vector<PublicKey> {});
-        std::vector<std::vector<uint8_t>> msgs {
-            std::vector<uint8_t> {'m', 's', 'g'},
+        PublicKeys empty_pks(std::vector<PublicKey>{});
+        std::vector<std::vector<uint8_t>> msgs{
+            std::vector<uint8_t>{'m', 's', 'g'},
         };
         BOOST_CHECK_THROW(empty_pks.VerifyBatch(msgs, sig), std::runtime_error);
     }
     {
         // empty msgs
-        PublicKeys pks(std::vector<PublicKey> {
+        PublicKeys pks(std::vector<PublicKey>{
             PublicKey(),
         });
         std::vector<std::vector<uint8_t>> empty_msgs;
@@ -142,12 +141,12 @@ BOOST_AUTO_TEST_CASE(test_verify_batch_bad_inputs)
     }
     {
         // numbers of pks and msgs don't match
-        PublicKeys pks(std::vector<PublicKey> {
+        PublicKeys pks(std::vector<PublicKey>{
             PublicKey(),
         });
-        std::vector<std::vector<uint8_t>> msgs {
-            std::vector<uint8_t> {'m', 's', 'g', '1'},
-            std::vector<uint8_t> {'m', 's', 'g', '2'},
+        std::vector<std::vector<uint8_t>> msgs{
+            std::vector<uint8_t>{'m', 's', 'g', '1'},
+            std::vector<uint8_t>{'m', 's', 'g', '2'},
         };
         BOOST_CHECK_THROW(pks.VerifyBatch(msgs, sig), std::runtime_error);
     }
@@ -155,4 +154,4 @@ BOOST_AUTO_TEST_CASE(test_verify_batch_bad_inputs)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
+} // namespace blsct

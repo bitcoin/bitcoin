@@ -6,12 +6,13 @@
 #define KEYRING_H
 
 #include <blsct/double_public_key.h>
-#include <blsct/public_key.h>
 #include <blsct/private_key.h>
+#include <blsct/public_key.h>
 #include <sync.h>
 
 namespace blsct {
-class KeyRing {
+class KeyRing
+{
 public:
     using KeyMap = std::map<CKeyID, PrivateKey>;
 
@@ -27,19 +28,19 @@ public:
     PublicKey viewPublicKey;
     PublicKey spendPublicKey;
 
-    virtual bool AddKeyPubKey(const PrivateKey& key, const PublicKey &pubkey);
-    virtual bool AddKey(const PrivateKey &key) { return AddKeyPubKey(key, key.GetPublicKey()); }
-    virtual bool AddViewKey(const PrivateKey &key, const PublicKey& pubkey);
-    virtual bool AddSpendKey(const PublicKey &pubkey);
+    virtual bool AddKeyPubKey(const PrivateKey& key, const PublicKey& pubkey);
+    virtual bool AddKey(const PrivateKey& key) { return AddKeyPubKey(key, key.GetPublicKey()); }
+    virtual bool AddViewKey(const PrivateKey& key, const PublicKey& pubkey);
+    virtual bool AddSpendKey(const PublicKey& pubkey);
 
-    virtual bool HaveKey(const CKeyID &id) const;
-    virtual bool GetKey(const CKeyID &id, PrivateKey &keyOut) const;
+    virtual bool HaveKey(const CKeyID& id) const;
+    virtual bool GetKey(const CKeyID& id, PrivateKey& keyOut) const;
 
     virtual ~KeyRing() = default;
 
     bool fSpendKeyDefined{false};
     bool fViewKeyDefined{false};
 };
-}
+} // namespace blsct
 
 #endif // KEYRING_H

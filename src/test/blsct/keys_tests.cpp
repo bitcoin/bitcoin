@@ -7,10 +7,10 @@
 #include <test/util/setup_common.h>
 
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/double_public_key.h>
+#include <blsct/private_key.h>
 #include <blsct/public_key.h>
 #include <blsct/public_keys.h>
-#include <blsct/private_key.h>
-#include <blsct/double_public_key.h>
 #include <blsct/signature.h>
 #include <boost/test/unit_test.hpp>
 
@@ -24,7 +24,40 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     // Single Public Key
     Point generator = Point::GetBasePoint();
 
-    blsct::PublicKey invalidKey;
+    blsct::PublicKey invalidKey{std::vector<unsigned char>{
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+    }};
     BOOST_CHECK(!invalidKey.IsValid());
 
     blsct::PublicKey keyFromVch(generator.GetVch());
@@ -42,11 +75,11 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     Point keyPointFromPoint;
     Point keyPointFromVector;
 
-    bool ret = keyFromVch.GetG1Point(keyPointFromVector);
-    BOOST_CHECK(ret == true);
+    keyPointFromVector = keyFromVch.GetG1Point();
+    BOOST_CHECK(keyPointFromVector.IsValid());
 
-    ret = keyFromPoint.GetG1Point(keyPointFromPoint);
-    BOOST_CHECK(ret == true);
+    keyPointFromPoint = keyFromPoint.GetG1Point();
+    BOOST_CHECK(keyPointFromPoint.IsValid());
 
     BOOST_CHECK(point == keyPointFromVector);
     BOOST_CHECK(point == keyPointFromPoint);
@@ -63,17 +96,17 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     Point keyPointFromPointRandom;
     Point keyPointFromVectorRandom;
 
-    ret = keyFromVchRandom.GetG1Point(keyPointFromVectorRandom);
-    BOOST_CHECK(ret == true);
+    keyPointFromVectorRandom = keyFromVchRandom.GetG1Point();
+    BOOST_CHECK(keyPointFromVectorRandom.IsValid());
 
-    ret = keyFromPointRandom.GetG1Point(keyPointFromPointRandom);
-    BOOST_CHECK(ret == true);
+    keyPointFromPointRandom = keyFromPointRandom.GetG1Point();
+    BOOST_CHECK(keyPointFromPointRandom.IsValid());
 
     BOOST_CHECK(pointR == keyPointFromVectorRandom);
     BOOST_CHECK(pointR == keyPointFromPointRandom);
 
     // Double Public Key
-    blsct::DoublePublicKey invalidDoublePublicKey;
+    blsct::DoublePublicKey invalidDoublePublicKey{invalidKey, invalidKey};
     BOOST_CHECK(!invalidDoublePublicKey.IsValid());
 
     blsct::DoublePublicKey doubleKeyFromPoints(generator, pointR);
@@ -99,7 +132,7 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
 
     Point viewKey;
 
-    ret = doubleKeyFromPoints.GetViewKey(viewKey);
+    auto ret = doubleKeyFromPoints.GetViewKey(viewKey);
     BOOST_CHECK(ret == true);
     BOOST_CHECK(viewKey == generator);
 
@@ -121,7 +154,7 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     blsct::PrivateKey invalidPrivateKey;
     BOOST_CHECK(!invalidPrivateKey.IsValid());
 
-    //BOOST_CHECK_THROW(blsct::PrivateKey zeroPrivateKey(Scalar(0)), std::runtime_error);
+    // BOOST_CHECK_THROW(blsct::PrivateKey zeroPrivateKey(Scalar(0)), std::runtime_error);
 
     {
         MclScalar n(123);
@@ -152,18 +185,18 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
 
     // G(a+b) == Ga + Gb
     blsct::PrivateKey privateKeyFromAddition(privateKeyFromScalar.GetScalar() +
-                                                privateKeyFromVector.GetScalar());
+                                             privateKeyFromVector.GetScalar());
     blsct::PublicKey publicKeyFromAddition(privateKeyFromScalar.GetPoint() +
-                                              privateKeyFromVector.GetPoint());
+                                           privateKeyFromVector.GetPoint());
     BOOST_CHECK(privateKeyFromAddition.GetPublicKey() == publicKeyFromAddition);
 
-    blsct::PublicKeys vecKeys(std::vector<blsct::PublicKey> {privateKeyFromScalar.GetPublicKey(), privateKeyFromVector.GetPublicKey()});
+    blsct::PublicKeys vecKeys(std::vector<blsct::PublicKey>{privateKeyFromScalar.GetPublicKey(), privateKeyFromVector.GetPublicKey()});
     BOOST_CHECK(vecKeys.Aggregate() == publicKeyFromAddition);
 }
 
 BOOST_AUTO_TEST_CASE(aggretate_empty_public_keys)
 {
-    blsct::PublicKeys pks(std::vector<blsct::PublicKey> {});
+    blsct::PublicKeys pks(std::vector<blsct::PublicKey>{});
     BOOST_CHECK_THROW(pks.Aggregate(), std::runtime_error);
 }
 
