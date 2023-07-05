@@ -93,7 +93,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
         for (const auto& mn : members) {
             ss << mn->dmn->proTxHash.ToString().substr(0, 4) << " | ";
         }
-        logger.Batch("DKGComposition h[%d] i[%d] DKG:%s", pCycleQuorumBaseBlockIndex->nHeight, quorumIndex, ss.str());
+        logger.Batch("DKGComposition h[%d] i[%d] DKG:[%s]", pCycleQuorumBaseBlockIndex->nHeight, quorumIndex, ss.str());
     }
 
     if (mns.size() < size_t(params.minSize)) {
@@ -138,6 +138,7 @@ void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
         return;
     }
     logger.Batch("generated contributions. time=%d", t1.count());
+    logger.Flush();
 
     SendContributions(pendingMessages);
 }
