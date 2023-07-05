@@ -704,7 +704,7 @@ public:
             // something went wrong when we accounted/calculated used memory...
             static volatile bool didPrint = false;
             if (!didPrint) {
-                LogPrintf("CDBTransaction::%s -- negative memoryUsage (%d)", __func__, memoryUsage);
+                LogPrintf("CDBTransaction::%s -- negative memoryUsage (%d)\n", __func__, memoryUsage);
                 didPrint = true;
             }
             return 0;
