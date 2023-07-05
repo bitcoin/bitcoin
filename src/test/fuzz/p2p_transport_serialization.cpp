@@ -24,9 +24,10 @@ void initialize_p2p_transport_serialization()
 
 FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serialization)
 {
-    // Construct deserializer, with a dummy NodeId
-    V1TransportDeserializer deserializer{Params(), NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};
-    V1TransportSerializer serializer{};
+    // Construct transports for both sides, with dummy NodeIds.
+    V1Transport recv_transport{Params(), NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};
+    V1Transport send_transport{Params(), NodeId{1}, SER_NETWORK, INIT_PROTO_VERSION};
+
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     auto checksum_assist = fuzzed_data_provider.ConsumeBool();
@@ -63,14 +64,14 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
     mutable_msg_bytes.insert(mutable_msg_bytes.end(), payload_bytes.begin(), payload_bytes.end());
     Span<const uint8_t> msg_bytes{mutable_msg_bytes};
     while (msg_bytes.size() > 0) {
-        const int handled = deserializer.Read(msg_bytes);
+        const int handled = recv_transport.Read(msg_bytes);
         if (handled < 0) {
             break;
         }
-        if (deserializer.Complete()) {
+        if (recv_transport.Complete()) {
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             bool reject_message{false};
-            CNetMessage msg = deserializer.GetMessage(m_time, reject_message);
+            CNetMessage msg = recv_transport.GetMessage(m_time, reject_message);
             assert(msg.m_type.size() <= CMessageHeader::COMMAND_SIZE);
             assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
             assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
@@ -78,7 +79,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
 
             std::vector<unsigned char> header;
             auto msg2 = CNetMsgMaker{msg.m_recv.GetVersion()}.Make(msg.m_type, Span{msg.m_recv});
-            serializer.prepareForTransport(msg2, header);
+            send_transport.prepareForTransport(msg2, header);
         }
     }
 }
