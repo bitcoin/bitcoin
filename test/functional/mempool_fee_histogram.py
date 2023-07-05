@@ -110,7 +110,7 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         self.log.info(f"Test fee rate histogram when mempool contains 2 transactions (tx1: {tx1_info['feerate']} sat/vB, tx2: {tx2_info['feerate']} sat/vB)")
         info = node.getmempoolinfo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
 
-        # Verify that both tx1 and tx2 are reported in 9 sat/vB fee rate group
+        # Verify that both tx1 and tx2 are reported in 8 sat/vB fee rate group
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         tx1p2_feerate = get_actual_fee_rate(tx1_info['fee'] + tx2_info['fee'], tx1_info['vsize'] + tx2_info['vsize'])
         assert_equal(1, non_empty_groups)
