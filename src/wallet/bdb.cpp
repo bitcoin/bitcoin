@@ -29,6 +29,8 @@
 #endif
 #endif
 
+static_assert(BDB_DB_FILE_ID_LEN == DB_FILE_ID_LEN, "DB_FILE_ID_LEN should be 20.");
+
 namespace wallet {
 namespace {
 

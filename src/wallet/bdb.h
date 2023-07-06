@@ -25,10 +25,14 @@
 
 struct bilingual_str;
 
+// This constant was introduced in BDB 4.0.14 and has never changed, but there
+// is a belt-and-suspenders check in the cpp file just in case.
+#define BDB_DB_FILE_ID_LEN 20 /* Unique file ID length. */
+
 namespace wallet {
 
 struct WalletDatabaseFileId {
-    uint8_t value[DB_FILE_ID_LEN];
+    uint8_t value[BDB_DB_FILE_ID_LEN];
     bool operator==(const WalletDatabaseFileId& rhs) const;
 };
 
