@@ -31,10 +31,6 @@
 
 namespace wallet {
 namespace {
-Span<const std::byte> SpanFromDbt(const SafeDbt& dbt)
-{
-    return {reinterpret_cast<const std::byte*>(dbt.get_data()), dbt.get_size()};
-}
 
 //! Make sure database has a unique fileid within the environment. If it
 //! doesn't, throw an error. BDB caches do not work properly when more than one
@@ -273,6 +269,11 @@ uint32_t SafeDbt::get_size() const
 SafeDbt::operator Dbt*()
 {
     return &m_dbt;
+}
+
+static Span<const std::byte> SpanFromDbt(const SafeDbt& dbt)
+{
+    return {reinterpret_cast<const std::byte*>(dbt.get_data()), dbt.get_size()};
 }
 
 bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
