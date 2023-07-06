@@ -14,7 +14,7 @@ if [ "$CI_OS_NAME" == "macos" ]; then
 else
   free -m -h
   echo "Number of CPUs (nproc): $(nproc)"
-  lscpu | grep Endian
+  lscpu
 fi
 echo "Free disk space:"
 df -h
