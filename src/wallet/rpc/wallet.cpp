@@ -739,7 +739,6 @@ RPCHelpMan simulaterawtransaction()
 static RPCHelpMan migratewallet()
 {
     return RPCHelpMan{"migratewallet",
-        "EXPERIMENTAL warning: This call may not work as expected and may be changed in future releases\n"
         "\nMigrate the wallet to a descriptor wallet.\n"
         "A new wallet backup will need to be made.\n"
         "\nThe migration process will create a backup of the wallet before migrating. This backup\n"
