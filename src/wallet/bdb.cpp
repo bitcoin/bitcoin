@@ -232,6 +232,26 @@ BerkeleyEnvironment::BerkeleyEnvironment() : m_use_shared_memory(false)
     fMockDb = true;
 }
 
+/** RAII class that automatically cleanses its data on destruction */
+class SafeDbt final
+{
+    Dbt m_dbt;
+
+public:
+    // construct Dbt with internally-managed data
+    SafeDbt();
+    // construct Dbt with provided data
+    SafeDbt(void* data, size_t size);
+    ~SafeDbt();
+
+    // delegate to Dbt
+    const void* get_data() const;
+    uint32_t get_size() const;
+
+    // conversion operator to access the underlying Dbt
+    operator Dbt*();
+};
+
 SafeDbt::SafeDbt()
 {
     m_dbt.set_flags(DB_DBT_MALLOC);
