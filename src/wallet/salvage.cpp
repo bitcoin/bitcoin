@@ -175,7 +175,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
         return false;
     }
 
-    DbTxn* ptxn = env->TxnBegin();
+    DbTxn* ptxn = env->TxnBegin(DB_TXN_WRITE_NOSYNC);
     CWallet dummyWallet(nullptr, "", std::make_unique<DummyDatabase>());
     for (KeyValPair& row : salvagedData)
     {

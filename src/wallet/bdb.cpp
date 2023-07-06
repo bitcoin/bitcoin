@@ -742,7 +742,7 @@ bool BerkeleyBatch::TxnBegin()
 {
     if (!pdb || activeTxn)
         return false;
-    DbTxn* ptxn = env->TxnBegin();
+    DbTxn* ptxn = env->TxnBegin(DB_TXN_WRITE_NOSYNC);
     if (!ptxn)
         return false;
     activeTxn = ptxn;

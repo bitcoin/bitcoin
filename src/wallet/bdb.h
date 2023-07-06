@@ -67,7 +67,7 @@ public:
     void CloseDb(const fs::path& filename);
     void ReloadDbEnv();
 
-    DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
+    DbTxn* TxnBegin(int flags)
     {
         DbTxn* ptxn = nullptr;
         int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
