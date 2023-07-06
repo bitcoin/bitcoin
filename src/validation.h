@@ -62,6 +62,9 @@ class SnapshotMetadata;
 namespace Consensus {
 struct Params;
 } // namespace Consensus
+namespace util {
+class SignalInterrupt;
+} // namespace util
 
 /** Maximum number of dedicated script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 15;
@@ -103,7 +106,7 @@ void StopScriptCheckWorkerThreads();
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
-bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str{});
+bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = {});
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
@@ -959,7 +962,7 @@ private:
 public:
     using Options = kernel::ChainstateManagerOpts;
 
-    explicit ChainstateManager(Options options, node::BlockManager::Options blockman_options);
+    explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
@@ -982,6 +985,7 @@ public:
      */
     RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
 
+    const util::SignalInterrupt& m_interrupt;
     const Options m_options;
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
@@ -1052,10 +1056,7 @@ public:
     //! If the coins match (expected), then mark the validation chainstate for
     //! deletion and continue using the snapshot chainstate as active.
     //! Otherwise, revert to using the ibd chainstate and shutdown.
-    SnapshotCompletionResult MaybeCompleteSnapshotValidation(
-        std::function<void(bilingual_str)> shutdown_fnc =
-            [](bilingual_str msg) { AbortNode(msg.original, msg); })
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    SnapshotCompletionResult MaybeCompleteSnapshotValidation() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! The most-work chain.
     Chainstate& ActiveChainstate() const;

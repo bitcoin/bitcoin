@@ -10,7 +10,12 @@
 
 #include <common/args.h>
 #include <common/system.h>
+#include <kernel/context.h>
+#include <logging.h>
+#include <node/abort.h>
 #include <node/interface_ui.h>
+#include <shutdown.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -70,6 +75,16 @@ void KernelNotifications::progress(const bilingual_str& title, int progress_perc
 void KernelNotifications::warning(const bilingual_str& warning)
 {
     DoWarning(warning);
+}
+
+void KernelNotifications::flushError(const std::string& debug_message)
+{
+    AbortNode(m_exit_status, debug_message);
+}
+
+void KernelNotifications::fatalError(const std::string& debug_message, const bilingual_str& user_message)
+{
+    node::AbortNode(m_exit_status, debug_message, user_message, m_shutdown_on_fatal_error);
 }
 
 } // namespace node

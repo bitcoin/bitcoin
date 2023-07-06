@@ -9,8 +9,8 @@
 #include <logging.h>
 #include <pow.h>
 #include <random.h>
-#include <shutdown.h>
 #include <uint256.h>
+#include <util/signalinterrupt.h>
 #include <util/translation.h>
 #include <util/vector.h>
 
@@ -291,7 +291,7 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
+bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
 {
     AssertLockHeld(::cs_main);
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
@@ -299,7 +299,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 
     // Load m_block_index
     while (pcursor->Valid()) {
-        if (ShutdownRequested()) return false;
+        if (interrupt) return false;
         std::pair<uint8_t, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;
