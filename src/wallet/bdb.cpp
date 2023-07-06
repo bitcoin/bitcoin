@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 
+#include <db_cxx.h>
 #include <sys/stat.h>
 
 // Windows may not define S_IRUSR or S_IWUSR. We define both

@@ -11,6 +11,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
+#include <db_cxx.h>
+
 namespace wallet {
 /* End of headers, beginning of key/value data */
 static const char *HEADER_END = "HEADER=END";

@@ -21,9 +21,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include <db_cxx.h>
-
 struct bilingual_str;
+
+class DbEnv;
+class DbTxn;
+class Db;
+class Dbc;
 
 // This constant was introduced in BDB 4.0.14 and has never changed, but there
 // is a belt-and-suspenders check in the cpp file just in case.
