@@ -29,6 +29,9 @@ class uint256;
 namespace Consensus {
 struct Params;
 };
+namespace util {
+class SignalInterrupt;
+} // namespace util
 
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 450;
@@ -98,7 +101,7 @@ public:
     void ReadReindexing(bool &fReindexing);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
-    bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
+    bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 

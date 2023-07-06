@@ -16,7 +16,7 @@ import re
 import sys
 
 FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS = [
-    'FatalError,0',
+    'FatalErrorf,0',
     'fprintf,1',
     'tfm::format,1',  # Assuming tfm::::format(std::ostream&, ...
     'LogConnectFailure,1',

@@ -94,6 +94,9 @@ private:
 
     virtual bool AllowPrune() const = 0;
 
+    template <typename... Args>
+    void FatalErrorf(const char* fmt, const Args&... args);
+
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
