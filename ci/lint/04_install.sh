@@ -33,11 +33,11 @@ if [ -z "${SKIP_PYTHON_INSTALL}" ]; then
     python3 --version
 fi
 
-${CI_RETRY_EXE} pip3 install codespell==2.2.1
-${CI_RETRY_EXE} pip3 install flake8==5.0.4
-${CI_RETRY_EXE} pip3 install lief==0.13.1
-${CI_RETRY_EXE} pip3 install mypy==0.971
-${CI_RETRY_EXE} pip3 install pyzmq==24.0.1
+${CI_RETRY_EXE} pip3 install codespell==2.2.5
+${CI_RETRY_EXE} pip3 install flake8==6.0.0
+${CI_RETRY_EXE} pip3 install lief==0.13.2
+${CI_RETRY_EXE} pip3 install mypy==1.4.1
+${CI_RETRY_EXE} pip3 install pyzmq==25.1.0
 ${CI_RETRY_EXE} pip3 install vulture==2.6
 
 SHELLCHECK_VERSION=v0.8.0

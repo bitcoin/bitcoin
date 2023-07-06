@@ -158,6 +158,12 @@ def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
 
+def check_MACHO_FIXUP_CHAINS(binary) -> bool:
+    '''
+    Check for use of chained fixups.
+    '''
+    return binary.has_dyld_chained_fixups
+
 def check_MACHO_Canary(binary) -> bool:
     '''
     Check for use of stack canary
@@ -208,6 +214,7 @@ BASE_PE = [
 BASE_MACHO = [
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
     ('Canary', check_MACHO_Canary),
+    ('FIXUP_CHAINS', check_MACHO_FIXUP_CHAINS),
 ]
 
 CHECKS = {
