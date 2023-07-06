@@ -67,14 +67,7 @@ public:
     void CloseDb(const fs::path& filename);
     void ReloadDbEnv();
 
-    DbTxn* TxnBegin(int flags)
-    {
-        DbTxn* ptxn = nullptr;
-        int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
-        if (!ptxn || ret != 0)
-            return nullptr;
-        return ptxn;
-    }
+    DbTxn* TxnBegin(int flags);
 };
 
 /** Get BerkeleyEnvironment given a directory path. */

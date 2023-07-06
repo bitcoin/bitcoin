@@ -462,6 +462,15 @@ void BerkeleyEnvironment::ReloadDbEnv()
     Open(open_err);
 }
 
+DbTxn* BerkeleyEnvironment::TxnBegin(int flags)
+{
+    DbTxn* ptxn = nullptr;
+    int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
+    if (!ptxn || ret != 0)
+        return nullptr;
+    return ptxn;
+}
+
 bool BerkeleyDatabase::Rewrite(const char* pszSkip)
 {
     while (true) {
