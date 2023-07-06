@@ -296,6 +296,13 @@ static Span<const std::byte> SpanFromDbt(const SafeDbt& dbt)
     return {reinterpret_cast<const std::byte*>(dbt.get_data()), dbt.get_size()};
 }
 
+BerkeleyDatabase::BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
+    WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
+{
+    auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
+    assert(inserted.second);
+}
+
 bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
 {
     fs::path walletDir = env->Directory();

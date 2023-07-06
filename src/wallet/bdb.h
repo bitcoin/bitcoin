@@ -84,12 +84,7 @@ public:
     BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
-        WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
-    {
-        auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
-        assert(inserted.second);
-    }
+    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options);
 
     ~BerkeleyDatabase() override;
 
