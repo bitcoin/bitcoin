@@ -64,7 +64,6 @@ static void addCoin(CoinsResult& coins,
     return CoinSelectionParams{
             rand,
             /*change_output_size=*/ 0,
-            /*change_spend_size=*/ 0,
             /*min_change_target=*/ CENT,
             /*effective_feerate=*/ CFeeRate(0),
             /*long_term_feerate=*/ CFeeRate(0),

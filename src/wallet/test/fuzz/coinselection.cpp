@@ -99,8 +99,8 @@ FUZZ_TARGET(coinselection)
     coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
     coin_params.m_change_fee = effective_fee_rate.GetFee(coin_params.change_output_size);
     coin_params.m_discard_feerate = discard_fee_rate;
-    coin_params.change_spend_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 1000);
-    coin_params.m_cost_of_change = coin_params.m_change_fee + coin_params.m_discard_feerate.GetFee(coin_params.change_spend_size);
+    CAmount change_spend_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 1000);
+    coin_params.m_cost_of_change = coin_params.m_change_fee + coin_params.m_discard_feerate.GetFee(change_spend_size);
 
     int next_locktime{0};
     CAmount total_balance{CreateCoins(fuzzed_data_provider, utxo_pool, coin_params, next_locktime)};

@@ -902,9 +902,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
     // as lower-bound to allow BnB to do it's thing
     if (change_spend_size == -1) {
-        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
-    } else {
-        coin_selection_params.change_spend_size = (size_t)change_spend_size;
+        change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
     }
 
     // Set discard feerate
@@ -929,7 +927,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // For spending the change output in the future, we use the discard feerate for now.
     // So cost of change = (change output size * effective feerate) + (size of spending change output * discard feerate)
     coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
-    coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
+    coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(change_spend_size) + coin_selection_params.m_change_fee;
 
     coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
 
@@ -937,7 +935,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // 1. at least equal to dust threshold
     // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
     const auto dust = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
-    const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
+    const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
     // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)

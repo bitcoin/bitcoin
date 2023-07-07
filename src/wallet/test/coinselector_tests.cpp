@@ -162,7 +162,6 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& availab
     CoinSelectionParams coin_selection_params{
         rand,
         /*change_output_size=*/ 0,
-        /*change_spend_size=*/ 0,
         /*min_change_target=*/ CENT,
         /*effective_feerate=*/ CFeeRate(0),
         /*long_term_feerate=*/ CFeeRate(0),
@@ -307,7 +306,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     CoinSelectionParams coin_selection_params_bnb{
         rand,
         /*change_output_size=*/ 31,
-        /*change_spend_size=*/ 68,
         /*min_change_target=*/ 0,
         /*effective_feerate=*/ CFeeRate(3000),
         /*long_term_feerate=*/ CFeeRate(1000),
@@ -315,9 +313,10 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
+    uint32_t change_spend_size = 68;
     coin_selection_params_bnb.m_change_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_output_size);
-    coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size) + coin_selection_params_bnb.m_change_fee;
-    coin_selection_params_bnb.min_viable_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size);
+    coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(change_spend_size) + coin_selection_params_bnb.m_change_fee;
+    coin_selection_params_bnb.min_viable_change = coin_selection_params_bnb.m_effective_feerate.GetFee(change_spend_size);
     coin_selection_params_bnb.m_subtract_fee_outputs = true;
 
     {
@@ -808,7 +807,6 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CoinSelectionParams cs_params{
             rand,
             /*change_output_size=*/ 34,
-            /*change_spend_size=*/ 148,
             /*min_change_target=*/ CENT,
             /*effective_feerate=*/ CFeeRate(0),
             /*long_term_feerate=*/ CFeeRate(0),
@@ -982,7 +980,6 @@ BOOST_AUTO_TEST_CASE(srd_tests)
     CoinSelectionParams dummy_params{ // Only used to provide the 'avoid_partial' flag.
             rand,
             /*change_output_size=*/34,
-            /*change_spend_size=*/68,
             /*min_change_target=*/CENT,
             /*effective_feerate=*/CFeeRate(0),
             /*long_term_feerate=*/CFeeRate(0),
@@ -1077,7 +1074,6 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
     CoinSelectionParams cs_params{
         rand,
         /*change_output_size=*/34,
-        /*change_spend_size=*/68,
         /*min_change_target=*/CENT,
         /*effective_feerate=*/CFeeRate(0),
         /*long_term_feerate=*/CFeeRate(0),
@@ -1182,7 +1178,6 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
     CoinSelectionParams cs_params{
         rand,
         /*change_output_size=*/34,
-        /*change_spend_size=*/148,
         /*min_change_target=*/1000,
         /*effective_feerate=*/CFeeRate(3000),
         /*long_term_feerate=*/CFeeRate(1000),

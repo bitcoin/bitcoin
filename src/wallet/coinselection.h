@@ -125,8 +125,6 @@ struct CoinSelectionParams {
     FastRandomContext& rng_fast;
     /** Size of a change output in bytes, determined by the output type. */
     size_t change_output_size = 0;
-    /** Size of the input to spend a change output in virtual bytes. */
-    size_t change_spend_size = 0;
     /** Mininmum change to target in Knapsack solver: select coins to cover the payment and
      * at least this value of change. */
     CAmount m_min_change_target{0};
@@ -160,12 +158,11 @@ struct CoinSelectionParams {
      */
     bool m_include_unsafe_inputs = false;
 
-    CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
+    CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
                         CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
-          change_spend_size(change_spend_size),
           m_min_change_target(min_change_target),
           m_effective_feerate(effective_feerate),
           m_long_term_feerate(long_term_feerate),

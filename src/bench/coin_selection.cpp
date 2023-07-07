@@ -69,7 +69,6 @@ static void CoinSelection(benchmark::Bench& bench)
     const CoinSelectionParams coin_selection_params{
         rand,
         /*change_output_size=*/ 34,
-        /*change_spend_size=*/ 148,
         /*min_change_target=*/ CHANGE_LOWER,
         /*effective_feerate=*/ CFeeRate(0),
         /*long_term_feerate=*/ CFeeRate(0),
