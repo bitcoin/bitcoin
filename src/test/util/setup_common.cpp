@@ -40,7 +40,6 @@
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
-#include <shutdown.h>
 #include <streams.h>
 #include <test/util/net.h>
 #include <test/util/random.h>

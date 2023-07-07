@@ -20,7 +20,6 @@
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <noui.h>
-#include <shutdown.h>
 #include <util/check.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
@@ -185,7 +184,6 @@ static bool AppInit(NodeContext& node)
         }
 
         node.kernel = std::make_unique<kernel::Context>();
-        node.shutdown = &node.kernel->interrupt; // TEMPORARY: will go away when kernel->interrupt member is removed
         if (!AppInitSanityChecks(*node.kernel))
         {
             // InitError will have been called with detailed error, which ends up on console
@@ -273,9 +271,7 @@ MAIN_FUNCTION
     if (ProcessInitCommands(args)) return EXIT_SUCCESS;
 
     // Start application
-    if (AppInit(node)) {
-        WaitForShutdown();
-    } else {
+    if (!AppInit(node) || !Assert(node.shutdown)->wait()) {
         node.exit_status = EXIT_FAILURE;
     }
     Interrupt(node);

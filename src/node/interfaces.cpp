@@ -39,13 +39,13 @@
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <shutdown.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/signalinterrupt.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -99,7 +99,6 @@ public:
         if (!AppInitParameterInteraction(args())) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
-        m_context->shutdown = &m_context->kernel->interrupt; // TEMPORARY: will go away when kernel->interrupt member is removed
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
 
         if (!AppInitLockDataDirectory()) return false;
@@ -121,14 +120,16 @@ public:
     }
     void startShutdown() override
     {
-        StartShutdown();
+        if (!(*Assert(Assert(m_context)->shutdown))()) {
+            LogPrintf("Error: failed to send shutdown signal\n");
+        }
         // Stop RPC for clean shutdown if any of waitfor* commands is executed.
         if (args().GetBoolArg("-server", false)) {
             InterruptRPC();
             StopRPC();
         }
     }
-    bool shutdownRequested() override { return ShutdownRequested(); }
+    bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); };
     bool isSettingIgnored(const std::string& name) override
     {
         bool ignored = false;
@@ -750,7 +751,7 @@ public:
     {
         return chainman().IsInitialBlockDownload();
     }
-    bool shutdownRequested() override { return ShutdownRequested(); }
+    bool shutdownRequested() override { return ShutdownRequested(m_node); }
     void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
     void initWarning(const bilingual_str& message) override { InitWarning(message); }
     void initError(const bilingual_str& message) override { InitError(message); }
