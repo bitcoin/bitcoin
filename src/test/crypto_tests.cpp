@@ -255,20 +255,37 @@ static void TestChaCha20Poly1305(const std::string& plain_hex, const std::string
     auto key = ParseHex<std::byte>(key_hex);
     auto expected_cipher = ParseHex<std::byte>(cipher_hex);
 
-    std::vector<std::byte> cipher(plain.size() + AEADChaCha20Poly1305::EXPANSION);
-    AEADChaCha20Poly1305 aead{key};
-    aead.Encrypt(plain, aad, nonce, cipher);
-    BOOST_CHECK(cipher == expected_cipher);
+    for (int i = 0; i < 10; ++i) {
+        // During i=0, use single-plain Encrypt/Decrypt; others use a split at prefix.
+        size_t prefix = i ? InsecureRandRange(plain.size() + 1) : plain.size();
+        // Encrypt.
+        std::vector<std::byte> cipher(plain.size() + AEADChaCha20Poly1305::EXPANSION);
+        AEADChaCha20Poly1305 aead{key};
+        if (i == 0) {
+            aead.Encrypt(plain, aad, nonce, cipher);
+        } else {
+            aead.Encrypt(Span{plain}.first(prefix), Span{plain}.subspan(prefix), aad, nonce, cipher);
+        }
+        BOOST_CHECK(cipher == expected_cipher);
 
-    std::vector<std::byte> decipher(cipher.size() - AEADChaCha20Poly1305::EXPANSION);
-    bool ret = aead.Decrypt(cipher, aad, nonce, decipher);
-    BOOST_CHECK(ret);
-    BOOST_CHECK(decipher == plain);
+        // Decrypt.
+        std::vector<std::byte> decipher(cipher.size() - AEADChaCha20Poly1305::EXPANSION);
+        bool ret{false};
+        if (i == 0) {
+            ret = aead.Decrypt(cipher, aad, nonce, decipher);
+        } else {
+            ret = aead.Decrypt(cipher, aad, nonce, Span{decipher}.first(prefix), Span{decipher}.subspan(prefix));
+        }
+        BOOST_CHECK(ret);
+        BOOST_CHECK(decipher == plain);
+    }
 
+    // Test Keystream output.
     std::vector<std::byte> keystream(plain.size());
+    AEADChaCha20Poly1305 aead{key};
     aead.Keystream(nonce, keystream);
     for (size_t i = 0; i < plain.size(); ++i) {
-        BOOST_CHECK_EQUAL(plain[i] ^ keystream[i], cipher[i]);
+        BOOST_CHECK_EQUAL(plain[i] ^ keystream[i], expected_cipher[i]);
     }
 }
 
@@ -280,25 +297,43 @@ static void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::stri
     auto expected_cipher = ParseHex<std::byte>(cipher_hex);
     std::vector<std::byte> cipher(plain.size() + FSChaCha20Poly1305::EXPANSION);
 
-    FSChaCha20Poly1305 enc_aead{key, 224};
-    for (uint64_t i = 0; i < msg_idx; ++i) {
-        std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
-        enc_aead.Encrypt(Span{dummy_tag}.first(0), Span{dummy_tag}.first(0), dummy_tag);
+    for (int it = 0; it < 10; ++it) {
+        // During it==0 we use the single-plain Encrypt/Decrypt; others use a split at prefix.
+        size_t prefix = it ? InsecureRandRange(plain.size() + 1) : plain.size();
+
+        // Do msg_idx dummy encryptions to seek to the correct packet.
+        FSChaCha20Poly1305 enc_aead{key, 224};
+        for (uint64_t i = 0; i < msg_idx; ++i) {
+            std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
+            enc_aead.Encrypt(Span{dummy_tag}.first(0), Span{dummy_tag}.first(0), dummy_tag);
+        }
+
+        // Invoke single-plain or plain1/plain2 Encrypt.
+        if (it == 0) {
+            enc_aead.Encrypt(plain, aad, cipher);
+        } else {
+            enc_aead.Encrypt(Span{plain}.first(prefix), Span{plain}.subspan(prefix), aad, cipher);
+        }
+        BOOST_CHECK(cipher == expected_cipher);
+
+        // Do msg_idx dummy decryptions to seek to the correct packet.
+        FSChaCha20Poly1305 dec_aead{key, 224};
+        for (uint64_t i = 0; i < msg_idx; ++i) {
+            std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
+            dec_aead.Decrypt(dummy_tag, Span{dummy_tag}.first(0), Span{dummy_tag}.first(0));
+        }
+
+        // Invoke single-plain or plain1/plain2 Decrypt.
+        std::vector<std::byte> decipher(cipher.size() - AEADChaCha20Poly1305::EXPANSION);
+        bool ret{false};
+        if (it == 0) {
+            ret = dec_aead.Decrypt(cipher, aad, decipher);
+        } else {
+            ret = dec_aead.Decrypt(cipher, aad, Span{decipher}.first(prefix), Span{decipher}.subspan(prefix));
+        }
+        BOOST_CHECK(ret);
+        BOOST_CHECK(decipher == plain);
     }
-
-    enc_aead.Encrypt(plain, aad, cipher);
-    BOOST_CHECK(cipher == expected_cipher);
-
-    FSChaCha20Poly1305 dec_aead{key, 224};
-    for (uint64_t i = 0; i < msg_idx; ++i) {
-        std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
-        dec_aead.Decrypt(dummy_tag, Span{dummy_tag}.first(0), Span{dummy_tag}.first(0));
-    }
-
-    std::vector<std::byte> decipher(cipher.size() - AEADChaCha20Poly1305::EXPANSION);
-    bool ret = dec_aead.Decrypt(cipher, aad, decipher);
-    BOOST_CHECK(ret);
-    BOOST_CHECK(decipher == plain);
 }
 
 static void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex, const std::string &info_hex, const std::string &okm_check_hex) {

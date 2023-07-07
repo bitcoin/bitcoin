@@ -73,31 +73,33 @@ void ComputeTag(ChaCha20& chacha20, Span<const std::byte> aad, Span<const std::b
 
 } // namespace
 
-void AEADChaCha20Poly1305::Encrypt(Span<const std::byte> plain, Span<const std::byte> aad, Nonce96 nonce, Span<std::byte> cipher) noexcept
+void AEADChaCha20Poly1305::Encrypt(Span<const std::byte> plain1, Span<const std::byte> plain2, Span<const std::byte> aad, Nonce96 nonce, Span<std::byte> cipher) noexcept
 {
-    assert(cipher.size() == plain.size() + EXPANSION);
+    assert(cipher.size() == plain1.size() + plain2.size() + EXPANSION);
 
     // Encrypt using ChaCha20 (starting at block 1).
     m_chacha20.Seek64(nonce, 1);
-    m_chacha20.Crypt(UCharCast(plain.data()), UCharCast(cipher.data()), plain.size());
+    m_chacha20.Crypt(UCharCast(plain1.data()), UCharCast(cipher.data()), plain1.size());
+    m_chacha20.Crypt(UCharCast(plain2.data()), UCharCast(cipher.data() + plain1.size()), plain2.size());
 
     // Seek to block 0, and compute tag using key drawn from there.
     m_chacha20.Seek64(nonce, 0);
-    ComputeTag(m_chacha20, aad, cipher.first(plain.size()), cipher.last(EXPANSION));
+    ComputeTag(m_chacha20, aad, cipher.first(cipher.size() - EXPANSION), cipher.last(EXPANSION));
 }
 
-bool AEADChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std::byte> aad, Nonce96 nonce, Span<std::byte> plain) noexcept
+bool AEADChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std::byte> aad, Nonce96 nonce, Span<std::byte> plain1, Span<std::byte> plain2) noexcept
 {
-    assert(cipher.size() == plain.size() + EXPANSION);
+    assert(cipher.size() == plain1.size() + plain2.size() + EXPANSION);
 
     // Verify tag (using key drawn from block 0).
     m_chacha20.Seek64(nonce, 0);
     std::byte expected_tag[EXPANSION];
-    ComputeTag(m_chacha20, aad, cipher.first(plain.size()), expected_tag);
-    if (timingsafe_bcmp(UCharCast(expected_tag), UCharCast(cipher.data() + plain.size()), EXPANSION)) return false;
+    ComputeTag(m_chacha20, aad, cipher.first(cipher.size() - EXPANSION), expected_tag);
+    if (timingsafe_bcmp(UCharCast(expected_tag), UCharCast(cipher.data() + cipher.size() - EXPANSION), EXPANSION)) return false;
 
     // Decrypt (starting at block 1).
-    m_chacha20.Crypt(UCharCast(cipher.data()), UCharCast(plain.data()), plain.size());
+    m_chacha20.Crypt(UCharCast(cipher.data()), UCharCast(plain1.data()), plain1.size());
+    m_chacha20.Crypt(UCharCast(cipher.data() + plain1.size()), UCharCast(plain2.data()), plain2.size());
     return true;
 }
 
@@ -126,15 +128,15 @@ void FSChaCha20Poly1305::NextPacket() noexcept
     }
 }
 
-void FSChaCha20Poly1305::Encrypt(Span<const std::byte> plain, Span<const std::byte> aad, Span<std::byte> cipher) noexcept
+void FSChaCha20Poly1305::Encrypt(Span<const std::byte> plain1, Span<const std::byte> plain2, Span<const std::byte> aad, Span<std::byte> cipher) noexcept
 {
-    m_aead.Encrypt(plain, aad, {m_packet_counter, m_rekey_counter}, cipher);
+    m_aead.Encrypt(plain1, plain2, aad, {m_packet_counter, m_rekey_counter}, cipher);
     NextPacket();
 }
 
-bool FSChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std::byte> aad, Span<std::byte> plain) noexcept
+bool FSChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std::byte> aad, Span<std::byte> plain1, Span<std::byte> plain2) noexcept
 {
-    bool ret = m_aead.Decrypt(cipher, aad, {m_packet_counter, m_rekey_counter}, plain);
+    bool ret = m_aead.Decrypt(cipher, aad, {m_packet_counter, m_rekey_counter}, plain1, plain2);
     NextPacket();
     return ret;
 }
