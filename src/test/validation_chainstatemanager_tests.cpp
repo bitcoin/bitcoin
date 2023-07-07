@@ -10,6 +10,7 @@
 #include <rpc/blockchain.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
+#include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <timedata.h>
@@ -659,8 +660,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     fs::path snapshot_chainstate_dir = gArgs.GetDataDirNet() / "chainstate_snapshot";
     BOOST_CHECK(fs::exists(snapshot_chainstate_dir));
 
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
-    BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
+    {
+        ASSERT_DEBUG_LOG("failed to validate the -assumeutxo snapshot state");
+        res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+        BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
+    }
 
     auto all_chainstates = chainman.GetAll();
     BOOST_CHECK_EQUAL(all_chainstates.size(), 1);
