@@ -102,11 +102,6 @@ extern const char* GETDATA;
  */
 extern const char* MERKLEBLOCK;
 /**
- * The getblocks message requests an inv message that provides block header
- * hashes starting from a particular point in the block chain.
- */
-extern const char* GETBLOCKS;
-/**
  * The getheaders message requests a headers message that provides block
  * headers starting from a particular point in the block chain.
  * @since protocol version 31800.
