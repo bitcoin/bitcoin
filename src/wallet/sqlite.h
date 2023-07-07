@@ -8,9 +8,10 @@
 #include <sync.h>
 #include <wallet/db.h>
 
-#include <sqlite3.h>
-
 struct bilingual_str;
+
+struct sqlite3_stmt;
+struct sqlite3;
 
 namespace wallet {
 class SQLiteDatabase;
