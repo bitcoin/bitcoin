@@ -122,8 +122,14 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
     return true;
 }
 
+std::function<bool(uint256, unsigned int, const Consensus::Params&)> g_check_pow_mock = nullptr;
+
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
+    if (g_check_pow_mock) {
+        return g_check_pow_mock(hash, nBits, params);
+    }
+
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
