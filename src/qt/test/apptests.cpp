@@ -11,7 +11,6 @@
 #include <qt/bitcoingui.h>
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
-#include <shutdown.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
