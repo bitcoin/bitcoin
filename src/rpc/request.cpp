@@ -167,6 +167,25 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     // Parse id now so errors from here on will have the id
     id = request.find_value("id");
 
+    // Check for JSON-RPC 2.0 (default 1.1)
+    m_json_version = JSONRPCVersion::V1_LEGACY;
+    const UniValue& jsonrpc_version = request.find_value("jsonrpc");
+    if (!jsonrpc_version.isNull()) {
+        if (!jsonrpc_version.isStr()) {
+            throw JSONRPCError(RPC_INVALID_REQUEST, "jsonrpc field must be a string");
+        }
+        // The "jsonrpc" key was added in the 2.0 spec, but some older documentation
+        // incorrectly included {"jsonrpc":"1.0"} in a request object, so we
+        // maintain that for backwards compatibility.
+        if (jsonrpc_version.get_str() == "1.0") {
+            m_json_version = JSONRPCVersion::V1_LEGACY;
+        } else if (jsonrpc_version.get_str() == "2.0") {
+            m_json_version = JSONRPCVersion::V2;
+        } else {
+            throw JSONRPCError(RPC_INVALID_REQUEST, "JSON-RPC version not supported");
+        }
+    }
+
     // Parse method
     const UniValue& valMethod{request.find_value("method")};
     if (valMethod.isNull())
