@@ -589,15 +589,18 @@ uint256 FastRandomContext::rand256() noexcept
     return ret;
 }
 
-std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
+template <typename B>
+std::vector<B> FastRandomContext::randbytes(size_t len)
 {
     if (requires_seed) RandomSeed();
-    std::vector<unsigned char> ret(len);
+    std::vector<B> ret(len);
     if (len > 0) {
-        rng.Keystream(ret.data(), len);
+        rng.Keystream(UCharCast(ret.data()), len);
     }
     return ret;
 }
+template std::vector<unsigned char> FastRandomContext::randbytes(size_t);
+template std::vector<std::byte> FastRandomContext::randbytes(size_t);
 
 void FastRandomContext::fillrand(Span<std::byte> output)
 {

@@ -244,11 +244,13 @@ BOOST_AUTO_TEST_CASE(class_methods)
     {
         DataStream ds;
         const std::string in{"ab"};
-        ds << Span{in};
+        ds << Span{in} << std::byte{'c'};
         std::array<std::byte, 2> out;
-        ds >> Span{out};
+        std::byte out_3;
+        ds >> Span{out} >> out_3;
         BOOST_CHECK_EQUAL(out.at(0), std::byte{'a'});
         BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
+        BOOST_CHECK_EQUAL(out_3, std::byte{'c'});
     }
 }
 
