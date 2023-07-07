@@ -15,7 +15,7 @@ CFeeRate::CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes)
 
     if (nSize > 0) {
         // SYSCOIN
-        nSatoshisPerK = static_cast<CAmount>(std::ceil(nFeePaid * 1000 / nSize));
+        nSatoshisPerK = static_cast<CAmount>(std::ceil((long long)nFeePaid * 1000 / nSize));
     } else {
         nSatoshisPerK = 0;
     }
