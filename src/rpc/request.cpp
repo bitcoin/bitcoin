@@ -37,21 +37,28 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id, JSONVersion json_version)
 {
     UniValue reply(UniValue::VOBJ);
-    if (!error.isNull())
-        reply.pushKV("result", NullUniValue);
-    else
+    // Add JSON-RPC version number field in v2 only.
+    if (json_version == JSONVersion::JSON_2_0) reply.pushKV("jsonrpc", "2.0");
+
+    // Add both result and error fields in v1, even though one will be null.
+    // Omit the null field in v2.
+    if (error.isNull()) {
         reply.pushKV("result", result);
-    reply.pushKV("error", error);
+        if (json_version == JSONVersion::JSON_1_BTC) reply.pushKV("error", NullUniValue);
+    } else {
+        if (json_version == JSONVersion::JSON_1_BTC) reply.pushKV("result", NullUniValue);
+        reply.pushKV("error", error);
+    }
     reply.pushKV("id", id);
     return reply;
 }
 
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
+std::string JSONRPCReply(const UniValue& result, const UniValue& error, const JSONRPCRequest& jreq)
 {
-    UniValue reply = JSONRPCReplyObj(result, error, id);
+    UniValue reply = JSONRPCReplyObj(result, error, jreq.id, jreq.m_json_version);
     return reply.write() + "\n";
 }
 

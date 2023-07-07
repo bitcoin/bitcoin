@@ -360,11 +360,24 @@ bool IsDeprecatedRPCEnabled(const std::string& method)
 
 UniValue JSONRPCExec(const JSONRPCRequest& jreq)
 {
-    // Might throw exception. Single requests will throw and send HTTP error codes
-    // but inside a batch, we just include the error object and return HTTP 200
-    UniValue result = tableRPC.execute(jreq);
+    UniValue result;
+    if (jreq.m_json_version == JSONVersion::JSON_2_0) {
+        // JSONRPC 2.0 behavior: only throw HTTP error if the server is actually
+        // broken. Otherwise errors are sent back in "HTTP OK" responses.
+        try {
+            result = tableRPC.execute(jreq);
+        } catch (const UniValue& objError) {
+            return JSONRPCReplyObj(NullUniValue, objError, jreq.id, jreq.m_json_version);
+        } catch (const std::exception& e) {
+            return JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version);
+        }
+    } else {
+        // Legacy Bitcoin JSONRPC 1.0/1.2 behavior:
+        // Single requests may throw HTTP errors, handled by caller or client
+        result = tableRPC.execute(jreq);
+    }
 
-    return JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id);
+    return JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id, jreq.m_json_version);
 }
 
 /**

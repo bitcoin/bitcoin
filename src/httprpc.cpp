@@ -73,8 +73,11 @@ static std::vector<std::vector<std::string>> g_rpcauth;
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
+static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const JSONRPCRequest& jreq)
 {
+    // Sending HTTP errors is a legacy JSON-RPC behavior.
+    Assume(jreq.m_json_version != JSONVersion::JSON_2_0);
+
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
@@ -84,7 +87,7 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
 
-    std::string strReply = JSONRPCReply(NullUniValue, objError, id);
+    std::string strReply = JSONRPCReply(NullUniValue, objError, jreq);
 
     req->WriteHeader("Content-Type", "application/json");
     req->WriteReply(nStatus, strReply);
@@ -226,14 +229,15 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             // Execute each request
             reply = UniValue{UniValue::VARR};
             for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
-                // Batches include errors in the batch response, they do not throw
+                // Batches never throw HTTP errors, they are always just included
+                // in "HTTP OK" responses.
                 try {
                     jreq.parse(valRequest[reqIdx]);
                     reply.push_back(JSONRPCExec(jreq));
                 } catch (const UniValue& objError) {
-                    reply.push_back(JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id));
+                    reply.push_back(JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version));
                 } catch (const std::exception& e) {
-                    reply.push_back(JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id));
+                    reply.push_back(JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version));
                 }
             }
         }
@@ -243,10 +247,10 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, reply.write() + "\n");
     } catch (const UniValue& objError) {
-        JSONErrorReply(req, objError, jreq.id);
+        JSONErrorReply(req, objError, jreq);
         return false;
     } catch (const std::exception& e) {
-        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
+        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq);
         return false;
     }
     return true;

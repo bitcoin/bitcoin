@@ -11,14 +11,15 @@
 
 #include <univalue.h>
 
+class JSONRPCRequest;
 enum class JSONVersion {
     JSON_1_BTC,
     JSON_2_0
 };
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
-UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id);
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id, JSONVersion json_version = JSONVersion::JSON_1_BTC);
+std::string JSONRPCReply(const UniValue& result, const UniValue& error, const JSONRPCRequest& jreq);
 UniValue JSONRPCError(int code, const std::string& message);
 
 /** Generate a new RPC authentication cookie and write it to disk */
