@@ -189,7 +189,7 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
             }
         }
 
-        if (!deterministicMNManager->UndoBlock(block, pindex)) {
+        if (!deterministicMNManager->UndoBlock(pindex)) {
             return false;
         }
 
