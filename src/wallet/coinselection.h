@@ -280,13 +280,14 @@ typedef std::map<CoinEligibilityFilter, OutputGroupTypeMap> FilteredOutputGroups
  *
  * @param[in] inputs The selected inputs
  * @param[in] change_cost The cost of creating change and spending it in the future.
- *                        Only used if there is change, in which case it must be positive.
- *                        Must be 0 if there is no change.
+ *                        Only used if there is change, in which case it must be positive, or 0 for an already covered
+ *                        change cost (e.g. existent change output).
+ *                        Must be std::nullopt if there is no change.
  * @param[in] target The amount targeted by the coin selection algorithm.
  * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
  * @return The waste
  */
-[[nodiscard]] CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+[[nodiscard]] CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, std::optional<CAmount> change_cost, CAmount target, bool use_effective_value = true);
 
 
 /** Choose a random change target for each transaction to make it harder to fingerprint the Core

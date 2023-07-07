@@ -449,7 +449,7 @@ void OutputGroupTypeMap::Push(const OutputGroup& group, OutputType type, bool in
     }
 }
 
-CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
+CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, std::optional<CAmount> change_cost, CAmount target, bool use_effective_value)
 {
     // This function should not be called with empty inputs as that would mean the selection failed
     assert(!inputs.empty());
@@ -465,11 +465,12 @@ CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmo
 
     if (change_cost) {
         // Consider the cost of making change and spending it in the future
-        // If we aren't making change, the caller should've set change_cost to 0
-        assert(change_cost > 0);
-        waste += change_cost;
+        // If we aren't making change, the caller should've set change_cost to std::nullopt
+        // change_cost will be 0 if the change cost is already covered
+        assert(change_cost >= 0);
+        waste += *change_cost;
     } else {
-        // When we are not making change (change_cost == 0), consider the excess we are throwing away to fees
+        // When we are not making change (change_cost == std::nullopt), consider the excess we are throwing away to fees
         assert(selected_effective_value >= target);
         waste += selected_effective_value - target;
     }
@@ -495,7 +496,7 @@ void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const 
     if (change > 0) {
         m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
     } else {
-        m_waste = GetSelectionWaste(m_selected_inputs, 0, m_target, m_use_effective);
+        m_waste = GetSelectionWaste(m_selected_inputs, /*change_cost=*/std::nullopt, m_target, m_use_effective);
     }
 }
 

@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     // Waste without change is the excess and difference between fee and long term fee
     add_coin(1 * COIN, 1, selection, fee, fee - fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee - fee_diff);
-    const CAmount waste_nochange1 = GetSelectionWaste(selection, 0, target);
+    const CAmount waste_nochange1 = GetSelectionWaste(selection, /*change_cost=*/std::nullopt, target);
     BOOST_CHECK_EQUAL(fee_diff * 2 + excess, waste_nochange1);
     selection.clear();
 
@@ -853,7 +853,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     // Waste without change and fee == long term fee is just the excess
     add_coin(1 * COIN, 1, selection, fee, fee);
     add_coin(2 * COIN, 2, selection, fee, fee);
-    BOOST_CHECK_EQUAL(excess, GetSelectionWaste(selection, 0, target));
+    BOOST_CHECK_EQUAL(excess, GetSelectionWaste(selection, /*change_cost=*/std::nullopt, target));
     selection.clear();
 
     // Waste will be greater when fee is greater, but long term fee is the same
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     // With long term fee greater than fee, waste should be less than when long term fee is less than fee
     add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
-    const CAmount waste_nochange2 = GetSelectionWaste(selection, 0, target);
+    const CAmount waste_nochange2 = GetSelectionWaste(selection, /*change_cost=*/std::nullopt, target);
     BOOST_CHECK_EQUAL(fee_diff * -2 + excess, waste_nochange2);
     BOOST_CHECK_LT(waste_nochange2, waste_nochange1);
     selection.clear();
@@ -885,7 +885,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     add_coin(1 * COIN, 1, selection, fee, fee);
     add_coin(2 * COIN, 2, selection, fee, fee);
     const CAmount exact_target{in_amt - fee * 2};
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/0, exact_target));
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/std::nullopt, exact_target));
     selection.clear();
 
     // No Waste when (fee - long_term_fee) == (-cost_of_change), and no excess
@@ -899,7 +899,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     const CAmount new_target{in_amt - fee * 2 - fee_diff * 2};
     add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/ 0, new_target));
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/std::nullopt, new_target));
     selection.clear();
 
     // Negative waste when the long term fee is greater than the current fee and the selected value == target
@@ -907,7 +907,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     const CAmount target_waste1{-2 * fee_diff}; // = (2 * fee) - (2 * (fee + fee_diff))
     add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
-    BOOST_CHECK_EQUAL(target_waste1, GetSelectionWaste(selection, /*change_cost=*/ 0, exact_target1));
+    BOOST_CHECK_EQUAL(target_waste1, GetSelectionWaste(selection, /*change_cost=*/std::nullopt, exact_target1));
     selection.clear();
 
     // Negative waste when the long term fee is greater than the current fee and change_cost < - (inputs * (fee - long_term_fee))
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
         rand,
         /*change_output_size=*/34,
         /*min_change_target=*/CENT,
-        /*effective_feerate=*/CFeeRate(0),
+        /*effective_feerate=*/CFeeRate(1), // tiny feerate so the waste score isn't always 0.
         /*long_term_feerate=*/CFeeRate(0),
         /*tx_noinputs_size=*/10 + 34, // static header size + output size
         /*avoid_partial=*/false,
@@ -1089,10 +1089,10 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
             target, cs_params, cc, [&](CWallet& wallet) {
                 CoinsResult available_coins;
                 for (int j = 0; j < 1515; ++j) {
-                    add_coin(available_coins, wallet, CAmount(0.033 * COIN), CFeeRate(0), 144, false, 0, true);
+                    add_coin(available_coins, wallet, CAmount(0.033 * COIN), cs_params.m_effective_feerate, 144, false, 0, true);
                 }
 
-                add_coin(available_coins, wallet, CAmount(50 * COIN), CFeeRate(0), 144, false, 0, true);
+                add_coin(available_coins, wallet, CAmount(50 * COIN), cs_params.m_effective_feerate, 144, false, 0, true);
                 return available_coins;
             },
             m_node);
@@ -1101,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
         // Verify that only the 50 BTC UTXO was selected
         const auto& selection_res = result->GetInputSet();
         BOOST_CHECK(selection_res.size() == 1);
-        BOOST_CHECK((*selection_res.begin())->GetEffectiveValue() == 50 * COIN);
+        BOOST_CHECK((*selection_res.begin())->txout.nValue == 50 * COIN);
     }
 
     {
