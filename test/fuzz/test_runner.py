@@ -200,29 +200,47 @@ def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
     {corpus_dir}.
     """
     logging.info("Generating corpus to {}".format(corpus_dir))
+    rpc_target = "rpc"
+    has_rpc = rpc_target in targets
+    if has_rpc:
+        targets.remove(rpc_target)
+    targets = [(t, {}) for t in targets]
+    if has_rpc:
+        lines = subprocess.run(
+            ["git", "grep", "--function-context", "RPC_COMMANDS_SAFE_FOR_FUZZING{", os.path.join(src_dir, "src", "test", "fuzz", "rpc.cpp")],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.splitlines()
+        lines = [l.split("\"", 1)[1].split("\"")[0] for l in lines if l.startswith("src/test/fuzz/rpc.cpp-    \"")]
+        targets += [(rpc_target, {"LIMIT_TO_RPC_COMMAND": r}) for r in lines]
 
-    def job(command, t):
-        logging.debug("Running '{}'\n".format(" ".join(command)))
+    def job(command, t, t_env):
+        logging.debug(f"Running '{command}'")
         logging.debug("Command '{}' output:\n'{}'\n".format(
-            ' '.join(command),
+            command,
             subprocess.run(
                 command,
-                env=get_fuzz_env(target=t, source_dir=src_dir),
+                env={
+                    **t_env,
+                    **get_fuzz_env(target=t, source_dir=src_dir),
+                },
                 check=True,
                 stderr=subprocess.PIPE,
                 text=True,
-            ).stderr))
+            ).stderr,
+        ))
 
     futures = []
-    for target in targets:
-        target_corpus_dir = os.path.join(corpus_dir, target)
+    for target, t_env in targets:
+        target_corpus_dir = corpus_dir / target
         os.makedirs(target_corpus_dir, exist_ok=True)
         command = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             "-runs=100000",
             target_corpus_dir,
         ]
-        futures.append(fuzz_pool.submit(job, command, target))
+        futures.append(fuzz_pool.submit(job, command, target, t_env))
 
     for future in as_completed(futures):
         future.result()
