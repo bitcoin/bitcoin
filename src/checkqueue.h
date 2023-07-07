@@ -139,6 +139,13 @@ public:
         }
     }
 
+    // Since this class manages its own resources, which is a thread
+    // pool `m_worker_threads`, copy and move operations are not appropriate.
+    CCheckQueue(const CCheckQueue&) = delete;
+    CCheckQueue& operator=(const CCheckQueue&) = delete;
+    CCheckQueue(CCheckQueue&&) = delete;
+    CCheckQueue& operator=(CCheckQueue&&) = delete;
+
     //! Wait until execution finishes, and return whether all evaluations were successful.
     bool Wait() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
