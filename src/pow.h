@@ -8,6 +8,7 @@
 
 #include <consensus/params.h>
 
+#include <functional>
 #include <stdint.h>
 
 class CBlockHeader;
@@ -18,6 +19,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
+extern std::function<bool(uint256, unsigned int, const Consensus::Params&)> g_check_pow_mock;
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 
 /**
