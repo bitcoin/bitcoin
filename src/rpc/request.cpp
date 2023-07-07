@@ -37,7 +37,7 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(UniValue result, UniValue error, UniValue id, JSONRPCVersion jsonrpc_version)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue> id, JSONRPCVersion jsonrpc_version)
 {
     UniValue reply(UniValue::VOBJ);
     // Add JSON-RPC version number field in v2 only.
@@ -52,7 +52,7 @@ UniValue JSONRPCReplyObj(UniValue result, UniValue error, UniValue id, JSONRPCVe
         if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("result", NullUniValue);
         reply.pushKV("error", std::move(error));
     }
-    reply.pushKV("id", std::move(id));
+    if (id.has_value()) reply.pushKV("id", std::move(id.value()));
     return reply;
 }
 
@@ -172,7 +172,11 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     const UniValue& request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
-    id = request.find_value("id");
+    if (request.exists("id")) {
+        id = request.find_value("id");
+    } else {
+        id = std::nullopt;
+    }
 
     // Check for JSON-RPC 2.0 (default 1.1)
     m_json_version = JSONRPCVersion::V1_LEGACY;

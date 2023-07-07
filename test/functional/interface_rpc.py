@@ -46,8 +46,11 @@ def format_request(options, idx, fields):
 
 
 def format_response(options, idx, fields):
+    if options.version == 2 and options.notification:
+        return None
     response = {}
-    response.update(id=None if options.notification else idx)
+    if not options.notification:
+        response.update(id=idx)
     if options.version == 2:
         response.update(jsonrpc="2.0")
     else:
@@ -129,11 +132,17 @@ class RPCInterfaceTest(BitcoinTestFramework):
             if options is None:
                 continue
             request.append(format_request(options, idx, call))
-            response.append(format_response(options, idx, result))
+            r = format_response(options, idx, result)
+            if r is not None:
+                response.append(r)
 
         rpc_response, http_status = send_json_rpc(self.nodes[0], request)
-        assert_equal(http_status, 200)
-        assert_equal(rpc_response, response)
+        if len(response) == 0 and len(request) > 0:
+            assert_equal(http_status, 204)
+            assert_equal(rpc_response, None)
+        else:
+            assert_equal(http_status, 200)
+            assert_equal(rpc_response, response)
 
     def test_batch_requests(self):
         self.log.info("Testing empty batch request...")
@@ -193,10 +202,10 @@ class RPCInterfaceTest(BitcoinTestFramework):
         expect_http_rpc_status(200, RPC_INVALID_PARAMETER,  self.nodes[0], "getblockhash", [42], 2, False)
         # force-send invalidly formatted requests
         response, status = send_json_rpc(self.nodes[0], {"jsonrpc": 2, "method": "getblockcount"})
-        assert_equal(response, {"id": None, "result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "jsonrpc field must be a string"}})
+        assert_equal(response, {"result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "jsonrpc field must be a string"}})
         assert_equal(status, 400)
         response, status = send_json_rpc(self.nodes[0], {"jsonrpc": "3.0", "method": "getblockcount"})
-        assert_equal(response, {"id": None, "result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "JSON-RPC version not supported"}})
+        assert_equal(response, {"result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "JSON-RPC version not supported"}})
         assert_equal(status, 400)
 
         self.log.info("Testing HTTP status codes for JSON-RPC 2.0 notifications...")
@@ -209,10 +218,12 @@ class RPCInterfaceTest(BitcoinTestFramework):
         # Not notification: has "id" field
         expect_http_rpc_status(200, None,                   self.nodes[0], "getblockcount", [],  2, False)
         block_count = self.nodes[0].getblockcount()
-        expect_http_rpc_status(200, None,                   self.nodes[0], "generatetoaddress", [1, "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdku202"],  2, True)
+        # Notification response status code: HTTP_NO_CONTENT
+        expect_http_rpc_status(204, None,                   self.nodes[0], "generatetoaddress", [1, "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdku202"],  2, True)
         # The command worked even though there was no response
         assert_equal(block_count + 1, self.nodes[0].getblockcount())
-        expect_http_rpc_status(200, RPC_INVALID_ADDRESS_OR_KEY, self.nodes[0], "generatetoaddress", [1, "invalid_address"], 2, True)
+        # No error response for notifications even if they are invalid
+        expect_http_rpc_status(204, None, self.nodes[0], "generatetoaddress", [1, "invalid_address"], 2, True)
         # Sanity check: command was not executed
         assert_equal(block_count + 1, self.nodes[0].getblockcount())
 
