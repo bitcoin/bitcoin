@@ -130,22 +130,11 @@ public:
     Mutex m_control_mutex;
 
     //! Create a new check queue
-    explicit CCheckQueue(unsigned int nBatchSizeIn)
-        : nBatchSize(nBatchSizeIn)
+    explicit CCheckQueue(unsigned int batch_size, int worker_threads_num)
+        : nBatchSize(batch_size)
     {
-    }
-
-    //! Create a pool of new worker threads.
-    void StartWorkerThreads(const int threads_num) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        {
-            LOCK(m_mutex);
-            nIdle = 0;
-            nTotal = 0;
-            fAllOk = true;
-        }
-        assert(m_worker_threads.empty());
-        for (int n = 0; n < threads_num; ++n) {
+        m_worker_threads.reserve(worker_threads_num);
+        for (int n = 0; n < worker_threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
                 util::ThreadRename(strprintf("scriptch.%i", n));
                 Loop(false /* worker thread */);
