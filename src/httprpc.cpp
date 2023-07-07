@@ -205,6 +205,11 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             }
 
             reply = JSONRPCExec(jreq);
+            if (jreq.IsNotification()) {
+                // Even though we do execute notifications, we do not respond to them
+                req->WriteReply(HTTP_NO_CONTENT);
+                return true;
+            }
 
         // array of requests
         } else if (valRequest.isArray()) {
@@ -228,17 +233,28 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
             // Execute each request
             reply = UniValue{UniValue::VARR};
+            bool all_notifications = true;
             for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
                 // Batches never throw HTTP errors, they are always just included
-                // in "HTTP OK" responses.
+                // in "HTTP OK" responses. Notifications never get any response.
+                UniValue response;
                 try {
                     jreq.parse(valRequest[reqIdx]);
-                    reply.push_back(JSONRPCExec(jreq));
+                    response = JSONRPCExec(jreq);
                 } catch (const UniValue& objError) {
-                    reply.push_back(JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version));
+                    response = JSONRPCReplyObj(NullUniValue, objError, jreq.id, jreq.m_json_version);
                 } catch (const std::exception& e) {
-                    reply.push_back(JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version));
+                    response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version);
                 }
+                if (!jreq.IsNotification()) {
+                    reply.push_back(std::move(response));
+                    all_notifications = false;
+                }
+            }
+            // All-notification batch expects no response
+            if (all_notifications && valRequest.size() > 0) {
+                req->WriteReply(HTTP_NO_CONTENT);
+                return true;
             }
         }
         else

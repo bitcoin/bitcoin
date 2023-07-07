@@ -37,7 +37,7 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id, JSONVersion json_version)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, const std::optional<UniValue>& id, JSONVersion json_version)
 {
     UniValue reply(UniValue::VOBJ);
     // Add JSON-RPC version number field in v2 only.
@@ -52,7 +52,7 @@ UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id, JS
         if (json_version == JSONVersion::JSON_1_BTC) reply.pushKV("result", NullUniValue);
         reply.pushKV("error", error);
     }
-    reply.pushKV("id", id);
+    if (id.has_value()) reply.pushKV("id", id.value());
     return reply;
 }
 
@@ -177,10 +177,8 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
     const UniValue& request = valRequest.get_obj();
 
-    // Parse id now so errors from here on will have the id
-    id = request.find_value("id");
-
     // Check for JSON-RPC 2.0 (default 1.1)
+    // We must do this before looking for the id field
     m_json_version = JSONVersion::JSON_1_BTC;
     const UniValue& valJsonRPC = request.find_value("jsonrpc");
     if (!valJsonRPC.isNull()) {
@@ -194,6 +192,17 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         } else {
             throw JSONRPCError(RPC_INVALID_REQUEST, "JSON-RPC version not supported");
         }
+    }
+
+    // Parse id now so errors from here on will have the id.
+    // In 1.1 a default null value is inserted if no id field was present in the request
+    // In 2.0 a missing id field is a notification, but `"id": null` is not
+    if (m_json_version != JSONVersion::JSON_2_0 || request.exists("id")) {
+        id = request.find_value("id");
+    } else {
+        // Because we reuse JSONRPCRequest objects with multiple valRequests in
+        // a batch request, we may need to reset this optional value.
+        id.reset();
     }
 
     // Parse method
