@@ -12,10 +12,14 @@
 CFeeRate::CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes)
 {
     const int64_t nSize{num_bytes};
-
+    // SYSCOIN
     if (nSize > 0) {
-        // SYSCOIN
-        nSatoshisPerK = static_cast<CAmount>(std::ceil((double)nFeePaid * 1000 / nSize));
+        if (nFeePaid < (LONG_MIN / 1000) || nFeePaid > (LONG_MAX / 1000)) {
+            // handle overflow case
+            nSatoshisPerK = LONG_MAX;
+        } else {
+            nSatoshisPerK = nFeePaid * 1000 / nSize;
+        }
     } else {
         nSatoshisPerK = 0;
     }
