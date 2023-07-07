@@ -15,9 +15,7 @@
 
 void StartShutdown()
 {
-    try {
-        Assert(kernel::g_context)->interrupt();
-    } catch (const std::system_error&) {
+    if (!Assert(kernel::g_context)->interrupt()) {
         LogPrintf("Sending shutdown token failed\n");
         assert(0);
     }
@@ -25,7 +23,10 @@ void StartShutdown()
 
 void AbortShutdown()
 {
-    Assert(kernel::g_context)->interrupt.reset();
+    if (!Assert(kernel::g_context)->interrupt.reset()) {
+        LogPrintf("Reading shutdown token failed\n");
+        assert(0);
+    }
 }
 
 bool ShutdownRequested()
@@ -35,9 +36,7 @@ bool ShutdownRequested()
 
 void WaitForShutdown()
 {
-    try {
-        Assert(kernel::g_context)->interrupt.wait();
-    } catch (const std::system_error&) {
+    if (!Assert(kernel::g_context)->interrupt.wait()) {
         LogPrintf("Reading shutdown token failed\n");
         assert(0);
     }
