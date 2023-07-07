@@ -75,6 +75,9 @@ static bool g_rpc_whitelist_default = false;
 
 static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCRequest& jreq)
 {
+    // Sending HTTP errors is a legacy JSON-RPC behavior.
+    Assume(jreq.m_json_version != JSONRPCVersion::V2);
+
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
@@ -201,7 +204,12 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                 return false;
             }
 
-            reply = JSONRPCExec(jreq);
+            // Legacy 1.0/1.1 behavior is for failed requests to throw
+            // exceptions which return HTTP errors and RPC errors to the client.
+            // 2.0 behavior is to catch exceptions and return HTTP success with
+            // RPC errors, as long as there is not an actual HTTP server error.
+            const bool catch_errors{jreq.m_json_version == JSONRPCVersion::V2};
+            reply = JSONRPCExec(jreq, catch_errors);
 
         // array of requests
         } else if (valRequest.isArray()) {
@@ -226,10 +234,11 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             // Execute each request
             reply = UniValue::VARR;
             for (size_t i{0}; i < valRequest.size(); ++i) {
-                // Batches include errors in the batch response, they do not throw
+                // Batches never throw HTTP errors, they are always just included
+                // in "HTTP OK" responses.
                 try {
                     jreq.parse(valRequest[i]);
-                    reply.push_back(JSONRPCExec(jreq));
+                    reply.push_back(JSONRPCExec(jreq, /*catch_errors=*/true));
                 } catch (UniValue& e) {
                     reply.push_back(JSONRPCReplyObj(NullUniValue, std::move(e), jreq.id, jreq.m_json_version));
                 } catch (const std::exception& e) {

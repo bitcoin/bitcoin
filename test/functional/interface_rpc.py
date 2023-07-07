@@ -188,9 +188,9 @@ class RPCInterfaceTest(BitcoinTestFramework):
         self.log.info("Testing HTTP status codes for JSON-RPC 2.0 requests...")
         # OK
         expect_http_rpc_status(200, None,                   self.nodes[0], "getblockhash", [0],  2, False)
-        # RPC errors and HTTP errors
-        expect_http_rpc_status(404, RPC_METHOD_NOT_FOUND,   self.nodes[0], "invalidmethod", [],  2, False)
-        expect_http_rpc_status(500, RPC_INVALID_PARAMETER,  self.nodes[0], "getblockhash", [42], 2, False)
+        # RPC errors but not HTTP errors
+        expect_http_rpc_status(200, RPC_METHOD_NOT_FOUND,   self.nodes[0], "invalidmethod", [],  2, False)
+        expect_http_rpc_status(200, RPC_INVALID_PARAMETER,  self.nodes[0], "getblockhash", [42], 2, False)
         # force-send invalidly formatted requests
         response, status = send_json_rpc(self.nodes[0], {"jsonrpc": 2, "method": "getblockcount"})
         assert_equal(response, {"id": None, "result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "jsonrpc field must be a string"}})
@@ -212,7 +212,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
         expect_http_rpc_status(200, None,                   self.nodes[0], "generatetoaddress", [1, "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdku202"],  2, True)
         # The command worked even though there was no response
         assert_equal(block_count + 1, self.nodes[0].getblockcount())
-        expect_http_rpc_status(500, RPC_INVALID_ADDRESS_OR_KEY, self.nodes[0], "generatetoaddress", [1, "invalid_address"], 2, True)
+        expect_http_rpc_status(200, RPC_INVALID_ADDRESS_OR_KEY, self.nodes[0], "generatetoaddress", [1, "invalid_address"], 2, True)
         # Sanity check: command was not executed
         assert_equal(block_count + 1, self.nodes[0].getblockcount())
 
