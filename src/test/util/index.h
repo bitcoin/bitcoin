@@ -8,6 +8,6 @@
 class BaseIndex;
 
 /** Block until the index is synced to the current chain */
-void IndexWaitSynced(BaseIndex& index);
+void IndexWaitSynced(const BaseIndex& index);
 
 #endif // BITCOIN_TEST_UTIL_INDEX_H

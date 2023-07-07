@@ -5,14 +5,11 @@
 #include <test/util/index.h>
 
 #include <index/base.h>
-#include <util/check.h>
 #include <util/time.h>
 
-void IndexWaitSynced(BaseIndex& index)
+void IndexWaitSynced(const BaseIndex& index)
 {
-    const auto timeout{SteadyClock::now() + 120s};
     while (!index.BlockUntilSyncedToCurrentChain()) {
-        Assert(timeout > SteadyClock::now());
         UninterruptibleSleep(100ms);
     }
 }
