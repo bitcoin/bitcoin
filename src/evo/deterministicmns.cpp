@@ -606,7 +606,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
             newList.SetHeight(nHeight);
         }
 
-        newList.SetBlockHash(block.GetHash());
+        newList.SetBlockHash(pindex->GetBlockHash());
 
         oldList = GetListForBlockInternal(pindex->pprev);
         diff = oldList.BuildDiff(newList);
@@ -645,10 +645,10 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     return true;
 }
 
-bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
+bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
 {
     int nHeight = pindex->nHeight;
-    uint256 blockHash = block.GetHash();
+    uint256 blockHash = pindex->GetBlockHash();
 
     CDeterministicMNList curList;
     CDeterministicMNList prevList;

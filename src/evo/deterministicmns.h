@@ -593,7 +593,7 @@ public:
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state,
                       const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(cs);
-    bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
+    bool UndoBlock(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
 
     void UpdatedBlockTip(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
 
