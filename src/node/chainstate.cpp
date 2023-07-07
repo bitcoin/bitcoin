@@ -17,6 +17,7 @@
 #include <txdb.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -55,14 +56,14 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
-    if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
+    if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
     // Note that it also sets fReindex global based on the disk flag!
     // From here on, fReindex and options.reindex values may be different!
     if (!chainman.LoadBlockIndex()) {
-        if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
+        if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
         return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
     }
 
