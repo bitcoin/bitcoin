@@ -364,7 +364,7 @@ UniValue JSONRPCExec(const JSONRPCRequest& jreq)
     // but inside a batch, we just include the error object and return HTTP 200
     UniValue result = tableRPC.execute(jreq);
 
-    return JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id);
+    return JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id, jreq.m_json_version);
 }
 
 /**

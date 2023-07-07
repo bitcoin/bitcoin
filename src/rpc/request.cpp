@@ -37,14 +37,21 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(UniValue result, UniValue error, UniValue id)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, UniValue id, JSONRPCVersion jsonrpc_version)
 {
     UniValue reply(UniValue::VOBJ);
-    if (!error.isNull())
-        reply.pushKV("result", NullUniValue);
-    else
+    // Add JSON-RPC version number field in v2 only.
+    if (jsonrpc_version == JSONRPCVersion::V2) reply.pushKV("jsonrpc", "2.0");
+
+    // Add both result and error fields in v1, even though one will be null.
+    // Omit the null field in v2.
+    if (error.isNull()) {
         reply.pushKV("result", std::move(result));
-    reply.pushKV("error", std::move(error));
+        if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("error", NullUniValue);
+    } else {
+        if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("result", NullUniValue);
+        reply.pushKV("error", std::move(error));
+    }
     reply.pushKV("id", std::move(id));
     return reply;
 }

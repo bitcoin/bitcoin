@@ -48,7 +48,10 @@ def format_request(options, idx, fields):
 def format_response(options, idx, fields):
     response = {}
     response.update(id=None if options.notification else idx)
-    response.update(result=None, error=None)
+    if options.version == 2:
+        response.update(jsonrpc="2.0")
+    else:
+        response.update(result=None, error=None)
     response.update(fields)
     if options.response_fields:
         response.update(options.response_fields)
