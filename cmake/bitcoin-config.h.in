@@ -30,14 +30,137 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
+/* Define this symbol if you have __builtin_clzl */
+#cmakedefine HAVE_BUILTIN_CLZL 1
+
+/* Define this symbol if you have __builtin_clzll */
+#cmakedefine HAVE_BUILTIN_CLZLL 1
+
 /* Define to 1 if you have the <byteswap.h> header file. */
 #cmakedefine HAVE_BYTESWAP_H 1
+
+/* Define to 1 if you have the declaration of `be16toh', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_BE16TOH
+
+/* Define to 1 if you have the declaration of `be32toh', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_BE32TOH
+
+/* Define to 1 if you have the declaration of `be64toh', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_BE64TOH
+
+/* Define to 1 if you have the declaration of `bswap_16', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_BSWAP_16
+
+/* Define to 1 if you have the declaration of `bswap_32', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_BSWAP_32
+
+/* Define to 1 if you have the declaration of `bswap_64', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_BSWAP_64
+
+/* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
+   */
+#cmakedefine01 HAVE_DECL_FORK
+
+/* Define to 1 if you have the declaration of `freeifaddrs', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_FREEIFADDRS
+
+/* Define to 1 if you have the declaration of `getifaddrs', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_GETIFADDRS
+
+/* Define to 1 if you have the declaration of `htobe16', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_HTOBE16
+
+/* Define to 1 if you have the declaration of `htobe32', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_HTOBE32
+
+/* Define to 1 if you have the declaration of `htobe64', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_HTOBE64
+
+/* Define to 1 if you have the declaration of `htole16', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_HTOLE16
+
+/* Define to 1 if you have the declaration of `htole32', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_HTOLE32
+
+/* Define to 1 if you have the declaration of `htole64', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_HTOLE64
+
+/* Define to 1 if you have the declaration of `le16toh', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_LE16TOH
+
+/* Define to 1 if you have the declaration of `le32toh', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_LE32TOH
+
+/* Define to 1 if you have the declaration of `le64toh', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_LE64TOH
+
+/* Define to 1 if you have the declaration of `pipe2', and to 0 if you don't.
+   */
+#cmakedefine01 HAVE_DECL_PIPE2
+
+/* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
+   */
+#cmakedefine01 HAVE_DECL_SETSID
 
 /* Define to 1 if you have the <endian.h> header file. */
 #cmakedefine HAVE_ENDIAN_H 1
 
+/* Define to 1 if fdatasync is available. */
+#cmakedefine HAVE_FDATASYNC 1
+
+/* Define this symbol if the BSD getentropy system call is available with
+   sys/random.h */
+#cmakedefine HAVE_GETENTROPY_RAND 1
+
+/* Define this symbol if gmtime_r is available */
+#cmakedefine HAVE_GMTIME_R 1
+
+/* Define this symbol if you have malloc_info */
+#cmakedefine HAVE_MALLOC_INFO 1
+
+/* Define this symbol if you have mallopt with M_ARENA_MAX */
+#cmakedefine HAVE_MALLOPT_ARENA_MAX 1
+
+/* Define to 1 if O_CLOEXEC flag is available. */
+#cmakedefine01 HAVE_O_CLOEXEC
+
+/* Define this symbol if you have posix_fallocate */
+#cmakedefine HAVE_POSIX_FALLOCATE 1
+
+/* Define this symbol to build code that uses getauxval) */
+#cmakedefine HAVE_STRONG_GETAUXVAL 1
+
+/* Define this symbol if the BSD sysctl() is available */
+#cmakedefine HAVE_SYSCTL 1
+
+/* Define this symbol if the BSD sysctl(KERN_ARND) is available */
+#cmakedefine HAVE_SYSCTL_ARND 1
+
+/* Define to 1 if std::system or ::wsystem is available. */
+#cmakedefine HAVE_SYSTEM 1
+
 /* Define to 1 if you have the <sys/endian.h> header file. */
 #cmakedefine HAVE_SYS_ENDIAN_H 1
+
+/* Define this symbol if the Linux getrandom system call is available */
+#cmakedefine HAVE_SYS_GETRANDOM 1
 
 /* Define to 1 if you have the <sys/prctl.h> header file. */
 #cmakedefine HAVE_SYS_PRCTL_H 1
@@ -62,6 +185,9 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "@PROJECT_VERSION@"
+
+/* Define to 1 if strerror_r returns char *. */
+#cmakedefine STRERROR_R_CHAR_P 1
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
