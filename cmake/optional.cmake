@@ -85,3 +85,26 @@ if(WITH_ZMQ)
     message(FATAL_ERROR "libzmq requested, but not found.")
   endif()
 endif()
+
+include(CheckCXXSourceCompiles)
+if(WITH_USDT)
+  check_cxx_source_compiles("
+    #include <sys/sdt.h>
+
+    int main()
+    {
+      DTRACE_PROBE(context, event);
+      int a, b, c, d, e, f, g;
+      DTRACE_PROBE7(context, event, a, b, c, d, e, f, g);
+    }
+    " HAVE_USDT_H
+  )
+  if(HAVE_USDT_H)
+    set(ENABLE_TRACING TRUE)
+    set(WITH_USDT ON)
+  elseif(WITH_USDT STREQUAL "AUTO")
+    set(WITH_USDT OFF)
+  else()
+    message(FATAL_ERROR "sys/sdt.h requested, but not found.")
+  endif()
+endif()
