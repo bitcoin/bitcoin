@@ -179,24 +179,16 @@ public:
         }
     }
 
-    //! Stop all of the worker threads.
-    void StopWorkerThreads() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    ~CCheckQueue()
     {
         WITH_LOCK(m_mutex, m_request_stop = true);
         m_worker_cv.notify_all();
         for (std::thread& t : m_worker_threads) {
             t.join();
         }
-        m_worker_threads.clear();
-        WITH_LOCK(m_mutex, m_request_stop = false);
     }
 
     bool HasThreads() const { return !m_worker_threads.empty(); }
-
-    ~CCheckQueue()
-    {
-        assert(m_worker_threads.empty());
-    }
 };
 
 /**

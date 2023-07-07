@@ -1246,7 +1246,6 @@ public:
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
-    void StopScriptCheckWorkerThreads();
 
     ~ChainstateManager();
 };
