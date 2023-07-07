@@ -99,6 +99,7 @@ public:
         if (!AppInitParameterInteraction(args())) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
+        m_context->shutdown = &m_context->kernel->interrupt; // TEMPORARY: will go away when kernel->interrupt member is removed
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
 
         if (!AppInitLockDataDirectory()) return false;

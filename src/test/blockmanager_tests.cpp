@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
         .blocks_dir = m_args.GetBlocksDirPath(),
         .notifications = notifications,
     };
-    BlockManager blockman{m_node.kernel->interrupt, blockman_opts};
+    BlockManager blockman{*Assert(m_node.shutdown), blockman_opts};
     // simulate adding a genesis block normally
     BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0, nullptr).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);
     // simulate what happens during reindex

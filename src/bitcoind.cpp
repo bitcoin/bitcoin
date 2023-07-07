@@ -185,6 +185,7 @@ static bool AppInit(NodeContext& node)
         }
 
         node.kernel = std::make_unique<kernel::Context>();
+        node.shutdown = &node.kernel->interrupt; // TEMPORARY: will go away when kernel->interrupt member is removed
         if (!AppInitSanityChecks(*node.kernel))
         {
             // InitError will have been called with detailed error, which ends up on console

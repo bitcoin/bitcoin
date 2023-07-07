@@ -102,6 +102,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()},
       m_args{}
 {
+    m_node.shutdown = &m_interrupt;
     m_node.args = &gArgs;
     std::vector<const char*> arguments = Cat(
         {
@@ -194,7 +195,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
         .blocks_dir = m_args.GetBlocksDirPath(),
         .notifications = chainman_opts.notifications,
     };
-    m_node.chainman = std::make_unique<ChainstateManager>(m_node.kernel->interrupt, chainman_opts, blockman_opts);
+    m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown), chainman_opts, blockman_opts);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
         .path = m_args.GetDataDirNet() / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),

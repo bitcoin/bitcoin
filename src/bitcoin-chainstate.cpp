@@ -125,7 +125,8 @@ int main(int argc, char* argv[])
         .blocks_dir = abs_datadir / "blocks",
         .notifications = chainman_opts.notifications,
     };
-    ChainstateManager chainman{kernel_context.interrupt, chainman_opts, blockman_opts};
+    util::SignalInterrupt interrupt;
+    ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
