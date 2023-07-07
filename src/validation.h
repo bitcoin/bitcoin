@@ -13,6 +13,7 @@
 #include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
+#include <checkqueue.h>
 #include <kernel/chain.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
@@ -97,11 +98,6 @@ extern uint256 g_best_block;
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
-
-/** Run instances of script checking worker threads */
-void StartScriptCheckWorkerThreads(int threads_num);
-/** Stop all of the script checking worker threads */
-void StopScriptCheckWorkerThreads();
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
@@ -896,6 +892,9 @@ private:
         return cs && !cs->m_disabled;
     }
 
+    //! A queue for script verifications that have to be performed by worker threads.
+    CCheckQueue<CScriptCheck> m_script_check_queue;
+
 public:
     using Options = kernel::ChainstateManagerOpts;
 
@@ -1245,6 +1244,9 @@ public:
     //! Return the height of the base block of the snapshot in use, if one exists, else
     //! nullopt.
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
+    void StopScriptCheckWorkerThreads();
 
     ~ChainstateManager();
 };

@@ -45,6 +45,8 @@ struct ChainstateManagerOpts {
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
     Notifications& notifications;
+    //! Number of script check worker threads. Zero means no parallel verification.
+    int worker_threads_num{0};
 };
 
 } // namespace kernel
