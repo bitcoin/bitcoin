@@ -17,6 +17,7 @@
 #include <mapport.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/chainstatemanager_args.h>
 #include <txdb.h> // for -dbcache defaults
 #include <util/string.h>
 #include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
