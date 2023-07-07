@@ -26,6 +26,9 @@ namespace node {
 struct NodeContext;
 } // namespace node
 
+/** Initialize node context variables. */
+void InitContext(node::NodeContext& node);
+
 /** Interrupt threads */
 void Interrupt(node::NodeContext& node);
 void Shutdown(node::NodeContext& node);
