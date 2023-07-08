@@ -84,7 +84,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     cpu: 4
-    memory: 5G
+    memory: 8G
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:lunar
       FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
