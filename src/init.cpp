@@ -114,7 +114,6 @@
 #include <zmq/zmqrpc.h>
 #endif
 
-using kernel::DEFAULT_STOPAFTERBLOCKIMPORT;
 using kernel::DumpMempool;
 using kernel::ValidationCacheSizes;
 
@@ -136,6 +135,7 @@ using node::VerifyLoadedChainstate;
 static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
 static constexpr bool DEFAULT_REST_ENABLE{false};
 static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
+static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -1653,6 +1653,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     chainman.m_thread_load = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         // Import blocks
         ImportBlocks(chainman, vImportFiles);
+        if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
+            LogPrintf("Stopping after block import\n");
+            StartShutdown();
+            return;
+        }
+
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
             bilingual_str err_str = _("Failed to start indexes, shutting down..");
