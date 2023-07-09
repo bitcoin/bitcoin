@@ -114,7 +114,7 @@ bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block,
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     try {
-        if (!deterministicMNManager || !deterministicMNManager->UndoBlock(block, pindex)) {
+        if (!deterministicMNManager || !deterministicMNManager->UndoBlock(pindex)) {
             return false;
         }
 

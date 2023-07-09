@@ -639,7 +639,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
             newList.SetHeight(nHeight);
         }
 
-        newList.SetBlockHash(block.GetHash());
+        newList.SetBlockHash(pindex->GetBlockHash());
 
         // If the fork is active for pindex block, then we need to repopulate property map
         // (Check documentation of CDeterministicMNList::RepopulateUniquePropertyMap()).
@@ -677,9 +677,9 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     return true;
 }
 
-bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
+bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
 {
-    uint256 blockHash = block.GetHash();
+    uint256 blockHash = pindex->GetBlockHash();
 
     CDeterministicMNList curList;
     CDeterministicMNList prevList;
