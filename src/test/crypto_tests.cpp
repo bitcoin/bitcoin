@@ -650,6 +650,19 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                  "d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d7"
                  "0eaf46f76dad3979e5c5360c3317166a1c894c94a371876a94df7628fe4eaaf2"
                  "ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78fab78c9");
+
+    // Test overflow of 32-bit block counter, should increment the first 32-bit
+    // part of the nonce to retain compatibility with >256 GiB output.
+    // The test data was generated with an implementation that uses a 64-bit
+    // counter and a 64-bit initialization vector (PyCryptodome's ChaCha20 class
+    // with 8 bytes nonce length).
+    TestChaCha20("",
+                 "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                 {0, 0xdeadbeef12345678}, 0xffffffff,
+                 "2d292c880513397b91221c3a647cfb0765a4815894715f411e3df5e0dd0ba9df"
+                 "fd565dea5addbdb914208fde7950f23e0385f9a727143f6a6ac51d84b1c0fb3e"
+                 "2e3b00b63d6841a1cc6d1538b1d3a74bef1eb2f54c7b7281e36e484dba89b351"
+                 "c8f572617e61e342879f211b0e4c515df50ea9d0771518fad96cd0baee62deb6");
 }
 
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
