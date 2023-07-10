@@ -191,6 +191,22 @@ static void TestPoly1305(const std::string &hexmessage, const std::string &hexke
     tagres.resize(POLY1305_TAGLEN);
     poly1305_auth(tagres.data(), m.data(), m.size(), key.data());
     BOOST_CHECK(tag == tagres);
+
+    // Test incremental interface
+    for (int splits = 0; splits < 10; ++splits) {
+        for (int iter = 0; iter < 10; ++iter) {
+            auto data = MakeByteSpan(m);
+            Poly1305 poly1305{MakeByteSpan(key)};
+            for (int chunk = 0; chunk < splits; ++chunk) {
+                size_t now = InsecureRandRange(data.size() + 1);
+                poly1305.Update(data.first(now));
+                data = data.subspan(now);
+            }
+            tagres.assign(POLY1305_TAGLEN, 0);
+            poly1305.Update(data).Finalize(MakeWritableByteSpan(tagres));
+            BOOST_CHECK(tag == tagres);
+        }
+    }
 }
 
 static void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex, const std::string &info_hex, const std::string &okm_check_hex) {

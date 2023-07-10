@@ -20,3 +20,34 @@ FUZZ_TARGET(crypto_poly1305)
     std::vector<uint8_t> tag_out(POLY1305_TAGLEN);
     poly1305_auth(tag_out.data(), in.data(), in.size(), key.data());
 }
+
+
+FUZZ_TARGET(crypto_poly1305_split)
+{
+    FuzzedDataProvider provider{buffer.data(), buffer.size()};
+
+    // Read key and instantiate two Poly1305 objects with it.
+    auto key = provider.ConsumeBytes<std::byte>(Poly1305::KEYLEN);
+    key.resize(Poly1305::KEYLEN);
+    Poly1305 poly_full{key}, poly_split{key};
+
+    // Vector that holds all bytes processed so far.
+    std::vector<std::byte> total_input;
+
+    // Process input in pieces.
+    LIMITED_WHILE(provider.remaining_bytes(), 100) {
+        auto in = provider.ConsumeRandomLengthString();
+        poly_split.Update(MakeByteSpan(in));
+        // Update total_input to match what was processed.
+        total_input.insert(total_input.end(), MakeByteSpan(in).begin(), MakeByteSpan(in).end());
+    }
+
+    // Process entire input at once.
+    poly_full.Update(total_input);
+
+    // Verify both agree.
+    std::array<std::byte, Poly1305::TAGLEN> tag_split, tag_full;
+    poly_split.Finalize(tag_split);
+    poly_full.Finalize(tag_full);
+    assert(tag_full == tag_split);
+}
