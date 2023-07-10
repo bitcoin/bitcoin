@@ -2479,7 +2479,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
                             {RPCResult::Type::NUM, "keypoolsize_hd_internal", "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
                             {RPCResult::Type::NUM, "keys_left", "how many new keys are left since last automatic backup"},
-                            {RPCResult::Type::NUM_TIME, "unlocked_until", "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked"},
+                            {RPCResult::Type::NUM_TIME, "unlocked_until", /* optional */ true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
                             {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB"},
                             {RPCResult::Type::STR_HEX, "hdchainid", "the ID of the HD chain"},
                             {RPCResult::Type::STR, "hdaccountcount", "how many accounts of the HD chain are in this wallet"},
@@ -2941,7 +2941,7 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
         "Unloads the wallet referenced by the request endpoint otherwise unloads the wallet specified in the argument.\n"
         "Specifying the wallet name on a wallet endpoint is invalid.",
         {
-            {"wallet_name", RPCArg::Type::STR, /* default */ "the wallet name from the RPC request", "The name of the wallet to unload."},
+            {"wallet_name", RPCArg::Type::STR, /* default */ "the wallet name from the RPC endpoint", "The name of the wallet to unload. Must be provided in the RPC endpoint or this parameter (but not both)."},
             {"load_on_startup", RPCArg::Type::BOOL, /* default */ "null", "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", {
@@ -2956,7 +2956,7 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
     std::string wallet_name;
     if (GetWalletNameFromJSONRPCRequest(request, wallet_name)) {
         if (!request.params[0].isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot unload the requested wallet");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Both the RPC endpoint wallet and wallet_name parameter were provided (only one allowed)");
         }
     } else {
         wallet_name = request.params[0].get_str();
@@ -3424,7 +3424,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
             {
                 {RPCResult::Type::STR_HEX, "hex", "The hex-encoded raw transaction with signature(s)"},
                 {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
-                {RPCResult::Type::ARR, "errors", "Script verification errors (if there are any)",
+                {RPCResult::Type::ARR, "errors", /* optional */ true, "Script verification errors (if there are any)",
                 {
                     {RPCResult::Type::OBJ, "", "",
                     {
@@ -4170,10 +4170,8 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
     if (!request.params[0].isNull()) {
         version = request.params[0].get_int();
     }
-
     bilingual_str error;
-    std::vector<bilingual_str> warnings;
-    if (!pwallet->UpgradeWallet(version, error, warnings)) {
+    if (!pwallet->UpgradeWallet(version, error)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     return error.original;

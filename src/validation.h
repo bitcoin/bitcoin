@@ -33,6 +33,7 @@
 #include <optional>
 #include <set>
 #include <stdint.h>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -175,6 +176,8 @@ extern bool fHavePruned;
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
+/** Documentation for argument 'checklevel'. */
+extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
