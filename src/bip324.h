@@ -52,8 +52,12 @@ public:
     /** Retrieve our public key. */
     const EllSwiftPubKey& GetOurPubKey() const noexcept { return m_our_pubkey; }
 
-    /** Initialize when the other side's public key is received. Can only be called once. */
-    void Initialize(const EllSwiftPubKey& their_pubkey, bool initiator) noexcept;
+    /** Initialize when the other side's public key is received. Can only be called once.
+     *
+     * self_decrypt is only for testing, and swaps encryption/decryption keys, so that encryption
+     * and decryption can be tested without knowing the other side's private key.
+     */
+    void Initialize(const EllSwiftPubKey& their_pubkey, bool initiator, bool self_decrypt = false) noexcept;
 
     /** Determine whether this cipher is fully initialized. */
     explicit operator bool() const noexcept { return m_send_l_cipher.has_value(); }
