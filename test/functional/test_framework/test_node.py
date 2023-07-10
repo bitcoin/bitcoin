@@ -250,7 +250,7 @@ class TestNode():
                     # Wait for the node to finish reindex, block import, and
                     # loading the mempool. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
-                    # is no guarantee and sometimes ThreadImport might finish
+                    # is no guarantee and sometimes ImportBlocks might finish
                     # later. This is going to cause intermittent test failures,
                     # because generally the tests assume the node is fully
                     # ready after being started.
