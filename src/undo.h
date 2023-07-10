@@ -63,7 +63,7 @@ public:
 class CBlockUndo
 {
 public:
-    std::vector<CTxUndo> vtxundo; // for all but the coinbase
+    std::vector<CTxUndo> vtxundo; // for all but the coinbase, plus an extra on the end for drivechains
 
     SERIALIZE_METHODS(CBlockUndo, obj) { READWRITE(obj.vtxundo); }
 };

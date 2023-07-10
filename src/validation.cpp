@@ -41,6 +41,7 @@
 #include <reverse_iterator.h>
 #include <script/script.h>
 #include <script/sigcache.h>
+#include <sidechain.h>
 #include <signet.h>
 #include <tinyformat.h>
 #include <txdb.h>
@@ -1993,9 +1994,32 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
         return DISCONNECT_FAILED;
     }
 
-    if (blockUndo.vtxundo.size() + 1 != block.vtx.size()) {
+    if (blockUndo.vtxundo.size() != block.vtx.size()) {
         error("DisconnectBlock(): block and undo data inconsistent");
         return DISCONNECT_FAILED;
+    }
+
+    // Block-wide undo data, used for Drivechain state
+    // The first 0x25 bytes of the "scriptPubKey" represents the type of data and virtual UTXO hash+index in the database
+    for (auto& undo : blockUndo.vtxundo.back().vprevout) {
+        uint8_t type;
+        COutPoint record_id;
+        {
+            CDataStream s(MakeByteSpan(undo.out.scriptPubKey).first(0x25), SER_NETWORK, PROTOCOL_VERSION);
+            s >> type;
+            s >> record_id;
+        }
+        if (record_id.n <= COutPoint::MAX_INDEX) return DISCONNECT_FAILED;
+        if (type == 0) {  // Entry was deleted by block; recreate it
+            undo.out.scriptPubKey.erase(undo.out.scriptPubKey.begin(), undo.out.scriptPubKey.begin() + 25);
+            int res = ApplyTxInUndo(std::move(undo), view, record_id);
+            if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
+            if (res == DISCONNECT_UNCLEAN) fClean = false;
+        } else if (type == 1) {  // Entry was created by block; delete it
+            Coin coin;
+            bool is_spent = view.SpendCoin(record_id, &coin);
+            if (!is_spent) fClean = false;
+        }
     }
 
     // Ignore blocks that contain transactions which are 'overwritten' by later transactions,
@@ -2349,7 +2373,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     CAmount nFees = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
-    blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    blockundo.vtxundo.reserve(block.vtx.size());
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2417,6 +2441,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
+
+    // BIP300 logic
+    blockundo.vtxundo.push_back(CTxUndo());
+    UpdateDrivechains(*block.vtx[0], view, blockundo.vtxundo.back(), pindex->nHeight);
+
     const auto time_3{SteadyClock::now()};
     time_connect += time_3 - time_2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
@@ -4447,6 +4476,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         // Pass check = true as every addition may be an overwrite.
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
+    // TODO: Drivechains
     return true;
 }
 
