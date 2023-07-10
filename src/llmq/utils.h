@@ -42,22 +42,12 @@ enum class QvvecSyncMode {
     OnlyIfTypeMember = 1,
 };
 
-//QuorumMembers per quorumIndex at heights H-Cycle, H-2Cycles, H-3Cycles
-struct PreviousQuorumQuarters {
-    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinusC;
-    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinus2C;
-    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinus3C;
-    explicit PreviousQuorumQuarters(size_t s) :
-        quarterHMinusC(s), quarterHMinus2C(s), quarterHMinus3C(s) {}
-};
-
 namespace utils
 {
 
 // includes members which failed DKG
 std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, bool reset_cache = false);
 
-void PreComputeQuorumMembers(const CBlockIndex* pindex, bool reset_cache = false);
 uint256 GetHashModifier(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex);
 uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
 uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);

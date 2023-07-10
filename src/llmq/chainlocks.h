@@ -29,7 +29,6 @@ class PeerManager;
 
 namespace llmq
 {
-class CInstantSendManager;
 class CSigningManager;
 class CSigSharesManager;
 
@@ -113,7 +112,7 @@ public:
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
     bool VerifyChainLock(const CChainLockSig& clsig) const;
 
-    bool IsTxSafeForMining(const CInstantSendManager& isman, const uint256& txid) const LOCKS_EXCLUDED(cs);
+    bool IsTxSafeForMining(const uint256& txid) const LOCKS_EXCLUDED(cs);
 
 private:
     // these require locks to be held already

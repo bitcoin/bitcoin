@@ -40,6 +40,15 @@ VersionBitsCache llmq_versionbitscache;
 namespace utils
 
 {
+//QuorumMembers per quorumIndex at heights H-Cycle, H-2Cycles, H-3Cycles
+struct PreviousQuorumQuarters {
+    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinusC;
+    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinus2C;
+    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinus3C;
+    explicit PreviousQuorumQuarters(size_t s) :
+        quarterHMinusC(s), quarterHMinus2C(s), quarterHMinus3C(s) {}
+};
+
 // Forward declarations
 static std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex);
 static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex);
@@ -53,15 +62,6 @@ static std::pair<CDeterministicMNList, CDeterministicMNList> GetMNUsageBySnapsho
 static void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& allMns, const CDeterministicMNList& mnUsedAtH, std::vector<CDeterministicMNCPtr>& sortedCombinedMns, CQuorumSnapshot& quorumSnapshot, int nHeight, std::vector<int>& skipList, const CBlockIndex* pCycleQuorumBaseBlockIndex);
 
 static bool IsInstantSendLLMQTypeShared();
-
-void PreComputeQuorumMembers(const CBlockIndex* pindex, bool reset_cache)
-{
-    for (const Consensus::LLMQParams& params : GetEnabledQuorumParams(pindex->pprev)) {
-        if (IsQuorumRotationEnabled(params, pindex) && (pindex->nHeight % params.dkgInterval == 0)) {
-            GetAllQuorumMembers(params.type, pindex, reset_cache);
-        }
-    }
-}
 
 uint256 GetHashModifier(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pCycleQuorumBaseBlockIndex)
 {

@@ -25,6 +25,15 @@
 
 #include <map>
 
+static void PreComputeQuorumMembers(const CBlockIndex* pindex, bool reset_cache = false)
+{
+    for (const Consensus::LLMQParams& params : llmq::utils::GetEnabledQuorumParams(pindex->pprev)) {
+        if (llmq::utils::IsQuorumRotationEnabled(params, pindex) && (pindex->nHeight % params.dkgInterval == 0)) {
+            llmq::utils::GetAllQuorumMembers(params.type, pindex, reset_cache);
+        }
+    }
+}
+
 namespace llmq
 {
 
@@ -148,7 +157,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         return true;
     }
 
-    llmq::utils::PreComputeQuorumMembers(pindex);
+    PreComputeQuorumMembers(pindex);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
     if (!GetCommitmentsFromBlock(block, pindex, qcs, state)) {
@@ -304,7 +313,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
 {
     AssertLockHeld(cs_main);
 
-    llmq::utils::PreComputeQuorumMembers(pindex, true);
+    PreComputeQuorumMembers(pindex, true);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
     BlockValidationState dummy;

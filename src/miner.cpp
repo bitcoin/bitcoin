@@ -286,7 +286,11 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
-        if (!m_clhandler.IsTxSafeForMining(m_isman, it->GetTx().GetHash())) {
+
+        const auto& txid = it->GetTx().GetHash();
+        if (!m_isman.RejectConflictingBlocks() || !m_isman.IsInstantSendEnabled() || m_isman.IsLocked(txid)) continue;
+
+        if (!m_clhandler.IsTxSafeForMining(txid)) {
             return false;
         }
     }
