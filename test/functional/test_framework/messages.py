@@ -32,7 +32,7 @@ from test_framework.util import hex_str_to_bytes, assert_equal
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70229  # MNLISTDIFF_VERSION_ORDER
+MY_VERSION = 70230  # MNLISTDIFF_CHAINLOCKS_PROTO_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -2023,7 +2023,7 @@ class msg_getmnlistd:
 QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
 
 class msg_mnlistdiff:
-    __slots__ = ("baseBlockHash", "blockHash", "merkleProof", "cbTx", "nVersion", "deletedMNs", "mnList", "deletedQuorums", "newQuorums",)
+    __slots__ = ("baseBlockHash", "blockHash", "merkleProof", "cbTx", "nVersion", "deletedMNs", "mnList", "deletedQuorums", "newQuorums", "quorumsCLSigs")
     command = b"mnlistdiff"
 
     def __init__(self):
@@ -2036,6 +2036,8 @@ class msg_mnlistdiff:
         self.mnList = []
         self.deletedQuorums = []
         self.newQuorums = []
+        self.quorumsCLSigs = {}
+
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<H", f.read(2))[0]
@@ -2062,6 +2064,14 @@ class msg_mnlistdiff:
             qc = CFinalCommitment()
             qc.deserialize(f)
             self.newQuorums.append(qc)
+        self.quorumsCLSigs = {}
+        for i in range(deser_compact_size(f)):
+            signature = f.read(96)
+            idx_set = set()
+            for j in range(deser_compact_size(f)):
+                set_element = struct.unpack('H', f.read(2))[0]
+                idx_set.add(set_element)
+            self.quorumsCLSigs[signature] = idx_set
 
     def __repr__(self):
         return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)

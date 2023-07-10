@@ -137,6 +137,10 @@ public:
     std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
 
+    // Map of Chainlock Signature used for shuffling per set of quorums
+    // The set of quorums is the set of indexes corresponding to entries in newQuorums
+    std::map<CBLSSignature, std::set<uint16_t>> quorumsCLSigs;
+
     SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
     {
         if ((s.GetType() & SER_NETWORK) && s.GetVersion() >= MNLISTDIFF_VERSION_ORDER) {
@@ -148,6 +152,9 @@ public:
         }
         READWRITE(obj.deletedMNs, obj.mnList);
         READWRITE(obj.deletedQuorums, obj.newQuorums);
+        if ((s.GetType() & SER_NETWORK) && s.GetVersion() >= MNLISTDIFF_CHAINLOCKS_PROTO_VERSION) {
+            READWRITE(obj.quorumsCLSigs);
+        }
     }
 
     CSimplifiedMNListDiff();
@@ -155,6 +162,7 @@ public:
 
     bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex,
                           const llmq::CQuorumBlockProcessor& quorum_block_processor);
+    bool BuildQuorumChainlockInfo(const CBlockIndex* blockIndex);
 
     void ToJson(UniValue& obj, bool extended = false) const;
 };

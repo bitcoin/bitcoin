@@ -88,6 +88,10 @@ public:
     {
         return !((*this) == r);
     }
+    bool operator<(const C& r) const
+    {
+        return GetHash() < r.GetHash();
+    }
 
     bool IsValid() const
     {
