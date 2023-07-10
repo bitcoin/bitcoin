@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_SUITE(txindex_tests)
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
     TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    BOOST_REQUIRE(txindex.Init());
 
     CTransactionRef tx_disk;
     uint256 block_hash;
@@ -29,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(txindex.Start());
+    BOOST_REQUIRE(txindex.StartBackgroundSync());
 
     // Allow tx index to catch up with the block index.
     IndexWaitSynced(txindex);

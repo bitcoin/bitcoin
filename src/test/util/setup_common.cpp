@@ -177,7 +177,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
         noui_connected = true;
     }
     bls::bls_legacy_scheme.store(true);
-    node::g_indexes_ready_to_sync = true;
 }
 
 BasicTestingSetup::~BasicTestingSetup()
