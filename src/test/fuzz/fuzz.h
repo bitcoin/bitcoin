@@ -34,9 +34,6 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 #define FUZZ_TARGET(...) DETAIL_FUZZ(__VA_ARGS__)
 #endif
 
-#define FUZZ_TARGET_INIT(name, init_fun) \
-    FUZZ_TARGET(name, .init = init_fun)
-
 #define DETAIL_FUZZ(name, ...)                                                        \
     void name##_fuzz_target(FuzzBufferType);                                          \
     struct name##_Before_Main {                                                       \

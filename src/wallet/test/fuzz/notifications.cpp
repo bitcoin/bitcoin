@@ -79,7 +79,7 @@ struct FuzzedWallet {
     }
 };
 
-FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
+FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     // The total amount, to be distributed to the wallets a and b in txs

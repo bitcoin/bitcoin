@@ -348,7 +348,7 @@ void initialize_rpc()
     }
 }
 
-FUZZ_TARGET_INIT(rpc, initialize_rpc)
+FUZZ_TARGET(rpc, .init = initialize_rpc)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

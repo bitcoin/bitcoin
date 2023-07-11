@@ -17,7 +17,7 @@ void initialize_parse_univalue()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(parse_univalue, initialize_parse_univalue)
+FUZZ_TARGET(parse_univalue, .init = initialize_parse_univalue)
 {
     const std::string random_string(buffer.begin(), buffer.end());
     bool valid = true;

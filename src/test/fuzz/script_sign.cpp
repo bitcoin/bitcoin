@@ -30,7 +30,7 @@ void initialize_script_sign()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
+FUZZ_TARGET(script_sign, .init = initialize_script_sign)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::vector<uint8_t> key = ConsumeRandomLengthByteVector(fuzzed_data_provider, 128);

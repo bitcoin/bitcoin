@@ -22,7 +22,7 @@ void initialize_p2p_transport_serialization()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serialization)
+FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serialization)
 {
     // Construct deserializer, with a dummy NodeId
     V1TransportDeserializer deserializer{Params(), NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};

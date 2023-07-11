@@ -1058,7 +1058,7 @@ void FuzzInitSmart()
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeStable. */
-FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
+FUZZ_TARGET(miniscript_stable, .init = FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     TestNode(GenNode([&](Type needed_type) {
@@ -1067,7 +1067,7 @@ FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeSmart. */
-FUZZ_TARGET_INIT(miniscript_smart, FuzzInitSmart)
+FUZZ_TARGET(miniscript_smart, .init = FuzzInitSmart)
 {
     /** The set of types we aim to construct nodes for. Together they cover all. */
     static constexpr std::array<Type, 4> BASE_TYPES{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
@@ -1079,7 +1079,7 @@ FUZZ_TARGET_INIT(miniscript_smart, FuzzInitSmart)
 }
 
 /* Fuzz tests that test parsing from a string, and roundtripping via string. */
-FUZZ_TARGET_INIT(miniscript_string, FuzzInit)
+FUZZ_TARGET(miniscript_string, .init = FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     auto str = provider.ConsumeRemainingBytesAsString();

@@ -29,7 +29,7 @@ void initialize_rbf()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(rbf, initialize_rbf)
+FUZZ_TARGET(rbf, .init = initialize_rbf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));

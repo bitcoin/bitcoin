@@ -40,7 +40,7 @@ PartiallyDownloadedBlock::CheckBlockFn FuzzedCheckBlock(std::optional<BlockValid
     };
 }
 
-FUZZ_TARGET_INIT(partially_downloaded_block, initialize_pdb)
+FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
