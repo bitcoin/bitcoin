@@ -12,6 +12,7 @@
 #include <index/txindex.h>
 #include <key_io.h>
 #include <node/blockstorage.h>
+#include <node/chainstate.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/psbt.h>
@@ -20,6 +21,7 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
+#include <primitives/compression.h>
 #include <psbt.h>
 #include <random.h>
 #include <rpc/blockchain.h>
@@ -490,6 +492,106 @@ static RPCHelpMan decoderawtransaction()
     TxToUniv(CTransaction(std::move(mtx)), /*block_hash=*/uint256(), /*entry=*/result, /*include_hex=*/false);
 
     return result;
+},
+    };
+}
+
+static RPCHelpMan compressrawtransaction()
+{
+    return RPCHelpMan{"compressrawtransaction",
+                "Return a JSON object representing the compressed, serialized, hex-encoded transaction.",
+                {
+                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction hex string"},
+                    {"compress_outpoints", RPCArg::Type::BOOL, RPCArg::Default{true}, "Weather to compress the TxId/Vout pairs"}
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "result", "The compressed transaction hex string"},
+                        {RPCResult::Type::ARR, "warnings", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "warning", "Warnings given for each input"}
+                        }}
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("compressrawtransaction", "\"hexstring\"")
+            + HelpExampleRpc("compressrawtransaction", "\"hexstring\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    UniValue r(UniValue::VOBJ);
+    UniValue warnings(UniValue::VARR);
+    CMutableTransaction mtx;
+    if (DecodeHexTx(mtx, request.params[0].get_str(), true, true)) {
+        CTransaction tx = CTransaction(mtx);
+        LOCK(cs_main);
+        std::vector<std::string> warning_strings;
+        bool compress_outpoints = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
+        std::tuple<uint32_t, std::vector<CCompressedInput>> cinputstup = EnsureChainman(node).ActiveChainstate().CompressOutPoints(tx, compress_outpoints, warning_strings);
+        CCompressedTransaction ctx = CCompressedTransaction(CTransaction(mtx), std::get<0>(cinputstup), std::get<1>(cinputstup));
+        for (const auto& warning : warning_strings) {
+            warnings.push_back(warning);
+        }
+        for (size_t index = 0; index < ctx.vin().size(); index++) {
+            if (ctx.vin()[index].warning() != "") warnings.push_back(strprintf("UTXO(%u): %s", index, ctx.vin()[index].warning()));
+        }
+
+        DataStream stream;
+        ctx.Serialize(stream);
+        std::vector<unsigned char> hex(stream.size());
+        stream.read(MakeWritableByteSpan(hex));
+
+        r.pushKV("result", HexStr(hex));
+        r.pushKV("warnings", warnings);
+        return r;
+    }
+    throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+},
+    };
+}
+
+static RPCHelpMan decompressrawtransaction()
+{
+    return RPCHelpMan{"decompressrawtransaction",
+                "Return a JSON object representing the decompressed, serialized, hex-encoded transaction.",
+                {
+                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The compressed transaction hex string"},
+                },
+                RPCResult{
+                       RPCResult::Type::STR_HEX, "result", "The decompressed transaction hex string"
+                },
+                RPCExamples{
+                    HelpExampleCli("decompressrawtransaction", "\"hexstring\"")
+            + HelpExampleRpc("decompressrawtransaction", "\"hexstring\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    UniValue r(UniValue::VOBJ);
+    try {
+        DataStream ssData(ParseHex(request.params[0].get_str()));
+        CCompressedTransaction tx = CCompressedTransaction(deserialize, ssData);
+        LOCK(cs_main);
+
+        std::vector<COutPoint> prevouts;
+        if (!EnsureChainman(node).ActiveChainstate().DecompressOutPoints(tx.minimumHeight(), tx.vin(), prevouts)) {throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Compressed TX decode failed");}
+        std::vector<Coin> coins = FindCoins(node, prevouts);
+        std::vector<CTxOut> outs;
+        outs.reserve(coins.size());
+        for (auto& coin : coins) {
+            outs.push_back(coin.out);
+        }
+
+        std::tuple<std::vector<COutPoint>, std::vector<CTxOut>> Index = std::make_tuple(prevouts, outs);
+        if (std::get<0>(Index).size() != std::get<1>(Index).size() || std::get<1>(Index).size() != tx.vin().size()) throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Compressed TX decode failed");
+        return EncodeHexTx(CTransaction(CMutableTransaction(tx, std::get<0>(Index), std::get<1>(Index))));
+    } catch (const std::exception& exc) {
+        std::string exc_string = exc.what();
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Compressed TX decode failed with exception: "+exc_string);
+    }
 },
     };
 }
@@ -2007,6 +2109,8 @@ void RegisterRawTransactionRPCCommands(CRPCTable& t)
         {"rawtransactions", &getrawtransaction},
         {"rawtransactions", &createrawtransaction},
         {"rawtransactions", &decoderawtransaction},
+        {"rawtransactions", &compressrawtransaction},
+        {"rawtransactions", &decompressrawtransaction},
         {"rawtransactions", &decodescript},
         {"rawtransactions", &combinerawtransaction},
         {"rawtransactions", &signrawtransactionwithkey},
