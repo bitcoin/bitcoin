@@ -8,8 +8,14 @@ import sys
 
 
 from test_framework.messages import (
+    CBlockHeader,
+    CInv,
     msg_ping,
     ser_string,
+    msg_getdata,
+    msg_headers,
+    msg_inv,
+    MSG_TX,
 )
 from test_framework.mininode import (
     P2PDataStore, P2PInterface
