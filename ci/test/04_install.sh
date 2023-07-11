@@ -22,7 +22,6 @@ if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASa
   CI_CONTAINER_CAP="--cap-add SYS_PTRACE"
 fi
 
-export P_CI_DIR="$PWD"
 export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
@@ -53,7 +52,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
-                  -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
                   $CONTAINER_NAME)
@@ -64,7 +62,7 @@ else
 fi
 
 CI_EXEC () {
-  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"${BASE_ROOT_DIR}\" && $*"
 }
 export -f CI_EXEC
 
