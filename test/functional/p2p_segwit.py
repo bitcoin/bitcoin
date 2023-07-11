@@ -71,8 +71,8 @@ from test_framework.script import (
     SIGHASH_NONE,
     SIGHASH_SINGLE,
     SegwitV0SignatureHash,
-    LegacySignatureHash,
     hash160,
+    sign_input_legacy,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
@@ -1529,10 +1529,8 @@ class SegWitTest(BitcoinTestFramework):
         tx5 = CTransaction()
         tx5.vin.append(CTxIn(COutPoint(tx4.sha256, 0), b""))
         tx5.vout.append(CTxOut(tx4.vout[0].nValue - 1000, CScript([OP_TRUE])))
-        (sig_hash, err) = LegacySignatureHash(script_pubkey, tx5, 0, SIGHASH_ALL)
-        signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
-        tx5.vin[0].scriptSig = CScript([signature, pubkey])
-        tx5.rehash()
+        tx5.vin[0].scriptSig = CScript([pubkey])
+        sign_input_legacy(tx5, 0, script_pubkey, key)
         # Should pass policy and consensus.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx5, True, True)
         block = self.build_next_block()
