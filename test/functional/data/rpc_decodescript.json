@@ -69,7 +69,7 @@
             "p2sh": "2N34iiGoUUkVSPiaaTFpJjB1FR9TXQu3PGM",
             "segwit": {
                 "asm": "0 96c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
-                "desc": "wsh(raw(02eeee))#gtay4y0z",
+                "desc": "addr(bcrt1qjmprdr7rq522gw9ghkgfly7yng25n4m3nrxtmdujqsakvm9jfapqk795l5)#5akkdska",
                 "hex": "002096c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
                 "address": "bcrt1qjmprdr7rq522gw9ghkgfly7yng25n4m3nrxtmdujqsakvm9jfapqk795l5",
                 "type": "witness_v0_scripthash",
