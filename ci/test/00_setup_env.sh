@@ -15,9 +15,12 @@ export BASE_ROOT_DIR
 # The depends dir.
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
-# A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
-# This folder only exists on the ci host.
+# A folder for the ci system to put temporary files (build result, datadirs for tests, ...)
+# This folder only exists on the ci guest.
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
+# A folder for the ci system to put executables.
+# This folder only exists on the ci guest.
+export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 
 echo "Setting specific values in env"
 if [ -n "${FILE_ENV}" ]; then
@@ -69,5 +72,4 @@ export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 export CI_BASE_PACKAGES=${CI_BASE_PACKAGES:-build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3 rsync git procps bison}
 export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_SCRATCH_DIR}/qa-assets}
-export PATH=${BASE_ROOT_DIR}/ci/retry:$PATH
 export CI_RETRY_EXE=${CI_RETRY_EXE:-"retry --"}

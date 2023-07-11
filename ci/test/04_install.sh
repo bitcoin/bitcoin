@@ -22,14 +22,12 @@ if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASa
   CI_CONTAINER_CAP="--cap-add SYS_PTRACE"
 fi
 
-export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
-
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Export all env vars to avoid missing some.
   # Though, exclude those with newlines to avoid parsing problems.
   python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value and "HOME" not in key]' | tee /tmp/env
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
-  DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
+  DOCKER_BUILDKIT=1 docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
@@ -62,7 +60,7 @@ else
 fi
 
 CI_EXEC () {
-  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"${BASE_ROOT_DIR}\" && $*"
+  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:${BASE_ROOT_DIR}/ci/retry:\$PATH && cd \"${BASE_ROOT_DIR}\" && $*"
 }
 export -f CI_EXEC
 
