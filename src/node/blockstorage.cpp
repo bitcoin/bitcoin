@@ -1029,11 +1029,6 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             activeMasternodeManager->Init(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
         }
         g_wallet_init_interface.AutoLockMasternodeCollaterals(node);
-        if (chainman.m_blockman.StopAfterBlockImport()) {
-            LogPrintf("Stopping after block import\n");
-            StartShutdown();
-            return;
-        }
     } // End scope of ImportingNow
 }
 } // namespace node

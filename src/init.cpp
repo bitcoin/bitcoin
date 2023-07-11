@@ -132,7 +132,6 @@
 #include <evo/deterministicmns.h>
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
-using kernel::DEFAULT_STOPAFTERBLOCKIMPORT;
 using kernel::DumpMempool;
 using kernel::ValidationCacheSizes;
 
@@ -156,6 +155,8 @@ static constexpr bool DEFAULT_REST_ENABLE{false};
 static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 // SYSCOIN
 extern unsigned int fRPCSerialVersion;
+static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
+
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
 // accessing block files don't count towards the fd_set size limit
@@ -1958,6 +1959,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     chainman.m_thread_load = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         // SYSCOIN Import blocks
         ImportBlocks(chainman, vImportFiles, pdsNotificationInterface, deterministicMNManager, activeMasternodeManager, g_wallet_init_interface, node);
+        if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
+            LogPrintf("Stopping after block import\n");
+            StartShutdown();
+            return;
+        }
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
             bilingual_str err_str = _("Failed to start indexes, shutting down..");
