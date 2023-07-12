@@ -577,8 +577,8 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
 
         def move_block_file(old, new):
-            old_path = self.nodes[0].chain_path / "blocks" / old
-            new_path = self.nodes[0].chain_path / "blocks" / new
+            old_path = self.nodes[0].blocks_path / old
+            new_path = self.nodes[0].blocks_path / new
             old_path.rename(new_path)
 
         # Move instead of deleting so we can restore chain state afterwards
