@@ -241,35 +241,30 @@ std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family);
 extern std::function<std::unique_ptr<Sock>(const sa_family_t&)> CreateSock;
 
 /**
- * Try to connect to the specified service on the specified socket.
+ * Create a socket and try to connect to the specified service.
  *
- * @param addrConnect The service to which to connect.
- * @param sock The socket on which to connect.
- * @param nTimeout Wait this many milliseconds for the connection to be
- *                 established.
- * @param manual_connection Whether or not the connection was manually requested
- *                          (e.g. through the addnode RPC)
+ * @param[in] dest The service to which to connect.
+ * @param[in] manual_connection Whether or not the connection was manually requested (e.g. through the addnode RPC)
  *
- * @returns Whether or not a connection was successfully made.
+ * @returns the connected socket if the operation succeeded, empty unique_ptr otherwise
  */
-bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nTimeout, bool manual_connection);
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection);
 
 /**
  * Connect to a specified destination service through a SOCKS5 proxy by first
  * connecting to the SOCKS5 proxy.
  *
- * @param proxy The SOCKS5 proxy.
- * @param strDest The destination service to which to connect.
- * @param port The destination port.
- * @param sock The socket on which to connect to the SOCKS5 proxy.
- * @param nTimeout Wait this many milliseconds for the connection to the SOCKS5
- *                 proxy to be established.
- * @param[out] outProxyConnectionFailed Whether or not the connection to the
- *                                      SOCKS5 proxy failed.
+ * @param[in] proxy The SOCKS5 proxy.
+ * @param[in] dest The destination service to which to connect.
+ * @param[in] port The destination port.
+ * @param[out] proxy_connection_failed Whether or not the connection to the SOCKS5 proxy failed.
  *
- * @returns Whether or not the operation succeeded.
+ * @returns the connected socket if the operation succeeded. Otherwise an empty unique_ptr.
  */
-bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
+std::unique_ptr<Sock> ConnectThroughProxy(const Proxy& proxy,
+                                          const std::string& dest,
+                                          uint16_t port,
+                                          bool& proxy_connection_failed);
 
 /**
  * Interrupt SOCKS5 reads or writes.

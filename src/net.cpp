@@ -442,7 +442,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     }
 
     // Connect
-    bool connected = false;
     std::unique_ptr<Sock> sock;
     Proxy proxy;
     CAddress addr_bind;
@@ -455,6 +454,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
         if (addrConnect.IsI2P() && use_proxy) {
             i2p::Connection conn;
+            bool connected{false};
 
             if (m_i2p_sam_session) {
                 connected = m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed);
@@ -483,21 +483,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 addr_bind = CAddress{conn.me, NODE_NONE};
             }
         } else if (use_proxy) {
-            sock = CreateSock(proxy.proxy.GetSAFamily());
-            if (!sock) {
-                return nullptr;
-            }
             LogPrintLevel(BCLog::PROXY, BCLog::Level::Debug, "Using proxy: %s to connect to %s:%s\n", proxy.proxy.ToStringAddrPort(), addrConnect.ToStringAddr(), addrConnect.GetPort());
-            connected = ConnectThroughProxy(proxy, addrConnect.ToStringAddr(), addrConnect.GetPort(),
-                                            *sock, nConnectTimeout, proxyConnectionFailed);
+            sock = ConnectThroughProxy(proxy, addrConnect.ToStringAddr(), addrConnect.GetPort(), proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
-            sock = CreateSock(addrConnect.GetSAFamily());
-            if (!sock) {
-                return nullptr;
-            }
-            connected = ConnectSocketDirectly(addrConnect, *sock, nConnectTimeout,
-                                              conn_type == ConnectionType::MANUAL);
+            sock = ConnectDirectly(addrConnect, conn_type == ConnectionType::MANUAL);
         }
         if (!proxyConnectionFailed) {
             // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
@@ -505,18 +495,13 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             addrman.Attempt(addrConnect, fCountFailure);
         }
     } else if (pszDest && GetNameProxy(proxy)) {
-        sock = CreateSock(proxy.proxy.GetSAFamily());
-        if (!sock) {
-            return nullptr;
-        }
         std::string host;
         uint16_t port{default_port};
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
-        connected = ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
-                                        proxyConnectionFailed);
+        sock = ConnectThroughProxy(proxy, host, port, proxyConnectionFailed);
     }
-    if (!connected) {
+    if (!sock) {
         return nullptr;
     }
 

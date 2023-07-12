@@ -326,13 +326,9 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
 
 std::unique_ptr<Sock> Session::Hello() const
 {
-    auto sock = CreateSock(m_control_host.GetSAFamily());
+    auto sock = ConnectDirectly(m_control_host, true);
 
     if (!sock) {
-        throw std::runtime_error("Cannot create socket");
-    }
-
-    if (!ConnectSocketDirectly(m_control_host, *sock, nConnectTimeout, true)) {
         throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToStringAddrPort()));
     }
 
