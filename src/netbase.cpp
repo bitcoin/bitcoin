@@ -535,6 +535,61 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
     }
 }
 
+static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen_t len, const std::string& dest_str, bool manual_connection)
+{
+    // Connect to `sockaddr` using `sock`.
+    if (sock.Connect(sockaddr, len) == SOCKET_ERROR) {
+        int nErr = WSAGetLastError();
+        // WSAEINVAL is here because some legacy version of winsock uses it
+        if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL)
+        {
+            // Connection didn't actually fail, but is being established
+            // asynchronously. Thus, use async I/O api (select/poll)
+            // synchronously to check for successful connection with a timeout.
+            const Sock::Event requested = Sock::RECV | Sock::SEND;
+            Sock::Event occurred;
+            if (!sock.Wait(std::chrono::milliseconds{nConnectTimeout}, requested, &occurred)) {
+                LogPrintf("wait for connect to %s failed: %s\n",
+                          dest_str,
+                          NetworkErrorString(WSAGetLastError()));
+                return false;
+            } else if (occurred == 0) {
+                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
+                return false;
+            }
+
+            // Even if the wait was successful, the connect might not
+            // have been successful. The reason for this failure is hidden away
+            // in the SO_ERROR for the socket in modern systems. We read it into
+            // sockerr here.
+            int sockerr;
+            socklen_t sockerr_len = sizeof(sockerr);
+            if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
+                SOCKET_ERROR) {
+                LogPrintf("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
+                return false;
+            }
+            if (sockerr != 0) {
+                LogConnectFailure(manual_connection,
+                                  "connect() to %s failed after wait: %s",
+                                  dest_str,
+                                  NetworkErrorString(sockerr));
+                return false;
+            }
+        }
+#ifdef WIN32
+        else if (WSAGetLastError() != WSAEISCONN)
+#else
+        else
+#endif
+        {
+            LogConnectFailure(manual_connection, "connect() to %s failed: %s", dest_str, NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+    }
+    return true;
+}
+
 std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
 {
     auto sock = CreateSock(dest.GetSAFamily());
@@ -547,61 +602,52 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!dest.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogPrintf("Cannot connect to %s: unsupported network\n", dest.ToStringAddrPort());
+        LogPrintf("Cannot get sockaddr for %s: unsupported network\n", dest.ToStringAddrPort());
         return {};
     }
 
-    // Connect to the dest service on the hSocket socket.
-    if (sock->Connect(reinterpret_cast<struct sockaddr*>(&sockaddr), len) == SOCKET_ERROR) {
-        int nErr = WSAGetLastError();
-        // WSAEINVAL is here because some legacy version of winsock uses it
-        if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL)
-        {
-            // Connection didn't actually fail, but is being established
-            // asynchronously. Thus, use async I/O api (select/poll)
-            // synchronously to check for successful connection with a timeout.
-            const Sock::Event requested = Sock::RECV | Sock::SEND;
-            Sock::Event occurred;
-            if (!sock->Wait(std::chrono::milliseconds{nConnectTimeout}, requested, &occurred)) {
-                LogPrintf("wait for connect to %s failed: %s\n",
-                          dest.ToStringAddrPort(),
-                          NetworkErrorString(WSAGetLastError()));
-                return {};
-            } else if (occurred == 0) {
-                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", dest.ToStringAddrPort());
-                return {};
-            }
-
-            // Even if the wait was successful, the connect might not
-            // have been successful. The reason for this failure is hidden away
-            // in the SO_ERROR for the socket in modern systems. We read it into
-            // sockerr here.
-            int sockerr;
-            socklen_t sockerr_len = sizeof(sockerr);
-            if (sock->GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
-                SOCKET_ERROR) {
-                LogPrintf("getsockopt() for %s failed: %s\n", dest.ToStringAddrPort(), NetworkErrorString(WSAGetLastError()));
-                return {};
-            }
-            if (sockerr != 0) {
-                LogConnectFailure(manual_connection,
-                                  "connect() to %s failed after wait: %s",
-                                  dest.ToStringAddrPort(),
-                                  NetworkErrorString(sockerr));
-                return {};
-            }
-        }
-#ifdef WIN32
-        else if (WSAGetLastError() != WSAEISCONN)
-#else
-        else
-#endif
-        {
-            LogConnectFailure(manual_connection, "connect() to %s failed: %s", dest.ToStringAddrPort(), NetworkErrorString(WSAGetLastError()));
-            return {};
-        }
+    if (!ConnectToSocket(*sock, (struct sockaddr*)&sockaddr, len, dest.ToStringAddrPort(), manual_connection)) {
+        LogPrintf("Cannot connect to socket for %s\n", dest.ToStringAddrPort());
+        return {};
     }
+
     return sock;
+}
+
+std::unique_ptr<Sock> Proxy::Connect() const
+{
+    if (!IsValid()) {
+        LogPrintf("Cannot connect to invalid Proxy\n");
+        return {};
+    }
+
+    if (!m_is_unix_socket) return ConnectDirectly(proxy, /*manual_connection=*/true);
+
+#if HAVE_SOCKADDR_UN
+    auto sock = CreateSock(AF_UNIX);
+    if (!sock) {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Cannot create a socket for connecting to %s\n", m_unix_socket_path);
+        return {};
+    }
+
+    const std::string path{m_unix_socket_path.substr(ADDR_PREFIX_UNIX.length())};
+
+    struct sockaddr_un addrun;
+    memset(&addrun, 0, sizeof(addrun));
+    addrun.sun_family = AF_UNIX;
+    // leave the last char in addrun.sun_path[] to be always '\0'
+    memcpy(addrun.sun_path, path.c_str(), std::min(sizeof(addrun.sun_path) - 1, path.length()));
+    socklen_t len = sizeof(addrun);
+
+    if(!ConnectToSocket(*sock, (struct sockaddr*)&addrun, len, path, /*manual_connection=*/true)) {
+        LogPrintf("Cannot connect to socket for %s\n", path);
+        return {};
+    }
+
+    return sock;
+#else
+    return {};
+#endif
 }
 
 bool SetProxy(enum Network net, const Proxy &addrProxy) {
@@ -658,7 +704,7 @@ std::unique_ptr<Sock> ConnectThroughProxy(const Proxy& proxy,
                                           bool& proxy_connection_failed)
 {
     // first connect to proxy server
-    auto sock = ConnectDirectly(proxy.proxy, /*manual_connection=*/true);
+    auto sock = proxy.Connect();
     if (!sock) {
         proxy_connection_failed = true;
         return {};

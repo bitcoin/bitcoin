@@ -84,6 +84,8 @@ public:
         if (m_is_unix_socket) return m_unix_socket_path;
         return proxy.ToStringAddrPort();
     }
+
+    std::unique_ptr<Sock> Connect() const;
 };
 
 /** Credentials for proxy authentication */
