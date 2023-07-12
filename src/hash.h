@@ -160,7 +160,6 @@ public:
 
     template<typename T>
     CHashWriter& operator<<(const T& obj) {
-        // Serialize to this stream
         ::Serialize(*this, obj);
         return (*this);
     }
@@ -228,7 +227,6 @@ public:
     template<typename T>
     CHashVerifier<Source>& operator>>(T&& obj)
     {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }

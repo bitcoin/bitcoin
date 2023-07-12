@@ -58,7 +58,6 @@ public:
     template<typename T>
     OverrideStream<Stream>& operator<<(const T& obj)
     {
-        // Serialize to this stream
         ::Serialize(*this, obj);
         return (*this);
     }
@@ -66,7 +65,6 @@ public:
     template<typename T>
     OverrideStream<Stream>& operator>>(T&& obj)
     {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }
@@ -131,7 +129,6 @@ class CVectorWriter
     template<typename T>
     CVectorWriter& operator<<(const T& obj)
     {
-        // Serialize to this stream
         ::Serialize(*this, obj);
         return (*this);
     }
@@ -172,7 +169,6 @@ public:
     template<typename T>
     SpanReader& operator>>(T&& obj)
     {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }
@@ -317,7 +313,6 @@ public:
     template<typename T>
     DataStream& operator<<(const T& obj)
     {
-        // Serialize to this stream
         ::Serialize(*this, obj);
         return (*this);
     }
@@ -325,7 +320,6 @@ public:
     template<typename T>
     DataStream& operator>>(T&& obj)
     {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }
@@ -741,7 +735,6 @@ public:
 
     template<typename T>
     CBufferedFile& operator>>(T&& obj) {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }
