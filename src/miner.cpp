@@ -235,8 +235,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 bool fMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
                 if (fMNRewardReallocated) {
                     const CAmount masternodeReward = GetMasternodePayment(nHeight, blockReward, Params().GetConsensus().BRRHeight);
-                    LogPrintf("CreateNewBlock() add MN reward %lld to credit pool\n", masternodeReward);
-                    creditPoolDiff->AddRewardRealloced(masternodeReward);
+                    const CAmount reallocedReward = masternodeReward * 0.375;
+                    LogPrint(BCLog::MNPAYMENTS, "%s: add MN reward %lld (%lld) to credit pool\n", __func__, masternodeReward, reallocedReward);
+                    creditPoolDiff->AddRewardRealloced(reallocedReward);
                 }
                 cbTx.creditPoolBalance = creditPoolDiff->GetTotalLocked();
             }

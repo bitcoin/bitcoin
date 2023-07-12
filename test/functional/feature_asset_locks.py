@@ -497,7 +497,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.activate_mn_rr(expected_activation_height=3090)
         self.log.info(f'height: {node.getblock(node.getbestblockhash())["height"]} credit: {self.get_credit_pool_balance()}')
-        reward = 6132959502
+        reward = 2299859813
         assert_equal(new_total, self.get_credit_pool_balance())
         node.generate(1)
         self.sync_all()

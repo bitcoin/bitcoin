@@ -40,9 +40,14 @@ static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, st
     bool fMNRewardReallocated =  llmq::utils::IsMNRewardReallocationActive(pindex);
 
     if (fMNRewardReallocated) {
-        LogPrintf("CMasternodePayments::%s -- MN reward %lld reallocated to credit pool\n", __func__, masternodeReward);
-        voutMasternodePaymentsRet.emplace_back(masternodeReward, CScript() << OP_RETURN);
-        return true;
+        const CAmount platformReward = masternodeReward * 0.375;
+        masternodeReward -= platformReward;
+
+        assert(MoneyRange(platformReward));
+        assert(MoneyRange(masternodeReward));
+
+        LogPrint(BCLog::MNPAYMENTS, "CMasternodePayments::%s -- MN reward %lld reallocated to credit pool\n", __func__, platformReward);
+        voutMasternodePaymentsRet.emplace_back(platformReward, CScript() << OP_RETURN);
     }
 
     auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee(pindex);
