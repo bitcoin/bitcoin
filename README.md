@@ -1,4 +1,4 @@
-Bitcoin Core integration/staging tree
+README.mdtcoin Core integration/staging tree
 =====================================
 
 https://bitcoincore.org
