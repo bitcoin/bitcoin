@@ -1,0 +1,53 @@
+This patch can be dropped when we are building with glibc 2.30+.
+
+commit 6e41ef56c9baab719a02f1377b1e7ce7bff61e73
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Feb 8 10:21:56 2019 +0100
+
+    rt: Turn forwards from librt to libc into compat symbols [BZ #24194]
+    
+    As the  result of commit 6e6249d0b461b952d0f544792372663feb6d792a
+    ("BZ#14743: Move clock_* symbols from librt to libc."), in glibc 2.17,
+    clock_gettime, clock_getres, clock_settime, clock_getcpuclockid,
+    clock_nanosleep were added to libc, and the file rt/clock-compat.c
+    was added with forwarders to the actual implementations in libc.
+    These forwarders were wrapped in
+
+    #if SHLIB_COMPAT (librt, GLIBC_2_2, GLIBC_2_17)
+    
+    so that they are not present for newer architectures (such as
+    powerpc64le) with a 2.17 or later ABI baseline.  But the forwarders
+    were not marked as compatibility symbols.  As a result, on older
+    architectures, historic configure checks such as
+    
+    AC_CHECK_LIB(rt, clock_gettime)
+    
+    still cause linking against librt, even though this is completely
+    unnecessary.  It also creates a needless porting hazard because
+    architectures behave differently when it comes to symbol availability.
+    
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+diff --git a/rt/clock-compat.c b/rt/clock-compat.c
+index f816973c05..11e71aa890 100644
+--- a/rt/clock-compat.c
++++ b/rt/clock-compat.c
+@@ -30,14 +30,16 @@
+ #if HAVE_IFUNC
+ # undef INIT_ARCH
+ # define INIT_ARCH()
+-# define COMPAT_REDIRECT(name, proto, arglist) libc_ifunc (name, &__##name)
++# define COMPAT_REDIRECT(name, proto, arglist) libc_ifunc (name, &__##name) \
++    compat_symbol (librt, name, name, GLIBC_2_2);
+ #else
+ # define COMPAT_REDIRECT(name, proto, arglist)				      \
+   int									      \
+   name proto								      \
+   {									      \
+     return __##name arglist;						      \
+-  }
++  }									      \
++  compat_symbol (librt, name, name, GLIBC_2_2);
+ #endif
+ 
+ COMPAT_REDIRECT (clock_getres,
