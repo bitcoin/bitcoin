@@ -165,7 +165,6 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& availab
         /*min_change_target=*/ CENT,
         /*effective_feerate=*/ CFeeRate(0),
         /*long_term_feerate=*/ CFeeRate(0),
-        /*discard_feerate=*/ CFeeRate(0),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
@@ -309,7 +308,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*min_change_target=*/ 0,
         /*effective_feerate=*/ CFeeRate(3000),
         /*long_term_feerate=*/ CFeeRate(1000),
-        /*discard_feerate=*/ CFeeRate(1000),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
@@ -810,7 +808,6 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
             /*min_change_target=*/ CENT,
             /*effective_feerate=*/ CFeeRate(0),
             /*long_term_feerate=*/ CFeeRate(0),
-            /*discard_feerate=*/ CFeeRate(0),
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ false,
         };
@@ -983,7 +980,6 @@ BOOST_AUTO_TEST_CASE(srd_tests)
             /*min_change_target=*/CENT,
             /*effective_feerate=*/CFeeRate(0),
             /*long_term_feerate=*/CFeeRate(0),
-            /*discard_feerate=*/CFeeRate(0),
             /*tx_noinputs_size=*/10 + 34, // static header size + output size
             /*avoid_partial=*/false,
     };
@@ -1077,7 +1073,6 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
         /*min_change_target=*/CENT,
         /*effective_feerate=*/CFeeRate(0),
         /*long_term_feerate=*/CFeeRate(0),
-        /*discard_feerate=*/CFeeRate(0),
         /*tx_noinputs_size=*/10 + 34, // static header size + output size
         /*avoid_partial=*/false,
     };
@@ -1181,7 +1176,6 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
         /*min_change_target=*/1000,
         /*effective_feerate=*/CFeeRate(3000),
         /*long_term_feerate=*/CFeeRate(1000),
-        /*discard_feerate=*/CFeeRate(1000),
         /*tx_noinputs_size=*/0,
         /*avoid_partial=*/false,
     };

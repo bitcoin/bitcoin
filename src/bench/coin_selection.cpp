@@ -72,7 +72,6 @@ static void CoinSelection(benchmark::Bench& bench)
         /*min_change_target=*/ CHANGE_LOWER,
         /*effective_feerate=*/ CFeeRate(0),
         /*long_term_feerate=*/ CFeeRate(0),
-        /*discard_feerate=*/ CFeeRate(0),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };

@@ -141,8 +141,6 @@ struct CoinSelectionParams {
     /** The feerate estimate used to estimate an upper bound on what should be sufficient to spend
      * the change output sometime in the future. */
     CFeeRate m_long_term_feerate;
-    /** If the cost to spend a change output at the discard feerate exceeds its value, drop it to fees. */
-    CFeeRate m_discard_feerate;
     /** Size of the transaction before coin selection, consisting of the header and recipient
      * output(s), excluding the inputs and change output(s). */
     size_t tx_noinputs_size = 0;
@@ -160,13 +158,12 @@ struct CoinSelectionParams {
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
+                        CFeeRate long_term_feerate, size_t tx_noinputs_size, bool avoid_partial)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           m_min_change_target(min_change_target),
           m_effective_feerate(effective_feerate),
           m_long_term_feerate(long_term_feerate),
-          m_discard_feerate(discard_feerate),
           tx_noinputs_size(tx_noinputs_size),
           m_avoid_partial_spends(avoid_partial)
     {

@@ -905,9 +905,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
     }
 
-    // Set discard feerate
-    coin_selection_params.m_discard_feerate = GetDiscardRate(wallet);
-
     // Get the fee rate to use effective values in coin selection
     FeeCalculation feeCalc;
     coin_selection_params.m_effective_feerate = GetMinimumFeeRate(wallet, coin_control, &feeCalc);
@@ -921,21 +918,24 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
     }
 
+    // When the cost to spend a change output at the discard feerate exceeds its value, drop it to fees.
+    CFeeRate discard_feerate = GetDiscardRate(wallet);
+
     // Calculate the cost of change
     // Cost of change is the cost of creating the change output + cost of spending the change output in the future.
     // For creating the change output now, we use the effective feerate.
     // For spending the change output in the future, we use the discard feerate for now.
     // So cost of change = (change output size * effective feerate) + (size of spending change output * discard feerate)
     coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
-    coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(change_spend_size) + coin_selection_params.m_change_fee;
+    coin_selection_params.m_cost_of_change = discard_feerate.GetFee(change_spend_size) + coin_selection_params.m_change_fee;
 
     coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
 
     // The smallest change amount should be:
     // 1. at least equal to dust threshold
     // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
-    const auto dust = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
-    const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(change_spend_size);
+    const auto dust = GetDustThreshold(change_prototype_txout, discard_feerate);
+    const auto change_spend_fee = discard_feerate.GetFee(change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
     // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
