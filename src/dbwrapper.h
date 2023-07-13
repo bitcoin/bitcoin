@@ -21,6 +21,7 @@
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -64,10 +65,6 @@ public:
 
 class CDBWrapper;
 
-namespace dbwrapper {
-    using leveldb::DestroyDB;
-}
-
 /** These should be considered an implementation detail of the specific database.
  */
 namespace dbwrapper_private {
@@ -82,7 +79,9 @@ void HandleError(const leveldb::Status& status);
  */
 const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
 
-};
+}; // namespace dbwrapper_private
+
+bool DestroyDB(const std::string& path_str);
 
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch

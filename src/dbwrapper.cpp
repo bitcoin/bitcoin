@@ -27,6 +27,11 @@
 #include <memory>
 #include <optional>
 
+bool DestroyDB(const std::string& path_str)
+{
+    return leveldb::DestroyDB(path_str, {}).ok();
+}
+
 class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
