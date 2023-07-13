@@ -946,8 +946,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
     }
 
-    // Set the 'change' related coin selection params
-    ComputeChangeParams(coin_selection_params, wallet, scriptChange, recipients_sum, vecSend.size());
+    // Only compute 'change' params when we might produce a change output
+    if (!existent_change_out_index) {
+        ComputeChangeParams(coin_selection_params, wallet, scriptChange, recipients_sum, vecSend.size());
+    }
 
     // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
     coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
