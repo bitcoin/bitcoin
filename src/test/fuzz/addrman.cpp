@@ -300,12 +300,20 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
             });
     }
     const AddrMan& const_addr_man{addr_man};
+    std::optional<Network> network;
+    if (fuzzed_data_provider.ConsumeBool()) {
+        network = fuzzed_data_provider.PickValueInArray(ALL_NETWORKS);
+    }
     (void)const_addr_man.GetAddr(
         /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        /*network=*/std::nullopt);
-    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool());
-    (void)const_addr_man.Size();
+        network);
+    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), network);
+    std::optional<bool> in_new;
+    if (fuzzed_data_provider.ConsumeBool()) {
+        in_new = fuzzed_data_provider.ConsumeBool();
+    }
+    (void)const_addr_man.Size(network, in_new);
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
     data_stream << const_addr_man;
 }
