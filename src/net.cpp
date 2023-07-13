@@ -146,7 +146,7 @@ uint16_t GetListenPort()
 }
 
 // find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNode& peer)
+[[nodiscard]] static bool GetLocal(CService& addr, const CNode& peer)
 {
     if (!fListen)
         return false;
