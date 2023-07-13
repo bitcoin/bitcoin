@@ -704,7 +704,9 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
 {
     LOCK(g_httppathhandlers_mutex);
 
-    for (auto i = pathHandlers.begin(); i != pathHandlers.end(); ++i)
+    auto i = pathHandlers.begin();
+    auto iend = pathHandlers.end();
+    for (; i != iend; ++i)
         if (i->prefix == prefix && i->exactMatch == exactMatch)
             break;
     
