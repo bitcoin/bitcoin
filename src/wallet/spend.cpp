@@ -821,6 +821,45 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
     }
 }
 
+/**
+ * Calculates all CoinSelectionParams 'change' related fields. No exceptions.
+ * Requires CoinSelectionParams::m_effective_feerate to be set.
+ */
+static void ComputeChangeParams(CoinSelectionParams& coin_selection_params, CWallet& wallet, const CScript& scriptChange, CAmount recipients_sum, size_t recipients_size)
+{
+    // When the cost to spend a change output at the discard feerate exceeds its value, drop it to fees.
+    CFeeRate discard_feerate = GetDiscardRate(wallet);
+
+    // Set change output size
+    CTxOut change_prototype_txout(0, scriptChange);
+    coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
+
+    // Get size of spending the change output
+    int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet, /*coin_control=*/nullptr);
+    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
+    // as lower-bound to allow BnB to do it's thing
+    if (change_spend_size == -1) {
+        change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
+    }
+
+    // Calculate the cost of change
+    // Cost of change is the cost of creating the change output + cost of spending the change output in the future.
+    // For creating the change output now, we use the effective feerate.
+    // For spending the change output in the future, we use the discard feerate for now.
+    // So cost of change = (change output size * effective feerate) + (size of spending change output * discard feerate)
+    coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
+    coin_selection_params.m_cost_of_change = discard_feerate.GetFee(change_spend_size) + coin_selection_params.m_change_fee;
+
+    coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / recipients_size), coin_selection_params.m_change_fee, coin_selection_params.rng_fast);
+
+    // The smallest change amount should be:
+    // 1. at least equal to dust threshold
+    // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
+    const auto dust = GetDustThreshold(change_prototype_txout, discard_feerate);
+    const auto change_spend_fee = discard_feerate.GetFee(change_spend_size);
+    coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
@@ -894,17 +933,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         if (recipient.scriptPubKey == scriptChange) existent_change_out_index = index;
     }
 
-    CTxOut change_prototype_txout(0, scriptChange);
-    coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
-
-    // Get size of spending the change output
-    int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet, /*coin_control=*/nullptr);
-    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
-    // as lower-bound to allow BnB to do it's thing
-    if (change_spend_size == -1) {
-        change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
-    }
-
     // Get the fee rate to use effective values in coin selection
     FeeCalculation feeCalc;
     coin_selection_params.m_effective_feerate = GetMinimumFeeRate(wallet, coin_control, &feeCalc);
@@ -918,25 +946,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
     }
 
-    // When the cost to spend a change output at the discard feerate exceeds its value, drop it to fees.
-    CFeeRate discard_feerate = GetDiscardRate(wallet);
-
-    // Calculate the cost of change
-    // Cost of change is the cost of creating the change output + cost of spending the change output in the future.
-    // For creating the change output now, we use the effective feerate.
-    // For spending the change output in the future, we use the discard feerate for now.
-    // So cost of change = (change output size * effective feerate) + (size of spending change output * discard feerate)
-    coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
-    coin_selection_params.m_cost_of_change = discard_feerate.GetFee(change_spend_size) + coin_selection_params.m_change_fee;
-
-    coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
-
-    // The smallest change amount should be:
-    // 1. at least equal to dust threshold
-    // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
-    const auto dust = GetDustThreshold(change_prototype_txout, discard_feerate);
-    const auto change_spend_fee = discard_feerate.GetFee(change_spend_size);
-    coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
+    // Set the 'change' related coin selection params
+    ComputeChangeParams(coin_selection_params, wallet, scriptChange, recipients_sum, vecSend.size());
 
     // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
     coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
