@@ -145,11 +145,12 @@ uint16_t GetListenPort()
     return static_cast<uint16_t>(gArgs.GetIntArg("-port", Params().GetDefaultPort()));
 }
 
-// find 'best' local address for a particular peer
-[[nodiscard]] static bool GetLocal(CService& addr, const CNode& peer)
+// Determine the "best" local address for a particular peer.
+[[nodiscard]] static std::optional<CService> GetLocal(const CNode& peer)
 {
-    if (!fListen) return false;
+    if (!fListen) return std::nullopt;
 
+    std::optional<CService> addr;
     int nBestScore = -1;
     int nBestReachability = -1;
     {
@@ -165,13 +166,13 @@ uint16_t GetListenPort()
             const int nScore{local_service_info.nScore};
             const int nReachability{local_addr.GetReachabilityFrom(peer.addr)};
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore)) {
-                addr = CService{local_addr, local_service_info.nPort};
+                addr.emplace(CService{local_addr, local_service_info.nPort});
                 nBestReachability = nReachability;
                 nBestScore = nScore;
             }
         }
     }
-    return nBestScore >= 0;
+    return addr;
 }
 
 //! Convert the serialized seeds into usable address objects.
@@ -196,17 +197,13 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     return vSeedsOut;
 }
 
-// get best local address for a particular peer as a CAddress
-// Otherwise, return the unroutable 0.0.0.0 but filled in with
+// Determine the "best" local address for a particular peer.
+// If none, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
 CService GetLocalAddress(const CNode& peer)
 {
-    CService addr;
-    if (GetLocal(addr, peer)) {
-        return addr;
-    }
-    return CService{CNetAddr(), GetListenPort()};
+    return GetLocal(peer).value_or(CService{CNetAddr(), GetListenPort()});
 }
 
 static int GetnScore(const CService& addr)
