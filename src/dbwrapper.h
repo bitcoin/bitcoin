@@ -98,6 +98,7 @@ private:
     size_t size_estimate{0};
 
     void WriteImpl(Span<const std::byte> ssKey, CDataStream& ssValue);
+    void EraseImpl(Span<const std::byte> ssKey);
 
 public:
     /**
@@ -128,15 +129,7 @@ public:
     {
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
-
-        batch.Delete(slKey);
-        // LevelDB serializes erases as:
-        // - byte: header
-        // - varint: key length
-        // - byte[]: key
-        // The formula below assumes the key is less than 16kB.
-        size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+        EraseImpl(ssKey);
         ssKey.clear();
     }
 

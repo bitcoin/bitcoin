@@ -152,6 +152,18 @@ void CDBBatch::WriteImpl(Span<const std::byte> ssKey, CDataStream& ssValue)
     size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
 }
 
+void CDBBatch::EraseImpl(Span<const std::byte> ssKey)
+{
+    leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
+    batch.Delete(slKey);
+    // LevelDB serializes erases as:
+    // - byte: header
+    // - varint: key length
+    // - byte[]: key
+    // The formula below assumes the key is less than 16kB.
+    size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+}
+
 CDBWrapper::CDBWrapper(const DBParams& params)
     : m_name{fs::PathToString(params.path.stem())}, m_path{params.path}, m_is_memory{params.memory_only}
 {
