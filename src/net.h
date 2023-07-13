@@ -188,8 +188,10 @@ bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr, bool bOverrideNetwork = false);
-bool GetLocal(CService &addr, const CNetAddr *paddrPeer = nullptr);
-CService GetLocalAddress(const CNetAddr& addrPeer);
+// SYSCOIN
+bool GetLocal(CService &addr, const CNetAddr *paddrPeer);
+bool GetLocal(CService& addr, const CNode& peer);
+CService GetLocalAddress(const CNode& peer);
 CService MaybeFlipIPv6toCJDNS(const CService& service);
 
 
