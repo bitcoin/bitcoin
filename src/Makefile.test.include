@@ -203,6 +203,7 @@ endif
 FUZZ_WALLET_SRC = \
  wallet/test/fuzz/coincontrol.cpp \
  wallet/test/fuzz/coinselection.cpp \
+ wallet/test/fuzz/crypter.cpp \
  wallet/test/fuzz/fees.cpp \
  wallet/test/fuzz/parse_iso8601.cpp
 
