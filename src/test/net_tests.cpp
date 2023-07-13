@@ -904,4 +904,109 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     TestOnlyResetTimeData();
 }
 
+
+BOOST_AUTO_TEST_CASE(advertise_local_address)
+{
+    auto CreatePeer = [](const CAddress& addr) {
+        return std::make_unique<CNode>(/*id=*/0,
+                                       /*sock=*/nullptr,
+                                       addr,
+                                       /*nKeyedNetGroupIn=*/0,
+                                       /*nLocalHostNonceIn=*/0,
+                                       CAddress{},
+                                       /*pszDest=*/std::string{},
+                                       ConnectionType::OUTBOUND_FULL_RELAY,
+                                       /*inbound_onion=*/false);
+    };
+    SetReachable(NET_CJDNS, true);
+
+    CAddress addr_ipv4{Lookup("1.2.3.4", 8333, false).value(), NODE_NONE};
+    BOOST_REQUIRE(addr_ipv4.IsValid());
+    BOOST_REQUIRE(addr_ipv4.IsIPv4());
+
+    CAddress addr_ipv6{Lookup("1122:3344:5566:7788:9900:aabb:ccdd:eeff", 8333, false).value(), NODE_NONE};
+    BOOST_REQUIRE(addr_ipv6.IsValid());
+    BOOST_REQUIRE(addr_ipv6.IsIPv6());
+
+    CAddress addr_ipv6_tunnel{Lookup("2002:3344:5566:7788:9900:aabb:ccdd:eeff", 8333, false).value(), NODE_NONE};
+    BOOST_REQUIRE(addr_ipv6_tunnel.IsValid());
+    BOOST_REQUIRE(addr_ipv6_tunnel.IsIPv6());
+    BOOST_REQUIRE(addr_ipv6_tunnel.IsRFC3964());
+
+    CAddress addr_teredo{Lookup("2001:0000:5566:7788:9900:aabb:ccdd:eeff", 8333, false).value(), NODE_NONE};
+    BOOST_REQUIRE(addr_teredo.IsValid());
+    BOOST_REQUIRE(addr_teredo.IsIPv6());
+    BOOST_REQUIRE(addr_teredo.IsRFC4380());
+
+    CAddress addr_onion;
+    BOOST_REQUIRE(addr_onion.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    BOOST_REQUIRE(addr_onion.IsValid());
+    BOOST_REQUIRE(addr_onion.IsTor());
+
+    CAddress addr_i2p;
+    BOOST_REQUIRE(addr_i2p.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p"));
+    BOOST_REQUIRE(addr_i2p.IsValid());
+    BOOST_REQUIRE(addr_i2p.IsI2P());
+
+    CService service_cjdns{Lookup("fc00:3344:5566:7788:9900:aabb:ccdd:eeff", 8333, false).value(), NODE_NONE};
+    CAddress addr_cjdns{MaybeFlipIPv6toCJDNS(service_cjdns), NODE_NONE};
+    BOOST_REQUIRE(addr_cjdns.IsValid());
+    BOOST_REQUIRE(addr_cjdns.IsCJDNS());
+
+    const auto peer_ipv4{CreatePeer(addr_ipv4)};
+    const auto peer_ipv6{CreatePeer(addr_ipv6)};
+    const auto peer_ipv6_tunnel{CreatePeer(addr_ipv6_tunnel)};
+    const auto peer_teredo{CreatePeer(addr_teredo)};
+    const auto peer_onion{CreatePeer(addr_onion)};
+    const auto peer_i2p{CreatePeer(addr_i2p)};
+    const auto peer_cjdns{CreatePeer(addr_cjdns)};
+
+    // one local clearnet address - advertise to all but privacy peers
+    AddLocal(addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_ipv4) == addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_ipv6) == addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_ipv6_tunnel) == addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_ipv4);
+    BOOST_CHECK(!GetLocalAddress(*peer_onion).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_i2p).IsValid());
+    RemoveLocal(addr_ipv4);
+
+    // local privacy addresses - don't advertise to clearnet peers
+    AddLocal(addr_onion);
+    AddLocal(addr_i2p);
+    BOOST_CHECK(!GetLocalAddress(*peer_ipv4).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_ipv6).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_ipv6_tunnel).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_teredo).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_cjdns).IsValid());
+    BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
+    BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
+    RemoveLocal(addr_onion);
+    RemoveLocal(addr_i2p);
+
+    // local addresses from all networks
+    AddLocal(addr_ipv4);
+    AddLocal(addr_ipv6);
+    AddLocal(addr_ipv6_tunnel);
+    AddLocal(addr_teredo);
+    AddLocal(addr_onion);
+    AddLocal(addr_i2p);
+    AddLocal(addr_cjdns);
+    BOOST_CHECK(GetLocalAddress(*peer_ipv4) == addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_ipv6) == addr_ipv6);
+    BOOST_CHECK(GetLocalAddress(*peer_ipv6_tunnel) == addr_ipv6);
+    BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
+    BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
+    BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
+    BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_cjdns);
+    RemoveLocal(addr_ipv4);
+    RemoveLocal(addr_ipv6);
+    RemoveLocal(addr_ipv6_tunnel);
+    RemoveLocal(addr_teredo);
+    RemoveLocal(addr_onion);
+    RemoveLocal(addr_i2p);
+    RemoveLocal(addr_cjdns);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
