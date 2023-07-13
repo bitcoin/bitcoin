@@ -463,7 +463,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                     LOCK(m_unused_i2p_sessions_mutex);
                     if (m_unused_i2p_sessions.empty()) {
                         i2p_transient_session =
-                            std::make_unique<i2p::sam::Session>(proxy.proxy, &interruptNet);
+                            std::make_unique<i2p::sam::Session>(proxy, &interruptNet);
                     } else {
                         i2p_transient_session.swap(m_unused_i2p_sessions.front());
                         m_unused_i2p_sessions.pop();
@@ -3186,7 +3186,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     Proxy i2p_sam;
     if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
         m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
-                                                                i2p_sam.proxy, &interruptNet);
+                                                                i2p_sam, &interruptNet);
     }
 
     for (const auto& strDest : connOptions.vSeedNodes) {
