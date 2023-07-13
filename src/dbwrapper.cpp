@@ -6,6 +6,8 @@
 
 #include <logging.h>
 #include <random.h>
+#include <span.h>
+#include <streams.h>
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -23,7 +25,9 @@
 #include <leveldb/helpers/memenv/memenv.h>
 #include <leveldb/iterator.h>
 #include <leveldb/options.h>
+#include <leveldb/slice.h>
 #include <leveldb/status.h>
+#include <leveldb/write_batch.h>
 #include <memory>
 #include <optional>
 
@@ -130,6 +134,22 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     }
     SetMaxOpenFiles(&options);
     return options;
+}
+
+void CDBBatch::WriteImpl(Span<const std::byte> ssKey, CDataStream& ssValue)
+{
+    leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
+    ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
+    leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
+    batch.Put(slKey, slValue);
+    // LevelDB serializes writes as:
+    // - byte: header
+    // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
+    // - byte[]: key
+    // - varint: value length
+    // - byte[]: value
+    // The formula below assumes the key and value are both less than 16k.
+    size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
 }
 
 CDBWrapper::CDBWrapper(const DBParams& params)
