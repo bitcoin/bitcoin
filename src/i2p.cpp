@@ -159,7 +159,7 @@ bool Session::Accept(Connection& conn)
             const std::string& peer_dest =
                 conn.sock->RecvUntilTerminator('\n', MAX_WAIT_FOR_IO, *m_interrupt, MAX_MSG_SIZE);
 
-            conn.peer = CService(DestB64ToAddr(peer_dest), Params().GetDefaultPort());
+            conn.peer = CService(DestB64ToAddr(peer_dest), I2P_SAM31_PORT);
 
             return true;
         }
@@ -172,6 +172,13 @@ bool Session::Accept(Connection& conn)
 
 bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
 {
+    // Refuse connecting to arbitrary ports. We don't specify any destination port to the SAM proxy
+    // when connecting (SAM 3.1 does not use ports) and it forces/defaults it to I2P_SAM31_PORT.
+    if (to.GetPort() != I2P_SAM31_PORT) {
+        proxy_error = false;
+        return false;
+    }
+
     proxy_error = true;
 
     std::string session_id;
@@ -366,7 +373,7 @@ void Session::CreateIfNotCreatedAlready()
     SendRequestAndGetReply(*sock, strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s",
                                             session_id, private_key_b64));
 
-    m_my_addr = CService(DestBinToAddr(MyDestination()), Params().GetDefaultPort());
+    m_my_addr = CService(DestBinToAddr(MyDestination()), I2P_SAM31_PORT);
     m_session_id = session_id;
     m_control_sock = std::move(sock);
 

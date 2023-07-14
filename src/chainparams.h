@@ -9,11 +9,13 @@
 #include <chainparamsbase.h>
 #include <consensus/params.h>
 #include <llmq/params.h>
+#include <netaddress.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <util/hash_type.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 struct SeedSpec6 {
@@ -84,6 +86,15 @@ public:
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
+    uint16_t GetDefaultPort(Network net) const
+    {
+        return net == NET_I2P ? I2P_SAM31_PORT : GetDefaultPort();
+    }
+    uint16_t GetDefaultPort(const std::string& addr) const
+    {
+        CNetAddr a;
+        return a.SetSpecial(addr) ? GetDefaultPort(a.GetNetwork()) : GetDefaultPort();
+    }
     uint16_t GetDefaultPlatformP2PPort() const { return nDefaultPlatformP2PPort; }
     uint16_t GetDefaultPlatformHTTPPort() const { return nDefaultPlatformHTTPPort; }
 
