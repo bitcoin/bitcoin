@@ -12,7 +12,6 @@
 #include <util/bitdeque.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
 #include <util/overflow.h>
@@ -1243,22 +1242,6 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     // Clean up
     ReleaseDirectoryLocks();
     fs::remove_all(dirname);
-}
-
-BOOST_AUTO_TEST_CASE(test_DirIsWritable)
-{
-    // Should be able to write to the data dir.
-    fs::path tmpdirname = m_args.GetDataDirBase();
-    BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
-
-    // Should not be able to write to a non-existent dir.
-    tmpdirname = GetUniquePath(tmpdirname);
-    BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), false);
-
-    fs::create_directory(tmpdirname);
-    // Should be able to write to it now.
-    BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
-    fs::remove(tmpdirname);
 }
 
 BOOST_AUTO_TEST_CASE(test_ToLower)
