@@ -1778,7 +1778,7 @@ void CConnman::SocketHandler()
     //
     for (const ListenSocket& hListenSocket : vhListenSocket)
     {
-        if (hListenSocket.socket != INVALID_SOCKET && recv_set.count(hListenSocket.socket) > 0)
+        if (recv_set.count(hListenSocket.socket) > 0)
         {
             AcceptConnection(hListenSocket);
         }
