@@ -316,24 +316,9 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
         return CNode{node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only};
     }
 }
-inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
+inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
 
-inline void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, const std::optional<int32_t>& version_in = std::nullopt) noexcept
-{
-    const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
-    const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
-    const int32_t version = version_in.value_or(fuzzed_data_provider.ConsumeIntegral<int32_t>());
-    const bool filter_txs = fuzzed_data_provider.ConsumeBool();
-
-    node.nServices = remote_services;
-    node.m_permissionFlags = permission_flags;
-    node.nVersion = version;
-    node.SetSendVersion(version);
-    if (node.m_tx_relay != nullptr) {
-        LOCK(node.m_tx_relay->cs_filter);
-        node.m_tx_relay->fRelayTxes = filter_txs;
-    }
-}
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept;
 
 inline void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
 {

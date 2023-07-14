@@ -67,10 +67,12 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
         return;
     }
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
-    FillNode(fuzzed_data_provider, p2p_node);
-    p2p_node.fSuccessfullyConnected = true;
+
+    const bool successfully_connected{true};
+    p2p_node.fSuccessfullyConnected = successfully_connected;
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
+    FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
 
     // fuzzed_data_provider is fully consumed after this call, don't use it
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
