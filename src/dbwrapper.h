@@ -141,6 +141,7 @@ private:
     leveldb::Iterator *piter;
 
     void SeekImpl(Span<const std::byte> ssKey);
+    Span<const std::byte> GetKeyImpl() const;
 
 public:
 
@@ -166,9 +167,8 @@ public:
     void Next();
 
     template<typename K> bool GetKey(K& key) {
-        leveldb::Slice slKey = piter->key();
         try {
-            DataStream ssKey{MakeByteSpan(slKey)};
+            DataStream ssKey{GetKeyImpl()};
             ssKey >> key;
         } catch (const std::exception&) {
             return false;

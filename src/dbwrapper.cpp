@@ -312,6 +312,11 @@ void CDBIterator::SeekImpl(Span<const std::byte> ssKey)
     piter->Seek(slKey);
 }
 
+Span<const std::byte> CDBIterator::GetKeyImpl() const
+{
+    return MakeByteSpan(piter->key());
+}
+
 CDBIterator::~CDBIterator() { delete piter; }
 bool CDBIterator::Valid() const { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
