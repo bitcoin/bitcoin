@@ -313,6 +313,21 @@ std::optional<std::string> CDBWrapper::ReadImpl(Span<const std::byte> ssKey) con
     return strValue;
 }
 
+bool CDBWrapper::ExistsImpl(Span<const std::byte> ssKey) const
+{
+    leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
+
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
+    if (!status.ok()) {
+        if (status.IsNotFound())
+            return false;
+        LogPrintf("LevelDB read failure: %s\n", status.ToString());
+        dbwrapper_private::HandleError(status);
+    }
+    return true;
+}
+
 bool CDBWrapper::IsEmpty()
 {
     std::unique_ptr<CDBIterator> it(NewIterator());

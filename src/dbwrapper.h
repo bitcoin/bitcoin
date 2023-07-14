@@ -6,7 +6,6 @@
 #define BITCOIN_DBWRAPPER_H
 
 #include <clientversion.h>
-#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -18,7 +17,6 @@
 #include <leveldb/db.h>
 #include <leveldb/options.h>
 #include <leveldb/slice.h>
-#include <leveldb/status.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -26,6 +24,7 @@
 #include <vector>
 namespace leveldb {
 class Env;
+class Status;
 }
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
@@ -236,6 +235,7 @@ private:
     bool m_is_memory;
 
     std::optional<std::string> ReadImpl(Span<const std::byte> ssKey) const;
+    bool ExistsImpl(Span<const std::byte> ssKey) const;
 
 public:
     CDBWrapper(const DBParams& params);
@@ -286,17 +286,7 @@ public:
         DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
-
-        std::string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString());
-            dbwrapper_private::HandleError(status);
-        }
-        return true;
+        return ExistsImpl(ssKey);
     }
 
     template <typename K>
