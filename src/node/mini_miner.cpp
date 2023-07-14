@@ -170,6 +170,7 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
     Assume(m_to_be_replaced.empty());
     Assume(m_requested_outpoints_by_txid.empty());
     Assume(m_bump_fees.empty());
+    Assume(m_inclusion_order.empty());
     SanityCheck();
 }
 
@@ -255,6 +256,7 @@ void MiniMiner::SanityCheck() const
 void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
 {
     const auto num_txns{m_entries_by_txid.size()};
+    uint32_t sequence_num{0};
     while (!m_entries_by_txid.empty()) {
         // Sort again, since transaction removal may change some m_entries' ancestor feerates.
         std::sort(m_entries.begin(), m_entries.end(), AncestorFeerateComparator());
@@ -290,16 +292,30 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
                 to_process.erase(iter);
             }
         }
+        // Track the order in which transactions were selected.
+        for (const auto& ancestor : ancestors) {
+            m_inclusion_order.emplace(Txid::FromUint256(ancestor->first), sequence_num);
+        }
         DeleteAncestorPackage(ancestors);
         SanityCheck();
+        ++sequence_num;
     }
     if (!target_feerate.has_value()) {
         Assume(m_in_block.size() == num_txns);
     } else {
         Assume(m_in_block.empty() || m_total_fees >= target_feerate->GetFee(m_total_vsize));
     }
+    Assume(m_in_block.empty() || sequence_num > 0);
+    Assume(m_in_block.size() == m_inclusion_order.size());
     // Do not try to continue building the block template with a different feerate.
     m_ready_to_calculate = false;
+}
+
+
+std::map<Txid, uint32_t> MiniMiner::Linearize()
+{
+    BuildMockTemplate(std::nullopt);
+    return m_inclusion_order;
 }
 
 std::map<COutPoint, CAmount> MiniMiner::CalculateBumpFees(const CFeeRate& target_feerate)

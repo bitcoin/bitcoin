@@ -67,8 +67,14 @@ struct IteratorComparator
     }
 };
 
-/** A minimal version of BlockAssembler. Allows us to run the mining algorithm on a subset of
- * mempool transactions, ignoring consensus rules, to calculate mining scores. */
+/** A minimal version of BlockAssembler, using the same ancestor set scoring algorithm. Allows us to
+ * run this algorithm on a limited set of transactions (e.g. subset of mempool or transactions that
+ * are not yet in mempool) instead of the entire mempool, ignoring consensus rules.
+ * Callers may use this to:
+ * - Calculate the "bump fee" needed to spend an unconfirmed UTXO at a given feerate
+ * - "Linearize" a list of transactions to see the order in which they would be selected for
+ *   inclusion in a block
+ */
 class MiniMiner
 {
     // When true, a caller may use CalculateBumpFees(). Becomes false if we failed to retrieve
@@ -84,6 +90,10 @@ class MiniMiner
     // the same tx will have the same bumpfee. Excludes non-mempool transactions.
     std::map<uint256, std::vector<COutPoint>> m_requested_outpoints_by_txid;
 
+    // Txid to a number representing the order in which this transaction was included (smaller
+    // number = included earlier).  Transactions included in an ancestor set together have the same
+    // sequence number.
+    std::map<Txid, uint32_t> m_inclusion_order;
     // What we're trying to calculate. Outpoint to the fee needed to bring the transaction to the target feerate.
     std::map<COutPoint, CAmount> m_bump_fees;
 
@@ -151,6 +161,11 @@ public:
      * if it cannot be calculated. */
     std::optional<CAmount> CalculateTotalBumpFees(const CFeeRate& target_feerate);
 
+    /** Construct a new block template with all of the transactions and calculate the order in which
+     * they are selected. Returns the sequence number (lower = selected earlier) with which each
+     * transaction was selected, indexed by txid, or an empty map if it cannot be calculated.
+     */
+    std::map<Txid, uint32_t> Linearize();
 };
 } // namespace node
 
