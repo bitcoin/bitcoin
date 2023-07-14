@@ -77,6 +77,24 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             return node.chain_path
         return node.wallets_path
 
+    def split_version(self, node):
+        major = node.version // 10000
+        minor = (node.version % 10000) // 100
+        patch = (node.version % 100)
+        return (major, minor, patch)
+
+    def major_version_equals(self, node, major):
+        node_major, _, _ = self.split_version(node)
+        return node_major == major
+
+    def major_version_less_than(self, node, major):
+        node_major, _, _ = self.split_version(node)
+        return node_major < major
+
+    def major_version_at_least(self, node, major):
+        node_major, _, _ = self.split_version(node)
+        return node_major >= major
+
     def run_test(self):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
