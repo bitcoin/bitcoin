@@ -1112,6 +1112,7 @@ static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 enum : char {
     ResSuccess = 2, // Start with 2 to avoid accidental collision with common values 0 and 1
+    ResErrorWrite,
     ResErrorLock,
     ResUnlockSuccess,
 };
@@ -1127,6 +1128,7 @@ enum : char {
             ch = [&] {
                 switch (util::LockDirectory(dirname, lockname)) {
                 case util::LockResult::Success: return ResSuccess;
+                case util::LockResult::ErrorWrite: return ResErrorWrite;
                 case util::LockResult::ErrorLock: return ResErrorLock;
                 } // no default case, so the compiler can warn about missing cases
                 assert(false);
@@ -1171,9 +1173,15 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
         TestOtherProcess(dirname, lockname, fd[0]);
     }
     BOOST_CHECK_EQUAL(close(fd[0]), 0); // Parent: close child end
+
+    char ch;
+    // Lock on non-existent directory should fail
+    BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
+    BOOST_CHECK_EQUAL(read(fd[1], &ch, 1), 1);
+    BOOST_CHECK_EQUAL(ch, ResErrorWrite);
 #endif
     // Lock on non-existent directory should fail
-    BOOST_CHECK_EQUAL(util::LockDirectory(dirname, lockname), util::LockResult::ErrorLock);
+    BOOST_CHECK_EQUAL(util::LockDirectory(dirname, lockname), util::LockResult::ErrorWrite);
 
     fs::create_directories(dirname);
 
@@ -1193,7 +1201,6 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     BOOST_CHECK_EQUAL(threadresult, util::LockResult::Success);
 #ifndef WIN32
     // Try to acquire lock in child process while we're holding it, this should fail.
-    char ch;
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
     BOOST_CHECK_EQUAL(read(fd[1], &ch, 1), 1);
     BOOST_CHECK_EQUAL(ch, ResErrorLock);

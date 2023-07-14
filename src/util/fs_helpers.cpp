@@ -65,8 +65,11 @@ LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_nam
     }
 
     // Create empty lock file if it doesn't exist.
-    FILE* file = fsbridge::fopen(pathLockFile, "a");
-    if (file) fclose(file);
+    if (auto created{fsbridge::fopen(pathLockFile, "a")}) {
+        std::fclose(created);
+    } else {
+        return LockResult::ErrorWrite;
+    }
     auto lock = std::make_unique<fsbridge::FileLock>(pathLockFile);
     if (!lock->TryLock()) {
         error("Error while attempting to lock directory %s: %s", fs::PathToString(directory), lock->GetReason());

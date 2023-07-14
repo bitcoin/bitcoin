@@ -38,6 +38,7 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length);
 namespace util {
 enum class LockResult {
     Success,
+    ErrorWrite,
     ErrorLock,
 };
 [[nodiscard]] LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only = false);
