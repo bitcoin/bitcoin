@@ -617,7 +617,7 @@ public:
         return random_bytes.size();
     }
 
-    bool Wait(std::chrono::milliseconds timeout, Event requested) const override
+    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
