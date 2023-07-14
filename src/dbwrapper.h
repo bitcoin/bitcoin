@@ -235,6 +235,8 @@ private:
     //! whether or not the database resides in memory
     bool m_is_memory;
 
+    std::optional<std::string> ReadImpl(Span<const std::byte> ssKey) const;
+
 public:
     CDBWrapper(const DBParams& params);
     ~CDBWrapper();
@@ -248,18 +250,12 @@ public:
         DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
-
-        std::string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString());
-            dbwrapper_private::HandleError(status);
+        std::optional<std::string> strValue{ReadImpl(ssKey)};
+        if (!strValue) {
+            return false;
         }
         try {
-            CDataStream ssValue{MakeByteSpan(strValue), SER_DISK, CLIENT_VERSION};
+            CDataStream ssValue{MakeByteSpan(*strValue), SER_DISK, CLIENT_VERSION};
             ssValue.Xor(obfuscate_key);
             ssValue >> value;
         } catch (const std::exception&) {
