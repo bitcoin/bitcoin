@@ -33,6 +33,8 @@
 #include <optional>
 #include <utility>
 
+static auto CharCast(const std::byte* data) { return reinterpret_cast<const char*>(data); }
+
 bool DestroyDB(const std::string& path_str)
 {
     return leveldb::DestroyDB(path_str, {}).ok();
@@ -338,6 +340,16 @@ bool CDBWrapper::ExistsImpl(Span<const std::byte> ssKey) const
         HandleError(status);
     }
     return true;
+}
+
+size_t CDBWrapper::EstimateSizeImpl(Span<const std::byte> ssKey1, Span<const std::byte> ssKey2) const
+{
+    leveldb::Slice slKey1(CharCast(ssKey1.data()), ssKey1.size());
+    leveldb::Slice slKey2(CharCast(ssKey2.data()), ssKey2.size());
+    uint64_t size = 0;
+    leveldb::Range range(slKey1, slKey2);
+    pdb->GetApproximateSizes(&range, 1, &size);
+    return size;
 }
 
 bool CDBWrapper::IsEmpty()
