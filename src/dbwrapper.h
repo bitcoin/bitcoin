@@ -5,24 +5,21 @@
 #ifndef BITCOIN_DBWRAPPER_H
 #define BITCOIN_DBWRAPPER_H
 
+#include <attributes.h>
 #include <clientversion.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <util/check.h>
 #include <util/fs.h>
 
 #include <cstddef>
 #include <exception>
-#include <leveldb/options.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
-namespace leveldb {
-class DB;
-class Env;
-}
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
@@ -180,30 +177,14 @@ public:
     }
 };
 
+struct LevelDBContext;
+
 class CDBWrapper
 {
     friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
 private:
-    //! custom environment this database is using (may be nullptr in case of default environment)
-    leveldb::Env* penv;
-
-    //! database options used
-    leveldb::Options options;
-
-    //! options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    //! options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-    //! options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    //! options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
-    //! the database itself
-    leveldb::DB* pdb;
+    //! holds all leveldb-specific fields of this class
+    std::unique_ptr<LevelDBContext> m_db_context;
 
     //! the name of this database
     std::string m_name;
@@ -228,6 +209,7 @@ private:
     std::optional<std::string> ReadImpl(Span<const std::byte> ssKey) const;
     bool ExistsImpl(Span<const std::byte> ssKey) const;
     size_t EstimateSizeImpl(Span<const std::byte> ssKey1, Span<const std::byte> ssKey2) const;
+    auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:
     CDBWrapper(const DBParams& params);
