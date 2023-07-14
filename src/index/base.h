@@ -85,7 +85,30 @@ private:
     /// with an empty datadir if, e.g., `-txindex=1` is specified.
     std::atomic<bool> m_synced{false};
 
-    /// The last block in the chain that the index is in sync with.
+    /// The best block in the chain that the index is considered synced to, as
+    /// reported by GetSummary. This field is not set in a consistent way and is
+    /// hard to rely on. In some cases, this points to the last block that has
+    /// been added to the index even if the data was not committed. In other
+    /// cases, this pointer lags behind as blocks are added to the index, and is
+    /// only updated when the data is committed.
+    ///
+    /// More specifically:
+    ///
+    /// - During initial sync when m_synced is false, m_best_block_index is not
+    ///   updated when blocks are added to the index. It is only updated when
+    ///   the data is committed (which is every 30 seconds, and at the end of
+    ///   the sync, and any time after blocks are rewound).
+    ///
+    /// - After initial sync when m_synced is true, m_best_block_index is set
+    ///   after each block is added to the index, whether or not the data is
+    ///   committed.
+    ///
+    /// - When there is a reorg, m_best_block_index is not set as individual blocks
+    ///   are removed from the index, only after all blocks are removed and the
+    ///   data is committed.
+    ///
+    /// - The m_best_block_index value is not consistent with the DB_BEST_BLOCK
+    ///   value, which can be updated at other times.
     std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
 
     std::thread m_thread_sync;
