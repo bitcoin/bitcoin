@@ -141,6 +141,7 @@ using node::CacheSizes;
 using node::CalculateCacheSizes;
 using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINTPRIORITY;
+using node::DEFAULT_STOPATHEIGHT;
 using node::fReindex;
 using node::KernelNotifications;
 using node::LoadChainstate;
@@ -1626,6 +1627,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     node.notifications = std::make_unique<KernelNotifications>(node.exit_status);
     // SYSCOIN
+    ReadNotificationArgs(args, *node.notifications);
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
     fReindexGeth = fReindex || fReindexChainState;
