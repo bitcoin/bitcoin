@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <exception>
 #include <leveldb/db.h>
-#include <leveldb/iterator.h>
 #include <leveldb/options.h>
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
@@ -27,6 +26,7 @@
 #include <vector>
 namespace leveldb {
 class Env;
+class Iterator;
 }
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
@@ -142,6 +142,7 @@ private:
 
     void SeekImpl(Span<const std::byte> ssKey);
     Span<const std::byte> GetKeyImpl() const;
+    Span<const std::byte> GetValueImpl() const;
 
 public:
 
@@ -177,9 +178,8 @@ public:
     }
 
     template<typename V> bool GetValue(V& value) {
-        leveldb::Slice slValue = piter->value();
         try {
-            CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
+            CDataStream ssValue{GetValueImpl(), SER_DISK, CLIENT_VERSION};
             ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
         } catch (const std::exception&) {

@@ -317,6 +317,11 @@ Span<const std::byte> CDBIterator::GetKeyImpl() const
     return MakeByteSpan(piter->key());
 }
 
+Span<const std::byte> CDBIterator::GetValueImpl() const
+{
+    return MakeByteSpan(piter->value());
+}
+
 CDBIterator::~CDBIterator() { delete piter; }
 bool CDBIterator::Valid() const { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
