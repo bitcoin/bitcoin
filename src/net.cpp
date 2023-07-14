@@ -275,7 +275,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
 CService MaybeFlipIPv6toCJDNS(const CService& service)
 {
     CService ret{service};
-    if (ret.m_net == NET_IPV6 && ret.m_addr[0] == 0xfc && IsReachable(NET_CJDNS)) {
+    if (ret.m_net == NET_IPV6 && ret.HasCJDNSPrefix() && IsReachable(NET_CJDNS)) {
         ret.m_net = NET_CJDNS;
     }
     return ret;

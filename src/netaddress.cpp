@@ -450,8 +450,7 @@ bool CNetAddr::IsValid() const
         return false;
     }
 
-    // CJDNS addresses always start with 0xfc
-    if (IsCJDNS() && (m_addr[0] != 0xFC)) {
+    if (IsCJDNS() && !HasCJDNSPrefix()) {
         return false;
     }
 
