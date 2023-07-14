@@ -106,6 +106,7 @@ BITCOIN_TESTS =\
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
+  test/i2p_tests.cpp \
   test/interfaces_tests.cpp \
   test/key_io_tests.cpp \
   test/key_tests.cpp \
@@ -248,6 +249,7 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/golomb_rice.cpp \
   test/fuzz/hex.cpp \
   test/fuzz/http_request.cpp \
+  test/fuzz/i2p.cpp \
   test/fuzz/integer.cpp \
   test/fuzz/key.cpp \
   test/fuzz/key_io.cpp \
