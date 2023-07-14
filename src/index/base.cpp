@@ -102,11 +102,32 @@ BaseIndex::~BaseIndex()
     Stop();
 }
 
+// Read index best block, register for block connected and disconnected
+// notifications, and determine where best block is relative to chain tip.
+//
+// If the chain tip and index best block are the same, `m_synced` will be set to
+// true so BlockConnected notifications will be processed after this call and
+// the index will update during node startup as the node::ImportBlocks()
+// function connects blocks. Otherwise the index will stay idle until
+// ImportBlocks() finishes and BaseIndex::StartBackgroundSync() is called later.
+//
+// If the node is being started for the first time, or if -reindex or
+// -reindex-chainstate are used, the chain tip will be null at this point,
+// meaning that no blocks in the chain, even a genesis block. The best block
+// locator will also be null if -reindex is used or if the index is new, but
+// will be non-null if -reindex-chainstate is used. Therefore:
+//
+// * -reindex causes the index to rebuild as the chain is rebuilt
+// * -reindex-chainstate causes the index to be idle until the chainstate is
+//   rebuilt and BaseIndex::StartBackgroundSync is called later.
+//
+// This ensures indexes are synced in the most efficient way possible in each
+// case.
 bool BaseIndex::Init()
 {
     AssertLockNotHeld(cs_main);
 
-    // May need reset if index is being restarted.
+    // May need reset if index is being restarted (e.g. after assumeutxo background validation)
     m_interrupt.reset();
 
     // m_chainstate member gives indexing code access to node internals. It is
@@ -354,6 +375,38 @@ void BaseIndex::BlockConnected(const ChainstateRole& role, const std::shared_ptr
         // m_synced. Consider the case where there is a reorg and the blocks on the stale branch are
         // in the ValidationInterface queue backlog even after the sync thread has caught up to the
         // new chain tip. In this unlikely event, log a warning and let the queue clear.
+        //
+        // To allow handling reorgs, this only checks that the new block
+        // connects to ancestor of the current best block, instead of checking
+        // that it connects to directly to the current block. If there is a
+        // reorg, Rewind call below will remove existing blocks from the index
+        // before adding the new one.
+        //
+        // It's also possible for the new block to connect to an ancestor of the
+        // current best block without a reorg when the m_synced flag gets set to
+        // true too early. For example if the index is synced to height 100, and
+        // -reindex-chainstate option is used, there may be BlockConnected
+        // notifications for blocks 97, 98, 99, and 100 sitting in the
+        // notifications queue when m_synced gets set to true. When this
+        // happens, the Rewind call below will remove these blocks from the
+        // index before they are attached again.
+        //
+        // To summarize, there are 4 cases:
+        //
+        //   1. Normal case where new block connects directly to current block.
+        //      New block is just appended below.
+        //
+        //   2. Reorg case where new block connects to ancestor of current
+        //      block. The index is rewound and the new block is appended.
+        //
+        //   3. Race case where m_synced is set to true too early and the new
+        //      block is a previously indexed ancestor of the current block.
+        //      Index is rewound, and the block is appended a second time.
+        //
+        //   4. Race case where m_synced is set to true too early and
+        //      there has been a reorg, and the new block is from the stale
+        //      branch of the reorg. In this case the ancestor check here fails,
+        //      and logs a warning, and returns early ignoring the stale block.
         if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
             LogWarning("Block %s does not connect to an ancestor of "
                       "known best chain (tip=%s); not updating index",
