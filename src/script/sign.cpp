@@ -14,6 +14,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <util/vector.h>
 
@@ -361,7 +362,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TxoutType::WITNESS_V1_TAPROOT:
         return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 static CScript PushAll(const std::vector<valtype>& values)

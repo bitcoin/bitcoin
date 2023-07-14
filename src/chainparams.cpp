@@ -12,6 +12,7 @@
 #include <logging.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -123,8 +124,8 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
     }
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 void SelectParams(const ChainType chain)

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/connection_types.h>
-#include <cassert>
+#include <util/check.h>
 
 std::string ConnectionTypeAsString(ConnectionType conn_type)
 {
@@ -21,6 +21,5 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
     case ConnectionType::ADDR_FETCH:
         return "addr-fetch";
     } // no default case, so the compiler can warn about missing cases
-
-    assert(false);
+    UNREACHABLE();
 }

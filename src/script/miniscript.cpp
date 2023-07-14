@@ -7,6 +7,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <script/miniscript.h>
+#include <util/check.h>
 
 #include <assert.h>
 
@@ -243,8 +244,8 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
                    "s"_mst.If(num_s >= n_subs - k + 1) |  // s= >=(n-k+1) s
                    acc_tl; // timelock info
             }
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys) {
@@ -275,8 +276,8 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::ANDOR: return subsize + 3;
         case Fragment::WRAP_J: return subsize + 4;
         case Fragment::THRESH: return subsize + n_subs + BuildScript(k).size();
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 InputStack& InputStack::SetAvailable(Availability avail) {

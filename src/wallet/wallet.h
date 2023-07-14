@@ -15,6 +15,7 @@
 #include <policy/feerate.h>
 #include <psbt.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/message.h>
@@ -251,7 +252,7 @@ inline std::string PurposeToString(AddressPurpose p)
     case AddressPurpose::SEND: return "send";
     case AddressPurpose::REFUND: return "refund";
     } // no default case so the compiler will warn when a new enum as added
-    assert(false);
+    UNREACHABLE();
 }
 
 inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)

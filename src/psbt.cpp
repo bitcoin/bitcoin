@@ -525,9 +525,8 @@ std::string PSBTRoleName(PSBTRole role) {
     case PSBTRole::SIGNER: return "signer";
     case PSBTRole::FINALIZER: return "finalizer";
     case PSBTRole::EXTRACTOR: return "extractor";
-        // no default case, so the compiler can warn about missing cases
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)

@@ -20,6 +20,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <span.h>
+#include <util/check.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -613,8 +614,8 @@ public:
                     }
                     return BuildScript(std::move(script), node.k, verify ? OP_EQUALVERIFY : OP_EQUAL);
                 }
-            }
-            assert(false);
+            } // no default case, so the compiler can warn about missing cases
+            UNREACHABLE();
         };
         return TreeEval<CScript>(false, downfn, upfn);
     }
@@ -716,7 +717,7 @@ public:
                 }
                 default: break;
             }
-            assert(false);
+            UNREACHABLE();
         };
 
         return TreeEvalMaybe<std::string>(false, downfn, upfn);
@@ -792,8 +793,8 @@ private:
                 assert(k <= sats.size());
                 return {count, sats[k], sats[0]};
             }
-        }
-        assert(false);
+        } // no default case, so the compiler can warn about missing cases
+        UNREACHABLE();
     }
 
     internal::StackSize CalcStackSize() const {
@@ -842,8 +843,8 @@ private:
                 assert(k <= sats.size());
                 return {sats[k], sats[0]};
             }
-        }
-        assert(false);
+        } // no default case, so the compiler can warn about missing cases
+        UNREACHABLE();
     }
 
     template<typename Ctx>

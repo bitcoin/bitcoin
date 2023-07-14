@@ -8,6 +8,7 @@
 #include <common/args.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 
 #include <assert.h>
 
@@ -47,8 +48,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
         return std::make_unique<CBaseChainParams>("signet", 38332, 38334);
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443, 18445);
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 void SelectBaseParams(const ChainType chain)

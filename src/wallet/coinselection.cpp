@@ -588,9 +588,8 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     case SelectionAlgorithm::KNAPSACK: return "knapsack";
     case SelectionAlgorithm::SRD: return "srd";
     case SelectionAlgorithm::MANUAL: return "manual";
-    // No default case to allow for compiler to warn
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 CAmount SelectionResult::GetChange(const CAmount min_viable_change, const CAmount change_fee) const

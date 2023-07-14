@@ -10,6 +10,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <string>
@@ -57,7 +58,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
@@ -287,7 +288,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     case TxoutType::NONSTANDARD:
         return false;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 namespace {

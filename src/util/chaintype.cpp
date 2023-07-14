@@ -4,6 +4,8 @@
 
 #include <util/chaintype.h>
 
+#include <util/check.h>
+
 #include <cassert>
 #include <optional>
 #include <string>
@@ -19,8 +21,8 @@ std::string ChainTypeToString(ChainType chain)
         return "signet";
     case ChainType::REGTEST:
         return "regtest";
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }
 
 std::optional<ChainType> ChainTypeFromString(std::string_view chain)

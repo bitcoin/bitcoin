@@ -10,6 +10,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <util/check.h>
 #include <util/vector.h>
 
 #include <assert.h>
@@ -45,7 +46,7 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::BECH32M: return OUTPUT_TYPE_STRING_BECH32M;
     case OutputType::UNKNOWN: return OUTPUT_TYPE_STRING_UNKNOWN;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
@@ -66,7 +67,7 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     case OutputType::BECH32M:
     case OutputType::UNKNOWN: {} // This function should never be used with BECH32M or UNKNOWN, so let it assert
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
@@ -105,7 +106,7 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
     case OutputType::BECH32M:
     case OutputType::UNKNOWN: {} // This function should not be used for BECH32M or UNKNOWN, so let it assert
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) {

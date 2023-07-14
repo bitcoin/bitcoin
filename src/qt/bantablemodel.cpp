@@ -6,6 +6,7 @@
 
 #include <interfaces/node.h>
 #include <net_types.h> // For banmap_t
+#include <util/check.h>
 
 #include <utility>
 
@@ -29,7 +30,7 @@ bool BannedNodeLessThan::operator()(const CCombinedBan& left, const CCombinedBan
     case BanTableModel::Bantime:
         return pLeft->banEntry.nBanUntil < pRight->banEntry.nBanUntil;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 // private implementation

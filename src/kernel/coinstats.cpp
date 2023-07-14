@@ -171,7 +171,7 @@ std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsV
             return ComputeUTXOStats(view, stats, nullptr, interruption_point);
         }
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        UNREACHABLE();
     }();
 
     if (!success) {

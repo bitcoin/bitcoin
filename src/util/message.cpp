@@ -9,6 +9,7 @@
 #include <pubkey.h>
 #include <script/standard.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/message.h>
 #include <util/strencodings.h>
 
@@ -88,7 +89,6 @@ std::string SigningResultString(const SigningResult res)
             return "Private key not available";
         case SigningResult::SIGNING_FAILED:
             return "Sign failed";
-        // no default case, so the compiler can warn about missing cases
-    }
-    assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    UNREACHABLE();
 }

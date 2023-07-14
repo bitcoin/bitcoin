@@ -5,6 +5,7 @@
 #include <qt/bitcoinunits.h>
 
 #include <consensus/amount.h>
+#include <util/check.h>
 
 #include <QStringList>
 
@@ -36,7 +37,7 @@ QString BitcoinUnits::longName(Unit unit)
     case Unit::uBTC: return QString::fromUtf8("µBTC (bits)");
     case Unit::SAT: return QString("Satoshi (sat)");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 QString BitcoinUnits::shortName(Unit unit)
@@ -47,7 +48,7 @@ QString BitcoinUnits::shortName(Unit unit)
     case Unit::uBTC: return QString("bits");
     case Unit::SAT: return QString("sat");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 QString BitcoinUnits::description(Unit unit)
@@ -58,7 +59,7 @@ QString BitcoinUnits::description(Unit unit)
     case Unit::uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     case Unit::SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 qint64 BitcoinUnits::factor(Unit unit)
@@ -69,7 +70,7 @@ qint64 BitcoinUnits::factor(Unit unit)
     case Unit::uBTC: return 100;
     case Unit::SAT: return 1;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 int BitcoinUnits::decimals(Unit unit)
@@ -80,7 +81,7 @@ int BitcoinUnits::decimals(Unit unit)
     case Unit::uBTC: return 2;
     case Unit::SAT: return 0;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
@@ -237,7 +238,7 @@ qint8 ToQint8(BitcoinUnit unit)
     case BitcoinUnit::uBTC: return 2;
     case BitcoinUnit::SAT: return 3;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 BitcoinUnit FromQint8(qint8 num)
@@ -248,7 +249,7 @@ BitcoinUnit FromQint8(qint8 num)
     case 2: return BitcoinUnit::uBTC;
     case 3: return BitcoinUnit::SAT;
     }
-    assert(false);
+    UNREACHABLE();
 }
 } // namespace
 

@@ -18,6 +18,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/serfloat.h>
 #include <util/time.h>
@@ -41,7 +42,7 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     case FeeEstimateHorizon::MED_HALFLIFE: return "medium";
     case FeeEstimateHorizon::LONG_HALFLIFE: return "long";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 namespace {
@@ -743,7 +744,7 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
         return longStats->GetMaxConfirms();
     }
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const

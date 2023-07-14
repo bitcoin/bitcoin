@@ -8,6 +8,7 @@
 #include <qt/walletmodel.h>
 
 #include <key_io.h>
+#include <util/check.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
 
@@ -61,7 +62,7 @@ constexpr AddressTableEntry::Type translateTransactionType(wallet::AddressPurpos
     case wallet::AddressPurpose::RECEIVE: return AddressTableEntry::Receiving;
     case wallet::AddressPurpose::REFUND: return AddressTableEntry::Hidden;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 
 // Private implementation

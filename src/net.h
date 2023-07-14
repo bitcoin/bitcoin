@@ -453,8 +453,7 @@ public:
             case ConnectionType::FEELER:
                 return false;
         } // no default case, so the compiler can warn about missing cases
-
-        assert(false);
+        UNREACHABLE();
     }
 
     bool IsFullOutboundConn() const {
@@ -492,8 +491,7 @@ public:
             case ConnectionType::ADDR_FETCH:
                 return true;
         } // no default case, so the compiler can warn about missing cases
-
-        assert(false);
+        UNREACHABLE();
     }
 
     /**
