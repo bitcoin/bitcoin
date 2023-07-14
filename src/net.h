@@ -984,7 +984,7 @@ public:
     std::unique_ptr<TransportDeserializer> m_deserializer;
     std::unique_ptr<TransportSerializer> m_serializer;
 
-    // socket
+    NetPermissionFlags m_permissionFlags{ PF_NONE };
     std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
     size_t nSendSize{0}; // total size of all vSendMsg entries
@@ -1198,7 +1198,6 @@ private:
     const ServiceFlags nLocalServices;
 
     int nSendVersion {0};
-    NetPermissionFlags m_permissionFlags{ PF_NONE };
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable RecursiveMutex cs_addrName;

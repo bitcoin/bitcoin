@@ -45,10 +45,9 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
         CNode& p2p_node = *peers.back();
 
+        FillNode(fuzzed_data_provider, p2p_node);
         p2p_node.fSuccessfullyConnected = true;
         p2p_node.fPauseSend = false;
-        p2p_node.nVersion = PROTOCOL_VERSION;
-        p2p_node.SetSendVersion(PROTOCOL_VERSION);
         g_setup->m_node.peerman->InitializeNode(&p2p_node);
 
         connman.AddTestNode(p2p_node);
