@@ -81,9 +81,10 @@ int main(int argc, char* argv[])
     class KernelNotifications : public kernel::Notifications
     {
     public:
-        void blockTip(SynchronizationState, CBlockIndex&) override
+        kernel::InterruptResult blockTip(SynchronizationState, CBlockIndex&) override
         {
             std::cout << "Block tip changed" << std::endl;
+            return {};
         }
         void headerTip(SynchronizationState, int64_t height, int64_t timestamp, bool presync) override
         {

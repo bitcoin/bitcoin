@@ -956,7 +956,6 @@ libbitcoinkernel_la_SOURCES = \
   script/script_error.cpp \
   script/sigcache.cpp \
   script/standard.cpp \
-  shutdown.cpp \
   signet.cpp \
   support/cleanse.cpp \
   support/lockedpool.cpp \

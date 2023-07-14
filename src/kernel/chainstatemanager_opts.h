@@ -21,7 +21,6 @@ class CChainParams;
 
 static constexpr bool DEFAULT_CHECKPOINTS_ENABLED{true};
 static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
-static constexpr int DEFAULT_STOPATHEIGHT{0};
 
 namespace kernel {
 
@@ -46,7 +45,6 @@ struct ChainstateManagerOpts {
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
     Notifications& notifications;
-    int stop_at_height{DEFAULT_STOPATHEIGHT};
 };
 
 } // namespace kernel
