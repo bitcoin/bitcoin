@@ -158,11 +158,8 @@ uint16_t GetListenPort()
             // For privacy reasons, don't advertise our privacy-network address
             // to other networks and don't advertise our other-network address
             // to privacy networks.
-            const Network our_net{local_addr.GetNetwork()};
-            const Network peers_net{peer.ConnectedThroughNetwork()};
-            if (our_net != peers_net &&
-                (our_net == NET_ONION || our_net == NET_I2P ||
-                 peers_net == NET_ONION || peers_net == NET_I2P)) {
+            if (local_addr.GetNetwork() != peer.ConnectedThroughNetwork()
+                && (local_addr.IsPrivacyNet() || peer.IsConnectedThroughPrivacyNet())) {
                 continue;
             }
             const int nScore{local_service_info.nScore};
@@ -272,7 +269,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
 CService MaybeFlipIPv6toCJDNS(const CService& service)
 {
     CService ret{service};
-    if (ret.m_net == NET_IPV6 && ret.HasCJDNSPrefix() && IsReachable(NET_CJDNS)) {
+    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && IsReachable(NET_CJDNS)) {
         ret.m_net = NET_CJDNS;
     }
     return ret;
@@ -488,7 +485,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         const bool use_proxy{GetProxy(addrConnect.GetNetwork(), proxy)};
         bool proxyConnectionFailed = false;
 
-        if (addrConnect.GetNetwork() == NET_I2P && use_proxy) {
+        if (addrConnect.IsI2P() && use_proxy) {
             i2p::Connection conn;
 
             if (m_i2p_sam_session) {
