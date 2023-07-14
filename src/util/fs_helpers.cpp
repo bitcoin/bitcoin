@@ -11,13 +11,11 @@
 
 #include <logging.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <util/fs.h>
 #include <util/getuniquepath.h>
 #include <util/syserror.h>
 
 #include <cerrno>
-#include <filesystem>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -263,7 +261,7 @@ bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef __MINGW64__
     // This is a workaround for a bug in libstdc++ which
-    // implements std::filesystem::rename with _wrename function.
+    // implements fs::rename with _wrename function.
     // This bug has been fixed in upstream:
     //  - GCC 10.3: 8dd1c1085587c9f8a21bb5e588dfe1e8cdbba79e
     //  - GCC 11.1: 1dfd95f0a0ca1d9e6cbc00e6cbfd1fa20a98f312
