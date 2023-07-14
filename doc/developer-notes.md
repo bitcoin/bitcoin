@@ -844,11 +844,11 @@ int GetInt(Tabs tab)
     case Tabs::network_graph: return 2;
     case Tabs::peers: return 3;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    UNREACHABLE();
 }
 ```
 
-*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
+*Rationale*: The comment documents skipping the `default:` case, and it complies with `clang-format` rules. The `UNREACHABLE` macro prevents firing of `-Wreturn-type`/`C4715` warnings on some compilers. In the RPC code, the `NONFATAL_UNREACHABLE` macro might be more appropriate instead.
 
 Strings and formatting
 ------------------------
