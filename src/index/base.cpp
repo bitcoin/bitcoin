@@ -82,6 +82,32 @@ BaseIndex::~BaseIndex()
     Stop();
 }
 
+// Read index best block, register for block connected and disconnected
+// notifications, and determine where best block is relative to chain tip.
+//
+// If the chain tip and index best block are the same, block connected and
+// disconnected notifications will be enabled after this call and the index
+// will update as the ImportBlocks() function connects blocks and sends
+// notifications. Otherwise, when the chain tip and index best block are not
+// the same, the index will stay idle until ImportBlocks() finishes and
+// BaseIndex::StartBackgroundSync() is called after.
+//
+// If the node is being started for the first time, or if -reindex or
+// -reindex-chainstate are used, the chain tip will be null at this point,
+// meaning that no blocks are attached, even a genesis block. The best block
+// locator will also be null if -reindex is used or if the index is new, but
+// will be non-null if -reindex-chainstate is used. So -reindex will cause the
+// index to be considered synced and rebuild right away as the chain is
+// rebuilt, while -reindex-chainstate will cause the index to be idle until the
+// chain is rebuilt and BaseIndex::StartBackgroundSync is called after.
+//
+// All of this just ensures that -reindex and -reindex-chainstate options both
+// function efficiently. If -reindex is used, both the chainstate and index are
+// wiped, and the index is considered synced right away and gets rebuilt at the
+// same time as the chainstate. If -reindex-chainstate is used, only the
+// chainstate is wiped, not the index, so the index will be considered not
+// synced, and the chainstate will update first, and the index will start
+// syncing after. So the most efficient thing should happen in both cases.
 bool BaseIndex::Init()
 {
     AssertLockNotHeld(cs_main);
@@ -339,6 +365,38 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
         // m_synced. Consider the case where there is a reorg and the blocks on the stale branch are
         // in the ValidationInterface queue backlog even after the sync thread has caught up to the
         // new chain tip. In this unlikely event, log a warning and let the queue clear.
+        //
+        // To allow handling reorgs, this only checks that the new block
+        // connects to ancestor of the current best block, instead of checking
+        // that it connects to directly to the current block. If there is a
+        // reorg, Rewind call below will remove existing blocks from the index
+        // before adding the new one.
+        //
+        // The other case where the new block will connect to an ancestor of the
+        // current block rather than the current block is when the m_synced flag
+        // is set to true too early. For example if the index is synced to
+        // height 100, and -reindex-chainstate option is used, there may be
+        // BlockConnected notifications for blocks 97, 98, 99, and 100 sitting
+        // in the notifications queue when m_synced gets set to true. When this
+        // happens, the Rewind call below will remove these blocks from the
+        // index before they are attached again.
+        //
+        // To summarize, there are 4 cases:
+        //
+        //   1. Normal case where new block connects directly to current block.
+        //      New block is just appended below.
+        //
+        //   2. Reorg case where new block connects to ancestor of current
+        //      block. The index is rewound and then the new block is appended.
+        //
+        //   3. Race condition case where m_synced is set to true too early and
+        //      the new block is stale and is an ancestor of the current block.
+        //      Index is rewound, and the stale block is reattached again.
+        //
+        //   4. Race condition case where m_synced is set to true too early and
+        //      there has been a reorg, and the new block is from the stale
+        //      branch of the reorg. In this case the ancestor check here fails,
+        //      and logs a warning, and returns early ignoring the stale block.
         if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
             LogWarning("Block %s does not connect to an ancestor of "
                       "known best chain (tip=%s); not updating index",
