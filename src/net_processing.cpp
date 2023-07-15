@@ -265,9 +265,9 @@ struct Peer {
         std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
 
         mutable RecursiveMutex m_tx_inventory_mutex;
-        /** A filter of all the txids and wtxids that the peer has announced to
+        /** A filter of all the (w)txids that the peer has announced to
          *  us or we have announced to the peer. We use this to avoid announcing
-         *  the same txid/wtxid to a peer that already has the transaction. */
+         *  the same (w)txid to a peer that already has the transaction. */
         CRollingBloomFilter m_tx_inventory_known_filter GUARDED_BY(m_tx_inventory_mutex){50000, 0.000001};
         /** Set of transaction ids we still have to announce (txid for
          *  non-wtxid-relay peers, wtxid for wtxid-relay peers). We use the
@@ -4089,14 +4089,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
         AddKnownTx(*peer, hash);
-        if (peer->m_wtxid_relay && txid != wtxid) {
-            // Insert txid into m_tx_inventory_known_filter, even for
-            // wtxidrelay peers. This prevents re-adding of
-            // unconfirmed parents to the recently_announced
-            // filter, when a child tx is requested. See
-            // ProcessGetData().
-            AddKnownTx(*peer, txid);
-        }
 
         LOCK(cs_main);
 
@@ -5748,14 +5740,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             vInv.clear();
                         }
                         tx_relay->m_tx_inventory_known_filter.insert(hash);
-                        if (peer->m_wtxid_relay && hash != txinfo.tx->GetHash()) {
-                            // Insert txid into m_tx_inventory_known_filter, even for
-                            // wtxidrelay peers. This prevents re-adding of
-                            // unconfirmed parents to the recently_announced
-                            // filter, when a child tx is requested. See
-                            // ProcessGetData().
-                            tx_relay->m_tx_inventory_known_filter.insert(txinfo.tx->GetHash());
-                        }
                     }
 
                     // Ensure we'll respond to GETDATA requests for anything we've just announced
