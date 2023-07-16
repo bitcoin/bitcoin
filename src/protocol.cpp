@@ -47,7 +47,6 @@ MAKE_MSG(CFHEADERS, "cfheaders");
 MAKE_MSG(GETCFCHECKPT, "getcfcheckpt");
 MAKE_MSG(CFCHECKPT, "cfcheckpt");
 // Dash message types
-MAKE_MSG(LEGACYTXLOCKREQUEST, "ix");
 MAKE_MSG(SPORK, "spork");
 MAKE_MSG(GETSPORKS, "getsporks");
 MAKE_MSG(DSACCEPT, "dsa");
@@ -129,7 +128,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CFCHECKPT,
     // Dash message types
     // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
-    NetMsgType::LEGACYTXLOCKREQUEST,
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
     NetMsgType::SENDDSQUEUE,
@@ -186,7 +184,6 @@ const static std::string netMessageTypesViolateBlocksOnly[] = {
     NetMsgType::DSSTATUSUPDATE,
     NetMsgType::DSTX,
     NetMsgType::DSVIN,
-    NetMsgType::LEGACYTXLOCKREQUEST,
     NetMsgType::QBSIGSHARES,
     NetMsgType::QCOMPLAINT,
     NetMsgType::QCONTRIB,
@@ -312,7 +309,6 @@ const char* CInv::GetCommandInternal() const
         case MSG_TX:                            return NetMsgType::TX;
         case MSG_BLOCK:                         return NetMsgType::BLOCK;
         case MSG_FILTERED_BLOCK:                return NetMsgType::MERKLEBLOCK;
-        case MSG_LEGACY_TXLOCK_REQUEST:         return NetMsgType::LEGACYTXLOCKREQUEST;
         case MSG_CMPCT_BLOCK:                   return NetMsgType::CMPCTBLOCK;
         case MSG_SPORK:                         return NetMsgType::SPORK;
         case MSG_DSTX:                          return NetMsgType::DSTX;

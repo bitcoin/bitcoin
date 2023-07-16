@@ -1783,7 +1783,6 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     {
     case MSG_TX:
     case MSG_DSTX:
-    case MSG_LEGACY_TXLOCK_REQUEST: // we treat legacy IX messages as TX messages
         {
             assert(recentRejects);
             if (m_chainman.ActiveChain().Tip()->GetBlockHash() != hashRecentRejectsChainTip)
@@ -3502,16 +3501,13 @@ void PeerManagerImpl::ProcessMessage(
         return;
     }
 
-    if (msg_type == NetMsgType::TX || msg_type == NetMsgType::DSTX || msg_type == NetMsgType::LEGACYTXLOCKREQUEST) {
+    if (msg_type == NetMsgType::TX || msg_type == NetMsgType::DSTX) {
         CTransactionRef ptx;
         CCoinJoinBroadcastTx dstx;
         int nInvType = MSG_TX;
 
         // Read data and assign inv type
         if(msg_type == NetMsgType::TX) {
-            vRecv >> ptx;
-        } else if(msg_type == NetMsgType::LEGACYTXLOCKREQUEST) {
-            // we keep processing the legacy IX message here but revert to handling it as a regular TX
             vRecv >> ptx;
         } else if (msg_type == NetMsgType::DSTX) {
             vRecv >> dstx;
