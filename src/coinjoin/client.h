@@ -159,6 +159,7 @@ class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 private:
     CConnman& connman;
     const CMasternodeSync& m_mn_sync;
+    mutable Mutex cs_ProcessDSQueue;
 
 public:
     explicit CCoinJoinClientQueueManager(CConnman& _connman, const CMasternodeSync& mn_sync) :

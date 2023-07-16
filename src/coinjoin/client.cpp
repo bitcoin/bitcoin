@@ -68,66 +68,75 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
     }
 
     {
-        TRY_LOCK(cs_vecqueue, lockRecv);
-        if (!lockRecv) return;
+        LOCK(cs_ProcessDSQueue);
 
-        // process every dsq only once
-        for (const auto& q : vecCoinJoinQueue) {
-            if (q == dsq) {
-                return;
+        {
+            LOCK(cs_vecqueue);
+            // process every dsq only once
+            for (const auto &q: vecCoinJoinQueue) {
+                if (q == dsq) {
+                    return;
+                }
+                if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                    // no way the same mn can send another dsq with the same readiness this soon
+                    LogPrint(BCLog::COINJOIN, /* Continued */
+                             "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n",
+                             peer.GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                    return;
+                }
             }
-            if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
-                // no way the same mn can send another dsq with the same readiness this soon
-                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", peer.GetLogString(), dsq.masternodeOutpoint.ToStringShort());
-                return;
-            }
+        } // cs_vecqueue
+
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
+
+        if (dsq.IsTimeOutOfBounds()) return;
+
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        if (!dmn) return;
+
+        if (dsq.m_protxHash.IsNull()) {
+            dsq.m_protxHash = dmn->proTxHash;
         }
-    } // cs_vecqueue
 
-    LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
-
-    if (dsq.IsTimeOutOfBounds()) return;
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
-    if (!dmn) return;
-
-    if (dsq.m_protxHash.IsNull()) {
-        dsq.m_protxHash = dmn->proTxHash;
-    }
-
-    if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-        peerman.Misbehaving(peer.GetId(), 10);
-        return;
-    }
-
-    // if the queue is ready, submit if we can
-    if (dsq.fReady && ranges::any_of(coinJoinClientManagers,
-                                     [this, &dmn](const auto& pair){ return pair.second->TrySubmitDenominate(dmn->pdmnState->addr, this->connman); })) {
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
-        return;
-    } else {
-        int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-        int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman.GetDsqCount());
-        // don't allow a few nodes to dominate the queuing process
-        if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
+        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+            peerman.Misbehaving(peer.GetId(), 10);
             return;
         }
 
-        mmetaman.AllowMixing(dmn->proTxHash);
+        // if the queue is ready, submit if we can
+        if (dsq.fReady && ranges::any_of(coinJoinClientManagers,
+                                         [this, &dmn](const auto &pair) {
+                                             return pair.second->TrySubmitDenominate(dmn->pdmnState->addr,
+                                                                                     this->connman);
+                                         })) {
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(),
+                     dmn->pdmnState->addr.ToString());
+            return;
+        } else {
+            int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+            int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq,
+                     nDsqThreshold, mmetaman.GetDsqCount());
+            // don't allow a few nodes to dominate the queuing process
+            if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
+                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n",
+                         dmn->proTxHash.ToString());
+                return;
+            }
 
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+            mmetaman.AllowMixing(dmn->proTxHash);
 
-        ranges::any_of(coinJoinClientManagers,
-                       [&dsq](const auto& pair){ return pair.second->MarkAlreadyJoinedQueueAsTried(dsq); });
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(),
+                     dmn->pdmnState->addr.ToString());
 
-        {TRY_LOCK(cs_vecqueue, lockRecv);
-        if (!lockRecv) return;
-        vecCoinJoinQueue.push_back(dsq);}
-        dsq.Relay(connman);
-    }
+            ranges::any_of(coinJoinClientManagers,
+                           [&dsq](const auto &pair) { return pair.second->MarkAlreadyJoinedQueueAsTried(dsq); });
+
+            WITH_LOCK(cs_vecqueue, vecCoinJoinQueue.push_back(dsq));
+        }
+    } // cs_ProcessDSQueue
+    dsq.Relay(connman);
 }
 
 void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
