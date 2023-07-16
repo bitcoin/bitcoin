@@ -7,10 +7,8 @@ To run linters locally with the same versions as the CI environment, use the inc
 Dockerfile:
 
 ```sh
-cd ./ci/lint
-docker build -t bitcoin-linter .
+DOCKER_BUILDKIT=1 docker build -t bitcoin-linter --file "./ci/lint_imagefile" ./
 
-cd /root/of/bitcoin/repo
 docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
 ```
 
