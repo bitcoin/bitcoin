@@ -787,7 +787,9 @@ public:
     void chainStateFlushed(ChainstateRole role, const CBlockLocator& loc) override;
 
     DBErrors LoadWallet();
-    DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /** Erases the provided transactions from the wallet. */
+    util::Result<void> ZapSelectTx(std::vector<uint256>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& purpose);
 
