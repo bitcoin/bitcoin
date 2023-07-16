@@ -3934,10 +3934,6 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             error = _("Error: Not all watchonly txs could be deleted");
             return false;
         }
-        // Tell the GUI of each tx
-        for (const uint256& txid : deleted_txids) {
-            NotifyTransactionChanged(txid, CT_UPDATED);
-        }
     }
 
     // Check the address book data in the same way we did for transactions
