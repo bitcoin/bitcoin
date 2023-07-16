@@ -37,6 +37,9 @@ public:
 
     void fatalError(const std::string& debug_message, const bilingual_str& user_message = {}) override;
 
+    // SYSCOIN
+    void exitWhenSynced() override;
+
     //! Block height after which blockTip notification will return Interrupted{}, if >0.
     int m_stop_at_height{DEFAULT_STOPATHEIGHT};
     //! Useful for tests, can be set to false to avoid shutdown on fatal error.

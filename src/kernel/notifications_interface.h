@@ -58,6 +58,8 @@ public:
     //! the user, or triggering an early shutdown as a precaution against
     //! causing more errors.
     virtual void fatalError(const std::string& debug_message, const bilingual_str& user_message = {}) {}
+    // SYSCOIN
+    virtual void exitWhenSynced() {}
 };
 } // namespace kernel
 

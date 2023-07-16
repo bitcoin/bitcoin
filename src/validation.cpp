@@ -2154,7 +2154,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
                 // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
                 const std::vector<std::string> &cmdLine = m_chainman.GethCommandLine();
                 if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
-                    StartShutdown();
+                    m_chainman.GetNotifications().exitWhenSynced();
                     return true;
                 }
             }
@@ -2176,7 +2176,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
                             // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
                             const std::vector<std::string> &cmdLine = m_chainman.GethCommandLine();
                             if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
-                                StartShutdown();
+                                m_chainman.GetNotifications().exitWhenSynced();
                                 return true;
                             }
                         }
@@ -4151,7 +4151,7 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
         // SYSCOIN for MN list to update
-        m_chainman.GetNotifications().blockTip(GetSynchronizationState(IsInitialBlockDownload()), *pindex->pprev);
+        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(IsInitialBlockDownload()), *pindex->pprev);
     }
     return true;
 }

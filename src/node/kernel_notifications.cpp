@@ -73,6 +73,12 @@ void KernelNotifications::headerTip(SynchronizationState state, int64_t height, 
     uiInterface.NotifyHeaderTip(state, height, timestamp, presync);
 }
 
+// SYSCOIN
+void KernelNotifications::exitWhenSynced()
+{
+    StartShutdown();   
+}
+
 void KernelNotifications::progress(const bilingual_str& title, int progress_percent, bool resume_possible)
 {
     uiInterface.ShowProgress(title.translated, progress_percent, resume_possible);
