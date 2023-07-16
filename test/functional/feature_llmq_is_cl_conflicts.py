@@ -10,7 +10,6 @@ Checks conflict handling between ChainLocks and InstantSend
 
 '''
 
-from codecs import encode
 from decimal import Decimal
 import struct
 
@@ -94,7 +93,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx2_obj = FromHex(CTransaction(), rawtx2)
 
         rawtx1_txid = self.nodes[0].sendrawtransaction(rawtx1)
-        rawtx2_txid = encode(hash256(hex_str_to_bytes(rawtx2))[::-1], 'hex_codec').decode('ascii')
+        rawtx2_txid = hash256(hex_str_to_bytes(rawtx2))[::-1].hex()
 
         # Create a chained TX on top of tx1
         inputs = []
@@ -207,8 +206,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
 
-        rawtx1_txid = encode(hash256(hex_str_to_bytes(rawtx1))[::-1], 'hex_codec').decode('ascii')
-        rawtx2_txid = encode(hash256(hex_str_to_bytes(rawtx2))[::-1], 'hex_codec').decode('ascii')
+        rawtx1_txid = hash256(hex_str_to_bytes(rawtx1))[::-1].hex()
+        rawtx2_txid = hash256(hex_str_to_bytes(rawtx2))[::-1].hex()
 
         # Create an ISLOCK but don't broadcast it yet
         islock = self.create_islock(rawtx2, deterministic)

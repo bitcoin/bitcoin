@@ -16,7 +16,7 @@ ser_*, deser_*: functions that handle serialization/deserialization.
 Classes use __slots__ to ensure extraneous attributes aren't accidentally added
 by tests, compromising their intended effect.
 """
-from codecs import encode
+
 import copy
 from collections import namedtuple
 import hashlib
@@ -495,7 +495,7 @@ class CTransaction:
     def calc_sha256(self):
         if self.sha256 is None:
             self.sha256 = uint256_from_str(hash256(self.serialize()))
-        self.hash = encode(hash256(self.serialize())[::-1], 'hex_codec').decode('ascii')
+        self.hash = hash256(self.serialize())[::-1].hex()
 
     def is_valid(self):
         self.calc_sha256()
@@ -567,7 +567,7 @@ class CBlockHeader:
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
             self.sha256 = uint256_from_str(dashhash(r))
-            self.hash = encode(dashhash(r)[::-1], 'hex_codec').decode('ascii')
+            self.hash = dashhash(r)[::-1].hex()
 
     def rehash(self):
         self.sha256 = None
@@ -723,7 +723,7 @@ class CompressibleBlockHeader:
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
             self.sha256 = uint256_from_str(dashhash(r))
-            self.hash = int(encode(dashhash(r)[::-1], 'hex_codec'), 16)
+            self.hash = int(dashhash(r)[::-1].hex(), 16)
 
     def rehash(self):
         self.sha256 = None

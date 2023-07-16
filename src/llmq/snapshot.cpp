@@ -251,7 +251,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
 
     auto snapshotHMinus2C = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pBlockHMinus2CIndex);
     if (!snapshotHMinus2C.has_value()) {
-        errorRet = strprintf("Can not find quorum snapshot at H-C");
+        errorRet = strprintf("Can not find quorum snapshot at H-2C");
         return false;
     } else {
         response.quorumSnapshotAtHMinus2C = std::move(snapshotHMinus2C.value());
@@ -263,7 +263,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
 
     auto snapshotHMinus3C = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pBlockHMinus3CIndex);
     if (!snapshotHMinus3C.has_value()) {
-        errorRet = strprintf("Can not find quorum snapshot at H-C");
+        errorRet = strprintf("Can not find quorum snapshot at H-3C");
         return false;
     } else {
         response.quorumSnapshotAtHMinus3C = std::move(snapshotHMinus3C.value());

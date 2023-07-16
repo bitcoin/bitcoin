@@ -1592,7 +1592,7 @@ void CInstantSendManager::ProcessPendingRetryLockTxs()
             if (IsLocked(tx->GetHash())) {
                 continue;
             }
-            if (IsConflicted(*tx)) {
+            if (GetConflictingLock(*tx) != nullptr) {
                 // should not really happen as we have already filtered these out
                 continue;
             }

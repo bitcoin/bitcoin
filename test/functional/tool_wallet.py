@@ -69,7 +69,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Invalid command: help', 'help')
         self.assert_raises_tool_error('Error: two methods provided (info and create). Only one method should be provided.', 'info', 'create')
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
-        locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
+        locked_dir = os.path.join(self.options.tmpdir, "node0", self.chain, "wallets")
         error = "SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another dashd?"
         if self.is_bdb_compiled():
             error = 'Error initializing wallet database environment "{}"!'.format(locked_dir)
@@ -78,7 +78,7 @@ class ToolWalletTest(BitcoinTestFramework):
             '-wallet=' + self.default_wallet_name,
             'info',
         )
-        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "nonexistent.dat")
+        path = os.path.join(self.options.tmpdir, "node0", self.chain, "wallets", "nonexistent.dat")
         self.assert_raises_tool_error("Failed to load database path '{}'. Path does not exist.".format(path), '-wallet=nonexistent.dat', 'info')
 
     def test_tool_wallet_info(self):
