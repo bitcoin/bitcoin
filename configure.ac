@@ -427,12 +427,6 @@ if test "$enable_werror" = "yes"; then
     AC_MSG_ERROR([enable-werror set but -Werror is not usable])
   fi
   ERROR_CXXFLAGS=$CXXFLAG_WERROR
-
-  dnl -Wreturn-type is broken in GCC for MinGW-w64.
-  dnl https://sourceforge.net/p/mingw-w64/bugs/306/
-  AX_CHECK_COMPILE_FLAG([-Werror=return-type], [], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Wno-error=return-type"], [$CXXFLAG_WERROR],
-                        [AC_LANG_SOURCE([[#include <cassert>
-                                          int f(){ assert(false); }]])])
 fi
 
 if test "$CXXFLAGS_overridden" = "no"; then
