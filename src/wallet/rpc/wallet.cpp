@@ -216,6 +216,7 @@ static RPCHelpMan loadwallet()
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+                    {"db_passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Passphrase for the wallet database if the database is encrypted"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -243,6 +244,11 @@ static RPCHelpMan loadwallet()
     bilingual_str error;
     std::vector<bilingual_str> warnings;
     std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
+
+    options.db_passphrase.reserve(100);
+    if (!request.params[2].isNull()) {
+        options.db_passphrase = std::string_view{request.params[2].get_str()};
+    }
 
     {
         LOCK(context.wallets_mutex);
@@ -340,13 +346,14 @@ static RPCHelpMan createwallet()
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
             {"disable_private_keys", RPCArg::Type::BOOL, RPCArg::Default{false}, "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
             {"blank", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
-            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
+            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the keys stored in this wallet with this passphrase."},
             {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{false}, "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
             {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{true}, "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation."
                                                                        " Setting to \"false\" will create a legacy wallet; This is only possible with the -deprecatedrpc=create_bdb setting because, the legacy wallet type is being deprecated and"
                                                                        " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"db_passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the entire wallet database with this passphrase."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -414,12 +421,23 @@ static RPCHelpMan createwallet()
     }
 #endif
 
+    SecureString db_passphrase;
+    db_passphrase.reserve(100);
+    if (!request.params[8].isNull()) {
+        db_passphrase = std::string_view{request.params[8].get_str()};
+        if (db_passphrase.empty()) {
+            // Empty string means unencrypted
+            warnings.emplace_back(Untranslated("Empty string given as database passphrase, wallet database will not be encrypted."));
+        }
+    }
+
     DatabaseOptions options;
     DatabaseStatus status;
     ReadDatabaseArgs(*context.args, options);
     options.require_create = true;
     options.create_flags = flags;
     options.create_passphrase = passphrase;
+    options.db_passphrase = db_passphrase;
     bilingual_str error;
     std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
     const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
