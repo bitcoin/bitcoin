@@ -297,7 +297,7 @@ void TestSatisfy(const std::string& testcase, const NodeRef& node) {
 
             if (nonmal_success) {
                 // Non-malleable satisfactions are bounded by GetStackSize().
-                BOOST_CHECK(witness_nonmal.stack.size() <= node->GetStackSize());
+                BOOST_CHECK(witness_nonmal.stack.size() <= *node->GetStackSize());
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
                 BOOST_CHECK(mal_success);
                 BOOST_CHECK(witness_nonmal.stack == witness_mal.stack);
@@ -375,8 +375,8 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, int ops
         auto inferred_miniscript = miniscript::FromScript(computed_script, CONVERTER);
         BOOST_CHECK_MESSAGE(inferred_miniscript, "Cannot infer miniscript from script: " + ms);
         BOOST_CHECK_MESSAGE(inferred_miniscript->ToScript(CONVERTER) == computed_script, "Roundtrip failure: miniscript->script != miniscript->script->miniscript->script: " + ms);
-        if (opslimit != -1) BOOST_CHECK_MESSAGE((int)node->GetOps() == opslimit, "Ops limit mismatch: " << ms << " (" << node->GetOps() << " vs " << opslimit << ")");
-        if (stacklimit != -1) BOOST_CHECK_MESSAGE((int)node->GetStackSize() == stacklimit, "Stack limit mismatch: " << ms << " (" << node->GetStackSize() << " vs " << stacklimit << ")");
+        if (opslimit != -1) BOOST_CHECK_MESSAGE((int)*node->GetOps() == opslimit, "Ops limit mismatch: " << ms << " (" << *node->GetOps() << " vs " << opslimit << ")");
+        if (stacklimit != -1) BOOST_CHECK_MESSAGE((int)*node->GetStackSize() == stacklimit, "Stack limit mismatch: " << ms << " (" << *node->GetStackSize() << " vs " << stacklimit << ")");
         TestSatisfy(ms, node);
     }
 }
@@ -498,8 +498,8 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // For CHECKMULTISIG the OP cost is the number of keys, but the stack size is the number of sigs (+1)
     const auto ms_multi = miniscript::FromString("multi(1,03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556,0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)", CONVERTER);
     BOOST_CHECK(ms_multi);
-    BOOST_CHECK_EQUAL(ms_multi->GetOps(), 4); // 3 pubkeys + CMS
-    BOOST_CHECK_EQUAL(ms_multi->GetStackSize(), 3); // 1 sig + dummy elem + script push
+    BOOST_CHECK_EQUAL(*ms_multi->GetOps(), 4); // 3 pubkeys + CMS
+    BOOST_CHECK_EQUAL(*ms_multi->GetStackSize(), 3); // 1 sig + dummy elem + script push
     // The 'd:' wrapper leaves on the stack what was DUP'ed at the beginning of its execution.
     // Since it contains an OP_IF just after on the same element, we can make sure that the element
     // in question must be OP_1 if OP_IF enforces that its argument must only be OP_1 or the empty

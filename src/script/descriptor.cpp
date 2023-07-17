@@ -15,6 +15,7 @@
 #include <common/args.h>
 #include <span.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/vector.h>
@@ -1553,14 +1554,14 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
                 error = std::move(parser.m_key_parsing_error);
                 return nullptr;
             }
-            if (!node->IsSane()) {
+            if (!node->IsSane() || node->IsNotSatisfiable()) {
                 // Try to find the first insane sub for better error reporting.
                 auto insane_node = node.get();
                 if (const auto sub = node->FindInsaneSub()) insane_node = sub;
                 if (const auto str = insane_node->ToString(parser)) error = *str;
                 if (!insane_node->IsValid()) {
                     error += " is invalid";
-                } else {
+                } else if (!node->IsSane()) {
                     error += " is not sane";
                     if (!insane_node->IsNonMalleable()) {
                         error += ": malleable witnesses exist";
@@ -1573,9 +1574,14 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
                     } else if (!insane_node->ValidSatisfactions()) {
                         error += ": needs witnesses that may exceed resource limits";
                     }
+                } else {
+                    error += " is not satisfiable";
                 }
                 return nullptr;
             }
+            // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
+            // may have an empty list of public keys.
+            CHECK_NONFATAL(!parser.m_keys.empty());
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
         }
     }
