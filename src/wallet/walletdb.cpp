@@ -20,6 +20,7 @@
 #include <wallet/bdb.h>
 #endif
 #ifdef USE_SQLITE
+#include <wallet/encrypted_db.h>
 #include <wallet/sqlite.h>
 #endif
 #include <wallet/wallet.h>
@@ -1458,6 +1459,19 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
             }
             format = DatabaseFormat::SQLITE;
         }
+        if (IsEncryptedSQLiteFile(SQLiteDataFile(path))) {
+            if (format) {
+                error = Untranslated(strprintf("Failed to load database path '%s'. Data is in ambiguous format.", fs::PathToString(path)));
+                status = DatabaseStatus::FAILED_BAD_FORMAT;
+                return nullptr;
+            }
+            format = DatabaseFormat::ENCRYPTED_SQLITE;
+            if (options.db_passphrase.empty()) {
+                error = Untranslated(strprintf("Unable to load database '%s'. Database is encrypted but passphrase was not provided.", fs::PathToString(path)));
+                status = DatabaseStatus::FAILED_ENCRYPT;
+                return nullptr;
+            }
+        }
     } else if (options.require_existing) {
         error = Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", fs::PathToString(path)));
         status = DatabaseStatus::FAILED_NOT_FOUND;
@@ -1490,15 +1504,22 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     if (!format) {
 #ifdef USE_SQLITE
         format = DatabaseFormat::SQLITE;
+        if (!options.db_passphrase.empty()) {
+            format = DatabaseFormat::ENCRYPTED_SQLITE;
+        }
 #endif
 #ifdef USE_BDB
         format = DatabaseFormat::BERKELEY;
 #endif
     }
 
-    if (format == DatabaseFormat::SQLITE) {
+    if (format == DatabaseFormat::SQLITE || format == DatabaseFormat::ENCRYPTED_SQLITE) {
 #ifdef USE_SQLITE
-        return MakeSQLiteDatabase(path, options, status, error);
+        if (format == DatabaseFormat::SQLITE) {
+            return MakeSQLiteDatabase(path, options, status, error);
+        } else if (format == DatabaseFormat::ENCRYPTED_SQLITE) {
+            return MakeEncryptedSQLiteDatabase(path, options, status, error);
+        }
 #else
         error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support SQLite database format.", fs::PathToString(path)));
         status = DatabaseStatus::FAILED_BAD_FORMAT;
