@@ -2529,7 +2529,7 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     auto local_socket_bytes = requestor.addrBind.GetAddrBytes();
     uint64_t cache_id = GetDeterministicRandomizer(RANDOMIZER_ID_ADDRCACHE)
         .Write(requestor.ConnectedThroughNetwork())
-        .Write(local_socket_bytes.data(), local_socket_bytes.size())
+        .Write(local_socket_bytes)
         // For outbound connections, the port of the bound address is randomly
         // assigned by the OS and would therefore not be useful for seeding.
         .Write(requestor.IsInboundConn() ? requestor.addrBind.GetPort() : 0)
@@ -2912,7 +2912,7 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& address) const
 {
     std::vector<unsigned char> vchNetGroup(m_netgroupman.GetGroup(address));
 
-    return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
+    return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup).Finalize();
 }
 
 void CaptureMessageToFile(const CAddress& addr,
