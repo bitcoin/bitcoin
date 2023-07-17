@@ -23,6 +23,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <uint256.h>
@@ -97,6 +98,14 @@ template <typename T>
         return std::nullopt;
     }
     return obj;
+}
+
+template <typename WeakEnumType, size_t size>
+[[nodiscard]] WeakEnumType ConsumeWeakEnum(FuzzedDataProvider& fuzzed_data_provider, const WeakEnumType (&all_types)[size]) noexcept
+{
+    return fuzzed_data_provider.ConsumeBool() ?
+               fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
+               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<typename std::underlying_type<WeakEnumType>::type>());
 }
 
 [[ nodiscard ]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
@@ -285,13 +294,14 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
 
 inline CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    return {ConsumeService(fuzzed_data_provider), static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+    return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
 }
 
-inline CNode ConsumeNode(FuzzedDataProvider& fuzzed_data_provider) noexcept
+template <bool ReturnUniquePtr = false>
+auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<NodeId>& node_id_in = std::nullopt) noexcept
 {
-    const NodeId node_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
-    const ServiceFlags local_services = static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+    const NodeId node_id = node_id_in.value_or(fuzzed_data_provider.ConsumeIntegral<NodeId>());
+    const ServiceFlags local_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
     const SOCKET socket = INVALID_SOCKET;
     const CAddress address = ConsumeAddress(fuzzed_data_provider);
     const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
@@ -300,8 +310,13 @@ inline CNode ConsumeNode(FuzzedDataProvider& fuzzed_data_provider) noexcept
     const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
     const bool inbound = fuzzed_data_provider.ConsumeBool();
     const bool block_relay_only = fuzzed_data_provider.ConsumeBool();
-    return {node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only};
+    if constexpr (ReturnUniquePtr) {
+        return std::make_unique<CNode>(node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only);
+    } else {
+        return CNode{node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only};
+    }
 }
+inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
 
 inline void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
 {

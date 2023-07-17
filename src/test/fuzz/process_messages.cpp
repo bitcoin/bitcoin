@@ -42,9 +42,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 
     const auto num_peers_to_add = fuzzed_data_provider.ConsumeIntegralInRange(1, 3);
     for (int i = 0; i < num_peers_to_add; ++i) {
-        const ServiceFlags service_flags = ServiceFlags(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
-        const bool inbound{fuzzed_data_provider.ConsumeBool()};
-        peers.push_back(std::make_unique<CNode>(i, service_flags, INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, inbound).release());
+        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
         CNode& p2p_node = *peers.back();
 
         p2p_node.fSuccessfullyConnected = true;
