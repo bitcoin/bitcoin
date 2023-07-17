@@ -44,6 +44,7 @@
 #include <utility>
 #include <vector>
 
+using interfaces::BlockInfo;
 using kernel::ChainstateRole;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
@@ -79,11 +80,19 @@ public:
     BaseIndexNotifications(BaseIndex& index) : m_index(index) {}
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
     void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
+    void processBlock(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block, bool append);
     BaseIndex& m_index;
     interfaces::Chain::NotifyOptions m_options = m_index.CustomOptions();
+    NodeClock::time_point m_last_log_time{NodeClock::now()};
+    NodeClock::time_point m_last_locator_write_time{m_last_log_time};
 };
 
 void BaseIndexNotifications::blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block)
+{
+    processBlock(role, block, /*append=*/true);
+}
+
+void BaseIndexNotifications::processBlock(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block, bool append)
 {
     if (m_index.IgnoreBlockConnected(role, block)) return;
 
@@ -96,14 +105,39 @@ void BaseIndexNotifications::blockConnected(const kernel::ChainstateRole& role, 
     }
 
     // Dispatch block to child class; errors are logged internally and abort the node.
-    if (!m_index.Append(block)) return;
+    if (append && !m_index.Append(block)) return;
 
+    NodeClock::time_point current_time{0s};
     if (block.background_sync) {
-        // Only update index best block between flushes if fully synced.
-        // Decision to let the best block pointer lag during sync seems a
-        // little arbitrary, but has been behavior since syncing was introduced
-        // in #13033, so preserving it in case anything depends on it.
-        return;
+        current_time = NodeClock::now();
+        if (current_time - m_last_log_time >= SYNC_LOG_INTERVAL) {
+            LogInfo("Syncing %s with block chain from height %d", m_index.GetName(), pindex->nHeight);
+            m_last_log_time = current_time;
+        }
+    }
+
+    // If currently syncing with the chain and adding old blocks, not new ones,
+    // decide whether to commit and update the best block pointer. Otherwise,
+    // when adding new blocks, always update the best block pointer, and don't
+    // commit until a chainstateFlush notification is received.
+    if (block.background_sync) {
+        // Commit if reached the last block flushed by the node, or if reached
+        // the end of sync and no more data is being appended, or if enough time
+        // has elapsed since the last commit.
+        if (block.status == BlockInfo::FLUSHED_TIP || (block.status == BlockInfo::FLUSHED && current_time - m_last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL)) {
+            auto locator = GetLocator(*m_index.m_chain, block.hash);
+            m_last_locator_write_time = current_time;
+            // No need to handle errors in Commit. If it fails, the error will be already be
+            // logged. The best way to recover is to continue, as index cannot be corrupted by
+            // a missed commit to disk for an advanced index state.
+            m_index.Commit(locator);
+        } else if (append) {
+            // Do not update index best block between commits if syncing.
+            // Decision to let the best block pointer lag during sync seems a
+            // little arbitrary, but has been behavior since syncing was introduced
+            // in #13033, so preserving it in case anything depends on it.
+            return;
+        }
     }
 
     // Setting the best block index is intentionally the last step of this
@@ -311,26 +345,26 @@ void BaseIndex::Sync()
 
     const CBlockIndex* pindex = m_best_block_index.load();
     if (m_state == State::SYNCING) {
-        auto last_log_time{NodeClock::now()};
-        auto last_locator_write_time{last_log_time};
         // Last block in the chain syncing to which is known to be flushed.
         const CBlockIndex *last_flushed{nullptr};
-        // Return whether or not it is safe to call Commit(). It may not safe to
-        // commit the index if the index best block is ahead of the last block
-        // flushed to disk, because if the node process doesn't shut down
-        // cleanly, and then is restarted, the node may not recognize the index
-        // best block, and it may be impossible to rewind the index to a block
-        // that is recognized because no undo data is saved either.
-        auto should_commit = [&]{ return pindex && last_flushed && last_flushed->GetAncestor(pindex->nHeight) == pindex; };
+        // Return flush status of the block being indexed.
+        auto process_block = [&](bool append){
+            if (pindex) {
+                interfaces::BlockInfo block_info = node::MakeBlockInfo(pindex);
+                block_info.background_sync = true;
+                if (pindex == last_flushed) {
+                    block_info.status = BlockInfo::FLUSHED_TIP;
+                } else if (!last_flushed || last_flushed->GetAncestor(pindex->nHeight) == pindex) {
+                    block_info.status = BlockInfo::FLUSHED;
+                }
+                notifications->processBlock({}, block_info, append); // error logged internally
+            }
+        };
         while (true) {
             if (m_interrupt) {
                 LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
-
-                SetBestBlockIndex(pindex);
-                // No need to handle errors in Commit. If it fails, the error will be already be
-                // logged. The best way to recover is to continue, as index cannot be corrupted by
-                // a missed commit to disk for an advanced index state.
-                if (should_commit()) Commit(GetLocator(*m_chain, pindex->GetBlockHash()));
+                // Call process_block a final time to commit latest state.
+                process_block(/*append=*/false);
                 return;
             }
 
@@ -340,9 +374,8 @@ void BaseIndex::Sync()
             // If pindex_next is null, it means pindex is the chain tip, so
             // commit data indexed so far.
             if (!pindex_next) {
-                SetBestBlockIndex(pindex);
-                // No need to handle errors in Commit. See rationale above.
-                if (should_commit()) Commit(GetLocator(*m_chain, pindex->GetBlockHash()));
+                // Call process_block with append=false to force a commit.
+                process_block(/*append=*/false);
 
                 // After committing, if pindex is still the active chain tip,
                 // background sync is finished and we can switch to notification-
@@ -365,23 +398,7 @@ void BaseIndex::Sync()
                 return;
             }
             pindex = pindex_next;
-
-            interfaces::BlockInfo block_info = node::MakeBlockInfo(pindex);
-            block_info.background_sync = true;
-            notifications->blockConnected(ChainstateRole{}, block_info); // error logged internally
-
-            auto current_time{NodeClock::now()};
-            if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
-                LogInfo("Syncing %s with block chain from height %d", GetName(), pindex->nHeight);
-                last_log_time = current_time;
-            }
-
-            if (current_time - last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL || pindex == last_flushed) {
-                SetBestBlockIndex(pindex);
-                last_locator_write_time = current_time;
-                // No need to handle errors in Commit. See rationale above.
-                if (should_commit()) Commit(GetLocator(*m_chain, pindex->GetBlockHash()));
-            }
+            process_block(/*append=*/true);
         }
     }
 
