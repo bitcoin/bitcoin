@@ -11,6 +11,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    wait_until
 )
 
 from test_framework.authproxy import JSONRPCException
@@ -62,12 +63,13 @@ class RpcMiscTest(BitcoinTestFramework):
         assert_equal(node.logging()['qt'], True)
 
         self.log.info("test getindexinfo")
+        self.restart_node(0, ["-txindex=0"])
         # Without any indices running the RPC returns an empty object
         assert_equal(node.getindexinfo(), {})
 
         # Restart the node with indices and wait for them to sync
         self.restart_node(0, ["-txindex", "-blockfilterindex"])
-        self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
+        wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
 
         # Returns a list of all running indices by default
         assert_equal(
