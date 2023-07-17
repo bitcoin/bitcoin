@@ -178,6 +178,8 @@ class TxConflicts(BitcoinTestFramework):
         assert_equal(alice.listunspent(), [unspents[0]])
         assert_equal(alice.getbalance(), 25)
 
+        assert_equal(alice.gettransaction(tx1_txid)["mempoolconflicts"], [tx2_txid])
+
         self.log.info("Test scenario where a mempool conflict is removed")
 
         # broadcast tx3, replaces tx2 in mempool
@@ -187,6 +189,7 @@ class TxConflicts(BitcoinTestFramework):
         # tx1 is no longer conflicted.
         alice.sendrawtransaction(tx3)
 
+        assert_equal(alice.gettransaction(tx1_txid)["mempoolconflicts"], [])
         assert tx1_txid not in self.nodes[0].getrawmempool()
 
         # now all of alice's outputs should be considered spent
@@ -261,6 +264,10 @@ class TxConflicts(BitcoinTestFramework):
 
         assert tx2_txid in bob.getrawmempool()
         assert tx1_conflict_txid in bob.getrawmempool()
+
+        assert_equal(bob.gettransaction(tx1_txid)["mempoolconflicts"], [tx1_conflict_txid])
+        assert_equal(bob.gettransaction(tx2_txid)["mempoolconflicts"], [])
+        assert_equal(bob.gettransaction(tx3_txid)["mempoolconflicts"], [tx1_conflict_txid])
 
         # check that tx3 is now conflicted, so the output from tx2 can now be spent
         assert_equal(bob.getbalances()["mine"]["untrusted_pending"], Decimal("24.99990000"))
@@ -348,6 +355,8 @@ class TxConflicts(BitcoinTestFramework):
         assert_equal(alice.getbalance(), 25)
         assert_equal(bob.getbalances()["mine"]["untrusted_pending"], Decimal("24.99990000"))
 
+        assert_equal(bob.gettransaction(tx1_txid)["mempoolconflicts"],  [])
+
         raw_tx = bob.createrawtransaction(inputs=[bob.listunspent(minconf=0)[0]], outputs=[{carol.getnewaddress() : 24.999}])
         # Bob creates a child to tx1
         tx1_child = bob.signrawtransactionwithwallet(raw_tx)['hex']
@@ -356,6 +365,8 @@ class TxConflicts(BitcoinTestFramework):
         self.sync_mempools()
 
         # Currently neither tx1 nor tx1_child should have any conflicts
+        assert_equal(bob.gettransaction(tx1_txid)["mempoolconflicts"],  [])
+        assert_equal(bob.gettransaction(tx1_child_txid)["mempoolconflicts"],  [])
         assert tx1_txid in bob.getrawmempool()
         assert tx1_child_txid in bob.getrawmempool()
         assert_equal(len(bob.getrawmempool()), 2)
@@ -378,12 +389,20 @@ class TxConflicts(BitcoinTestFramework):
         assert tx1_conflict_txid in bob.getrawmempool()
         assert_equal(len(bob.getrawmempool()), 1)
 
+        # Now both tx1 and tx1_child are conflicted by tx1_conflict
+        assert_equal(bob.gettransaction(tx1_txid)["mempoolconflicts"],  [tx1_conflict_txid])
+        assert_equal(bob.gettransaction(tx1_child_txid)["mempoolconflicts"],  [tx1_conflict_txid])
+
         # Now create a conflict to tx1_conflict, so that it gets kicked out of the mempool
         raw_tx = alice.createrawtransaction(inputs=[unspents[1]], outputs=[{carol.getnewaddress() : 24.9895}])
         tx1_conflict_conflict = alice.signrawtransactionwithwallet(raw_tx)['hex']
         tx1_conflict_conflict_txid = alice.sendrawtransaction(tx1_conflict_conflict)
 
         self.sync_mempools()
+
+        # Now that tx1_conflict has been removed, both tx1 and tx1_child
+        assert_equal(bob.gettransaction(tx1_txid)["mempoolconflicts"],  [])
+        assert_equal(bob.gettransaction(tx1_child_txid)["mempoolconflicts"],  [])
 
         # Both tx1 and tx1_child are still not in the mempool because they have not be re-broadcasted
         assert tx1_txid not in bob.getrawmempool()
