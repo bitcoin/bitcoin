@@ -29,6 +29,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <policy/ancestor_packages.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -1443,6 +1444,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         package_state_quit_early.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-child-with-parents");
         return PackageMempoolAcceptResult(package_state_quit_early, {});
     }
+    AncestorPackage linearized_package{package};
 
     // IsChildWithParents() guarantees the package is > 1 transactions.
     assert(package.size() > 1);
@@ -1489,7 +1491,6 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // (i.e. when evaluated with a fee-bumping child), the result in this map may be discarded.
     std::map<uint256, MempoolAcceptResult> individual_results_nonfinal;
     bool quit_early{false};
-    std::vector<CTransactionRef> txns_package_eval;
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
         const auto& txid = tx->GetHash();
@@ -1509,6 +1510,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             auto iter = m_pool.GetIter(txid);
             assert(iter != std::nullopt);
             results_final.emplace(wtxid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
+            linearized_package.MarkAsInMempool(tx);
         } else if (m_pool.exists(GenTxid::Txid(txid))) {
             // Transaction with the same non-witness data but different witness (same txid,
             // different wtxid) already exists in the mempool.
@@ -1521,39 +1523,82 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             assert(iter != std::nullopt);
             // Provide the wtxid of the mempool tx so that the caller can look it up in the mempool.
             results_final.emplace(wtxid, MempoolAcceptResult::MempoolTxDifferentWitness(iter.value()->GetTx().GetWitnessHash()));
+            linearized_package.MarkAsInMempool(tx);
         } else {
             // Transaction does not already exist in the mempool.
             // Try submitting the transaction on its own.
+            // There are 4 possible paths:
+            // (1) Valid -> continue
+            // (2) Invalid but might be package CPFP -> continue
+            // (3) Invalid otherwise -> abort
+            // (4) Internal bug -> abort
             const auto single_package_res = AcceptSubPackage({tx}, args);
             const auto& single_res = single_package_res.m_tx_results.at(wtxid);
             if (single_res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                 // The transaction succeeded on its own and is now in the mempool. Don't include it
                 // in package validation, because its fees should only be "used" once.
                 assert(m_pool.exists(GenTxid::Wtxid(wtxid)));
+                linearized_package.MarkAsInMempool(tx);
                 results_final.emplace(wtxid, single_res);
-            } else if (single_res.m_state.GetResult() != TxValidationResult::TX_RECONSIDERABLE &&
-                       single_res.m_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
-                // Package validation policy only differs from individual policy in its evaluation
-                // of feerate. For example, if a transaction fails here due to violation of a
-                // consensus rule, the result will not change when it is submitted as part of a
-                // package. To minimize the amount of repeated work, unless the transaction fails
-                // due to feerate or missing inputs (its parent is a previous transaction in the
-                // package that failed due to feerate), don't run package validation. Note that this
-                // decision might not make sense if different types of packages are allowed in the
-                // future.  Continue individually validating the rest of the transactions, because
-                // some of them may still be valid.
-                quit_early = true;
-                package_state_quit_early.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
-                individual_results_nonfinal.emplace(wtxid, single_res);
             } else {
-                individual_results_nonfinal.emplace(wtxid, single_res);
-                txns_package_eval.push_back(tx);
+                switch (single_res.m_state.GetResult()) {
+                case TxValidationResult::TX_RECONSIDERABLE:
+                case TxValidationResult::TX_MISSING_INPUTS:
+                {
+                    individual_results_nonfinal.emplace(wtxid, single_res);
+                    break;
+                }
+                case TxValidationResult::TX_CONFLICT:
+                case TxValidationResult::TX_MEMPOOL_POLICY:
+                case TxValidationResult::TX_CONSENSUS:
+                case TxValidationResult::TX_PREMATURE_SPEND:
+                case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
+                case TxValidationResult::TX_WITNESS_MUTATED:
+                case TxValidationResult::TX_WITNESS_STRIPPED:
+                case TxValidationResult::TX_NOT_STANDARD:
+                case TxValidationResult::TX_INPUTS_NOT_STANDARD:
+                {
+                    // If a transaction fails for these reasons, abort package validation (but
+                    // finish the individual PreChecks calls to return partial validation results).
+                    //
+                    // - Apart from TX_RECONSIDERABLE (i.e. low feerate but CPFP'd), there is no way
+                    //   for package validation to change this transaction from invalid to valid.
+                    //
+                    // - Transactions that are TX_NOT_STANDARD might be very large and too DoSy
+                    //   to continue handling. Don't call PackageAddTransaction.
+                    //
+                    // - Assuming there are valid transactions in this package (which is the only
+                    //   reason we would want to continue), the only computationally reasonable way
+                    //   to deal with this situation is to wait for a different peer to announce
+                    //   them to us and be open to retrying them. Considering the package may be
+                    //   deliberately stuffed with consensus-invalid transactions, using a very
+                    //   expensive algorithm to find the optimal subset can be a DoS vector.
+                    quit_early = true;
+                    individual_results_nonfinal.emplace(wtxid, single_res);
+                    package_state_quit_early.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                    break;
+                }
+                case TxValidationResult::TX_RESULT_UNSET:
+                case TxValidationResult::TX_UNKNOWN:
+                case TxValidationResult::TX_NO_MEMPOOL:
+                {
+                    // These results shouldn't be possible.
+                    // - TX_RESULT_UNSET means IsValid() so PreChecks should have returned true.
+                    // - TX_UNKNOWN is only used at the end of AcceptPackage().
+                    // - TX_NO_MEMPOOL is only used externally when there is no mempool to submit to.
+                    Assume(false);
+                    quit_early = true;
+                    break;
+                }
+                // No default to ensure all possible results are handled.
+                }
             }
         }
     }
 
-    auto multi_submission_result = quit_early || txns_package_eval.empty() ? PackageMempoolAcceptResult(package_state_quit_early, {}) :
-        AcceptSubPackage(txns_package_eval, args);
+    auto multi_submission_result = quit_early || linearized_package.FilteredTxns().empty() ?
+        PackageMempoolAcceptResult(package_state_quit_early, {}) :
+        AcceptSubPackage(linearized_package.FilteredTxns(), args);
     PackageValidationState& package_state_final = multi_submission_result.m_state;
 
     // Make sure we haven't exceeded max mempool size.
@@ -1594,6 +1639,11 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             Assume(it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
             // Interesting result from previous processing.
             results_final.emplace(wtxid, it->second);
+        } else {
+            // Fill with "unknown"
+            TxValidationState unknown_state;
+            unknown_state.Invalid(TxValidationResult::TX_UNKNOWN, "unknown-not-validated");
+            results_final.emplace(wtxid, MempoolAcceptResult::Failure(unknown_state));
         }
     }
     Assume(results_final.size() == package.size());
