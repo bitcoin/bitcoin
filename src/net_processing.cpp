@@ -2216,14 +2216,14 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         // as the network format matches the format on disk
         std::vector<uint8_t> block_data;
         bool read_succeeded{m_chainman.m_blockman.ReadRawBlockFromDisk(block_data, pindex->GetBlockPos(), m_chainparams.MessageStart())};
-        assert(read_succeeded); // cannot load block from disk
+        Assert(read_succeeded); // cannot load block from disk
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, Span{block_data}));
         // Don't set pblock as we've sent the block
     } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
         bool read_succeeded{m_chainman.m_blockman.ReadBlockFromDisk(*pblockRead, *pindex)};
-        assert(read_succeeded); // cannot load block from disk
+        Assert(read_succeeded); // cannot load block from disk
         pblock = pblockRead;
     }
     if (pblock) {
