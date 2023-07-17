@@ -184,13 +184,28 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
 
 static void TestPoly1305(const std::string &hexmessage, const std::string &hexkey, const std::string& hextag)
 {
-    std::vector<unsigned char> key = ParseHex(hexkey);
-    std::vector<unsigned char> m = ParseHex(hexmessage);
-    std::vector<unsigned char> tag = ParseHex(hextag);
-    std::vector<unsigned char> tagres;
-    tagres.resize(POLY1305_TAGLEN);
-    poly1305_auth(tagres.data(), m.data(), m.size(), key.data());
+    auto key = ParseHex<std::byte>(hexkey);
+    auto m = ParseHex<std::byte>(hexmessage);
+    auto tag = ParseHex<std::byte>(hextag);
+    std::vector<std::byte> tagres(Poly1305::TAGLEN);
+    Poly1305{key}.Update(m).Finalize(tagres);
     BOOST_CHECK(tag == tagres);
+
+    // Test incremental interface
+    for (int splits = 0; splits < 10; ++splits) {
+        for (int iter = 0; iter < 10; ++iter) {
+            auto data = Span{m};
+            Poly1305 poly1305{key};
+            for (int chunk = 0; chunk < splits; ++chunk) {
+                size_t now = InsecureRandRange(data.size() + 1);
+                poly1305.Update(data.first(now));
+                data = data.subspan(now);
+            }
+            tagres.assign(Poly1305::TAGLEN, std::byte{});
+            poly1305.Update(data).Finalize(tagres);
+            BOOST_CHECK(tag == tagres);
+        }
+    }
 }
 
 static void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex, const std::string &info_hex, const std::string &okm_check_hex) {
@@ -751,6 +766,57 @@ BOOST_AUTO_TEST_CASE(poly1305_testvector)
     TestPoly1305("e33594d7505e43b900000000000000003394d7505e4379cd010000000000000000000000000000000000000000000000",
                  "0100000000000000040000000000000000000000000000000000000000000000",
                  "13000000000000000000000000000000");
+
+    // Tests from https://github.com/floodyberry/poly1305-donna/blob/master/poly1305-donna.c
+    TestPoly1305("8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a"
+                 "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738"
+                 "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da"
+                 "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74"
+                 "e355a5",
+                 "eea6a7251c1e72916d11c2cb214d3c252539121d8e234e652d651fa4c8cff880",
+                 "f3ffc7703f9400e52a7dfb4b3d3305d9");
+    {
+        // mac of the macs of messages of length 0 to 256, where the key and messages have all
+        // their values set to the length.
+        auto total_key = ParseHex<std::byte>("01020304050607fffefdfcfbfaf9ffffffffffffffffffffffffffff00000000");
+        Poly1305 total_ctx(total_key);
+        for (unsigned i = 0; i < 256; ++i) {
+            std::vector<std::byte> key(32, std::byte{(uint8_t)i});
+            std::vector<std::byte> msg(i, std::byte{(uint8_t)i});
+            std::array<std::byte, Poly1305::TAGLEN> tag;
+            Poly1305{key}.Update(msg).Finalize(tag);
+            total_ctx.Update(tag);
+        }
+        std::vector<std::byte> total_tag(Poly1305::TAGLEN);
+        total_ctx.Finalize(total_tag);
+        BOOST_CHECK(total_tag == ParseHex<std::byte>("64afe2e8d6ad7bbdd287f97c44623d39"));
+    }
+
+    // Tests with sparse messages and random keys.
+    TestPoly1305("000000000000000000000094000000000000b07c4300000000002c002600d500"
+                 "00000000000000000000000000bc58000000000000000000c9000000dd000000"
+                 "00000000000000d34c000000000000000000000000f9009100000000000000c2"
+                 "4b0000e900000000000000000000000000000000000e00000027000074000000"
+                 "0000000003000000000000f1000000000000dce2000000000000003900000000"
+                 "0000000000000000000000000000000000000000000000520000000000000000"
+                 "000000000000000000000000009500000000000000000000000000cf00826700"
+                 "000000a900000000000000000000000000000000000000000079000000000000"
+                 "0000de0000004c000000000033000000000000000000000000002800aa000000"
+                 "00003300860000e000000000",
+                 "6e543496db3cf677592989891ab021f58390feb84fb419fbc7bb516a60bfa302",
+                 "7ea80968354d40d9d790b45310caf7f3");
+    TestPoly1305("0000005900000000c40000002f00000000000000000000000000000029690000"
+                 "0000e8000037000000000000000000000000000b000000000000000000000000"
+                 "000000000000000000000000001800006e0000000000a4000000000000000000"
+                 "00000000000000004d00000000000000b0000000000000000000005a00000000"
+                 "0000000000b7c300000000000000540000000000000000000000000a00000000"
+                 "00005b0000000000000000000000000000000000002d00e70000000000000000"
+                 "000000000000003400006800d700000000000000000000360000000000000000"
+                 "00eb000000000000000000000000000000000000000000000000000028000000"
+                 "37000000000000000000000000000000000000000000000000000000008f0000"
+                 "000000000000000000000000",
+                 "f0b659a4f3143d8a1e1dacb9a409fe7e7cd501dfb58b16a2623046c5d337922a",
+                 "0e410fa9d7a40ac582e77546be9a72bb");
 }
 
 BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
@@ -791,7 +857,7 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
     std::vector<unsigned char> expected_ciphertext_and_mac = ParseHex(hex_encrypted_message);
     std::vector<unsigned char> expected_ciphertext_and_mac_sequence999 = ParseHex(hex_encrypted_message_seq_999);
 
-    std::vector<unsigned char> ciphertext_buf(plaintext_buf.size() + POLY1305_TAGLEN, 0);
+    std::vector<unsigned char> ciphertext_buf(plaintext_buf.size() + Poly1305::TAGLEN, 0);
     std::vector<unsigned char> plaintext_buf_new(plaintext_buf.size(), 0);
     std::vector<unsigned char> cmp_ctx_buffer(64);
     uint32_t out_len = 0;
