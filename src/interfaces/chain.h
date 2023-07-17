@@ -89,6 +89,13 @@ struct BlockInfo {
     unsigned int chain_time_max{0};
     //! Block is from the tip of the chain (always true except when first calling attachChain and reading old blocks).
     bool chain_tip{true};
+    // Whether block data has been saved to disk yet. FLUSHED_TIP is distinct
+    // from FLUSHED, because it indicates that not only is the block flushed,
+    // but is also the most recently block flushed. Knowing this is useful for
+    // chain clients that are syncing with the node and want to flush their
+    // state at the same point as the node, while avoiding flushing too
+    // frequently.
+    enum { UNFLUSHED, FLUSHED, FLUSHED_TIP } status{UNFLUSHED};
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
