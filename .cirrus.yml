@@ -30,6 +30,7 @@ persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
 #
 # The following specific types should exist, with the following requirements:
 # - lunar: For a machine running the Linux kernel shipped with Ubuntu Lunar 23.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
+# - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
 persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
   persistent_worker: {}  # Only use this if the task does not care about the type at all
 
@@ -206,13 +207,11 @@ task:
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: debian:bullseye
-      FILE_ENV: "./ci/test/00_setup_env_arm.sh"
-  << : *CREDITS_TEMPLATE
+  persistent_worker:
+    labels:
+      type: arm64  # Use arm64 worker to sidestep qemu and avoid a slow CI: https://github.com/bitcoin/bitcoin/pull/28087#issuecomment-1649399453
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
   name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [jammy]'
@@ -230,7 +229,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: quay.io/centos/centos:stream9
+      CI_IMAGE_NAME_TAG: "quay.io/centos/amd64:stream9"
       FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
   # For faster CI feedback, immediately schedule one task that runs all tests
   << : *CREDITS_TEMPLATE
@@ -304,7 +303,7 @@ task:
     cpu: 4
     memory: 16G  # The default memory is too small, so double everything
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:focal
+      CI_IMAGE_NAME_TAG: "docker.io/amd64/ubuntu:focal"
       FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV

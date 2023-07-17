@@ -19,6 +19,11 @@ fi
 echo "Free disk space:"
 df -h
 
+# What host to compile for. See also ./depends/README.md
+# Tests that need cross-compilation export the appropriate HOST.
+# Tests that run natively guess the host
+export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
+
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
   if [ ! -d "$DIR_FUZZ_IN" ]; then
@@ -122,13 +127,6 @@ if [[ $HOST = *-mingw32 ]]; then
   make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
   make "$MAKEJOBS" -C src minisketch/test.exe VERBOSE=1
   "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
-fi
-
-if [ -n "$QEMU_USER_CMD" ]; then
-  # Generate all binaries, so that they can be wrapped
-  make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
-  make "$MAKEJOBS" -C src minisketch/test VERBOSE=1
-  "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
 fi
 
 if [ -n "$USE_VALGRIND" ]; then
