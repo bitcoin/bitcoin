@@ -574,8 +574,22 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     /**
-     * Package (more specific than just multiple transactions) acceptance. Package must be a child
-     * with all of its unconfirmed parents, and topologically sorted.
+     * Handle any list of transactions sensibly, even if unsorted. If not a well-formed
+     * AncestorPackage, transactions will not be validated or submitted.
+     *
+     * General algorithm:
+     * 1. Basic sanitization to ensure package is well formed and not too big to work on.
+     * 2. Linearize (based on topological sort).
+     * 3. PreChecks loop: call PreChecks on all transactions to get fees and vsizes, and to find
+     *    obvious errors for which we should skip parts of the package or abort validation altogether.
+     * 4. Linearize (based on ancestor score).
+     * 5. For each transaction in the new linearized order, submit with its in-package
+     *    ancestors that haven't been submitted yet, or "subpackage." Skip if the subpackage
+     *    or individual feerate is too low. Since we have linearized using ancestor set
+     *    scoring, transactions that don't need to be CPFP'd are placed first and submitted
+     *    individually. Transactions that need CPFP are ordered such that they can be easily
+     *    grouped with their fee-bumping child.
+     * 6. Limit mempool size and backfill map of MempoolAcceptResults.
      */
     PackageMempoolAcceptResult AcceptPackage(const Package& package, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1486,11 +1500,16 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // Stores results from which we will create the returned PackageMempoolAcceptResult.
     // A result may be changed if a mempool transaction is evicted later due to LimitMempoolSize().
     std::map<uint256, MempoolAcceptResult> results_final;
-    // Results from individual validation which will be returned if no other result is available for
+    // Results from calling PreChecks() which will be returned if no other result is available for
     // this transaction. "Nonfinal" because if a transaction fails by itself but succeeds later
     // (i.e. when evaluated with a fee-bumping child), the result in this map may be discarded.
     std::map<uint256, MempoolAcceptResult> individual_results_nonfinal;
+    // Call PreChecks() for every transaction in topological order, de-duplicating and skipping
+    // transactions we can't validate, making each transaction's inputs available for subsequent
+    // transactions to spend. If we encounter a failure that isn't TX_RECONSIDERABLE, we continue to
+    // call PreChecks() but may quit_early and not submit any transactions to the mempool.
     bool quit_early{false};
+    ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
         const auto& txid = tx->GetHash();
@@ -1525,33 +1544,69 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             results_final.emplace(wtxid, MempoolAcceptResult::MempoolTxDifferentWitness(iter.value()->GetTx().GetWitnessHash()));
             linearized_package.MarkAsInMempool(tx);
         } else {
-            // Transaction does not already exist in the mempool.
-            // Try submitting the transaction on its own.
-            // There are 4 possible paths:
+            // Transaction does not already exist in the mempool. Call PreChecks to find any obvious
+            // errors and grab the UTXOs so we can calculate fees. There are 6 possible paths:
             // (1) Valid -> continue
-            // (2) Invalid but might be package CPFP -> continue
-            // (3) Invalid otherwise -> abort
-            // (4) Internal bug -> abort
-            const auto single_package_res = AcceptSubPackage({tx}, args);
-            const auto& single_res = single_package_res.m_tx_results.at(wtxid);
-            if (single_res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                // The transaction succeeded on its own and is now in the mempool. Don't include it
-                // in package validation, because its fees should only be "used" once.
-                assert(m_pool.exists(GenTxid::Wtxid(wtxid)));
-                linearized_package.MarkAsInMempool(tx);
-                results_final.emplace(wtxid, single_res);
+            // (2) Invalid but fee-related and package CPFP-eligible -> treat as if valid
+            // (3) Possibly already confirmed -> skip this tx; continue
+            // (4) Invalid for possibly benign reasons -> skip this tx and descendants; continue
+            // (5) Invalid for consensus or standardness reasons -> abort
+            // (6) Internal bug -> abort
+            Workspace ws(tx);
+            if (PreChecks(single_args, ws)) {
+                linearized_package.AddFeeAndVsize(tx->GetHash(), ws.m_modified_fees, ws.m_vsize);
+                // We will CleanupTemporaryCoins after this loop so this is safe even if the tx
+                // turns out to be invalid.
+                m_viewmempool.PackageAddTransaction(tx);
             } else {
-                switch (single_res.m_state.GetResult()) {
+                switch (ws.m_state.GetResult()) {
                 case TxValidationResult::TX_RECONSIDERABLE:
-                case TxValidationResult::TX_MISSING_INPUTS:
                 {
-                    individual_results_nonfinal.emplace(wtxid, single_res);
+                    // We should continue under the assumption that the tx will be CPFP'd. We know
+                    // that the fee and vsize values are populated because the only way to get this
+                    // error is to have called CheckFeeRate() with them.
+                    linearized_package.AddFeeAndVsize(tx->GetHash(), ws.m_modified_fees, ws.m_vsize);
+                    individual_results_nonfinal.emplace(wtxid,
+                        MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), {tx->GetWitnessHash()}));
+
+                    // Even though the transaction had an invalid result for now, make its coins
+                    // available for the next transactions in the package so that we can calculate
+                    // subsequent transactions' fees (and potentially find out that this is CPFP'd).
+                    // We will CleanupTemporaryCoins after this loop so this is safe even if the tx
+                    // turns out to be invalid.
+                    m_viewmempool.PackageAddTransaction(tx);
                     break;
                 }
                 case TxValidationResult::TX_CONFLICT:
+                {
+                    // - TX_CONFLICT (must be txn-already-known since mempool existence was already
+                    // checked) may happen if we have a different chainstate from our peer and a
+                    // package parent already confirmed for us.
+                    Assume(ws.m_state.GetRejectReason() == "txn-already-known");
+                    linearized_package.MarkAsInMempool(tx);
+                    individual_results_nonfinal.emplace(wtxid, MempoolAcceptResult::Failure(ws.m_state));
+                    break;
+                }
+                case TxValidationResult::TX_MISSING_INPUTS:
                 case TxValidationResult::TX_MEMPOOL_POLICY:
-                case TxValidationResult::TX_CONSENSUS:
                 case TxValidationResult::TX_PREMATURE_SPEND:
+                {
+                    // If there is a conflict that we won't be able to resolve, or we have no
+                    // in-package dependencies but are still missing inputs, continue, but skip this
+                    // transaction and its descendants.
+                    //
+                    // - TX_MISSING_INPUTS may happen if we have a different chainstate from our peer
+                    // and a package parent already confirmed for our peer so they didn't include it
+                    // in the ancestor package (bad-txns-inputs-missingorspent).
+                    //
+                    // - TX_MEMPOOL_POLICY may happen if we have a conflicting transaction that our
+                    // peer didn't have.
+                    linearized_package.IsDanglingWithDescendants(tx);
+                    package_state_quit_early.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                    individual_results_nonfinal.emplace(wtxid, MempoolAcceptResult::Failure(ws.m_state));
+                    break;
+                }
+                case TxValidationResult::TX_CONSENSUS:
                 case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
                 case TxValidationResult::TX_WITNESS_MUTATED:
                 case TxValidationResult::TX_WITNESS_STRIPPED:
@@ -1574,7 +1629,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
                     //   deliberately stuffed with consensus-invalid transactions, using a very
                     //   expensive algorithm to find the optimal subset can be a DoS vector.
                     quit_early = true;
-                    individual_results_nonfinal.emplace(wtxid, single_res);
+                    individual_results_nonfinal.emplace(wtxid, MempoolAcceptResult::Failure(ws.m_state));
                     package_state_quit_early.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
                     break;
                 }
@@ -1596,10 +1651,91 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         }
     }
 
-    auto multi_submission_result = quit_early || linearized_package.FilteredTxns().empty() ?
-        PackageMempoolAcceptResult(package_state_quit_early, {}) :
-        AcceptSubPackage(linearized_package.FilteredTxns(), args);
-    PackageValidationState& package_state_final = multi_submission_result.m_state;
+    // Clear temporary coins that were pulled in during PreChecks or created in PackageAddTransaction.
+    CleanupTemporaryCoins();
+
+    // Now that we have determined which transactions to skip, do full validation for each
+    // transaction with its ancestor subpackage. If this is a single transaction, call
+    // AcceptSingleTransaction() with a single transaction ATMPArgs to avoid unnecessary package
+    // restrictions like disallowment of RBF. Skip when we know the feerate will not be sufficient.
+    // If we encounter any errors at all, we quit immediately and do not validate anything else.
+    // This means we may potentially skip validation for valid transactions, but we can expect that
+    // some other peer will announce those transactions to us.
+    PackageValidationState package_state_final;
+    if (!quit_early) {
+        // Use the fee information gathered in the PreChecks() loop above to refine linearization.
+        // We want to try to submit the higher-feerate subpackages and transactions first.
+        // If linearization fails, we might miss out on fees but can continue evaluation.
+        Assume(linearized_package.LinearizeWithFees());
+
+        for (const auto& tx : linearized_package.FilteredTxns()) {
+            const auto subpackage_info{linearized_package.FilteredSubpackageInfo(tx)};
+            // If no value, this transaction or its ancestor already failed earlier.
+            if (!subpackage_info) continue;
+            // FilteredAncestorSet should always be consistent with FilteredSubpackageInfo
+            const auto subpackage = linearized_package.FilteredAncestorSet(tx);
+            if (!Assume(subpackage)) continue;
+
+            // Check if min(self_feerate, subpackage_feerate) meets minimum fee requirements.
+            TxValidationState subpackage_fee_state;
+            if (!CheckFeeRate(subpackage_info->m_ancestor_vsize, subpackage_info->m_ancestor_fee, subpackage_fee_state)) {
+                // No need to validate if we know this subpackage won't meet feerate
+                // requirements. If it's a CPFP'd transaction, presumably there is a subsequent
+                // subpackage that will bump it.
+                std::vector<Wtxid> subpackage_wtxids;
+                subpackage_wtxids.reserve(subpackage->size());
+                std::transform(subpackage->cbegin(), subpackage->cend(), std::back_inserter(subpackage_wtxids),
+                               [](const auto& tx) { return tx->GetWitnessHash(); });
+                const CFeeRate subpackage_feerate(subpackage_info->m_ancestor_fee, subpackage_info->m_ancestor_vsize);
+                // Override previous result.
+                individual_results_nonfinal.erase(tx->GetWitnessHash());
+                individual_results_nonfinal.emplace(tx->GetWitnessHash(),
+                    MempoolAcceptResult::FeeFailure(subpackage_fee_state, subpackage_feerate, subpackage_wtxids));
+                continue;
+            } else if (!CheckFeeRate(subpackage_info->m_self_vsize, subpackage_info->m_self_fee, subpackage_fee_state)) {
+                // No need to validate if we know this transaction wouldn't meet feerate requirements.
+                // If we don't exit early here, we'll hit a low fee failure and quit early.
+                // Even if package feerate is sufficient, we don't allow "parent pay for child."
+                // No need to touch individual_results_nonfinal because it should already be there.
+                Assume(individual_results_nonfinal.count(tx->GetWitnessHash()) > 0);
+                continue;
+            }
+
+            const auto subpackage_result = AcceptSubPackage(*subpackage, args);
+            for (const auto& subpackage_tx : subpackage.value()) {
+                const auto subpackage_wtxid{subpackage_tx->GetWitnessHash()};
+                const auto subpackage_it{subpackage_result.m_tx_results.find(subpackage_wtxid)};
+                // Add all transactions' results to results_final. There might not be one for every
+                // transaction.
+                if (subpackage_it != subpackage_result.m_tx_results.end()) {
+                    // A tx would only be in results_final if we already found it (or same txid) in
+                    // the mempool in the previous loop so it should not be included in
+                    // FilteredTxns().
+                    //
+                    // A result should not already be present because anything already in mempool
+                    // would have already been skipped, and a tx is never validated more than once
+                    // in this loop:
+                    // - if tx succeeds, it is skipped in subsequent iterations
+                    // - if tx fails, we exit the loop immediately
+                    if (!Assume(results_final.count(subpackage_wtxid) == 0)) {
+                        results_final.erase(subpackage_wtxid);
+                    }
+                    results_final.emplace(subpackage_wtxid, subpackage_it->second);
+                }
+                // We detect that a transaction was successful by looking for it in mempool.
+                if (m_pool.exists(GenTxid::Wtxid(subpackage_wtxid))) {
+                    linearized_package.MarkAsInMempool(subpackage_tx);
+                }
+            }
+            // Abort if we get errors; it's not worth the computational effort to try to validate
+            // any more transactions. Note that results_final has already been populated with the
+            // (invalid) result(s) above.
+            if (subpackage_result.m_state.IsInvalid()) {
+                package_state_final = subpackage_result.m_state;
+                break;
+            }
+        }
+    }
 
     // Make sure we haven't exceeded max mempool size.
     // Package transactions that were submitted to mempool or already in mempool may be evicted.
@@ -1607,36 +1743,22 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
-        if (multi_submission_result.m_tx_results.count(wtxid) > 0) {
-            // We shouldn't have re-submitted if the tx result was already in results_final.
-            Assume(results_final.count(wtxid) == 0);
-            // If it was submitted, check to see if the tx is still in the mempool. It could have
-            // been evicted due to LimitMempoolSize() above.
-            const auto& txresult = multi_submission_result.m_tx_results.at(wtxid);
-            if (txresult.m_result_type == MempoolAcceptResult::ResultType::VALID && !m_pool.exists(GenTxid::Wtxid(wtxid))) {
+        if (results_final.count(wtxid) > 0) {
+            // If the result was valid, check to see if it's still in mempool. If not, change its
+            // result to failure due to mempool getting full.
+            // Need to check by txid to include the same-txid-different-witness transaction case.
+            if (results_final.at(wtxid).m_result_type != MempoolAcceptResult::ResultType::INVALID &&
+                !m_pool.exists(GenTxid::Txid(tx->GetHash()))) {
                 package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
                 TxValidationState mempool_full_state;
                 mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
-                results_final.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
-            } else {
-                results_final.emplace(wtxid, txresult);
-            }
-        } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
-            // Already-in-mempool transaction. Check to see if it's still there, as it could have
-            // been evicted when LimitMempoolSize() was called.
-            Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
-            Assume(individual_results_nonfinal.count(wtxid) == 0);
-            // Query by txid to include the same-txid-different-witness ones.
-            if (!m_pool.exists(GenTxid::Txid(tx->GetHash()))) {
-                package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
-                TxValidationState mempool_full_state;
-                mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
-                // Replace the previous result.
+                // Replace successful result.
                 results_final.erase(wtxid);
                 results_final.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
             }
         } else if (const auto it{individual_results_nonfinal.find(wtxid)}; it != individual_results_nonfinal.end()) {
             Assume(it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+            package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
             // Interesting result from previous processing.
             results_final.emplace(wtxid, it->second);
         } else {
