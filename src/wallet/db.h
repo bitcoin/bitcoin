@@ -11,6 +11,7 @@
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <optional>
@@ -26,6 +27,8 @@ bool operator<(BytePrefix a, Span<const std::byte> b);
 bool operator<(Span<const std::byte> a, BytePrefix b);
 
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
+
+const std::array<const std::byte, 4> ENCRYPTED_DB_XOR{std::byte{0x36}, std::byte{0x93}, std::byte{0x2d}, std::byte{0x47}};
 
 class DatabaseCursor
 {
@@ -234,6 +237,7 @@ fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);
 bool IsBDBFile(const fs::path& path);
 bool IsSQLiteFile(const fs::path& path);
+bool IsEncryptedSQLiteFile(const fs::path& path);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_DB_H

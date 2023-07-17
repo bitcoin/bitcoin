@@ -39,7 +39,12 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
             const fs::path path{it->path().lexically_relative(wallet_dir)};
 
             if (it->status().type() == fs::file_type::directory &&
-                (IsBDBFile(BDBDataFile(it->path())) || IsSQLiteFile(SQLiteDataFile(it->path())))) {
+                (
+                    IsBDBFile(BDBDataFile(it->path()))
+                    || IsSQLiteFile(SQLiteDataFile(it->path()))
+                    || IsEncryptedSQLiteFile(SQLiteDataFile(it->path()))
+                )
+            ) {
                 // Found a directory which contains wallet.dat btree file, add it as a wallet.
                 paths.emplace_back(path);
             } else if (it.depth() == 0 && it->symlink_status().type() == fs::file_type::regular && IsBDBFile(it->path())) {
@@ -108,7 +113,7 @@ bool IsBDBFile(const fs::path& path)
     return data == 0x00053162 || data == 0x62310500;
 }
 
-bool IsSQLiteFile(const fs::path& path)
+static bool IsSQLiteFile(const fs::path& path, std::array<const std::byte, 4> id)
 {
     if (!fs::exists(path)) return false;
 
@@ -138,8 +143,32 @@ bool IsSQLiteFile(const fs::path& path)
         return false;
     }
 
-    // Check the application id matches our network magic
-    return memcmp(Params().MessageStart().data(), app_id, 4) == 0;
+    // Check the application id matches our intended id
+    return memcmp(id.data(), app_id, 4) == 0;
+}
+
+bool IsSQLiteFile(const fs::path& path)
+{
+    // For unencrypted files, application id is the network magic
+    std::array<const std::byte, 4> app_id = {
+        std::byte{Params().MessageStart()[0]},
+        std::byte{Params().MessageStart()[1]},
+        std::byte{Params().MessageStart()[2]},
+        std::byte{Params().MessageStart()[3]},
+    };
+    return IsSQLiteFile(path, app_id);
+}
+
+bool IsEncryptedSQLiteFile(const fs::path& path)
+{
+    // For encrypted files, application id is the network magic XOR'd with 36932d47
+    std::array<const std::byte, 4> app_id = {
+        std::byte{Params().MessageStart()[0]} ^ ENCRYPTED_DB_XOR[0],
+        std::byte{Params().MessageStart()[1]} ^ ENCRYPTED_DB_XOR[1],
+        std::byte{Params().MessageStart()[2]} ^ ENCRYPTED_DB_XOR[2],
+        std::byte{Params().MessageStart()[3]} ^ ENCRYPTED_DB_XOR[3],
+    };
+    return IsSQLiteFile(path, app_id);
 }
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)

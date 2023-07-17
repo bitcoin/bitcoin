@@ -351,7 +351,7 @@ DatabaseCursor::Status EncryptedDBCursor::Next(DataStream& key, DataStream& valu
 
 std::unique_ptr<EncryptedDatabase> MakeEncryptedSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
-    std::unique_ptr<SQLiteDatabase> backing_db = MakeSQLiteDatabase(path, options, status, error);
+    std::unique_ptr<SQLiteDatabase> backing_db = MakeSQLiteDatabase(path, options, status, error, ENCRYPTED_DB_XOR);
     try {
         auto db = std::make_unique<EncryptedDatabase>(std::move(backing_db), options.db_passphrase, options.require_create);
         status = DatabaseStatus::SUCCESS;

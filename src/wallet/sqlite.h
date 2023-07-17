@@ -8,6 +8,8 @@
 #include <sync.h>
 #include <wallet/db.h>
 
+#include <array>
+
 struct bilingual_str;
 
 struct sqlite3_stmt;
@@ -84,6 +86,8 @@ private:
 
     const std::string m_file_path;
 
+    std::array<const std::byte, 4> m_app_id;
+
     /**
      * This mutex protects SQLite initialization and shutdown.
      * sqlite3_config() and sqlite3_shutdown() are not thread-safe (sqlite3_initialize() is).
@@ -99,7 +103,7 @@ public:
     SQLiteDatabase() = delete;
 
     /** Create DB handle to real database */
-    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock = false);
+    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock = false, std::array<const std::byte, 4> app_id_xor = {std::byte{0}, std::byte{0}, std::byte{0}, std::byte{0}});
 
     ~SQLiteDatabase();
 
@@ -146,7 +150,7 @@ public:
     bool m_use_unsafe_sync;
 };
 
-std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::array<const std::byte, 4> app_id_xor = {std::byte{0}, std::byte{0}, std::byte{0}, std::byte{0}});
 
 std::string SQLiteDatabaseVersion();
 } // namespace wallet

@@ -109,8 +109,18 @@ static void SetPragma(sqlite3* db, const std::string& key, const std::string& va
 Mutex SQLiteDatabase::g_sqlite_mutex;
 int SQLiteDatabase::g_sqlite_count = 0;
 
-SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock)
-    : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path)), m_use_unsafe_sync(options.use_unsafe_sync)
+SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock, std::array<const std::byte, 4> app_id_xor)
+    : WalletDatabase(),
+    m_mock(mock),
+    m_dir_path(fs::PathToString(dir_path)),
+    m_file_path(fs::PathToString(file_path)),
+    m_app_id({
+        std::byte{Params().MessageStart()[0]} ^ app_id_xor[0],
+        std::byte{Params().MessageStart()[1]} ^ app_id_xor[1],
+        std::byte{Params().MessageStart()[2]} ^ app_id_xor[2],
+        std::byte{Params().MessageStart()[3]} ^ app_id_xor[3],
+    }),
+    m_use_unsafe_sync(options.use_unsafe_sync)
 {
     {
         LOCK(g_sqlite_mutex);
@@ -189,13 +199,13 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
 {
     assert(m_db);
 
-    // Check the application ID matches our network magic
+    // Check the application ID matches the db's stored app_id
     auto read_result = ReadPragmaInteger(m_db, "application_id", "the application id", error);
     if (!read_result.has_value()) return false;
     uint32_t app_id = static_cast<uint32_t>(read_result.value());
-    uint32_t net_magic = ReadBE32(Params().MessageStart().data());
-    if (app_id != net_magic) {
-        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
+    uint32_t magic = ReadBE32(reinterpret_cast<const unsigned char*>(m_app_id.data()));
+    if (app_id != magic) {
+        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), magic, app_id);
         return false;
     }
 
@@ -324,7 +334,7 @@ void SQLiteDatabase::Open()
         }
 
         // Set the application id
-        uint32_t app_id = ReadBE32(Params().MessageStart().data());
+        uint32_t app_id = ReadBE32(reinterpret_cast<const unsigned char*>(m_app_id.data()));
         SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
                   "Failed to set the application id");
 
@@ -634,11 +644,11 @@ bool SQLiteBatch::TxnAbort()
     return res == SQLITE_OK;
 }
 
-std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::array<const std::byte, 4> app_id_xor)
 {
     try {
         fs::path data_file = SQLiteDataFile(path);
-        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options);
+        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options, /*mock=*/false, app_id_xor);
         if (options.verify && !db->Verify(error)) {
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;
