@@ -23,7 +23,7 @@ void initialize_pow()
     SelectParams(ChainType::MAIN);
 }
 
-FUZZ_TARGET_INIT(pow, initialize_pow)
+FUZZ_TARGET(pow, .init = initialize_pow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const Consensus::Params& consensus_params = Params().GetConsensus();
@@ -87,7 +87,7 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
 }
 
 
-FUZZ_TARGET_INIT(pow_transition, initialize_pow)
+FUZZ_TARGET(pow_transition, .init = initialize_pow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const Consensus::Params& consensus_params{Params().GetConsensus()};

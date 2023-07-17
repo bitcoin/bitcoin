@@ -25,7 +25,7 @@ void initialize_setup()
     g_wallet_ptr = std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase());
 }
 
-FUZZ_TARGET_INIT(wallet_fees, initialize_setup)
+FUZZ_TARGET(wallet_fees, .init = initialize_setup)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     const auto& node{g_setup->m_node};

@@ -54,20 +54,25 @@ const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = 
     return g_args;
 };
 
-std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>>& FuzzTargets()
+struct FuzzTarget {
+    const TypeTestOneInput test_one_input;
+    const FuzzTargetOptions opts;
+};
+
+auto& FuzzTargets()
 {
-    static std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>> g_fuzz_targets;
+    static std::map<std::string_view, FuzzTarget> g_fuzz_targets;
     return g_fuzz_targets;
 }
 
-void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, TypeInitialize init, TypeHidden hidden)
+void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
-    const auto it_ins = FuzzTargets().try_emplace(name, std::move(target), std::move(init), hidden);
+    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped in C++20 */ {std::move(target), std::move(opts)})};
     Assert(it_ins.second);
 }
 
 static std::string_view g_fuzz_target;
-static TypeTestOneInput* g_test_one_input{nullptr};
+static const TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
@@ -84,22 +89,22 @@ void initialize()
 
     bool should_exit{false};
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
-        for (const auto& t : FuzzTargets()) {
-            if (std::get<2>(t.second)) continue;
-            std::cout << t.first << std::endl;
+        for (const auto& [name, t] : FuzzTargets()) {
+            if (t.opts.hidden) continue;
+            std::cout << name << std::endl;
         }
         should_exit = true;
     }
     if (const char* out_path = std::getenv("WRITE_ALL_FUZZ_TARGETS_AND_ABORT")) {
         std::cout << "Writing all fuzz target names to '" << out_path << "'." << std::endl;
         std::ofstream out_stream{out_path, std::ios::binary};
-        for (const auto& t : FuzzTargets()) {
-            if (std::get<2>(t.second)) continue;
-            out_stream << t.first << std::endl;
+        for (const auto& [name, t] : FuzzTargets()) {
+            if (t.opts.hidden) continue;
+            out_stream << name << std::endl;
         }
-        should_exit= true;
+        should_exit = true;
     }
-    if (should_exit){
+    if (should_exit) {
         std::exit(EXIT_SUCCESS);
     }
     if (const auto* env_fuzz{std::getenv("FUZZ")}) {
@@ -117,8 +122,8 @@ void initialize()
         std::exit(EXIT_FAILURE);
     }
     Assert(!g_test_one_input);
-    g_test_one_input = &std::get<0>(it->second);
-    std::get<1>(it->second)();
+    g_test_one_input = &it->second.test_one_input;
+    it->second.opts.init();
 }
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION)

@@ -36,7 +36,7 @@ void initialize_script()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(script, initialize_script)
+FUZZ_TARGET(script, .init = initialize_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const CScript script{ConsumeScript(fuzzed_data_provider)};

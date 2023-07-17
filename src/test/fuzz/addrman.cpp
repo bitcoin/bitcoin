@@ -46,7 +46,7 @@ void initialize_addrman()
     return NetGroupManager(asmap);
 }
 
-FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
+FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
@@ -233,7 +233,7 @@ public:
     }
 };
 
-FUZZ_TARGET_INIT(addrman, initialize_addrman)
+FUZZ_TARGET(addrman, .init = initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
@@ -319,7 +319,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
 }
 
 // Check that serialize followed by unserialize produces the same addrman.
-FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
+FUZZ_TARGET(addrman_serdeser, .init = initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
