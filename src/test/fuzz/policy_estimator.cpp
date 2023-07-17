@@ -28,7 +28,7 @@ void initialize_policy_estimator()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
+FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};

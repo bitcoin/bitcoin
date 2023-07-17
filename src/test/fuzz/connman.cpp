@@ -28,7 +28,7 @@ void initialize_connman()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(connman, initialize_connman)
+FUZZ_TARGET(connman, .init = initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

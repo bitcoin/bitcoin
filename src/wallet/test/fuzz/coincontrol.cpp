@@ -20,7 +20,7 @@ void initialize_coincontrol()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(coincontrol, initialize_coincontrol)
+FUZZ_TARGET(coincontrol, .init = initialize_coincontrol)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;

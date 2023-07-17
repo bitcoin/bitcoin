@@ -31,7 +31,7 @@ void InitRandData()
 
 } // namespace
 
-FUZZ_TARGET_INIT(bitdeque, InitRandData)
+FUZZ_TARGET(bitdeque, .init = InitRandData)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     FastRandomContext ctx(true);

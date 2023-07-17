@@ -33,7 +33,7 @@ void initialize_validation_load_mempool()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(validation_load_mempool, initialize_validation_load_mempool)
+FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

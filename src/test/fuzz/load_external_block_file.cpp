@@ -23,7 +23,7 @@ void initialize_load_external_block_file()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(load_external_block_file, initialize_load_external_block_file)
+FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_file)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);

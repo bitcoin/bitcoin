@@ -35,7 +35,7 @@ void initialize_key()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(key, initialize_key)
+FUZZ_TARGET(key, .init = initialize_key)
 {
     const CKey key = [&] {
         CKey k;
@@ -308,7 +308,7 @@ FUZZ_TARGET_INIT(key, initialize_key)
     }
 }
 
-FUZZ_TARGET_INIT(ellswift_roundtrip, initialize_key)
+FUZZ_TARGET(ellswift_roundtrip, .init = initialize_key)
 {
     FuzzedDataProvider fdp{buffer.data(), buffer.size()};
 
@@ -327,7 +327,7 @@ FUZZ_TARGET_INIT(ellswift_roundtrip, initialize_key)
     assert(key.VerifyPubKey(decoded_pubkey));
 }
 
-FUZZ_TARGET_INIT(bip324_ecdh, initialize_key)
+FUZZ_TARGET(bip324_ecdh, .init = initialize_key)
 {
     FuzzedDataProvider fdp{buffer.data(), buffer.size()};
 

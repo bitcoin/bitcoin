@@ -14,7 +14,7 @@ void initialize_descriptor_parse()
     SelectParams(ChainType::MAIN);
 }
 
-FUZZ_TARGET_INIT(descriptor_parse, initialize_descriptor_parse)
+FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
 {
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;
