@@ -77,6 +77,16 @@ public:
         }
     }
 
+    template <typename K>
+    bool Read(const K& key, DataStream& value)
+    {
+        DataStream s_key{};
+        s_key.reserve(1000);
+        s_key << key;
+
+        return ReadKey(std::move(s_key), value);
+    }
+
     template <typename K, typename T>
     bool Write(const K& key, const T& value, bool fOverwrite = true)
     {
