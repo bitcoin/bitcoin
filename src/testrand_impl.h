@@ -16,8 +16,6 @@
 #include "util.h"
 
 static uint64_t secp256k1_test_state[4];
-static uint64_t secp256k1_test_rng_integer;
-static int secp256k1_test_rng_integer_bits_left = 0;
 
 SECP256K1_INLINE static void secp256k1_testrand_seed(const unsigned char *seed16) {
     static const unsigned char PREFIX[19] = "secp256k1 test init";
@@ -36,7 +34,6 @@ SECP256K1_INLINE static void secp256k1_testrand_seed(const unsigned char *seed16
         for (j = 0; j < 8; ++j) s = (s << 8) | out32[8*i + j];
         secp256k1_test_state[i] = s;
     }
-    secp256k1_test_rng_integer_bits_left = 0;
 }
 
 SECP256K1_INLINE static uint64_t rotl(const uint64_t x, int k) {
@@ -57,58 +54,30 @@ SECP256K1_INLINE static uint64_t secp256k1_testrand64(void) {
 }
 
 SECP256K1_INLINE static uint64_t secp256k1_testrand_bits(int bits) {
-    uint64_t ret;
-    if (secp256k1_test_rng_integer_bits_left < bits) {
-        secp256k1_test_rng_integer = secp256k1_testrand64();
-        secp256k1_test_rng_integer_bits_left = 64;
-    }
-    ret = secp256k1_test_rng_integer;
-    secp256k1_test_rng_integer >>= bits;
-    secp256k1_test_rng_integer_bits_left -= bits;
-    ret &= ((~((uint64_t)0)) >> (64 - bits));
-    return ret;
+    if (bits == 0) return 0;
+    return secp256k1_testrand64() >> (64 - bits);
 }
 
 SECP256K1_INLINE static uint32_t secp256k1_testrand32(void) {
-    return secp256k1_testrand_bits(32);
+    return secp256k1_testrand64() >> 32;
 }
 
 static uint32_t secp256k1_testrand_int(uint32_t range) {
-    /* We want a uniform integer between 0 and range-1, inclusive.
-     * B is the smallest number such that range <= 2**B.
-     * two mechanisms implemented here:
-     * - generate B bits numbers until one below range is found, and return it
-     * - find the largest multiple M of range that is <= 2**(B+A), generate B+A
-     *   bits numbers until one below M is found, and return it modulo range
-     * The second mechanism consumes A more bits of entropy in every iteration,
-     * but may need fewer iterations due to M being closer to 2**(B+A) then
-     * range is to 2**B. The array below (indexed by B) contains a 0 when the
-     * first mechanism is to be used, and the number A otherwise.
-     */
-    static const int addbits[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 0};
-    uint32_t trange, mult;
-    int bits = 0;
-    if (range <= 1) {
-        return 0;
+    uint32_t mask = 0;
+    uint32_t range_copy;
+    /* Reduce range by 1, changing its meaning to "maximum value". */
+    VERIFY_CHECK(range != 0);
+    range -= 1;
+    /* Count the number of bits in range. */
+    range_copy = range;
+    while (range_copy) {
+        mask = (mask << 1) | 1U;
+        range_copy >>= 1;
     }
-    trange = range - 1;
-    while (trange > 0) {
-        trange >>= 1;
-        bits++;
-    }
-    if (addbits[bits]) {
-        bits = bits + addbits[bits];
-        mult = ((~((uint32_t)0)) >> (32 - bits)) / range;
-        trange = range * mult;
-    } else {
-        trange = range;
-        mult = 1;
-    }
-    while(1) {
-        uint32_t x = secp256k1_testrand_bits(bits);
-        if (x < trange) {
-            return (mult == 1) ? x : (x % range);
-        }
+    /* Generation loop. */
+    while (1) {
+        uint32_t val = secp256k1_testrand64() & mask;
+        if (val <= range) return val;
     }
 }
 

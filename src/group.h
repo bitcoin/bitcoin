@@ -106,7 +106,8 @@ static void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a);
 /** Check two group elements (jacobian) for equality in variable time. */
 static int secp256k1_gej_eq_var(const secp256k1_gej *a, const secp256k1_gej *b);
 
-/** Compare the X coordinate of a group element (jacobian). */
+/** Compare the X coordinate of a group element (jacobian).
+  * The magnitude of the group element's X coordinate must not exceed 31. */
 static int secp256k1_gej_eq_x_var(const secp256k1_fe *x, const secp256k1_gej *a);
 
 /** Set r equal to the inverse of a (i.e., mirrored around the X axis) */

@@ -88,7 +88,7 @@ $$
 \begin{array}{lcl}
 X(u, t) & = & \left\\{\begin{array}{ll}
   \dfrac{g(u) - t^2}{2t} & a = 0 \\
-  \dfrac{g(u) + h(u)(Y_0(u) + X_0(u)t)^2}{X_0(u)(1 + h(u)t^2)} & a \neq 0
+  \dfrac{g(u) + h(u)(Y_0(u) - X_0(u)t)^2}{X_0(u)(1 + h(u)t^2)} & a \neq 0
 \end{array}\right. \\
 Y(u, t) & = & \left\\{\begin{array}{ll}
   \dfrac{X(u, t) + t}{u \sqrt{-3}} = \dfrac{g(u) + t^2}{2tu\sqrt{-3}} & a = 0 \\
@@ -329,7 +329,7 @@ $t$ value for multiple $c$ inputs (thereby biasing that encoding):
     it requires $g(u)=0$ which is already outlawed on even-ordered curves and impossible on others; in the second it would trigger division by zero.
 * Curve-specific special cases also exist that need to be rejected, because they result in $(u,t)$ which is invalid to the decoder, or because of division by zero in the encoder:
   * For $a=0$ curves, when $u=0$ or when $t=0$. The latter can only be reached by the encoder when $g(u)=0$, which requires an even-ordered curve.
-  * For $a \neq 0$ curves, when $X_0(u)=0$, when $h(u)t^2 = -1$, or when $2w(u + 2v) = 2X_0(u)$ while also either $w \neq 2Y_0(u)$ or $h(u)=0$.
+  * For $a \neq 0$ curves, when $X_0(u)=0$, when $h(u)t^2 = -1$, or when $w(u + 2v) = 2X_0(u)$ while also either $w \neq 2Y_0(u)$ or $h(u)=0$.
 
 **Define** a version of $G_{c,u}(x)$ which deals with all these cases:
 * If $a=0$ and $u=0$, return $\bot.$

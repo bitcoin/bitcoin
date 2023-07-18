@@ -61,7 +61,7 @@ typedef int (*secp256k1_nonce_function_hardened)(
  *  Therefore, to create BIP-340 compliant signatures, algo must be set to
  *  "BIP0340/nonce" and algolen to 13.
  */
-SECP256K1_API_VAR const secp256k1_nonce_function_hardened secp256k1_nonce_function_bip340;
+SECP256K1_API const secp256k1_nonce_function_hardened secp256k1_nonce_function_bip340;
 
 /** Data structure that contains additional arguments for schnorrsig_sign_custom.
  *

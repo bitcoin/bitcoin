@@ -127,12 +127,6 @@ AC_DEFUN([SECP_TRY_APPEND_DEFAULT_CFLAGS], [
       SECP_TRY_APPEND_CFLAGS([-wd4267], $1) # Disable warning C4267 "'var' : conversion from 'size_t' to 'type', possible loss of data".
       # Eliminate deprecation warnings for the older, less secure functions.
       CPPFLAGS="-D_CRT_SECURE_NO_WARNINGS $CPPFLAGS"
-      # We pass -ignore:4217 to the MSVC linker to suppress warning 4217 when
-      # importing variables from a statically linked secp256k1.
-      # (See the libtool manual, section "Windows DLLs" for background.)
-      # Unfortunately, libtool tries to be too clever and strips "-Xlinker arg"
-      # into "arg", so this will be " -Xlinker -ignore:4217" after stripping.
-      LDFLAGS="-Xlinker -Xlinker -Xlinker -ignore:4217 $LDFLAGS" 
     fi
 ])
 SECP_TRY_APPEND_DEFAULT_CFLAGS(SECP_CFLAGS)
