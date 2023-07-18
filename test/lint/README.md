@@ -7,10 +7,8 @@ To run linters locally with the same versions as the CI environment, use the inc
 Dockerfile:
 
 ```sh
-cd ./ci/lint
-docker build -t syscoin-linter .
+DOCKER_BUILDKIT=1 docker build -t syscoin-linter --file "./ci/lint_imagefile" ./
 
-cd /root/of/syscoin/repo
 docker run --rm -v $(pwd):/syscoin -it syscoin-linter
 ```
 
