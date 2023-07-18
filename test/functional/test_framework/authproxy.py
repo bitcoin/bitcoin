@@ -160,6 +160,15 @@ class AuthServiceProxy():
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
 
+        # Check for no-content HTTP status code, which can be returned when an
+        # RPC client requests a JSON-RPC 2.0 "notification" with no response.
+        # Currently this is only possible if clients call the _request() method
+        # directly to send a raw request.
+        if http_response.status == HTTPStatus.NO_CONTENT:
+            if len(http_response.read()) != 0:
+                raise JSONRPCException({'code': -342, 'message': 'Content received with NO CONTENT status code'})
+            return None, http_response.status
+
         content_type = http_response.getheader('Content-Type')
         if content_type != 'application/json':
             raise JSONRPCException(
