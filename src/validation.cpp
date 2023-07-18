@@ -5161,7 +5161,7 @@ static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_load
 
 struct StopHashingException : public std::exception
 {
-    const char* what() const throw() override
+    const char* what() const noexcept override
     {
         return "ComputeUTXOStats interrupted.";
     }
