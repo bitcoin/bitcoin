@@ -277,11 +277,13 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
 UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 {
     UniValue params(UniValue::VOBJ);
+    UniValue positional_args{UniValue::VARR};
 
     for (const std::string &s: strParams) {
         size_t pos = s.find('=');
         if (pos == std::string::npos) {
-            throw(std::runtime_error("No '=' in named argument '"+s+"', this needs to be present for every argument (even if it is empty)"));
+            positional_args.push_back(rpcCvtTable.convert(strMethod, positional_args.size()) ? ParseNonRFCJSONValue(s) : s);
+            continue;
         }
 
         std::string name = s.substr(0, pos);
@@ -294,6 +296,10 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
             // parse string as JSON, insert bool/number/object/etc. value
             params.pushKV(name, ParseNonRFCJSONValue(value));
         }
+    }
+
+    if (!positional_args.empty()) {
+        params.pushKV("args", positional_args);
     }
 
     return params;
