@@ -14,13 +14,13 @@ static const uint64_t BUFFER_SIZE_LARGE = 1024*1024;
 
 static void CHACHA20(benchmark::Bench& bench, size_t buffersize)
 {
-    std::vector<uint8_t> key(32,0);
-    ChaCha20 ctx(key.data());
-    ctx.Seek64({0, 0}, 0);
-    std::vector<uint8_t> in(buffersize,0);
-    std::vector<uint8_t> out(buffersize,0);
+    std::vector<std::byte> key(32, {});
+    ChaCha20 ctx(key);
+    ctx.Seek({0, 0}, 0);
+    std::vector<std::byte> in(buffersize, {});
+    std::vector<std::byte> out(buffersize, {});
     bench.batch(in.size()).unit("byte").run([&] {
-        ctx.Crypt(in.data(), out.data(), in.size());
+        ctx.Crypt(in, out);
     });
 }
 

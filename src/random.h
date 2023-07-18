@@ -175,9 +175,9 @@ public:
     uint64_t rand64() noexcept
     {
         if (requires_seed) RandomSeed();
-        unsigned char buf[8];
-        rng.Keystream(buf, 8);
-        return ReadLE64(buf);
+        std::array<std::byte, 8> buf;
+        rng.Keystream(buf);
+        return ReadLE64(UCharCast(buf.data()));
     }
 
     /** Generate a random (bits)-bit integer. */

@@ -133,27 +133,27 @@ static void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, b
 
 static void TestChaCha20(const std::string &hex_message, const std::string &hexkey, ChaCha20::Nonce96 nonce, uint32_t seek, const std::string& hexout)
 {
-    std::vector<unsigned char> key = ParseHex(hexkey);
+    auto key = ParseHex<std::byte>(hexkey);
     assert(key.size() == 32);
-    std::vector<unsigned char> m = ParseHex(hex_message);
-    ChaCha20 rng(key.data());
-    rng.Seek64(nonce, seek);
-    std::vector<unsigned char> outres;
+    auto m = ParseHex<std::byte>(hex_message);
+    ChaCha20 rng{key};
+    rng.Seek(nonce, seek);
+    std::vector<std::byte> outres;
     outres.resize(hexout.size() / 2);
     assert(hex_message.empty() || m.size() * 2 == hexout.size());
 
     // perform the ChaCha20 round(s), if message is provided it will output the encrypted ciphertext otherwise the keystream
     if (!hex_message.empty()) {
-        rng.Crypt(m.data(), outres.data(), outres.size());
+        rng.Crypt(m, outres);
     } else {
-        rng.Keystream(outres.data(), outres.size());
+        rng.Keystream(outres);
     }
     BOOST_CHECK_EQUAL(hexout, HexStr(outres));
     if (!hex_message.empty()) {
         // Manually XOR with the keystream and compare the output
-        rng.Seek64(nonce, seek);
-        std::vector<unsigned char> only_keystream(outres.size());
-        rng.Keystream(only_keystream.data(), only_keystream.size());
+        rng.Seek(nonce, seek);
+        std::vector<std::byte> only_keystream(outres.size());
+        rng.Keystream(only_keystream);
         for (size_t i = 0; i != m.size(); i++) {
             outres[i] = m[i] ^ only_keystream[i];
         }
@@ -167,14 +167,14 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
         lens[1] = InsecureRandRange(hexout.size() / 2U + 1U - lens[0]);
         lens[2] = hexout.size() / 2U - lens[0] - lens[1];
 
-        rng.Seek64(nonce, seek);
-        outres.assign(hexout.size() / 2U, 0);
+        rng.Seek(nonce, seek);
+        outres.assign(hexout.size() / 2U, {});
         size_t pos = 0;
         for (int j = 0; j < 3; ++j) {
             if (!hex_message.empty()) {
-                rng.Crypt(m.data() + pos, outres.data() + pos, lens[j]);
+                rng.Crypt(Span{m}.subspan(pos, lens[j]), Span{outres}.subspan(pos, lens[j]));
             } else {
-                rng.Keystream(outres.data() + pos, lens[j]);
+                rng.Keystream(Span{outres}.subspan(pos, lens[j]));
             }
             pos += lens[j];
         }
@@ -190,7 +190,7 @@ static void TestFSChaCha20(const std::string& hex_plaintext, const std::string& 
     auto plaintext = ParseHex<std::byte>(hex_plaintext);
 
     auto fsc20 = FSChaCha20{key, rekey_interval};
-    auto c20 = ChaCha20{UCharCast(key.data())};
+    auto c20 = ChaCha20{key};
 
     std::vector<std::byte> fsc20_output;
     fsc20_output.resize(plaintext.size());
@@ -200,23 +200,23 @@ static void TestFSChaCha20(const std::string& hex_plaintext, const std::string& 
 
     for (size_t i = 0; i < rekey_interval; i++) {
         fsc20.Crypt(plaintext, fsc20_output);
-        c20.Crypt(UCharCast(plaintext.data()), UCharCast(c20_output.data()), plaintext.size());
+        c20.Crypt(plaintext, c20_output);
         BOOST_CHECK(c20_output == fsc20_output);
     }
 
     // At the rotation interval, the outputs will no longer match
     fsc20.Crypt(plaintext, fsc20_output);
     auto c20_copy = c20;
-    c20.Crypt(UCharCast(plaintext.data()), UCharCast(c20_output.data()), plaintext.size());
+    c20.Crypt(plaintext, c20_output);
     BOOST_CHECK(c20_output != fsc20_output);
 
     std::byte new_key[FSChaCha20::KEYLEN];
-    c20_copy.Keystream(UCharCast(new_key), sizeof(new_key));
-    c20.SetKey32(UCharCast(new_key));
-    c20.Seek64({0, 1}, 0);
+    c20_copy.Keystream(new_key);
+    c20.SetKey(new_key);
+    c20.Seek({0, 1}, 0);
 
     // Outputs should match again after simulating key rotation
-    c20.Crypt(UCharCast(plaintext.data()), UCharCast(c20_output.data()), plaintext.size());
+    c20.Crypt(plaintext, c20_output);
     BOOST_CHECK(c20_output == fsc20_output);
 
     BOOST_CHECK_EQUAL(HexStr(fsc20_output), ciphertext_after_rotation);
@@ -823,20 +823,20 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
 
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
 {
-    auto key = ParseHex("0000000000000000000000000000000000000000000000000000000000000000");
-    ChaCha20 c20{key.data()};
+    auto key = ParseHex<std::byte>("0000000000000000000000000000000000000000000000000000000000000000");
+    ChaCha20 c20{key};
     // get one block of keystream
-    unsigned char block[64];
-    c20.Keystream(block, sizeof(block));
-    unsigned char b1[5], b2[7], b3[52];
-    c20 = ChaCha20{key.data()};
-    c20.Keystream(b1, 5);
-    c20.Keystream(b2, 7);
-    c20.Keystream(b3, 52);
+    std::byte block[64];
+    c20.Keystream(block);
+    std::byte b1[5], b2[7], b3[52];
+    c20 = ChaCha20{key};
+    c20.Keystream(b1);
+    c20.Keystream(b2);
+    c20.Keystream(b3);
 
-    BOOST_CHECK_EQUAL(0, memcmp(b1, block, 5));
-    BOOST_CHECK_EQUAL(0, memcmp(b2, block + 5, 7));
-    BOOST_CHECK_EQUAL(0, memcmp(b3, block + 12, 52));
+    BOOST_CHECK(Span{block}.first(5) == Span{b1});
+    BOOST_CHECK(Span{block}.subspan(5, 7) == Span{b2});
+    BOOST_CHECK(Span{block}.last(52) == Span{b3});
 }
 
 BOOST_AUTO_TEST_CASE(poly1305_testvector)
