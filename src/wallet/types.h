@@ -69,6 +69,11 @@ struct CRecipient
     CScript scriptPubKey;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
+
+    friend bool operator==(const CRecipient& a, const CRecipient& b)
+    {
+        return a.scriptPubKey == b.scriptPubKey && a.nAmount == b.nAmount;
+    }
 };
 
 struct V0SilentPaymentDestination
