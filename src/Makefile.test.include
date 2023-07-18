@@ -17,6 +17,7 @@ FUZZ_BINARY=test/fuzz/fuzz$(EXEEXT)
 JSON_TEST_FILES = \
   test/data/script_tests.json \
   test/data/bip341_wallet_vectors.json \
+  test/data/bip352_send_and_receive_vectors.json \
   test/data/base58_encode_decode.json \
   test/data/blockfilters.json \
   test/data/key_io_valid.json \
@@ -183,6 +184,7 @@ BITCOIN_TESTS += \
   wallet/test/ismine_tests.cpp \
   wallet/test/rpc_util_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp \
+  wallet/test/silentpayment_tests.cpp \
   wallet/test/walletload_tests.cpp \
   wallet/test/group_outputs_tests.cpp
 
