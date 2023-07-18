@@ -14,6 +14,7 @@
 #define BITCOIN_WALLET_TYPES_H
 
 #include <type_traits>
+#include <pubkey.h>
 
 namespace wallet {
 /**
@@ -61,6 +62,20 @@ enum class AddressPurpose {
     RECEIVE,
     SEND,
     REFUND, //!< Never set in current code may be present in older wallet databases
+};
+
+struct CRecipient
+{
+    CScript scriptPubKey;
+    CAmount nAmount;
+    bool fSubtractFeeFromAmount;
+};
+
+struct V0SilentPaymentDestination
+{
+    CPubKey m_scan_pubkey;
+    CPubKey m_spend_pubkey;
+    CAmount m_amount;
 };
 } // namespace wallet
 

@@ -108,6 +108,10 @@ public:
     {
         ctx.Write(UCharCast(src.data()), src.size());
     }
+    void write(Span<const unsigned char> src)
+    {
+        ctx.Write(src.data(), src.size());
+    }
 
     /** Compute the double-SHA256 hash of all data written to this object.
      *
