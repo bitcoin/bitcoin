@@ -43,7 +43,7 @@ struct DecodeResult
 };
 
 /** Decode a Bech32 or Bech32m string. */
-DecodeResult Decode(const std::string& str);
+DecodeResult Decode(const std::string& str, bool silent = false);
 
 /** Return the positions of errors in a Bech32 string. */
 std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str);
