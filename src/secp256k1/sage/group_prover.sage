@@ -198,7 +198,7 @@ def normalize_factor(p):
   (8) * (-bx + ax)^3
   ```
   """
-  # Assert p is not 0 and that its non-zero coeffients are coprime.
+  # Assert p is not 0 and that its non-zero coefficients are coprime.
   # (We could just work with the primitive part p/p.content() but we want to be
   # aware if factor() does not return a primitive part in future sage versions.)
   assert p.content() == 1

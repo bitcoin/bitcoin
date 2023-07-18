@@ -322,7 +322,9 @@ void run_ellswift_tests(void) {
         secp256k1_testrand256_test(auxrnd32a);
         secp256k1_testrand256_test(auxrnd32b);
         random_scalar_order_test(&seca);
-        random_scalar_order_test(&secb);
+        /* Draw secb uniformly at random to make sure that the secret keys
+         * differ */
+        random_scalar_order(&secb);
         secp256k1_scalar_get_b32(sec32a, &seca);
         secp256k1_scalar_get_b32(sec32b, &secb);
 

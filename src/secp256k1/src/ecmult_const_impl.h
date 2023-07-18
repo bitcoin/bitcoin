@@ -276,7 +276,7 @@ static int secp256k1_ecmult_const_xonly(secp256k1_fe* r, const secp256k1_fe *n, 
      *
      * It is easy to verify that both (n*g, g^2, v) and its negation (n*g, -g^2, v) have affine X
      * coordinate n/d, and this holds even when the square root function doesn't have a
-     * determinstic sign. We choose the (n*g, g^2, v) version.
+     * deterministic sign. We choose the (n*g, g^2, v) version.
      *
      * Now switch to the effective affine curve using phi_v, where the input point has coordinates
      * (n*g, g^2). Compute (X, Y, Z) = q * (n*g, g^2) there.
