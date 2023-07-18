@@ -40,11 +40,6 @@ void ChaCha20Aligned::SetKey(Span<const std::byte> key) noexcept
     input[11] = 0;
 }
 
-ChaCha20Aligned::ChaCha20Aligned() noexcept
-{
-    memset(input, 0, sizeof(input));
-}
-
 ChaCha20Aligned::~ChaCha20Aligned()
 {
     memory_cleanse(input, sizeof(input));

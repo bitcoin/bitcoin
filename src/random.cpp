@@ -6,6 +6,7 @@
 #include <random.h>
 
 #include <compat/cpuid.h>
+#include <crypto/chacha20.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
 #include <logging.h>
@@ -606,10 +607,7 @@ void FastRandomContext::fillrand(Span<std::byte> output)
     rng.Keystream(output);
 }
 
-FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), bitbuf_size(0)
-{
-    rng.SetKey(MakeByteSpan(seed));
-}
+FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), rng(MakeByteSpan(seed)), bitbuf_size(0) {}
 
 bool Random_SanityCheck()
 {
@@ -657,13 +655,13 @@ bool Random_SanityCheck()
     return true;
 }
 
-FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), bitbuf_size(0)
+static constexpr std::array<std::byte, ChaCha20::KEYLEN> ZERO_KEY{};
+
+FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), rng(ZERO_KEY), bitbuf_size(0)
 {
-    if (!fDeterministic) {
-        return;
-    }
-    static constexpr std::array<std::byte, ChaCha20::KEYLEN> ZERO{};
-    rng.SetKey(ZERO);
+    // Note that despite always initializing with ZERO_KEY, requires_seed is set to true if not
+    // fDeterministic. That means the rng will be reinitialized with a secure random key upon first
+    // use.
 }
 
 FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexcept

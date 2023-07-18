@@ -34,7 +34,8 @@ public:
     /** Block size (inputs/outputs to Keystream / Crypt should be multiples of this). */
     static constexpr unsigned BLOCKLEN{64};
 
-    ChaCha20Aligned() noexcept;
+    /** For safety, disallow initialization without key. */
+    ChaCha20Aligned() noexcept = delete;
 
     /** Initialize a cipher with specified 32-byte key. */
     ChaCha20Aligned(Span<const std::byte> key) noexcept;
@@ -84,7 +85,8 @@ public:
     /** Expected key length in constructor and SetKey. */
     static constexpr unsigned KEYLEN = ChaCha20Aligned::KEYLEN;
 
-    ChaCha20() noexcept = default;
+    /** For safety, disallow initialization without key. */
+    ChaCha20() noexcept = delete;
 
     /** Initialize a cipher with specified 32-byte key. */
     ChaCha20(Span<const std::byte> key) noexcept : m_aligned(key) {}

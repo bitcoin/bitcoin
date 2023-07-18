@@ -17,11 +17,9 @@ FUZZ_TARGET(crypto_chacha20)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    ChaCha20 chacha20;
-    if (fuzzed_data_provider.ConsumeBool()) {
-        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
-        chacha20 = ChaCha20{MakeByteSpan(key)};
-    }
+    const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+    ChaCha20 chacha20{MakeByteSpan(key)};
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,

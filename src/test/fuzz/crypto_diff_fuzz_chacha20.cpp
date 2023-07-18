@@ -267,20 +267,13 @@ void ECRYPT_keystream_bytes(ECRYPT_ctx* x, u8* stream, u32 bytes)
 
 FUZZ_TARGET(crypto_diff_fuzz_chacha20)
 {
-    static const unsigned char ZEROKEY[32] = {0};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    ChaCha20 chacha20;
     ECRYPT_ctx ctx;
 
-    if (fuzzed_data_provider.ConsumeBool()) {
-        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
-        chacha20 = ChaCha20{MakeByteSpan(key)};
-        ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
-    } else {
-        // The default ChaCha20 constructor is equivalent to using the all-0 key.
-        ECRYPT_keysetup(&ctx, ZEROKEY, 256, 0);
-    }
+    const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+    ChaCha20 chacha20{MakeByteSpan(key)};
+    ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
 
     // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
     static const uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
