@@ -40,6 +40,7 @@
 #include <streams.h>
 #include <spork.h>
 #include <txdb.h>
+#include <test/util/index.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -316,12 +317,7 @@ void TestChainSetup::mineBlocks(int num_blocks)
     assert(g_txindex->Start(::ChainstateActive()));
 
     // Allow tx index to catch up with the block index.
-    constexpr int64_t timeout_ms = 10 * 1000;
-    int64_t time_start = GetTimeMillis();
-    while (!g_txindex->BlockUntilSyncedToCurrentChain()) {
-        assert(time_start + timeout_ms > GetTimeMillis());
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-    }
+    IndexWaitSynced(*g_txindex);
 }
 
 CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
@@ -410,14 +406,9 @@ TestChainSetup::~TestChainSetup()
     // Allow tx index to catch up with the block index cause otherwise
     // we might be destroying it while scheduler still has some work for it
     // e.g. via BlockConnected signal
-    int64_t time_start = GetTimeMillis();
-    while (!g_txindex->BlockUntilSyncedToCurrentChain()) {
-        static constexpr int64_t timeout_ms = 10 * 1000;
-        assert(time_start + timeout_ms > GetTimeMillis());
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-    }
-    g_txindex->Interrupt();
+    IndexWaitSynced(*g_txindex);
     g_txindex->Stop();
+    SyncWithValidationInterfaceQueue();
     g_txindex.reset();
     SetMockTime(0);
 }
