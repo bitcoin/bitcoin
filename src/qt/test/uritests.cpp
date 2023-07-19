@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,9 +58,35 @@ void URITests::uriTests()
     uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-message=Wikipedia Example Address"));
     QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
 
+    // Commas in amounts are not allowed.
     uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
 
     uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
+
+    // There are two amount specifications. The last value wins.
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&amount=200&label=Wikipedia Example"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 20000000000LL);
+    QVERIFY(rv.label == QString("Wikipedia Example"));
+
+    // The first amount value is correct. However, the second amount value is not valid. Hence, the URI is not valid.
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&amount=1,000&label=Wikipedia Example"));
+    QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
+
+    // Test label containing a question mark ('?').
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=?"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.label == QString("?"));
+
+    // Escape sequences are not supported.
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=%3F"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.label == QString("%3F"));
 }
