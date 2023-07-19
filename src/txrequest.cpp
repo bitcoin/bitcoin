@@ -124,7 +124,7 @@ public:
 
     Priority operator()(const uint256& txhash, NodeId peer, bool preferred) const
     {
-        uint64_t low_bits = CSipHasher(m_k0, m_k1).Write(txhash.begin(), txhash.size()).Write(peer).Finalize() >> 1;
+        uint64_t low_bits = CSipHasher(m_k0, m_k1).Write(txhash).Write(peer).Finalize() >> 1;
         return low_bits | uint64_t{preferred} << 63;
     }
 

@@ -171,8 +171,8 @@ public:
             hasher.Write(a.source.GetNetwork());
             hasher.Write(addr_key.size());
             hasher.Write(source_key.size());
-            hasher.Write(addr_key.data(), addr_key.size());
-            hasher.Write(source_key.data(), source_key.size());
+            hasher.Write(addr_key);
+            hasher.Write(source_key);
             return (size_t)hasher.Finalize();
         };
 
