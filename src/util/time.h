@@ -14,6 +14,7 @@
 
 using namespace std::chrono_literals;
 
+using SteadyClock = std::chrono::steady_clock;
 using SteadySeconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::seconds>;
 using SteadyMilliseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
 using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::microseconds>;
