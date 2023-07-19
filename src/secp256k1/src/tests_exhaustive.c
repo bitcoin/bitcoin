@@ -13,6 +13,9 @@
 #define EXHAUSTIVE_TEST_ORDER 13
 #endif
 
+/* These values of B are all values in [1, 8] that result in a curve with even order. */
+#define EXHAUSTIVE_TEST_CURVE_HAS_EVEN_ORDER (SECP256K1_B == 1 || SECP256K1_B == 6 || SECP256K1_B == 8)
+
 #ifdef USE_EXTERNAL_DEFAULT_CALLBACKS
     #pragma message("Ignoring USE_EXTERNAL_CALLBACKS in exhaustive_tests.")
     #undef USE_EXTERNAL_DEFAULT_CALLBACKS
@@ -395,6 +398,10 @@ static void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_g
 #include "modules/schnorrsig/tests_exhaustive_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_ELLSWIFT
+#include "modules/ellswift/tests_exhaustive_impl.h"
+#endif
+
 int main(int argc, char** argv) {
     int i;
     secp256k1_gej groupj[EXHAUSTIVE_TEST_ORDER];
@@ -489,6 +496,15 @@ int main(int argc, char** argv) {
 #endif
 #ifdef ENABLE_MODULE_SCHNORRSIG
         test_exhaustive_schnorrsig(ctx);
+#endif
+#ifdef ENABLE_MODULE_ELLSWIFT
+    /* The ellswift algorithm does have additional edge cases when operating on
+     * curves of even order, which are not included in the code as secp256k1 is
+     * of odd order. Skip the ellswift tests if the used exhaustive tests curve
+     * is even-ordered accordingly. */
+    #if !EXHAUSTIVE_TEST_CURVE_HAS_EVEN_ORDER
+        test_exhaustive_ellswift(ctx, group);
+    #endif
 #endif
 
         secp256k1_context_destroy(ctx);

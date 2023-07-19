@@ -44,7 +44,7 @@ SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe *a, const 
     return secp256k1_fe_normalizes_to_zero_var(&na);
 }
 
-static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
+static int secp256k1_fe_sqrt(secp256k1_fe * SECP256K1_RESTRICT r, const secp256k1_fe * SECP256K1_RESTRICT a) {
     /** Given that p is congruent to 3 mod 4, we can compute the square root of
      *  a mod p as the (p+1)/4'th power of a.
      *
@@ -289,23 +289,23 @@ SECP256K1_INLINE static void secp256k1_fe_get_b32(unsigned char *r, const secp25
     secp256k1_fe_impl_get_b32(r, a);
 }
 
-static void secp256k1_fe_impl_negate(secp256k1_fe *r, const secp256k1_fe *a, int m);
-SECP256K1_INLINE static void secp256k1_fe_negate(secp256k1_fe *r, const secp256k1_fe *a, int m) {
+static void secp256k1_fe_impl_negate_unchecked(secp256k1_fe *r, const secp256k1_fe *a, int m);
+SECP256K1_INLINE static void secp256k1_fe_negate_unchecked(secp256k1_fe *r, const secp256k1_fe *a, int m) {
     secp256k1_fe_verify(a);
     VERIFY_CHECK(m >= 0 && m <= 31);
     VERIFY_CHECK(a->magnitude <= m);
-    secp256k1_fe_impl_negate(r, a, m);
+    secp256k1_fe_impl_negate_unchecked(r, a, m);
     r->magnitude = m + 1;
     r->normalized = 0;
     secp256k1_fe_verify(r);
 }
 
-static void secp256k1_fe_impl_mul_int(secp256k1_fe *r, int a);
-SECP256K1_INLINE static void secp256k1_fe_mul_int(secp256k1_fe *r, int a) {
+static void secp256k1_fe_impl_mul_int_unchecked(secp256k1_fe *r, int a);
+SECP256K1_INLINE static void secp256k1_fe_mul_int_unchecked(secp256k1_fe *r, int a) {
     secp256k1_fe_verify(r);
     VERIFY_CHECK(a >= 0 && a <= 32);
     VERIFY_CHECK(a*r->magnitude <= 32);
-    secp256k1_fe_impl_mul_int(r, a);
+    secp256k1_fe_impl_mul_int_unchecked(r, a);
     r->magnitude *= a;
     r->normalized = 0;
     secp256k1_fe_verify(r);

@@ -80,7 +80,12 @@ static SECP256K1_INLINE void secp256k1_u128_rshift(secp256k1_uint128 *r, unsigne
      r->lo = r->hi >> (n-64);
      r->hi = 0;
    } else if (n > 0) {
+#if defined(_MSC_VER) && defined(_M_X64)
+     VERIFY_CHECK(n < 64);
+     r->lo = __shiftright128(r->lo, r->hi, n);
+#else
      r->lo = ((1U * r->hi) << (64-n)) | r->lo >> n;
+#endif
      r->hi >>= n;
    }
 }

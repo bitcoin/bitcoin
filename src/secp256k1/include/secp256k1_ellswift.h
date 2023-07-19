@@ -41,6 +41,8 @@ extern "C" {
  * - The paper uses an additional encoding bit for the parity of y. Here the
  *   parity of t is used (negating t does not affect the decoded x coordinate,
  *   so this is possible).
+ *
+ * For mathematical background about the scheme, see the doc/ellswift.md file.
  */
 
 /** A pointer to a function used by secp256k1_ellswift_xdh to hash the shared X
@@ -70,7 +72,7 @@ typedef int (*secp256k1_ellswift_xdh_hash_function)(
 /** An implementation of an secp256k1_ellswift_xdh_hash_function which uses
  *  SHA256(prefix64 || ell_a64 || ell_b64 || x32), where prefix64 is the 64-byte
  *  array pointed to by data. */
-SECP256K1_API_VAR const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_prefix;
+SECP256K1_API const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_prefix;
 
 /** An implementation of an secp256k1_ellswift_xdh_hash_function compatible with
  *  BIP324. It returns H_tag(ell_a64 || ell_b64 || x32), where H_tag is the
@@ -78,7 +80,7 @@ SECP256K1_API_VAR const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_
  *  to secp256k1_ellswift_xdh_hash_function_prefix with prefix64 set to
  *  SHA256("bip324_ellswift_xonly_ecdh")||SHA256("bip324_ellswift_xonly_ecdh").
  *  The data argument is ignored. */
-SECP256K1_API_VAR const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_bip324;
+SECP256K1_API const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_bip324;
 
 /** Construct a 64-byte ElligatorSwift encoding of a given pubkey.
  *
@@ -159,7 +161,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ellswift_create(
 /** Given a private key, and ElligatorSwift public keys sent in both directions,
  *  compute a shared secret using x-only Elliptic Curve Diffie-Hellman (ECDH).
  *
- *  Returns: 1: shared secret was succesfully computed
+ *  Returns: 1: shared secret was successfully computed
  *           0: secret was invalid or hashfp returned 0
  *  Args:    ctx:       pointer to a context object.
  *  Out:     output:    pointer to an array to be filled by hashfp.
