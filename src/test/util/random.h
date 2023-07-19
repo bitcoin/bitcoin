@@ -33,8 +33,8 @@ enum class SeedRand {
 
 /** Seed the given random ctx or use the seed passed in via an environment var */
 void Seed(FastRandomContext& ctx);
-
-static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
+// SYSCOIN
+static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEEDRAND)
 {
     if (seed == SeedRand::ZEROS) {
         g_insecure_rand_ctx = FastRandomContext(/*fDeterministic=*/true);

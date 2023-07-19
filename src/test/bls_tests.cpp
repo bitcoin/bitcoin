@@ -8,6 +8,7 @@
 #include <boost/test/unit_test.hpp>
 #include <streams.h>
 #include <clientversion.h>
+#include <random.h>
 BOOST_FIXTURE_TEST_SUITE(bls_tests, BasicTestingSetup)
 
 void FuncSign(const bool legacy_scheme)
