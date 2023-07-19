@@ -14,6 +14,10 @@
 
 using namespace std::chrono_literals;
 
+using SteadySeconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::seconds>;
+using SteadyMilliseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
+using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::microseconds>;
+
 void UninterruptibleSleep(const std::chrono::microseconds& n);
 
 /**
@@ -51,6 +55,15 @@ int64_t GetMockTime();
 /** Return system time (or mocked time, if set) */
 template <typename T>
 T GetTime();
+/**
+ * Return the current time point cast to the given precicion. Only use this
+ * when an exact precicion is needed, otherwise use T::clock::now() directly.
+ */
+template <typename T>
+T Now()
+{
+    return std::chrono::time_point_cast<typename T::duration>(T::clock::now());
+}
 
 /**
  * ISO 8601 formatting is preferred. Use the FormatISO8601{DateTime,Date,Time}

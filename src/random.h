@@ -208,6 +208,17 @@ public:
     /** Generate a random boolean. */
     bool randbool() noexcept { return randbits(1); }
 
+    /** Return the time point advanced by a uniform random duration. */
+    template <typename Tp>
+    Tp rand_uniform_delay(const Tp& time, typename Tp::duration range)
+    {
+        using Dur = typename Tp::duration;
+        Dur dur{range.count() > 0 ? /* interval [0..range) */ Dur{randrange(range.count())} :
+                range.count() < 0 ? /* interval (range..0] */ -Dur{randrange(-range.count())} :
+                                    /* interval [0..0] */ Dur{0}};
+        return time + dur;
+    }
+
     // Compatibility with the C++11 UniformRandomBitGenerator concept
     typedef uint64_t result_type;
     static constexpr uint64_t min() { return 0; }
