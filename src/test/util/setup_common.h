@@ -11,7 +11,6 @@
 #include <node/context.h> // IWYU pragma: export
 #include <primitives/transaction.h>
 #include <pubkey.h>
-#include <random.h>
 #include <stdexcept>
 #include <util/chaintype.h>
 #include <util/check.h>
@@ -27,6 +26,7 @@
 
 class CFeeRate;
 class Chainstate;
+class FastRandomContext;
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
@@ -42,37 +42,6 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 } // namespace std
-
-/**
- * This global and the helpers that use it are not thread-safe.
- *
- * If thread-safety is needed, the global could be made thread_local (given
- * that thread_local is supported on all architectures we support) or a
- * per-thread instance could be used in the multi-threaded test.
- */
-extern FastRandomContext g_insecure_rand_ctx;
-
-/**
- * Flag to make GetRand in random.h return the same number
- */
-extern bool g_mock_deterministic_tests;
-// SYSCOIN
-enum class SeedRand {
-    ZEROS, //!< Seed with a compile time constant of zeros
-    SEEDRAND,  //!< Call the Seed() helper
-};
-
-/** Seed the given random ctx or use the seed passed in via an environment var */
-void Seed(FastRandomContext& ctx);
-
-static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEEDRAND)
-{
-    if (seed == SeedRand::ZEROS) {
-        g_insecure_rand_ctx = FastRandomContext(/* deterministic */ true);
-    } else {
-        Seed(g_insecure_rand_ctx);
-    }
-}
 
 static constexpr CAmount CENT{1000000};
 
