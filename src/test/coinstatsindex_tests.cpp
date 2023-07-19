@@ -14,6 +14,17 @@
 
 BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
 
+static void IndexWaitSynced(BaseIndex& index)
+{
+    // Allow the CoinStatsIndex to catch up with the block index that is syncing
+    // in a background thread.
+    const auto timeout = GetTime<std::chrono::seconds>() + 120s;
+    while (!index.BlockUntilSyncedToCurrentChain()) {
+        BOOST_REQUIRE(timeout > GetTime<std::chrono::milliseconds>());
+        UninterruptibleSleep(100ms);
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 {
     CoinStatsIndex coin_stats_index{1 << 20, true};
@@ -34,13 +45,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 
     BOOST_REQUIRE(coin_stats_index.Start(::ChainstateActive()));
 
-    // Allow the CoinStatsIndex to catch up with the block index that is syncing
-    // in a background thread.
-    const auto timeout = GetTime<std::chrono::seconds>() + 120s;
-    while (!coin_stats_index.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(timeout > GetTime<std::chrono::milliseconds>());
-        UninterruptibleSleep(100ms);
-    }
+    IndexWaitSynced(coin_stats_index);
 
     // Check that CoinStatsIndex works for genesis block.
     const CBlockIndex* genesis_block_index;
