@@ -1851,9 +1851,9 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
     {
         LOCK(m_recent_confirmed_transactions_mutex);
         for (const auto& ptx : pblock->vtx) {
-            m_recent_confirmed_transactions.insert(ptx->GetHash());
+            m_recent_confirmed_transactions.insert(ptx->GetHash().ToUint256());
             if (ptx->HasWitness()) {
-                m_recent_confirmed_transactions.insert(ptx->GetWitnessHash());
+                m_recent_confirmed_transactions.insert(ptx->GetWitnessHash().ToUint256());
             }
         }
     }
@@ -2967,7 +2967,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
                 // for concerns around weakening security of unupgraded nodes
                 // if we start doing this too early.
-                m_recent_rejects.insert(porphanTx->GetWitnessHash());
+                m_recent_rejects.insert(porphanTx->GetWitnessHash().ToUint256());
                 // If the transaction failed for TX_INPUTS_NOT_STANDARD,
                 // then we know that the witness was irrelevant to the policy
                 // failure, since this check depends only on the txid
@@ -2979,7 +2979,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && porphanTx->HasWitness()) {
                     // We only add the txid if it differs from the wtxid, to
                     // avoid wasting entries in the rolling bloom filter.
-                    m_recent_rejects.insert(porphanTx->GetHash());
+                    m_recent_rejects.insert(porphanTx->GetHash().ToUint256());
                 }
             }
             m_orphanage.EraseTx(orphanHash);
@@ -4230,8 +4230,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // regardless of what witness is provided, we will not accept
                 // this, so we don't need to allow for redownload of this txid
                 // from any of our non-wtxidrelay peers.
-                m_recent_rejects.insert(tx.GetHash());
-                m_recent_rejects.insert(tx.GetWitnessHash());
+                m_recent_rejects.insert(tx.GetHash().ToUint256());
+                m_recent_rejects.insert(tx.GetWitnessHash().ToUint256());
                 m_txrequest.ForgetTxHash(tx.GetHash());
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             }
@@ -4250,7 +4250,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
                 // for concerns around weakening security of unupgraded nodes
                 // if we start doing this too early.
-                m_recent_rejects.insert(tx.GetWitnessHash());
+                m_recent_rejects.insert(tx.GetWitnessHash().ToUint256());
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
                 // If the transaction failed for TX_INPUTS_NOT_STANDARD,
                 // then we know that the witness was irrelevant to the policy
@@ -4261,7 +4261,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // transactions are later received (resulting in
                 // parent-fetching by txid via the orphan-handling logic).
                 if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && tx.HasWitness()) {
-                    m_recent_rejects.insert(tx.GetHash());
+                    m_recent_rejects.insert(tx.GetHash().ToUint256());
                     m_txrequest.ForgetTxHash(tx.GetHash());
                 }
                 if (RecursiveDynamicUsage(*ptx) < 100000) {
@@ -5694,9 +5694,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     LOCK(tx_relay->m_bloom_filter_mutex);
 
                     for (const auto& txinfo : vtxinfo) {
-                        const uint256& hash = peer->m_wtxid_relay ? txinfo.tx->GetWitnessHash() : txinfo.tx->GetHash();
-                        CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
-                        tx_relay->m_tx_inventory_to_send.erase(hash);
+                        CInv inv{
+                            peer->m_wtxid_relay ? MSG_WTX : MSG_TX,
+                            peer->m_wtxid_relay ?
+                                txinfo.tx->GetWitnessHash().ToUint256() :
+                                txinfo.tx->GetHash().ToUint256(),
+                        };
+                        tx_relay->m_tx_inventory_to_send.erase(inv.hash);
+
                         // Don't send transactions that peers will not put into their mempool
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
@@ -5704,7 +5709,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         if (tx_relay->m_bloom_filter) {
                             if (!tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         }
-                        tx_relay->m_tx_inventory_known_filter.insert(hash);
+                        tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
                         vInv.push_back(inv);
                         if (vInv.size() == MAX_INV_SZ) {
                             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
