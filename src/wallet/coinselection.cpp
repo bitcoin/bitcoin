@@ -449,15 +449,15 @@ void OutputGroupTypeMap::Push(const OutputGroup& group, OutputType type, bool in
     }
 }
 
-CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
+CAmount SelectionResult::GetSelectionWaste(CAmount change_cost, CAmount target, bool use_effective_value)
 {
     // This function should not be called with empty inputs as that would mean the selection failed
-    assert(!inputs.empty());
+    assert(!m_selected_inputs.empty());
 
     // Always consider the cost of spending an input now vs in the future.
     CAmount waste = 0;
     CAmount selected_effective_value = 0;
-    for (const auto& coin_ptr : inputs) {
+    for (const auto& coin_ptr : m_selected_inputs) {
         const COutput& coin = *coin_ptr;
         waste += coin.GetFee() - coin.long_term_fee;
         selected_effective_value += use_effective_value ? coin.GetEffectiveValue() : coin.txout.nValue;
@@ -493,9 +493,9 @@ void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const 
     const CAmount change = GetChange(min_viable_change, change_fee);
 
     if (change > 0) {
-        m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+        m_waste = GetSelectionWaste(change_cost, m_target, m_use_effective);
     } else {
-        m_waste = GetSelectionWaste(m_selected_inputs, 0, m_target, m_use_effective);
+        m_waste = GetSelectionWaste(0, m_target, m_use_effective);
     }
 }
 

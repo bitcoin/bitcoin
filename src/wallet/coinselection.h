@@ -275,26 +275,6 @@ struct OutputGroupTypeMap
 
 typedef std::map<CoinEligibilityFilter, OutputGroupTypeMap> FilteredOutputGroups;
 
-/** Compute the waste for this result given the cost of change
- * and the opportunity cost of spending these inputs now vs in the future.
- * If change exists, waste = change_cost + inputs * (effective_feerate - long_term_feerate)
- * If no change, waste = excess + inputs * (effective_feerate - long_term_feerate)
- * where excess = selected_effective_value - target
- * change_cost = effective_feerate * change_output_size + long_term_feerate * change_spend_size
- *
- * Note this function is separate from SelectionResult for the tests.
- *
- * @param[in] inputs The selected inputs
- * @param[in] change_cost The cost of creating change and spending it in the future.
- *                        Only used if there is change, in which case it must be positive.
- *                        Must be 0 if there is no change.
- * @param[in] target The amount targeted by the coin selection algorithm.
- * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
- * @return The waste
- */
-[[nodiscard]] CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
-
-
 /** Choose a random change target for each transaction to make it harder to fingerprint the Core
  * wallet based on the change output values of transactions it creates.
  * Change target covers at least change fees and adds a random value on top of it.
@@ -347,6 +327,22 @@ private:
             throw std::runtime_error(STR_INTERNAL_BUG("Shared UTXOs among selection results"));
         }
     }
+
+    /** Compute the waste for this result given the cost of change
+     * and the opportunity cost of spending these inputs now vs in the future.
+     * If change exists, waste = change_cost + inputs * (effective_feerate - long_term_feerate)
+     * If no change, waste = excess + inputs * (effective_feerate - long_term_feerate)
+     * where excess = selected_effective_value - target
+     * change_cost = effective_feerate * change_output_size + long_term_feerate * change_spend_size
+     *
+     * @param[in] change_cost The cost of creating change and spending it in the future.
+     *                        Only used if there is change, in which case it must be positive.
+     *                        Must be 0 if there is no change.
+     * @param[in] target The amount targeted by the coin selection algorithm.
+     * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
+     * @return The waste
+     */
+    [[nodiscard]] CAmount GetSelectionWaste(CAmount change_cost, CAmount target, bool use_effective_value = true);
 
 public:
     explicit SelectionResult(const CAmount target, SelectionAlgorithm algo)
