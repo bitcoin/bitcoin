@@ -27,6 +27,7 @@ CTxDestination DecodeDestination(const std::string& str, std::string& error_msg,
 
 std::pair<CPubKey, CPubKey> DecodeSilentData(const std::vector<unsigned char>& data);
 std::vector<unsigned char> DecodeSilentAddress(const std::string& str);
+std::string EncodeSilentDestination(const CPubKey& scan_pubkey, const CPubKey& spend_pubkey);
 
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);

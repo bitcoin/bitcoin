@@ -341,3 +341,21 @@ std::vector<unsigned char> DecodeSilentAddress(const std::string& str)
     if ((version == 0 && silent_payment_data.size() != SILENT_PAYMENT_V0_DATA_SIZE) || silent_payment_data.size() < SILENT_PAYMENT_V0_DATA_SIZE) return {};
     return silent_payment_data;
 }
+
+std::string EncodeSilentDestination(const CPubKey& scan_pubkey, const CPubKey& spend_pubkey)
+{
+    // The data_in is scan_pubkey + spend_pubkey
+    std::vector<unsigned char> data_in = {};
+    // Set 0 as the silent payments version
+    std::vector<unsigned char> data_out = {0};
+
+    data_in.insert(data_in.end(), scan_pubkey.begin(), scan_pubkey.end());
+    data_in.insert(data_in.end(), spend_pubkey.begin(), spend_pubkey.end());
+
+    ConvertBits<8, 5, true>([&](unsigned char c) { data_out.push_back(c); }, data_in.begin(), data_in.end());
+
+    std::string hrp = Params().SilentPaymentHRP();
+
+    return bech32::Encode(bech32::Encoding::BECH32M, hrp, data_out);
+}
+
