@@ -56,11 +56,12 @@ static void print_two_tables(FILE *fp, int window_g) {
 int main(void) {
     /* Always compute all tables for window sizes up to 15. */
     int window_g = (ECMULT_WINDOW_SIZE < 15) ? 15 : ECMULT_WINDOW_SIZE;
+    const char outfile[] = "src/precomputed_ecmult.c";
     FILE* fp;
 
-    fp = fopen("src/precomputed_ecmult.c","w");
+    fp = fopen(outfile, "w");
     if (fp == NULL) {
-        fprintf(stderr, "Could not open src/precomputed_ecmult.h for writing!\n");
+        fprintf(stderr, "Could not open %s for writing!\n", outfile);
         return -1;
     }
 
