@@ -620,6 +620,11 @@ Network CNode::ConnectedThroughNetwork() const
     return m_inbound_onion ? NET_ONION : addr.GetNetClass();
 }
 
+bool CNode::IsConnectedThroughPrivacyNet() const
+{
+    return m_inbound_onion || addr.IsPrivacyNet();
+}
+
 #undef X
 #define X(name) stats.name = name
 void CNode::CopyStats(CNodeStats& stats)

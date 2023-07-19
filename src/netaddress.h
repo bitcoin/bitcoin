@@ -189,6 +189,13 @@ public:
     bool IsValid() const;
 
     /**
+     * Whether this object is a privacy network.
+     * TODO: consider adding IsCJDNS() here when more peers adopt CJDNS, see:
+     * https://github.com/bitcoin/bitcoin/pull/27411#issuecomment-1497176155
+     */
+    [[nodiscard]] bool IsPrivacyNet() const { return IsTor() || IsI2P(); }
+
+    /**
      * Check if the current object can be serialized in pre-ADDRv2/BIP155 format.
      */
     bool IsAddrV1Compatible() const;
