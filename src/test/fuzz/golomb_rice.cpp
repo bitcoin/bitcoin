@@ -23,7 +23,7 @@ namespace {
 uint64_t HashToRange(const std::vector<uint8_t>& element, const uint64_t f)
 {
     const uint64_t hash = CSipHasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL)
-                              .Write(element.data(), element.size())
+                              .Write(element)
                               .Finalize();
     return FastRange64(hash, f);
 }
