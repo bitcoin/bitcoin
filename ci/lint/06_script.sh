@@ -6,6 +6,8 @@
 
 export LC_ALL=C
 
+set -ex
+
 if [ -n "$LOCAL_BRANCH" ]; then
   # To faithfully recreate CI linting locally, specify all commits on the current
   # branch.

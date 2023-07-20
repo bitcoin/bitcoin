@@ -1,3 +1,7 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
 # See test/lint/README.md for usage.
 
 FROM debian:bookworm
@@ -6,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 
 COPY ./.python-version /.python-version
-COPY ./ci/lint/docker-entrypoint.sh /entrypoint.sh
+COPY ./ci/lint/container-entrypoint.sh /entrypoint.sh
 COPY ./ci/lint/04_install.sh /install.sh
 
 RUN /install.sh && \
