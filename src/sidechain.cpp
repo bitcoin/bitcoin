@@ -6,6 +6,7 @@
 
 #include <arith_uint256.h>
 #include <coins.h>
+#include <consensus/validation.h>
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <streams.h>
@@ -43,14 +44,14 @@ void DeleteDBEntry(CCoinsViewCache& inputs, CTxUndo &txundo, const COutPoint& re
     CreateDBUndoData(txundo, 0, record_id, undo);
 }
 
-CDataStream GetDBEntry(CCoinsViewCache& inputs, const COutPoint& record_id) {
+CDataStream GetDBEntry(const CCoinsViewCache& inputs, const COutPoint& record_id) {
     const Coin& coin = inputs.AccessCoin(record_id);
-    assert(!coin.IsSpent());
     return CDataStream(MakeByteSpan(coin.out.scriptPubKey), SER_NETWORK, PROTOCOL_VERSION);
 }
 
 void ModifyDBEntry(CCoinsViewCache& view, CTxUndo &txundo, const int block_height, const COutPoint& record_id, const std::function<void(CDataStream&)>& modify_func) {
     CDataStream s = GetDBEntry(view, record_id);
+    assert(!s.empty());
     modify_func(s);
     DeleteDBEntry(view, txundo, record_id);
     CreateDBEntry(view, txundo, block_height, record_id, s);
@@ -65,6 +66,13 @@ void IncrementDBEntry(CCoinsViewCache& view, CTxUndo &txundo, const int block_he
         s.clear();
         s << counter;
     });
+}
+
+uint256 CalculateDrivechainWithdrawBlindedHash(const CTransaction& tx) {
+    CMutableTransaction mtx(tx);
+    mtx.vin[0].SetNull();
+    mtx.vout[0].SetNull();
+    return mtx.GetHash();
 }
 
 void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &txundo, int block_height)
@@ -171,4 +179,116 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
     proposal_list << withdraw_proposal_list;
     COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
     CreateDBEntry(view, txundo, block_height, record_id, MakeByteSpan(proposal_list));
+
+    // TODO: clean up expiring stuff
+    // TODO: activate sidechains and assign CTIPs
+}
+
+bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_input_n, const std::vector<CTxOut>& spent_outputs, const CCoinsViewCache& view, TxValidationState& state) {
+    const CTxIn& sidechain_input = tx.vin[sidechain_input_n];
+    // TODO: Do we want to verify there's only one sidechain involved? BIP300 says yes, but why?
+
+    // Lookup sidechain number from CTIP and ensure this is in fact a CTIP to begin with
+    // FIXME: It might be a good idea to include the sidechain # in the tx itself somewhere?
+    {
+        COutPoint record_id{sidechain_input.prevout.hash, DBIDX_SIDECHAIN_CTIP_INFO};
+        CDataStream ctip_info = GetDBEntry(view, record_id);
+        if (ctip_info.empty()) {
+            // Not an active CTIP, so treat as NOP5
+            // FIXME: This could be abused to bypass the extra OP_DRIVECHAIN weight
+            return true;
+        }
+        uint8_t sidechain_id;
+        ctip_info >> sidechain_id;
+
+        {
+            uint32_t ctip_outpoint_index;
+            ctip_info >> ctip_outpoint_index;
+            if (ctip_outpoint_index != sidechain_input.prevout.n) {
+                // Not an active CTIP (another index is), so treat as NOP5
+                return true;
+            }
+        }
+    }
+
+    // Identify new CTIP output
+    unsigned int sidechain_output_n = (unsigned int)-1;
+    static const CScript ctip_output_script{OP_DRIVECHAIN};
+    for (unsigned int i = 0; i < tx.vout.size(); ++i) {
+        if (tx.vout[i].scriptPubKey != ctip_output_script) continue;
+
+        if (sidechain_output_n == (unsigned int)-1) {
+            sidechain_output_n = i;
+        } else {
+            // Multiple sidechain outputs is invalid?
+            // FIXME: Add to BIP
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-ctip-output-multiple");
+        }
+    }
+    if (sidechain_output_n == (unsigned int)-1) {
+        // There must always be a new CTIP, so this is invalid
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-ctip-output-missing");
+    }
+    const CTxOut& sidechain_output = tx.vout[sidechain_output_n];
+
+    // If output > input, transaction doesn't need any additional checks
+    // FIXME: Define what should happen if output amt==input amt exactly
+    if (sidechain_output.nValue >= spent_outputs[sidechain_input_n].nValue) {
+        return true;
+    }
+
+    // Sidechain Withdraw
+
+    if (sidechain_output_n != 0) {
+        // Withdraws must put the new CTIP at index 0 (FIXME: why? if changing, adjust CalculateDrivechainWithdrawBlindedHash assumption)
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-ctip-output-nonzero");
+    }
+
+    if (tx.vout.size() < 2) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-fee-output-missing");
+    }
+
+    if (tx.vout[1].nValue != 0) {
+        // Ensure the sidechain coins can't be burned in the fee commitment
+        // TODO: Document in BIP
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-fee-output-hasvalue");
+    }
+
+    // Ensure transaction fee matches OP_RETURN data in 2nd output
+    {
+        CAmount fee = -tx.GetValueOut();
+        for (const auto& txout : spent_outputs) {
+            fee += txout.nValue;
+        }
+        Assert(fee >= 0);
+
+        std::vector<unsigned char> fee_data(8, 0);
+        WriteLE64(fee_data.data(), fee);
+
+        CScript fee_output_script;
+        fee_output_script << OP_RETURN << fee_data;
+
+        if (tx.vout[1].scriptPubKey != fee_output_script) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-fee-output-incorrect");
+        }
+    }
+
+    const uint256 blinded_hash = CalculateDrivechainWithdrawBlindedHash(tx);
+
+    // TODO: Ensure bundle hash is actually for expected sidechain id
+
+    COutPoint record_id{blinded_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS};
+    CDataStream s = GetDBEntry(view, record_id);
+    if (s.empty()) {
+        // No proposed withdraw, invalid
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-withdraw-not-proposed");
+    }
+    uint16_t counter;
+    s >> counter;
+    if (counter < 13150) {
+        // Not enough ACKs, invalid
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-withdraw-acks-insufficient");
+    }
+
+    return true;
 }

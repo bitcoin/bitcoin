@@ -136,7 +136,7 @@ std::string GetOpName(opcodetype opcode)
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
     case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
     case OP_NOP4                   : return "OP_NOP4";
-    case OP_NOP5                   : return "OP_NOP5";
+    case OP_NOP5                   : return "OP_DRIVECHAIN";
     case OP_NOP6                   : return "OP_NOP6";
     case OP_NOP7                   : return "OP_NOP7";
     case OP_NOP8                   : return "OP_NOP8";
@@ -234,6 +234,14 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
         return true;
     }
     return false;
+}
+
+bool CScript::IsDrivechain() const
+{
+    // Extra-fast test for drivechain CScripts:
+    return (this->size() == 1 &&
+            (*this)[0] == OP_DRIVECHAIN);
+    // TODO: Consider adding sidechain # and/or OP_TRUE
 }
 
 bool CScript::IsPushOnly(const_iterator pc) const

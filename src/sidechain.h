@@ -10,10 +10,13 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
-class CTransaction;
 class CCoinsViewCache;
+class CTransaction;
+class CTxOut;
 class CTxUndo;
+class TxValidationState;
 
 //! The current sidechain version
 static constexpr int SIDECHAIN_VERSION_CURRENT{0};
@@ -28,6 +31,8 @@ static constexpr uint32_t DBIDX_SIDECHAIN_PROPOSAL_ACKS{0xff010002};
 static constexpr uint32_t DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST{0xff010003};
 // Key is a blinded withdrawl hash; Data is a uint16_t with ACK count
 static constexpr uint32_t DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS{0xff010004};
+// Key is a CTIP; data is uint8 sidechain id it's for and uint32 output index
+static constexpr uint32_t DBIDX_SIDECHAIN_CTIP_INFO{0xff010005};
 
 struct Sidechain {
     uint8_t idnum{0};
@@ -43,5 +48,6 @@ struct Sidechain {
 };
 
 void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
+bool VerifyDrivechainSpend(const CTransaction& tx, unsigned int sidechain_input_n, const std::vector<CTxOut>& spent_outputs, const CCoinsViewCache& view, TxValidationState& state);
 
 #endif // BITCOIN_SIDECHAIN_H

@@ -1929,6 +1929,18 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             // such errors).
             return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
         }
+
+        // Verify drivechain spends
+        // This must be outside CScriptCheck since it requires access to state beyond the input UTXO
+        // TODO: Move to a CScriptCheck subclass for parallelism?
+        if (txdata.m_spent_outputs[i].scriptPubKey.IsDrivechain()) {
+            // This check is inherently stateful, so we can't cache it
+            cacheFullScriptStore = false;
+
+            if (!VerifyDrivechainSpend(tx, i, txdata.m_spent_outputs, inputs, state)) {
+                return false;  // VerifyDrivechainSpend already called state.Invalid
+            }
+        }
     }
 
     if (cacheFullScriptStore && !pvChecks) {
