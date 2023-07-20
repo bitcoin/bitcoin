@@ -513,7 +513,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
+    std::optional<std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
@@ -2072,9 +2072,19 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
+std::optional<std::string> PeerManagerImpl::FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index)
 {
     if (m_chainman.m_blockman.LoadingBlocks()) return "Loading blocks ...";
+
+    // If no peer id was specified, track block. The internal block sync process will
+    // be in charge of downloading the block.
+    if (!op_peer_id) {
+        if (!m_block_tracker.track(block_index.GetBlockHash())) return "Already tracked block";
+        LogDebug(BCLog::NET, "Block added to the tracking list, hash %s\n", block_index.GetBlockHash().ToString());
+        return std::nullopt;
+    }
+
+    NodeId peer_id = *op_peer_id;
 
     // Ensure this peer exists and hasn't been disconnected
     PeerRef peer = GetPeerRef(peer_id);
