@@ -105,17 +105,14 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
                 if (vote == 0xffff) continue;  // abstain
 
-                COutPoint record_id{uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST};
                 // FIXME: what if it's missing?
-                CDataStream withdraw_proposals = GetDBEntry(view, record_id);
+                CDataStream withdraw_proposals = GetDBEntry(view, {uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST});
                 uint256 bundle_hash;
                 bool found_bundle{false};
                 for (uint16_t bundle_hash_num = 0; !withdraw_proposals.eof(); ++bundle_hash_num) {
                     withdraw_proposals >> bundle_hash;
-                    record_id.hash = bundle_hash;
-                    record_id.n = DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS;
                     if (bundle_hash_num == vote) found_bundle = true;
-                    IncrementDBEntry(view, txundo, block_height, record_id, (bundle_hash_num == vote) ? 1 : -1);
+                    IncrementDBEntry(view, txundo, block_height, {bundle_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS}, (bundle_hash_num == vote) ? 1 : -1);
                 }
                 // TODO: invalid if ((!found_bundle) && vote != 0xfffe)
             }
@@ -131,44 +128,36 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             // FIXME: make sure this proposal isn't already listed (check for ACKS existing?)
             // FIXME: allow the same bundle for multiple sidechain_id to prevent DoS attacks?
 
-            COutPoint record_id{uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST};
-            ModifyDBEntry(view, txundo, block_height, record_id, [&bundle_hash](CDataStream& withdraw_proposals){
+            ModifyDBEntry(view, txundo, block_height, {uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST}, [&bundle_hash](CDataStream& withdraw_proposals){
                 withdraw_proposals << bundle_hash;
             });
 
-            record_id.hash = bundle_hash;
-            record_id.n = DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS;
             s.clear();
             s << uint16_t{0};
-            CreateDBEntry(view, txundo, block_height, record_id, s);
+            CreateDBEntry(view, txundo, block_height, {bundle_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS}, s);
 
-            withdraw_proposal_list.resize(withdraw_proposal_list.size() + record_id.hash.size());
-            memcpy(&withdraw_proposal_list.data()[withdraw_proposal_list.size() - record_id.hash.size()], record_id.hash.data(), record_id.hash.size());  // FIXME: C++ify
+            withdraw_proposal_list.resize(withdraw_proposal_list.size() + bundle_hash.size());
+            memcpy(&withdraw_proposal_list.data()[withdraw_proposal_list.size() - bundle_hash.size()], bundle_hash.data(), bundle_hash.size());  // FIXME: C++ify
         } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_SIDECHAIN_ACK)) {
             // FIXME: check size is [at least?] 37 bytes
-            COutPoint record_id;
-            memcpy(record_id.hash.data(), &out.scriptPubKey[5], 0x20);
-            record_id.n = DBIDX_SIDECHAIN_PROPOSAL_ACKS;
-
-            IncrementDBEntry(view, txundo, block_height, record_id, 1);
+            const uint256 sidechain_proposal_hash{Span{&out.scriptPubKey[5], 0x20}};
+            IncrementDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL_ACKS}, 1);
         } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_SIDECHAIN_PROPOSE)) {
             CDataStream s(MakeByteSpan(out.scriptPubKey).subspan(5), SER_NETWORK, PROTOCOL_VERSION);
             Sidechain proposed;
             // FIXME: What happens if parsing fails?
             s >> proposed;
 
-            COutPoint record_id;
-            CSHA256().Write(out.scriptPubKey.data() + 5, out.scriptPubKey.size() - 5).Finalize(record_id.hash.data());
-            record_id.n = DBIDX_SIDECHAIN_PROPOSAL;
-            CreateDBEntry(view, txundo, block_height, record_id, s);
+            uint256 sidechain_proposal_hash;
+            CSHA256().Write(out.scriptPubKey.data() + 5, out.scriptPubKey.size() - 5).Finalize(sidechain_proposal_hash.data());
+            CreateDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL}, s);
 
             s.clear();
             s << uint16_t{0};
-            record_id.n = DBIDX_SIDECHAIN_PROPOSAL_ACKS;
-            CreateDBEntry(view, txundo, block_height, record_id, s);
+            CreateDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL_ACKS}, s);
 
-            sidechain_proposal_list.resize(sidechain_proposal_list.size() + record_id.hash.size());
-            memcpy(&sidechain_proposal_list.data()[sidechain_proposal_list.size() - record_id.hash.size()], record_id.hash.data(), record_id.hash.size());  // FIXME: C++ify
+            sidechain_proposal_list.resize(sidechain_proposal_list.size() + sidechain_proposal_hash.size());
+            memcpy(&sidechain_proposal_list.data()[sidechain_proposal_list.size() - sidechain_proposal_hash.size()], sidechain_proposal_hash.data(), sidechain_proposal_hash.size());  // FIXME: C++ify
         }
     }
 
@@ -176,8 +165,7 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         CDataStream proposal_list(SER_NETWORK, PROTOCOL_VERSION);
         proposal_list << sidechain_proposal_list;
         proposal_list << withdraw_proposal_list;
-        COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
-        CreateDBEntry(view, txundo, block_height, record_id, proposal_list);
+        CreateDBEntry(view, txundo, block_height, {ArithToUint256(arith_uint256{uint64_t{block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST}, proposal_list);
     }
 
     // Perform sidechain overwriting/expiry and withdraw expiry
@@ -209,18 +197,14 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
         for (size_t i = 0; i < withdraw_proposal_list.size(); i += uint256::size()) {
             uint256 withdraw_proposal_hash{Span{&withdraw_proposal_list[i], uint256::size()}};
-            record_id.hash = withdraw_proposal_hash;
             // FIXME: remove from DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST
-            record_id.n = DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS;
-            DeleteDBEntry(view, txundo, record_id);
+            DeleteDBEntry(view, txundo, {withdraw_proposal_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS});
         }
     }
 
     // New sidechain activation
     completed_block_height = block_height - (SIDECHAIN_ACTIVATION_PERIOD - 1);
-    record_id.hash = ArithToUint256(arith_uint256{uint64_t{completed_block_height}});
-    record_id.n = DBIDX_SIDECHAIN_PROPOSAL_LIST;
-    completed_proposal_list = GetDBEntry(view, record_id);
+    completed_proposal_list = GetDBEntry(view, {ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST});
     if (!completed_proposal_list.empty()) {
         completed_proposal_list >> sidechain_proposal_list;
         completed_proposal_list >> withdraw_proposal_list;
@@ -228,16 +212,12 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         std::vector<unsigned char> sidechain_proposal_list_new;
         for (size_t i = 0; i < sidechain_proposal_list.size(); i += uint256::size()) {
             uint256 sidechain_proposal_hash{Span{&sidechain_proposal_list[i], uint256::size()}};
-            record_id.hash = sidechain_proposal_hash;
-            record_id.n = DBIDX_SIDECHAIN_PROPOSAL;
-            CDataStream proposal_s = GetDBEntry(view, record_id);
+            CDataStream proposal_s = GetDBEntry(view, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL});
             Assert(!proposal_s.empty());
             Sidechain proposal;
             proposal_s >> proposal;
 
-            record_id.hash = uint256{proposal.idnum};
-            record_id.n = DBIDX_SIDECHAIN_DATA;
-            CDataStream old_sidechain_s = GetDBEntry(view, record_id);
+            CDataStream old_sidechain_s = GetDBEntry(view, {uint256{proposal.idnum}, DBIDX_SIDECHAIN_DATA});
             if (!old_sidechain_s.empty()) {
                 // This would be an overwrite, so it must wait for the final completion after SIDECHAIN_WITHDRAW_PERIOD
                 sidechain_proposal_list_new.resize(sidechain_proposal_list_new.size() + sidechain_proposal_hash.size());
@@ -263,15 +243,13 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         }
 
         if (sidechain_proposal_list.size() != sidechain_proposal_list_new.size()) {
-            record_id.hash = ArithToUint256(arith_uint256{uint64_t{completed_block_height}});
-            record_id.n = DBIDX_SIDECHAIN_PROPOSAL_LIST;
+            COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
             DeleteDBEntry(view, txundo, record_id);
 
             if (!(sidechain_proposal_list_new.empty() && withdraw_proposal_list.empty())) {
                 CDataStream proposal_list(SER_NETWORK, PROTOCOL_VERSION);
                 proposal_list << sidechain_proposal_list_new;
                 proposal_list << withdraw_proposal_list;
-                COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
                 CreateDBEntry(view, txundo, block_height, record_id, proposal_list);
             }
         }
@@ -285,8 +263,7 @@ bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_
     // Lookup sidechain number from CTIP and ensure this is in fact a CTIP to begin with
     // FIXME: It might be a good idea to include the sidechain # in the tx itself somewhere?
     {
-        COutPoint record_id{sidechain_input.prevout.hash, DBIDX_SIDECHAIN_CTIP_INFO};
-        CDataStream ctip_info = GetDBEntry(view, record_id);
+        CDataStream ctip_info = GetDBEntry(view, {sidechain_input.prevout.hash, DBIDX_SIDECHAIN_CTIP_INFO});
         if (ctip_info.empty()) {
             // Not an active CTIP, so treat as NOP5
             // FIXME: This could be abused to bypass the extra OP_DRIVECHAIN weight
@@ -371,8 +348,7 @@ bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_
 
     // TODO: Ensure bundle hash is actually for expected sidechain id
 
-    COutPoint record_id{blinded_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS};
-    CDataStream s = GetDBEntry(view, record_id);
+    CDataStream s = GetDBEntry(view, {blinded_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS});
     if (s.empty()) {
         // No proposed withdraw, invalid
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-withdraw-not-proposed");
