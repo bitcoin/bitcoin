@@ -82,12 +82,7 @@ bool FileLock::TryLock()
 #else
 
 static std::string GetErrorReason() {
-    wchar_t* err;
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        nullptr, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<WCHAR*>(&err), 0, nullptr);
-    std::wstring err_str(err);
-    LocalFree(err);
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().to_bytes(err_str);
+    return Win32ErrorString(GetLastError());
 }
 
 FileLock::FileLock(const fs::path& file)
