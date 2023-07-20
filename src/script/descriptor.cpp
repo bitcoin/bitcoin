@@ -1718,7 +1718,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
     if (ctx == ParseScriptContext::P2WSH) {
         KeyParser parser(nullptr, &provider);
         auto node = miniscript::FromScript(script, parser);
-        if (node && node->IsSane()) {
+        if (node && node->IsSane() && !node->IsNotSatisfiable()) {
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
         }
     }
