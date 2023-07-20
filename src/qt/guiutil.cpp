@@ -836,7 +836,7 @@ QString formatBytes(uint64_t bytes)
 QString formatBytesps(float val)
 {
     if (val < 10)
-        //: "Byes per second"
+        //: "Bytes per second"
         return QObject::tr("%1 B/s").arg(0.01 * int(val * 100));
     if (val < 100)
         //: "Bytes per second"
