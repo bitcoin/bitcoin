@@ -73,8 +73,9 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 /include-what-you-use
-  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S /include-what-you-use
+  ${CI_RETRY_EXE} git clone https://github.com/include-what-you-use/include-what-you-use -b master /include-what-you-use
+  git -C /include-what-you-use checkout a138eaac254e5a472464e31d5ec418fe6e6f1fc7
+  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
   make -C /iwyu-build/ install "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
 fi
 
