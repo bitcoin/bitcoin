@@ -39,7 +39,7 @@ static constexpr uint32_t DBIDX_SIDECHAIN_PROPOSAL_LIST{0xff010001};
 static constexpr uint32_t DBIDX_SIDECHAIN_PROPOSAL_ACKS{0xff010002};
 // Key is the sidechain number; Data is a raw list of blinded-hashes of withdraw proposals
 static constexpr uint32_t DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST{0xff010003};
-// Key is a blinded withdrawl hash; Data is a uint16_t with ACK count
+// Key is SHA256(blinded withdraw hash | sidechain id); Data is a uint16_t with ACK count
 static constexpr uint32_t DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS{0xff010004};
 // Key is a CTIP; data is uint8 sidechain id it's for and uint32 output index
 static constexpr uint32_t DBIDX_SIDECHAIN_CTIP_INFO{0xff010005};

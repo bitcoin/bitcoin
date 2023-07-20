@@ -75,6 +75,13 @@ uint256 CalculateDrivechainWithdrawBlindedHash(const CTransaction& tx) {
     return mtx.GetHash();
 }
 
+uint256 CalculateDrivechainWithdrawInternalHash(const uint256& blinded_hash, const uint8_t sidechain_id) {
+    // Internally, we hash the bundle_hash with the sidechain_id to avoid conflicts between sidechains
+    uint256 internal_hash;
+    CSHA256().Write(blinded_hash.data(), blinded_hash.size()).Write(&sidechain_id, sizeof(sidechain_id)).Finalize(internal_hash.data());
+    return internal_hash;
+}
+
 void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &txundo, int block_height)
 {
     Assert(tx.IsCoinBase());
@@ -124,9 +131,12 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             s >> bundle_hash;
             s >> sidechain_id;
 
+            // Internally, we hash the bundle_hash with the sidechain_id to avoid conflicts between sidechains
+            // TODO: maybe define this in the BIP and M3 ?
+            bundle_hash = CalculateDrivechainWithdrawInternalHash(bundle_hash, sidechain_id);
+
             // FIXME: make sure sidechain_id hasn't been encountered here in this block before
             // FIXME: make sure this proposal isn't already listed (check for ACKS existing?)
-            // FIXME: allow the same bundle for multiple sidechain_id to prevent DoS attacks?
 
             ModifyDBEntry(view, txundo, block_height, {uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST}, [&bundle_hash](CDataStream& withdraw_proposals){
                 withdraw_proposals << bundle_hash;
@@ -262,6 +272,7 @@ bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_
 
     // Lookup sidechain number from CTIP and ensure this is in fact a CTIP to begin with
     // FIXME: It might be a good idea to include the sidechain # in the tx itself somewhere?
+    uint8_t sidechain_id;
     {
         CDataStream ctip_info = GetDBEntry(view, {sidechain_input.prevout.hash, DBIDX_SIDECHAIN_CTIP_INFO});
         if (ctip_info.empty()) {
@@ -269,7 +280,6 @@ bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_
             // FIXME: This could be abused to bypass the extra OP_DRIVECHAIN weight
             return true;
         }
-        uint8_t sidechain_id;
         ctip_info >> sidechain_id;
 
         {
@@ -344,11 +354,11 @@ bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_
         }
     }
 
-    const uint256 blinded_hash = CalculateDrivechainWithdrawBlindedHash(tx);
+    const uint256 internal_hash = CalculateDrivechainWithdrawInternalHash(CalculateDrivechainWithdrawBlindedHash(tx), sidechain_id);
 
     // TODO: Ensure bundle hash is actually for expected sidechain id
 
-    CDataStream s = GetDBEntry(view, {blinded_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS});
+    CDataStream s = GetDBEntry(view, {internal_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS});
     if (s.empty()) {
         // No proposed withdraw, invalid
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-drivechain-withdraw-not-proposed");
