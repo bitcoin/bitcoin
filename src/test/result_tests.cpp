@@ -172,6 +172,12 @@ void ExpectFail(const util::Result<T, F>& result, bilingual_str str, Args&&... a
     BOOST_CHECK_EQUAL(result.GetFailure(), F{std::forward<Args>(args)...});
 }
 
+BOOST_AUTO_TEST_CASE(check_sizes)
+{
+    static_assert(sizeof(util::Result<int>) == sizeof(void*)*2);
+    static_assert(sizeof(util::Result<void>) == sizeof(void*));
+}
+
 BOOST_AUTO_TEST_CASE(check_returned)
 {
     ExpectResult(VoidSuccessFn(), true, {});
