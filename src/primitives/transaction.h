@@ -137,6 +137,14 @@ public:
 
     SERIALIZE_METHODS(CTxIn, obj) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
 
+    void SetNull()
+    {
+        prevout.SetNull();
+        scriptSig.clear();
+        nSequence = SEQUENCE_FINAL;
+        scriptWitness.SetNull();
+    }
+
     friend bool operator==(const CTxIn& a, const CTxIn& b)
     {
         return (a.prevout   == b.prevout &&
