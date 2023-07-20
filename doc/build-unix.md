@@ -135,7 +135,7 @@ ZMQ dependencies (provides ZMQ API/NEVM connection):
 
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
-    sudo dnf install systemtap
+    sudo dnf install systemtap-sdt-devel
 
 GUI dependencies:
 
