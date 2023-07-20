@@ -82,7 +82,7 @@ uint256 CalculateDrivechainWithdrawInternalHash(const uint256& blinded_hash, con
     return internal_hash;
 }
 
-void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &txundo, int block_height)
+bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &txundo, int block_height, BlockValidationState& state)
 {
     Assert(tx.IsCoinBase());
 
@@ -121,7 +121,9 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                     if (bundle_hash_num == vote) found_bundle = true;
                     IncrementDBEntry(view, txundo, block_height, {bundle_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS}, (bundle_hash_num == vote) ? 1 : -1);
                 }
-                // TODO: invalid if ((!found_bundle) && vote != 0xfffe)
+                if ((!found_bundle) && vote != 0xfffe) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-withdraw-ack-nonexistent");
+                }
             }
         } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_WITHDRAW_PROPOSE)) {
             // FIXME; size check; [at least] 38 bytes
@@ -136,7 +138,11 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             bundle_hash = CalculateDrivechainWithdrawInternalHash(bundle_hash, sidechain_id);
 
             // FIXME: make sure sidechain_id hasn't been encountered here in this block before
-            // FIXME: make sure this proposal isn't already listed (check for ACKS existing?)
+
+            if (!GetDBEntry(view, {bundle_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS}).empty()) {
+                // Withdraw has already been proposed, invalid
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-withdraw-propose-duplicate");
+            }
 
             ModifyDBEntry(view, txundo, block_height, {uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST}, [&bundle_hash](CDataStream& withdraw_proposals){
                 withdraw_proposals << bundle_hash;
@@ -270,7 +276,7 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             for (uint8_t sidechain_id : new_sidechains_activated) {
                 for ( ; true; ++output_index) {
                     if (output_index >= tx.vout.size()) {
-                        // FIXME: block is invalid
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-activated-without-ctip");
                     }
                     static const CScript ctip_output_script{OP_DRIVECHAIN};
                     if (tx.vout[output_index].scriptPubKey == ctip_output_script && tx.vout[output_index].nValue == 0) {
@@ -295,6 +301,8 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             }
         }
     }
+
+    return true;
 }
 
 bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_input_n, const std::vector<CTxOut>& spent_outputs, const CCoinsViewCache& view, TxValidationState& state) {

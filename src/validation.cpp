@@ -2456,7 +2456,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // BIP300 logic
     blockundo.vtxundo.push_back(CTxUndo());
-    UpdateDrivechains(*block.vtx[0], view, blockundo.vtxundo.back(), pindex->nHeight);
+    if (!UpdateDrivechains(*block.vtx[0], view, blockundo.vtxundo.back(), pindex->nHeight, state)) {
+        // state.Invalid already called inside UpdateDrivechains
+        return false;
+    }
 
     const auto time_3{SteadyClock::now()};
     time_connect += time_3 - time_2;

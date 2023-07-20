@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+class BlockValidationState;
 class CBlock;
 class CCoinsViewCache;
 class CTransaction;
@@ -55,7 +56,7 @@ struct Sidechain {
     }
 };
 
-void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
+bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, BlockValidationState& state);
 bool VerifyDrivechainSpend(const CTransaction& tx, unsigned int sidechain_input_n, const std::vector<CTxOut>& spent_outputs, const CCoinsViewCache& view, TxValidationState& state);
 
 #endif // BITCOIN_SIDECHAIN_H
