@@ -65,7 +65,7 @@ namespace util {
 //!    return result;
 //!
 //! It also provides an update() method which is useful for returning early on
-//! failures and for combining results of the same type.
+//! errors and for combining results of the same type.
 //!
 //!    Result<Value> result;
 //!    if (!(DoSomething() >> result)) {
