@@ -2050,9 +2050,6 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
 
     LOCK(cs_main);
 
-    // Forget about all prior requests
-    RemoveBlockRequest(block_index.GetBlockHash(), std::nullopt);
-
     // Mark block as in-flight
     if (!BlockRequested(peer_id, block_index)) return "Already requested from this peer";
 
