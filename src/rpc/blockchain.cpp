@@ -435,7 +435,8 @@ static RPCHelpMan getblockfrompeer()
         "Returns an empty JSON object if the request was successfully scheduled.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
-            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
+            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The peer to fetch it from (see getpeerinfo for peer IDs). "
+                                                                      "If omitted, the node will fetch the block from any available peer."},
         },
         RPCResult{RPCResult::Type::OBJ, "", /*optional=*/false, "", {}},
         RPCExamples{
@@ -449,7 +450,7 @@ static RPCHelpMan getblockfrompeer()
     PeerManager& peerman = EnsurePeerman(node);
 
     const uint256& block_hash{ParseHashV(request.params[0], "blockhash")};
-    const NodeId peer_id{request.params[1].getInt<int64_t>()};
+    const std::optional<NodeId> peer_id = request.params[1].isNull() ? std::nullopt : std::make_optional(request.params[1].getInt<int64_t>());
 
     const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
 

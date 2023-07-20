@@ -202,6 +202,23 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         # Now verify that the block was requested and received from another peer after the initial failure
         self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block_15), timeout=3)
 
+        #######################################
+        # Test fetching block from "any" peer #
+        #######################################
+
+        self.log.info("Fetch block from \"any\" peer")
+        # Disconnect only connection that can provide the block
+        self.disconnect_nodes(0, 2)
+        self.disconnect_nodes(1, 2)
+
+        # Try to fetch the block from "any" peer. When there is no available peer
+        result = pruned_node.getblockfrompeer(pruned_block_10)
+        assert_equal(result, {})
+
+        # Now connect the full node. The node should automatically request the missing block
+        self.connect_nodes(0, 2)
+        self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block_10), timeout=5)
+
 
 if __name__ == '__main__':
     GetBlockFromPeerTest().main()
