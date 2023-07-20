@@ -21,6 +21,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+import time
 
 
 class GetBlockFromPeerTest(BitcoinTestFramework):
@@ -164,7 +165,42 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         pruned_block_10 = self.nodes[0].getblockhash(10)
         assert_raises_rpc_error(-1, "Cannot fetch block from a limited peer", pruned_node.getblockfrompeer, pruned_block_10, limited_peer_id)
 
+        ##############################################################################################
+        # Verify node managing to fetch block from another peer after first peer fails to deliver it #
+        ##############################################################################################
 
+        self.log.info("Try to fetch block from a peer, fail and verify that the node can fetch it from somewhere else")
+
+        # Disconnect only "good" peer that can serve blocks
+        self.disconnect_nodes(0, 2)
+
+        # Set mock time and connect two "bad" peers
+        current_time = int(time.time())
+        for node in self.nodes:
+            node.setmocktime(current_time)
+
+        # Connect a limited peer
+        pruned_node.add_p2p_connection(P2PInterface(), services=NODE_NETWORK_LIMITED | NODE_WITNESS)
+        # Connect second peer that can serve blocks but will not answer to the getdata requests
+        pruned_node.add_p2p_connection(P2PInterface())
+        not_responding_peer_id = pruned_node.getpeerinfo()[-1]["id"]  # last connection
+
+        # Try to fetch block
+        pruned_block_15 = self.nodes[0].getblockhash(15)
+        result = pruned_node.getblockfrompeer(pruned_block_15, not_responding_peer_id)
+        assert_equal(result, {})
+
+        # Connect other full-nodes nodes
+        self.connect_nodes(2, 0)
+        self.connect_nodes(1, 2)
+
+        # Move clock above the block request timeout and assert the initial block fetching failed
+        with pruned_node.assert_debug_log([f"Timeout downloading block {pruned_block_15} from peer={not_responding_peer_id}"], timeout=5):
+            for node in self.nodes:
+                node.setmocktime(current_time + 610)
+
+        # Now verify that the block was requested and received from another peer after the initial failure
+        self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block_15), timeout=3)
 
 
 if __name__ == '__main__':
