@@ -583,7 +583,10 @@ private:
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
 protected:
-  WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
+    WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
+
+    //! Same as 'TopUp' but designed for use within a batch transaction context
+    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
 
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
