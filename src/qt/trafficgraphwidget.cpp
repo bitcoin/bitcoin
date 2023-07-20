@@ -7,11 +7,11 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QColor>
 #include <QTimer>
-#include <QHelpEvent>
 #include <QToolTip>
 
 #include <chrono>
@@ -56,7 +56,7 @@ int TrafficGraphWidget::y_value(float value)
 void TrafficGraphWidget::paintPath(QPainterPath &path, QQueue<float> &samples)
 {
     int sampleCount = samples.size();
-    if (sampleCount > 0) {
+    if(sampleCount > 0) {
         int h = height() - YMARGIN * 2, w = width() - XMARGIN * 2;
         int x = XMARGIN + w;
         path.moveTo(x, YMARGIN + h);
