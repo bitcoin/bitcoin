@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+class CBlock;
 class CCoinsViewCache;
 class CTransaction;
 class CTxOut;
@@ -21,6 +22,15 @@ class TxValidationState;
 //! The current sidechain version
 static constexpr int SIDECHAIN_VERSION_CURRENT{0};
 
+// Number of blocks for a new sidechain
+static constexpr int SIDECHAIN_ACTIVATION_PERIOD = 2016;
+static constexpr int SIDECHAIN_ACTIVATION_THRESHOLD = SIDECHAIN_ACTIVATION_PERIOD - 200;
+// Number of blocks a sidechain withdraw (or overwrite) can be valid (after acquiring enough ACKs)
+static constexpr int SIDECHAIN_WITHDRAW_PERIOD = 26300;
+static constexpr int SIDECHAIN_WITHDRAW_THRESHOLD = SIDECHAIN_WITHDRAW_PERIOD / 2;
+
+// Key is the sidechain number; Data is the Sidechain itself
+static constexpr uint32_t DBIDX_SIDECHAIN_DATA{0xff010006};
 // Key is the proposal hash; Data is the proposal itself
 static constexpr uint32_t DBIDX_SIDECHAIN_PROPOSAL{0xff010000};
 // Key is the block height; Data is a serialised list of hashes of sidechain proposals in the block, then a serialised list of withdraw proposals in the block
@@ -39,11 +49,9 @@ struct Sidechain {
     int32_t version{SIDECHAIN_VERSION_CURRENT};
     std::string title;
     std::string description;
-    uint256 hashID1;
-    uint160 hashID2;
 
     SERIALIZE_METHODS(Sidechain, obj) {
-        READWRITE(obj.idnum, obj.version, obj.title, obj.description, obj.hashID1, obj.hashID2);
+        READWRITE(obj.idnum, obj.version, obj.title, obj.description);
     }
 };
 
