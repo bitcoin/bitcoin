@@ -289,6 +289,21 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         }
     }
     s << tx.nLockTime;
+
+    if (s.GetVersion() & SERIALIZE_TRANSACTION_FOR_WEIGHT) {
+        if constexpr (std::is_same_v<Stream, CSizeComputer>) {
+            if (tx.IsCoinBase()) {
+                // TODO: Drivechain data may increase weight
+            }
+            for (auto& out : tx.vout) {
+                if (out.scriptPubKey.IsDrivechain()) {
+                    // TODO: OP_DRIVECHAIN inputs may increase weight, but are only part of the spent output; however, they are required to have an OP_DRIVECHAIN output, and it has no purpose otherwise, so account for it here
+                }
+            }
+        } else {
+            throw std::ios_base::failure("SERIALIZE_TRANSACTION_FOR_WEIGHT is only valid for CSizeComputer");
+        }
+    }
 }
 
 template<typename TxType>
@@ -416,6 +431,11 @@ struct CMutableTransaction
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
      */
     uint256 GetHash() const;
+
+    bool IsCoinBase() const
+    {
+        return (vin.size() == 1 && vin[0].prevout.IsNull());
+    }
 
     bool HasWitness() const
     {
