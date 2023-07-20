@@ -113,7 +113,7 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                 if (vote == 0xffff) continue;  // abstain
 
                 // FIXME: what if it's missing?
-                CDataStream withdraw_proposals = GetDBEntry(view, {uint256{sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST});
+                CDataStream withdraw_proposals = GetDBEntry(view, {uint256{(uint8_t)sidechain_id}, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_LIST});
                 uint256 bundle_hash;
                 bool found_bundle{false};
                 for (uint16_t bundle_hash_num = 0; !withdraw_proposals.eof(); ++bundle_hash_num) {
@@ -175,12 +175,12 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         CDataStream proposal_list(SER_NETWORK, PROTOCOL_VERSION);
         proposal_list << sidechain_proposal_list;
         proposal_list << withdraw_proposal_list;
-        CreateDBEntry(view, txundo, block_height, {ArithToUint256(arith_uint256{uint64_t{block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST}, proposal_list);
+        CreateDBEntry(view, txundo, block_height, {ArithToUint256(arith_uint256{(uint64_t)block_height}), DBIDX_SIDECHAIN_PROPOSAL_LIST}, proposal_list);
     }
 
     // Perform sidechain overwriting/expiry and withdraw expiry
     int completed_block_height = block_height - (SIDECHAIN_WITHDRAW_PERIOD - 1);
-    COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
+    COutPoint record_id{ArithToUint256(arith_uint256{(uint64_t)completed_block_height}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
     CDataStream completed_proposal_list = GetDBEntry(view, record_id);
     if (!completed_proposal_list.empty()) {
         DeleteDBEntry(view, txundo, record_id);
@@ -222,7 +222,7 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
     // New sidechain activation
     completed_block_height = block_height - (SIDECHAIN_ACTIVATION_PERIOD - 1);
-    completed_proposal_list = GetDBEntry(view, {ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST});
+    completed_proposal_list = GetDBEntry(view, {ArithToUint256(arith_uint256{(uint64_t)completed_block_height}), DBIDX_SIDECHAIN_PROPOSAL_LIST});
     if (!completed_proposal_list.empty()) {
         completed_proposal_list >> sidechain_proposal_list;
         completed_proposal_list >> withdraw_proposal_list;
@@ -284,7 +284,7 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
         if (sidechain_proposal_list.size() != sidechain_proposal_list_new.size()) {
             Assume(!new_sidechains_activated.empty());
-            COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
+            COutPoint record_id{ArithToUint256(arith_uint256{(uint64_t)completed_block_height}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
             DeleteDBEntry(view, txundo, record_id);
 
             if (!(sidechain_proposal_list_new.empty() && withdraw_proposal_list.empty())) {
