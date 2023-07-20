@@ -198,7 +198,15 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                 acks_s >> acks;
             }
             if (acks >= SIDECHAIN_WITHDRAW_THRESHOLD) {
-                // TODO: this is an overwrite case
+                // Overwrite an existing sidechain with a new one
+                CDataStream proposal_s = GetDBEntry(view, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL});
+                Assert(!proposal_s.empty());
+                Sidechain proposal;
+                proposal_s >> proposal;
+
+                COutPoint sidechain_record_id{uint256{proposal.idnum}, DBIDX_SIDECHAIN_DATA};
+                DeleteDBEntry(view, txundo, sidechain_record_id);
+                CreateDBEntry(view, txundo, block_height, sidechain_record_id, proposal_s);
             }
             DeleteDBEntry(view, txundo, record_id);
             record_id.n = DBIDX_SIDECHAIN_PROPOSAL;
@@ -220,6 +228,7 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         completed_proposal_list >> withdraw_proposal_list;
 
         std::vector<unsigned char> sidechain_proposal_list_new;
+        std::set<uint8_t> new_sidechains_activated;
         for (size_t i = 0; i < sidechain_proposal_list.size(); i += uint256::size()) {
             uint256 sidechain_proposal_hash{Span{&sidechain_proposal_list[i], uint256::size()}};
             CDataStream proposal_s = GetDBEntry(view, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL});
@@ -227,7 +236,8 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             Sidechain proposal;
             proposal_s >> proposal;
 
-            CDataStream old_sidechain_s = GetDBEntry(view, {uint256{proposal.idnum}, DBIDX_SIDECHAIN_DATA});
+            COutPoint sidechain_record_id{uint256{proposal.idnum}, DBIDX_SIDECHAIN_DATA};
+            CDataStream old_sidechain_s = GetDBEntry(view, sidechain_record_id);
             if (!old_sidechain_s.empty()) {
                 // This would be an overwrite, so it must wait for the final completion after SIDECHAIN_WITHDRAW_PERIOD
                 sidechain_proposal_list_new.resize(sidechain_proposal_list_new.size() + sidechain_proposal_hash.size());
@@ -244,15 +254,36 @@ void UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                 acks_s >> acks;
             }
             if (acks >= SIDECHAIN_ACTIVATION_THRESHOLD) {
-                // TODO: activate NEW sidechain
-                // TODO: assign CTIPs
+                // Activate new sidechain
+                CreateDBEntry(view, txundo, block_height, sidechain_record_id, proposal_s);
+                new_sidechains_activated.insert(proposal.idnum);
             }
             DeleteDBEntry(view, txundo, record_id);
             record_id.n = DBIDX_SIDECHAIN_PROPOSAL;
             DeleteDBEntry(view, txundo, record_id);
         }
 
+        if (!new_sidechains_activated.empty()) {
+            Assume(sidechain_proposal_list.size() != sidechain_proposal_list_new.size());
+            // Assign CTIPs in sidechain id order (sorted by std::set)
+            size_t output_index = 0;
+            for (uint8_t sidechain_id : new_sidechains_activated) {
+                for ( ; true; ++output_index) {
+                    if (output_index >= tx.vout.size()) {
+                        // FIXME: block is invalid
+                    }
+                    static const CScript ctip_output_script{OP_DRIVECHAIN};
+                    if (tx.vout[output_index].scriptPubKey == ctip_output_script && tx.vout[output_index].nValue == 0) {
+                        // This output is eligible to be a CTIP
+                        // TODO: assign
+                        break;
+                    }
+                }
+            }
+        }
+
         if (sidechain_proposal_list.size() != sidechain_proposal_list_new.size()) {
+            Assume(!new_sidechains_activated.empty());
             COutPoint record_id{ArithToUint256(arith_uint256{uint64_t{completed_block_height}}), DBIDX_SIDECHAIN_PROPOSAL_LIST};
             DeleteDBEntry(view, txundo, record_id);
 
