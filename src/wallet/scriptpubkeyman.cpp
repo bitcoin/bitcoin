@@ -333,7 +333,8 @@ bool LegacyScriptPubKeyMan::TopUpInactiveHDChain(const CKeyID seed_id, int64_t i
         chain.m_next_external_index = std::max(chain.m_next_external_index, index + 1);
     }
 
-    TopUpChain(chain, 0);
+    WalletBatch batch(m_storage.GetDatabase());
+    TopUpChain(batch, chain, 0);
 
     return true;
 }
@@ -1274,19 +1275,22 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int kpSize)
         return false;
     }
 
-    if (!TopUpChain(m_hd_chain, kpSize)) {
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.TxnBegin()) return false;
+    if (!TopUpChain(batch, m_hd_chain, kpSize)) {
         return false;
     }
     for (auto& [chain_id, chain] : m_inactive_hd_chains) {
-        if (!TopUpChain(chain, kpSize)) {
+        if (!TopUpChain(batch, chain, kpSize)) {
             return false;
         }
     }
+    if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during keypool top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
     NotifyCanGetAddressesChanged();
     return true;
 }
 
-bool LegacyScriptPubKeyMan::TopUpChain(CHDChain& chain, unsigned int kpSize)
+bool LegacyScriptPubKeyMan::TopUpChain(WalletBatch& batch, CHDChain& chain, unsigned int kpSize)
 {
     LOCK(cs_KeyStore);
 
@@ -1318,7 +1322,6 @@ bool LegacyScriptPubKeyMan::TopUpChain(CHDChain& chain, unsigned int kpSize)
         missingInternal = 0;
     }
     bool internal = false;
-    WalletBatch batch(m_storage.GetDatabase());
     for (int64_t i = missingInternal + missingExternal; i--;) {
         if (i < missingInternal) {
             internal = true;
