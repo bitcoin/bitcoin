@@ -281,7 +281,9 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                     continue;
                 }
 
-                // TODO: assign
+                CDataStream ctip_info(SER_NETWORK, PROTOCOL_VERSION);
+                ctip_info << sidechain_id;
+                CreateDBEntry(view, txundo, block_height, {tx.GetHash(), DBIDX_SIDECHAIN_CTIP_INFO}, ctip_info);
             }
             if (!new_sidechains_activated.empty()) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-activated-without-ctip");
