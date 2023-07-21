@@ -51,9 +51,9 @@ CDataStream GetDBEntry(const CCoinsViewCache& inputs, const COutPoint& record_id
 
 void ModifyDBEntry(CCoinsViewCache& view, CTxUndo &txundo, const int block_height, const COutPoint& record_id, const std::function<void(CDataStream&)>& modify_func) {
     CDataStream s = GetDBEntry(view, record_id);
-    assert(!s.empty());
+    const bool new_entry = s.empty();
     modify_func(s);
-    DeleteDBEntry(view, txundo, record_id);
+    if (!new_entry) DeleteDBEntry(view, txundo, record_id);
     CreateDBEntry(view, txundo, block_height, record_id, s);
 }
 
@@ -87,6 +87,8 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
     Assert(tx.IsCoinBase());
 
     std::vector<unsigned char> sidechain_proposal_list, withdraw_proposal_list;
+    std::set<uint8_t> saw_withdraw_proposed_for_sidechain;
+    bool proposed_a_sidechain{false}, saw_sidechain_acks{false};
 
     for (auto& out : tx.vout) {
         if (out.scriptPubKey.size() < 5) continue;
@@ -99,10 +101,15 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_WITHDRAW_ACK)) {
             const uint8_t data_format = out.scriptPubKey[6];
             // TODO: Implement formats 3+? Or at least validate
+                // NOTE data_format 2 changed to 0 FIXME
+                // TODO: (new) data format 2 sets it to the ACKs from the previous block - but those aren't known, have the same cost, and encourages blind upvoting; so can we get rid of it?
+                // TODO: data format 3 upvotes any bundle leading its rivals by at least 50 ACKs -- also encourages blind upvoting :/
             // TODO: How is vote vector actually encoded?
             // TODO: Block is invalid if there are no bundles proposed at all
+            // FIXME: Presumably blocks should only be able to vote once - this is missing in the BIP
             for (int sidechain_id = 0; sidechain_id < 0x100; ++sidechain_id) {
                 // FIXME: bounds checking
+                // FIXME: skip votes for sidechains with no proposals
                 uint16_t vote = out.scriptPubKey[6 + (sidechain_id * data_format)];
                 if (data_format == 2) {
                     vote |= uint16_t{out.scriptPubKey[6 + (sidechain_id * data_format) + 1]} << 8;
@@ -126,18 +133,37 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                 }
             }
         } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_WITHDRAW_PROPOSE)) {
-            // FIXME; size check; [at least] 38 bytes
+            if (out.scriptPubKey.size() != 0x26) {
+                // "M3 is ignored if it does not parse"
+                continue;
+            }
             CDataStream s(MakeByteSpan(out.scriptPubKey).subspan(5), SER_NETWORK, PROTOCOL_VERSION);
             uint256 bundle_hash;
             uint8_t sidechain_id;
-            s >> bundle_hash;
-            s >> sidechain_id;
+            try {
+                s >> bundle_hash;
+                s >> sidechain_id;
+            } catch (...) {
+                // "M3 is ignored if it does not parse"
+                continue;
+            }
+
+            if (GetDBEntry(view, {uint256{sidechain_id}, DBIDX_SIDECHAIN_DATA}).empty()) {
+                // "M3 is ignored...if it is for a sidechain that doesn't exist."
+                continue;
+            }
 
             // Internally, we hash the bundle_hash with the sidechain_id to avoid conflicts between sidechains
             // TODO: maybe define this in the BIP and M3 ?
             bundle_hash = CalculateDrivechainWithdrawInternalHash(bundle_hash, sidechain_id);
 
-            // FIXME: make sure sidechain_id hasn't been encountered here in this block before
+            // "M3 is invalid if...This block already has an M3 for that nSidechain."
+            if (saw_withdraw_proposed_for_sidechain.find(sidechain_id) != saw_withdraw_proposed_for_sidechain.end()) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-withdraw-propose-multiple");
+            }
+            saw_withdraw_proposed_for_sidechain.insert(sidechain_id);
+
+            // FIXME: "M3 is invalid if...A bundle with this hash already paid out. A bundle with this hash was rejected in the past." is not practical to track!
 
             if (!GetDBEntry(view, {bundle_hash, DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS}).empty()) {
                 // Withdraw has already been proposed, invalid
@@ -155,14 +181,36 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             withdraw_proposal_list.resize(withdraw_proposal_list.size() + bundle_hash.size());
             memcpy(&withdraw_proposal_list.data()[withdraw_proposal_list.size() - bundle_hash.size()], bundle_hash.data(), bundle_hash.size());  // FIXME: C++ify
         } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_SIDECHAIN_ACK)) {
-            // FIXME: check size is [at least?] 37 bytes
+            if (saw_sidechain_acks) {
+                // FIXME: shouldn't it be possible to ACK multiple proposals for different sidechain ids??
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-ack-multiple");
+            }
+            saw_sidechain_acks = true;
+
+            if (out.scriptPubKey.size() != 0x25) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-ack-unparsable");
+            }
             const uint256 sidechain_proposal_hash{Span{&out.scriptPubKey[5], 0x20}};
-            IncrementDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL_ACKS}, 1);
+            try {
+                IncrementDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL_ACKS}, 1);
+            } catch (...) {  // TODO: make this explicitly for a non-existent entry
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-ack-unknown");
+            }
         } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_SIDECHAIN_PROPOSE)) {
+            if (proposed_a_sidechain) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-propose-multiple");
+            }
+            proposed_a_sidechain = true;
+
             CDataStream s(MakeByteSpan(out.scriptPubKey).subspan(5), SER_NETWORK, PROTOCOL_VERSION);
             Sidechain proposed;
-            // FIXME: What happens if parsing fails?
-            s >> proposed;
+            try {
+                s >> proposed;
+            } catch (...) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-propose-unparsable");
+            }
+
+            // TODO: block is invalid if proposed matches the current sidechain
 
             uint256 sidechain_proposal_hash;
             CSHA256().Write(out.scriptPubKey.data() + 5, out.scriptPubKey.size() - 5).Finalize(sidechain_proposal_hash.data());
