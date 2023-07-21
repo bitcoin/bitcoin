@@ -75,7 +75,7 @@ FUZZ_TARGET_INIT(parse_univalue, initialize_parse_univalue)
     }
     try {
         (void)ParseSighashString(univalue);
-    } catch (const std::runtime_error&) {
+    } catch (const UniValue&) {
     }
     try {
         (void)AmountFromValue(univalue);
