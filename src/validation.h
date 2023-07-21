@@ -561,10 +561,6 @@ public:
      */
     const CBlockIndex* SnapshotBase() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Return true if this chainstate relies on blocks that are assumed-valid. In
-    //! practice this means it was created based on a UTXO snapshot.
-    bool reliesOnAssumedValid() { return m_from_snapshot_blockhash.has_value(); }
-
     /**
      * The set of all CBlockIndex entries with either BLOCK_VALID_TRANSACTIONS (for
      * itself and all ancestors) *or* BLOCK_ASSUMED_VALID (if using background
