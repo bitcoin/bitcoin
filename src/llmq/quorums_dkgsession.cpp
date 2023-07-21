@@ -132,6 +132,7 @@ void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
         return;
     }
     logger.Batch("generated contributions. time=%d", t1.count());
+    logger.Flush();
 
     SendContributions(pendingMessages);
 }
