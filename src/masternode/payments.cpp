@@ -22,9 +22,90 @@
 
 #include <string>
 
-CMasternodePayments mnpayments;
+/**
+*   GetMasternodeTxOuts
+*
+*   Get masternode payment tx outputs
+*/
 
-bool IsOldBudgetBlockValueValid(const CMasternodeSync& mn_sync, const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet) {
+static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
+{
+    voutMasternodePaymentsRet.clear();
+
+    const CBlockIndex* pindex = WITH_LOCK(cs_main, return ::ChainActive()[nBlockHeight - 1]);
+    auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee(pindex);
+    if (!dmnPayee) {
+        return false;
+    }
+
+    CAmount operatorReward = 0;
+    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward, Params().GetConsensus().BRRHeight);
+
+    if (dmnPayee->nOperatorReward != 0 && dmnPayee->pdmnState->scriptOperatorPayout != CScript()) {
+        // This calculation might eventually turn out to result in 0 even if an operator reward percentage is given.
+        // This will however only happen in a few years when the block rewards drops very low.
+        operatorReward = (masternodeReward * dmnPayee->nOperatorReward) / 10000;
+        masternodeReward -= operatorReward;
+    }
+
+    if (masternodeReward > 0) {
+        voutMasternodePaymentsRet.emplace_back(masternodeReward, dmnPayee->pdmnState->scriptPayout);
+    }
+    if (operatorReward > 0) {
+        voutMasternodePaymentsRet.emplace_back(operatorReward, dmnPayee->pdmnState->scriptOperatorPayout);
+    }
+
+    return true;
+}
+
+
+static bool GetMasternodeTxOuts(const int nBlockHeight, const CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
+{
+    // make sure it's not filled yet
+    voutMasternodePaymentsRet.clear();
+
+    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
+        LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
+        return false;
+    }
+
+    for (const auto& txout : voutMasternodePaymentsRet) {
+        CTxDestination dest;
+        ExtractDestination(txout.scriptPubKey, dest);
+
+        LogPrintf("CMasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
+    }
+
+    return true;
+}
+
+static bool IsTransactionValid(const CTransaction& txNew, const int nBlockHeight, const CAmount blockReward)
+{
+    if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
+        // can't verify historical blocks here
+        return true;
+    }
+
+    std::vector<CTxOut> voutMasternodePayments;
+    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
+        LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
+        return true;
+    }
+
+    for (const auto& txout : voutMasternodePayments) {
+        bool found = ranges::any_of(txNew.vout, [&txout](const auto& txout2) {return txout == txout2;});
+        if (!found) {
+            CTxDestination dest;
+            if (!ExtractDestination(txout.scriptPubKey, dest))
+                assert(false);
+            LogPrintf("CMasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool IsOldBudgetBlockValueValid(const CMasternodeSync& mn_sync, const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet) {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
@@ -66,6 +147,8 @@ bool IsOldBudgetBlockValueValid(const CMasternodeSync& mn_sync, const CBlock& bl
     return isBlockRewardValueMet;
 }
 
+namespace CMasternodePayments {
+
 /**
 * IsBlockValueValid
 *
@@ -76,9 +159,8 @@ bool IsOldBudgetBlockValueValid(const CMasternodeSync& mn_sync, const CBlock& bl
 *   - Other blocks are 10% lower in outgoing value, so in total, no extra coins are created
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
-
 bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                       const CMasternodeSync& mn_sync, const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet)
+                       const CMasternodeSync& mn_sync, const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
@@ -164,7 +246,7 @@ bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& go
 }
 
 bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                       const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+                       const CTransaction& txNew, const int nBlockHeight, const CAmount blockReward)
 {
     if(fDisableGovernance) {
         //there is no budget data to use to check anything, let's just accept the longest chain
@@ -207,7 +289,7 @@ bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& go
     }
 
     // Check for correct masternode payment
-    if(CMasternodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward)) {
+    if(IsTransactionValid(txNew, nBlockHeight, blockReward)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
         return true;
     }
@@ -217,7 +299,8 @@ bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& go
 }
 
 void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                       CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
+                       CMutableTransaction& txNew, const int nBlockHeight, const CAmount blockReward,
+                       std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
@@ -226,7 +309,7 @@ void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& go
         CSuperblockManager::GetSuperblockPayments(governanceManager, nBlockHeight, voutSuperblockPaymentsRet);
     }
 
-    if (!CMasternodePayments::GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
+    if (!GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
     }
 
@@ -246,84 +329,4 @@ void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& go
                             nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
 }
 
-/**
-*   GetMasternodeTxOuts
-*
-*   Get masternode payment tx outputs
-*/
-
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
-{
-    // make sure it's not filled yet
-    voutMasternodePaymentsRet.clear();
-
-    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
-        LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
-        return false;
-    }
-
-    for (const auto& txout : voutMasternodePaymentsRet) {
-        CTxDestination dest;
-        ExtractDestination(txout.scriptPubKey, dest);
-
-        LogPrintf("CMasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
-    }
-
-    return true;
-}
-
-bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
-{
-    voutMasternodePaymentsRet.clear();
-
-    const CBlockIndex* pindex = WITH_LOCK(cs_main, return ::ChainActive()[nBlockHeight - 1]);
-    auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee(pindex);
-    if (!dmnPayee) {
-        return false;
-    }
-
-    CAmount operatorReward = 0;
-    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward, Params().GetConsensus().BRRHeight);
-
-    if (dmnPayee->nOperatorReward != 0 && dmnPayee->pdmnState->scriptOperatorPayout != CScript()) {
-        // This calculation might eventually turn out to result in 0 even if an operator reward percentage is given.
-        // This will however only happen in a few years when the block rewards drops very low.
-        operatorReward = (masternodeReward * dmnPayee->nOperatorReward) / 10000;
-        masternodeReward -= operatorReward;
-    }
-
-    if (masternodeReward > 0) {
-        voutMasternodePaymentsRet.emplace_back(masternodeReward, dmnPayee->pdmnState->scriptPayout);
-    }
-    if (operatorReward > 0) {
-        voutMasternodePaymentsRet.emplace_back(operatorReward, dmnPayee->pdmnState->scriptOperatorPayout);
-    }
-
-    return true;
-}
-
-bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
-{
-    if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
-        // can't verify historical blocks here
-        return true;
-    }
-
-    std::vector<CTxOut> voutMasternodePayments;
-    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
-        LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
-        return true;
-    }
-
-    for (const auto& txout : voutMasternodePayments) {
-        bool found = ranges::any_of(txNew.vout, [&txout](const auto& txout2) {return txout == txout2;});
-        if (!found) {
-            CTxDestination dest;
-            if (!ExtractDestination(txout.scriptPubKey, dest))
-                assert(false);
-            LogPrintf("CMasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
-            return false;
-        }
-    }
-    return true;
-}
+} // namespace CMasternodePayments
