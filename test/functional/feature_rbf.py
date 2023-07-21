@@ -116,9 +116,14 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # Should fail because we haven't changed the fee
         tx.vout[0].scriptPubKey[-1] ^= 1
+        tx.rehash()
 
         # This will raise an exception due to insufficient fee
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex(), 0)
+        debug_message = f"insufficient fee, rejecting replacement {tx.hash}; new feerate"
+        assert_raises_rpc_error(-26, debug_message, self.nodes[0].sendrawtransaction, tx.serialize().hex(), 0)
+        res = self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()])[0]
+        assert not res['allowed']
+        assert debug_message in res['reject-reason']
 
         # Extra 0.1 BTC fee
         tx.vout[0].nValue -= int(0.1 * COIN)
@@ -158,15 +163,18 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             utxo_to_spend=tx0_outpoint,
             sequence=0,
             fee=Decimal("3"),
-        )["tx"]
-        dbl_tx_hex = dbl_tx.serialize().hex()
+        )
 
         # This will raise an exception due to insufficient fee
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
+        debug_message = f"insufficient fee, rejecting replacement {dbl_tx['txid']}; less fees than conflicting txs"
+        assert_raises_rpc_error(-26, debug_message, self.nodes[0].sendrawtransaction, dbl_tx["hex"], 0)
+        res = self.nodes[0].testmempoolaccept(rawtxs=[dbl_tx["hex"]])[0]
+        assert not res['allowed']
+        assert debug_message in res['reject-reason']
 
         # Accepted with sufficient fee
-        dbl_tx.vout[0].nValue = int(0.1 * COIN)
-        dbl_tx_hex = dbl_tx.serialize().hex()
+        dbl_tx["tx"].vout[0].nValue = int(0.1 * COIN)
+        dbl_tx_hex = dbl_tx["tx"].serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
         mempool = self.nodes[0].getrawmempool()
@@ -281,22 +289,27 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         utxo1 = self.make_utxo(self.nodes[0], int(1.2 * COIN))
         utxo2 = self.make_utxo(self.nodes[0], 3 * COIN)
 
-        tx1a_utxo = self.wallet.send_self_transfer(
+        tx1a = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=utxo1,
             sequence=0,
             fee=Decimal("0.1"),
-        )["new_utxo"]
+        )
+        tx1a_utxo = tx1a["new_utxo"]
 
         # Direct spend an output of the transaction we're replacing.
-        tx2_hex = self.wallet.create_self_transfer_multi(
+        tx2 = self.wallet.create_self_transfer_multi(
             utxos_to_spend=[utxo1, utxo2, tx1a_utxo],
             sequence=0,
             amount_per_output=int(COIN * tx1a_utxo["value"]),
-        )["hex"]
+        )
 
         # This will raise an exception
-        assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
+        debug_message = f"bad-txns-spends-conflicting-tx, {tx2['txid']} spends conflicting transaction {tx1a['txid']}"
+        assert_raises_rpc_error(-26, debug_message, self.nodes[0].sendrawtransaction, tx2["hex"], 0)
+        res = self.nodes[0].testmempoolaccept(rawtxs=[tx2["hex"]])[0]
+        assert not res['allowed']
+        assert debug_message in res['reject-reason']
 
         # Spend tx1a's output to test the indirect case.
         tx1b_utxo = self.wallet.send_self_transfer(
@@ -327,14 +340,18 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             fee=Decimal("0.1"),
         )
 
-        tx2_hex = self.wallet.create_self_transfer_multi(
+        tx2 = self.wallet.create_self_transfer_multi(
             utxos_to_spend=[confirmed_utxo, unconfirmed_utxo],
             sequence=0,
             amount_per_output=1 * COIN,
-        )["hex"]
+        )
 
         # This will raise an exception
-        assert_raises_rpc_error(-26, "replacement-adds-unconfirmed", self.nodes[0].sendrawtransaction, tx2_hex, 0)
+        debug_message = f"replacement-adds-unconfirmed, replacement {tx2['txid']} adds unconfirmed input, idx"
+        assert_raises_rpc_error(-26, debug_message, self.nodes[0].sendrawtransaction, tx2["hex"], 0)
+        res = self.nodes[0].testmempoolaccept(rawtxs=[tx2["hex"]])[0]
+        assert not res['allowed']
+        assert debug_message in res['reject-reason']
 
     def test_too_many_replacements(self):
         """Replacements that evict too many transactions are rejected"""
@@ -372,15 +389,18 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             utxos_to_spend=splitting_tx_utxos,
             sequence=0,
             amount_per_output=double_spend_value,
-        )["tx"]
-        double_tx_hex = double_tx.serialize().hex()
+        )
 
         # This will raise an exception
-        assert_raises_rpc_error(-26, "too many potential replacements", self.nodes[0].sendrawtransaction, double_tx_hex, 0)
+        debug_message = f"too many potential replacements, rejecting replacement {double_tx['txid']}; too many potential replacements"
+        assert_raises_rpc_error(-26, debug_message, self.nodes[0].sendrawtransaction, double_tx["hex"], 0)
+        res = self.nodes[0].testmempoolaccept(rawtxs=[double_tx["hex"]])[0]
+        assert not res['allowed']
+        assert debug_message in res['reject-reason']
 
         # If we remove an input, it should pass
-        double_tx.vin.pop()
-        double_tx_hex = double_tx.serialize().hex()
+        double_tx["tx"].vin.pop()
+        double_tx_hex = double_tx["tx"].serialize().hex()
         self.nodes[0].sendrawtransaction(double_tx_hex, 0)
 
     def test_too_many_replacements_with_default_mempool_params(self):
@@ -697,7 +717,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
         assert_equal(self.nodes[0].getmempoolinfo()["incrementalrelayfee"], Decimal("0.00001"))
         tx.vout[0].nValue -= 1
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+        tx.rehash()
+        debug_message = f"insufficient fee, rejecting replacement {tx.hash}; not enough additional fees to relay"
+        assert_raises_rpc_error(-26, debug_message, self.nodes[0].sendrawtransaction, tx.serialize().hex())
+        res = self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()])[0]
+        assert not res['allowed']
+        assert debug_message in res['reject-reason']
 
     def test_fullrbf(self):
 
