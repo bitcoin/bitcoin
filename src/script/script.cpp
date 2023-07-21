@@ -239,9 +239,10 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
 bool CScript::IsDrivechain() const
 {
     // Extra-fast test for drivechain CScripts:
-    return (this->size() == 1 &&
-            (*this)[0] == OP_DRIVECHAIN);
-    // TODO: Consider adding sidechain # and/or OP_TRUE
+    return (this->size() == 4 &&
+            (*this)[0] == OP_DRIVECHAIN &&
+            (*this)[1] == 1 &&
+            (*this)[3] == OP_TRUE);
 }
 
 bool CScript::IsPushOnly(const_iterator pc) const

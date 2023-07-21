@@ -271,20 +271,20 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
         if (!new_sidechains_activated.empty()) {
             Assume(sidechain_proposal_list.size() != sidechain_proposal_list_new.size());
-            // Assign CTIPs in sidechain id order (sorted by std::set)
-            size_t output_index = 0;
-            for (uint8_t sidechain_id : new_sidechains_activated) {
-                for ( ; true; ++output_index) {
-                    if (output_index >= tx.vout.size()) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-activated-without-ctip");
-                    }
-                    static const CScript ctip_output_script{OP_DRIVECHAIN};
-                    if (tx.vout[output_index].scriptPubKey == ctip_output_script && tx.vout[output_index].nValue == 0) {
-                        // This output is eligible to be a CTIP
-                        // TODO: assign
-                        break;
-                    }
+            // Assign CTIPs
+            for (size_t output_index = 0; output_index < tx.vout.size(); ++output_index) {
+                if (!tx.vout[output_index].scriptPubKey.IsDrivechain()) continue;
+
+                const uint8_t sidechain_id = tx.vout[output_index].scriptPubKey[DRIVECHAIN_SCRIPT_SIDECHAIN_ID_OFFSET];
+                if (new_sidechains_activated.find(sidechain_id) == new_sidechains_activated.end()) {
+                    // TODO: OP_DRIVECHAIN (or OP_NOP5) for a non-activating sidechain id; should this be invalid??
+                    continue;
                 }
+
+                // TODO: assign
+            }
+            if (!new_sidechains_activated.empty()) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-activated-without-ctip");
             }
         }
 
@@ -333,7 +333,10 @@ bool VerifyDrivechainSpend(const CTransaction& tx, const unsigned int sidechain_
 
     // Identify new CTIP output
     unsigned int sidechain_output_n = (unsigned int)-1;
-    static const CScript ctip_output_script{OP_DRIVECHAIN};
+    CScript ctip_output_script{OP_DRIVECHAIN};
+    ctip_output_script.push_back(1);
+    ctip_output_script.push_back(sidechain_id);
+    ctip_output_script << OP_TRUE;
     for (unsigned int i = 0; i < tx.vout.size(); ++i) {
         if (tx.vout[i].scriptPubKey != ctip_output_script) continue;
 

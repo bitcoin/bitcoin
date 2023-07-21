@@ -45,6 +45,9 @@ static constexpr uint32_t DBIDX_SIDECHAIN_WITHDRAW_PROPOSAL_ACKS{0xff010004};
 // Key is a CTIP; data is uint8 sidechain id it's for and uint32 output index
 static constexpr uint32_t DBIDX_SIDECHAIN_CTIP_INFO{0xff010005};
 
+// Offset into an OP_DRIVECHAIN script, where we find the raw sidechain id
+static constexpr int DRIVECHAIN_SCRIPT_SIDECHAIN_ID_OFFSET = 2;
+
 struct Sidechain {
     uint8_t idnum{0};
     int32_t version{SIDECHAIN_VERSION_CURRENT};
