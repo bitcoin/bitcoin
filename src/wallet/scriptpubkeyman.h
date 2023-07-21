@@ -29,6 +29,7 @@
 #include <unordered_map>
 
 enum class OutputType;
+typedef std::variant<CKey, KeyPair> Key;
 
 namespace wallet {
 struct MigrationData;
@@ -86,6 +87,7 @@ public:
     virtual ~ScriptPubKeyMan() = default;
     virtual util::Result<CTxDestination> GetNewDestination(const OutputType type) { return util::Error{Untranslated("Not supported")}; }
     virtual bool IsMine(const CScript& script) const { return false; }
+    virtual Key GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const { return {}; }
 
     //! Check that the given decryption key is valid for this ScriptPubKeyMan, i.e. it decrypts all of the keys handled by it.
     virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key) { return false; }
@@ -376,6 +378,8 @@ public:
 
     bool AddKey(const CKeyID& key_id, const CKey& key);
     bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
+
+    Key GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const override;
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
     util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor);
