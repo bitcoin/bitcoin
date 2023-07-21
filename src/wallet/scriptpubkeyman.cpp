@@ -2652,6 +2652,32 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
     return true;
 }
 
+std::pair<CKey,bool> DescriptorScriptPubKeyMan::GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType whichType = Solver(scriptPubKey, solutions);
+    if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::MULTISIG || whichType == TxoutType::WITNESS_UNKNOWN ) return {};
+    std::unique_ptr<FlatSigningProvider> coin_keys = GetSigningProvider(scriptPubKey, true);
+    if (!coin_keys || coin_keys->keys.size() != 1) return {};
+    const auto& [_, key] = *coin_keys->keys.begin();
+    (void) _;
+
+    if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
+        auto pubKeyFromScriptPubKey = XOnlyPubKey(solutions[0]);
+        // this means it is a "rawtr" output
+        if (XOnlyPubKey(key.GetPubKey()) == pubKeyFromScriptPubKey) return {key, true};
+
+        // Otherwise, tweak with the merkle root
+        TaprootSpendData spenddata;
+        coin_keys->GetTaprootSpendData(pubKeyFromScriptPubKey, spenddata);
+        CKey tweaked_key;
+        if(!key.ApplyTapTweak(&spenddata.merkle_root, tweaked_key)) return {};
+        if (XOnlyPubKey(tweaked_key.GetPubKey()) ==  pubKeyFromScriptPubKey) return {tweaked_key, true};
+        return {};
+    }
+    return {key, false};
+}
+
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);
