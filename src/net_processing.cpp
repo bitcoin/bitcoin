@@ -1852,7 +1852,7 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
         LOCK(m_recent_confirmed_transactions_mutex);
         for (const auto& ptx : pblock->vtx) {
             m_recent_confirmed_transactions.insert(ptx->GetHash());
-            if (ptx->GetHash() != ptx->GetWitnessHash()) {
+            if (ptx->HasWitness()) {
                 m_recent_confirmed_transactions.insert(ptx->GetWitnessHash());
             }
         }
@@ -2976,7 +2976,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 // processing of this transaction in the event that child
                 // transactions are later received (resulting in
                 // parent-fetching by txid via the orphan-handling logic).
-                if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && porphanTx->GetWitnessHash() != porphanTx->GetHash()) {
+                if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && porphanTx->HasWitness()) {
                     // We only add the txid if it differs from the wtxid, to
                     // avoid wasting entries in the rolling bloom filter.
                     m_recent_rejects.insert(porphanTx->GetHash());
@@ -4260,7 +4260,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // processing of this transaction in the event that child
                 // transactions are later received (resulting in
                 // parent-fetching by txid via the orphan-handling logic).
-                if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && tx.GetWitnessHash() != tx.GetHash()) {
+                if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && tx.HasWitness()) {
                     m_recent_rejects.insert(tx.GetHash());
                     m_txrequest.ForgetTxHash(tx.GetHash());
                 }
