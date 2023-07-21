@@ -311,6 +311,10 @@ RPCHelpMan sendtoaddress()
 
     std::vector<Destination> recipients;
     ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
+    auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r); });
+    if (it != recipients.end())
+        coin_control.m_silent_payment = true;
+
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
@@ -407,6 +411,9 @@ RPCHelpMan sendmany()
 
     std::vector<Destination> recipients;
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
+    auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r); });
+    if (it != recipients.end())
+        coin_control.m_silent_payment = true;
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
