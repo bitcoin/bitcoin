@@ -1475,6 +1475,30 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
     return true;
 }
 
+Key DescriptorScriptPubKeyMan::GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType whichType = Solver(scriptPubKey, solutions);
+    if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::MULTISIG || whichType == TxoutType::WITNESS_UNKNOWN ) return {};
+    std::unique_ptr<FlatSigningProvider> coin_keys = GetSigningProvider(scriptPubKey, true);
+    if (!coin_keys || coin_keys->keys.size() != 1) return {};
+    const auto& [_, key] = *coin_keys->keys.begin();
+    (void) _;
+
+    if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
+        auto pubKeyFromScriptPubKey = XOnlyPubKey(solutions[0]);
+        // this means it is a "rawtr" output
+        if (XOnlyPubKey(key.GetPubKey()) == pubKeyFromScriptPubKey) {
+            return key.ComputeKeyPair(nullptr);
+        }
+        // Otherwise, tweak with the merkle root
+        TaprootSpendData spenddata;
+        coin_keys->GetTaprootSpendData(pubKeyFromScriptPubKey, spenddata);
+        return key.ComputeKeyPair(&spenddata.merkle_root);
+    }
+    return key;
+}
+
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);
