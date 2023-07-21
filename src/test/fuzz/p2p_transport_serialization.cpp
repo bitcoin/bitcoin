@@ -79,7 +79,16 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
 
             std::vector<unsigned char> header;
             auto msg2 = CNetMsgMaker{msg.m_recv.GetVersion()}.Make(msg.m_type, Span{msg.m_recv});
-            send_transport.prepareForTransport(msg2, header);
+            bool queued = send_transport.SetMessageToSend(msg2);
+            assert(queued);
+            std::optional<bool> known_more;
+            while (true) {
+                const auto& [to_send, more, _msg_type] = send_transport.GetBytesToSend();
+                if (known_more) assert(!to_send.empty() == *known_more);
+                if (to_send.empty()) break;
+                send_transport.MarkBytesSent(to_send.size());
+                known_more = more;
+            }
         }
     }
 }

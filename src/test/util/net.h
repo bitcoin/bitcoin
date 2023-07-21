@@ -54,7 +54,7 @@ struct ConnmanTestMsg : public CConnman {
 
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
-    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
+    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
