@@ -586,16 +586,16 @@ class CBlock(CBlockHeader):
     __slots__ = ("vtx",)
 
     def __init__(self, header=None):
-        super(CBlock, self).__init__(header)
+        super().__init__(header)
         self.vtx = []
 
     def deserialize(self, f):
-        super(CBlock, self).deserialize(f)
+        super().deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
 
     def serialize(self):
         r = b""
-        r += super(CBlock, self).serialize()
+        r += super().serialize()
         r += ser_vector(self.vtx)
         return r
 

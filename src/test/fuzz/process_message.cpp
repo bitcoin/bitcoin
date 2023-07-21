@@ -14,6 +14,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/mining.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <validationinterface.h>
 #include <version.h>
@@ -59,15 +60,17 @@ void initialize_process_message()
 void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
     const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
-    CNode p2p_node{0, ServiceFlags(NODE_NETWORK | NODE_BLOOM), INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, false};
+    CNode& p2p_node = *std::make_unique<CNode>(0, ServiceFlags(NODE_NETWORK | NODE_BLOOM), INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, false).release();
     p2p_node.fSuccessfullyConnected = true;
     p2p_node.nVersion = PROTOCOL_VERSION;
     p2p_node.SetSendVersion(PROTOCOL_VERSION);
+    connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
     try {
         g_setup->m_node.peerman->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), std::atomic<bool>{false});
@@ -78,6 +81,8 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
         g_setup->m_node.peerman->SendMessages(&p2p_node);
     }
     SyncWithValidationInterfaceQueue();
+    LOCK2(::cs_main, g_cs_orphans); // See init.cpp for rationale for implicit locking order requirement
+    g_setup->m_node.connman->StopNodes();
 }
 
 FUZZ_TARGET_INIT(process_message, initialize_process_message) { fuzz_target(buffer, ""); }

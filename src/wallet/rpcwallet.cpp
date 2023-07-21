@@ -51,6 +51,8 @@ using interfaces::FoundBlock;
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
+static const uint32_t WALLET_DASH_KB_TO_DUFF_B = COIN / 1000; // 1 duff / B = 0.00001 DASH / kB
+
 static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValue& param) {
     bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
     bool avoid_reuse = param.isNull() ? can_avoid_reuse : param.get_bool();
@@ -190,12 +192,47 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
         entry.pushKV(item.first, item.second);
 }
 
+
 static std::string LabelFromValue(const UniValue& value)
 {
     std::string label = value.get_str();
     if (label == "*")
         throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, "Invalid label name");
     return label;
+}
+
+/**
+ * Update coin control with fee estimation based on the given parameters
+ *
+ * @param[in]     pwallet        Wallet pointer
+ * @param[in,out] cc             Coin control which is to be updated
+ * @param[in]     estimate_mode  String value (e.g. "ECONOMICAL")
+ * @param[in]     estimate_param Parameter (blocks to confirm, explicit fee rate, etc)
+ * @throws a JSONRPCError if estimate_mode is unknown, or if estimate_param is missing when required
+ */
+static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const UniValue& estimate_mode, const UniValue& estimate_param)
+{
+    if (!estimate_mode.isNull()) {
+        if (!FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+        }
+    }
+
+    if (cc.m_fee_mode == FeeEstimateMode::DASH_KB || cc.m_fee_mode == FeeEstimateMode::DUFF_B) {
+        if (estimate_param.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode requires a fee rate");
+        }
+
+        CAmount fee_rate = AmountFromValue(estimate_param);
+        if (cc.m_fee_mode == FeeEstimateMode::DUFF_B) {
+            fee_rate /= WALLET_DASH_KB_TO_DUFF_B;
+        }
+
+        cc.m_feerate = CFeeRate(fee_rate);
+
+    } else if (!estimate_param.isNull()) {
+        cc.m_confirm_target = ParseConfirmTarget(estimate_param, pwallet->chain().estimateMaxBlocks());
+    }
 }
 
 UniValue getnewaddress(const JSONRPCRequest& request)
@@ -371,11 +408,9 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     "                             The recipient will receive less amount of Dash than you enter in the amount field."},
             {"use_is", RPCArg::Type::BOOL, /* default */ "false", "Deprecated and ignored"},
             {"use_cj", RPCArg::Type::BOOL, /* default */ "false", "Use CoinJoin funds only"},
-            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
-    "       \"UNSET\"\n"
-    "       \"ECONOMICAL\"\n"
-    "       \"CONSERVATIVE\""},
+            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+            {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+            "       \"" + FeeModes("\"\n\"") + "\""},
             {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
     "                             dirty if they have previously been used in a transaction."},
         },
@@ -386,6 +421,8 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1")
     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"donation\" \"seans outpost\"")
     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"\" \"\" true")
+    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"\" \"\" false true 0.00002 " + (CURRENCY_UNIT + "/kB"))
+    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"\" \"\" false true 2 " + (CURRENCY_ATOM + "/B"))
     + HelpExampleRpc("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\", 0.1, \"donation\", \"seans outpost\"")
         },
     }.Check(request);
@@ -424,19 +461,12 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         coin_control.UseCoinJoin(request.params[6].get_bool());
     }
 
-    if (!request.params[7].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7], pwallet->chain().estimateMaxBlocks());
-    }
-
-    if (!request.params[8].isNull()) {
-        if (!FeeModeFromString(request.params[8].get_str(), coin_control.m_fee_mode)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-        }
-    }
 
     coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(pwallet, request.params[9]);
     // We also enable partial spend avoidance if reuse avoidance is set.
     coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
+
+    SetFeeEstimateMode(pwallet, coin_control, request.params[8], request.params[7]);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -852,11 +882,9 @@ static UniValue sendmany(const JSONRPCRequest& request)
                     },
                     {"use_is", RPCArg::Type::BOOL, /* default */ "false", "Deprecated and ignored"},
                     {"use_cj", RPCArg::Type::BOOL, /* default */ "false", "Use CoinJoin funds only"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-                    {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
-            "       \"UNSET\"\n"
-            "       \"ECONOMICAL\"\n"
-            "       \"CONSERVATIVE\""},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+            "       \"" + FeeModes("\"\n\"") + "\""},
                 },
                  RPCResult{
                      RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
@@ -902,15 +930,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
         coin_control.UseCoinJoin(request.params[7].get_bool());
     }
 
-    if (!request.params[8].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[8], pwallet->chain().estimateMaxBlocks());
-    }
-
-    if (!request.params[9].isNull()) {
-        if (!FeeModeFromString(request.params[9].get_str(), coin_control.m_fee_mode)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-        }
-    }
+    SetFeeEstimateMode(pwallet, coin_control, request.params[9], request.params[8]);
 
     if (coin_control.IsUsingCoinJoin()) {
         mapValue["DS"] = "1";
@@ -2732,7 +2752,7 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
     // If you are generating new mnemonic it is assumed that the addresses have never gotten a transaction before, so you don't need to rescan for transactions
     bool rescan = request.params[3].isNull() ? !generate_mnemonic : request.params[3].get_bool();
     if (rescan) {
-        WalletRescanReserver reserver(pwallet);
+        WalletRescanReserver reserver(*pwallet);
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
@@ -3254,26 +3274,21 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
 
         if (options.exists("feeRate"))
         {
+            if (options.exists("conf_target")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
+            }
+            if (options.exists("estimate_mode")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+            }
             coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
-        if (options.exists("conf_target")) {
-            if (options.exists("feeRate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
-            }
-            coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"], pwallet->chain().estimateMaxBlocks());
-        }
-        if (options.exists("estimate_mode")) {
-            if (options.exists("feeRate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
-            }
-            if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-            }
-        }
+
+        SetFeeEstimateMode(pwallet, coinControl, options["estimate_mode"], options["conf_target"]);
+
       }
     } else {
         // if options is null and not a bool
@@ -3337,11 +3352,9 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-                            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
-                            "         \"UNSET\"\n"
-                            "         \"ECONOMICAL\"\n"
-                            "         \"CONSERVATIVE\""},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                            {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+                            "       \"" + FeeModes("\"\n\"") + "\""},
                         },
                         "options"},
                 },
@@ -3505,7 +3518,7 @@ static UniValue rescanblockchain(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    WalletRescanReserver reserver(pwallet);
+    WalletRescanReserver reserver(*pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
@@ -3577,7 +3590,7 @@ static UniValue wipewallettxes(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    WalletRescanReserver reserver(pwallet);
+    WalletRescanReserver reserver(*pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort rescan or wait.");
     }
@@ -4081,10 +4094,8 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                         },
                     },
                     {"conf_target", RPCArg::Type::NUM, /* default */ "Fallback to wallet's confirmation target", "Confirmation target (in blocks)"},
-                    {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
-                    "         \"UNSET\"\n"
-                    "         \"ECONOMICAL\"\n"
-                    "         \"CONSERVATIVE\""},
+                    {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+                    "         \"" + FeeModes("\"\n\"") + "\""},
                 },
                 "options"},
             {"bip32derivs", RPCArg::Type::BOOL, /* default */ "true", "Include BIP 32 derivation paths for public keys if we know them"},
