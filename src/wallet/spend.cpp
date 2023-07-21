@@ -294,6 +294,21 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
 
+        if (coin_control.m_silent_payment) {
+            std::vector<std::vector<uint8_t>> solutions;
+            TxoutType type = Solver(txout.scriptPubKey, solutions);
+            if (type == TxoutType::WITNESS_UNKNOWN) {
+                return util::Error{strprintf(_("%s has an unknown witness version and cannot be used in a silent payment transaction"), outpoint.ToString())};
+            } else if (type == TxoutType::WITNESS_V1_TAPROOT) {
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(txout.scriptPubKey);
+                TaprootSpendData spenddata;
+                if (provider->GetTaprootSpendData(XOnlyPubKey(solutions[0]), spenddata)) {
+                    if (!spenddata.scripts.empty())
+                        return util::Error{strprintf(_("Found script data for %s. Only key path spends are allowed when funding a silent payment, please choose a different input"), outpoint.ToString())};
+                }
+            }
+        }
+
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
         output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
@@ -316,6 +331,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
+    const bool silent_payment = {coinControl ? coinControl->m_silent_payment : false};
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -432,6 +448,19 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
                 type = Solver(script, script_solutions);
                 is_from_p2sh = true;
+            }
+
+            // Very unlikely we'd be spending a witness unknown output, but if we are trying to pay a
+            // silent payments v0 address, this can't be included
+            if (silent_payment && type == TxoutType::WITNESS_UNKNOWN) continue;
+            if (silent_payment && type == TxoutType::WITNESS_V1_TAPROOT) {
+                TaprootSpendData spenddata;
+                // If we have scriptpath spend data for the taproot output, just skip it for now. Only keypath
+                // spends can be used with silent payments and at this point we don't know if the keypath or script path is going to be used
+                // so if there's even a chance the script path will be used, better to skip the output for now
+                if (provider->GetTaprootSpendData(XOnlyPubKey(script_solutions[0]), spenddata)) {
+                    if (!spenddata.scripts.empty()) continue;
+                }
             }
 
             result.Add(GetOutputType(type, is_from_p2sh),
