@@ -10,7 +10,6 @@
 #include <script/sign.h>
 #include <serialize.h>
 #include <streams.h>
-#include <univalue.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <version.h>
@@ -241,16 +240,6 @@ bool ParseHashStr(const std::string& strHex, uint256& result)
 
     result.SetHex(strHex);
     return true;
-}
-
-std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)
-{
-    std::string strHex;
-    if (v.isStr())
-        strHex = v.getValStr();
-    if (!IsHex(strHex))
-        throw std::runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
-    return ParseHex(strHex);
 }
 
 util::Result<int> SighashFromStr(const std::string& sighash)
