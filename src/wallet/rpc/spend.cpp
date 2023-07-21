@@ -168,7 +168,15 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
+static void EnsureSilentPaymentsEnabled(const CWallet &pwallet)
+{
+    if (pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || pwallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) ) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Silent payments require access to private keys to build transactions.");
+    }
+    EnsureWalletIsUnlocked(pwallet);
+}
+
+UniValue SendMoney(CWallet& wallet, CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
 
@@ -176,6 +184,11 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     // This should always try to sign, if we don't have private keys, don't try to do anything here.
     if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+    }
+
+    if (std::any_of(recipients.begin(), recipients.end(), [](const auto& r) { return IsSilentPaymentsDestination(r.dest); })) {
+        EnsureSilentPaymentsEnabled(wallet);
+        coin_control.m_silent_payments = true;
     }
 
     // Shuffle recipient list
@@ -678,6 +691,11 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
+
+    if (std::any_of(recipients.begin(), recipients.end(), [](const auto& r) { return IsSilentPaymentsDestination(r.dest); })) {
+        EnsureSilentPaymentsEnabled(wallet);
+        coinControl.m_silent_payments = true;
+    }
 
     auto txr = FundTransaction(wallet, tx, recipients, change_position, lockUnspents, coinControl);
     if (!txr) {
