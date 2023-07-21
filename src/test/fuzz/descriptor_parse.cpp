@@ -108,11 +108,30 @@ public:
 MockedDescriptorConverter MOCKED_DESC_CONVERTER;
 
 /** Test a successfully parsed descriptor. */
-static void TestDescriptor(const Descriptor& desc)
+static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_provider, std::string& dummy)
 {
-    (void)desc.ToString();
+    // Trivial helpers.
     (void)desc.IsRange();
     (void)desc.IsSolvable();
+    (void)desc.IsSingleType();
+    (void)desc.GetOutputType();
+
+    // Serialization to string representation.
+    (void)desc.ToString();
+    (void)desc.ToPrivateString(sig_provider, dummy);
+    (void)desc.ToNormalizedString(sig_provider, dummy);
+
+    // Serialization to Script.
+    DescriptorCache cache;
+    std::vector<CScript> out_scripts;
+    (void)desc.Expand(0, sig_provider, out_scripts, sig_provider, &cache);
+    (void)desc.ExpandPrivate(0, sig_provider, sig_provider);
+    (void)desc.ExpandFromCache(0, cache, out_scripts, sig_provider);
+
+    // If we could serialize to script we must be able to infer using the same provider.
+    if (!out_scripts.empty()) {
+        assert(InferDescriptor(out_scripts.back(), sig_provider));
+    }
 }
 
 void initialize_descriptor_parse()
@@ -134,7 +153,7 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
         FlatSigningProvider signing_provider;
         std::string error;
         const auto desc = Parse(*descriptor, signing_provider, error);
-        if (desc) TestDescriptor(*desc);
+        if (desc) TestDescriptor(*desc, signing_provider, error);
     }
 }
 
@@ -145,6 +164,6 @@ FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
     std::string error;
     for (const bool require_checksum : {true, false}) {
         const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
-        if (desc) TestDescriptor(*desc);
+        if (desc) TestDescriptor(*desc, signing_provider, error);
     }
 }
