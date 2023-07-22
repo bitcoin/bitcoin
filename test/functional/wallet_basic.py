@@ -12,6 +12,7 @@ from test_framework.messages import (
     COIN,
     DEFAULT_ANCESTOR_LIMIT,
 )
+from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
@@ -447,6 +448,16 @@ class WalletTest(BitcoinTestFramework):
             # This will raise an exception for importing an address with the PS2H flag
             temp_address = self.nodes[1].getnewaddress("", "p2sh-segwit")
             assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
+
+            # This will raise an exception for importing a sh(pkh()) hex script with the p2sh flag enabled
+            # (cannot wrap a sh(pkh()) script under another sh level)
+            script_sh_pkh = script_to_p2sh_script(key_to_p2pkh_script(self.nodes[1].getaddressinfo(temp_address)["pubkey"]))
+            assert_raises_rpc_error(-8, "Cannot wrap p2sh or p2wsh into a p2sh", self.nodes[0].importaddress, script_sh_pkh.hex(), "invalid", False, p2sh=True)
+
+            # This will raise an exception for importing a sh(sh(pkh())) invalid raw script
+            self.nodes[0].importaddress(script_sh_pkh.hex(), "raw_sh", False, p2sh=False) # Need first import the sh(pkh()) and then calculate the sh(sh(pkh()))
+            script_double_sh = script_to_p2sh_script(script_sh_pkh.hex())
+            assert_raises_rpc_error(-8, "Cannot import invalid script", self.nodes[0].importaddress, script_double_sh.hex(), "invalid", False, p2sh=False)
 
             # This will raise an exception for attempting to dump the private key of an address you do not own
             assert_raises_rpc_error(-3, "Address does not refer to a key", self.nodes[0].dumpprivkey, temp_address)

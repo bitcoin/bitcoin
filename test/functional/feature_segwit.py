@@ -473,31 +473,35 @@ class SegWitTest(BitcoinTestFramework):
             self.mine_and_test_listunspent(spendable_after_importaddress + solvable_after_importaddress + unseen_anytime + unsolvable_after_importaddress, 0)
 
             importlist = []
+
+            def append_script(script_hex, wrap_into_sh=True):
+                importlist.append({'hex': script_hex, 'p2sh': wrap_into_sh})
+
             for i in compressed_spendable_address + uncompressed_spendable_address + compressed_solvable_address + uncompressed_solvable_address:
                 v = self.nodes[0].getaddressinfo(i)
                 if v['isscript']:
                     bare = bytes.fromhex(v['hex'])
-                    importlist.append(bare.hex())
-                    importlist.append(script_to_p2wsh_script(bare).hex())
+                    append_script(bare.hex())
+                    append_script(script_to_p2wsh_script(bare).hex(), wrap_into_sh=False)
                 else:
                     pubkey = bytes.fromhex(v['pubkey'])
                     p2pk = key_to_p2pk_script(pubkey)
                     p2pkh = key_to_p2pkh_script(pubkey)
-                    importlist.append(p2pk.hex())
-                    importlist.append(p2pkh.hex())
-                    importlist.append(key_to_p2wpkh_script(pubkey).hex())
-                    importlist.append(script_to_p2wsh_script(p2pk).hex())
-                    importlist.append(script_to_p2wsh_script(p2pkh).hex())
+                    append_script(p2pk.hex())
+                    append_script(p2pkh.hex())
+                    append_script(key_to_p2wpkh_script(pubkey).hex())
+                    append_script(script_to_p2wsh_script(p2pk).hex(), wrap_into_sh=False)
+                    append_script(script_to_p2wsh_script(p2pkh).hex(), wrap_into_sh=False)
 
-            importlist.append(unsolvablep2pkh.hex())
-            importlist.append(unsolvablep2wshp2pkh.hex())
-            importlist.append(op1.hex())
-            importlist.append(p2wshop1.hex())
+            append_script(unsolvablep2pkh.hex())
+            append_script(unsolvablep2wshp2pkh.hex(), wrap_into_sh=False)
+            append_script(op1.hex())
+            append_script(p2wshop1.hex(), wrap_into_sh=False)
 
-            for i in importlist:
-                # import all generated addresses. The wallet already has the private keys for some of these, so catch JSON RPC
-                # exceptions and continue.
-                try_rpc(-4, "The wallet already contains the private key for this address or script", self.nodes[0].importaddress, i, "", False, True)
+            for entry in importlist:
+                # Import all generated addresses. Skip invalid scripts and continue.
+                # todo: decouple check for scripts that will be imported from the ones that will not.
+                try_rpc(-5, "Failure importing scripts, not all scripts were imported correctly", self.nodes[0].importaddress, entry['hex'], "", False, entry['p2sh'])
 
             self.nodes[0].importaddress(script_to_p2sh(op0))  # import OP_0 as address only
             self.nodes[0].importaddress(multisig_without_privkey_address)  # Test multisig_without_privkey
