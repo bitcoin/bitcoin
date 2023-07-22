@@ -1570,6 +1570,12 @@ bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript> scripts, int64
             WalletLogPrintf("Already have script %s, skipping\n", HexStr(entry));
             continue;
         }
+
+        // Prior to importing it, check if the script is valid
+        if (IsMineInner(*this, entry, IsMineSigVersion::TOP) == IsMineResult::INVALID) {
+            return error("Cannot import invalid script: %s", HexStr(entry));
+        }
+
         if (!AddCScriptWithDB(batch, entry)) {
             return false;
         }
@@ -1643,14 +1649,23 @@ bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pub
 bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
+    bool any_script_failed = false;
     for (const CScript& script : script_pub_keys) {
-        if (!have_solving_data || !IsMine(script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
+        // Prevent invalid script from being stored inside the spkm.
+        IsMineResult is_mine_res = IsMineInner(*this, script, IsMineSigVersion::TOP);
+        if (is_mine_res == IsMineResult::INVALID) {
+            any_script_failed = true;
+            continue;
+        }
+
+        // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
+        if (!have_solving_data || is_mine_res == IsMineResult::NO) {
             if (!AddWatchOnlyWithDB(batch, script, timestamp)) {
-                return false;
+                any_script_failed = true;
             }
         }
     }
-    return true;
+    return !any_script_failed;
 }
 
 std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const

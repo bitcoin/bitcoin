@@ -293,13 +293,23 @@ RPCHelpMan importaddress()
             CScript redeem_script(data.begin(), data.end());
 
             std::set<CScript> scripts = {redeem_script};
-            pwallet->ImportScripts(scripts, /*timestamp=*/0);
+            if (!pwallet->ImportScripts(scripts, /*timestamp=*/0)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot import invalid script");
+            }
 
             if (fP2SH) {
+                // Check if script is already a p2sh before wrap it into another one.
+                std::vector<std::vector<unsigned char>> solver_data;
+                TxoutType type = Solver(redeem_script, solver_data);
+                if (type == TxoutType::SCRIPTHASH || type == TxoutType::WITNESS_V0_SCRIPTHASH) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot wrap p2sh or p2wsh into a p2sh");
+                }
                 scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
             }
 
-            pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
+            if (!pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Failure importing scripts, not all scripts were imported correctly");
+            }
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
         }
