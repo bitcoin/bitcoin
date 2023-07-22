@@ -517,6 +517,12 @@ public:
     std::set<CKeyID> GetKeys() const override;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
 
+    /**
+     * Retrieves scripts that were imported by bugs into the legacy spkm and are
+     * simply invalid, such as a sh(sh(pkh())) script, or not watched.
+     */
+    std::unordered_set<CScript, SaltedSipHasher> GetNotMineScriptPubKeys() const;
+
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
      * Does not modify this ScriptPubKeyMan. */
     std::optional<MigrationData> MigrateToDescriptor();

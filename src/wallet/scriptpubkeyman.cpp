@@ -1712,8 +1712,23 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPub
     }
 
     // All watchonly scripts are raw
-    spks.insert(setWatchOnly.begin(), setWatchOnly.end());
+    for (const CScript& script : setWatchOnly) {
+        // As the legacy wallet allowed to import any script, we need to verify the validity here.
+        // LegacyScriptPubKeyMan::IsMine() return 'ISMINE_NO' for invalid or not watched scripts (IsMineResult::INVALID or IsMineResult::NO).
+        // e.g. a "sh(sh(pkh()))" which legacy wallets allowed to import!.
+        if (IsMine(script) != ISMINE_NO) spks.insert(script);
+    }
 
+    return spks;
+}
+
+std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetNotMineScriptPubKeys() const
+{
+    LOCK(cs_KeyStore);
+    std::unordered_set<CScript, SaltedSipHasher> spks;
+    for (const CScript& script : setWatchOnly) {
+        if (IsMine(script) == ISMINE_NO) spks.insert(script);
+    }
     return spks;
 }
 
