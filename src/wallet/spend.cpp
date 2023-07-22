@@ -320,6 +320,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
+    const bool segwit_inputs_only = {coinControl ? coinControl->m_segwit_inputs_only : false};
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -413,7 +414,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
-            if (coinControl && coinControl->m_segwit_inputs_only && !IsSegWitOutput(*provider, wtx.tx->vout[i].scriptPubKey)) {
+            if (segwit_inputs_only && !IsSegWitOutput(*provider, wtx.tx->vout[i].scriptPubKey)) {
                 continue;
             }
 
