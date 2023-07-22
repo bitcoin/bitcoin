@@ -83,7 +83,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
         if (m < 1 || m > n)
             return false;
     } else if (whichType == TxoutType::NULL_DATA) {
-        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes) {
+        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes + 1) {
             return false;
         }
     }
