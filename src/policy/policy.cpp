@@ -83,7 +83,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
         if (m < 1 || m > n)
             return false;
     } else if (whichType == TxoutType::NULL_DATA) {
-        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes + 1) {
+        if (max_datacarrier_bytes && scriptPubKey.size() > *max_datacarrier_bytes + 1) {
             return false;
         }
     }
@@ -136,7 +136,8 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
             return false;
         }
 
-        if (whichType == TxoutType::NULL_DATA)
+        // data carrying outputs only count if they actually carry data
+        if (whichType == TxoutType::NULL_DATA && txout.scriptPubKey.size() > 1)
             nDataOut++;
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
@@ -147,8 +148,9 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         }
     }
 
-    // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
+    // only one data carrying OP_RETURN txout is permitted if datacarrier is
+    // limited
+    if (max_datacarrier_bytes && nDataOut > 1) {
         reason = "multi-op-return";
         return false;
     }

@@ -764,14 +764,18 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
+    // 82 bytes of script data after the OP_Return is the old null-data limit.
+    //
+    // We use that limit here to allow the data size limit code to be tested
+    // without redoing all the test cases.
     constexpr auto CheckIsStandard = [](const auto& t) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, 82, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
     constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, 82, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
@@ -818,14 +822,16 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
-    // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
+    // TxoutType::NULL_DATA, with null-data size limited
+    //
+    // 82 bytes + 1 byte for the OP_Return is the old standardness limit
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY + 1, t.vout[0].scriptPubKey.size());
+    BOOST_CHECK_EQUAL(82 + 1, t.vout[0].scriptPubKey.size());
     CheckIsStandard(t);
 
-    // MAX_OP_RETURN_RELAY+1-byte TxoutType::NULL_DATA (non-standard)
+    // Same as above, but 1 byte over the limit
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
-    BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY + 2, t.vout[0].scriptPubKey.size());
+    BOOST_CHECK_EQUAL(82 + 1 + 1, t.vout[0].scriptPubKey.size());
     CheckIsNotStandard(t, "scriptpubkey");
 
     // Data payload can be encoded in any way...
@@ -848,7 +854,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     CheckIsStandard(t);
 
-    // Only one TxoutType::NULL_DATA permitted in all cases
+    // Only one data-containing TxoutType::NULL_DATA is permitted with the limit enabled
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[0].nValue = 0;
@@ -856,13 +862,14 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[1].nValue = 0;
     CheckIsNotStandard(t, "multi-op-return");
 
+    // However, multiple non-data-containing TxoutType::NULL_DATA's are permitted
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsStandard(t);
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsStandard(t);
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);
