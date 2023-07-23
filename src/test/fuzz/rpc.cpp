@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
-#include <core_io.h>
 #include <key.h>
 #include <key_io.h>
 #include <node/context.h>
@@ -14,7 +13,6 @@
 #include <rpc/client.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
-#include <rpc/util.h>
 #include <span.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>

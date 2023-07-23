@@ -50,6 +50,15 @@ bool ParseHashStr(const std::string& strHex, uint256& result);
 
 // core_write.cpp
 UniValue ValueFromAmount(const CAmount amount);
+/**
+ * Validate and return a CAmount from a UniValue number or string.
+ *
+ * @param[in] value     UniValue number or string to parse.
+ * @param[in] decimals  Number of significant digits (default: 8).
+ * @param[in] rpc       Whether caller is an RPC for error handling (default: true).
+ * @returns a CAmount if the various checks pass.
+ */
+CAmount AmountFromValue(const UniValue& value, int decimals = 8, bool rpc = true);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 std::string SighashToStr(unsigned char sighash_type);

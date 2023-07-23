@@ -5,7 +5,6 @@
 #include <wallet/rpc/util.h>
 
 #include <common/url.h>
-#include <rpc/util.h>
 #include <util/any.h>
 #include <util/translation.h>
 #include <wallet/context.h>

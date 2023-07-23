@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <core_io.h>
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>

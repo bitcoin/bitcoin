@@ -6,7 +6,6 @@
 #define BITCOIN_RPC_UTIL_H
 
 #include <addresstype.h>
-#include <consensus/amount.h>
 #include <node/transaction.h>
 #include <outputtype.h>
 #include <protocol.h>
@@ -95,15 +94,6 @@ uint256 ParseHashV(const UniValue& v, std::string strName);
 uint256 ParseHashO(const UniValue& o, std::string strKey);
 std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
 std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
-
-/**
- * Validate and return a CAmount from a UniValue number or string.
- *
- * @param[in] value     UniValue number or string to parse.
- * @param[in] decimals  Number of significant digits (default: 8).
- * @returns a CAmount if the various checks pass.
- */
-CAmount AmountFromValue(const UniValue& value, int decimals = 8);
 
 using RPCArgList = std::vector<std::pair<std::string, UniValue>>;
 std::string HelpExampleCli(const std::string& methodname, const std::string& args);

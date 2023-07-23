@@ -28,7 +28,6 @@
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/translation.h>
 
 #include <cstdio>
 #include <functional>
@@ -550,18 +549,6 @@ static bool findSighashFlags(int& flags, const std::string& flagStr)
     return false;
 }
 
-static CAmount AmountFromValue(const UniValue& value)
-{
-    if (!value.isNum() && !value.isStr())
-        throw std::runtime_error("Amount is not a number or string");
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
-        throw std::runtime_error("Invalid amount");
-    if (!MoneyRange(amount))
-        throw std::runtime_error("Amount out of range");
-    return amount;
-}
-
 static std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)
 {
     std::string strHex;
@@ -645,7 +632,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 newcoin.out.scriptPubKey = scriptPubKey;
                 newcoin.out.nValue = MAX_MONEY;
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
+                    newcoin.out.nValue = AmountFromValue(prevOut["amount"], /*decimals=*/8, /*rpc=*/false);
                 }
                 newcoin.nHeight = 1;
                 view.AddCoin(out, std::move(newcoin), true);

@@ -9,6 +9,8 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>
+#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/solver.h>
@@ -17,7 +19,9 @@
 #include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/result.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <map>
 #include <string>
@@ -34,6 +38,32 @@ UniValue ValueFromAmount(const CAmount amount)
     }
     return UniValue(UniValue::VNUM,
             strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
+}
+
+static util::Result<CAmount> VerifyValue(const UniValue& value, int decimals)
+{
+    if (!value.isNum() && !value.isStr()) {
+        return util::Error{Untranslated("Amount is not a number or string")};
+    }
+    CAmount amount;
+    if (!ParseFixedPoint(value.getValStr(), decimals, &amount)) {
+        return util::Error{Untranslated("Invalid amount")};
+    }
+    if (!MoneyRange(amount)) {
+        return util::Error{Untranslated("Amount out of range")};
+    }
+    return amount;
+}
+
+CAmount AmountFromValue(const UniValue& value, int decimals, bool rpc)
+{
+    if (const util::Result result{VerifyValue(value, decimals)}) {
+        return result.value();
+    } else if (rpc) {
+        throw JSONRPCError(RPC_TYPE_ERROR, util::ErrorString(result).original);
+    } else {
+        throw std::runtime_error(util::ErrorString(result).original);
+    }
 }
 
 std::string FormatScript(const CScript& script)

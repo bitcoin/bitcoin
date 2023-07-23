@@ -5,7 +5,6 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <common/args.h>
-#include <consensus/amount.h>
 #include <script/interpreter.h>
 #include <key_io.h>
 #include <outputtype.h>
@@ -60,18 +59,6 @@ void RPCTypeCheckObj(const UniValue& o,
             }
         }
     }
-}
-
-CAmount AmountFromValue(const UniValue& value, int decimals)
-{
-    if (!value.isNum() && !value.isStr())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), decimals, &amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (!MoneyRange(amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-    return amount;
 }
 
 uint256 ParseHashV(const UniValue& v, std::string strName)
