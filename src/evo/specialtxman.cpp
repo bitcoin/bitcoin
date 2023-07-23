@@ -169,7 +169,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         nTimeCbTxCL += nTime6 - nTime5;
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxBestChainlock: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCbTxCL * 0.000001);
 
-        if (llmq::utils::V19ActivationHeight(pindex) == pindex->nHeight + 1) {
+        if (Params().GetConsensus().V19Height == pindex->nHeight + 1) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // V19 activated just activated, so we must switch to the new rules here.
             bls::bls_legacy_scheme.store(false);
@@ -190,7 +190,7 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
     auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
 
     try {
-        if (llmq::utils::V19ActivationHeight(pindex) == pindex->nHeight + 1) {
+        if (Params().GetConsensus().V19Height == pindex->nHeight + 1) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // Removing the activation block here, so we must switch back to the old rules.
             bls::bls_legacy_scheme.store(true);

@@ -707,26 +707,13 @@ bool IsDIP0024Active(const CBlockIndex* pindex)
 bool IsV19Active(const CBlockIndex* pindex)
 {
     assert(pindex);
-
-    LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) == ThresholdState::ACTIVE;
-}
-
-const int V19ActivationHeight(const CBlockIndex* pindex)
-{
-    assert(pindex);
-
-   LOCK(cs_llmq_vbc);
-   if (VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache) != ThresholdState::ACTIVE) {
-       return -1;
-   }
-   return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19, llmq_versionbitscache);
+    return pindex->nHeight + 1 >= Params().GetConsensus().V19Height;
 }
 
 const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
 {
     assert(pindex);
-    return pindex->GetAncestor(V19ActivationHeight(pindex));
+    return pindex->GetAncestor(Params().GetConsensus().V19Height);
 }
 
 bool IsV20Active(const CBlockIndex* pindex)
