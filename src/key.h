@@ -130,6 +130,7 @@ public:
     //! Tweak a secret key by adding a scalar value to it.
     //
     bool TweakAdd(const unsigned char *tweak32);
+    bool ApplyTapTweak(const uint256*, CKey&) const;
 
     //! Tweak a secret key by multiplying it by a scalar value.
     bool TweakMultiply(const unsigned char *tweak32);
