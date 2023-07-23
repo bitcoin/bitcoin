@@ -2253,7 +2253,7 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
 
-OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const
+OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<Destination>& vecSend) const
 {
     // If -changetype is specified, always use that change type.
     if (change_type) {
@@ -2272,7 +2272,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
     for (const auto& recipient : vecSend) {
         std::vector<std::vector<uint8_t>> dummy;
-        const TxoutType type{Solver(recipient.scriptPubKey, dummy)};
+        const TxoutType type{Solver(std::get<CRecipient>(recipient).scriptPubKey, dummy)};
         if (type == TxoutType::WITNESS_V1_TAPROOT) {
             any_tr = true;
         } else if (type == TxoutType::WITNESS_V0_KEYHASH) {
@@ -4314,5 +4314,35 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{error};
     }
     return res;
+}
+
+CAmount GetAmountFromDestination(const Destination& destination)
+{
+    return std::visit([](auto&& arg) -> CAmount {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, CRecipient>) {
+            return arg.nAmount;
+        }
+    }, destination);
+}
+
+bool GetSubtractFeeFromAmountFromDestination(const Destination& destination)
+{
+    return std::visit([](auto&& arg) -> bool {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, CRecipient>) {
+            return arg.fSubtractFeeFromAmount;
+        }
+    }, destination);
+}
+
+size_t GetSerializeSizeFromDestination(const Destination& destination)
+{
+    return std::visit([](auto&& arg) -> size_t {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, CRecipient>) {
+            return ::GetSerializeSize(CTxOut(arg.nAmount, arg.scriptPubKey), PROTOCOL_VERSION);
+        }
+    }, destination);
 }
 } // namespace wallet

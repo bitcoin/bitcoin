@@ -242,7 +242,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // Fill in recipients (and preserve a single change key if there
     // is one). If outputs vector is non-empty, replace original
     // outputs with its contents, otherwise use original outputs.
-    std::vector<CRecipient> recipients;
+    std::vector<Destination> recipients;
     CAmount new_outputs_value = 0;
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (size_t i = 0; i < txouts.size(); ++i) {

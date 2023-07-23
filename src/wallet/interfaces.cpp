@@ -272,7 +272,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
     }
-    util::Result<CTransactionRef> createTransaction(const std::vector<CRecipient>& recipients,
+    util::Result<CTransactionRef> createTransaction(const std::vector<Destination>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,

@@ -262,6 +262,12 @@ inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)
     return {};
 }
 
+using Destination = std::variant<CRecipient>;
+
+CAmount GetAmountFromDestination(const Destination& destination);
+bool GetSubtractFeeFromAmountFromDestination(const Destination& destination);
+size_t GetSerializeSizeFromDestination(const Destination& destination);
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -596,7 +602,7 @@ public:
     bool ShouldResend() const;
     void ResubmitWalletTransactions(bool relay, bool force);
 
-    OutputType TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const;
+    OutputType TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<Destination>& vecSend) const;
 
     /** Fetch the inputs and sign with SIGHASH_ALL. */
     bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

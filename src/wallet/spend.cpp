@@ -821,7 +821,7 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
 
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
-        const std::vector<CRecipient>& vecSend,
+        const std::vector<Destination>& vecSend,
         int change_pos,
         const CCoinControl& coin_control,
         bool sign) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -846,9 +846,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     ReserveDestination reservedest(&wallet, change_type);
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
     for (const auto& recipient : vecSend) {
-        recipients_sum += recipient.nAmount;
+        recipients_sum += GetAmountFromDestination(recipient);
 
-        if (recipient.fSubtractFeeFromAmount) {
+        if (GetSubtractFeeFromAmountFromDestination(recipient)) {
             outputs_to_subtract_fee_from++;
             coin_selection_params.m_subtract_fee_outputs = true;
         }
@@ -934,12 +934,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
     // vouts to the payees
-    for (const auto& recipient : vecSend)
+    for (const auto& destination : vecSend)
     {
+        auto recipient = std::get<CRecipient>(destination);
         CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
         // Include the fee cost for outputs.
-        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
+        coin_selection_params.tx_noinputs_size += GetSerializeSizeFromDestination(destination);
 
         if (IsDust(txout, wallet.chain().relayDustFee())) {
             return util::Error{_("Transaction amount too small")};
@@ -1051,7 +1052,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             }
             CTxOut& txout = txNew.vout[i];
 
-            if (recipient.fSubtractFeeFromAmount)
+            if (GetSubtractFeeFromAmountFromDestination(recipient))
             {
                 txout.nValue -= to_reduce / outputs_to_subtract_fee_from; // Subtract fee equally from each selected recipient
 
@@ -1131,7 +1132,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
 util::Result<CreatedTransactionResult> CreateTransaction(
         CWallet& wallet,
-        const std::vector<CRecipient>& vecSend,
+        const std::vector<Destination>& vecSend,
         int change_pos,
         const CCoinControl& coin_control,
         bool sign)
@@ -1140,7 +1141,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         return util::Error{_("Transaction must have at least one recipient")};
     }
 
-    if (std::any_of(vecSend.cbegin(), vecSend.cend(), [](const auto& recipient){ return recipient.nAmount < 0; })) {
+    if (std::any_of(vecSend.cbegin(), vecSend.cend(), [](const auto& recipient){ return GetAmountFromDestination(recipient) < 0; })) {
         return util::Error{_("Transaction amounts must not be negative")};
     }
 
@@ -1179,7 +1180,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
-    std::vector<CRecipient> vecSend;
+    std::vector<Destination> vecSend;
 
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {

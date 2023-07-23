@@ -26,7 +26,8 @@
 #include <psbt.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/wallet.h> // for CRecipient
+#include <wallet/types.h> // for Destination, CRecipient
+#include <wallet/wallet.h>
 
 #include <stdint.h>
 #include <functional>
@@ -38,6 +39,7 @@
 
 using wallet::CCoinControl;
 using wallet::CRecipient;
+using wallet::Destination;
 using wallet::DEFAULT_DISABLE_WALLET;
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel& client_model, const PlatformStyle *platformStyle, QObject *parent) :
@@ -160,7 +162,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
-    std::vector<CRecipient> vecSend;
+    std::vector<Destination> vecSend;
 
     if(recipients.empty())
     {

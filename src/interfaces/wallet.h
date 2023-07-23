@@ -40,6 +40,7 @@ enum isminetype : unsigned int;
 struct CRecipient;
 struct WalletContext;
 using isminefilter = std::underlying_type<isminetype>::type;
+using Destination = std::variant<CRecipient>;
 } // namespace wallet
 
 namespace interfaces {
@@ -140,7 +141,7 @@ public:
     virtual void listLockedCoins(std::vector<COutPoint>& outputs) = 0;
 
     //! Create transaction.
-    virtual util::Result<CTransactionRef> createTransaction(const std::vector<wallet::CRecipient>& recipients,
+    virtual util::Result<CTransactionRef> createTransaction(const std::vector<wallet::Destination>& recipients,
         const wallet::CCoinControl& coin_control,
         bool sign,
         int& change_pos,
