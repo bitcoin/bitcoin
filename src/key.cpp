@@ -190,6 +190,24 @@ CKey CKey::AddTweak(const unsigned char *tweak32) const
     return new_seckey;
 }
 
+bool CKey::ApplyTapTweak(const uint256* merkle_root, CKey& key) const
+{
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, begin())) return false;
+
+    secp256k1_xonly_pubkey pubkey;
+    if (!secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, &keypair)) return false;
+    unsigned char pubkey_bytes[32];
+    if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey)) return false;
+    uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
+    if (!secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, &keypair, tweak.data())) return false;
+
+    unsigned char tweaked_secret_key[32];
+    if (!secp256k1_keypair_sec(secp256k1_context_sign, tweaked_secret_key, &keypair)) return false;
+    key.Set(std::begin(tweaked_secret_key), std::end(tweaked_secret_key), true);
+    return key.IsValid();
+}
+
 CKey CKey::MultiplyTweak(const unsigned char *tweak32) const
 {
     assert(fValid);
