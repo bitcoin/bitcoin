@@ -243,11 +243,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
             self.generate_small_transactions(self.nodes[3], 2500, utxo_list)
             # Pick a random block between current tip, and starting tip
             current_height = self.nodes[3].getblockcount()
-            # TODO: re-enable this when ReplayBlocks is fixed to support evodb and additional indexes
-            skip_this_test_ReplayBlocks = True
             random_height = random.randint(starting_tip_height, current_height)
             self.log.debug("At height %d, considering height %d", current_height, random_height)
-            if not skip_this_test_ReplayBlocks and random_height > starting_tip_height:
+            if random_height > starting_tip_height:
                 # Randomly reorg from this point with some probability (1/4 for
                 # tip, 1/5 for tip-1, ...)
                 if random.random() < 1.0 / (current_height + 4 - random_height):
