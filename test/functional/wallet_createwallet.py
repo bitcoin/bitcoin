@@ -16,6 +16,8 @@ from test_framework.wallet_util import generate_keypair, WalletUnlock
 
 
 EMPTY_PASSPHRASE_MSG = "Empty string given as passphrase, wallet will not be encrypted."
+EMPTY_DB_PASSPHRASE_MSG = "Empty string given as database passphrase, wallet database will not be encrypted."
+EMPTY_PASSPHRASE_MSGS = [EMPTY_PASSPHRASE_MSG, EMPTY_DB_PASSPHRASE_MSG]
 LEGACY_WALLET_MSG = "Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."
 
 
@@ -161,7 +163,7 @@ class CreateWalletTest(BitcoinTestFramework):
             assert_equal(walletinfo['keypoolsize_hd_internal'], keys)
         # Allow empty passphrase, but there should be a warning
         resp = self.nodes[0].createwallet(wallet_name='w7', disable_private_keys=False, blank=False, passphrase='')
-        assert_equal(resp["warnings"], [EMPTY_PASSPHRASE_MSG] if self.options.descriptors else [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG])
+        assert_equal(resp["warnings"], EMPTY_PASSPHRASE_MSGS if self.options.descriptors else EMPTY_PASSPHRASE_MSGS + [LEGACY_WALLET_MSG])
 
         w7 = node.get_wallet_rpc('w7')
         assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 60)
@@ -180,12 +182,12 @@ class CreateWalletTest(BitcoinTestFramework):
             result = self.nodes[0].createwallet(wallet_name="legacy_w0", descriptors=False, passphrase=None)
             assert_equal(result, {
                 "name": "legacy_w0",
-                "warnings": [LEGACY_WALLET_MSG],
+                "warnings": [EMPTY_DB_PASSPHRASE_MSG, LEGACY_WALLET_MSG],
             })
             result = self.nodes[0].createwallet(wallet_name="legacy_w1", descriptors=False, passphrase="")
             assert_equal(result, {
                 "name": "legacy_w1",
-                "warnings": [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG],
+                "warnings": EMPTY_PASSPHRASE_MSGS + [LEGACY_WALLET_MSG],
             })
 
 
