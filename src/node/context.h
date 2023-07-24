@@ -15,6 +15,7 @@ class BanMan;
 class CAddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
+class CCreditPoolManager;
 class CScheduler;
 class CTxMemPool;
 class ChainstateManager;
@@ -56,6 +57,7 @@ struct NodeContext {
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash
     std::unique_ptr<LLMQContext> llmq_ctx;
+    std::unique_ptr<CCreditPoolManager> creditPoolManager;
 
     std::unique_ptr<CEvoDB> evodb;
 

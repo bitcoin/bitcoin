@@ -95,6 +95,7 @@ BITCOIN_TESTS =\
   test/dip0020opcodes_tests.cpp \
   test/descriptor_tests.cpp \
   test/dynamic_activation_thresholds_tests.cpp \
+  test/evo_assetlocks_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_instantsend_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \

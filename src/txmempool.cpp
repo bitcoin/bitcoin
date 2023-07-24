@@ -20,6 +20,7 @@
 #include <validationinterface.h>
 
 #include <evo/specialtx.h>
+#include <evo/assetlocktx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 #include <llmq/instantsend.h>
@@ -451,6 +452,11 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
             newit->isKeyChangeProTx = true;
         }
+    } else if (tx.nType == TRANSACTION_ASSET_UNLOCK) {
+        CAssetUnlockPayload assetUnlockTx;
+        bool ok = GetTxPayload(tx, assetUnlockTx);
+        assert(ok);
+        mapAssetUnlockExpiry.insert({tx.GetHash(), assetUnlockTx.getHeightToExpiry()});
     }
 }
 
@@ -679,6 +685,8 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
             assert(false);
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
+    } else if (it->GetTx().nType == TRANSACTION_ASSET_UNLOCK) {
+        mapAssetUnlockExpiry.erase(it->GetTx().GetHash());
     }
 
     totalTxSize -= it->GetTxSize();
@@ -997,6 +1005,25 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     }
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
+}
+
+/**
+  * Called when a lenght of chain is increased. Removes from mempool expired asset-unlock transactions
+  */
+void CTxMemPool::removeExpiredAssetUnlock(unsigned int nBlockHeight)
+{
+    AssertLockHeld(cs);
+    // items to removed should be firstly collected to independed list,
+    // because removing items by `removeRecursive` changes the mapAssetUnlockExpiry
+    std::vector<CTransactionRef> entries;
+    for (const auto& item: mapAssetUnlockExpiry) {
+        if (item.second < nBlockHeight) {
+            entries.push_back(get(item.first));
+        }
+    }
+    for (const auto& tx : entries) {
+        removeRecursive(*tx, MemPoolRemovalReason::EXPIRY);
+    }
 }
 
 void CTxMemPool::_clear()

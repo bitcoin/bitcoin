@@ -48,7 +48,7 @@ def script_BIP34_coinbase_height(height):
     return CScript([CScriptNum(height)])
 
 
-def create_coinbase(height, pubkey=None, dip4_activated=False):
+def create_coinbase(height, pubkey=None, dip4_activated=False, v20_activated=False):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -67,7 +67,8 @@ def create_coinbase(height, pubkey=None, dip4_activated=False):
     if dip4_activated:
         coinbase.nVersion = 3
         coinbase.nType = 5
-        cbtx_payload = CCbTx(2, height, 0, 0)
+        cbtx_version = 3 if v20_activated else 2
+        cbtx_payload = CCbTx(cbtx_version, height, 0, 0, 0)
         coinbase.vExtraPayload = cbtx_payload.serialize()
     coinbase.calc_sha256()
     return coinbase

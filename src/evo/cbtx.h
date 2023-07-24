@@ -20,6 +20,9 @@ class CQuorumBlockProcessor;
 class CChainLocksHandler;
 }// namespace llmq
 
+// Forward declaration from core_io to get rid of circular dependency
+UniValue ValueFromAmount(const CAmount& amount);
+
 // coinbase transaction
 class CCbTx
 {
@@ -34,6 +37,7 @@ public:
     uint256 merkleRootQuorums;
     uint32_t bestCLHeightDiff;
     CBLSSignature bestCLSignature;
+    CAmount assetLockedAmount{0};
 
     SERIALIZE_METHODS(CCbTx, obj)
     {
@@ -44,8 +48,10 @@ public:
             if (obj.nVersion >= CB_V20_VERSION) {
                 READWRITE(COMPACTSIZE(obj.bestCLHeightDiff));
                 READWRITE(obj.bestCLSignature);
+                READWRITE(obj.assetLockedAmount);
             }
         }
+
     }
 
     std::string ToString() const;
@@ -62,6 +68,7 @@ public:
             if (nVersion >= CB_V20_VERSION) {
                 obj.pushKV("bestCLHeightDiff", static_cast<int>(bestCLHeightDiff));
                 obj.pushKV("bestCLSignature", bestCLSignature.ToString());
+                obj.pushKV("assetLockedAmount", ValueFromAmount(assetLockedAmount));
             }
         }
     }

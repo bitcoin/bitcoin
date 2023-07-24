@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <consensus/validation.h>
+#include <evo/assetlocktx.h>
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -160,6 +161,11 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
 
 bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
 {
+
+    if (bool isAssetUnlockTx = (tx.nVersion == 3 && tx.nType ==  TRANSACTION_ASSET_UNLOCK); isAssetUnlockTx) {
+        return GetAssetUnlockFee(tx, txfee, state);
+    }
+
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",

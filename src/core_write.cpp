@@ -16,6 +16,7 @@
 
 #include <spentindex.h>
 
+#include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/mnhftx.h>
 #include <evo/providertx.h>
@@ -309,6 +310,20 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             UniValue obj;
             mnhfTx.ToJson(obj);
             entry.pushKV("mnhfTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_ASSET_LOCK) {
+        CAssetLockPayload assetLockTx;
+        if (!GetTxPayload(tx, assetLockTx)) {
+            UniValue obj;
+            assetLockTx.ToJson(obj);
+            entry.pushKV("assetLockTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_ASSET_UNLOCK) {
+        CAssetUnlockPayload assetUnlockTx;
+        if (!GetTxPayload(tx, assetUnlockTx)) {
+            UniValue obj;
+            assetUnlockTx.ToJson(obj);
+            entry.pushKV("assetUnlockTx", obj);
         }
     }
 

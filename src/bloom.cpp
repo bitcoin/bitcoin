@@ -194,6 +194,10 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
     case(TRANSACTION_MNHF_SIGNAL):
         // No additional checks for this transaction types
         return false;
+    case(TRANSACTION_ASSET_LOCK):
+    case(TRANSACTION_ASSET_UNLOCK):
+        // TODO asset lock/unlock bloom?
+        return false;
     }
 
     LogPrintf("Unknown special transaction type in Bloom filter check.\n");

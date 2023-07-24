@@ -15,6 +15,7 @@
 #include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
+#include <util/skip_set.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -23,10 +24,12 @@
 
 #include <array>
 #include <optional>
+#include <random>
 #include <stdint.h>
 #include <string.h>
 #include <thread>
 #include <univalue.h>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 #ifndef WIN32
@@ -2158,6 +2161,31 @@ BOOST_AUTO_TEST_CASE(test_Capitalize)
     BOOST_CHECK_EQUAL(Capitalize(""), "");
     BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
+}
+
+BOOST_AUTO_TEST_CASE(test_SkipSet)
+{
+    std::mt19937 gen;
+    for (size_t test = 0; test < 17; ++test) {
+        std::uniform_int_distribution<uint64_t> dist_value(0, (1 << test));
+        size_t skip_size = test ? (1 << (test - 1)) : 1;
+        CSkipSet set_1{skip_size};
+        std::unordered_set<uint64_t> set_2;
+        for (size_t iter = 0; iter < (1 << test) * 2; ++iter) {
+            uint64_t value = dist_value(gen);
+            BOOST_CHECK(set_1.Contains(value) == !!set_2.count(value));
+            if (!set_1.Contains(value) && set_1.CanBeAdded(value)) {
+                BOOST_CHECK(!set_1.Contains(value));
+                BOOST_CHECK(set_1.Add(value));
+                set_2.insert(value);
+            }
+            BOOST_CHECK(set_1.Contains(value) == !!set_2.count(value));
+            BOOST_CHECK(set_1.Size() == set_2.size());
+        }
+        if (test > 4) {
+            BOOST_CHECK(set_1.Size() > ((1 << test) / 4));
+        }
+    }
 }
 
 static std::string SpanToStr(const Span<const char>& span)
