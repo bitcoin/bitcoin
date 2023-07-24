@@ -771,7 +771,7 @@ private:
 
     const Options m_opts;
 
-    bool RejectIncomingTxs(const CNode& peer) const;
+    bool RejectIncomingTxs(const ConnectionContext& conn_ctx) const;
 
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
@@ -1488,7 +1488,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
     uint64_t your_services{addr.nServices};
 
-    const bool tx_relay{!RejectIncomingTxs(pnode)};
+    const bool tx_relay{!RejectIncomingTxs(peer.m_conn_ctx)};
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, my_services, nTime,
             your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
             my_services, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
@@ -3744,7 +3744,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // Peer must not offer us reconciliations if we specified no tx relay support in VERSION.
-        if (RejectIncomingTxs(pfrom)) {
+        if (RejectIncomingTxs(peer->m_conn_ctx)) {
             LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "sendtxrcncl received from peer=%d to which we indicated no tx relay; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -3894,7 +3894,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        const bool reject_tx_invs{RejectIncomingTxs(pfrom)};
+        const bool reject_tx_invs{RejectIncomingTxs(peer->m_conn_ctx)};
 
         LOCK(cs_main);
 
@@ -4201,7 +4201,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::TX) {
-        if (RejectIncomingTxs(pfrom)) {
+        if (RejectIncomingTxs(peer->m_conn_ctx)) {
             LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -5420,13 +5420,13 @@ public:
 };
 } // namespace
 
-bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
+bool PeerManagerImpl::RejectIncomingTxs(const ConnectionContext& conn_ctx) const
 {
     // block-relay-only peers may never send txs to us
-    if (peer.GetContext().IsBlockOnlyConn()) return true;
-    if (peer.GetContext().IsFeelerConn()) return true;
+    if (conn_ctx.IsBlockOnlyConn()) return true;
+    if (conn_ctx.IsFeelerConn()) return true;
     // In -blocksonly mode, peers need the 'relay' permission to send txs to us
-    if (m_opts.ignore_incoming_txs && !peer.GetContext().HasPermission(NetPermissionFlags::Relay)) return true;
+    if (m_opts.ignore_incoming_txs && !conn_ctx.HasPermission(NetPermissionFlags::Relay)) return true;
     return false;
 }
 
