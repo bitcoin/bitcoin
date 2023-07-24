@@ -84,6 +84,8 @@ int TxOrphanage::EraseTxNoLock(const uint256& txid)
         m_orphan_list[old_pos] = it_last;
         it_last->second.list_pos = old_pos;
     }
+    const auto& wtxid = it->second.tx->GetWitnessHash();
+    LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", txid.ToString(), wtxid.ToString());
     m_orphan_list.pop_back();
     m_wtxid_to_orphan_it.erase(it->second.tx->GetWitnessHash());
 
@@ -160,6 +162,8 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
                 std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(elem->second.fromPeer).first->second;
                 // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
+                LogPrint(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
+                         tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), elem->second.fromPeer);
             }
         }
     }
