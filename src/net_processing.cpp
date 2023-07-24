@@ -2930,7 +2930,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
             m_orphanage.AddChildrenToWorkSet(*porphanTx);
-            m_orphanage.EraseTx(orphanHash);
+            m_orphanage.EraseTx(orphan_wtxid);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
             }
@@ -2982,7 +2982,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                     m_recent_rejects.insert(porphanTx->GetHash());
                 }
             }
-            m_orphanage.EraseTx(orphanHash);
+            m_orphanage.EraseTx(orphan_wtxid);
             return true;
         }
     }

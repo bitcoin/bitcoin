@@ -23,6 +23,9 @@ public:
     /** Add a new orphan transaction */
     bool AddTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
+    /** Get orphan transaction by wtxid. Returns nullptr if we don't have it anymore. */
+    CTransactionRef GetTx(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
     /** Check if we already have an orphan transaction (by txid or wtxid) */
     bool HaveTx(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
@@ -33,8 +36,8 @@ public:
      */
     CTransactionRef GetTxToReconsider(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Erase an orphan by txid */
-    int EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Erase an orphan by wtxid */
+    int EraseTx(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Erase all orphans announced by a peer (eg, after that peer disconnects) */
     void EraseForPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -98,8 +101,8 @@ protected:
      *  transactions using their witness ids. */
     std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
 
-    /** Erase an orphan by txid */
-    int EraseTxNoLock(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    /** Erase an orphan by wtxid */
+    int EraseTxNoLock(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 };
 
 #endif // BITCOIN_TXORPHANAGE_H
