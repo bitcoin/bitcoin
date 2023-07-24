@@ -667,6 +667,8 @@ private:
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
 };
 
+using CNodeRef = std::shared_ptr<CNode>;
+
 /**
  * Interface for message handling
  */
