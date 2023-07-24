@@ -1079,7 +1079,7 @@ private:
      *  @return   True if address relay is enabled with peer
      *            False if address relay is disallowed
      */
-    bool SetupAddressRelay(const CNode& node, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    bool SetupAddressRelay(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
@@ -3539,7 +3539,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // inbound or outbound block-relay-only peers.
         bool send_getaddr{false};
         if (!pfrom.GetContext().IsInboundConn()) {
-            send_getaddr = SetupAddressRelay(pfrom, *peer);
+            send_getaddr = SetupAddressRelay(*peer);
         }
         if (send_getaddr) {
             // Do a one-time address fetch to help populate/update our addrman.
@@ -3802,7 +3802,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         s >> vAddr;
 
-        if (!SetupAddressRelay(pfrom, *peer)) {
+        if (!SetupAddressRelay(*peer)) {
             LogPrint(BCLog::NET, "ignoring %s message from %s peer=%d\n", msg_type, pfrom.GetContext().ConnectionTypeAsString(), pfrom.GetId());
             return;
         }
@@ -4758,7 +4758,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // Since this must be an inbound connection, SetupAddressRelay will
         // never fail.
-        Assume(SetupAddressRelay(pfrom, *peer));
+        Assume(SetupAddressRelay(*peer));
 
         // Only send one GetAddr response per connection to reduce resource waste
         // and discourage addr stamping of INV announcements.
@@ -5430,12 +5430,12 @@ bool PeerManagerImpl::RejectIncomingTxs(const ConnectionContext& conn_ctx) const
     return false;
 }
 
-bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
+bool PeerManagerImpl::SetupAddressRelay(Peer& peer)
 {
     // We don't participate in addr relay with outbound block-relay-only
     // connections to prevent providing adversaries with the additional
     // information of addr traffic to infer the link.
-    if (node.GetContext().IsBlockOnlyConn()) return false;
+    if (peer.m_conn_ctx.IsBlockOnlyConn()) return false;
 
     if (!peer.m_addr_relay_enabled.exchange(true)) {
         // During version message processing (non-block-relay-only outbound peers)
