@@ -16,6 +16,7 @@
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
 #include <llmq/context.h>
+#include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>

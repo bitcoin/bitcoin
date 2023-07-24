@@ -6,6 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <node/blockstorage.h>
 #include <streams.h>
 #include <validation.h>
 #include <zmq/zmqutil.h>

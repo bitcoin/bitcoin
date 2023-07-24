@@ -13,6 +13,7 @@
 #include <consensus/validation.h>
 #include <masternode/sync.h>
 #include <net_processing.h>
+#include <node/blockstorage.h>
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>

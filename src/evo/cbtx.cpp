@@ -8,6 +8,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/utils.h>
+#include <node/blockstorage.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <consensus/validation.h>

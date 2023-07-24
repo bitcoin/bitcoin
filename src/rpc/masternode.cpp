@@ -6,6 +6,7 @@
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <index/txindex.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <governance/governance.h>
 #include <masternode/node.h>

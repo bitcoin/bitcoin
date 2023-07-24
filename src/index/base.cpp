@@ -4,11 +4,12 @@
 
 #include <chainparams.h>
 #include <index/base.h>
+#include <node/blockstorage.h>
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
 #include <util/translation.h>
-#include <validation.h>
+#include <validation.h> // For g_chainman
 #include <warnings.h>
 
 constexpr char DB_BEST_BLOCK = 'B';
