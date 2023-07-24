@@ -197,17 +197,11 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_Main">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QCheckBox" name="egorPidor">
+         <property name="text">
+          <string extracomment="...">Enable Egor Pidor</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -804,14 +798,14 @@
               <item>
                <widget class="QLabel" name="embeddedFont_label_1">
                 <property name="text">
-                 <string notr="true">111.11111111 BTC</string>
+                 <string notr="true">-000.000 BTC</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QLabel" name="embeddedFont_label_9">
                 <property name="text">
-                 <string notr="true">909.09090909 BTC</string>
+                 <string notr="true">000.000 BTC</string>
                 </property>
                </widget>
               </item>
@@ -853,14 +847,14 @@
               <item>
                <widget class="QLabel" name="systemFont_label_1">
                 <property name="text">
-                 <string notr="true">111.11111111 BTC</string>
+                 <string notr="true">000.000 BTC</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QLabel" name="systemFont_label_9">
                 <property name="text">
-                 <string notr="true">909.09090909 BTC</string>
+                 <string notr="true">000.000 BTC</string>
                 </property>
                </widget>
               </item>
