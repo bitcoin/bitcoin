@@ -19,6 +19,7 @@
 #include <crypto/sha256.h>
 #include <i2p.h>
 #include <logging.h>
+#include <memusage.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -115,6 +116,14 @@ GlobalMutex g_maplocalhost_mutex;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
 static bool vfLimited[NET_MAX] GUARDED_BY(g_maplocalhost_mutex) = {};
 std::string strSubVersion;
+
+size_t CSerializedNetMsg::GetMemoryUsage() const noexcept
+{
+    // Don't count the dynamic memory used for the m_type string, by assuming it fits in the
+    // "small string" optimization area (which stores data inside the object itself, up to some
+    // size; 15 bytes in modern libstdc++).
+    return sizeof(*this) + memusage::DynamicUsage(data);
+}
 
 void CConnman::AddAddrFetch(const std::string& strDest)
 {
@@ -894,6 +903,14 @@ void V1Transport::MarkBytesSent(size_t bytes_sent) noexcept
     }
 }
 
+size_t V1Transport::GetSendMemoryUsage() const noexcept
+{
+    AssertLockNotHeld(m_send_mutex);
+    LOCK(m_send_mutex);
+    // Don't count sending-side fields besides m_message_to_send, as they're all small and bounded.
+    return m_message_to_send.GetMemoryUsage();
+}
+
 std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
 {
     auto it = node.vSendMsg.begin();
@@ -923,8 +940,8 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             nSentSize += nBytes;
             if (node.nSendOffset == data.size()) {
                 node.nSendOffset = 0;
-                node.nSendSize -= data.size();
-                node.fPauseSend = node.nSendSize > nSendBufferMaxSize;
+                // Update memory usage of send buffer (as *it will be deleted).
+                node.m_send_memusage -= sizeof(data) + memusage::DynamicUsage(data);
                 it++;
             } else {
                 // could not send full message; stop sending more
@@ -944,9 +961,11 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
         }
     }
 
+    node.fPauseSend = node.m_send_memusage + node.m_transport->GetSendMemoryUsage() > nSendBufferMaxSize;
+
     if (it == node.vSendMsg.end()) {
         assert(node.nSendOffset == 0);
-        assert(node.nSendSize == 0);
+        assert(node.m_send_memusage == 0);
     }
     node.vSendMsg.erase(node.vSendMsg.begin(), it);
     return {nSentSize, !node.vSendMsg.empty()};
@@ -2985,14 +3004,21 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
             if (bytes.empty()) break;
             // Update statistics per message type.
             pnode->AccountForSentBytes(msg_type, bytes.size());
-            // Update number of bytes in the send buffer.
-            pnode->nSendSize += bytes.size();
-            if (pnode->nSendSize > nSendBufferMaxSize) pnode->fPauseSend = true;
             pnode->vSendMsg.push_back({bytes.begin(), bytes.end()});
+            // Update memory usage of send buffer. For now, use static + dynamic memory usage of
+            // byte vectors in vSendMsg as send memory. In a future commit, vSendMsg will be
+            // replaced with a queue of CSerializedNetMsg objects, and we'll use their memory usage
+            // instead.
+            pnode->m_send_memusage += sizeof(pnode->vSendMsg.back()) + memusage::DynamicUsage(pnode->vSendMsg.back());
             // Notify transport that bytes have been processed (they're not actually sent yet,
             // but pushed onto the vSendMsg queue of bytes to send).
             pnode->m_transport->MarkBytesSent(bytes.size());
         }
+        // At this point, m_transport->GetSendMemoryUsage() isn't very interesting as the
+        // transport's message is fully flushed (and converted to byte arrays). It's still included
+        // here for correctness, and will become relevant in a future commit when a queued message
+        // inside the transport may survive PushMessage calls.
+        if (pnode->m_send_memusage + pnode->m_transport->GetSendMemoryUsage() > nSendBufferMaxSize) pnode->fPauseSend = true;
 
         // If the write queue was empty before and isn't now, attempt "optimistic write":
         // because the poll/select loop may pause for SELECT_TIMEOUT_MILLISECONDS before actually
