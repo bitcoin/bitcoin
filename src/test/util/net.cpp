@@ -49,7 +49,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     PeerStats peer_stats;
     assert(peerman.GetPeerStats(node.GetId(), peer_stats));
     assert(peer_stats.m_version == version);
-    assert(peer_stats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
+    assert(peer_stats.m_relay_txs == (relay_txs && !node.GetContext().IsBlockOnlyConn()));
     assert(peer_stats.their_services == remote_services);
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};

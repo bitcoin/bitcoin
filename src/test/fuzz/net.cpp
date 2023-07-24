@@ -63,6 +63,6 @@ FUZZ_TARGET(net, .init = initialize_net)
     assert(ref_count >= 0);
 
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
-    (void)node.HasPermission(net_permission_flags);
-    (void)node.ConnectedThroughNetwork();
+    (void)node.GetContext().HasPermission(net_permission_flags);
+    (void)node.GetContext().ConnectedThroughNetwork();
 }

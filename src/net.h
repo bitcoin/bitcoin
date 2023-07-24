@@ -9,7 +9,6 @@
 #include <chainparams.h>
 #include <common/bloom.h>
 #include <compat/compat.h>
-#include <node/connection_types.h>
 #include <node/eviction.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
@@ -19,6 +18,8 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/connection_context.h>
+#include <node/connection_types.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -92,7 +93,7 @@ static constexpr bool DEFAULT_FIXEDSEEDS{true};
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
-typedef int64_t NodeId;
+using node::ConnectionContext;
 
 struct AddedNodeInfo
 {
@@ -341,7 +342,6 @@ public:
 
 struct CNodeOptions
 {
-    NetPermissionFlags permission_flags = NetPermissionFlags::None;
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
 };
@@ -352,8 +352,6 @@ class CNode
 public:
     const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
     const std::unique_ptr<const TransportSerializer> m_serializer;
-
-    const NetPermissionFlags m_permission_flags;
 
     /**
      * Socket used for communication with the node.
@@ -379,18 +377,6 @@ public:
 
     std::atomic<std::chrono::seconds> m_last_send{0s};
     std::atomic<std::chrono::seconds> m_last_recv{0s};
-    //! Unix epoch time at peer connection
-    const std::chrono::seconds m_connected;
-    // Address of this peer
-    const CAddress addr;
-    // Bind address of our side of the connection
-    const CAddress addrBind;
-    const std::string m_addr_name;
-    //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
-    const bool m_inbound_onion;
-    bool HasPermission(NetPermissionFlags permission) const {
-        return NetPermissions::HasFlag(m_permission_flags, permission);
-    }
     /** fSuccessfullyConnected is set to true on receiving VERACK from the peer. */
     std::atomic_bool fSuccessfullyConnected{false};
     // Setting fDisconnect to true will cause the node to be disconnected the
@@ -402,7 +388,7 @@ public:
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
 
-    const ConnectionType m_conn_type;
+    const ConnectionContext& GetContext() const { return m_ctx; }
 
     /** Move all messages from the received queue to the processing queue. */
     void MarkReceivedMsgsForProcessing()
@@ -423,88 +409,17 @@ public:
         mapSendBytesPerMsgType[msg_type] += sent_bytes;
     }
 
-    bool IsOutboundOrBlockRelayConn() const {
-        switch (m_conn_type) {
-            case ConnectionType::OUTBOUND_FULL_RELAY:
-            case ConnectionType::BLOCK_RELAY:
-                return true;
-            case ConnectionType::INBOUND:
-            case ConnectionType::MANUAL:
-            case ConnectionType::ADDR_FETCH:
-            case ConnectionType::FEELER:
-                return false;
-        } // no default case, so the compiler can warn about missing cases
-
-        assert(false);
-    }
-
-    bool IsFullOutboundConn() const {
-        return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
-    }
-
-    bool IsManualConn() const {
-        return m_conn_type == ConnectionType::MANUAL;
-    }
-
-    bool IsBlockOnlyConn() const {
-        return m_conn_type == ConnectionType::BLOCK_RELAY;
-    }
-
-    bool IsFeelerConn() const {
-        return m_conn_type == ConnectionType::FEELER;
-    }
-
-    bool IsAddrFetchConn() const {
-        return m_conn_type == ConnectionType::ADDR_FETCH;
-    }
-
-    bool IsInboundConn() const {
-        return m_conn_type == ConnectionType::INBOUND;
-    }
-
-    bool ExpectServicesFromConn() const {
-        switch (m_conn_type) {
-            case ConnectionType::INBOUND:
-            case ConnectionType::MANUAL:
-            case ConnectionType::FEELER:
-                return false;
-            case ConnectionType::OUTBOUND_FULL_RELAY:
-            case ConnectionType::BLOCK_RELAY:
-            case ConnectionType::ADDR_FETCH:
-                return true;
-        } // no default case, so the compiler can warn about missing cases
-
-        assert(false);
-    }
-
-    /**
-     * Get network the peer connected through.
-     *
-     * Returns Network::NET_ONION for *inbound* onion connections,
-     * and CNetAddr::GetNetClass() otherwise. The latter cannot be used directly
-     * because it doesn't detect the former, and it's not the responsibility of
-     * the CNetAddr class to know the actual network a peer is connected through.
-     *
-     * @return network the peer connected through.
-     */
-    Network ConnectedThroughNetwork() const;
-
     /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
     std::atomic<std::chrono::microseconds> m_last_ping_time{0us};
 
-    CNode(NodeId id,
+    CNode(ConnectionContext&& conn_ctx,
           std::shared_ptr<Sock> sock,
-          const CAddress& addrIn,
-          const CAddress& addrBindIn,
-          const std::string& addrNameIn,
-          ConnectionType conn_type_in,
-          bool inbound_onion,
           CNodeOptions&& node_opts = {});
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 
     NodeId GetId() const {
-        return id;
+        return m_ctx.id;
     }
 
     int GetRefCount() const
@@ -539,15 +454,13 @@ public:
 
     void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!cs_vSend, !cs_vRecv);
 
-    std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
-
     /** A ping-pong round trip has completed successfully. Update latest ping time. */
     void PongReceived(std::chrono::microseconds ping_time) {
         m_last_ping_time = ping_time;
     }
 
 private:
-    const NodeId id;
+    const ConnectionContext m_ctx;
 
     const size_t m_recv_flood_size;
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
@@ -735,7 +648,7 @@ public:
      * A non-malicious call (from RPC or a peer with addr permission) should
      * call the function without a parameter to avoid using the cache.
      */
-    std::vector<CAddress> GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
+    std::vector<CAddress> GetAddresses(const ConnectionContext& requestor, size_t max_addresses, size_t max_pct);
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.

@@ -1470,13 +1470,13 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     uint64_t nonce{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(pnode.GetId()).Finalize()};
     // If this is an outbound connection, store the version nonce so we can check that
     // we haven't connected to ourselves.
-    if (!pnode.IsInboundConn()) {
+    if (!pnode.GetContext().IsInboundConn()) {
         LOCK(m_version_nonces_mutex);
         m_version_nonces.emplace_hint(m_version_nonces.end(), pnode.GetId(), nonce);
     }
     const int nNodeStartingHeight{m_best_height};
     NodeId nodeid = pnode.GetId();
-    CAddress addr = pnode.addr;
+    CAddress addr = pnode.GetContext().addr;
 
     CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
     uint64_t your_services{addr.nServices};
@@ -1498,7 +1498,7 @@ void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid,
 {
     AssertLockHeld(::cs_main); // For m_txrequest
     NodeId nodeid = node.GetId();
-    if (!node.HasPermission(NetPermissionFlags::Relay) && m_txrequest.Count(nodeid) >= MAX_PEER_TX_ANNOUNCEMENTS) {
+    if (!node.GetContext().HasPermission(NetPermissionFlags::Relay) && m_txrequest.Count(nodeid) >= MAX_PEER_TX_ANNOUNCEMENTS) {
         // Too many queued announcements from this peer
         return;
     }
@@ -1515,7 +1515,7 @@ void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid,
     const bool preferred = state->fPreferredDownload;
     if (!preferred) delay += NONPREF_PEER_TX_DELAY;
     if (!gtxid.IsWtxid() && m_wtxid_relay_peers > 0) delay += TXID_RELAY_DELAY;
-    const bool overloaded = !node.HasPermission(NetPermissionFlags::Relay) &&
+    const bool overloaded = !node.GetContext().HasPermission(NetPermissionFlags::Relay) &&
         m_txrequest.CountInFlight(nodeid) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
     m_txrequest.ReceivedInv(nodeid, gtxid, preferred, current_time + delay);
@@ -1526,7 +1526,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
     NodeId nodeid = node.GetId();
     {
         LOCK(cs_main);
-        m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.IsInboundConn()));
+        m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.GetContext().IsInboundConn()));
         assert(m_txrequest.Count(nodeid) == 0);
     }
     PeerRef peer = std::make_shared<Peer>(nodeid, our_services);
@@ -1534,7 +1534,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
     }
-    if (!node.IsInboundConn()) {
+    if (!node.GetContext().IsInboundConn()) {
         PushNodeVersion(node, *peer);
     }
 }
@@ -1625,11 +1625,11 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     }
     } // cs_main
     if (node.fSuccessfullyConnected && misbehavior == 0 &&
-        !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
+        !node.GetContext().IsBlockOnlyConn() && !node.GetContext().IsInboundConn()) {
         // Only change visible addrman state for full outbound peers.  We don't
         // call Connected() for feeler connections since they don't have
         // fSuccessfullyConnected set.
-        m_addrman.Connected(node.addr);
+        m_addrman.Connected(node.GetContext().addr);
     }
     {
         LOCK(m_headers_presync_mutex);
@@ -2264,14 +2264,14 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     // disconnect node in case we have reached the outbound limit for serving historical blocks
     if (m_connman.OutboundTargetReached(true) &&
         (((m_chainman.m_best_header != nullptr) && (m_chainman.m_best_header->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.IsMsgFilteredBlk()) &&
-        !pfrom.HasPermission(NetPermissionFlags::Download) // nodes with the download permission may exceed target
+        !pfrom.GetContext().HasPermission(NetPermissionFlags::Download) // nodes with the download permission may exceed target
     ) {
         LogPrint(BCLog::NET, "historical block serving limit reached, disconnect peer=%d\n", pfrom.GetId());
         pfrom.fDisconnect = true;
         return;
     }
     // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
-    if (!pfrom.HasPermission(NetPermissionFlags::NoBan) && (
+    if (!pfrom.GetContext().HasPermission(NetPermissionFlags::NoBan) && (
             (((peer.m_our_services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((peer.m_our_services & NODE_NETWORK) != NODE_NETWORK) && (m_chainman.ActiveChain().Tip()->nHeight - pindex->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
        )) {
         LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold, disconnect peer=%d\n", pfrom.GetId());
@@ -2859,7 +2859,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
             // until we have a headers chain that has at least
             // the minimum chain work, even if a peer has a chain past our tip,
             // as an anti-DoS measure.
-            if (pfrom.IsOutboundOrBlockRelayConn()) {
+            if (pfrom.GetContext().IsOutboundOrBlockRelayConn()) {
                 LogPrintf("Disconnecting outbound peer %d -- headers chain has insufficient work\n", pfrom.GetId());
                 pfrom.fDisconnect = true;
             }
@@ -2871,7 +2871,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
     // Note that outbound block-relay peers are excluded from this protection, and
     // thus always subject to eviction under the bad/lagging chain logic.
     // See ChainSyncTimeoutState.
-    if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
+    if (!pfrom.fDisconnect && pfrom.GetContext().IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
         if (m_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
             LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
             nodestate->m_chain_sync.m_protect = true;
@@ -2978,7 +2978,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     // If our peer has NetPermissionFlags::NoBan privileges, then bypass our
     // anti-DoS logic (this saves bandwidth when we connect to a trusted peer
     // on startup).
-    if (pfrom.HasPermission(NetPermissionFlags::NoBan)) {
+    if (pfrom.GetContext().HasPermission(NetPermissionFlags::NoBan)) {
         already_validated_work = true;
     }
 
@@ -3401,11 +3401,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         vRecv.ignore(8); // Ignore the addrMe service bits sent by the peer
         vRecv >> addrMe;
-        if (!pfrom.IsInboundConn())
+        if (!pfrom.GetContext().IsInboundConn())
         {
-            m_addrman.SetServices(pfrom.addr, nServices);
+            m_addrman.SetServices(pfrom.GetContext().addr, nServices);
         }
-        if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
+        if (pfrom.GetContext().ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
         {
             LogPrint(BCLog::NET, "peer=%d does not offer the expected services (%08x offered, %08x expected); disconnecting\n", pfrom.GetId(), nServices, GetDesirableServiceFlags(nServices));
             pfrom.fDisconnect = true;
@@ -3438,21 +3438,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!vRecv.empty())
             vRecv >> fRelay;
         // Disconnect if we connected to ourself
-        if (pfrom.IsInboundConn() && !CheckIncomingNonce(nNonce))
+        if (pfrom.GetContext().IsInboundConn() && !CheckIncomingNonce(nNonce))
         {
-            LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
+            LogPrintf("connected to self at %s, disconnecting\n", pfrom.GetContext().addr.ToStringAddrPort());
             pfrom.fDisconnect = true;
             return;
         }
 
-        if (pfrom.IsInboundConn() && addrMe.IsRoutable())
+        if (pfrom.GetContext().IsInboundConn() && addrMe.IsRoutable())
         {
             SeenLocal(addrMe);
         }
 
         // Inbound peers send us their version message when they connect.
         // We send our version message in response.
-        if (pfrom.IsInboundConn()) {
+        if (pfrom.GetContext().IsInboundConn()) {
             PushNodeVersion(pfrom, *peer);
         }
 
@@ -3488,8 +3488,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // - fRelay=true (the peer wishes to receive transaction announcements)
         //   or we're offering NODE_BLOOM to this peer. NODE_BLOOM means that
         //   the peer may turn on transaction relay later.
-        if (!pfrom.IsBlockOnlyConn() &&
-            !pfrom.IsFeelerConn() &&
+        if (!pfrom.GetContext().IsBlockOnlyConn() &&
+            !pfrom.GetContext().IsFeelerConn() &&
             (fRelay || (peer->m_our_services & NODE_BLOOM))) {
             auto* const tx_relay = peer->SetTxRelay();
             {
@@ -3510,7 +3510,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // - we are not in -blocksonly mode.
             const auto* tx_relay = peer->GetTxRelay();
             if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
-                !pfrom.IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
+                !pfrom.GetContext().IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
                 const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
                 m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDTXRCNCL,
                                                              TXRECONCILIATION_VERSION, recon_salt));
@@ -3523,7 +3523,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         {
             LOCK(cs_main);
             CNodeState* state = State(pfrom.GetId());
-            state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(*peer);
+            state->fPreferredDownload = (!pfrom.GetContext().IsInboundConn() || pfrom.GetContext().HasPermission(NetPermissionFlags::NoBan)) && !pfrom.GetContext().IsAddrFetchConn() && CanServeBlocks(*peer);
             m_num_preferred_download_peers += state->fPreferredDownload;
         }
 
@@ -3531,7 +3531,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // to decide whether to send GETADDR, so that we don't send it to
         // inbound or outbound block-relay-only peers.
         bool send_getaddr{false};
-        if (!pfrom.IsInboundConn()) {
+        if (!pfrom.GetContext().IsInboundConn()) {
             send_getaddr = SetupAddressRelay(pfrom, *peer);
         }
         if (send_getaddr) {
@@ -3548,7 +3548,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             peer->m_addr_token_bucket += MAX_ADDR_TO_SEND;
         }
 
-        if (!pfrom.IsInboundConn()) {
+        if (!pfrom.GetContext().IsInboundConn()) {
             // For non-inbound connections, we update the addrman to record
             // connection success so that addrman will have an up-to-date
             // notion of which peers are online and available.
@@ -3563,14 +3563,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             //
             // This moves an address from New to Tried table in Addrman,
             // resolves tried-table collisions, etc.
-            m_addrman.Good(pfrom.addr);
+            m_addrman.Good(pfrom.GetContext().addr);
         }
 
         std::string remoteAddr;
         if (fLogIPs)
-            remoteAddr = ", peeraddr=" + pfrom.addr.ToStringAddrPort();
+            remoteAddr = ", peeraddr=" + pfrom.GetContext().addr.ToStringAddrPort();
 
-        const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
+        const auto mapped_as{m_connman.GetMappedAS(pfrom.GetContext().addr)};
         LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
                   cleanSubVer, peer->m_version,
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
@@ -3578,10 +3578,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         int64_t nTimeOffset = nTime - GetTime();
         peer->m_time_offset = nTimeOffset;
-        if (!pfrom.IsInboundConn()) {
+        if (!pfrom.GetContext().IsInboundConn()) {
             // Don't use timedata samples from inbound peers to make it
             // harder for others to tamper with our adjusted time.
-            AddTimeData(pfrom.addr, nTimeOffset);
+            AddTimeData(pfrom.GetContext().addr, nTimeOffset);
         }
 
         // If the peer is old enough to have the old alert system, send it the final alert.
@@ -3591,7 +3591,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // Feeler connections exist only to verify if address is online.
-        if (pfrom.IsFeelerConn()) {
+        if (pfrom.GetContext().IsFeelerConn()) {
             LogPrint(BCLog::NET, "feeler connection completed peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
         }
@@ -3613,13 +3613,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (!pfrom.IsInboundConn()) {
-            const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
+        if (!pfrom.GetContext().IsInboundConn()) {
+            const auto mapped_as{m_connman.GetMappedAS(pfrom.GetContext().addr)};
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s%s (%s)\n",
                       peer->m_version.load(), peer->m_starting_height,
-                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : ""),
+                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.GetContext().addr.ToStringAddrPort()) : ""),
                       (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""),
-                      pfrom.ConnectionTypeAsString());
+                      pfrom.GetContext().ConnectionTypeAsString());
         }
 
         if (peer->m_greatest_common_version >= SHORT_IDS_BLOCKS_VERSION) {
@@ -3757,7 +3757,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         uint64_t remote_salt;
         vRecv >> peer_txreconcl_version >> remote_salt;
 
-        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
+        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.GetContext().IsInboundConn(),
                                                                                      peer_txreconcl_version, remote_salt);
         switch (result) {
         case ReconciliationRegisterResult::NOT_FOUND:
@@ -3796,7 +3796,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         s >> vAddr;
 
         if (!SetupAddressRelay(pfrom, *peer)) {
-            LogPrint(BCLog::NET, "ignoring %s message from %s peer=%d\n", msg_type, pfrom.ConnectionTypeAsString(), pfrom.GetId());
+            LogPrint(BCLog::NET, "ignoring %s message from %s peer=%d\n", msg_type, pfrom.GetContext().ConnectionTypeAsString(), pfrom.GetId());
             return;
         }
 
@@ -3820,7 +3820,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         peer->m_addr_token_timestamp = current_time;
 
-        const bool rate_limited = !pfrom.HasPermission(NetPermissionFlags::Addr);
+        const bool rate_limited = !pfrom.GetContext().HasPermission(NetPermissionFlags::Addr);
         uint64_t num_proc = 0;
         uint64_t num_rate_limit = 0;
         Shuffle(vAddr.begin(), vAddr.end(), FastRandomContext());
@@ -3867,11 +3867,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d\n",
                  vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
 
-        m_addrman.Add(vAddrOk, pfrom.addr, 2h);
+        m_addrman.Add(vAddrOk, pfrom.GetContext().addr, 2h);
         if (vAddr.size() < 1000) peer->m_getaddr_sent = false;
 
         // AddrFetch: Require multiple addresses to avoid disconnecting on self-announcements
-        if (pfrom.IsAddrFetchConn() && vAddr.size() > 1) {
+        if (pfrom.GetContext().IsAddrFetchConn() && vAddr.size() > 1) {
             LogPrint(BCLog::NET, "addrfetch connection completed peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
         }
@@ -4135,7 +4135,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // getting partitioned off the honest network for serving that chain to
         // others.
         if (m_chainman.ActiveTip() == nullptr ||
-                (m_chainman.ActiveTip()->nChainWork < m_chainman.MinimumChainWork() && !pfrom.HasPermission(NetPermissionFlags::Download))) {
+                (m_chainman.ActiveTip()->nChainWork < m_chainman.MinimumChainWork() && !pfrom.GetContext().HasPermission(NetPermissionFlags::Download))) {
             LogPrint(BCLog::NET, "Ignoring getheaders from peer=%d because active chain has too little work; sending empty response\n", pfrom.GetId());
             // Just respond with an empty headers message, to tell the peer to
             // go away but not treat us as unresponsive.
@@ -4241,7 +4241,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
         if (AlreadyHaveTx(GenTxid::Wtxid(wtxid))) {
-            if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
+            if (pfrom.GetContext().HasPermission(NetPermissionFlags::ForceRelay)) {
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
@@ -4552,7 +4552,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     req.blockhash = pindex->GetBlockHash();
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETBLOCKTXN, req));
                 } else if (peer->m_bip152_highbandwidth_to &&
-                    (!pfrom.IsInboundConn() ||
+                    (!pfrom.GetContext().IsInboundConn() ||
                     IsBlockRequestedFromOutbound(blockhash) ||
                     already_in_flight < MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK - 1)) {
                     // ... or it's a hb relay peer and:
@@ -4744,8 +4744,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // to users' AddrMan and later request them by sending getaddr messages.
         // Making nodes which are behind NAT and can only make outgoing connections ignore
         // the getaddr message mitigates the attack.
-        if (!pfrom.IsInboundConn()) {
-            LogPrint(BCLog::NET, "Ignoring \"getaddr\" from %s connection. peer=%d\n", pfrom.ConnectionTypeAsString(), pfrom.GetId());
+        if (!pfrom.GetContext().IsInboundConn()) {
+            LogPrint(BCLog::NET, "Ignoring \"getaddr\" from %s connection. peer=%d\n", pfrom.GetContext().ConnectionTypeAsString(), pfrom.GetId());
             return;
         }
 
@@ -4763,10 +4763,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         peer->m_addrs_to_send.clear();
         std::vector<CAddress> vAddr;
-        if (pfrom.HasPermission(NetPermissionFlags::Addr)) {
+        if (pfrom.GetContext().HasPermission(NetPermissionFlags::Addr)) {
             vAddr = m_connman.GetAddresses(MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND, /*network=*/std::nullopt);
         } else {
-            vAddr = m_connman.GetAddresses(pfrom, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
+            vAddr = m_connman.GetAddresses(pfrom.GetContext(), MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
         }
         FastRandomContext insecure_rand;
         for (const CAddress &addr : vAddr) {
@@ -4778,9 +4778,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::MEMPOOL) {
         // Only process received mempool messages if we advertise NODE_BLOOM
         // or if the peer has mempool permissions.
-        if (!(peer->m_our_services & NODE_BLOOM) && !pfrom.HasPermission(NetPermissionFlags::Mempool))
+        if (!(peer->m_our_services & NODE_BLOOM) && !pfrom.GetContext().HasPermission(NetPermissionFlags::Mempool))
         {
-            if (!pfrom.HasPermission(NetPermissionFlags::NoBan))
+            if (!pfrom.GetContext().HasPermission(NetPermissionFlags::NoBan))
             {
                 LogPrint(BCLog::NET, "mempool request with bloom filters disabled, disconnect peer=%d\n", pfrom.GetId());
                 pfrom.fDisconnect = true;
@@ -4788,9 +4788,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (m_connman.OutboundTargetReached(false) && !pfrom.HasPermission(NetPermissionFlags::Mempool))
+        if (m_connman.OutboundTargetReached(false) && !pfrom.GetContext().HasPermission(NetPermissionFlags::Mempool))
         {
-            if (!pfrom.HasPermission(NetPermissionFlags::NoBan))
+            if (!pfrom.GetContext().HasPermission(NetPermissionFlags::NoBan))
             {
                 LogPrint(BCLog::NET, "mempool request with bandwidth limit reached, disconnect peer=%d\n", pfrom.GetId());
                 pfrom.fDisconnect = true;
@@ -5013,31 +5013,31 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
         peer.m_should_discourage = false;
     } // peer.m_misbehavior_mutex
 
-    if (pnode.HasPermission(NetPermissionFlags::NoBan)) {
+    if (pnode.GetContext().HasPermission(NetPermissionFlags::NoBan)) {
         // We never disconnect or discourage peers for bad behavior if they have NetPermissionFlags::NoBan permission
         LogPrintf("Warning: not punishing noban peer %d!\n", peer.m_id);
         return false;
     }
 
-    if (pnode.IsManualConn()) {
+    if (pnode.GetContext().IsManualConn()) {
         // We never disconnect or discourage manual peers for bad behavior
         LogPrintf("Warning: not punishing manually connected peer %d!\n", peer.m_id);
         return false;
     }
 
-    if (pnode.addr.IsLocal()) {
+    if (pnode.GetContext().addr.IsLocal()) {
         // We disconnect local peers for bad behavior but don't discourage (since that would discourage
         // all peers on the same local address)
         LogPrint(BCLog::NET, "Warning: disconnecting but not discouraging %s peer %d!\n",
-                 pnode.m_inbound_onion ? "inbound onion" : "local", peer.m_id);
+                 pnode.GetContext().is_inbound_onion ? "inbound onion" : "local", peer.m_id);
         pnode.fDisconnect = true;
         return true;
     }
 
     // Normal case: Disconnect the peer and discourage all nodes sharing the address
     LogPrint(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer.m_id);
-    if (m_banman) m_banman->Discourage(pnode.addr);
-    m_connman.DisconnectNode(pnode.addr);
+    if (m_banman) m_banman->Discourage(pnode.GetContext().addr);
+    m_connman.DisconnectNode(pnode.GetContext().addr);
     return true;
 }
 
@@ -5091,7 +5091,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     );
 
     if (m_opts.capture_messages) {
-        CaptureMessage(pfrom->addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
+        CaptureMessage(pfrom->GetContext().addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
     }
 
     msg.SetVersion(peer->m_greatest_common_version);
@@ -5124,7 +5124,7 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
 
     CNodeState &state = *State(pto.GetId());
 
-    if (!state.m_chain_sync.m_protect && pto.IsOutboundOrBlockRelayConn() && state.fSyncStarted) {
+    if (!state.m_chain_sync.m_protect && pto.GetContext().IsOutboundOrBlockRelayConn() && state.fSyncStarted) {
         // This is an outbound peer subject to disconnection if they don't
         // announce a block with as much work as the current tip within
         // CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME seconds (note: if
@@ -5354,10 +5354,10 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     if (m_opts.ignore_incoming_txs) return;
     if (peer.m_greatest_common_version < FEEFILTER_VERSION) return;
     // peers with the forcerelay permission should not filter txs to us
-    if (pto.HasPermission(NetPermissionFlags::ForceRelay)) return;
+    if (pto.GetContext().HasPermission(NetPermissionFlags::ForceRelay)) return;
     // Don't send feefilter messages to outbound block-relay-only peers since they should never announce
     // transactions to us, regardless of feefilter state.
-    if (pto.IsBlockOnlyConn()) return;
+    if (pto.GetContext().IsBlockOnlyConn()) return;
 
     CAmount currentFilter = m_mempool.GetMinFee().GetFeePerK();
     static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
@@ -5416,10 +5416,10 @@ public:
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
-    if (peer.IsBlockOnlyConn()) return true;
-    if (peer.IsFeelerConn()) return true;
+    if (peer.GetContext().IsBlockOnlyConn()) return true;
+    if (peer.GetContext().IsFeelerConn()) return true;
     // In -blocksonly mode, peers need the 'relay' permission to send txs to us
-    if (m_opts.ignore_incoming_txs && !peer.HasPermission(NetPermissionFlags::Relay)) return true;
+    if (m_opts.ignore_incoming_txs && !peer.GetContext().HasPermission(NetPermissionFlags::Relay)) return true;
     return false;
 }
 
@@ -5428,7 +5428,7 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
     // We don't participate in addr relay with outbound block-relay-only
     // connections to prevent providing adversaries with the additional
     // information of addr traffic to infer the link.
-    if (node.IsBlockOnlyConn()) return false;
+    if (node.GetContext().IsBlockOnlyConn()) return false;
 
     if (!peer.m_addr_relay_enabled.exchange(true)) {
         // During version message processing (non-block-relay-only outbound peers)
@@ -5461,7 +5461,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     const auto current_time{GetTime<std::chrono::microseconds>()};
 
-    if (pto->IsAddrFetchConn() && current_time - pto->m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
+    if (pto->GetContext().IsAddrFetchConn() && current_time - pto->GetContext().connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
         LogPrint(BCLog::NET, "addrfetch connection timeout; disconnecting peer=%d\n", pto->GetId());
         pto->fDisconnect = true;
         return true;
@@ -5492,7 +5492,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         bool sync_blocks_and_headers_from_peer = false;
         if (state.fPreferredDownload) {
             sync_blocks_and_headers_from_peer = true;
-        } else if (CanServeBlocks(*peer) && !pto->IsAddrFetchConn()) {
+        } else if (CanServeBlocks(*peer) && !pto->GetContext().IsAddrFetchConn()) {
             // Typically this is an inbound peer. If we don't have any outbound
             // peers, or if we aren't downloading any blocks from such peers,
             // then allow block downloads from this peer, too.
@@ -5691,10 +5691,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
                 LOCK(tx_relay->m_tx_inventory_mutex);
                 // Check whether periodic sends should happen
-                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
+                bool fSendTrickle = pto->GetContext().HasPermission(NetPermissionFlags::NoBan);
                 if (tx_relay->m_next_inv_send_time < current_time) {
                     fSendTrickle = true;
-                    if (pto->IsInboundConn()) {
+                    if (pto->GetContext().IsInboundConn()) {
                         tx_relay->m_next_inv_send_time = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
                     } else {
                         tx_relay->m_next_inv_send_time = GetExponentialRand(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
@@ -5809,7 +5809,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
-            LogPrintf("Peer=%d%s is stalling block download, disconnecting\n", pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->addr.ToStringAddrPort()) : "");
+            LogPrintf("Peer=%d%s is stalling block download, disconnecting\n", pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->GetContext().addr.ToStringAddrPort()) : "");
             pto->fDisconnect = true;
             // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
             // bandwidth is insufficient.
@@ -5828,7 +5828,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
             if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
-                LogPrintf("Timeout downloading block %s from peer=%d%s, disconnecting\n", queuedBlock.pindex->GetBlockHash().ToString(), pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->addr.ToStringAddrPort()) : "");
+                LogPrintf("Timeout downloading block %s from peer=%d%s, disconnecting\n", queuedBlock.pindex->GetBlockHash().ToString(), pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->GetContext().addr.ToStringAddrPort()) : "");
                 pto->fDisconnect = true;
                 return true;
             }
@@ -5843,12 +5843,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // Note: If all our peers are inbound, then we won't
                     // disconnect our sync peer for stalling; we have bigger
                     // problems if we can't get any outbound peers.
-                    if (!pto->HasPermission(NetPermissionFlags::NoBan)) {
-                        LogPrintf("Timeout downloading headers from peer=%d%s, disconnecting\n", pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->addr.ToStringAddrPort()) : "");
+                    if (!pto->GetContext().HasPermission(NetPermissionFlags::NoBan)) {
+                        LogPrintf("Timeout downloading headers from peer=%d%s, disconnecting\n", pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->GetContext().addr.ToStringAddrPort()) : "");
                         pto->fDisconnect = true;
                         return true;
                     } else {
-                        LogPrintf("Timeout downloading headers from noban peer=%d%s, not disconnecting\n", pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->addr.ToStringAddrPort()) : "");
+                        LogPrintf("Timeout downloading headers from noban peer=%d%s, not disconnecting\n", pto->GetId(), fLogIPs ? strprintf(" peeraddr=%s", pto->GetContext().addr.ToStringAddrPort()) : "");
                         // Reset the headers sync state so that we have a
                         // chance to try downloading from a different peer.
                         // Note: this will also result in at least one more

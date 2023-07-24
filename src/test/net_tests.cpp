@@ -57,69 +57,81 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     CAddress addr = CAddress(CService(ipv4Addr, 7777), NODE_NETWORK);
     std::string pszDest;
 
-    std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
-                                                            addr,
-                                                            CAddress(),
-                                                            pszDest,
-                                                            ConnectionType::OUTBOUND_FULL_RELAY,
-                                                            /*inbound_onion=*/false);
-    BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
-    BOOST_CHECK(pnode1->IsManualConn() == false);
-    BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
-    BOOST_CHECK(pnode1->IsFeelerConn() == false);
-    BOOST_CHECK(pnode1->IsAddrFetchConn() == false);
-    BOOST_CHECK(pnode1->IsInboundConn() == false);
-    BOOST_CHECK(pnode1->m_inbound_onion == false);
-    BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
+    std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(
+        ConnectionContext{
+            .id = id++,
+            .addr = addr,
+            .addr_bind = CAddress(),
+            .addr_name = pszDest,
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr);
+    BOOST_CHECK(pnode1->GetContext().IsFullOutboundConn() == true);
+    BOOST_CHECK(pnode1->GetContext().IsManualConn() == false);
+    BOOST_CHECK(pnode1->GetContext().IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode1->GetContext().IsFeelerConn() == false);
+    BOOST_CHECK(pnode1->GetContext().IsAddrFetchConn() == false);
+    BOOST_CHECK(pnode1->GetContext().IsInboundConn() == false);
+    BOOST_CHECK(pnode1->GetContext().is_inbound_onion == false);
+    BOOST_CHECK_EQUAL(pnode1->GetContext().ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
-                                                            addr,
-                                                            CAddress(),
-                                                            pszDest,
-                                                            ConnectionType::INBOUND,
-                                                            /*inbound_onion=*/false);
-    BOOST_CHECK(pnode2->IsFullOutboundConn() == false);
-    BOOST_CHECK(pnode2->IsManualConn() == false);
-    BOOST_CHECK(pnode2->IsBlockOnlyConn() == false);
-    BOOST_CHECK(pnode2->IsFeelerConn() == false);
-    BOOST_CHECK(pnode2->IsAddrFetchConn() == false);
-    BOOST_CHECK(pnode2->IsInboundConn() == true);
-    BOOST_CHECK(pnode2->m_inbound_onion == false);
-    BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
+    std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(
+        ConnectionContext{
+            .id = id++,
+            .addr = addr,
+            .addr_bind = CAddress(),
+            .addr_name = pszDest,
+            .conn_type = ConnectionType::INBOUND,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr);
+    BOOST_CHECK(pnode2->GetContext().IsFullOutboundConn() == false);
+    BOOST_CHECK(pnode2->GetContext().IsManualConn() == false);
+    BOOST_CHECK(pnode2->GetContext().IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode2->GetContext().IsFeelerConn() == false);
+    BOOST_CHECK(pnode2->GetContext().IsAddrFetchConn() == false);
+    BOOST_CHECK(pnode2->GetContext().IsInboundConn() == true);
+    BOOST_CHECK(pnode2->GetContext().is_inbound_onion == false);
+    BOOST_CHECK_EQUAL(pnode2->GetContext().ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
-                                                            addr,
-                                                            CAddress(),
-                                                            pszDest,
-                                                            ConnectionType::OUTBOUND_FULL_RELAY,
-                                                            /*inbound_onion=*/false);
-    BOOST_CHECK(pnode3->IsFullOutboundConn() == true);
-    BOOST_CHECK(pnode3->IsManualConn() == false);
-    BOOST_CHECK(pnode3->IsBlockOnlyConn() == false);
-    BOOST_CHECK(pnode3->IsFeelerConn() == false);
-    BOOST_CHECK(pnode3->IsAddrFetchConn() == false);
-    BOOST_CHECK(pnode3->IsInboundConn() == false);
-    BOOST_CHECK(pnode3->m_inbound_onion == false);
-    BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
+    std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(
+        ConnectionContext{
+            .id = id++,
+            .addr = addr,
+            .addr_bind = CAddress(),
+            .addr_name = pszDest,
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr);
+    BOOST_CHECK(pnode3->GetContext().IsFullOutboundConn() == true);
+    BOOST_CHECK(pnode3->GetContext().IsManualConn() == false);
+    BOOST_CHECK(pnode3->GetContext().IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode3->GetContext().IsFeelerConn() == false);
+    BOOST_CHECK(pnode3->GetContext().IsAddrFetchConn() == false);
+    BOOST_CHECK(pnode3->GetContext().IsInboundConn() == false);
+    BOOST_CHECK(pnode3->GetContext().is_inbound_onion == false);
+    BOOST_CHECK_EQUAL(pnode3->GetContext().ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
-                                                            addr,
-                                                            CAddress(),
-                                                            pszDest,
-                                                            ConnectionType::INBOUND,
-                                                            /*inbound_onion=*/true);
-    BOOST_CHECK(pnode4->IsFullOutboundConn() == false);
-    BOOST_CHECK(pnode4->IsManualConn() == false);
-    BOOST_CHECK(pnode4->IsBlockOnlyConn() == false);
-    BOOST_CHECK(pnode4->IsFeelerConn() == false);
-    BOOST_CHECK(pnode4->IsAddrFetchConn() == false);
-    BOOST_CHECK(pnode4->IsInboundConn() == true);
-    BOOST_CHECK(pnode4->m_inbound_onion == true);
-    BOOST_CHECK_EQUAL(pnode4->ConnectedThroughNetwork(), Network::NET_ONION);
+    std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(
+        ConnectionContext{
+            .id = id++,
+            .addr = addr,
+            .addr_bind = CAddress(),
+            .addr_name = pszDest,
+            .conn_type = ConnectionType::INBOUND,
+            .is_inbound_onion = true,
+        },
+        /*sock=*/nullptr);
+    BOOST_CHECK(pnode4->GetContext().IsFullOutboundConn() == false);
+    BOOST_CHECK(pnode4->GetContext().IsManualConn() == false);
+    BOOST_CHECK(pnode4->GetContext().IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode4->GetContext().IsFeelerConn() == false);
+    BOOST_CHECK(pnode4->GetContext().IsAddrFetchConn() == false);
+    BOOST_CHECK(pnode4->GetContext().IsInboundConn() == true);
+    BOOST_CHECK(pnode4->GetContext().is_inbound_onion == true);
+    BOOST_CHECK_EQUAL(pnode4->GetContext().ConnectedThroughNetwork(), Network::NET_ONION);
 }
 
 BOOST_AUTO_TEST_CASE(cnetaddr_basic)
@@ -615,13 +627,16 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     in_addr ipv4AddrPeer;
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(/*id=*/0,
-                                                           /*sock=*/nullptr,
-                                                           addr,
-                                                           CAddress{},
-                                                           /*pszDest=*/std::string{},
-                                                           ConnectionType::OUTBOUND_FULL_RELAY,
-                                                           /*inbound_onion=*/false);
+    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(
+        ConnectionContext{
+            .id = 0,
+            .addr = addr,
+            .addr_bind = CAddress{},
+            .addr_name = "",
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr);
     pnode->fSuccessfullyConnected.store(true);
 
     // the peer claims to be reaching us via IPv6
@@ -666,13 +681,16 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     // Create a peer with a routable IPv4 address (outbound).
     in_addr peer_out_in_addr;
     peer_out_in_addr.s_addr = htonl(0x01020304);
-    CNode peer_out{/*id=*/0,
-                   /*sock=*/nullptr,
-                   /*addrIn=*/CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
-                   /*addrBindIn=*/CAddress{},
-                   /*addrNameIn=*/std::string{},
-                   /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
-                   /*inbound_onion=*/false};
+    CNode peer_out{
+        ConnectionContext{
+            .id = 0,
+            .addr = CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
+            .addr_bind = CAddress{},
+            .addr_name = "",
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
     peer_out.fSuccessfullyConnected = true;
 
     // Without the fix peer_us:8333 is chosen instead of the proper peer_us:bind_port.
@@ -684,13 +702,16 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     // Create a peer with a routable IPv4 address (inbound).
     in_addr peer_in_in_addr;
     peer_in_in_addr.s_addr = htonl(0x05060708);
-    CNode peer_in{/*id=*/0,
-                  /*sock=*/nullptr,
-                  /*addrIn=*/CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
-                  /*addrBindIn=*/CAddress{},
-                  /*addrNameIn=*/std::string{},
-                  /*conn_type_in=*/ConnectionType::INBOUND,
-                  /*inbound_onion=*/false};
+    CNode peer_in{
+        ConnectionContext{
+            .id = 1,
+            .addr = CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
+            .addr_bind = CAddress{},
+            .addr_name = "",
+            .conn_type = ConnectionType::INBOUND,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
     peer_in.fSuccessfullyConnected = true;
 
     // Without the fix peer_us:8333 is chosen instead of the proper peer_us:peer_us.GetPort().
@@ -810,13 +831,16 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     // Create a peer with a routable IPv4 address.
     in_addr peer_in_addr;
     peer_in_addr.s_addr = htonl(0x01020304);
-    CNode peer{/*id=*/0,
-               /*sock=*/nullptr,
-               /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
-               /*addrBindIn=*/CAddress{},
-               /*addrNameIn=*/std::string{},
-               /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
-               /*inbound_onion=*/false};
+    CNode peer{
+        ConnectionContext{
+            .id = 0,
+            .addr = CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
+            .addr_bind = CAddress{},
+            .addr_name = "",
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
 
     const uint64_t services{NODE_NETWORK | NODE_WITNESS};
     const int64_t time{0};
@@ -889,13 +913,16 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 BOOST_AUTO_TEST_CASE(advertise_local_address)
 {
     auto CreatePeer = [](const CAddress& addr) {
-        return std::make_unique<CNode>(/*id=*/0,
-                                       /*sock=*/nullptr,
-                                       addr,
-                                       CAddress{},
-                                       /*pszDest=*/std::string{},
-                                       ConnectionType::OUTBOUND_FULL_RELAY,
-                                       /*inbound_onion=*/false);
+        return std::make_unique<CNode>(
+            ConnectionContext{
+                .id = 0,
+                .addr = addr,
+                .addr_bind = CAddress{},
+                .addr_name = "",
+                .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+                .is_inbound_onion = false,
+            },
+            /*sock=*/nullptr);
     };
     SetReachable(NET_CJDNS, true);
 

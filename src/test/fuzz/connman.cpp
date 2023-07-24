@@ -83,7 +83,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             },
             [&] {
                 (void)connman.GetAddresses(
-                    /*requestor=*/random_node,
+                    /*requestor=*/random_node.GetContext(),
                     /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
                     /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>());
             },

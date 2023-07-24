@@ -9,6 +9,7 @@
 #include <common/args.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/connection_context.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -26,6 +27,8 @@
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
+
+using node::ConnectionContext;
 
 static CService ip(uint32_t i)
 {
@@ -65,13 +68,17 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
-    CNode dummyNode1{id++,
-                     /*sock=*/nullptr,
-                     addr1,
-                     CAddress(),
-                     /*addrNameIn=*/"",
-                     ConnectionType::OUTBOUND_FULL_RELAY,
-                     /*inbound_onion=*/false};
+    CNode dummyNode1{
+        ConnectionContext{
+            .id = id++,
+            .connected = Now<NodeSeconds>().time_since_epoch(),
+            .addr = addr1,
+            .addr_bind = CAddress(),
+            .addr_name = "",
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
 
     connman->Handshake(
         /*node=*/dummyNode1,
@@ -144,13 +151,17 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
     banman->ClearBanned();
     NodeId id{0};
-    nodes[0] = new CNode{id++,
-                         /*sock=*/nullptr,
-                         addr[0],
-                         CAddress(),
-                         /*addrNameIn=*/"",
-                         ConnectionType::INBOUND,
-                         /*inbound_onion=*/false};
+    nodes[0] = new CNode{
+        ConnectionContext{
+            .id = id++,
+            .connected = Now<NodeSeconds>().time_since_epoch(),
+            .addr = addr[0],
+            .addr_bind = CAddress(),
+            .addr_name = "",
+            .conn_type = ConnectionType::INBOUND,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
     connman->AddTestNode(*nodes[0]);
     connman->Handshake(*nodes[0], true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
     peerLogic->UnitTestMisbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD); // Should be discouraged
@@ -160,13 +171,17 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
-    nodes[1] = new CNode{id++,
-                         /*sock=*/nullptr,
-                         addr[1],
-                         CAddress(),
-                         /*addrNameIn=*/"",
-                         ConnectionType::INBOUND,
-                         /*inbound_onion=*/false};
+    nodes[1] = new CNode{
+        ConnectionContext{
+            .id = id++,
+            .connected = Now<NodeSeconds>().time_since_epoch(),
+            .addr = addr[1],
+            .addr_bind = CAddress(),
+            .addr_name = "",
+            .conn_type = ConnectionType::INBOUND,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
     connman->AddTestNode(*nodes[1]);
     connman->Handshake(*nodes[1], true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
     peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1);
@@ -187,13 +202,17 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
     // Make sure non-IP peers are discouraged and disconnected properly.
 
-    nodes[2] = new CNode{id++,
-                         /*sock=*/nullptr,
-                         addr[2],
-                         CAddress(),
-                         /*addrNameIn=*/"",
-                         ConnectionType::OUTBOUND_FULL_RELAY,
-                         /*inbound_onion=*/false};
+    nodes[2] = new CNode{
+        ConnectionContext{
+            .id = id++,
+            .connected = Now<NodeSeconds>().time_since_epoch(),
+            .addr = addr[2],
+            .addr_bind = CAddress(),
+            .addr_name = "",
+            .conn_type = ConnectionType::OUTBOUND_FULL_RELAY,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
     connman->AddTestNode(*nodes[2]);
     connman->Handshake(*nodes[2], true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
     peerLogic->UnitTestMisbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD);
@@ -232,13 +251,17 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
-    CNode* dummyNode = new CNode{id++,
-                                 /*sock=*/nullptr,
-                                 addr,
-                                 CAddress(),
-                                 /*addrNameIn=*/"",
-                                 ConnectionType::INBOUND,
-                                 /*inbound_onion=*/false};
+    CNode* dummyNode = new CNode{
+        ConnectionContext{
+            .id = id++,
+            .connected = Now<NodeSeconds>().time_since_epoch(),
+            .addr = addr,
+            .addr_bind = CAddress(),
+            .addr_name = "",
+            .conn_type = ConnectionType::INBOUND,
+            .is_inbound_onion = false,
+        },
+        /*sock=*/nullptr};
     connman->AddTestNode(*dummyNode);
     connman->Handshake(*dummyNode, true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
 
