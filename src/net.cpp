@@ -13,9 +13,12 @@
 
 #include <banman.h>
 #include <clientversion.h>
+#include <compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
+#include <i2p.h>
 #include <net_permissions.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
 #include <scheduler.h>
@@ -84,16 +87,6 @@ static constexpr std::chrono::seconds MAX_UPLOAD_TIMEFRAME{60 * 60 * 24};
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
-
-// MSG_NOSIGNAL is not available on some platforms, if it doesn't exist define it as 0
-#if !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
-#endif
-
-// MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
-#if !defined(MSG_DONTWAIT)
-#define MSG_DONTWAIT 0
-#endif
 
 /** Used to pass flags to the Bind() function */
 enum BindFlags {
@@ -437,7 +430,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     }
 
     // Resolve
-    const uint16_t default_port{Params().GetDefaultPort()};
+    const uint16_t default_port{pszDest != nullptr ? Params().GetDefaultPort(pszDest) :
+                                                     Params().GetDefaultPort()};
     if (pszDest) {
         std::vector<CService> resolved;
         if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
@@ -465,10 +459,20 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     bool connected = false;
     std::unique_ptr<Sock> sock;
     proxyType proxy;
+    CAddress addr_bind;
+    assert(!addr_bind.IsValid());
+
     if (addrConnect.IsValid()) {
         bool proxyConnectionFailed = false;
 
-        if (GetProxy(addrConnect.GetNetwork(), proxy)) {
+        if (addrConnect.GetNetwork() == NET_I2P && m_i2p_sam_session.get() != nullptr) {
+            i2p::Connection conn;
+            if (m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed)) {
+                connected = true;
+                sock = std::move(conn.sock);
+                addr_bind = CAddress{conn.me, NODE_NONE};
+            }
+        } else if (GetProxy(addrConnect.GetNetwork(), proxy)) {
             sock = CreateSock(proxy.proxy);
             if (!sock) {
                 return nullptr;
@@ -481,7 +485,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             if (!sock) {
                 return nullptr;
             }
-            connected = ConnectSocketDirectly(addrConnect, sock->Get(), nConnectTimeout, manual_connection);
+            connected = ConnectSocketDirectly(addrConnect, *sock, nConnectTimeout, manual_connection);
         }
         if (!proxyConnectionFailed) {
             // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
@@ -507,7 +511,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-    CAddress addr_bind = GetBindAddress(sock->Get());
+    if (!addr_bind.IsValid()) {
+        addr_bind = GetBindAddress(sock->Get());
+    }
     CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false, block_relay_only);
     pnode->AddRef();
     statsClient.inc("peers.connect", 1.0f);
@@ -1102,18 +1108,35 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
+    if (hSocket == INVALID_SOCKET) {
+        const int nErr = WSAGetLastError();
+        if (nErr != WSAEWOULDBLOCK) {
+            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+        }
+        return;
+    }
+
+    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
+        LogPrintf("Warning: Unknown socket family\n");
+    }
+
+    const CAddress addr_bind = GetBindAddress(hSocket);
+
+    NetPermissionFlags permissionFlags = NetPermissionFlags::PF_NONE;
+    hListenSocket.AddSocketPermissionFlags(permissionFlags);
+
+    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr);
+}
+
+void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
+                                            NetPermissionFlags permissionFlags,
+                                            const CAddress& addr_bind,
+                                            const CAddress& addr)
+{
     int nInbound = 0;
     int nVerifiedInboundMasternodes = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    if (hSocket != INVALID_SOCKET) {
-        if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
-            LogPrintf("Warning: Unknown socket family\n");
-        }
-    }
-
-    NetPermissionFlags permissionFlags = NetPermissionFlags::PF_NONE;
-    hListenSocket.AddSocketPermissionFlags(permissionFlags);
     AddWhitelistPermissionFlags(permissionFlags, addr);
     bool legacyWhitelisted = false;
     if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_ISIMPLICIT)) {
@@ -1136,14 +1159,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
             }
         }
 
-    }
-
-    if (hSocket == INVALID_SOCKET)
-    {
-        int nErr = WSAGetLastError();
-        if (nErr != WSAEWOULDBLOCK)
-            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
-        return;
     }
 
     std::string strDropped;
@@ -1213,7 +1228,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-    CAddress addr_bind = GetBindAddress(hSocket);
 
     ServiceFlags nodeServices = nLocalServices;
     if (NetPermissions::HasFlag(permissionFlags, PF_BLOOMFILTER)) {
@@ -1764,7 +1778,7 @@ void CConnman::SocketHandler()
     //
     for (const ListenSocket& hListenSocket : vhListenSocket)
     {
-        if (hListenSocket.socket != INVALID_SOCKET && recv_set.count(hListenSocket.socket) > 0)
+        if (recv_set.count(hListenSocket.socket) > 0)
         {
             AcceptConnection(hListenSocket);
         }
@@ -2385,8 +2399,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort() && addr.GetPort() != GetListenPort() && nTries < 50)
+            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && addr.GetPort() != GetListenPort() && nTries < 50) {
                 continue;
+            }
 
             addrConnect = addr;
             break;
@@ -2447,7 +2462,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     }
 
     for (const std::string& strAddNode : lAddresses) {
-        CService service(LookupNumeric(strAddNode, Params().GetDefaultPort()));
+        CService service(LookupNumeric(strAddNode, Params().GetDefaultPort(strAddNode)));
         AddedNodeInfo addedNode{strAddNode, CService(), false, false};
         if (service.IsValid()) {
             // strAddNode is an IP:port
@@ -2807,10 +2822,44 @@ void CConnman::ThreadMessageHandler()
     }
 }
 
+void CConnman::ThreadI2PAcceptIncoming()
+{
+    static constexpr auto err_wait_begin = 1s;
+    static constexpr auto err_wait_cap = 5min;
+    auto err_wait = err_wait_begin;
 
+    bool advertising_listen_addr = false;
+    i2p::Connection conn;
 
+    while (!interruptNet) {
 
+        if (!m_i2p_sam_session->Listen(conn)) {
+            if (advertising_listen_addr && conn.me.IsValid()) {
+                RemoveLocal(conn.me);
+                advertising_listen_addr = false;
+            }
 
+            interruptNet.sleep_for(err_wait);
+            if (err_wait < err_wait_cap) {
+                err_wait *= 2;
+            }
+
+            continue;
+        }
+
+        if (!advertising_listen_addr) {
+            AddLocal(conn.me, LOCAL_BIND);
+            advertising_listen_addr = true;
+        }
+
+        if (!m_i2p_sam_session->Accept(conn)) {
+            continue;
+        }
+
+        CreateNodeFromAcceptedSocket(conn.sock->Release(), NetPermissionFlags::PF_NONE,
+                                     CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE});
+    }
+}
 
 bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError, NetPermissionFlags permissions)
 {
@@ -3071,6 +3120,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
+    proxyType i2p_sam;
+    if (GetProxy(NET_I2P, i2p_sam)) {
+        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(GetDataDir() / "i2p_private_key",
+                                                                i2p_sam.proxy, &interruptNet);
+    }
+
     for (const auto& strDest : connOptions.vSeedNodes) {
         AddOneShot(strDest);
     }
@@ -3186,6 +3241,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Process messages
     threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
 
+    if (connOptions.m_i2p_accept_incoming && m_i2p_sam_session.get() != nullptr) {
+        threadI2PAcceptIncoming =
+            std::thread(&TraceThread<std::function<void()>>, "i2paccept",
+                        std::function<void()>(std::bind(&CConnman::ThreadI2PAcceptIncoming, this)));
+    }
+
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpAddresses(); }, DUMP_PEERS_INTERVAL);
 
@@ -3241,6 +3302,9 @@ void CConnman::Interrupt()
 
 void CConnman::StopThreads()
 {
+    if (threadI2PAcceptIncoming.joinable()) {
+        threadI2PAcceptIncoming.join();
+    }
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
     if (threadOpenMasternodeConnections.joinable())
@@ -3351,9 +3415,9 @@ CConnman::~CConnman()
     Stop();
 }
 
-std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pct)
+std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network)
 {
-    std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct);
+    std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct, network);
     if (m_banman) {
         addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
                         [this](const CAddress& addr){return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr);}),
@@ -3364,9 +3428,7 @@ std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pc
 
 std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)
 {
-    SOCKET socket;
-    WITH_LOCK(requestor.cs_hSocket, socket = requestor.hSocket);
-    auto local_socket_bytes = GetBindAddress(socket).GetAddrBytes();
+    auto local_socket_bytes = requestor.addrBind.GetAddrBytes();
     uint64_t cache_id = GetDeterministicRandomizer(RANDOMIZER_ID_ADDRCACHE)
         .Write(requestor.addr.GetNetwork())
         .Write(local_socket_bytes.data(), local_socket_bytes.size())
@@ -3375,7 +3437,7 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     auto r = m_addr_response_caches.emplace(cache_id, CachedAddrResponse{});
     CachedAddrResponse& cache_entry = r.first->second;
     if (cache_entry.m_cache_entry_expiration < current_time) { // If emplace() added new one it has expiration 0.
-        cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct);
+        cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct, /* network */ std::nullopt);
         // Choosing a proper cache lifetime is a trade-off between the privacy leak minimization
         // and the usefulness of ADDR responses to honest users.
         //

@@ -5,6 +5,7 @@
 
 #include <netbase.h>
 
+#include <compat.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/sock.h>
@@ -14,6 +15,7 @@
 #include <util/time.h>
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -26,10 +28,6 @@
 
 #ifdef USE_POLL
 #include <poll.h>
-#endif
-
-#if !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
 #endif
 
 // Settings
@@ -96,6 +94,9 @@ enum Network ParseNetwork(const std::string& net_in) {
         LogPrintf("Warning: net name 'tor' is deprecated and will be removed in the future. You should use 'onion' instead.\n");
         return NET_ONION;
     }
+    if (net == "i2p") {
+        return NET_I2P;
+    }
     return NET_UNROUTABLE;
 }
 
@@ -120,7 +121,7 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     std::vector<std::string> names;
     for (int n = 0; n < NET_MAX; ++n) {
         const enum Network network{static_cast<Network>(n)};
-        if (network == NET_UNROUTABLE || network == NET_I2P || network == NET_CJDNS || network == NET_INTERNAL) continue;
+        if (network == NET_UNROUTABLE || network == NET_CJDNS || network == NET_INTERNAL) continue;
         names.emplace_back(GetNetworkName(network));
     }
     if (append_unroutable) {
@@ -308,9 +309,6 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
 {
     int64_t curTime = GetTimeMillis();
     int64_t endTime = curTime + timeout;
-    // Maximum time to wait for I/O readiness. It will take up until this time
-    // (in millis) to break off in case of an interruption.
-    const int64_t maxWait = 1000;
     while (len > 0 && curTime < endTime) {
         ssize_t ret = sock.Recv(data, len, 0); // Optimistically try the recv first
         if (ret > 0) {
@@ -321,10 +319,11 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
         } else { // Other error or blocking
             int nErr = WSAGetLastError();
             if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL) {
-                // Only wait at most maxWait milliseconds at a time, unless
+                // Only wait at most MAX_WAIT_FOR_IO at a time, unless
                 // we're approaching the end of the specified total timeout
-                int timeout_ms = std::min(endTime - curTime, maxWait);
-                if (!sock.Wait(std::chrono::milliseconds{timeout_ms}, Sock::RECV)) {
+                const auto remaining = std::chrono::milliseconds{endTime - curTime};
+                const auto timeout = std::min(remaining, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
+                if (!sock.Wait(timeout, Sock::RECV)) {
                     return IntrRecvError::NetworkError;
                 }
             } else {
@@ -537,12 +536,12 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
     }
 }
 
-bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout, bool manual_connection)
+bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nTimeout, bool manual_connection)
 {
     // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    if (hSocket == INVALID_SOCKET) {
+    if (sock.Get() == INVALID_SOCKET) {
         LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToString());
         return false;
     }
@@ -552,8 +551,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
     }
 
     // Connect to the addrConnect service on the hSocket socket.
-    if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
-    {
+    if (sock.Connect(reinterpret_cast<struct sockaddr*>(&sockaddr), len) == SOCKET_ERROR) {
         int nErr = WSAGetLastError();
         // WSAEINVAL is here because some legacy version of winsock uses it
         if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL)
@@ -561,46 +559,34 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
             // Connection didn't actually fail, but is being established
             // asynchronously. Thus, use async I/O api (select/poll)
             // synchronously to check for successful connection with a timeout.
-#ifdef USE_POLL
-            struct pollfd pollfd = {};
-            pollfd.fd = hSocket;
-            pollfd.events = POLLIN | POLLOUT;
-            int nRet = poll(&pollfd, 1, nTimeout);
-#else
-            struct timeval timeout = MillisToTimeval(nTimeout);
-            fd_set fdset;
-            FD_ZERO(&fdset);
-            FD_SET(hSocket, &fdset);
-            int nRet = select(hSocket + 1, nullptr, &fdset, nullptr, &timeout);
-#endif
-            // Upon successful completion, both select and poll return the total
-            // number of file descriptors that have been selected. A value of 0
-            // indicates that the call timed out and no file descriptors have
-            // been selected.
-            if (nRet == 0)
-            {
-                LogPrint(BCLog::NET, "connection to %s timeout\n", addrConnect.ToString());
+            const Sock::Event requested = Sock::RECV | Sock::SEND;
+            Sock::Event occurred;
+            if (!sock.Wait(std::chrono::milliseconds{nTimeout}, requested, &occurred)) {
+                LogPrintf("wait for connect to %s failed: %s\n",
+                          addrConnect.ToString(),
+                          NetworkErrorString(WSAGetLastError()));
                 return false;
-            }
-            if (nRet == SOCKET_ERROR)
-            {
-                LogPrintf("select() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+            } else if (occurred == 0) {
+                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", addrConnect.ToString());
                 return false;
             }
 
-            // Even if the select/poll was successful, the connect might not
+            // Even if the wait was successful, the connect might not
             // have been successful. The reason for this failure is hidden away
             // in the SO_ERROR for the socket in modern systems. We read it into
-            // nRet here.
-            socklen_t nRetSize = sizeof(nRet);
-            if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&nRet, &nRetSize) == SOCKET_ERROR)
-            {
+            // sockerr here.
+            int sockerr;
+            socklen_t sockerr_len = sizeof(sockerr);
+            if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
+                SOCKET_ERROR) {
                 LogPrintf("getsockopt() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 return false;
             }
-            if (nRet != 0)
-            {
-                LogConnectFailure(manual_connection, "connect() to %s failed after select(): %s", addrConnect.ToString(), NetworkErrorString(nRet));
+            if (sockerr != 0) {
+                LogConnectFailure(manual_connection,
+                                  "connect() to %s failed after wait: %s",
+                                  addrConnect.ToString(),
+                                  NetworkErrorString(sockerr));
                 return false;
             }
         }
@@ -668,7 +654,7 @@ bool IsProxy(const CNetAddr &addr) {
 bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
 {
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.proxy, sock.Get(), nTimeout, true)) {
+    if (!ConnectSocketDirectly(proxy.proxy, sock, nTimeout, true)) {
         outProxyConnectionFailed = true;
         return false;
     }

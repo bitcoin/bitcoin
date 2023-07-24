@@ -27,6 +27,8 @@
 #include <version.h>
 #include <warnings.h>
 
+#include <optional>
+
 #include <univalue.h>
 
 static UniValue getconnectioncount(const JSONRPCRequest& request)
@@ -461,7 +463,7 @@ static UniValue GetNetworksInfo()
     UniValue networks(UniValue::VARR);
     for (int n = 0; n < NET_MAX; ++n) {
         enum Network network = static_cast<enum Network>(n);
-        if (network == NET_UNROUTABLE || network == NET_I2P || network == NET_CJDNS || network == NET_INTERNAL) continue;
+        if (network == NET_UNROUTABLE || network == NET_CJDNS || network == NET_INTERNAL) continue;
         proxyType proxy;
         UniValue obj(UniValue::VOBJ);
         GetProxy(network, proxy);
@@ -820,7 +822,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
         }
     }
     // returns a shuffled list of CAddress
-    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0);
+    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0, /* network */ std::nullopt);
     UniValue ret(UniValue::VARR);
 
     for (const CAddress& addr : vAddr) {

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrman.h>
+#include <i2p.h>
 #include <hash.h>
 #include <netbase.h>
 #include <random.h>
@@ -10,6 +11,7 @@
 #include <test/data/asmap.raw.h>
 #include <test/util/setup_common.h>
 
+#include <optional>
 #include <string>
 
 #include <boost/test/unit_test.hpp>
@@ -393,7 +395,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     // Test: Sanity check, GetAddr should never return anything if addrman
     //  is empty.
     BOOST_CHECK_EQUAL(addrman.size(), 0U);
-    std::vector<CAddress> vAddr1 = addrman.GetAddr(/* max_addresses */ 0, /* max_pct */0);
+    std::vector<CAddress> vAddr1 = addrman.GetAddr(/* max_addresses */ 0, /* max_pct */ 0, /* network */ std::nullopt);
     BOOST_CHECK_EQUAL(vAddr1.size(), 0U);
 
     CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
@@ -416,15 +418,15 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK(addrman.Add(addr4, source2));
     BOOST_CHECK(addrman.Add(addr5, source1));
 
-    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 0, /* max_pct */ 0).size(), 5U);
+    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 0, /* max_pct */ 0, /* network */ std::nullopt).size(), 5U);
     // Net processing asks for 23% of addresses. 23% of 5 is 1 rounded down.
-    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23).size(), 1U);
+    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23, /* network */ std::nullopt).size(), 1U);
 
     // Test: Ensure GetAddr works with new and tried addresses.
     addrman.Good(CAddress(addr1, NODE_NONE));
     addrman.Good(CAddress(addr2, NODE_NONE));
-    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 0, /* max_pct */ 0).size(), 5U);
-    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23).size(), 1U);
+    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 0, /* max_pct */ 0, /* network */ std::nullopt).size(), 5U);
+    BOOST_CHECK_EQUAL(addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23, /* network */ std::nullopt).size(), 1U);
 
     // Test: Ensure GetAddr still returns 23% when addrman has many addrs.
     for (unsigned int i = 1; i < (8 * 256); i++) {
@@ -439,7 +441,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
         if (i % 8 == 0)
             addrman.Good(addr);
     }
-    std::vector<CAddress> vAddr = addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23);
+    std::vector<CAddress> vAddr = addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23, /* network */ std::nullopt);
 
     size_t percent23 = (addrman.size() * 23) / 100;
     BOOST_CHECK_EQUAL(vAddr.size(), percent23);
@@ -966,5 +968,121 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
 }
 
+BOOST_AUTO_TEST_CASE(reset_i2p_ports)
+{
+    CAddrManTest addrman1;
+    CAddrManTest addrman2;
+    const uint32_t good_time{static_cast<uint32_t>(GetAdjustedTime())};
+    constexpr uint16_t port = 8333;
+
+    // Has its port changed, will be re-positioned within the same bucket in vvNew.
+    const CAddress i2p_new1{
+        ResolveService("72l3ucjkuscrbiiepoehuwqgknyzgo7zuix5ty4puwrkyhtmnsga.b32.i2p", port),
+        NODE_NONE,
+        good_time};
+
+    // Has its port changed, will not be re-positioned in vvNew because ports 0 and 10075 result in
+    // the same bucket position.
+    const CAddress i2p_new2{
+        ResolveService("gehtac45oaghz54ypyopim64mql7oad2bqclla74l6tfeolzmodq.b32.i2p", 10075),
+        NODE_NONE,
+        good_time};
+
+    // Remains unchanged, port is already as it should be.
+    const CAddress i2p_new3{
+        ResolveService("c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p",
+                       I2P_SAM31_PORT),
+        NODE_NONE,
+        good_time};
+
+    // Has its port changed, re-positioning in vvNew will cause i2p_new3 to be evicted.
+    const CAddress i2p_new4{
+        ResolveService("c4cbbkn46qxftwja53pxiykntegfyfjqtnzbm6iv6r5mungmqgmq.b32.i2p", port),
+        NODE_NONE,
+        good_time};
+
+    // Remains unchanged.
+    const CAddress ipv4_new{ResolveService("1.2.3.4", port), NODE_NONE, good_time};
+
+    // Has its port changed, will be re-positioned in vvTried.
+    const CAddress i2p_tried1{
+        ResolveService("h3r6bkn46qxftwja53pxiykntegfyfjqtnzbm6iv6r5mungmqgmq.b32.i2p", port),
+        NODE_NONE,
+        good_time};
+
+    // Has its port changed, will not be re-positioned in vvTried because ports 0 and 10537
+    // result in the same position (bucket, i).
+    const CAddress i2p_tried2{
+        ResolveService("pjs7or2ctvteeo5tu4bwyrtydeuhqhvdprtujn4daxr75jpebjxa.b32.i2p", 10537),
+        NODE_NONE,
+        good_time};
+
+    // Remains unchanged, port is already as it should be.
+    const CAddress i2p_tried3{
+        ResolveService("hnbbyjpxx54623l555sta7pocy3se4sdgmuebi5k6reesz5rjp6q.b32.i2p",
+                       I2P_SAM31_PORT),
+        NODE_NONE,
+        good_time};
+
+    // Has its port changed, re-positioning in vvTried will cause i2p_tried3 to be moved to vvNew.
+    const CAddress i2p_tried4{
+        ResolveService("hna37nqr3ahkqv62cuqfwgtneekvvpnuc4i4f6yo7tpoqjswvcwa.b32.i2p", port),
+        NODE_NONE,
+        good_time};
+
+    // Remains unchanged.
+    const CAddress ipv4_tried{ResolveService("2.3.4.5", port), NODE_NONE, good_time};
+
+    const CNetAddr source;
+
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+
+    addrman1.Add(i2p_new1, source);
+    addrman1.Add(i2p_new2, source);
+    addrman1.Add(i2p_new3, source);
+    addrman1.Add(i2p_new4, source);
+    addrman1.Add(ipv4_new, source);
+
+    addrman1.Add(i2p_tried1, source);
+    addrman1.Good(i2p_tried1);
+    addrman1.Add(i2p_tried2, source);
+    addrman1.Good(i2p_tried2);
+    addrman1.Add(i2p_tried3, source);
+    addrman1.Good(i2p_tried3);
+    addrman1.Add(i2p_tried4, source);
+    addrman1.Good(i2p_tried4);
+    addrman1.Add(ipv4_tried, source);
+    addrman1.Good(ipv4_tried);
+
+    stream << addrman1;
+    stream >> addrman2;
+
+    const size_t max_addresses{0};
+    const size_t max_pct{0};
+
+    auto addresses = addrman2.GetAddr(max_addresses, max_pct, NET_I2P);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 7UL);
+    std::sort(addresses.begin(), addresses.end()); // Just some deterministic order.
+    BOOST_CHECK_EQUAL(addresses[0].ToStringIP(), i2p_new4.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[0].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[1].ToStringIP(), i2p_new2.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[1].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[2].ToStringIP(), i2p_tried4.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[2].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[3].ToStringIP(), i2p_tried3.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[3].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[4].ToStringIP(), i2p_tried1.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[4].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[5].ToStringIP(), i2p_tried2.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[5].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[6].ToStringIP(), i2p_new1.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[6].GetPort(), I2P_SAM31_PORT);
+
+    addresses = addrman2.GetAddr(max_addresses, max_pct, NET_IPV4);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 2UL);
+    std::sort(addresses.begin(), addresses.end()); // Just some deterministic order.
+    BOOST_CHECK_EQUAL(addresses[0].ToStringIPPort(), ipv4_new.ToStringIPPort());
+    BOOST_CHECK_EQUAL(addresses[1].ToStringIPPort(), ipv4_tried.ToStringIPPort());
+}
 
 BOOST_AUTO_TEST_SUITE_END()

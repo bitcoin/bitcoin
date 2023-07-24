@@ -4058,7 +4058,7 @@ void PeerManagerImpl::ProcessMessage(
         pfrom.vAddrToSend.clear();
         std::vector<CAddress> vAddr;
         if (pfrom.HasPermission(PF_ADDR)) {
-            vAddr = m_connman.GetAddresses(MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
+            vAddr = m_connman.GetAddresses(MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND, /* network */ std::nullopt);
         } else {
             vAddr = m_connman.GetAddresses(pfrom, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
         }

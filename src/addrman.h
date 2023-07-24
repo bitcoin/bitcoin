@@ -20,6 +20,7 @@
 #include <hash.h>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <streams.h>
@@ -460,6 +461,8 @@ public:
 
         RemoveInvalid();
 
+        ResetI2PPorts();
+
         Check();
     }
 
@@ -602,14 +605,20 @@ public:
         return addrRet;
     }
 
-    //! Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct)
+    /**
+     * Return all or many randomly selected addresses, optionally by network.
+     *
+     * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
+     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
+     * @param[in] network        Select only addresses of this network (nullopt = all).
+     */
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network)
     {
         Check();
         std::vector<CAddress> vAddr;
         {
             LOCK(cs);
-            GetAddr_(vAddr, max_addresses, max_pct);
+            GetAddr_(vAddr, max_addresses, max_pct, network);
         }
         Check();
         return vAddr;
@@ -750,8 +759,15 @@ private:
     int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 #endif
 
-    //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr, size_t max_addresses, size_t max_pct) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /**
+     * Return all or many randomly selected addresses, optionally by network.
+     *
+     * @param[out] vAddr         Vector of randomly selected addresses from vRandom.
+     * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
+     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
+     * @param[in] network        Select only addresses of this network (nullopt = all).
+     */
+    void GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** We have successfully connected to this peer. Calling this function
      *  updates the CAddress's nTime, which is used in our IsTerrible()
@@ -774,6 +790,14 @@ private:
 
     //! Remove invalid addresses.
     void RemoveInvalid() EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /**
+     * Reset the ports of I2P peers to 0.
+     * This is needed as a temporary measure because now we enforce port 0 and
+     * only connect to I2P hosts if the port is 0, but in the early days some
+     * I2P addresses with port 8333 were rumoured and persisted into addrmans.
+     */
+    void ResetI2PPorts() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     friend class CAddrManTest;
 };

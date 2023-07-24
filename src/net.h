@@ -14,6 +14,7 @@
 #include <fs.h>
 #include <crypto/siphash.h>
 #include <hash.h>
+#include <i2p.h>
 #include <limitedmap.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -184,6 +185,7 @@ public:
         std::vector<std::string> m_added_nodes;
         SocketEventsMode socketEventsMode = SOCKETEVENTS_SELECT;
         std::vector<bool> m_asmap;
+        bool m_i2p_accept_incoming;
     };
 
     void Init(const Options& connOptions) {
@@ -397,7 +399,15 @@ public:
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     // Addrman functions
-    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct);
+    /**
+     * Return all or many randomly selected addresses, optionally by network.
+     *
+     * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
+     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
+     * @param[in] network        Select only addresses of this network (nullopt = all).
+     */
+    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network);
+
     /**
      * Cache is used to minimize topology leaks, so it should
      * be used for all non-trusted calls, for example, p2p.
@@ -508,7 +518,22 @@ private:
     void ProcessOneShot();
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
+    void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
+
+    /**
+     * Create a `CNode` object from a socket that has just been accepted and add the node to
+     * the `vNodes` member.
+     * @param[in] hSocket Connected socket to communicate with the peer.
+     * @param[in] permissionFlags The peer's permissions.
+     * @param[in] addr_bind The address and port at our side of the connection.
+     * @param[in] addr The address and port at the peer's side of the connection.
+     */
+    void CreateNodeFromAcceptedSocket(SOCKET hSocket,
+                                      NetPermissionFlags permissionFlags,
+                                      const CAddress& addr_bind,
+                                      const CAddress& addr);
+
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
     void CalculateNumConnectionsChangedStats();
@@ -670,7 +695,19 @@ private:
     Mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc{false};
 
+    /**
+     * This is signaled when network activity should cease.
+     * A pointer to it is saved in `m_i2p_sam_session`, so make sure that
+     * the lifetime of `interruptNet` is not shorter than
+     * the lifetime of `m_i2p_sam_session`.
+     */
     CThreadInterrupt interruptNet;
+
+    /**
+     * I2P SAM session.
+     * Used to accept incoming and make outgoing I2P connections.
+     */
+    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
 
 #ifdef USE_WAKEUP_PIPE
     /** a pipe which is added to select() calls to wakeup before the timeout */
@@ -699,6 +736,7 @@ private:
     std::thread threadOpenConnections;
     std::thread threadOpenMasternodeConnections;
     std::thread threadMessageHandler;
+    std::thread threadI2PAcceptIncoming;
 
     /** flag for deciding to connect to an extra outbound peer,
      *  in excess of m_max_outbound_full_relay
@@ -984,7 +1022,7 @@ public:
     std::unique_ptr<TransportDeserializer> m_deserializer;
     std::unique_ptr<TransportSerializer> m_serializer;
 
-    // socket
+    NetPermissionFlags m_permissionFlags{ PF_NONE };
     std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
     size_t nSendSize{0}; // total size of all vSendMsg entries
@@ -1198,7 +1236,6 @@ private:
     const ServiceFlags nLocalServices;
 
     int nSendVersion {0};
-    NetPermissionFlags m_permissionFlags{ PF_NONE };
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable RecursiveMutex cs_addrName;

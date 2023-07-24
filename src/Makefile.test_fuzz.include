@@ -18,6 +18,7 @@ libtest_fuzz_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libtest_fuzz_a_SOURCES = \
   test/fuzz/fuzz.cpp \
   test/util/mining.cpp \
+  test/fuzz/util.cpp \
   $(TEST_FUZZ_H)
 
 LIBTEST_FUZZ += $(LIBBITCOIN_SERVER)

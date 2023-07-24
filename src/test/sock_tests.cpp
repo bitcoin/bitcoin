@@ -4,11 +4,13 @@
 
 #include <compat.h>
 #include <test/util/setup_common.h>
+#include <threadinterrupt.h>
 #include <util/sock.h>
 #include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <cassert>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -142,6 +144,35 @@ BOOST_AUTO_TEST_CASE(wait)
     BOOST_REQUIRE_EQUAL(sock1.Send("a", 1, 0), 1);
 
     waiter.join();
+}
+
+BOOST_AUTO_TEST_CASE(recv_until_terminator_limit)
+{
+    constexpr auto timeout = 1min; // High enough so that it is never hit.
+    CThreadInterrupt interrupt;
+    int s[2];
+    CreateSocketPair(s);
+
+    Sock sock_send(s[0]);
+    Sock sock_recv(s[1]);
+
+    std::thread receiver([&sock_recv, &timeout, &interrupt]() {
+        constexpr size_t max_data{10};
+        bool threw_as_expected{false};
+        // BOOST_CHECK_EXCEPTION() writes to some variables shared with the main thread which
+        // creates a data race. So mimic it manually.
+        try {
+            sock_recv.RecvUntilTerminator('\n', timeout, interrupt, max_data);
+        } catch (const std::runtime_error& e) {
+            threw_as_expected = HasReason("too many bytes without a terminator")(e);
+        }
+        assert(threw_as_expected);
+    });
+
+    BOOST_REQUIRE_NO_THROW(sock_send.SendComplete("1234567", timeout, interrupt));
+    BOOST_REQUIRE_NO_THROW(sock_send.SendComplete("89a\n", timeout, interrupt));
+
+    receiver.join();
 }
 
 #endif /* WIN32 */

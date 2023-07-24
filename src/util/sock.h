@@ -6,9 +6,17 @@
 #define BITCOIN_UTIL_SOCK_H
 
 #include <compat.h>
+#include <threadinterrupt.h>
+#include <util/time.h>
 
 #include <chrono>
 #include <string>
+
+/**
+ * Maximum time to wait for I/O readiness.
+ * It will take up until this time to break off in case of an interruption.
+ */
+static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
 /**
  * RAII helper class that manages a socket. Mimics `std::unique_ptr`, but instead of a pointer it
@@ -72,15 +80,28 @@ public:
 
     /**
      * send(2) wrapper. Equivalent to `send(this->Get(), data, len, flags);`. Code that uses this
-     * wrapper can be unit-tested if this method is overridden by a mock Sock implementation.
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     virtual ssize_t Send(const void* data, size_t len, int flags) const;
 
     /**
      * recv(2) wrapper. Equivalent to `recv(this->Get(), buf, len, flags);`. Code that uses this
-     * wrapper can be unit-tested if this method is overridden by a mock Sock implementation.
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     virtual ssize_t Recv(void* buf, size_t len, int flags) const;
+
+    /**
+     * connect(2) wrapper. Equivalent to `connect(this->Get(), addr, addrlen)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
+
+    /**
+     * getsockopt(2) wrapper. Equivalent to
+     * `getsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    virtual int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const;
 
     using Event = uint8_t;
 
@@ -98,11 +119,54 @@ public:
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
      * @param[in] requested Wait for those events, bitwise-or of `RECV` and `SEND`.
+     * @param[out] occurred If not nullptr and `true` is returned, then upon return this
+     * indicates which of the requested events occurred. A timeout is indicated by return
+     * value of `true` and `occurred` being set to 0.
      * @return true on success and false otherwise
      */
-    virtual bool Wait(std::chrono::milliseconds timeout, Event requested) const;
+    virtual bool Wait(std::chrono::milliseconds timeout,
+                      Event requested,
+                      Event* occurred = nullptr) const;
 
-private:
+    /* Higher level, convenience, methods. These may throw. */
+
+    /**
+     * Send the given data, retrying on transient errors.
+     * @param[in] data Data to send.
+     * @param[in] timeout Timeout for the entire operation.
+     * @param[in] interrupt If this is signaled then the operation is canceled.
+     * @throws std::runtime_error if the operation cannot be completed. In this case only some of
+     * the data will be written to the socket.
+     */
+    virtual void SendComplete(const std::string& data,
+                              std::chrono::milliseconds timeout,
+                              CThreadInterrupt& interrupt) const;
+
+    /**
+     * Read from socket until a terminator character is encountered. Will never consume bytes past
+     * the terminator from the socket.
+     * @param[in] terminator Character up to which to read from the socket.
+     * @param[in] timeout Timeout for the entire operation.
+     * @param[in] interrupt If this is signaled then the operation is canceled.
+     * @param[in] max_data The maximum amount of data (in bytes) to receive. If this many bytes
+     * are received and there is still no terminator, then this method will throw an exception.
+     * @return The data that has been read, without the terminating character.
+     * @throws std::runtime_error if the operation cannot be completed. In this case some bytes may
+     * have been consumed from the socket.
+     */
+    virtual std::string RecvUntilTerminator(uint8_t terminator,
+                                            std::chrono::milliseconds timeout,
+                                            CThreadInterrupt& interrupt,
+                                            size_t max_data) const;
+
+    /**
+     * Check if still connected.
+     * @param[out] err The error string, if the socket has been disconnected.
+     * @return true if connected
+     */
+    virtual bool IsConnected(std::string& errmsg) const;
+
+protected:
     /**
      * Contained socket. `INVALID_SOCKET` designates the object is empty.
      */

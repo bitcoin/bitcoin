@@ -13,6 +13,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
@@ -65,13 +66,16 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
-    CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
-    CNode& p2p_node = *std::make_unique<CNode>(0, ServiceFlags(NODE_NETWORK | NODE_BLOOM), INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, false).release();
-    p2p_node.fSuccessfullyConnected = true;
-    p2p_node.nVersion = PROTOCOL_VERSION;
-    p2p_node.SetSendVersion(PROTOCOL_VERSION);
+    CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
+
+    const bool successfully_connected{true};
+    p2p_node.fSuccessfullyConnected = successfully_connected;
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
+    FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
+
+    // fuzzed_data_provider is fully consumed after this call, don't use it
+    CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
     try {
         g_setup->m_node.peerman->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), std::atomic<bool>{false});
     } catch (const std::ios_base::failure& e) {

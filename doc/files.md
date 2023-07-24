@@ -66,6 +66,7 @@ Subdirectory       | File(s)               | Description
 `./`               | `guisettings.ini.bak` | Backup of former [GUI settings](#gui-settings) after `-resetguisettings` option is used
 `./`               | `mempool.dat`         | Dump of the mempool's transactions
 `./`               | `onion_v3_private_key` | Cached Tor onion service private key for `-listenonion` option
+`./`               | `i2p_private_key`     | Private key that corresponds to our I2P address. When `-i2psam=` is specified the contents of this file is used to identify ourselves for making outgoing connections to I2P peers and possibly accepting incoming ones. Automatically generated if it does not exist.
 `./`               | `peers.dat`           | Peer IP address database (custom format)
 `./`               | `settings.json`       | Read-write settings set through GUI or RPC interfaces, augmenting manual settings from [dash.conf](dash-conf.md). File is created automatically if read-write settings storage is not disabled with `-nosettings` option. Path can be specified with `-settings` option
 `./`               | `.cookie`             | Session RPC authentication cookie; if used, created at start and deleted on shutdown; can be specified by `-rpccookiefile` option
