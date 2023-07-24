@@ -122,16 +122,16 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        inbound_onion,
                                        CNodeOptions{ .permission_flags = permission_flags });
     } else {
-        return CNode{node_id,
-                     sock,
-                     address,
-                     keyed_net_group,
-                     local_host_nonce,
-                     addr_bind,
-                     addr_name,
-                     conn_type,
-                     inbound_onion,
-                     CNodeOptions{ .permission_flags = permission_flags }};
+        return std::make_shared<CNode>(node_id,
+                                       sock,
+                                       address,
+                                       keyed_net_group,
+                                       local_host_nonce,
+                                       addr_bind,
+                                       addr_name,
+                                       conn_type,
+                                       inbound_onion,
+                                       CNodeOptions{.permission_flags = permission_flags});
     }
 }
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }

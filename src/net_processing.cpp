@@ -1241,20 +1241,20 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
             }
         }
     }
-    m_connman.ForNode(nodeid, [this](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    m_connman.ForNode(nodeid, [this](CNodeRef pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
         if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
             // As per BIP152, we only get 3 of our peers to announce
             // blocks using compact encodings.
-            m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this](CNode* pnodeStop){
-                m_connman.PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
+            m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this](CNodeRef pnodeStop) {
+                m_connman.PushMessage(pnodeStop.get(), CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
                 // save BIP152 bandwidth state: we select peer to be low-bandwidth
                 pnodeStop->m_bip152_highbandwidth_to = false;
                 return true;
             });
             lNodesAnnouncingHeaderAndIDs.pop_front();
         }
-        m_connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION));
+        m_connman.PushMessage(pfrom.get(), CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION));
         // save BIP152 bandwidth state: we select peer to be high-bandwidth
         pfrom->m_bip152_highbandwidth_to = true;
         lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
@@ -1792,9 +1792,9 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     std::vector<CInv> invs{CInv(MSG_BLOCK | MSG_WITNESS_FLAG, hash)};
 
     // Send block request message to the peer
-    bool success = m_connman.ForNode(peer_id, [this, &invs](CNode* node) {
+    bool success = m_connman.ForNode(peer_id, [this, &invs](CNodeRef node) {
         const CNetMsgMaker msgMaker(node->GetCommonVersion());
-        this->m_connman.PushMessage(node, msgMaker.Make(NetMsgType::GETDATA, invs));
+        this->m_connman.PushMessage(node.get(), msgMaker.Make(NetMsgType::GETDATA, invs));
         return true;
     });
 
@@ -1932,7 +1932,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         m_most_recent_block_txs = std::move(most_recent_block_txs);
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNodeRef pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
         if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
@@ -1947,7 +1947,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
                     hashBlock.ToString(), pnode->GetId());
 
             const CSerializedNetMsg& ser_cmpctblock{lazy_ser.get()};
-            m_connman.PushMessage(pnode, ser_cmpctblock.Copy());
+            m_connman.PushMessage(pnode.get(), ser_cmpctblock.Copy());
             state.pindexBestHeaderSent = pindex;
         }
     });
@@ -5101,7 +5101,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
     if (m_connman.GetExtraBlockRelayCount() > 0) {
         std::pair<NodeId, std::chrono::seconds> youngest_peer{-1, 0}, next_youngest_peer{-1, 0};
 
-        m_connman.ForEachNode([&](CNode* pnode) {
+        m_connman.ForEachNode([&](CNodeRef pnode) {
             if (!pnode->IsBlockOnlyConn() || pnode->fDisconnect) return;
             if (pnode->GetId() > youngest_peer.first) {
                 next_youngest_peer = youngest_peer;
@@ -5115,7 +5115,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             // disconnect our second youngest.
             to_disconnect = next_youngest_peer.first;
         }
-        m_connman.ForNode(to_disconnect, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        m_connman.ForNode(to_disconnect, [&](CNodeRef pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
             // Make sure we're not getting a block right now, and that
             // we've been connected long enough for this eviction to happen
@@ -5148,7 +5148,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         NodeId worst_peer = -1;
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
-        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
+        m_connman.ForEachNode([&](CNodeRef pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
             AssertLockHeld(::cs_main);
 
             // Only consider outbound-full-relay peers that are not already
@@ -5167,7 +5167,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             }
         });
         if (worst_peer != -1) {
-            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            bool disconnected = m_connman.ForNode(worst_peer, [&](CNodeRef pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
                 AssertLockHeld(::cs_main);
 
                 // Only disconnect a peer that has been connected to us for
