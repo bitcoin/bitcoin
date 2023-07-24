@@ -70,6 +70,18 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
       return false;
     }
 
+    // Check if settings file is empty
+    if (file.peek() == std::ifstream::traits_type::eof()) {
+        // In that case delete it and return true: it will be created with default value later
+        file.close();
+        if (!boost::filesystem::remove(path)) {
+            // Return false only if it failed to delete the empty settings file
+            errors.emplace_back(strprintf("Unable to delete empty settings file %s", path.string()));
+            return false;
+        }
+        return true;
+    }
+
     SettingsValue in;
     if (!in.read(std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()})) {
         errors.emplace_back(strprintf("Unable to parse settings file %s", path.string()));
