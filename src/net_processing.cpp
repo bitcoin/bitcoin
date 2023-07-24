@@ -206,6 +206,12 @@ struct Peer {
     /** Same id as the CNode object for this peer */
     const NodeId m_id{0};
 
+    /** Context of the underlying connection.
+     *
+     * Useful for accesing static connection data without reaching into the
+     * networking layer. */
+    const ConnectionContext m_conn_ctx;
+
     /** Services we offered to this peer.
      *
      *  This is supplied by CConnman during peer initialization. It's const
@@ -415,8 +421,9 @@ struct Peer {
      * during the version handshake. */
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
-    explicit Peer(NodeId id, ServiceFlags our_services)
-        : m_id{id}
+    explicit Peer(const ConnectionContext& conn_ctx, ServiceFlags our_services)
+        : m_id{conn_ctx.id}
+        , m_conn_ctx{conn_ctx}
         , m_our_services{our_services}
     {}
 
@@ -1529,7 +1536,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
         m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.GetContext().IsInboundConn()));
         assert(m_txrequest.Count(nodeid) == 0);
     }
-    PeerRef peer = std::make_shared<Peer>(nodeid, our_services);
+    PeerRef peer = std::make_shared<Peer>(node.GetContext(), our_services);
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
