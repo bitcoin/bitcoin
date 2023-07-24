@@ -28,6 +28,13 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
     std::set<CTxDestination> destinations;
     int i = 0;
     for (const std::string& address: address_amounts.getKeys()) {
+        const auto& silent_payment_data = DecodeSilentAddress(address);
+        if (!silent_payment_data.empty()) {
+            const auto& pubkey_pair = DecodeSilentData(silent_payment_data);
+            const auto& amount = AmountFromValue(address_amounts[i++]);
+            recipients.push_back(V0SilentPaymentDestination{pubkey_pair.first, pubkey_pair.second, amount});
+            continue;
+        }
         CTxDestination dest = DecodeDestination(address);
         if (!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
@@ -49,7 +56,7 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
             }
         }
 
-        CRecipient recipient = {script_pub_key, amount, subtract_fee};
+        CRecipient recipient = CRecipient{script_pub_key, amount, subtract_fee};
         recipients.push_back(recipient);
     }
 }

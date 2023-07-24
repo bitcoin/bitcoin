@@ -38,9 +38,10 @@ class CWallet;
 enum class AddressPurpose;
 enum isminetype : unsigned int;
 struct CRecipient;
+struct V0SilentPaymentDestination;
 struct WalletContext;
 using isminefilter = std::underlying_type<isminetype>::type;
-using Destination = std::variant<CRecipient>;
+using Destination = std::variant<CRecipient, V0SilentPaymentDestination>;
 } // namespace wallet
 
 namespace interfaces {

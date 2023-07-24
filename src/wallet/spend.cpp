@@ -936,16 +936,18 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // vouts to the payees
     for (const auto& destination : vecSend)
     {
-        auto recipient = std::get<CRecipient>(destination);
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        if (std::holds_alternative<CRecipient>(destination)) {
+            auto recipient = std::get<CRecipient>(destination);
+            CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+
+            if (IsDust(txout, wallet.chain().relayDustFee())) {
+                return util::Error{_("Transaction amount too small")};
+            }
+            txNew.vout.push_back(txout);
+        }
 
         // Include the fee cost for outputs.
         coin_selection_params.tx_noinputs_size += GetSerializeSizeFromDestination(destination);
-
-        if (IsDust(txout, wallet.chain().relayDustFee())) {
-            return util::Error{_("Transaction amount too small")};
-        }
-        txNew.vout.push_back(txout);
     }
 
     // Include the fees for things that aren't inputs, excluding the change output

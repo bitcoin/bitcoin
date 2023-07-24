@@ -262,7 +262,7 @@ inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)
     return {};
 }
 
-using Destination = std::variant<CRecipient>;
+using Destination = std::variant<CRecipient, V0SilentPaymentDestination>;
 
 CAmount GetAmountFromDestination(const Destination& destination);
 bool GetSubtractFeeFromAmountFromDestination(const Destination& destination);

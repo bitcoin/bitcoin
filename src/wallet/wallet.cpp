@@ -2271,6 +2271,9 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
+        if (std::holds_alternative<V0SilentPaymentDestination>(recipient)) {
+            continue;
+        }
         std::vector<std::vector<uint8_t>> dummy;
         const TxoutType type{Solver(std::get<CRecipient>(recipient).scriptPubKey, dummy)};
         if (type == TxoutType::WITNESS_V1_TAPROOT) {
@@ -4322,6 +4325,8 @@ CAmount GetAmountFromDestination(const Destination& destination)
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, CRecipient>) {
             return arg.nAmount;
+        } else if constexpr (std::is_same_v<T, V0SilentPaymentDestination>) {
+            return arg.m_amount;
         }
     }, destination);
 }
@@ -4332,6 +4337,9 @@ bool GetSubtractFeeFromAmountFromDestination(const Destination& destination)
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, CRecipient>) {
             return arg.fSubtractFeeFromAmount;
+        } else if constexpr (std::is_same_v<T, V0SilentPaymentDestination>) {
+            // TODO: implement SFFO for SP destinations
+            return false;
         }
     }, destination);
 }
@@ -4342,6 +4350,8 @@ size_t GetSerializeSizeFromDestination(const Destination& destination)
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, CRecipient>) {
             return ::GetSerializeSize(CTxOut(arg.nAmount, arg.scriptPubKey), PROTOCOL_VERSION);
+        } else if constexpr (std::is_same_v<T, V0SilentPaymentDestination>) {
+            return ::GetSerializeSize(CTxOut(arg.m_amount, GetScriptForDestination(WitnessV1Taproot())), PROTOCOL_VERSION);
         }
     }, destination);
 }
