@@ -92,6 +92,8 @@ bool VerifyWallets(WalletContext& context)
         if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
             if (status == DatabaseStatus::FAILED_NOT_FOUND) {
                 chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
+            } else if (status == DatabaseStatus::FAILED_ENCRYPT) {
+                chain.initWarning(Untranslated(strprintf("Skipping -wallet path to encrypted wallet, use loadwallet to load it. %s", error_string.original)));
             } else {
                 chain.initError(error_string);
                 return false;
@@ -120,7 +122,7 @@ bool LoadWallets(WalletContext& context)
             bilingual_str error;
             std::vector<bilingual_str> warnings;
             std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
-            if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
+            if (!database && (status == DatabaseStatus::FAILED_NOT_FOUND || status == DatabaseStatus::FAILED_ENCRYPT)) {
                 continue;
             }
             chain.initMessage(_("Loading wallet…").translated);
