@@ -35,13 +35,7 @@ std::unique_ptr<CCoinJoinClientQueueManager> coinJoinClientQueueManager;
 void CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
-    if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!m_mn_sync->IsBlockchainSynced()) return;
-
-    if (!CheckDiskSpace(GetDataDir())) {
-        LogPrint(BCLog::COINJOIN, "CCoinJoinClientQueueManager::ProcessMessage -- Not enough disk space, disabling CoinJoin.\n");
-        return;
-    }
 
     if (msg_type == NetMsgType::DSQUEUE) {
         CCoinJoinClientQueueManager::ProcessDSQueue(peer, vRecv);
@@ -1806,7 +1800,6 @@ void CCoinJoinClientManager::UpdatedBlockTip(const CBlockIndex* pindex)
 
 void CCoinJoinClientQueueManager::DoMaintenance()
 {
-    if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (m_mn_sync == nullptr) return;
     if (fMasternodeMode) return; // no client-side mixing on masternodes
 
