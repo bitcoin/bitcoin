@@ -93,7 +93,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false);
     void FlushUndoFile(int block_file, bool finalize = false);
-    bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
+    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     FlatFileSeq BlockFileSeq() const;
