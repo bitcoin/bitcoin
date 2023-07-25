@@ -24,10 +24,10 @@ using CoreContext = std::variant<std::nullopt_t,
                                  std::reference_wrapper<LLMQContext>>;
 
 template<typename T>
-T* GetContext(const CoreContext& ctx) noexcept
+T* GetContext(const CoreContext& context) noexcept
 {
-    return std::holds_alternative<std::reference_wrapper<T>>(ctx)
-                ? &std::get<std::reference_wrapper<T>>(ctx).get()
+    return std::holds_alternative<std::reference_wrapper<T>>(context)
+                ? &std::get<std::reference_wrapper<T>>(context).get()
                 : nullptr;
 }
 
