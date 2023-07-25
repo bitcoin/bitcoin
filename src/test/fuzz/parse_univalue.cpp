@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <core_io.h>
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
@@ -58,12 +57,6 @@ FUZZ_TARGET(parse_univalue, .init = initialize_parse_univalue)
     } catch (const UniValue&) {
     }
     try {
-        (void)ParseHexUV(univalue, "A");
-        (void)ParseHexUV(univalue, random_string);
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
-    }
-    try {
         (void)ParseHexV(univalue, "A");
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
@@ -75,7 +68,7 @@ FUZZ_TARGET(parse_univalue, .init = initialize_parse_univalue)
     }
     try {
         (void)ParseSighashString(univalue);
-    } catch (const std::runtime_error&) {
+    } catch (const UniValue&) {
     }
     try {
         (void)AmountFromValue(univalue);
