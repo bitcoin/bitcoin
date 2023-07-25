@@ -12,7 +12,7 @@
 
 #include <atomic>
 
-BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, ChainTestingSetup)
 
 struct TestSubscriberNoop final : public CValidationInterface {
     void BlockChecked(const CBlock&, const BlockValidationState&) override {}
