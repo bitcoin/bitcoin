@@ -20,8 +20,7 @@ def get_fuzz_env(*, target, source_dir):
         'FUZZ': target,
         'UBSAN_OPTIONS':
         f'suppressions={source_dir}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1',
-        'ASAN_OPTIONS':  # symbolizer disabled due to https://github.com/google/sanitizers/issues/1364#issuecomment-761072085
-        'symbolize=0:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1',
+        "ASAN_OPTIONS": "detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1",
     }
 
 
