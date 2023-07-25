@@ -12,31 +12,36 @@
 #include <vector>
 
 template <typename T>
-struct zero_after_free_allocator : public std::allocator<T> {
-    using base = std::allocator<T>;
-    using traits = std::allocator_traits<base>;
-    using size_type = typename traits::size_type;
-    using difference_type = typename traits::difference_type;
-    using pointer = typename traits::pointer;
-    using const_pointer = typename traits::const_pointer;
-    using value_type = typename traits::value_type;
-    zero_after_free_allocator() noexcept {}
-    zero_after_free_allocator(const zero_after_free_allocator& a) noexcept : base(a) {}
+struct zero_after_free_allocator {
+    using value_type = T;
+
+    zero_after_free_allocator() noexcept = default;
     template <typename U>
-    zero_after_free_allocator(const zero_after_free_allocator<U>& a) noexcept : base(a)
+    zero_after_free_allocator(const zero_after_free_allocator<U>&) noexcept
     {
     }
-    ~zero_after_free_allocator() noexcept {}
-    template <typename Other>
-    struct rebind {
-        typedef zero_after_free_allocator<Other> other;
-    };
+
+    T* allocate(std::size_t n)
+    {
+        return std::allocator<T>{}.allocate(n);
+    }
 
     void deallocate(T* p, std::size_t n)
     {
         if (p != nullptr)
             memory_cleanse(p, sizeof(T) * n);
-        std::allocator<T>::deallocate(p, n);
+        std::allocator<T>{}.deallocate(p, n);
+    }
+
+    template <typename U>
+    friend bool operator==(const zero_after_free_allocator&, const zero_after_free_allocator<U>&) noexcept
+    {
+        return true;
+    }
+    template <typename U>
+    friend bool operator!=(const zero_after_free_allocator&, const zero_after_free_allocator<U>&) noexcept
+    {
+        return false;
     }
 };
 
