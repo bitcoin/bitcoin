@@ -3471,9 +3471,12 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
 
 bool CConnman::AddNode(const AddedNodeParams& add)
 {
+    const CService resolved(LookupNumeric(add.m_added_node, GetDefaultPort(add.m_added_node)));
+    const bool resolved_is_valid{resolved.IsValid()};
+
     LOCK(m_added_nodes_mutex);
     for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node) return false;
+        if (add.m_added_node == it.m_added_node || (resolved_is_valid && resolved == LookupNumeric(it.m_added_node, GetDefaultPort(it.m_added_node)))) return false;
     }
 
     m_added_node_params.push_back(add);
