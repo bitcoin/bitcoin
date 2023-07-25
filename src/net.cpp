@@ -676,33 +676,20 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 }
 #undef X
 
-/**
- * Receive bytes from the buffer and deserialize them into messages.
- *
- * @param[in]   pch         A pointer to the raw data
- * @param[in]   nBytes      Size of the data
- * @param[out]  complete    Set True if at least one message has been
- *                          deserialized and is ready to be processed
- * @return  True if the peer should stay connected,
- *          False if the peer should be disconnected from.
- */
-bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
+bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 {
     complete = false;
     int64_t nTimeMicros = GetTimeMicros();
     LOCK(cs_vRecv);
     nLastRecv = nTimeMicros / 1000000;
-    nRecvBytes += nBytes;
-    while (nBytes > 0) {
+    nRecvBytes += msg_bytes.size();
+    while (msg_bytes.size() > 0) {
         // absorb network data
-        int handled = m_deserializer->Read(pch, nBytes);
+        int handled = m_deserializer->Read(msg_bytes);
         if (handled < 0) {
             // Serious header problem, disconnect from the peer.
             return false;
         }
-
-        pch += handled;
-        nBytes -= handled;
 
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
@@ -760,13 +747,13 @@ int CNode::GetSendVersion() const
     return nSendVersion;
 }
 
-int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
+int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
 {
     // copy data to temporary parsing buffer
     unsigned int nRemaining = 24 - nHdrPos;
-    unsigned int nCopy = std::min(nRemaining, nBytes);
+    unsigned int nCopy = std::min<unsigned int>(nRemaining, msg_bytes.size());
 
-    memcpy(&hdrbuf[nHdrPos], pch, nCopy);
+    memcpy(&hdrbuf[nHdrPos], msg_bytes.data(), nCopy);
     nHdrPos += nCopy;
 
     // if header incomplete, exit
@@ -800,18 +787,18 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
     return nCopy;
 }
 
-int V1TransportDeserializer::readData(const char *pch, unsigned int nBytes)
+int V1TransportDeserializer::readData(Span<const uint8_t> msg_bytes)
 {
     unsigned int nRemaining = hdr.nMessageSize - nDataPos;
-    unsigned int nCopy = std::min(nRemaining, nBytes);
+    unsigned int nCopy = std::min<unsigned int>(nRemaining, msg_bytes.size());
 
     if (vRecv.size() < nDataPos + nCopy) {
         // Allocate up to 256 KiB ahead, but never more than the total message size.
         vRecv.resize(std::min(hdr.nMessageSize, nDataPos + nCopy + 256 * 1024));
     }
 
-    hasher.Write({(const unsigned char*)pch, nCopy});
-    memcpy(&vRecv[nDataPos], pch, nCopy);
+    hasher.Write(msg_bytes.first(nCopy));
+    memcpy(&vRecv[nDataPos], msg_bytes.data(), nCopy);
     nDataPos += nCopy;
 
     return nCopy;
@@ -1925,13 +1912,13 @@ void CConnman::SocketHandler()
 size_t CConnman::SocketRecvData(CNode *pnode)
 {
     // typical socket buffer is 8K-64K
-    char pchBuf[0x10000];
+    uint8_t pchBuf[0x10000];
     int nBytes = 0;
     {
         LOCK(pnode->cs_hSocket);
         if (pnode->hSocket == INVALID_SOCKET)
             return 0;
-        nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+        nBytes = recv(pnode->hSocket, (char*)pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
         if (nBytes < (int)sizeof(pchBuf)) {
             pnode->fHasRecvData = false;
         }
@@ -1939,7 +1926,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
     if (nBytes > 0)
     {
         bool notify = false;
-        if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify)) {
+        if (!pnode->ReceiveMsgBytes(Span<const uint8_t>(pchBuf, nBytes), notify)) {
             LOCK(cs_vNodes);
             pnode->CloseSocketDisconnect(this);
         }
@@ -3079,17 +3066,6 @@ bool CConnman::InitBinds(
 bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 {
     Init(connOptions);
-
-    {
-        LOCK(cs_totalBytesRecv);
-        nTotalBytesRecv = 0;
-    }
-    {
-        LOCK(cs_totalBytesSent);
-        nTotalBytesSent = 0;
-        nMaxOutboundTotalBytesSentInCycle = 0;
-        nMaxOutboundCycleStartTime = 0s;
-    }
 
 #ifdef USE_KQUEUE
     if (socketEventsMode == SOCKETEVENTS_KQUEUE) {

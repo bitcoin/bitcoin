@@ -7,9 +7,9 @@
 #include <chainparams.h>
 #include <net.h>
 
-void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, const char* pch, unsigned int nBytes, bool& complete) const
+void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const
 {
-    assert(node.ReceiveMsgBytes(pch, nBytes, complete));
+    assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
         size_t nSizeAdded = 0;
         auto it(node.vRecvMsg.begin());
@@ -29,11 +29,11 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, const char* pch, unsigned 
 
 bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const
 {
-    std::vector<unsigned char> ser_msg_header;
+    std::vector<uint8_t> ser_msg_header;
     node.m_serializer->prepareForTransport(ser_msg, ser_msg_header);
 
     bool complete;
-    NodeReceiveMsgBytes(node, (const char*)ser_msg_header.data(), ser_msg_header.size(), complete);
-    NodeReceiveMsgBytes(node, (const char*)ser_msg.data.data(), ser_msg.data.size(), complete);
+    NodeReceiveMsgBytes(node, ser_msg_header, complete);
+    NodeReceiveMsgBytes(node, ser_msg.data, complete);
     return complete;
 }
