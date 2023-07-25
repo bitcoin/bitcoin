@@ -49,6 +49,8 @@ add_definitions(
         -DENABLE_WALLET=1
 )
 
+# find src/ -name '*.h' -or -name '*.cpp' | sed -r 's/[^/]*.(h|cpp)$/*.\1/' | sort | uniq | grep -Ev "/(bench/data|obj)/" > list.txt
+
 file(GLOB SOURCE_FILES
         src/*.cpp
         src/*.h
@@ -69,13 +71,20 @@ file(GLOB SOURCE_FILES
         src/evo/*.h
         src/governance/*.cpp
         src/governance/*.h
+        src/index/*.cpp
+        src/index/*.h
+        src/interfaces/*.cpp
+        src/interfaces/*.h
         src/leveldb/db/*.cc
         src/leveldb/db/*.h
         src/leveldb/include/*.h
         src/llmq/*.cpp
         src/llmq/*.h
+        src/logging/*.h
         src/masternode/*.cpp
         src/masternode/*.h
+        src/node/*.cpp
+        src/node/*.h
         src/policy/*.cpp
         src/policy/*.h
         src/primitives/*.cpp
@@ -89,11 +98,20 @@ file(GLOB SOURCE_FILES
         src/script/*.cpp
         src/script/*.h
         src/secp256k1/include/*.h
+        src/support/allocators/*.h
+        src/support/*.cpp
+        src/support/*.h
         src/test/*.cpp
         src/test/*.h
+        src/test/fuzz/*.cpp
+        src/test/fuzz/*.h
+        src/test/util/*.cpp
+        src/test/util/*.h
         src/univalue/include/*.h
         src/univalue/lib/*.cpp
         src/univalue/lib/*.h
+        src/util/*.h
+        src/util/*.cpp
         src/wallet/*.cpp
         src/wallet/*.h
         src/wallet/test/*.cpp
