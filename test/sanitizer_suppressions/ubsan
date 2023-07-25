@@ -1,9 +1,7 @@
+# Suppressions should use `sanitize-type:ClassName::MethodName`.
+
 # -fsanitize=undefined suppressions
 # =================================
-# The suppressions would be `sanitize-type:ClassName::MethodName`,
-# however due to a bug in clang the symbolizer is disabled and thus no symbol
-# names can be used.
-# See https://github.com/google/sanitizers/issues/1364
 
 # -fsanitize=integer suppressions
 # ===============================
@@ -11,8 +9,7 @@
 # ------------
 # Suppressions in dependencies that are developed outside this repository.
 unsigned-integer-overflow:*/include/c++/
-# unsigned-integer-overflow in FuzzedDataProvider's ConsumeIntegralInRange
-unsigned-integer-overflow:FuzzedDataProvider.h
+unsigned-integer-overflow:FuzzedDataProvider::ConsumeIntegralInRange
 unsigned-integer-overflow:leveldb/
 unsigned-integer-overflow:minisketch/
 unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
