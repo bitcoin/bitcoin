@@ -280,6 +280,7 @@ SYSCOIN_CORE_H = \
   node/miner.h \
   node/mini_miner.h \
   node/minisketchwrapper.h \
+  node/peerman_args.h \
   node/psbt.h \
   node/transaction.h \
   node/interface_ui.h \
@@ -548,6 +549,7 @@ libsyscoin_node_a_SOURCES = \
   node/miner.cpp \
   node/mini_miner.cpp \
   node/minisketchwrapper.cpp \
+  node/peerman_args.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/interface_ui.cpp \
