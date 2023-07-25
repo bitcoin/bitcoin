@@ -538,12 +538,14 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     return true;
 }
 
-void BlockManager::FlushUndoFile(int block_file, bool finalize)
+bool BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
         m_opts.notifications.flushError("Flushing undo file to disk failed. This is likely the result of an I/O error.");
+        return false;
     }
+    return true;
 }
 
 bool BlockManager::FlushBlockFile(bool fFinalize, bool finalize_undo)
@@ -567,7 +569,11 @@ bool BlockManager::FlushBlockFile(bool fFinalize, bool finalize_undo)
     }
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,
     // e.g. during IBD or a sync after a node going offline
-    if (!fFinalize || finalize_undo) FlushUndoFile(m_last_blockfile, finalize_undo);
+    if (!fFinalize || finalize_undo) {
+        if (!FlushUndoFile(m_last_blockfile, finalize_undo)) {
+            success = false;
+        }
+    }
     return success;
 }
 
@@ -764,7 +770,14 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
         // with the block writes (usually when a synced up node is getting newly mined blocks) -- this case is caught in
         // the FindBlockPos function
         if (_pos.nFile < m_last_blockfile && static_cast<uint32_t>(block.nHeight) == m_blockfile_info[_pos.nFile].nHeightLast) {
-            FlushUndoFile(_pos.nFile, true);
+            // Do not propagate the return code, a failed flush here should not
+            // be an indication for a failed write. If it were propagated here,
+            // the caller would assume the undo data not to be written, when in
+            // fact it is. Note though, that a failed flush might leave the data
+            // file untrimmed.
+            if (!FlushUndoFile(_pos.nFile, true)) {
+                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", _pos.nFile);
+            }
         } else if (_pos.nFile == m_last_blockfile && static_cast<uint32_t>(block.nHeight) > m_undo_height_in_last_blockfile) {
             m_undo_height_in_last_blockfile = block.nHeight;
         }
