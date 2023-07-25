@@ -40,6 +40,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/mempool_eviction.cpp \
   bench/mempool_stress.cpp \
   bench/merkle_root.cpp \
+  bench/miniminer.cpp \
   bench/nanobench.cpp \
   bench/nanobench.h \
   bench/peer_eviction.cpp \
