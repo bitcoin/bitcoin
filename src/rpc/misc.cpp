@@ -571,8 +571,11 @@ static UniValue mnauth(const JSONRPCRequest& request)
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
     }
+
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+
     CBLSPublicKey publicKey;
-    bool bls_legacy_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    bool bls_legacy_scheme = !llmq::utils::IsV19Active(chainman.ActiveChain().Tip());
     publicKey.SetHexStr(request.params[2].get_str(), bls_legacy_scheme);
     if (!publicKey.IsValid()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
@@ -922,7 +925,8 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
         }
     }
 
-    int nHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    int nHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Height());
 
     CAmount balance = 0;
     CAmount balance_spendable = 0;

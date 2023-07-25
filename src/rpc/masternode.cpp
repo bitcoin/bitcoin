@@ -28,7 +28,7 @@
 #include <fstream>
 #include <iomanip>
 
-static UniValue masternodelist(const JSONRPCRequest& request);
+static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager& chainman);
 
 static void masternode_list_help(const JSONRPCRequest& request)
 {
@@ -83,7 +83,7 @@ static UniValue masternode_connect(const JSONRPCRequest& request)
     if (!Lookup(strAddress, addr, 0, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
     if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
@@ -326,14 +326,14 @@ static void masternode_winners_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue masternode_winners(const JSONRPCRequest& request)
+static UniValue masternode_winners(const JSONRPCRequest& request, const ChainstateManager& chainman)
 {
     masternode_winners_help(request);
 
     const CBlockIndex* pindexTip{nullptr};
     {
         LOCK(cs_main);
-        pindexTip = ::ChainActive().Tip();
+        pindexTip = chainman.ActiveChain().Tip();
         if (!pindexTip) return NullUniValue;
     }
 
@@ -405,7 +405,7 @@ static void masternode_payments_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue masternode_payments(const JSONRPCRequest& request)
+static UniValue masternode_payments(const JSONRPCRequest& request, const ChainstateManager& chainman)
 {
     masternode_payments_help(request);
 
@@ -417,11 +417,11 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
 
     if (request.params[0].isNull()) {
         LOCK(cs_main);
-        pindex = ::ChainActive().Tip();
+        pindex = chainman.ActiveChain().Tip();
     } else {
         LOCK(cs_main);
         uint256 blockHash(ParseHashV(request.params[0], "blockhash"));
-        pindex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
+        pindex = chainman.m_blockman.LookupBlockIndex(blockHash);
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -442,7 +442,7 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
         // Note: we have to actually calculate block reward from scratch instead of simply querying coinbase vout
         // because miners might collect less coins than they potentially could and this would break our calculations.
         CAmount nBlockFees{0};
-        const CTxMemPool& mempool = EnsureMemPool(request.context);
+        const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
         for (const auto& tx : block.vtx) {
             if (tx->IsCoinBase()) {
                 continue;
@@ -496,7 +496,7 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
 
         if (nCount > 0) {
             LOCK(cs_main);
-            pindex = ::ChainActive().Next(pindex);
+            pindex = chainman.ActiveChain().Next(pindex);
         } else {
             pindex = pindex->pprev;
         }
@@ -542,6 +542,8 @@ static UniValue masternode(const JSONRPCRequest& request)
     const JSONRPCRequest new_request{request.strMethod == "masternode" ? request.squashed() : request};
     const std::string command{new_request.strMethod};
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+
     if (command == "masternodeconnect") {
         return masternode_connect(new_request);
     } else if (command == "masternodecount") {
@@ -557,17 +559,17 @@ static UniValue masternode(const JSONRPCRequest& request)
     } else if (command == "masternodestatus") {
         return masternode_status(new_request);
     } else if (command == "masternodepayments") {
-        return masternode_payments(new_request);
+        return masternode_payments(new_request, chainman);
     } else if (command == "masternodewinners") {
-        return masternode_winners(new_request);
+        return masternode_winners(new_request, chainman);
     } else if (command == "masternodelist") {
-        return masternodelist(new_request);
+        return masternodelist(new_request, chainman);
     } else {
         masternode_help();
     }
 }
 
-static UniValue masternodelist(const JSONRPCRequest& request)
+static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager& chainman)
 {
     std::string strMode = "json";
     std::string strFilter = "";
@@ -605,13 +607,13 @@ static UniValue masternodelist(const JSONRPCRequest& request)
         }
 
         LOCK(cs_main);
-        const CBlockIndex* pindex = ::ChainActive()[dmn.pdmnState->nLastPaidHeight];
+        const CBlockIndex* pindex = chainman.ActiveChain()[dmn.pdmnState->nLastPaidHeight];
         return (int)pindex->nTime;
     };
 
     bool showRecentMnsOnly = strMode == "recent";
     bool showHPMNsOnly = strMode == "hpmn";
-    int tipHeight = WITH_LOCK(cs_main, return ::ChainActive().Tip()->nHeight);
+    int tipHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->nHeight);
     mnList.ForEachMN(false, [&](auto& dmn) {
         if (showRecentMnsOnly && mnList.IsMNPoSeBanned(dmn)) {
             if (tipHeight - dmn.pdmnState->GetBannedHeight() > Params().GetConsensus().nSuperblockCycle) {
