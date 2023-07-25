@@ -1540,9 +1540,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ChainstateManager& chainman = *Assert(node.chainman);
 
 
-    PeerManager::Options peerman_opts{
-        .ignore_incoming_txs = ignores_incoming_txs,
-    };
+    PeerManager::Options peerman_opts{};
     ApplyArgsManOptions(args, peerman_opts);
 
     assert(!node.peerman);
