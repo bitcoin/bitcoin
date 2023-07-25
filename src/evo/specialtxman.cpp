@@ -45,7 +45,10 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const
         case TRANSACTION_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
-            return pindexPrev->nHeight + 1 >= Params().GetConsensus().DIP0024Height && CheckMNHFTx(tx, pindexPrev, state);
+            if (!llmq::utils::IsV20Active(pindexPrev)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");
+            }
+            return CheckMNHFTx(tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
         case TRANSACTION_ASSET_UNLOCK:
             if (!llmq::utils::IsV20Active(pindexPrev)) {

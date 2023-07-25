@@ -98,6 +98,7 @@ BITCOIN_TESTS =\
   test/evo_assetlocks_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_instantsend_tests.cpp \
+  test/evo_mnhf_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/evo_trivialvalidation.cpp \
   test/evo_utils_tests.cpp \
@@ -146,7 +147,6 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/sock_tests.cpp \
-  test/specialtx_tests.cpp \
   test/streams_tests.cpp \
   test/subsidy_tests.cpp \
   test/sync_tests.cpp \

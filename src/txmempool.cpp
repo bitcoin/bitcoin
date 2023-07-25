@@ -457,6 +457,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         bool ok = GetTxPayload(tx, assetUnlockTx);
         assert(ok);
         mapAssetUnlockExpiry.insert({tx.GetHash(), assetUnlockTx.getHeightToExpiry()});
+    } else if (tx.nType == TRANSACTION_MNHF_SIGNAL) {
+        PrioritiseTransaction(tx.GetHash(), 0.1 * COIN);
     }
 }
 

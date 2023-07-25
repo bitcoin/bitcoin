@@ -36,7 +36,7 @@ static CMutableTransaction CreateMNHFTx(const uint256& mnhfTxHash, const CBLSSig
 {
     MNHFTxPayload extraPayload;
     extraPayload.nVersion = 1;
-    extraPayload.signal.nVersion = versionBit;
+    extraPayload.signal.versionBit = versionBit;
     extraPayload.signal.quorumHash = mnhfTxHash;
     extraPayload.signal.sig = cblSig;
 
@@ -48,7 +48,7 @@ static CMutableTransaction CreateMNHFTx(const uint256& mnhfTxHash, const CBLSSig
     return tx;
 }
 
-BOOST_FIXTURE_TEST_SUITE(specialtx_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(evo_mnhf_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(verify_mnhf_specialtx_tests)
 {

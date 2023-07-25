@@ -1176,6 +1176,45 @@ class CAssetUnlockTx:
             .format(self.version, self.index, self.fee, self.requestedHeight, self.quorumHash, self.quorumSig.hex())
 
 
+class CMnEhf:
+    __slots__ = ("version", "versionBit", "quorumHash", "quorumSig")
+
+    def __init__(self, version=None, versionBit=None, quorumHash = 0, quorumSig = None):
+        self.set_null()
+        if version is not None:
+            self.version = version
+        if versionBit is not None:
+            self.versionBit = versionBit
+        if quorumHash is not None:
+            self.quorumHash = quorumHash
+        if quorumSig is not None:
+            self.quorumSig = quorumSig
+
+    def set_null(self):
+        self.version = 0
+        self.versionBit = 0
+        self.quorumHash = 0
+        self.quorumSig = b'\x00' * 96
+
+    def deserialize(self, f):
+        self.version = struct.unpack("<B", f.read(1))[0]
+        self.versionBit = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.quorumSig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.version)
+        r += struct.pack("<B", self.versionBit)
+        r += ser_uint256(self.quorumHash)
+        r += self.quorumSig
+        return r
+
+    def __repr__(self):
+        return "CMnEhf(version={} versionBit={} quorumHash={:x} quorumSig={}" \
+            .format(self.version, self.versionBit, self.quorumHash, self.quorumSig.hex())
+
+
 class CSimplifiedMNListEntry:
     __slots__ = ("proRegTxHash", "confirmedHash", "service", "pubKeyOperator", "keyIDVoting", "isValid", "nVersion", "type", "platformHTTPPort", "platformNodeID")
 
