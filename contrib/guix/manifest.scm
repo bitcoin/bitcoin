@@ -523,6 +523,37 @@ inspecting signatures in Mach-O binaries.")
     (description "Just sponge")
     (license license:gpl2+)))
 
+(define-public glibc-2.40
+  (let ((commit "8d3dd23e3de8b4c6e4b94f8bbfab971c3b8a55be"))
+  (package
+    (inherit glibc) ;; 2.35
+    (version "2.40")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "1fzc4wwaj79q5w3inaqazskh4z38np215lf9v6f6g7cb0bblpgh2"))
+              (patches (search-our-patches "glibc-2.40-guix-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--enable-fortify-source",
+                  "--enable-cet=yes",
+                  "--enable-nscd=no",
+                  "--enable-static-nss=yes",
+                  "--disable-timezone-tools",
+                  "--disable-profile",
+                  "--disable-werror",
+                  building-on))))))))
+
 (packages->manifest
  (append
   (list ;; The Basics
