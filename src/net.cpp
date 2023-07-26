@@ -2849,6 +2849,24 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     if (nBytesSent) RecordBytesSent(nBytesSent);
 }
 
+void CConnman::PushMessage(NodeId id, CSerializedNetMsg&& msg)
+{
+    CNode* connection{nullptr};
+    {
+        LOCK(m_nodes_mutex);
+        auto it = m_nodes.find(id);
+        if (it != m_nodes.end()) {
+            connection = it->second;
+            connection->AddRef();
+        }
+    }
+
+    if (connection) {
+        PushMessage(connection, std::move(msg));
+        connection->Release();
+    }
+}
+
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
     LOCK(m_nodes_mutex);

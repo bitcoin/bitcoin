@@ -612,7 +612,7 @@ public:
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
-    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    void PushMessage(NodeId id, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)
@@ -828,6 +828,7 @@ private:
 
     NodeId GetNewNodeId();
 
+    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     size_t SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
     void DumpAddresses();
 
