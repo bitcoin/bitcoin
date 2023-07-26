@@ -582,6 +582,11 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
+    /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
+     * Updates m_txrequest, m_orphanage, and vExtraTxnForCompact. Also queues the tx for relay. */
+    void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
+
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
@@ -3032,6 +3037,34 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     return;
 }
 
+void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
+{
+    AssertLockNotHeld(m_peer_mutex);
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+
+    // As this version of the transaction was acceptable, we can forget about any requests for it.
+    // No-op if the tx is not in txrequest.
+    m_txrequest.ForgetTxHash(tx->GetHash());
+    m_txrequest.ForgetTxHash(tx->GetWitnessHash());
+
+    m_orphanage.AddChildrenToWorkSet(*tx);
+    // If it came from the orphanage, remove it. No-op if the tx is not in txorphanage.
+    m_orphanage.EraseTx(tx->GetHash());
+
+    LogDebug(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (wtxid=%s) (poolsz %u txn, %u kB)\n",
+             nodeid,
+             tx->GetHash().ToString(),
+             tx->GetWitnessHash().ToString(),
+             m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
+
+    RelayTransaction(tx->GetHash(), tx->GetWitnessHash());
+
+    for (const CTransactionRef& removedTx : replaced_transactions) {
+        AddToCompactExtraTransactions(removedTx);
+    }
+}
+
 bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
     AssertLockHeld(g_msgproc_mutex);
@@ -3047,17 +3080,9 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::TXPACKAGES, "   accepted orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
-            LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (wtxid=%s) (poolsz %u txn, %u kB)\n",
-                peer.m_id,
-                orphanHash.ToString(),
-                orphan_wtxid.ToString(),
-                m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
-            RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
-            m_orphanage.AddChildrenToWorkSet(*porphanTx);
-            m_orphanage.EraseTx(orphanHash);
-            for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
-                AddToCompactExtraTransactions(removedTx);
-            }
+            Assume(result.m_replaced_transactions.has_value());
+            std::list<CTransactionRef> empty_replacement_list;
+            ProcessValidTx(peer.m_id, porphanTx, result.m_replaced_transactions.value_or(empty_replacement_list));
             return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (state.IsInvalid()) {
@@ -4276,24 +4301,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            // As this version of the transaction was acceptable, we can forget about any
-            // requests for it.
-            m_txrequest.ForgetTxHash(tx.GetHash());
-            m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-            RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
-            m_orphanage.AddChildrenToWorkSet(tx);
-
+            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions.value());
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
-
-            LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (wtxid=%s) (poolsz %u txn, %u kB)\n",
-                pfrom.GetId(),
-                tx.GetHash().ToString(),
-                tx.GetWitnessHash().ToString(),
-                m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
-
-            for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
-                AddToCompactExtraTransactions(removedTx);
-            }
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
