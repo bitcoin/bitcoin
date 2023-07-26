@@ -858,13 +858,14 @@ bool CConnman::AttemptToEvictConnection()
     }
 
     LOCK(m_nodes_mutex);
-    for (auto& [id, pnode] : m_nodes) {
-        if (pnode->GetId() == *node_id_to_evict) {
-            LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->GetContext().ConnectionTypeAsString(), pnode->GetId());
-            pnode->fDisconnect = true;
-            return true;
-        }
+    auto it = m_nodes.find(*node_id_to_evict);
+    if (it != m_nodes.end()) {
+        CNode* connection{it->second};
+        LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n",
+                 connection->GetContext().ConnectionTypeAsString(), connection->GetId());
+        connection->fDisconnect = true;
     }
+
     return false;
 }
 
@@ -2626,14 +2627,12 @@ bool CConnman::DisconnectNode(const CNetAddr& addr)
 bool CConnman::DisconnectNode(NodeId id)
 {
     LOCK(m_nodes_mutex);
-    for(auto& [id, pnode] : m_nodes) {
-        if (id == pnode->GetId()) {
-            LogPrint(BCLog::NET, "disconnect by id peer=%d; disconnecting\n", pnode->GetId());
-            pnode->fDisconnect = true;
-            return true;
-        }
-    }
-    return false;
+    auto it = m_nodes.find(id);
+    if (it == m_nodes.end()) return false;
+
+    it->second->fDisconnect = true;
+
+    return true;
 }
 
 void CConnman::RecordBytesRecv(uint64_t bytes)
@@ -2844,15 +2843,9 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
-    CNode* found = nullptr;
     LOCK(m_nodes_mutex);
-    for (auto& [id, pnode] : m_nodes) {
-        if (pnode->GetId() == id) {
-            found = pnode;
-            break;
-        }
-    }
-    return found != nullptr && NodeFullyConnected(found) && func(found);
+    auto it = m_nodes.find(id);
+    return it != m_nodes.end() && NodeFullyConnected(it->second) && func(it->second);
 }
 
 CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
