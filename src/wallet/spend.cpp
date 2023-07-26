@@ -936,19 +936,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
 
-    // vouts to the payees
-    for (const auto& destination : vecSend)
-    {
-        if (std::holds_alternative<CRecipient>(destination)) {
-            auto recipient = std::get<CRecipient>(destination);
-            CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
-
-            if (IsDust(txout, wallet.chain().relayDustFee())) {
-                return util::Error{_("Transaction amount too small")};
-            }
-            txNew.vout.push_back(txout);
-        }
-    }
 
     // Include the fees for things that aren't inputs, excluding the change output
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
@@ -985,6 +972,19 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const SelectionResult& result = *select_coins_res;
     TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result.GetAlgo()).c_str(), result.GetTarget(), result.GetWaste(), result.GetSelectedValue());
 
+    // vouts to the payees
+    for (const auto& destination : vecSend)
+    {
+        if (std::holds_alternative<CRecipient>(destination)) {
+            auto recipient = std::get<CRecipient>(destination);
+            CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+
+            if (IsDust(txout, wallet.chain().relayDustFee())) {
+                return util::Error{_("Transaction amount too small")};
+            }
+            txNew.vout.push_back(txout);
+        }
+    }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
