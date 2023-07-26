@@ -2635,6 +2635,14 @@ bool CConnman::DisconnectNode(NodeId id)
     return true;
 }
 
+bool CConnman::IsDisconnected(NodeId id) const
+{
+    LOCK(m_nodes_mutex);
+    auto it = m_nodes.find(id);
+    return it == m_nodes.end() ||
+           it->second->fDisconnect;
+}
+
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     nTotalBytesRecv += bytes;

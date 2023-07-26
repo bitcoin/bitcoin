@@ -693,6 +693,9 @@ public:
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
 
+    /** Check if a connection still exists. */
+    bool IsDisconnected(NodeId id) const;
+
     //! Used to convey which local services we are offering peers during node
     //! connection.
     //!
