@@ -273,6 +273,10 @@ task:
 
 task:
   name: '[ASan + LSan + UBSan + integer, no depends, USDT] [lunar]'
+  enable_bpfcc_script:
+    # In the image build step, no external environment variables are available,
+    # so any settings will need to be written to the settings env file:
+    - sed -i "s|\${CIRRUS_CI}|true|g" ./ci/test/00_setup_env_native_asan.sh
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
