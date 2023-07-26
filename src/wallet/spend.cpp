@@ -984,6 +984,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;
+    // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
+    coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
     CAmount recipients_sum = 0;
     const OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
@@ -996,6 +998,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             outputs_to_subtract_fee_from++;
             coin_selection_params.m_subtract_fee_outputs = true;
         }
+
+        // Include the fee cost for outputs.
+        coin_selection_params.tx_noinputs_size += GetSerializeSizeForRecipient(recipient);
     }
 
     // Create change script that will be used if we need change
@@ -1074,16 +1079,12 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
-    // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
-    coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
     // vouts to the payees
     for (const auto& recipient : vecSend)
     {
+        if (std::holds_alternative<V0SilentPaymentDestination>(recipient.dest)) continue;
         CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
-
-        // Include the fee cost for outputs.
-        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
 
         if (IsDust(txout, wallet.chain().relayDustFee())) {
             return util::Error{_("Transaction amount too small")};

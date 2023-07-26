@@ -167,5 +167,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * script for CNoDestination.
  */
 CScript GetScriptForDestination(const CTxDestination& dest);
+size_t GetSerializeSizeForDestination(const CTxDestination& dest);
 
 #endif // BITCOIN_ADDRESSTYPE_H
