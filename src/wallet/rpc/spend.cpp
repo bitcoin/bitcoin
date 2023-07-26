@@ -148,6 +148,14 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
+static void IsSilentPaymentsEnabled(const CWallet &pwallet)
+{
+    if (pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || pwallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) ) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Silent payments require access to private keys to build transactions.");
+    }
+    EnsureWalletIsUnlocked(pwallet);
+}
+
 UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<Destination> &recipients, mapValue_t map_value, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
@@ -312,8 +320,10 @@ RPCHelpMan sendtoaddress()
     std::vector<Destination> recipients;
     ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
     auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r); });
-    if (it != recipients.end())
+    if (it != recipients.end()) {
+        IsSilentPaymentsEnabled(*pwallet);
         coin_control.m_silent_payment = true;
+    }
 
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
@@ -412,8 +422,10 @@ RPCHelpMan sendmany()
     std::vector<Destination> recipients;
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
     auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r); });
-    if (it != recipients.end())
+    if (it != recipients.end()) {
+        IsSilentPaymentsEnabled(*pwallet);
         coin_control.m_silent_payment = true;
+    }
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
