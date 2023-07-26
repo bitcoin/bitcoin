@@ -33,6 +33,10 @@ from decimal import (
     getcontext,
 )
 
+
+RAW_TX = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a00000000'
+
+
 class SignRawTransactionWithWalletTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
@@ -47,10 +51,12 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
     def test_with_lock_outputs(self):
         self.log.info("Test correct error reporting when trying to sign a locked output")
         self.nodes[0].encryptwallet("password")
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signrawtransactionwithwallet, RAW_TX)
+        self.nodes[0].walletpassphrase("password", 9999)
 
-        rawTx = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a00000000'
-
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signrawtransactionwithwallet, rawTx)
+    def test_with_invalid_sighashtype(self):
+        self.log.info("Test signrawtransactionwithwallet raises if an invalid sighashtype is passed")
+        assert_raises_rpc_error(-8, "all is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithwallet, hexstring=RAW_TX, sighashtype="all")
 
     def script_verification_error_test(self):
         """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
@@ -299,6 +305,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
         self.script_verification_error_test()
         self.OP_1NEGATE_test()
         self.test_with_lock_outputs()
+        self.test_with_invalid_sighashtype()
         self.test_fully_signed_tx()
         self.test_signing_with_csv()
         self.test_signing_with_cltv()
