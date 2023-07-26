@@ -24,6 +24,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 using util::SplitString;
@@ -305,7 +306,7 @@ static bool InitRPCAuthentication()
         }
 
         assert(strRPCUserColonPass.empty()); // Only support initializing once
-        if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
+        if (!GenerateAuthCookie(&strRPCUserColonPass, std::make_pair(cookie_perms, bool(cookie_perms_arg)))) {
             return false;
         }
         if (strRPCUserColonPass.empty()) {
