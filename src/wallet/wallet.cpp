@@ -2272,6 +2272,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
     for (const auto& recipient : vecSend) {
         if (std::holds_alternative<V0SilentPaymentDestination>(recipient)) {
+            any_tr = true;
             continue;
         }
         std::vector<std::vector<uint8_t>> dummy;
