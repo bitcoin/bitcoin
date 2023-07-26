@@ -98,7 +98,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc glibc-2.27)
+                                       (base-libc glibc-2.39)
                                        (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -476,6 +476,35 @@ inspecting signatures in Mach-O binaries.")
                     (string-append out "/etc/rpc" suffix "\n"))
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n"))))))))))))
+
+(define-public glibc-2.39
+  (package
+    (inherit glibc) ;; 2.35
+    (version "2.39")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit "1b9c1a0047fb26a65a9b2a7b8cd977243f7d353c")))
+              (file-name (git-file-name "glibc" "1b9c1a0047fb26a65a9b2a7b8cd977243f7d353c"))
+              (sha256
+               (base32
+                "1h27p9c4bnb9z74mj307w5x3i9n4irhxmkg11qrnclyz25cbm5r8"))
+              (patches (search-our-patches "glibc-2.39-guix-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--disable-werror",
+                  "--enable-fortify-source=yes",
+                  "--enable-cet=yes",
+                  "--enable-nscd=no",
+                  "--enable-static-nss=yes",
+                  "--enable-static-pie=yes",
+                  building-on)))))))
 
 (packages->manifest
  (append
