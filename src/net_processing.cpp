@@ -2020,7 +2020,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         PeerRef peer{GetPeerRef(pnode->GetId())};
         if (!peer) return;
 
-        if (peer->m_greatest_common_version < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
+        if (peer->m_greatest_common_version < INVALID_CB_NO_BAN_VERSION)
             return;
         ProcessBlockAvailability(pnode->GetId());
         CNodeState &state = *State(pnode->GetId());
