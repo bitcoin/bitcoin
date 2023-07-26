@@ -56,6 +56,11 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         txid = self.nodes[0].sendrawtransaction(self.nodes[0].signrawtransactionwithkey(rawtx, [self.nodes[0].get_deterministic_priv_key().key])["hex"], 0)
         return txid
 
+    def assert_signing_completed_successfully(self, signed_tx):
+        assert 'errors' not in signed_tx
+        assert 'complete' in signed_tx
+        assert_equal(signed_tx['complete'], True)
+
     def successful_signing_test(self):
         """Create and sign a valid raw transaction with one input.
 
@@ -68,11 +73,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         rawTx = self.nodes[0].createrawtransaction(INPUTS, OUTPUTS)
         rawTxSigned = self.nodes[0].signrawtransactionwithkey(rawTx, privKeys, INPUTS)
 
-        # 1) The transaction has a complete set of signatures
-        assert rawTxSigned['complete']
-
-        # 2) No script verification error occurred
-        assert 'errors' not in rawTxSigned
+        self.assert_signing_completed_successfully(rawTxSigned)
 
     def witness_script_test(self):
         self.log.info("Test signing transaction to P2SH-P2WSH addresses without wallet")
@@ -93,9 +94,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {getnewdestination()[2]: Decimal("49.998")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [unspent_output])
-        # Check the signing completed successfully
-        assert 'complete' in spending_tx_signed
-        assert_equal(spending_tx_signed['complete'], True)
+        self.assert_signing_completed_successfully(spending_tx_signed)
 
         # Now test with P2PKH and P2PK scripts as the witnessScript
         for tx_type in ['P2PKH', 'P2PK']:  # these tests are order-independent
@@ -118,9 +117,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {getnewdestination()[2]: Decimal("9.999")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
-        # Check the signing completed successfully
-        assert 'complete' in spending_tx_signed
-        assert_equal(spending_tx_signed['complete'], True)
+        self.assert_signing_completed_successfully(spending_tx_signed)
         self.nodes[0].sendrawtransaction(spending_tx_signed['hex'])
 
     def invalid_sighashtype_test(self):
