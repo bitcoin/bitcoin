@@ -618,7 +618,7 @@ public:
     void ForEachNode(const NodeFn& func)
     {
         LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto&& [id, node] : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -627,7 +627,7 @@ public:
     void ForEachNode(const NodeFn& func) const
     {
         LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto&& [id, node] : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -876,7 +876,7 @@ private:
     Mutex m_addr_fetches_mutex;
     std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
     mutable Mutex m_added_nodes_mutex;
-    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::unordered_map<NodeId, CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
@@ -1027,11 +1027,17 @@ private:
         {
             {
                 LOCK(connman.m_nodes_mutex);
-                m_nodes_copy = connman.m_nodes;
-                for (auto& node : m_nodes_copy) {
-                    node->AddRef();
-                }
+
+                // Copy CNode pointers and call AddRef
+                auto add_ref = [](const std::pair<NodeId, CNode*>& pair) -> CNode* {
+                    pair.second->AddRef();
+                    return pair.second;
+                };
+                std::transform(connman.m_nodes.begin(), connman.m_nodes.end(),
+                               std::back_inserter(m_nodes_copy),
+                               add_ref);
             }
+
             if (shuffle) {
                 Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
             }

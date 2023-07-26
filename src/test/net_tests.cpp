@@ -15,6 +15,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <timedata.h>
@@ -831,7 +832,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     // Create a peer with a routable IPv4 address.
     in_addr peer_in_addr;
     peer_in_addr.s_addr = htonl(0x01020304);
-    CNode peer{
+    CNode* peer = new CNode{
         ConnectionContext{
             .id = 0,
             .addr = CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
@@ -841,6 +842,9 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
             .is_inbound_onion = false,
         },
         /*sock=*/nullptr};
+
+    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(m_node.connman.get());
+    connman.AddTestNode(*peer);
 
     const uint64_t services{NODE_NETWORK | NODE_WITNESS};
     const int64_t time{0};
@@ -852,7 +856,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
     chainstate.JumpOutOfIbd();
 
-    m_node.peerman->InitializeNode(peer, NODE_NETWORK);
+    m_node.peerman->InitializeNode(*peer, NODE_NETWORK);
 
     std::atomic<bool> interrupt_dummy{false};
     std::chrono::microseconds time_received_dummy{0};
@@ -862,14 +866,14 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     CDataStream msg_version_stream{msg_version.data, SER_NETWORK, PROTOCOL_VERSION};
 
     m_node.peerman->ProcessMessage(
-        peer, NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
+        *peer, NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
 
     const auto msg_verack = msg_maker.Make(NetMsgType::VERACK);
     CDataStream msg_verack_stream{msg_verack.data, SER_NETWORK, PROTOCOL_VERSION};
 
     // Will set peer.fSuccessfullyConnected to true (necessary in SendMessages()).
     m_node.peerman->ProcessMessage(
-        peer, NetMsgType::VERACK, msg_verack_stream, time_received_dummy, interrupt_dummy);
+        *peer, NetMsgType::VERACK, msg_verack_stream, time_received_dummy, interrupt_dummy);
 
     // Ensure that peer_us_addr:bind_port is sent to the peer.
     const CService expected{peer_us_addr, bind_port};
@@ -895,9 +899,13 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         }
     };
 
-    m_node.peerman->SendMessages(&peer);
+    m_node.peerman->SendMessages(peer);
 
     BOOST_CHECK(sent);
+
+    m_node.peerman->FinalizeNode(*peer);
+
+    connman.ClearTestNodes();
 
     CaptureMessage = CaptureMessageOrig;
     chainstate.ResetIbd();

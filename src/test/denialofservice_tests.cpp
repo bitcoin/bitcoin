@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
-    CNode dummyNode1{
+    CNode* dummyNode1 = new CNode{
         ConnectionContext{
             .id = id++,
             .connected = Now<NodeSeconds>().time_since_epoch(),
@@ -80,8 +80,9 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         },
         /*sock=*/nullptr};
 
+	connman->AddTestNode(*dummyNode1);
     connman->Handshake(
-        /*node=*/dummyNode1,
+        /*node=*/*dummyNode1,
         /*successfully_connected=*/true,
         /*remote_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
         /*local_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
@@ -97,28 +98,30 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     }
 
     // Test starts here
-    BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
+    BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in getheaders
 
     {
-        LOCK(dummyNode1.cs_vSend);
-        BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
-        dummyNode1.vSendMsg.clear();
+        LOCK(dummyNode1->cs_vSend);
+        BOOST_CHECK(dummyNode1->vSendMsg.size() > 0);
+        dummyNode1->vSendMsg.clear();
     }
 
     int64_t nStartTime = GetTime();
     // Wait 21 minutes
     SetMockTime(nStartTime+21*60);
-    BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
+    BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in getheaders
     {
-        LOCK(dummyNode1.cs_vSend);
-        BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
+        LOCK(dummyNode1->cs_vSend);
+        BOOST_CHECK(dummyNode1->vSendMsg.size() > 0);
     }
     // Wait 3 more minutes
-    SetMockTime(nStartTime+24*60);
-    BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in disconnect
-    BOOST_CHECK(dummyNode1.fDisconnect == true);
+    SetMockTime(nStartTime + 24 * 60);
+    BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in disconnect
+                                                     // TODO need to use ConnmanTestMsg to register nodes in the map
+    BOOST_CHECK(dummyNode1->fDisconnect == true);
 
-    peerman.FinalizeNode(dummyNode1);
+    peerman.FinalizeNode(*dummyNode1);
+    connman->ClearTestNodes();
 
     TestOnlyResetTimeData();
 }
