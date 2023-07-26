@@ -719,6 +719,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 
 int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
 {
+    AssertLockHeld(m_recv_mutex);
     // copy data to temporary parsing buffer
     unsigned int nRemaining = CMessageHeader::HEADER_SIZE - nHdrPos;
     unsigned int nCopy = std::min<unsigned int>(nRemaining, msg_bytes.size());
@@ -759,6 +760,7 @@ int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
 
 int V1Transport::readData(Span<const uint8_t> msg_bytes)
 {
+    AssertLockHeld(m_recv_mutex);
     unsigned int nRemaining = hdr.nMessageSize - nDataPos;
     unsigned int nCopy = std::min<unsigned int>(nRemaining, msg_bytes.size());
 
@@ -776,7 +778,8 @@ int V1Transport::readData(Span<const uint8_t> msg_bytes)
 
 const uint256& V1Transport::GetMessageHash() const
 {
-    assert(Complete());
+    AssertLockHeld(m_recv_mutex);
+    assert(CompleteInternal());
     if (data_hash.IsNull())
         hasher.Finalize(data_hash);
     return data_hash;
@@ -784,9 +787,11 @@ const uint256& V1Transport::GetMessageHash() const
 
 CNetMessage V1Transport::GetMessage(const std::chrono::microseconds time, bool& reject_message)
 {
+    AssertLockNotHeld(m_recv_mutex);
     // Initialize out parameter
     reject_message = false;
     // decompose a single CNetMessage from the TransportDeserializer
+    LOCK(m_recv_mutex);
     CNetMessage msg(std::move(vRecv));
 
     // store message type string, time, and sizes
