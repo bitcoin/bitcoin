@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
         auto ptx{MakeTransactionRef(tx)};
-        if (orphanage.AddTx(ptx, i)) {
+        if (orphanage.AddTx(ptx, i, {})) {
             ++expected_count;
             expected_total_size += ptx->GetTotalSize();
         }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL, empty));
 
         auto ptx{MakeTransactionRef(tx)};
-        if (orphanage.AddTx(ptx, i)) {
+        if (orphanage.AddTx(ptx, i, {})) {
             ++expected_count;
             expected_total_size += ptx->GetTotalSize();
         }
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i));
+        BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i, {}));
     }
     BOOST_CHECK_EQUAL(orphanage.Size(), expected_count);
     BOOST_CHECK_EQUAL(orphanage.TotalOrphanBytes(), expected_total_size);

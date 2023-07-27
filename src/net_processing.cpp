@@ -4212,7 +4212,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     if (!AlreadyHaveTx(gtxid)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
 
-                if (m_orphanage.AddTx(ptx, pfrom.GetId())) {
+                if (m_orphanage.AddTx(ptx, pfrom.GetId(), unique_parents)) {
                     AddToCompactExtraTransactions(ptx);
                 }
 
