@@ -194,7 +194,7 @@ static UniValue sporkupdate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
     }
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
@@ -578,7 +578,7 @@ static UniValue mnauth(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     bool fSuccess = node.connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
         pNode->SetVerifiedProRegTxHash(proTxHash);
         pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
@@ -697,7 +697,7 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
 
     std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > indexes;
 
-    CTxMemPool& mempool = EnsureMemPool(request.context);
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     if (!mempool.getAddressIndex(addresses, indexes)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
     }
@@ -1066,7 +1066,7 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
     CSpentIndexKey key(txid, outputIndex);
     CSpentIndexValue value;
 
-    CTxMemPool& mempool = EnsureMemPool(request.context);
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     if (!GetSpentIndex(mempool, key, value)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to get spent info");
     }

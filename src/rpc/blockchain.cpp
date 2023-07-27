@@ -62,9 +62,9 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, CChainState& active_chainstate, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
 
-NodeContext& EnsureNodeContext(const CoreContext& context)
+NodeContext& EnsureAnyNodeContext(const CoreContext& context)
 {
     auto* node_context = GetContext<NodeContext>(context);
     if (!node_context) {
@@ -73,40 +73,57 @@ NodeContext& EnsureNodeContext(const CoreContext& context)
     return *node_context;
 }
 
-CTxMemPool& EnsureMemPool(const CoreContext& context)
+CTxMemPool& EnsureMemPool(const NodeContext& node)
 {
-    NodeContext& node = EnsureNodeContext(context);
     if (!node.mempool) {
         throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
     }
     return *node.mempool;
 }
 
-ChainstateManager& EnsureChainman(const CoreContext& context)
+CTxMemPool& EnsureAnyMemPool(const CoreContext& context)
 {
-    NodeContext& node = EnsureNodeContext(context);
+    return EnsureMemPool(EnsureAnyNodeContext(context));
+}
+
+ChainstateManager& EnsureChainman(const NodeContext& node)
+{
     if (!node.chainman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
     }
+    WITH_LOCK(::cs_main, CHECK_NONFATAL(std::addressof(g_chainman) == std::addressof(*node.chainman)));
     return *node.chainman;
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const CoreContext& context)
+ChainstateManager& EnsureAnyChainman(const CoreContext& context)
 {
-    NodeContext& node = EnsureNodeContext(context);
+    return EnsureChainman(EnsureAnyNodeContext(context));
+}
+
+CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
+{
     if (!node.fee_estimator) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
     }
     return *node.fee_estimator;
 }
 
-LLMQContext& EnsureLLMQContext(const CoreContext& context)
+CBlockPolicyEstimator& EnsureAnyFeeEstimator(const CoreContext& context)
 {
-    NodeContext& node = EnsureNodeContext(context);
+    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
+}
+
+LLMQContext& EnsureLLMQContext(const NodeContext& node)
+{
     if (!node.llmq_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node LLMQ context not found");
     }
     return *node.llmq_ctx;
+}
+
+LLMQContext& EnsureAnyLLMQContext(const CoreContext& context)
+{
+    return EnsureLLMQContext(EnsureAnyNodeContext(context));
 }
 
 /* Calculate the difficulty for a given block index.
@@ -232,8 +249,9 @@ static UniValue getblockcount(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
-    return ::ChainActive().Height();
+    return chainman.ActiveChain().Height();
 }
 
 static UniValue getbestblockhash(const JSONRPCRequest& request)
@@ -249,8 +267,9 @@ static UniValue getbestblockhash(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
-    return ::ChainActive().Tip()->GetBlockHash().GetHex();
+    return chainman.ActiveChain().Tip()->GetBlockHash().GetHex();
 }
 
 static UniValue getbestchainlock(const JSONRPCRequest& request)
@@ -273,7 +292,9 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     }.Check(request);
     UniValue result(UniValue::VOBJ);
 
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     llmq::CChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
@@ -282,8 +303,9 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     result.pushKV("height", clsig.getHeight());
     result.pushKV("signature", clsig.getSig().ToString());
 
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
-    result.pushKV("known_block", g_chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()) != nullptr);
+    result.pushKV("known_block", chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()) != nullptr);
     return result;
 }
 
@@ -451,8 +473,9 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
-    return GetDifficulty(::ChainActive().Tip());
+    return GetDifficulty(chainman.ActiveChain().Tip());
 }
 
 static std::vector<RPCResult> MempoolEntryDescription() { return {
@@ -589,7 +612,10 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         fVerbose = request.params[0].get_bool();
 
-    return MempoolToJSON(EnsureMemPool(request.context), EnsureLLMQContext(request.context).isman, fVerbose);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    return MempoolToJSON(mempool, llmq_ctx.isman, fVerbose);
 }
 
 static UniValue getmempoolancestors(const JSONRPCRequest& request)
@@ -620,7 +646,9 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
 
     uint256 hash(ParseHashV(request.params[0], "parameter 1"));
 
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    const CTxMemPool& mempool = EnsureMemPool(node);
     LOCK(mempool.cs);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
@@ -642,7 +670,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+        LLMQContext& llmq_ctx = EnsureLLMQContext(node);
         for (CTxMemPool::txiter ancestorIt : setAncestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
@@ -684,7 +712,9 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
 
     uint256 hash(ParseHashV(request.params[0], "parameter 1"));
 
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    const CTxMemPool& mempool = EnsureMemPool(node);
     LOCK(mempool.cs);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
@@ -706,7 +736,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+        LLMQContext& llmq_ctx = EnsureLLMQContext(node);
         for (CTxMemPool::txiter descendantIt : setDescendants) {
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
@@ -735,7 +765,9 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
 
     uint256 hash(ParseHashV(request.params[0], "parameter 1"));
 
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    const CTxMemPool& mempool = EnsureMemPool(node);
     LOCK(mempool.cs);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
@@ -745,7 +777,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
 
     const CTxMemPoolEntry &e = *it;
     UniValue info(UniValue::VOBJ);
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     entryToJSON(mempool, info, e, llmq_ctx.isman);
     return info;
 }
@@ -798,13 +830,15 @@ static UniValue getblockhash(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    const CChain& active_chain = chainman.ActiveChain();
 
     int nHeight = request.params[0].get_int();
-    if (nHeight < 0 || nHeight > ::ChainActive().Height())
+    if (nHeight < 0 || nHeight > active_chain.Height())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
 
-    CBlockIndex* pblockindex = ::ChainActive()[nHeight];
+    CBlockIndex* pblockindex = active_chain[nHeight];
     return pblockindex->GetBlockHash().GetHex();
 }
 
@@ -847,6 +881,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
     }.Check(request);
 
     uint256 hash(ParseHashV(request.params[0], "hash"));
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     bool fVerbose = true;
     if (!request.params[1].isNull())
@@ -855,9 +890,10 @@ static UniValue getblockheader(const JSONRPCRequest& request)
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     {
+        ChainstateManager& chainman = EnsureChainman(node);
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
-        tip = ::ChainActive().Tip();
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+        tip = chainman.ActiveChain().Tip();
     }
 
     if (!pblockindex) {
@@ -872,7 +908,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
         return strHex;
     }
 
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     return blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman);
 }
 
@@ -921,12 +957,19 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    ChainstateManager& chainman = EnsureChainman(node);
+
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    CChain& active_chain = active_chainstate.m_chain;
+
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
-        tip = ::ChainActive().Tip();
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+        tip = active_chain.Tip();
     }
 
     if (!pblockindex) {
@@ -948,7 +991,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
 
     if (!fVerbose)
     {
-        for (; pblockindex; pblockindex = ::ChainActive().Next(pblockindex))
+        for (; pblockindex; pblockindex = active_chain.Next(pblockindex))
         {
             CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
             ssBlock << pblockindex->GetBlockHeader();
@@ -960,8 +1003,8 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
         return arrHeaders;
     }
 
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
-    for (; pblockindex; pblockindex = ::ChainActive().Next(pblockindex))
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    for (; pblockindex; pblockindex = active_chain.Next(pblockindex))
     {
         arrHeaders.push_back(blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman));
         if (--nCount <= 0)
@@ -1020,6 +1063,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
 
     CBloomFilter filter;
@@ -1032,7 +1076,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
 
     uint256 hash(ParseHashV(request.params[1], "blockhash"));
 
-    const CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+    const CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
@@ -1049,7 +1093,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
 
     UniValue arrMerkleBlocks(UniValue::VARR);
 
-    for (; pblockindex; pblockindex = ::ChainActive().Next(pblockindex))
+    for (; pblockindex; pblockindex = chainman.ActiveChain().Next(pblockindex))
     {
         if (--nCount < 0) {
             break;
@@ -1145,13 +1189,16 @@ static UniValue getblock(const JSONRPCRequest& request)
             verbosity = request.params[1].get_bool() ? 1 : 0;
     }
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     CBlock block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     {
+        ChainstateManager& chainman = EnsureChainman(node);
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
-        tip = ::ChainActive().Tip();
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+        tip = chainman.ActiveChain().Tip();
 
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -1168,7 +1215,7 @@ static UniValue getblock(const JSONRPCRequest& request)
         return strHex;
     }
 
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     return blockToJSON(block, tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, verbosity >= 2);
 }
 
@@ -1190,7 +1237,10 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
     if (!fPruneMode)
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    CChain& active_chain = active_chainstate.m_chain;
 
     int heightParam = request.params[0].get_int();
     if (heightParam < 0)
@@ -1200,7 +1250,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
     // too low to be a block time (corresponds to timestamp from Sep 2001).
     if (heightParam > 1000000000) {
         // Add a 2 hour buffer to include blocks which might have had old timestamps
-        CBlockIndex* pindex = ::ChainActive().FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
+        CBlockIndex* pindex = active_chain.FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp.");
         }
@@ -1208,7 +1258,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
     }
 
     unsigned int height = (unsigned int) heightParam;
-    unsigned int chainHeight = (unsigned int) ::ChainActive().Height();
+    unsigned int chainHeight = (unsigned int) active_chain.Height();
     if (chainHeight < Params().PruneAfterHeight())
         throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
     else if (height > chainHeight)
@@ -1218,8 +1268,8 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(::ChainstateActive(), height);
-    const CBlockIndex* block = ::ChainActive().Tip();
+    PruneBlockFilesManual(active_chainstate, height);
+    const CBlockIndex* block = active_chain.Tip();
     CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         block = block->pprev;
@@ -1270,13 +1320,21 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
     UniValue ret(UniValue::VOBJ);
 
     CCoinsStats stats;
-    ::ChainstateActive().ForceFlushStateToDisk();
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    active_chainstate.ForceFlushStateToDisk();
 
     const CoinStatsHashType hash_type{request.params[0].isNull() ? CoinStatsHashType::HASH_SERIALIZED : ParseHashType(request.params[0].get_str())};
 
-    CCoinsView* coins_view = WITH_LOCK(::cs_main, return &::ChainstateActive().CoinsDB());
-    NodeContext& node = EnsureNodeContext(request.context);
-    if (GetUTXOStats(coins_view, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), stats, hash_type, node.rpc_interruption_point)) {
+    CCoinsView* coins_view;
+    BlockManager* blockman;
+    {
+        LOCK(::cs_main);
+        coins_view = &active_chainstate.CoinsDB();
+        blockman = &active_chainstate.m_blockman;
+    }
+    if (GetUTXOStats(coins_view, *blockman, stats, hash_type, node.rpc_interruption_point)) {
         ret.pushKV("height", (int64_t)stats.nHeight);
         ret.pushKV("bestblock", stats.hashBlock.GetHex());
         ret.pushKV("transactions", (int64_t)stats.nTransactions);
@@ -1332,7 +1390,12 @@ static UniValue gettxout(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
+
+    CChainState& active_chainstate = chainman.ActiveChainstate();
 
     UniValue ret(UniValue::VOBJ);
 
@@ -1344,10 +1407,10 @@ static UniValue gettxout(const JSONRPCRequest& request)
         fMempool = request.params[2].get_bool();
 
     Coin coin;
-    CCoinsViewCache* coins_view = &::ChainstateActive().CoinsTip();
+    CCoinsViewCache* coins_view = &active_chainstate.CoinsTip();
 
     if (fMempool) {
-        const CTxMemPool& mempool = EnsureMemPool(request.context);
+        const CTxMemPool& mempool = EnsureMemPool(node);
         LOCK(mempool.cs);
         CCoinsViewMemPool view(coins_view, mempool);
         if (!view.GetCoin(out, coin) || mempool.isSpent(out)) {
@@ -1359,7 +1422,7 @@ static UniValue gettxout(const JSONRPCRequest& request)
         }
     }
 
-    const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
+    const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);
@@ -1395,33 +1458,35 @@ static UniValue verifychain(const JSONRPCRequest& request)
     const int check_level(request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].get_int());
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
 
-    const NodeContext& node_context = EnsureNodeContext(request.context);
-
+    CChainState& active_chainstate = chainman.ActiveChainstate();
     return CVerifyDB().VerifyDB(
-        ::ChainstateActive(), Params(), ::ChainstateActive().CoinsTip(), *node_context.evodb, check_level, check_depth);
+        active_chainstate, Params(), active_chainstate.CoinsTip(), *node.evodb, check_level, check_depth);
 }
 
-static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int softfork_height, int tip_height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For buried deployments.
     // A buried deployment is one where the height of the activation has been hardcoded into
     // the client implementation long after the consensus change has activated. See BIP 90.
     // Buried deployments with activation height value of
     // std::numeric_limits<int>::max() are disabled and thus hidden.
-    if (height == std::numeric_limits<int>::max()) return;
+    if (softfork_height == std::numeric_limits<int>::max()) return;
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "buried");
     // getblockchaininfo reports the softfork as active from when the chain height is
     // one below the activation height
-    rv.pushKV("active", ::ChainActive().Tip()->nHeight + 1 >= height);
-    rv.pushKV("height", height);
+    rv.pushKV("active", tip_height + 1 >= softfork_height);
+    rv.pushKV("height", softfork_height);
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
     // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
@@ -1430,7 +1495,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
 
     UniValue bip9(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
+    const ThresholdState thresholdState = VersionBitsState(active_chain_tip, consensusParams, id, versionbitscache);
     switch (thresholdState) {
     case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
@@ -1444,12 +1509,12 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
+    int64_t since_height = VersionBitsStateSinceHeight(active_chain_tip, consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id, versionbitscache);
+        BIP9Stats statsStruct = VersionBitsStatistics(active_chain_tip, consensusParams, id, versionbitscache);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
@@ -1522,20 +1587,24 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
 
     std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
 
-    const CBlockIndex* tip = ::ChainActive().Tip();
+    const CBlockIndex* tip = active_chainstate.m_chain.Tip();
+    CHECK_NONFATAL(tip);
+    const int height = tip->nHeight;
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 strChainName);
-    obj.pushKV("blocks",                (int)::ChainActive().Height());
+    obj.pushKV("blocks",                height);
     obj.pushKV("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1);
     obj.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
     obj.pushKV("difficulty",            (double)GetDifficulty(tip));
     obj.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
-    obj.pushKV("initialblockdownload",  ::ChainstateActive().IsInitialBlockDownload());
+    obj.pushKV("initialblockdownload",  active_chainstate.IsInitialBlockDownload());
     obj.pushKV("chainwork",             tip->nChainWork.GetHex());
     obj.pushKV("size_on_disk",          CalculateCurrentUsage());
     obj.pushKV("pruned",                fPruneMode);
@@ -1559,20 +1628,20 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
     // sorted by activation block
-    BuriedForkDescPushBack(softforks,"bip34", consensusParams.BIP34Height);
-    BuriedForkDescPushBack(softforks,"bip66", consensusParams.BIP66Height);
-    BuriedForkDescPushBack(softforks,"bip65", consensusParams.BIP65Height);
-    BuriedForkDescPushBack(softforks,"bip147", consensusParams.BIP147Height);
-    BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
-    BuriedForkDescPushBack(softforks, "dip0001", consensusParams.DIP0001Height);
-    BuriedForkDescPushBack(softforks, "dip0003", consensusParams.DIP0003Height);
-    BuriedForkDescPushBack(softforks, "dip0008", consensusParams.DIP0008Height);
-    BuriedForkDescPushBack(softforks, "dip0020", consensusParams.DIP0020Height);
-    BuriedForkDescPushBack(softforks, "dip0024", consensusParams.DIP0024Height);
-    BuriedForkDescPushBack(softforks, "realloc", consensusParams.BRRHeight);
-    BuriedForkDescPushBack(softforks, "v19", consensusParams.V19Height);
-    BIP9SoftForkDescPushBack(softforks, "v20", consensusParams, Consensus::DEPLOYMENT_V20);
-    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    BuriedForkDescPushBack(softforks,"bip34", consensusParams.BIP34Height, height);
+    BuriedForkDescPushBack(softforks,"bip66", consensusParams.BIP66Height, height);
+    BuriedForkDescPushBack(softforks,"bip65", consensusParams.BIP65Height, height);
+    BuriedForkDescPushBack(softforks,"bip147", consensusParams.BIP147Height, height);
+    BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight, height);
+    BuriedForkDescPushBack(softforks, "dip0001", consensusParams.DIP0001Height, height);
+    BuriedForkDescPushBack(softforks, "dip0003", consensusParams.DIP0003Height, height);
+    BuriedForkDescPushBack(softforks, "dip0008", consensusParams.DIP0008Height, height);
+    BuriedForkDescPushBack(softforks, "dip0020", consensusParams.DIP0020Height, height);
+    BuriedForkDescPushBack(softforks, "dip0024", consensusParams.DIP0024Height, height);
+    BuriedForkDescPushBack(softforks, "realloc", consensusParams.BRRHeight, height);
+    BuriedForkDescPushBack(softforks, "v19", consensusParams.V19Height, height);
+    BIP9SoftForkDescPushBack(tip, softforks, "v20", consensusParams, Consensus::DEPLOYMENT_V20);
+    BIP9SoftForkDescPushBack(tip, softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
 
     obj.pushKV("softforks",             softforks);
 
@@ -1629,8 +1698,9 @@ static UniValue getchaintips(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    ChainstateManager& chainman = EnsureChainman(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChain& active_chain = chainman.ActiveChain();
 
     /*
      * Idea: The set of chain tips is the active chain tip, plus orphan blocks which do not have another orphan building off of them.
@@ -1644,7 +1714,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     std::set<const CBlockIndex*> setPrevs;
 
     for (const std::pair<const uint256, CBlockIndex*>& item : chainman.BlockIndex()) {
-        if (!chainman.ActiveChain().Contains(item.second)) {
+        if (!active_chain.Contains(item.second)) {
             setOrphans.insert(item.second);
             setPrevs.insert(item.second->pprev);
         }
@@ -1657,7 +1727,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     }
 
     // Always report the currently active tip.
-    setTips.insert(chainman.ActiveChain().Tip());
+    setTips.insert(active_chain.Tip());
 
     int nBranchMin = -1;
     int nCountMax = INT_MAX;
@@ -1672,7 +1742,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     UniValue res(UniValue::VARR);
     for (const CBlockIndex* block : setTips)
     {
-        const CBlockIndex* pindexFork = chainman.ActiveChain().FindFork(block);
+        const CBlockIndex* pindexFork = active_chain.FindFork(block);
         const int branchLen = block->nHeight - pindexFork->nHeight;
         if(branchLen < nBranchMin) continue;
 
@@ -1687,7 +1757,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
         obj.pushKV("forkpoint", pindexFork->phashBlock->GetHex());
 
         std::string status;
-        if (chainman.ActiveChain().Contains(block)) {
+        if (active_chain.Contains(block)) {
             // This block is part of the currently active chain.
             status = "active";
         } else if (block->nStatus & BLOCK_FAILED_MASK) {
@@ -1759,7 +1829,10 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    return MempoolInfoToJSON(EnsureMemPool(request.context), *(EnsureLLMQContext(request.context).isman));
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    return MempoolInfoToJSON(mempool, *llmq_ctx.isman);
 }
 
 static UniValue preciousblock(const JSONRPCRequest& request)
@@ -1781,16 +1854,17 @@ static UniValue preciousblock(const JSONRPCRequest& request)
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CBlockIndex* pblockindex;
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
 
     BlockValidationState state;
-    ::ChainstateActive().PreciousBlock(state, pblockindex);
+    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1817,17 +1891,20 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
     BlockValidationState state;
 
     CBlockIndex* pblockindex;
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    ::ChainstateActive().InvalidateBlock(state, pblockindex);
+
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    active_chainstate.InvalidateBlock(state, pblockindex);
 
     if (state.IsValid()) {
-        ::ChainstateActive().ActivateBestChain(state);
+        active_chainstate.ActivateBestChain(state);
     }
 
     if (!state.IsValid()) {
@@ -1852,20 +1929,23 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     {
         LOCK(cs_main);
-        CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        ::ChainstateActive().ResetBlockFailureFlags(pblockindex);
+        active_chainstate.ResetBlockFailureFlags(pblockindex);
     }
 
     BlockValidationState state;
-    ::ChainstateActive().ActivateBestChain(state);
+    active_chainstate.ActivateBestChain(state);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1900,20 +1980,23 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+
+    CChain& active_chain = chainman.ActiveChain();
     const CBlockIndex* pindex;
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
     if (request.params[1].isNull()) {
         LOCK(cs_main);
-        pindex = ::ChainActive().Tip();
+        pindex = active_chain.Tip();
     } else {
         uint256 hash(ParseHashV(request.params[1], "blockhash"));
         LOCK(cs_main);
-        pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        if (!::ChainActive().Contains(pindex)) {
+        if (!active_chain.Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
         }
     }
@@ -2069,12 +2152,14 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChain& active_chain = chainman.ActiveChain();
 
     CBlockIndex* pindex;
     if (request.params[0].isNum()) {
         const int height = request.params[0].get_int();
-        const int current_tip = ::ChainActive().Height();
+        const int current_tip = active_chain.Height();
         if (height < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
@@ -2082,14 +2167,14 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, current_tip));
         }
 
-        pindex = ::ChainActive()[height];
+        pindex = active_chain[height];
     } else {
         const uint256 hash(ParseHashV(request.params[0], "hash_or_height"));
-        pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        if (!::ChainActive().Contains(pindex)) {
+        if (!active_chain.Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Block is not in chain %s", Params().NetworkIDString()));
         }
     }
@@ -2274,7 +2359,13 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
+
+    CTxMemPool& mempool = EnsureMemPool(node);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
@@ -2304,7 +2395,8 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbosity must be in range 0..2");
         }
     }
-    const CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+
+    const CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
@@ -2313,8 +2405,6 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
 
     int nTxNum = 0;
     UniValue result(UniValue::VARR);
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
-    CTxMemPool& mempool = EnsureMemPool(request.context);
 
     for(const auto& tx : block.vtx)
     {
@@ -2334,7 +2424,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             case 2 :
                 {
                     UniValue objTx(UniValue::VOBJ);
-                    TxToJSON(*tx, uint256(), mempool, *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
+                    TxToJSON(*tx, uint256(), mempool, chainman.ActiveChainstate(), *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
                     result.push_back(objTx);
                     break;
                 }
@@ -2357,7 +2447,7 @@ static UniValue savemempool(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 
     if (!mempool.IsLoaded()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
@@ -2545,15 +2635,17 @@ UniValue scantxoutset(const JSONRPCRequest& request)
         int64_t count = 0;
         std::unique_ptr<CCoinsViewCursor> pcursor;
         CBlockIndex* tip;
+        NodeContext& node = EnsureAnyNodeContext(request.context);
         {
+            ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
-            ::ChainstateActive().ForceFlushStateToDisk();
-            pcursor = std::unique_ptr<CCoinsViewCursor>(::ChainstateActive().CoinsDB().Cursor());
+            CChainState& active_chainstate = chainman.ActiveChainstate();
+            active_chainstate.ForceFlushStateToDisk();
+            pcursor = std::unique_ptr<CCoinsViewCursor>(active_chainstate.CoinsDB().Cursor());
             CHECK_NONFATAL(pcursor);
-            tip = ::ChainActive().Tip();
+            tip = active_chainstate.m_chain.Tip();
             CHECK_NONFATAL(tip);
         }
-        NodeContext& node = EnsureNodeContext(request.context);
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
         result.pushKV("success", res);
         result.pushKV("txouts", count);
@@ -2624,8 +2716,9 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
     const CBlockIndex* block_index;
     bool block_was_connected;
     {
+        ChainstateManager& chainman = EnsureAnyChainman(request.context);
         LOCK(cs_main);
-        block_index = g_chainman.m_blockman.LookupBlockIndex(block_hash);
+        block_index = chainman.m_blockman.LookupBlockIndex(block_hash);
         if (!block_index) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -2702,7 +2795,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
 
     FILE* file{fsbridge::fopen(temppath, "wb")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), afile);
     fs::rename(temppath, path);
 
@@ -2738,7 +2831,7 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
         }
 
         pcursor = std::unique_ptr<CCoinsViewCursor>(chainstate.CoinsDB().Cursor());
-        tip = g_chainman.m_blockman.LookupBlockIndex(stats.hashBlock);
+        tip = chainstate.m_blockman.LookupBlockIndex(stats.hashBlock);
         CHECK_NONFATAL(tip);
     }
 

@@ -45,7 +45,7 @@ static UniValue getconnectioncount(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -66,7 +66,7 @@ static UniValue ping(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -149,7 +149,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman || !node.peerman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
@@ -266,7 +266,7 @@ static UniValue addnode(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -312,7 +312,7 @@ static UniValue disconnectnode(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -370,7 +370,7 @@ static UniValue getaddednodeinfo(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -438,7 +438,7 @@ static UniValue getnettotals(const JSONRPCRequest& request)
     + HelpExampleRpc("getnettotals", "")
         },
     }.Check(request);
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -541,7 +541,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     obj.pushKV("buildversion",  FormatFullVersion());
     obj.pushKV("subversion",    strSubVersion);
     obj.pushKV("protocolversion",PROTOCOL_VERSION);
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (node.connman) {
         ServiceFlags services = node.connman->GetLocalServices();
         obj.pushKV("localservices", strprintf("%016x", services));
@@ -621,7 +621,7 @@ static UniValue setban(const JSONRPCRequest& request)
     if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
         throw std::runtime_error(help.ToString());
     }
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.banman) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
     }
@@ -699,7 +699,7 @@ static UniValue listbanned(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.banman) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
     }
@@ -733,7 +733,7 @@ static UniValue clearbanned(const JSONRPCRequest& request)
                     + HelpExampleRpc("clearbanned", "")
         },
     }.Check(request);
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.banman) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
     }
@@ -754,7 +754,7 @@ static UniValue cleardiscouraged(const JSONRPCRequest& request)
                        + HelpExampleRpc("cleardiscouraged", "")
                },
     }.Check(request);
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.banman) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
     }
@@ -775,7 +775,7 @@ static UniValue setnetworkactive(const JSONRPCRequest& request)
         RPCExamples{""},
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
@@ -809,7 +809,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
             + HelpExampleRpc("getnodeaddresses", "8")
                 },
             }.Check(request);
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
@@ -856,7 +856,7 @@ static UniValue addpeeraddress(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.addrman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
     }
