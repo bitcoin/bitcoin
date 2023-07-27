@@ -13,4 +13,7 @@ export DPKG_ADD_ARCH="i386"
 export PACKAGES="nsis g++-mingw-w64-x86-64-posix wine-binfmt wine64 wine32 file"
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
-export BITCOIN_CONFIG="--enable-reduce-exports --enable-external-signer --disable-gui-tests"
+# Prior to 11.0.0, the mingw-w64 headers were missing noreturn attributes, causing warnings when
+# cross-compiling for Windows. https://sourceforge.net/p/mingw-w64/bugs/306/
+# https://github.com/mingw-w64/mingw-w64/commit/1690994f515910a31b9fb7c7bd3a52d4ba987abe
+export BITCOIN_CONFIG="--enable-reduce-exports --enable-external-signer --disable-gui-tests CXXFLAGS=-Wno-return-type"
