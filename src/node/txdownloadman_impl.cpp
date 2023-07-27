@@ -365,7 +365,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 }
 
                 // Potentially flip add_extra_compact_tx to false if AddTx returns false because the tx was already there
-                add_extra_compact_tx &= m_orphanage.AddTx(ptx, nodeid);
+                add_extra_compact_tx &= m_orphanage.AddTx(ptx, nodeid, unique_parents);
 
                 // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
                 m_txrequest.ForgetTxHash(tx.GetHash());
