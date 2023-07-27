@@ -255,15 +255,15 @@ RPCHelpMan importaddress()
 
     // Use legacy spkm only if the wallet does not support descriptors.
     bool use_legacy = !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS);
-    if (!use_legacy) {
+    if (use_legacy) {
+        // In case the wallet is blank
+    EnsureLegacyScriptPubKeyMan(*pwallet, true);
+    } else {
         // We don't allow mixing watch-only descriptors with spendable ones.
         if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import address in wallet with private keys enabled. "
                                                  "Create wallet with no private keys to watch specific addresses/scripts");
         }
-    } else {
-        // In case the wallet is blank
-        EnsureLegacyScriptPubKeyMan(*pwallet, /*also_create=*/true);
     }
 
     const std::string strLabel{LabelFromValue(request.params[1])};
@@ -308,14 +308,15 @@ RPCHelpMan importaddress()
             if (fP2SH) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
             }
+            if (OutputTypeFromDestination(dest) == OutputType::BECH32M) {
+                if (use_legacy)
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m addresses cannot be imported into legacy wallets");
+            }
 
             pwallet->MarkDirty();
 
             if (use_legacy) {
-                if (OutputTypeFromDestination(dest) == OutputType::BECH32M) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m addresses cannot be imported into legacy wallets");
-                }
-                pwallet->ImportScriptPubKeys(strLabel, {GetScriptForDestination(dest)}, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
+            pwallet->ImportScriptPubKeys(strLabel, {GetScriptForDestination(dest)}, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
             } else {
                 import_descriptor("addr(" + address + ")", strLabel);
             }
@@ -324,13 +325,16 @@ RPCHelpMan importaddress()
 
             if (use_legacy) {
                 std::vector<unsigned char> data(ParseHex(hex));
-                CScript redeem_script(data.begin(), data.end());
-                std::set<CScript> scripts = {redeem_script};
-                pwallet->ImportScripts(scripts, /*timestamp=*/0);
-                if (fP2SH) {
-                    scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
-                }
-                pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
+            CScript redeem_script(data.begin(), data.end());
+
+            std::set<CScript> scripts = {redeem_script};
+            pwallet->ImportScripts(scripts, /*timestamp=*/0);
+
+            if (fP2SH) {
+                scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
+            }
+
+            pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
             } else {
                 // P2SH Not allowed. Can't detect inner P2SH function from a raw hex.
                 if (fP2SH) throw JSONRPCError(RPC_WALLET_ERROR, "P2SH import feature disabled for descriptors' wallet. "
