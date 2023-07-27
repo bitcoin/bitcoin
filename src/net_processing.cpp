@@ -547,7 +547,7 @@ public:
     void BlockChecked(const CBlock& block, const BlockValidationState& state) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, !m_peer_mutex);
 
     /** Implement NetEventsInterface */
     void InitializeNode(CNode& node, ServiceFlags our_services) override
@@ -976,7 +976,8 @@ private:
      * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
      * removing the first element if necessary.
      */
-    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
 
     /** Stack of nodes which we have set to announce using compact blocks */
     std::list<NodeId> lNodesAnnouncingHeaderAndIDs GUARDED_BY(cs_main);
@@ -1288,32 +1289,28 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
             }
         }
     }
-    m_connman.ForNode(nodeid, [this](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        AssertLockHeld(::cs_main);
-        if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
-            // As per BIP152, we only get 3 of our peers to announce
-            // blocks using compact encodings.
-            m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this](CNode* pnodeStop) {
-                PeerRef peer{GetPeerRef(pnodeStop->GetId())};
-                if (!peer) return false;
 
-                m_connman.PushMessage(pnodeStop->GetId(), CNetMsgMaker(peer->m_greatest_common_version).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
-                // save BIP152 bandwidth state: we select peer to be low-bandwidth
-                peer->m_bip152_highbandwidth_to = false;
-                return true;
-            });
-            lNodesAnnouncingHeaderAndIDs.pop_front();
+    AssertLockHeld(::cs_main);
+    if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
+        // As per BIP152, we only get 3 of our peers to announce
+        // blocks using compact encodings.
+        PeerRef peer{GetPeerRef(lNodesAnnouncingHeaderAndIDs.front())};
+        if (peer && m_connman.IsSuccessfullyConnected(peer->m_id)) {
+            m_connman.PushMessage(peer->m_id, CNetMsgMaker(peer->m_greatest_common_version).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
+            // save BIP152 bandwidth state: we select peer to be low-bandwidth
+            peer->m_bip152_highbandwidth_to = false;
         }
 
-        PeerRef peer{GetPeerRef(pfrom->GetId())};
-        if (!peer) return false;
+        lNodesAnnouncingHeaderAndIDs.pop_front();
+    }
 
-        m_connman.PushMessage(pfrom->GetId(), CNetMsgMaker(peer->m_greatest_common_version).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION));
-        // save BIP152 bandwidth state: we select peer to be high-bandwidth
-        peer->m_bip152_highbandwidth_to = true;
-        lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
-        return true;
-    });
+    PeerRef peer{GetPeerRef(nodeid)};
+    if (!peer || m_connman.IsSuccessfullyConnected(nodeid)) return;
+
+    m_connman.PushMessage(nodeid, CNetMsgMaker(peer->m_greatest_common_version).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION));
+    // save BIP152 bandwidth state: we select peer to be high-bandwidth
+    peer->m_bip152_highbandwidth_to = true;
+    lNodesAnnouncingHeaderAndIDs.push_back(nodeid);
 }
 
 bool PeerManagerImpl::TipMayBeStale()
@@ -1863,17 +1860,15 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     const uint256& hash{block_index.GetBlockHash()};
     std::vector<CInv> invs{CInv(MSG_BLOCK | MSG_WITNESS_FLAG, hash)};
 
+    if (!m_connman.IsSuccessfullyConnected(peer->m_id)) return "Peer not fully connected";
+
     // Send block request message to the peer
     const CNetMsgMaker msgMaker(peer->m_greatest_common_version);
-    bool success = m_connman.ForNode(peer_id, [this, &invs, &msgMaker](CNode* node) {
-        this->m_connman.PushMessage(node->GetId(), msgMaker.Make(NetMsgType::GETDATA, invs));
-        return true;
-    });
+    m_connman.PushMessage(peer->m_id, msgMaker.Make(NetMsgType::GETDATA, invs));
 
-    if (!success) return "Peer not fully connected";
 
     LogPrint(BCLog::NET, "Requesting block %s from peer=%d\n",
-                 hash.ToString(), peer_id);
+             hash.ToString(), peer_id);
     return std::nullopt;
 }
 
@@ -2005,27 +2000,25 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         m_most_recent_block_txs = std::move(most_recent_block_txs);
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        AssertLockHeld(::cs_main);
-        PeerRef peer{GetPeerRef(pnode->GetId())};
-        if (!peer) return;
-
-        if (peer->m_greatest_common_version < INVALID_CB_NO_BAN_VERSION)
+    LOCK(m_peer_mutex);
+    for (auto& [id, peer] : m_peer_map) {
+        if (peer->m_greatest_common_version < INVALID_CB_NO_BAN_VERSION ||
+            !m_connman.IsSuccessfullyConnected(id))
             return;
-        ProcessBlockAvailability(pnode->GetId());
-        CNodeState &state = *State(pnode->GetId());
+
+        ProcessBlockAvailability(id);
+        CNodeState& state = *State(id);
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
         if (state.m_requested_hb_cmpctblocks && !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
-
             LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", "PeerManager::NewPoWValidBlock",
-                    hashBlock.ToString(), pnode->GetId());
+                     hashBlock.ToString(), id);
 
             const CSerializedNetMsg& ser_cmpctblock{lazy_ser.get()};
-            m_connman.PushMessage(pnode->GetId(), ser_cmpctblock.Copy());
+            m_connman.PushMessage(id, ser_cmpctblock.Copy());
             state.pindexBestHeaderSent = pindex;
         }
-    });
+    }
 }
 
 /**
