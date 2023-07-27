@@ -365,6 +365,15 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
 
 TestChainSetup::~TestChainSetup()
 {
+    // Allow tx index to catch up with the block index cause otherwise
+    // we might be destroying it while scheduler still has some work for it
+    // e.g. via BlockConnected signal
+    int64_t time_start = GetTimeMillis();
+    while (!g_txindex->BlockUntilSyncedToCurrentChain()) {
+        static constexpr int64_t timeout_ms = 10 * 1000;
+        assert(time_start + timeout_ms > GetTimeMillis());
+        UninterruptibleSleep(std::chrono::milliseconds{100});
+    }
     g_txindex->Interrupt();
     g_txindex->Stop();
     g_txindex.reset();

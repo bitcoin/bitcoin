@@ -1884,7 +1884,6 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 
     WalletLogPrintf("Rescan started from block %s...\n", start_block.ToString());
 
-    fAbortRescan = false;
     ShowProgress(strprintf("%s " + _("Rescanning...").translated, GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
     uint256 tip_hash;
     // The way the 'block_height' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
@@ -3667,6 +3666,9 @@ void CWallet::AutoLockMasternodeCollaterals()
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
     AssertLockHeld(cs_wallet);
+
+    WalletLogPrintf("ZapSelectTx started for %d transactions...\n", vHashIn.size());
+
     DBErrors nZapSelectTxRet = WalletBatch(*database).ZapSelectTx(vHashIn, vHashOut);
     for (uint256 hash : vHashOut) {
         const auto& it = mapWallet.find(hash);
@@ -3689,6 +3691,8 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
         return nZapSelectTxRet;
 
     MarkDirty();
+
+    WalletLogPrintf("ZapSelectTx completed for %d transactions.\n", vHashOut.size());
 
     return DBErrors::LOAD_OK;
 }

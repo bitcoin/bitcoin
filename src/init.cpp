@@ -2416,7 +2416,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*::coinJoinServer)), std::chrono::seconds{1});
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET
-    } else if(CCoinJoinClientOptions::IsEnabled()) {
+    } else {
         node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.mempool), std::ref(*node.connman)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }

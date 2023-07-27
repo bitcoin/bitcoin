@@ -595,7 +595,7 @@ public:
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state,
                       const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
+    bool UndoBlock(const CBlockIndex* pindex);
 
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
