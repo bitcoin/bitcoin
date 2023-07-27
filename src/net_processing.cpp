@@ -3616,7 +3616,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     const CNetMsgMaker msgMaker(peer->m_greatest_common_version);
 
     if (msg_type == NetMsgType::VERACK) {
-        if (pfrom.fSuccessfullyConnected) {
+        if (m_connman.IsSuccessfullyConnected(pfrom.GetId())) {
             LogPrint(BCLog::NET, "ignoring redundant verack message from peer=%d\n", pfrom.GetId());
             return;
         }
@@ -3666,7 +3666,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // At this point we can be sure that we did not connect to ourselves,
         // so the entry is no longer needed.
         WITH_LOCK(m_version_nonces_mutex, m_version_nonces.erase(pfrom.GetId()));
-        pfrom.fSuccessfullyConnected = true;
+        m_connman.SetSuccessfullyConnected(pfrom.GetId());
         m_evictionman.UpdateSuccessfullyConnected(pfrom.GetId());
         return;
     }
@@ -3697,7 +3697,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     // BIP339 defines feature negotiation of wtxidrelay, which must happen between
     // VERSION and VERACK to avoid relay problems from switching after a connection is up.
     if (msg_type == NetMsgType::WTXIDRELAY) {
-        if (pfrom.fSuccessfullyConnected) {
+        if (m_connman.IsSuccessfullyConnected(pfrom.GetId())) {
             // Disconnect peers that send a wtxidrelay message after VERACK.
             LogPrint(BCLog::NET, "wtxidrelay received after verack from peer=%d; disconnecting\n", pfrom.GetId());
             m_connman.DisconnectNode(pfrom.GetId());
@@ -3719,7 +3719,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     // BIP155 defines feature negotiation of addrv2 and sendaddrv2, which must happen
     // between VERSION and VERACK.
     if (msg_type == NetMsgType::SENDADDRV2) {
-        if (pfrom.fSuccessfullyConnected) {
+        if (m_connman.IsSuccessfullyConnected(pfrom.GetId())) {
             // Disconnect peers that send a SENDADDRV2 message after VERACK.
             LogPrint(BCLog::NET, "sendaddrv2 received after verack from peer=%d; disconnecting\n", pfrom.GetId());
             m_connman.DisconnectNode(pfrom.GetId());
@@ -3738,7 +3738,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (pfrom.fSuccessfullyConnected) {
+        if (m_connman.IsSuccessfullyConnected(pfrom.GetId())) {
             LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "sendtxrcncl received after verack from peer=%d; disconnecting\n", pfrom.GetId());
             m_connman.DisconnectNode(pfrom.GetId());
             return;
@@ -3785,7 +3785,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
-    if (!pfrom.fSuccessfullyConnected) {
+    if (!m_connman.IsSuccessfullyConnected(pfrom.GetId())) {
         LogPrint(BCLog::NET, "Unsupported message \"%s\" prior to verack from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
         return;
     }
@@ -5462,7 +5462,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     if (MaybeDiscourageAndDisconnect(*pto, *peer)) return true;
 
     // Don't send anything until the version handshake is complete
-    if (!pto->fSuccessfullyConnected || m_connman.IsDisconnected(peer->m_id))
+    if (!m_connman.IsSuccessfullyConnected(peer->m_id) ||
+        m_connman.IsDisconnected(peer->m_id))
         return true;
 
     // If we get here, the outgoing message serialization version is set and can't change.

@@ -696,6 +696,12 @@ public:
     /** Check if a connection still exists. */
     bool IsDisconnected(NodeId id) const;
 
+    /** Check if a connection has completed the version handshake. */
+    bool IsSuccessfullyConnected(NodeId id) const;
+    /** Mark this connection as having completed the version handshake.
+     * TODO: this smells like app-data. */
+    void SetSuccessfullyConnected(NodeId id);
+
     //! Used to convey which local services we are offering peers during node
     //! connection.
     //!

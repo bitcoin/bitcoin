@@ -2643,6 +2643,24 @@ bool CConnman::IsDisconnected(NodeId id) const
            it->second->fDisconnect;
 }
 
+bool CConnman::IsSuccessfullyConnected(NodeId id) const
+{
+    LOCK(m_nodes_mutex);
+    if (auto it = m_nodes.find(id); it != m_nodes.end()) {
+        return it->second->fSuccessfullyConnected;
+    }
+
+    return false;
+}
+
+void CConnman::SetSuccessfullyConnected(NodeId id)
+{
+    LOCK(m_nodes_mutex);
+    if (auto it = m_nodes.find(id); it != m_nodes.end()) {
+        it->second->fSuccessfullyConnected = true;
+    }
+}
+
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     nTotalBytesRecv += bytes;
