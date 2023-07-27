@@ -2944,13 +2944,6 @@ std::optional<std::pair<CNetMessage, bool>> CConnman::PollMessage(NodeId id)
     return std::nullopt;
 }
 
-bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
-{
-    LOCK(m_nodes_mutex);
-    auto it = m_nodes.find(id);
-    return it != m_nodes.end() && NodeFullyConnected(it->second) && func(it->second);
-}
-
 CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
 {
     return CSipHasher(nSeed0, nSeed1).Write(id);

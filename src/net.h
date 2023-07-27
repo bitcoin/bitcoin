@@ -610,29 +610,8 @@ public:
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
-    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
-
     void PushMessage(NodeId id, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::optional<std::pair<CNetMessage, bool>> PollMessage(NodeId id);
-
-    using NodeFn = std::function<void(CNode*)>;
-    void ForEachNode(const NodeFn& func)
-    {
-        LOCK(m_nodes_mutex);
-        for (auto&& [id, node] : m_nodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
-    void ForEachNode(const NodeFn& func) const
-    {
-        LOCK(m_nodes_mutex);
-        for (auto&& [id, node] : m_nodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
 
     // Addrman functions
     /**
