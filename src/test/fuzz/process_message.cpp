@@ -84,11 +84,11 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     // fuzzed_data_provider is fully consumed after this call, don't use it
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
     try {
-        g_setup->m_node.peerman->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream,
+        g_setup->m_node.peerman->ProcessMessage(p2p_node.GetId(), random_message_type, random_bytes_data_stream,
                                                 GetTime<std::chrono::microseconds>(), std::atomic<bool>{false});
     } catch (const std::ios_base::failure&) {
     }
-    g_setup->m_node.peerman->SendMessages(&p2p_node);
+    g_setup->m_node.peerman->SendMessages(p2p_node.GetId());
     SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
 }

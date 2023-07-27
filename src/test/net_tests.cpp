@@ -856,7 +856,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
     chainstate.JumpOutOfIbd();
 
-    m_node.peerman->InitializeNode(*peer, NODE_NETWORK);
+    m_node.peerman->InitializeNode(peer->GetContext(), NODE_NETWORK);
 
     std::atomic<bool> interrupt_dummy{false};
     std::chrono::microseconds time_received_dummy{0};
@@ -866,14 +866,14 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     CDataStream msg_version_stream{msg_version.data, SER_NETWORK, PROTOCOL_VERSION};
 
     m_node.peerman->ProcessMessage(
-        *peer, NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
+        peer->GetId(), NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
 
     const auto msg_verack = msg_maker.Make(NetMsgType::VERACK);
     CDataStream msg_verack_stream{msg_verack.data, SER_NETWORK, PROTOCOL_VERSION};
 
     // Will set peer.fSuccessfullyConnected to true (necessary in SendMessages()).
     m_node.peerman->ProcessMessage(
-        *peer, NetMsgType::VERACK, msg_verack_stream, time_received_dummy, interrupt_dummy);
+        peer->GetId(), NetMsgType::VERACK, msg_verack_stream, time_received_dummy, interrupt_dummy);
 
     // Ensure that peer_us_addr:bind_port is sent to the peer.
     const CService expected{peer_us_addr, bind_port};
@@ -899,11 +899,11 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         }
     };
 
-    m_node.peerman->SendMessages(peer);
+    m_node.peerman->SendMessages(peer->GetId());
 
     BOOST_CHECK(sent);
 
-    m_node.peerman->FinalizeNode(*peer, peer->fSuccessfullyConnected);
+    m_node.peerman->FinalizeNode(peer->GetContext(), peer->fSuccessfullyConnected);
 
     connman.ClearTestNodes();
 

@@ -24,7 +24,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
     const CNetMsgMaker mm{0};
 
-    peerman.InitializeNode(node, local_services);
+    peerman.InitializeNode(node.GetContext(), local_services);
 
     CSerializedNetMsg msg_version{
         mm.Make(NetMsgType::VERSION,
@@ -44,7 +44,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     (void)connman.ReceiveMsgFrom(node, msg_version);
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
-    peerman.SendMessages(&node);
+    peerman.SendMessages(node.GetId());
     if (node.fDisconnect) return;
     PeerStats peer_stats;
     assert(peerman.GetPeerStats(node.GetId(), peer_stats));
@@ -56,7 +56,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
         (void)connman.ReceiveMsgFrom(node, msg_verack);
         node.fPauseSend = false;
         connman.ProcessMessagesOnce(node);
-        peerman.SendMessages(&node);
+        peerman.SendMessages(node.GetId());
         assert(node.fSuccessfullyConnected == true);
     }
 }

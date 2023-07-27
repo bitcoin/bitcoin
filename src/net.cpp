@@ -988,7 +988,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                  .recv_flood_size = nReceiveFloodSize,
                              });
     pnode->AddRef();
-    m_msgproc->InitializeNode(*pnode, nodeServices);
+    m_msgproc->InitializeNode(pnode->GetContext(), nodeServices);
 
     LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
 
@@ -1976,7 +1976,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
 
-    m_msgproc->InitializeNode(*pnode, nLocalServices);
+    m_msgproc->InitializeNode(pnode->GetContext(), nLocalServices);
     {
         LOCK(m_nodes_mutex);
         m_nodes.emplace(pnode->GetId(), pnode);
@@ -2014,12 +2014,12 @@ void CConnman::ThreadMessageHandler()
                     continue;
 
                 // Receive messages
-                bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode, flagInterruptMsgProc);
+                bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode->GetId(), flagInterruptMsgProc);
                 fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
                 if (flagInterruptMsgProc)
                     return;
                 // Send messages
-                m_msgproc->SendMessages(pnode);
+                m_msgproc->SendMessages(pnode->GetId());
 
                 if (flagInterruptMsgProc)
                     return;
@@ -2459,7 +2459,7 @@ void CConnman::StopNodes()
 void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
-    m_msgproc->FinalizeNode(*pnode, pnode->fSuccessfullyConnected);
+    m_msgproc->FinalizeNode(pnode->GetContext(), pnode->fSuccessfullyConnected);
     delete pnode;
 }
 

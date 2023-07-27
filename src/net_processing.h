@@ -106,7 +106,7 @@ public:
     virtual void CheckForStaleTipAndEvictPeers() = 0;
 
     /** Process a single message from a peer. Public for fuzz testing */
-    virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+    virtual void ProcessMessage(NodeId id, const std::string& msg_type, CDataStream& vRecv,
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 };
 

@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     }
 
     // Test starts here
-    BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in getheaders
+    BOOST_CHECK(peerman.SendMessages(dummyNode1->GetId())); // should result in getheaders
 
     {
         LOCK(dummyNode1->cs_vSend);
@@ -109,18 +109,18 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     int64_t nStartTime = GetTime();
     // Wait 21 minutes
     SetMockTime(nStartTime+21*60);
-    BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in getheaders
+    BOOST_CHECK(peerman.SendMessages(dummyNode1->GetId())); // should result in getheaders
     {
         LOCK(dummyNode1->cs_vSend);
         BOOST_CHECK(dummyNode1->vSendMsg.size() > 0);
     }
     // Wait 3 more minutes
     SetMockTime(nStartTime + 24 * 60);
-    BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in disconnect
+    BOOST_CHECK(peerman.SendMessages(dummyNode1->GetId())); // should result in disconnect
                                                      // TODO need to use ConnmanTestMsg to register nodes in the map
     BOOST_CHECK(dummyNode1->fDisconnect == true);
 
-    peerman.FinalizeNode(*dummyNode1, dummyNode1->fSuccessfullyConnected);
+    peerman.FinalizeNode(dummyNode1->GetContext(), dummyNode1->fSuccessfullyConnected);
     connman->ClearTestNodes();
 
     TestOnlyResetTimeData();
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     connman->AddTestNode(*nodes[0]);
     connman->Handshake(*nodes[0], true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
     peerLogic->UnitTestMisbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD); // Should be discouraged
-    BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
+    BOOST_CHECK(peerLogic->SendMessages(nodes[0]->GetId()));
 
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(nodes[0]->fDisconnect);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     connman->AddTestNode(*nodes[1]);
     connman->Handshake(*nodes[1], true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
     peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1);
-    BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
+    BOOST_CHECK(peerLogic->SendMessages(nodes[1]->GetId()));
     // [0] is still discouraged/disconnected.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(nodes[0]->fDisconnect);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(!nodes[1]->fDisconnect);
     peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), 1); // [1] reaches discouragement threshold
-    BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
+    BOOST_CHECK(peerLogic->SendMessages(nodes[1]->GetId()));
     // Expect both [0] and [1] to be discouraged/disconnected now.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(nodes[0]->fDisconnect);
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     connman->AddTestNode(*nodes[2]);
     connman->Handshake(*nodes[2], true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
     peerLogic->UnitTestMisbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD);
-    BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
+    BOOST_CHECK(peerLogic->SendMessages(nodes[2]->GetId()));
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(banman->IsDiscouraged(addr[2]));
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(nodes[2]->fDisconnect);
 
     for (CNode* node : nodes) {
-        peerLogic->FinalizeNode(*node, node->fSuccessfullyConnected);
+        peerLogic->FinalizeNode(node->GetContext(), node->fSuccessfullyConnected);
     }
     connman->ClearTestNodes();
 
@@ -269,10 +269,10 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     connman->Handshake(*dummyNode, true, ServiceFlags(NODE_NETWORK | NODE_WITNESS), ServiceFlags(NODE_NETWORK | NODE_WITNESS), PROTOCOL_VERSION, true);
 
     peerLogic->UnitTestMisbehaving(dummyNode->GetId(), DISCOURAGEMENT_THRESHOLD);
-    BOOST_CHECK(peerLogic->SendMessages(dummyNode));
+    BOOST_CHECK(peerLogic->SendMessages(dummyNode->GetId()));
     BOOST_CHECK(banman->IsDiscouraged(addr));
 
-    peerLogic->FinalizeNode(*dummyNode, dummyNode->fSuccessfullyConnected);
+    peerLogic->FinalizeNode(dummyNode->GetContext(), dummyNode->fSuccessfullyConnected);
 
     connman->ClearTestNodes();
 
