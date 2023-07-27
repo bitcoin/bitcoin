@@ -116,13 +116,13 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     // AddTx should return false if tx is too big or already have it
                     // tx weight is unknown, we only check when tx is already in orphanage
                     {
-                        bool add_tx = orphanage.AddTx(tx, peer_id);
+                        bool add_tx = orphanage.AddTx(tx, peer_id, {});
                         // have_tx == true -> add_tx == false
                         Assert(!have_tx || !add_tx);
                     }
                     have_tx = orphanage.HaveTx(tx->GetWitnessHash());
                     {
-                        bool add_tx = orphanage.AddTx(tx, peer_id);
+                        bool add_tx = orphanage.AddTx(tx, peer_id, {});
                         // if have_tx is still false, it must be too big
                         Assert(!have_tx == (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT));
                         Assert(!have_tx || !add_tx);
