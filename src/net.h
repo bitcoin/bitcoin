@@ -702,6 +702,9 @@ public:
      * TODO: this smells like app-data. */
     void SetSuccessfullyConnected(NodeId id);
 
+    /** Check whether more data should be send on this connection. */
+    bool IsSendingPaused(NodeId id) const;
+
     //! Used to convey which local services we are offering peers during node
     //! connection.
     //!

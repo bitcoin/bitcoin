@@ -2661,6 +2661,14 @@ void CConnman::SetSuccessfullyConnected(NodeId id)
     }
 }
 
+bool CConnman::IsSendingPaused(NodeId id) const
+{
+    LOCK(m_nodes_mutex);
+    auto it = m_nodes.find(id);
+    return it == m_nodes.end() ||
+           it->second->fPauseSend;
+}
+
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     nTotalBytesRecv += bytes;
