@@ -2,7 +2,7 @@
 
 #include <common/args.h>
 #include <net_processing.h>
-
+extern bool fMasternodeMode;
 namespace node {
 
 void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& options)
@@ -18,6 +18,10 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
     }
 
     if (auto value{argsman.GetBoolArg("-capturemessages")}) options.capture_messages = *value;
+    // SYSCOIN
+    if (!fMasternodeMode) {
+        if (auto value{argsman.GetBoolArg("-blocksonly")}) options.ignore_incoming_txs = *value;
+    }
 }
 
 } // namespace node
