@@ -145,7 +145,7 @@ uint16_t GetListenPort()
 }
 
 // find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNode& peer)
+bool GetLocal(CService& addr, const ConnectionContext& conn_ctx)
 {
     if (!fListen)
         return false;
@@ -160,14 +160,14 @@ bool GetLocal(CService& addr, const CNode& peer)
             // to other networks and don't advertise our other-network address
             // to privacy networks.
             const Network our_net{entry.first.GetNetwork()};
-            const Network peers_net{peer.GetContext().ConnectedThroughNetwork()};
+            const Network peers_net{conn_ctx.ConnectedThroughNetwork()};
             if (our_net != peers_net &&
                 (our_net == NET_ONION || our_net == NET_I2P ||
                  peers_net == NET_ONION || peers_net == NET_I2P)) {
                 continue;
             }
             int nScore = entry.second.nScore;
-            int nReachability = entry.first.GetReachabilityFrom(peer.GetContext().addr);
+            int nReachability = entry.first.GetReachabilityFrom(conn_ctx.addr);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
                 addr = CService(entry.first, entry.second.nPort);
@@ -205,10 +205,10 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
 // Otherwise, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
-CService GetLocalAddress(const CNode& peer)
+CService GetLocalAddress(const ConnectionContext& conn_ctx)
 {
     CService addr;
-    if (GetLocal(addr, peer)) {
+    if (GetLocal(addr, conn_ctx)) {
         return addr;
     }
     return CService{CNetAddr(), GetListenPort()};
@@ -221,16 +221,15 @@ static int GetnScore(const CService& addr)
     return (it != mapLocalHost.end()) ? it->second.nScore : 0;
 }
 
-// Is our peer's addrLocal potentially useful as an external IP source?
-bool IsPeerAddrLocalGood(CNode* pnode, const CService& addr_local)
+bool IsPeerAddrLocalGood(const ConnectionContext& conn_ctx, const CService& addr_local)
 {
-    return fDiscover && pnode->GetContext().addr.IsRoutable() && addr_local.IsRoutable() &&
+    return fDiscover && conn_ctx.addr.IsRoutable() && addr_local.IsRoutable() &&
            IsReachable(addr_local.GetNetwork());
 }
 
-std::optional<CService> GetLocalAddrForPeer(CNode& node, const CService& addr_local)
+std::optional<CService> GetLocalAddrForPeer(const ConnectionContext& conn_ctx, const CService& addr_local)
 {
-    CService addrLocal{GetLocalAddress(node)};
+    CService addrLocal{GetLocalAddress(conn_ctx)};
     if (gArgs.GetBoolArg("-addrmantest", false)) {
         // use IPv4 loopback during addrmantest
         addrLocal = CService(LookupNumeric("127.0.0.1", GetListenPort()));
@@ -239,10 +238,10 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node, const CService& addr_lo
     // tells us that it sees us as in case it has a better idea of our
     // address than we do.
     FastRandomContext rng;
-    if (IsPeerAddrLocalGood(&node, addr_local) && (!addrLocal.IsRoutable() ||
+    if (IsPeerAddrLocalGood(conn_ctx, addr_local) && (!addrLocal.IsRoutable() ||
          rng.randbits((GetnScore(addrLocal) > LOCAL_MANUAL) ? 3 : 1) == 0))
     {
-        if (node.GetContext().IsInboundConn()) {
+        if (conn_ctx.IsInboundConn()) {
             // For inbound connections, assume both the address and the port
             // as seen from the peer.
             addrLocal = addr_local;
@@ -256,7 +255,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node, const CService& addr_lo
     }
     if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
     {
-        LogPrint(BCLog::NET, "Advertising address %s to peer=%d\n", addrLocal.ToStringAddrPort(), node.GetId());
+        LogPrint(BCLog::NET, "Advertising address %s to peer=%d\n", addrLocal.ToStringAddrPort(), conn_ctx.id);
         return addrLocal;
     }
     // Address is unroutable. Don't advertise.

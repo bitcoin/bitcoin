@@ -147,9 +147,9 @@ enum
     LOCAL_MAX
 };
 
-bool IsPeerAddrLocalGood(CNode *pnode, const CService& addr_local);
-/** Returns a local address that we should advertise to this peer. */
-std::optional<CService> GetLocalAddrForPeer(CNode& node, const CService& addr_local);
+bool IsPeerAddrLocalGood(const ConnectionContext& conn_ctx, const CService& addr_local);
+/** Returns a local address that we should advertise on this connection. */
+std::optional<CService> GetLocalAddrForPeer(const ConnectionContext& conn_ctx, const CService& addr_local);
 
 /**
  * Mark a network as reachable or unreachable (no automatic connects to it)
@@ -167,7 +167,7 @@ void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
 bool GetLocal(CService& addr, const CNode& peer);
-CService GetLocalAddress(const CNode& peer);
+CService GetLocalAddress(const ConnectionContext& conn_ctx);
 CService MaybeFlipIPv6toCJDNS(const CService& service);
 
 
