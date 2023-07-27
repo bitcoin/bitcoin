@@ -10,6 +10,7 @@
 #include <policy/rbf.h>
 #include <policy/truc_policy.h>
 #include <txmempool.h>
+#include <txorphanage.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -217,4 +218,14 @@ void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry)
             entry.GetTime().count(), entry.GetHeight(), entry.GetSequence(),
             entry.GetSpendsCoinbase(), entry.GetSigOpCost(), entry.GetLockPoints());
     changeset->Apply();
+}
+
+bool AddToOrphanage(TxOrphanage& orphanage, const CTransactionRef& tx, NodeId peer)
+{
+    std::vector<Txid> parent_txids;
+    parent_txids.reserve(tx->vin.size());
+    // Assume all inputs are missing
+    std::transform(tx->vin.cbegin(), tx->vin.cend(), std::back_inserter(parent_txids),
+                   [](const auto& input){return input.prevout.hash;});
+    return orphanage.AddTx(tx, peer, parent_txids);
 }

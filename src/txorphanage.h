@@ -27,8 +27,10 @@ static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
  */
 class TxOrphanage {
 public:
-    /** Add a new orphan transaction */
-    bool AddTx(const CTransactionRef& tx, NodeId peer);
+    /** Add a new orphan transaction.
+     * parent_txids should contain a (de-duplicated) list of txids of this transaction's missing parents.
+      @returns true if the transaction was added as a new orphan. */
+    bool AddTx(const CTransactionRef& tx, NodeId peer, const std::vector<Txid>& parent_txids);
 
     /** Check if we already have an orphan transaction (by wtxid only) */
     bool HaveTx(const Wtxid& wtxid) const;
@@ -66,6 +68,9 @@ public:
      * which peer provided each tx. */
     std::vector<std::pair<CTransactionRef, NodeId>> GetChildrenFromDifferentPeer(const CTransactionRef& parent, NodeId nodeid) const;
 
+    /** Get an orphan's parent_txids, or std::nullopt if the orphan is not present. */
+    std::optional<std::vector<Txid>> GetParentTxids(const Wtxid& wtxid);
+
     /** Return how many entries exist in the orphange */
     size_t Size() const
     {
@@ -84,6 +89,8 @@ public:
 protected:
     struct OrphanTx : public OrphanTxBase {
         size_t list_pos;
+        /** Txids of the missing parents to request. Determined by peerman. */
+        std::vector<Txid> parent_txids;
     };
 
     /** Map from wtxid to orphan transaction record. Limited by
