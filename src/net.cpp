@@ -717,6 +717,15 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
     return true;
 }
 
+V1Transport::V1Transport(const NodeId node_id, int nTypeIn, int nVersionIn) noexcept :
+    m_node_id(node_id), hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn)
+{
+    assert(std::size(Params().MessageStart()) == std::size(m_magic_bytes));
+    std::copy(std::begin(Params().MessageStart()), std::end(Params().MessageStart()), m_magic_bytes);
+    LOCK(m_recv_mutex);
+    Reset();
+}
+
 int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
 {
     AssertLockHeld(m_recv_mutex);
@@ -741,7 +750,7 @@ int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
     }
 
     // Check start string, network magic
-    if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
+    if (memcmp(hdr.pchMessageStart, m_magic_bytes, CMessageHeader::MESSAGE_START_SIZE) != 0) {
         LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
@@ -835,7 +844,7 @@ bool V1Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     uint256 hash = Hash(msg.data);
 
     // create header
-    CMessageHeader hdr(Params().MessageStart(), msg.m_type.c_str(), msg.data.size());
+    CMessageHeader hdr(m_magic_bytes, msg.m_type.c_str(), msg.data.size());
     memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     // serialize header
@@ -2874,7 +2883,7 @@ CNode::CNode(NodeId idIn,
              ConnectionType conn_type_in,
              bool inbound_onion,
              CNodeOptions&& node_opts)
-    : m_transport{std::make_unique<V1Transport>(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION)},
+    : m_transport{std::make_unique<V1Transport>(idIn, SER_NETWORK, INIT_PROTO_VERSION)},
       m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},

@@ -25,8 +25,8 @@ void initialize_p2p_transport_serialization()
 FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serialization)
 {
     // Construct transports for both sides, with dummy NodeIds.
-    V1Transport recv_transport{Params(), NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};
-    V1Transport send_transport{Params(), NodeId{1}, SER_NETWORK, INIT_PROTO_VERSION};
+    V1Transport recv_transport{NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};
+    V1Transport send_transport{NodeId{1}, SER_NETWORK, INIT_PROTO_VERSION};
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
