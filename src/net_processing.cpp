@@ -5214,7 +5214,7 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 
 void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now)
 {
-    if (m_connman.ShouldRunInactivityChecks(node_to, std::chrono::duration_cast<std::chrono::seconds>(now)) &&
+    if (m_connman.ShouldRunInactivityChecks(peer.m_conn_ctx, std::chrono::duration_cast<std::chrono::seconds>(now)) &&
         peer.m_ping_nonce_sent &&
         now > peer.m_ping_start.load() + TIMEOUT_INTERVAL)
     {

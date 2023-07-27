@@ -1119,9 +1119,9 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
-bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const
+bool CConnman::ShouldRunInactivityChecks(const ConnectionContext& conn_ctx, std::chrono::seconds now) const
 {
-    return node.GetContext().connected + m_peer_connect_timeout < now;
+    return conn_ctx.connected + m_peer_connect_timeout < now;
 }
 
 bool CConnman::InactivityCheck(const CNode& node) const
@@ -1132,7 +1132,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
     const auto last_send{node.m_last_send.load()};
     const auto last_recv{node.m_last_recv.load()};
 
-    if (!ShouldRunInactivityChecks(node, now)) return false;
+    if (!ShouldRunInactivityChecks(node.GetContext(), now)) return false;
 
     if (last_recv.count() == 0 || last_send.count() == 0) {
         LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, node.GetId());
