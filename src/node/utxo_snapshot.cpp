@@ -49,7 +49,7 @@ bool WriteSnapshotBaseBlockhash(Chainstate& snapshot_chainstate)
 std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
 {
     if (!fs::exists(chaindir)) {
-        LogPrintf("[snapshot] cannot read base blockhash: no chainstate dir " /* Continued */
+        LogPrintf("[snapshot] cannot read base blockhash: no chainstate dir "
             "exists at path %s\n", fs::PathToString(chaindir));
         return std::nullopt;
     }
@@ -57,7 +57,7 @@ std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
     const std::string read_from_str = fs::PathToString(read_from);
 
     if (!fs::exists(read_from)) {
-        LogPrintf("[snapshot] snapshot chainstate dir is malformed! no base blockhash file " /* Continued */
+        LogPrintf("[snapshot] snapshot chainstate dir is malformed! no base blockhash file "
             "exists at path %s. Try deleting %s and calling loadtxoutset again?\n",
             fs::PathToString(chaindir), read_from_str);
         return std::nullopt;
