@@ -2883,10 +2883,13 @@ static RPCHelpMan getblocklocations()
                     RPCResult{
                         RPCResult::Type::ARR, "", "",
                         {
-                            {RPCResult::Type::NUM, "file", "blk*.dat/rev*.dat file index"},
-                            {RPCResult::Type::NUM, "data", "block data file offset"},
-                            {RPCResult::Type::NUM, "undo", "undo data file offset (if exists)"},
-                            {RPCResult::Type::STR_HEX, "prev", "previous block hash"},
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::NUM, "file", "blk*.dat/rev*.dat file index"},
+                                {RPCResult::Type::NUM, "data", "block data file offset"},
+                                {RPCResult::Type::NUM, "undo", /*optional=*/true, "undo data file offset (if exists)"},
+                                {RPCResult::Type::STR_HEX, "prev", "previous block hash"},
+                            }},
                         }
                     },
                 },
