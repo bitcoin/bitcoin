@@ -528,7 +528,122 @@ protected:
     ~NetEventsInterface() = default;
 };
 
-class CConnman
+/** ConnectionsInterface describes the interface between the message processing
+ * code and CConnman. */
+class ConnectionsInterface
+{
+public:
+    /** Queue a serialized message for sending.
+     *
+     * @param[in] id  Id of the connection we are pushing messages to.
+     *
+     * Note: Messages will be queued even if IsSendingPaused return true.
+     */
+    virtual void PushMessage(NodeId id, CSerializedNetMsg&& msg) = 0;
+
+    /** Poll a message from the queue of received messages.
+     *
+     * @param[in] id  Id of the connection we are polling messages from.
+     * @return        std::nullopt if the connection does not exist or if
+     *                there is no message in the queue. Otherwise a pair is
+     *                returned containing a message and a flag indicating
+     *                whether or not there are more messages in the queue.
+     */
+    virtual std::optional<std::pair<CNetMessage, bool>> PollMessage(NodeId id) = 0;
+
+    /**
+     * Return all or many randomly selected addresses, optionally by network.
+     *
+     * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
+     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
+     * @param[in] network        Select only addresses of this network (nullopt = all).
+     */
+    virtual std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct,
+                                               std::optional<Network> network) const = 0;
+
+    /** Return a random selection of addresses in a privacy preserving way. */
+    virtual std::vector<CAddress> GetAddresses(const ConnectionContext& requestor,
+                                               size_t max_addresses, size_t max_pct) = 0;
+
+    /** Try connection to a new outbound peer. */
+    virtual void SetTryNewOutboundPeer(bool flag) = 0;
+    virtual bool GetTryNewOutboundPeer() const = 0;
+    /** Try establishing a new block-relay-only connection. */
+    virtual void StartExtraBlockRelayPeers() = 0;
+
+    /**
+     * Count the number of outbound-full-relay peers we have over our limit.
+     *
+     * Out limit may be violated if for example, we previously called
+     * SetTryNewOutboundPeer(true), and have since set to false.
+     *
+     * Note: This may return a value less than
+     * (num_outbound_connections - num_outbound_slots) in cases where some
+     * outbound connections are not yet fully connected, or not yet fully
+     * disconnected.
+     */
+    virtual int GetExtraFullOutboundCount() const = 0;
+    /** Count the number of block-relay-only peers we have over our limit. */
+    virtual int GetExtraBlockRelayCount() const = 0;
+    /** Get the mapped AS of an address. */
+    virtual uint32_t GetMappedAS(const CNetAddr& addr) const = 0;
+
+    /**
+     * Disconnect one or more connections by address.
+     *
+     * @param[in] addr  Address of the connection that we whish to disconnect.
+     *
+     * Note: this will kill all connections for the supplied address.
+     */
+    virtual bool DisconnectNode(const CNetAddr& addr) = 0;
+    /**
+     * Disconnect a connection by id.
+     *
+     * @param[in] id  Id of the connection that we whish to disconnect.
+     */
+    virtual bool DisconnectNode(NodeId id) = 0;
+
+    /** Check if a connection still exists. */
+    virtual bool IsDisconnected(NodeId id) const = 0;
+
+    // TODO it is a little odd to have the version handshake status as part of
+    // this interface.
+    /** Check if a connection has completed the version handshake. */
+    virtual bool IsSuccessfullyConnected(NodeId id) const = 0;
+    /** Mark this connection as having completed the version handshake. */
+    virtual void SetSuccessfullyConnected(NodeId id) = 0;
+
+    /** Check whether more data should be send on this connection. */
+    virtual bool IsSendingPaused(NodeId id) const = 0;
+
+	/** Update the timestamp of the last received pong message on a connection. */
+	// TODO shouldn't be a part of this interface
+    virtual void PongReceived(NodeId id, std::chrono::microseconds ping_time) = 0;
+
+    virtual bool OutboundTargetReached(bool historicalBlockServingLimit) const = 0;
+
+    /** Get a unique deterministic randomizer. */
+	// TODO shouldn't be a part of this interface
+    virtual CSipHasher GetDeterministicRandomizer(uint64_t id) const = 0;
+
+    // TODO shouldn't be a part of this interface
+    virtual void WakeMessageHandler() = 0;
+
+    /** Return true if we should disconnect the peer for failing an inactivity check. */
+    virtual bool ShouldRunInactivityChecks(const ConnectionContext& conn_ctx,
+                                           std::chrono::seconds now) const = 0;
+
+
+    // TODO shouldn't be a part of this interface
+    virtual bool GetNetworkActive() const = 0;
+    // TODO shouldn't be a part of this interface
+    virtual bool GetUseAddrmanOutgoing() const = 0;
+
+protected:
+    virtual ~ConnectionsInterface() {}
+};
+
+class CConnman : public ConnectionsInterface
 {
 public:
 
@@ -607,47 +722,8 @@ public:
     };
 
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
-    bool GetNetworkActive() const { return fNetworkActive; };
-    bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
-
-    void PushMessage(NodeId id, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
-    std::optional<std::pair<CNetMessage, bool>> PollMessage(NodeId id);
-
-    // Addrman functions
-    /**
-     * Return all or many randomly selected addresses, optionally by network.
-     *
-     * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
-     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
-     * @param[in] network        Select only addresses of this network (nullopt = all).
-     */
-    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network) const;
-    /**
-     * Cache is used to minimize topology leaks, so it should
-     * be used for all non-trusted calls, for example, p2p.
-     * A non-malicious call (from RPC or a peer with addr permission) should
-     * call the function without a parameter to avoid using the cache.
-     */
-    std::vector<CAddress> GetAddresses(const ConnectionContext& requestor, size_t max_addresses, size_t max_pct);
-
-    // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
-    // a peer that is better than all our current peers.
-    void SetTryNewOutboundPeer(bool flag);
-    bool GetTryNewOutboundPeer() const;
-
-    void StartExtraBlockRelayPeers();
-
-    // Return the number of outbound peers we have in excess of our target (eg,
-    // if we previously called SetTryNewOutboundPeer(true), and have since set
-    // to false, we may have extra peers that we wish to disconnect). This may
-    // return a value less than (num_outbound_connections - num_outbound_slots)
-    // in cases where some outbound connections are not yet fully connected, or
-    // not yet fully disconnected.
-    int GetExtraFullOutboundCount() const;
-    // Count the number of block-relay-only peers we have over our limit.
-    int GetExtraBlockRelayCount() const;
 
     bool AddNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
@@ -668,26 +744,9 @@ public:
     bool AddConnection(const std::string& address, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
     size_t GetNodeCount(ConnectionDirection) const;
-    uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);
-    bool DisconnectNode(const CNetAddr& addr);
-    bool DisconnectNode(NodeId id);
-
-    /** Check if a connection still exists. */
-    bool IsDisconnected(NodeId id) const;
-
-    /** Check if a connection has completed the version handshake. */
-    bool IsSuccessfullyConnected(NodeId id) const;
-    /** Mark this connection as having completed the version handshake.
-     * TODO: this smells like app-data. */
-    void SetSuccessfullyConnected(NodeId id);
-
-    /** Check whether more data should be send on this connection. */
-    bool IsSendingPaused(NodeId id) const;
-
-    void PongReceived(NodeId id, std::chrono::microseconds ping_time);
 
     //! Used to convey which local services we are offering peers during node
     //! connection.
@@ -700,10 +759,6 @@ public:
     uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::chrono::seconds GetMaxOutboundTimeframe() const;
 
-    //! check if the outbound target is reached
-    //! if param historicalBlockServingLimit is set true, the function will
-    //! response true if the limit for serving historical blocks has been reached
-    bool OutboundTargetReached(bool historicalBlockServingLimit) const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     //! response the bytes left in the current max outbound cycle
     //! in case of no limit, it will always response 0
@@ -714,13 +769,33 @@ public:
     uint64_t GetTotalBytesRecv() const;
     uint64_t GetTotalBytesSent() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
-    /** Get a unique deterministic randomizer. */
-    CSipHasher GetDeterministicRandomizer(uint64_t id) const;
+    // ConnectionsInterface
 
-    void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
-
-    /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const ConnectionContext& conn_ctx, std::chrono::seconds now) const;
+    void PushMessage(NodeId id, CSerializedNetMsg&& msg) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    std::optional<std::pair<CNetMessage, bool>> PollMessage(NodeId id) override;
+    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network) const override;
+    std::vector<CAddress> GetAddresses(const ConnectionContext& requestor, size_t max_addresses, size_t max_pct) override;
+    void SetTryNewOutboundPeer(bool flag) override;
+    bool GetTryNewOutboundPeer() const override;
+    void StartExtraBlockRelayPeers() override;
+    int GetExtraFullOutboundCount() const override;
+    int GetExtraBlockRelayCount() const override;
+    uint32_t GetMappedAS(const CNetAddr& addr) const override;
+    bool DisconnectNode(const CNetAddr& addr) override;
+    bool DisconnectNode(NodeId id) override;
+    bool IsDisconnected(NodeId id) const override;
+    bool IsSuccessfullyConnected(NodeId id) const override;
+    void SetSuccessfullyConnected(NodeId id) override;
+    bool IsSendingPaused(NodeId id) const override;
+    void PongReceived(NodeId id, std::chrono::microseconds ping_time) override;
+    bool OutboundTargetReached(bool historicalBlockServingLimit) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    CSipHasher GetDeterministicRandomizer(uint64_t id) const override;
+    void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc) override;
+    bool ShouldRunInactivityChecks(const ConnectionContext& conn_ctx, std::chrono::seconds now) const override;
+    bool GetNetworkActive() const override { return fNetworkActive; };
+    bool GetUseAddrmanOutgoing() const override { return m_use_addrman_outgoing; };
 
 private:
     struct ListenSocket {
