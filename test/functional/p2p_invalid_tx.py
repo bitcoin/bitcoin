@@ -60,8 +60,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         block.solve()
         # Save the coinbase for later
         block1 = block
-        node.p2ps[0].send_blocks_and_test([block], node, success=True)
-
+        node.p2ps[0].send_blocks_and_test([block1], node, success=True)
         self.log.info("Mature the block.")
         self.generatetoaddress(self.nodes[0], 100, self.nodes[0].get_deterministic_priv_key().address)
 
@@ -144,7 +143,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # tx_orphan_2_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
         # tx_orphan_2_invalid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
 
-        self.wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
+        self.wait_until(lambda: len(node.getpeerinfo()) == 1, timeout=12)
         assert_equal(expected_mempool, set(node.getrawmempool()))
 
         self.log.info('Test orphan pool overflow')
@@ -161,7 +160,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
         rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
         rejected_parent.rehash()
-        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
+        with node.assert_debug_log([f'not keeping orphan with rejected parents {rejected_parent.hash}']):
             node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
 
         self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')

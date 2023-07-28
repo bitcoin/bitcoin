@@ -42,7 +42,7 @@ class LazyPeer(P2PInterface):
 
     def bad_message(self, message):
         self.unexpected_msg = True
-        print("should not have received message: %s" % message.msgtype)
+        print(f"should not have received message: {message.msgtype}")
 
     def on_open(self):
         self.ever_connected = True

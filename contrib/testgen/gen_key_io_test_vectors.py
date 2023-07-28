@@ -119,10 +119,10 @@ def is_valid(v):
 
 def is_valid_bech32(v):
     '''Check vector v for bech32 validity'''
-    for hrp in ['bc', 'tb', 'bcrt']:
-        if decode_segwit_address(hrp, v) != (None, None):
-            return True
-    return False
+    return any(
+        decode_segwit_address(hrp, v) != (None, None)
+        for hrp in ['bc', 'tb', 'bcrt']
+    )
 
 def gen_valid_base58_vector(template):
     '''Generate valid base58 vector'''
@@ -168,11 +168,7 @@ def gen_invalid_base58_vector(template):
     randomize_payload_size = randbool(0.2)
     corrupt_suffix = randbool(0.2)
 
-    if corrupt_prefix:
-        prefix = rand_bytes(size=1)
-    else:
-        prefix = bytearray(template[0])
-
+    prefix = rand_bytes(size=1) if corrupt_prefix else bytearray(template[0])
     if randomize_payload_size:
         payload = rand_bytes(size=max(int(random.expovariate(0.5)), 50))
     else:
@@ -190,7 +186,7 @@ def gen_invalid_base58_vector(template):
             val += random.choice(b58chars)
         else: # replace random character in the middle
             n = random.randint(0, len(val))
-            val = val[0:n] + random.choice(b58chars) + val[n+1:]
+            val = val[:n] + random.choice(b58chars) + val[n+1:]
 
     return val
 

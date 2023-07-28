@@ -114,11 +114,11 @@ def process_file(path: str, messages: List[Any], recv: bool, progress_bar: Optio
             length = int.from_bytes(tmp_header.read(LENGTH_SIZE), "little")  # type: int
 
             # Start converting the message to a dictionary
-            msg_dict = {}
-            msg_dict["direction"] = "recv" if recv else "sent"
-            msg_dict["time"] = time
-            msg_dict["size"] = length   # "size" is less readable here, but more readable in the output
-
+            msg_dict = {
+                "direction": "recv" if recv else "sent",
+                "time": time,
+                "size": length,
+            }
             msg_ser = BytesIO(f_in.read(length))
 
             # Determine message type

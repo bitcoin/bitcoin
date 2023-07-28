@@ -20,7 +20,7 @@ def to_c_array(x):
     if x == "":
         return ""
     s = ',0x'.join(a+b for a,b in zip(x[::2], x[1::2]))
-    return "0x" + s
+    return f"0x{s}"
 
 
 num_vectors = 0

@@ -53,7 +53,7 @@ def main():
         sys.exit(1)
 
     if not args.testdir:
-        print("Opening latest test directory: {}".format(testdir), file=sys.stderr)
+        print(f"Opening latest test directory: {testdir}", file=sys.stderr)
 
     colors = defaultdict(lambda: '')
     if args.color:
@@ -81,16 +81,15 @@ def read_logs(tmp_dir):
 
     # Find out what the folder is called that holds the debug.log file
     glob = pathlib.Path(tmp_dir).glob('node0/**/debug.log')
-    path = next(glob, None)
-    if path:
+    if path := next(glob, None):
         assert next(glob, None) is None #  more than one debug.log, should never happen
-        chain = re.search(r'node0/(.+?)/debug\.log$', path.as_posix()).group(1)  # extract the chain name
+        chain = re.search(r'node0/(.+?)/debug\.log$', path.as_posix())[1]
     else:
         chain = 'regtest'  # fallback to regtest (should only happen when none exists)
 
-    files = [("test", "%s/test_framework.log" % tmp_dir)]
+    files = [("test", f"{tmp_dir}/test_framework.log")]
     for i in itertools.count():
-        logfile = "{}/node{}/{}/debug.log".format(tmp_dir, i, chain)
+        logfile = f"{tmp_dir}/node{i}/{chain}/debug.log"
         if not os.path.isfile(logfile):
             break
         files.append(("node%d" % i, logfile))
@@ -104,18 +103,21 @@ def print_node_warnings(tmp_dir, colors):
     warnings = []
     for stream in ['stdout', 'stderr']:
         for i in itertools.count():
-            folder = "{}/node{}/{}".format(tmp_dir, i, stream)
+            folder = f"{tmp_dir}/node{i}/{stream}"
             if not os.path.isdir(folder):
                 break
             for (_, _, fns) in os.walk(folder):
                 for fn in fns:
-                    warning = pathlib.Path('{}/{}'.format(folder, fn)).read_text().strip()
-                    if warning:
-                        warnings.append(("node{} {}".format(i, stream), warning))
+                    if (
+                        warning := pathlib.Path(f'{folder}/{fn}')
+                        .read_text()
+                        .strip()
+                    ):
+                        warnings.append((f"node{i} {stream}", warning))
 
     print()
     for w in warnings:
-        print("{} {} {} {}".format(colors[w[0].split()[0]], w[0], w[1], colors["reset"]))
+        print(f'{colors[w[0].split()[0]]} {w[0]} {w[1]} {colors["reset"]}')
 
 
 def find_latest_test_dir():
@@ -153,9 +155,7 @@ def get_log_events(source, logfile):
                 # skip blank lines
                 if line == '\n':
                     continue
-                # if this line has a timestamp, it's the start of a new log event.
-                time_match = TIMESTAMP_PATTERN.match(line)
-                if time_match:
+                if time_match := TIMESTAMP_PATTERN.match(line):
                     if event:
                         yield LogEvent(timestamp=timestamp, source=source, event=event.rstrip())
                     timestamp = time_match.group()
@@ -165,14 +165,16 @@ def get_log_events(source, logfile):
                         line = line.replace(timestamp, timestamp_micro)
                         timestamp = timestamp_micro
                     event = line
-                # if it doesn't have a timestamp, it's a continuation line of the previous log.
                 else:
                     # Add the line. Prefix with space equivalent to the source + timestamp so log lines are aligned
-                    event += "                                   " + line
+                    event += f"                                   {line}"
             # Flush the final event
             yield LogEvent(timestamp=timestamp, source=source, event=event.rstrip())
     except FileNotFoundError:
-        print("File %s could not be opened. Continuing without it." % logfile, file=sys.stderr)
+        print(
+            f"File {logfile} could not be opened. Continuing without it.",
+            file=sys.stderr,
+        )
 
 
 def print_logs_plain(log_events, colors):

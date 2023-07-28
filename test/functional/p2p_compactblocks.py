@@ -388,9 +388,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             if announce == "inv":
                 test_node.send_message(msg_inv([CInv(MSG_BLOCK, block.sha256)]))
                 test_node.wait_until(lambda: "getheaders" in test_node.last_message, timeout=30)
-                test_node.send_header_for_blocks([block])
-            else:
-                test_node.send_header_for_blocks([block])
+            test_node.send_header_for_blocks([block])
             test_node.wait_for_getdata([block.sha256], timeout=30)
             assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
 
@@ -559,8 +557,10 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # We should receive a getdata request
         test_node.wait_for_getdata([block.sha256], timeout=10)
-        assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK or \
-               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG
+        assert test_node.last_message["getdata"].inv[0].type in [
+            MSG_BLOCK,
+            MSG_BLOCK | MSG_WITNESS_FLAG,
+        ]
 
         # Deliver the block
         test_node.send_and_ping(msg_block(block))
@@ -633,11 +633,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
 
         tips = node.getchaintips()
-        found = False
-        for x in tips:
-            if x["hash"] == block.hash:
-                found = True
-                break
+        found = any(x["hash"] == block.hash for x in tips)
         assert not found
 
     def test_compactblocks_not_at_tip(self, test_node):

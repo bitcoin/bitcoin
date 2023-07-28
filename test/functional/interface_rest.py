@@ -67,7 +67,7 @@ class RESTTest (BitcoinTestFramework):
             ret_type: RetType = RetType.JSON,
             query_params: Optional[typing.Dict[str, typing.Any]] = None,
             ) -> typing.Union[http.client.HTTPResponse, bytes, str, None]:
-        rest_uri = '/rest' + uri
+        rest_uri = f'/rest{uri}'
         if req_type in ReqType:
             rest_uri += f'.{req_type.name.lower()}'
         if query_params:
@@ -162,7 +162,7 @@ class RESTTest (BitcoinTestFramework):
             bin_request += n.to_bytes(4, 'little')
 
         bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
-        chain_height = int.from_bytes(bin_response[0:4], 'little')
+        chain_height = int.from_bytes(bin_response[:4], 'little')
         response_hash = bin_response[4:36][::-1].hex()
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine

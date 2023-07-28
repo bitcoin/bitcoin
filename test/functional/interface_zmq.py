@@ -71,9 +71,9 @@ class ZMQSubscriber:
         label = chr(body[32])
         mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
         if mempool_sequence is not None:
-            assert label == "A" or label == "R"
+            assert label in {"A", "R"}
         else:
-            assert label == "D" or label == "C"
+            assert label in {"D", "C"}
         return (hash, label, mempool_sequence)
 
 
@@ -392,11 +392,10 @@ class ZMQTest (BitcoinTestFramework):
         orig_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
         orig_txid = orig_tx['txid']
 
-        # More to be simply mined
-        more_tx = []
-        for _ in range(5):
-            more_tx.append(self.wallet.send_self_transfer(from_node=self.nodes[0]))
-
+        more_tx = [
+            self.wallet.send_self_transfer(from_node=self.nodes[0])
+            for _ in range(5)
+        ]
         orig_tx['tx'].vout[0].nValue -= 1000
         bump_txid = self.nodes[0].sendrawtransaction(orig_tx['tx'].serialize().hex())
         # Mine the pre-bump tx
@@ -418,8 +417,8 @@ class ZMQTest (BitcoinTestFramework):
         # Added original tx
         assert_equal(label, "A")
         # More transactions to be simply mined
-        for i in range(len(more_tx)):
-            assert_equal((more_tx[i]['txid'], "A", mempool_seq), seq.receive_sequence())
+        for item in more_tx:
+            assert_equal((item['txid'], "A", mempool_seq), seq.receive_sequence())
             mempool_seq += 1
         # Bumped by rbf
         assert_equal((orig_txid, "R", mempool_seq), seq.receive_sequence())
@@ -449,12 +448,11 @@ class ZMQTest (BitcoinTestFramework):
         next_mempool_seq = self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"]
         assert_equal(next_mempool_seq, 1)
 
-        # Some transactions have been happening but we aren't consuming zmq notifications yet
-        # or we lost a ZMQ message somehow and want to start over
-        txs = []
         num_txs = 5
-        for _ in range(num_txs):
-            txs.append(self.wallet.send_self_transfer(from_node=self.nodes[1]))
+        txs = [
+            self.wallet.send_self_transfer(from_node=self.nodes[1])
+            for _ in range(num_txs)
+        ]
         self.sync_all()
 
         # 1) Consume backlog until we get a mempool sequence number
@@ -462,7 +460,7 @@ class ZMQTest (BitcoinTestFramework):
         while zmq_mem_seq is None:
             (hash_str, label, zmq_mem_seq) = seq.receive_sequence()
 
-        assert label == "A" or label == "R"
+        assert label in ["A", "R"]
         assert hash_str is not None
 
         # 2) We need to "seed" our view of the mempool
@@ -479,8 +477,10 @@ class ZMQTest (BitcoinTestFramework):
 
         # Things continue to happen in the "interim" while waiting for snapshot results
         # We have node 0 do all these to avoid p2p races with RBF announcements
-        for _ in range(num_txs):
-            txs.append(self.wallet.send_self_transfer(from_node=self.nodes[0]))
+        txs.extend(
+            self.wallet.send_self_transfer(from_node=self.nodes[0])
+            for _ in range(num_txs)
+        )
         txs[-1]['tx'].vout[0].nValue -= 1000
         self.nodes[0].sendrawtransaction(txs[-1]['tx'].serialize().hex())
         self.sync_all()
@@ -505,13 +505,10 @@ class ZMQTest (BitcoinTestFramework):
             (hash_str, label, mempool_sequence) = seq.receive_sequence()
             if mempool_sequence is not None:
                 if mempool_sequence != expected_sequence:
-                    # Detected "R" gap, means this a conflict eviction, and mempool tx are being evicted before its
-                    # position in the incoming block message "C"
-                    if label == "R":
-                        assert mempool_sequence > expected_sequence
-                        r_gap += mempool_sequence - expected_sequence
-                    else:
+                    if label != "R":
                         raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")
+                    assert mempool_sequence > expected_sequence
+                    r_gap += mempool_sequence - expected_sequence
             if label == "A":
                 assert hash_str not in mempool_view
                 mempool_view.add(hash_str)

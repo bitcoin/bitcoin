@@ -105,15 +105,13 @@ def pushd(new_dir) -> None:
 def download_binary(tag, args) -> int:
     if Path(tag).is_dir():
         if not args.remove_dir:
-            print('Using cached {}'.format(tag))
+            print(f'Using cached {tag}')
             return 0
         shutil.rmtree(tag)
     Path(tag).mkdir()
-    bin_path = 'bin/bitcoin-core-{}'.format(tag[1:])
-    match = re.compile('v(.*)(rc[0-9]+)$').search(tag)
-    if match:
-        bin_path = 'bin/bitcoin-core-{}/test.{}'.format(
-            match.group(1), match.group(2))
+    bin_path = f'bin/bitcoin-core-{tag[1:]}'
+    if match := re.compile('v(.*)(rc[0-9]+)$').search(tag):
+        bin_path = f'bin/bitcoin-core-{match[1]}/test.{match[2]}'
     platform = args.platform
     if tag < "v23" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
         platform = "osx64"
@@ -195,8 +193,8 @@ def download_binary(tag, args) -> int:
 
 def build_release(tag, args) -> int:
     githubUrl = "https://github.com/bitcoin/bitcoin"
-    if args.remove_dir:
-        if Path(tag).is_dir():
+    if Path(tag).is_dir():
+        if args.remove_dir:
             shutil.rmtree(tag)
     if not Path(tag).is_dir():
         # fetch new tags
@@ -204,43 +202,33 @@ def build_release(tag, args) -> int:
             ["git", "fetch", githubUrl, "--tags"])
         output = subprocess.check_output(['git', 'tag', '-l', tag])
         if not output:
-            print('Tag {} not found'.format(tag))
+            print(f'Tag {tag} not found')
             return 1
-    ret = subprocess.run([
-        'git', 'clone', githubUrl, tag
-    ]).returncode
-    if ret:
+    if ret := subprocess.run(['git', 'clone', githubUrl, tag]).returncode:
         return ret
     with pushd(tag):
-        ret = subprocess.run(['git', 'checkout', tag]).returncode
-        if ret:
+        if ret := subprocess.run(['git', 'checkout', tag]).returncode:
             return ret
         host = args.host
         if args.depends:
             with pushd('depends'):
-                ret = subprocess.run(['make', 'NO_QT=1']).returncode
-                if ret:
+                if ret := subprocess.run(['make', 'NO_QT=1']).returncode:
                     return ret
                 host = os.environ.get(
                     'HOST', subprocess.check_output(['./config.guess']))
         config_flags = '--prefix={pwd}/depends/{host} '.format(
             pwd=os.getcwd(),
             host=host) + args.config_flags
-        cmds = [
-            './autogen.sh',
-            './configure {}'.format(config_flags),
-            'make',
-        ]
+        cmds = ['./autogen.sh', f'./configure {config_flags}', 'make']
         for cmd in cmds:
-            ret = subprocess.run(cmd.split()).returncode
-            if ret:
+            if ret := subprocess.run(cmd.split()).returncode:
                 return ret
         # Move binaries, so they're in the same place as in the
         # release download
         Path('bin').mkdir(exist_ok=True)
         files = ['bitcoind', 'bitcoin-cli', 'bitcoin-tx']
         for f in files:
-            Path('src/'+f).rename('bin/'+f)
+            Path(f'src/{f}').rename(f'bin/{f}')
     return 0
 
 
@@ -259,30 +247,27 @@ def check_host(args) -> int:
             if fnmatch(args.host, pattern):
                 args.platform = target
         if not args.platform:
-            print('Not sure which binary to download for {}'.format(args.host))
+            print(f'Not sure which binary to download for {args.host}')
             return 1
     return 0
 
 
 def main(args) -> int:
     Path(args.target_dir).mkdir(exist_ok=True, parents=True)
-    print("Releases directory: {}".format(args.target_dir))
-    ret = check_host(args)
-    if ret:
+    print(f"Releases directory: {args.target_dir}")
+    if ret := check_host(args):
         return ret
     if args.download_binary:
         with pushd(args.target_dir):
             for tag in args.tags:
-                ret = download_binary(tag, args)
-                if ret:
+                if ret := download_binary(tag, args):
                     return ret
         return 0
     args.config_flags = os.environ.get('CONFIG_FLAGS', '')
     args.config_flags += ' --without-gui --disable-tests --disable-bench'
     with pushd(args.target_dir):
         for tag in args.tags:
-            ret = build_release(tag, args)
-            if ret:
+            if ret := build_release(tag, args):
                 return ret
     return 0
 
@@ -298,7 +283,7 @@ if __name__ == '__main__':
                         help='download release binary.')
     parser.add_argument('-t', '--target-dir', action='store',
                         help='target directory.', default='releases')
-    all_tags = sorted([*set([v['tag'] for v in SHA256_SUMS.values()])])
+    all_tags = sorted([*{v['tag'] for v in SHA256_SUMS.values()}])
     parser.add_argument('tags', nargs='*', default=all_tags,
                         help='release tags. e.g.: v0.18.1 v0.20.0rc2 '
                         '(if not specified, the full list needed for '

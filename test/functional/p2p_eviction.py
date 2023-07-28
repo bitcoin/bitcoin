@@ -76,7 +76,7 @@ class P2PEvict(BitcoinTestFramework):
             current_peer += 1
 
         self.log.info("Create 4 peers and protect them from eviction by sending us a tx")
-        for i in range(4):
+        for _ in range(4):
             txpeer = node.add_p2p_connection(SlowP2PInterface())
             current_peer += 1
             txpeer.sync_with_ping()
@@ -93,9 +93,10 @@ class P2PEvict(BitcoinTestFramework):
 
         # Make sure by asking the node what the actual min pings are
         peerinfo = node.getpeerinfo()
-        pings = {}
-        for i in range(len(peerinfo)):
-            pings[i] = peerinfo[i]['minping'] if 'minping' in peerinfo[i] else 1000000
+        pings = {
+            i: peerinfo[i]['minping'] if 'minping' in peerinfo[i] else 1000000
+            for i in range(len(peerinfo))
+        }
         sorted_pings = sorted(pings.items(), key=lambda x: x[1])
 
         # Usually the 8 fast peers are protected. In rare case of unreliable pings,
@@ -106,20 +107,15 @@ class P2PEvict(BitcoinTestFramework):
         self.log.info("Create peer that triggers the eviction mechanism")
         node.add_p2p_connection(SlowP2PInterface())
 
-        # One of the non-protected peers must be evicted. We can't be sure which one because
-        # 4 peers are protected via netgroup, which is identical for all peers,
-        # and the eviction mechanism doesn't preserve the order of identical elements.
-        evicted_peers = []
-        for i in range(len(node.p2ps)):
-            if not node.p2ps[i].is_connected:
-                evicted_peers.append(i)
-
+        evicted_peers = [
+            i for i in range(len(node.p2ps)) if not node.p2ps[i].is_connected
+        ]
         self.log.info("Test that one peer was evicted")
-        self.log.debug("{} evicted peer: {}".format(len(evicted_peers), set(evicted_peers)))
+        self.log.debug(f"{len(evicted_peers)} evicted peer: {set(evicted_peers)}")
         assert_equal(len(evicted_peers), 1)
 
         self.log.info("Test that no peer expected to be protected was evicted")
-        self.log.debug("{} protected peers: {}".format(len(protected_peers), protected_peers))
+        self.log.debug(f"{len(protected_peers)} protected peers: {protected_peers}")
         assert evicted_peers[0] not in protected_peers
 
 

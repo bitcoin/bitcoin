@@ -298,7 +298,7 @@ def get_files_from_hosts_and_compare(
 
     for i, host in enumerate(other_hosts):
         url = join_url(host)
-        fname = filename + f'.{i + 2}'
+        fname = f'{filename}.{i + 2}'
         success, output = download_with_wget(url, fname)
 
         if require_all and not success:
@@ -568,10 +568,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
 
 
 def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
-    binary_to_basename = {}
-    for file in args.binary:
-        binary_to_basename[PurePath(file).name] = file
-
+    binary_to_basename = {PurePath(file).name: file for file in args.binary}
     sums_sig_path = None
     if args.sums_sig_file:
         sums_sig_path = Path(args.sums_sig_file)
@@ -585,7 +582,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
         return sigs_status
 
     # Extract hashes and filenames
-    hashes_to_verify = parse_sums_file(args.sums_file, [k for k, n in binary_to_basename.items()])
+    hashes_to_verify = parse_sums_file(args.sums_file, list(binary_to_basename))
     if not hashes_to_verify:
         log.error(f"No files in {args.sums_file} match the specified binaries")
         return ReturnCode.NO_BINARIES_MATCH
@@ -594,11 +591,11 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
     sums_file_path = Path(args.sums_file)
     missing_files = []
     files_to_hash = []
-    if len(binary_to_basename) > 0:
+    if binary_to_basename:
         for file_hash, file in hashes_to_verify:
             files_to_hash.append([file_hash, binary_to_basename[file]])
             del binary_to_basename[file]
-        if len(binary_to_basename) > 0:
+        if binary_to_basename:
             log.error(f"Not all specified binaries are in {args.sums_file}")
             return ReturnCode.NO_BINARIES_MATCH
     else:

@@ -111,13 +111,13 @@ class InitStressTest(BitcoinTestFramework):
 
             for target_file in target_files:
                 self.log.info(f"Deleting file to ensure failure {target_file}")
-                bak_path = str(target_file) + ".bak"
+                bak_path = f"{str(target_file)}.bak"
                 target_file.rename(bak_path)
 
             start_expecting_error(err_fragment)
 
             for target_file in target_files:
-                bak_path = str(target_file) + ".bak"
+                bak_path = f"{str(target_file)}.bak"
                 self.log.debug(f"Restoring file from {bak_path} and restarting")
                 Path(bak_path).rename(target_file)
 

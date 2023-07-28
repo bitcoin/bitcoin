@@ -61,14 +61,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.generate(self.wallet, 130)
 
-        # p2p_conns[0] will only request old blocks
-        # p2p_conns[1] will only request new blocks
-        # p2p_conns[2] will test resetting the counters
-        p2p_conns = []
-
-        for _ in range(3):
-            p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn()))
-
+        p2p_conns = [self.nodes[0].add_p2p_connection(TestP2PConn()) for _ in range(3)]
         # Now mine a big block
         mine_large_block(self, self.wallet, self.nodes[0])
 

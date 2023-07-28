@@ -80,9 +80,9 @@ class P2PLeakTxTest(BitcoinTestFramework):
         inbound_peer = self.gen_node.add_p2p_connection(P2PNode())  # An "attacking" inbound peer
 
         MAX_REPEATS = 100
-        self.log.info("Running test up to {} times.".format(MAX_REPEATS))
+        self.log.info(f"Running test up to {MAX_REPEATS} times.")
         for i in range(MAX_REPEATS):
-            self.log.info('Run repeat {}'.format(i + 1))
+            self.log.info(f'Run repeat {i + 1}')
             txid = self.miniwallet.send_self_transfer(from_node=self.gen_node)["wtxid"]
 
             want_tx = msg_getdata()
@@ -92,14 +92,14 @@ class P2PLeakTxTest(BitcoinTestFramework):
             inbound_peer.send_and_ping(want_tx)
 
             if inbound_peer.last_message.get('notfound'):
-                self.log.debug('tx {} was not yet announced to us.'.format(txid))
+                self.log.debug(f'tx {txid} was not yet announced to us.')
                 self.log.debug("node has responded with a notfound message. End test.")
                 assert_equal(inbound_peer.last_message['notfound'].vec[0].hash, int(txid, 16))
                 with p2p_lock:
                     inbound_peer.last_message.pop('notfound')
                 break
             else:
-                self.log.debug('tx {} was already announced to us. Try test again.'.format(txid))
+                self.log.debug(f'tx {txid} was already announced to us. Try test again.')
                 assert int(txid, 16) in [inv.hash for inv in inbound_peer.last_message['inv'].inv]
 
 

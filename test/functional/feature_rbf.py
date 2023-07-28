@@ -201,11 +201,14 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             _total_txs[0] += 1
 
             for utxo in tx["new_utxos"]:
-                for x in branch(utxo, txout_value,
-                                  max_txs,
-                                  tree_width=tree_width, fee=fee,
-                                  _total_txs=_total_txs):
-                    yield x
+                yield from branch(
+                    utxo,
+                    txout_value,
+                    max_txs,
+                    tree_width=tree_width,
+                    fee=fee,
+                    _total_txs=_total_txs,
+                )
 
         fee = int(0.00001 * COIN)
         n = MAX_REPLACEMENT_LIMIT

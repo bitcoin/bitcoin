@@ -196,12 +196,10 @@ class TestP2PConn(P2PInterface):
             self.last_message.pop("getheaders", None)
         msg = msg_headers()
         msg.headers = [CBlockHeader(block)]
-        if use_header:
-            self.send_message(msg)
-        else:
+        if not use_header:
             self.send_message(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
             self.wait_for_getheaders()
-            self.send_message(msg)
+        self.send_message(msg)
         self.wait_for_getdata([block.sha256])
 
     def request_block(self, blockhash, inv_type, timeout=60):
@@ -396,7 +394,7 @@ class SegWitTest(BitcoinTestFramework):
             # for MSG_BLOCK, MSG_WITNESS_BLOCK, and rpc getblock() are equal.
             all_heights = list(range(chain_height + 1))
             random.shuffle(all_heights)
-            all_heights = all_heights[0:10]
+            all_heights = all_heights[:10]
             for height in all_heights:
                 block_hash = self.nodes[0].getblockhash(height)
                 rpc_block = self.nodes[0].getblock(block_hash, False)
@@ -1598,7 +1596,6 @@ class SegWitTest(BitcoinTestFramework):
         # Ensure that we've tested a situation where we use SIGHASH_SINGLE with
         # an input index > number of outputs.
         NUM_SIGHASH_TESTS = 500
-        temp_utxos = []
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(prev_utxo.sha256, prev_utxo.n), b""))
         split_value = prev_utxo.nValue // NUM_SIGHASH_TESTS
@@ -1606,9 +1603,9 @@ class SegWitTest(BitcoinTestFramework):
             tx.vout.append(CTxOut(split_value, script_pubkey))
         tx.wit.vtxinwit.append(CTxInWitness())
         sign_p2pk_witness_input(witness_script, tx, 0, SIGHASH_ALL, prev_utxo.nValue, key)
-        for i in range(NUM_SIGHASH_TESTS):
-            temp_utxos.append(UTXO(tx.sha256, i, split_value))
-
+        temp_utxos = [
+            UTXO(tx.sha256, i, split_value) for i in range(NUM_SIGHASH_TESTS)
+        ]
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1703,16 +1700,14 @@ class SegWitTest(BitcoinTestFramework):
         output_value = sum(i.nValue for i in temp_utxos) // 2
 
         tx = CTransaction()
-        index = 0
         # Just spend to our usual anyone-can-spend output
         tx.vout = [CTxOut(output_value, CScript([OP_TRUE]))] * 2
-        for i in temp_utxos:
+        for index, i in enumerate(temp_utxos):
             # Use SIGHASH_ALL|SIGHASH_ANYONECANPAY so we can build up
             # the signatures as we go.
             tx.vin.append(CTxIn(COutPoint(i.sha256, i.n), b""))
             tx.wit.vtxinwit.append(CTxInWitness())
             sign_p2pk_witness_input(witness_script, tx, index, SIGHASH_ALL | SIGHASH_ANYONECANPAY, i.nValue, key)
-            index += 1
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1777,8 +1772,7 @@ class SegWitTest(BitcoinTestFramework):
         pad = chr(1).encode('latin-1')
 
         # Create scripts for tests
-        scripts = []
-        scripts.append(CScript([OP_DROP] * 100))
+        scripts = [CScript([OP_DROP] * 100)]
         scripts.append(CScript([OP_DROP] * 99))
         scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 60))
         scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 61))

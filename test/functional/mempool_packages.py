@@ -34,8 +34,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
             ],
             [
                 "-maxorphantx=1000",
-                "-limitancestorcount={}".format(CUSTOM_ANCESTOR_LIMIT),
-                "-limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
+                f"-limitancestorcount={CUSTOM_ANCESTOR_LIMIT}",
+                f"-limitdescendantcount={CUSTOM_DESCENDANT_LIMIT}",
             ],
         ]
 
@@ -51,7 +51,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         ancestor_vsize = 0
         ancestor_fees = Decimal(0)
 
-        for i, t in enumerate(chain):
+        for t in chain:
             ancestor_vsize += t["tx"].get_vsize()
             ancestor_fees += t["fee"]
             self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=t["hex"])
@@ -64,13 +64,12 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # count and fees should look correct
         mempool = self.nodes[0].getrawmempool(True)
         assert_equal(len(mempool), DEFAULT_ANCESTOR_LIMIT)
-        descendant_count = 1
         descendant_fees = 0
         descendant_vsize = 0
 
-        assert_equal(ancestor_vsize, sum([mempool[tx]['vsize'] for tx in mempool]))
+        assert_equal(ancestor_vsize, sum(mempool[tx]['vsize'] for tx in mempool))
         ancestor_count = DEFAULT_ANCESTOR_LIMIT
-        assert_equal(ancestor_fees, sum([mempool[tx]['fees']['base'] for tx in mempool]))
+        assert_equal(ancestor_fees, sum(mempool[tx]['fees']['base'] for tx in mempool))
 
         # Adding one more transaction on to the chain should fail.
         next_hop = self.wallet.create_self_transfer(utxo_to_spend=chain[-1]["new_utxo"])["hex"]
@@ -79,7 +78,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         descendants = []
         ancestors = [t["txid"] for t in chain]
         chain = [t["txid"] for t in chain]
-        for x in reversed(chain):
+        for descendant_count, x in enumerate(reversed(chain), start=1):
             # Check that getmempoolentry is consistent with getrawmempool
             entry = self.nodes[0].getmempoolentry(x)
             assert_equal(entry, mempool[x])
@@ -97,8 +96,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(entry['fees']['descendant'], descendant_fees)
             descendant_vsize += entry['vsize']
             assert_equal(entry['descendantsize'], descendant_vsize)
-            descendant_count += 1
-
             # Check that ancestor calculations are correct
             assert_equal(entry['ancestorcount'], ancestor_count)
             assert_equal(entry['fees']['ancestor'], ancestor_fees)

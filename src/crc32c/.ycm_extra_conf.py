@@ -97,10 +97,7 @@ def FindNearest(target, path, build_root):
     return None
 
   parent = os.path.dirname(path)
-  if parent == path:
-    return None
-
-  return FindNearest(target, parent, build_root)
+  return None if parent == path else FindNearest(target, parent, build_root)
 
 
 def FlagsForClangComplete(file_path, build_root):
@@ -118,8 +115,7 @@ def FlagsForClangComplete(file_path, build_root):
   clang_complete_path = FindNearest('.clang_complete', file_path, build_root)
   if clang_complete_path is None:
     return None
-  clang_complete_flags = open(clang_complete_path, 'r').read().splitlines()
-  return clang_complete_flags
+  return open(clang_complete_path, 'r').read().splitlines()
 
 
 def FlagsForFile(filename, **kwargs):
@@ -133,8 +129,7 @@ def FlagsForFile(filename, **kwargs):
   file_path = os.path.realpath(filename)
 
   flags = BASE_FLAGS
-  clang_flags = FlagsForClangComplete(file_path, build_root)
-  if clang_flags:
+  if clang_flags := FlagsForClangComplete(file_path, build_root):
     flags += clang_flags
 
   final_flags = MakeRelativePathsInFlagsAbsolute(flags, build_root)

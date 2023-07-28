@@ -55,13 +55,17 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # Let's make sure permissions are merged correctly
         # For this, we need to use whitebind instead of bind
         # by modifying the configuration file.
-        ip_port = "127.0.0.1:{}".format(p2p_port(1))
-        self.nodes[1].replace_in_config([("bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)])
+        ip_port = f"127.0.0.1:{p2p_port(1)}"
+        self.nodes[1].replace_in_config(
+            [("bind=127.0.0.1", f"whitebind=bloomfilter,forcerelay@{ip_port}")]
+        )
         self.checkpermission(
             ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
             ["noban", "bloomfilter", "forcerelay", "relay", "download"])
-        self.nodes[1].replace_in_config([("whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")])
+        self.nodes[1].replace_in_config(
+            [(f"whitebind=bloomfilter,forcerelay@{ip_port}", "bind=127.0.0.1")]
+        )
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
@@ -106,7 +110,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.log.debug("Check that node[1] will send the tx to node[0] even though it is already in the mempool")
         self.connect_nodes(1, 0)
-        with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
+        with self.nodes[1].assert_debug_log([f"Force relaying tx {txid} from peer=0"]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
             self.wait_until(lambda: txid in self.nodes[0].getrawmempool())
 
@@ -119,14 +123,14 @@ class P2PPermissionsTests(BitcoinTestFramework):
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='{} from peer=0 was not accepted: txn-mempool-conflict'.format(txid)
+            reject_reason=f'{txid} from peer=0 was not accepted: txn-mempool-conflict',
         )
 
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid)
+            reject_reason=f'Not relaying non-mempool transaction {txid} from forcerelay peer=0',
         )
 
     def checkpermission(self, args, expectedPermissions):

@@ -66,6 +66,17 @@ with tempfile.NamedTemporaryFile('w', suffix='.h2m') as footer:
 
     # Call the binaries through help2man to produce a manual page for each of them.
     for (abspath, verstr, _) in versions:
-        outname = os.path.join(mandir, os.path.basename(abspath) + '.1')
+        outname = os.path.join(mandir, f'{os.path.basename(abspath)}.1')
         print(f'Generating {outname}…')
-        subprocess.run([help2man, '-N', '--version-string=' + verstr, '--include=' + footer.name, '-o', outname, abspath], check=True)
+        subprocess.run(
+            [
+                help2man,
+                '-N',
+                f'--version-string={verstr}',
+                f'--include={footer.name}',
+                '-o',
+                outname,
+                abspath,
+            ],
+            check=True,
+        )

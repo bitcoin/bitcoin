@@ -210,7 +210,7 @@ def poly_divmod(poly, mod, gf):
             for x in range(len(mod) - 1):
                 val[1 + x - len(mod)] ^= gf.mul(term, mod[x])
     # Prune trailing zero coefficients.
-    while len(val) > 0 and val[-1] == 0:
+    while val and val[-1] == 0:
         val.pop()
     return div, val
 
@@ -450,9 +450,7 @@ class Minisketch:
         # inverses of the roots. We find these by reversing the order of the coefficients, and
         # finding the roots.
         roots = poly_find_roots(list(reversed(poly)), self.gf)
-        if len(roots) == 0:
-            return None
-        return roots
+        return None if len(roots) == 0 else roots
 
 class TestMinisketch(unittest.TestCase):
     """Test class for Minisketch."""

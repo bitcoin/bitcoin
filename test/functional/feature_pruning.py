@@ -98,7 +98,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 2)
         self.connect_nodes(0, 3)
         self.connect_nodes(0, 4)
-        self.sync_blocks(self.nodes[0:5])
+        self.sync_blocks(self.nodes[:5])
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
@@ -108,13 +108,15 @@ class PruneTest(BitcoinTestFramework):
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
-        self.generate(self.nodes[1], 200, sync_fun=lambda: self.sync_blocks(self.nodes[0:2]))
+        self.generate(
+            self.nodes[1], 200, sync_fun=lambda: self.sync_blocks(self.nodes[:2])
+        )
         self.generate(self.nodes[0], 150, sync_fun=self.no_op)
 
         # Then mine enough full blocks to create more than 550MiB of data
         mine_large_blocks(self.nodes[0], 645)
 
-        self.sync_blocks(self.nodes[0:5])
+        self.sync_blocks(self.nodes[:5])
 
     def test_invalid_command_line_options(self):
         self.stop_node(0)
@@ -173,7 +175,7 @@ class PruneTest(BitcoinTestFramework):
             # Create connections in the order so both nodes can see the reorg at the same time
             self.connect_nodes(0, 1)
             self.connect_nodes(0, 2)
-            self.sync_blocks(self.nodes[0:3])
+            self.sync_blocks(self.nodes[:3])
 
         self.log.info(f"Usage can be over target because of high stale rate: {calc_usage(self.prunedir)}")
 
@@ -210,7 +212,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Reconnect nodes")
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 2)
-        self.sync_blocks(self.nodes[0:3], timeout=120)
+        self.sync_blocks(self.nodes[:3], timeout=120)
 
         self.log.info(f"Verify height on node 2: {self.nodes[2].getblockcount()}")
         self.log.info(f"Usage possibly still high because of stale blocks in block files: {calc_usage(self.prunedir)}")
@@ -218,7 +220,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Mine 220 more large blocks so we have requisite history")
 
         mine_large_blocks(self.nodes[0], 220)
-        self.sync_blocks(self.nodes[0:3], timeout=120)
+        self.sync_blocks(self.nodes[:3], timeout=120)
 
         usage = calc_usage(self.prunedir)
         self.log.info(f"Usage should be below target: {usage}")

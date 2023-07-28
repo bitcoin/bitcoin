@@ -31,7 +31,7 @@ class TestP2PConn(P2PInterface):
 
     def on_inv(self, message):
         for i in message.inv:
-            if (i.type == MSG_TX) or (i.type == MSG_WTX):
+            if i.type in [MSG_TX, MSG_WTX]:
                 self.txinvs.append('{:064x}'.format(i.hash))
 
     def wait_for_invs_to_match(self, invs_expected):

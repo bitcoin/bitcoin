@@ -19,7 +19,7 @@ settings = {}
 
 class BitcoinRPC:
     def __init__(self, host, port, username, password):
-        authpair = "%s:%s" % (username, password)
+        authpair = f"{username}:{password}"
         authpair = authpair.encode('utf-8')
         self.authhdr = b"Basic " + base64.b64encode(authpair)
         self.conn = HTTPConnection(host, port=port, timeout=30)
@@ -40,19 +40,16 @@ class BitcoinRPC:
             return None
 
         body = resp.read().decode('utf-8')
-        resp_obj = json.loads(body)
-        return resp_obj
+        return json.loads(body)
 
     @staticmethod
     def build_request(idx, method, params):
-        obj = { 'version' : '1.1',
-            'method' : method,
-            'id' : idx }
-        if params is None:
-            obj['params'] = []
-        else:
-            obj['params'] = params
-        return obj
+        return {
+            'version': '1.1',
+            'method': method,
+            'id': idx,
+            'params': [] if params is None else params,
+        }
 
     @staticmethod
     def response_is_error(resp_obj):
@@ -65,10 +62,10 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
     height = settings['min_height']
     while height < settings['max_height']+1:
         num_blocks = min(settings['max_height']+1-height, max_blocks_per_call)
-        batch = []
-        for x in range(num_blocks):
-            batch.append(rpc.build_request(x, 'getblockhash', [height + x]))
-
+        batch = [
+            rpc.build_request(x, 'getblockhash', [height + x])
+            for x in range(num_blocks)
+        ]
         reply = rpc.execute(batch)
         if reply is None:
             print('Cannot continue. Program will halt.')
@@ -109,7 +106,7 @@ if __name__ == '__main__':
             m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
             if m is None:
                 continue
-            settings[m.group(1)] = m.group(2)
+            settings[m[1]] = m[2]
 
     if 'host' not in settings:
         settings['host'] = '127.0.0.1'
@@ -122,12 +119,8 @@ if __name__ == '__main__':
     if 'rev_hash_bytes' not in settings:
         settings['rev_hash_bytes'] = 'false'
 
-    use_userpass = True
-    use_datadir = False
-    if 'rpcuser' not in settings or 'rpcpassword' not in settings:
-        use_userpass = False
-    if 'datadir' in settings and not use_userpass:
-        use_datadir = True
+    use_userpass = 'rpcuser' in settings and 'rpcpassword' in settings
+    use_datadir = 'datadir' in settings and not use_userpass
     if not use_userpass and not use_datadir:
         print("Missing datadir or username and/or password in cfg file", file=sys.stderr)
         sys.exit(1)

@@ -128,7 +128,7 @@ class ExampleTest(BitcoinTestFramework):
         # sync_all() should not include node2, since we're not expecting it to
         # sync.
         self.connect_nodes(0, 1)
-        self.sync_all(self.nodes[0:2])
+        self.sync_all(self.nodes[:2])
 
     # Use setup_nodes() to customize the node start behaviour (for example if
     # you don't want to start all nodes at the start of the test).
@@ -151,7 +151,16 @@ class ExampleTest(BitcoinTestFramework):
         peer_messaging = self.nodes[0].add_p2p_connection(BaseNode())
 
         # Generating a block on one of the nodes will get us out of IBD
-        blocks = [int(self.generate(self.nodes[0], sync_fun=lambda: self.sync_all(self.nodes[0:2]), nblocks=1)[0], 16)]
+        blocks = [
+            int(
+                self.generate(
+                    self.nodes[0],
+                    sync_fun=lambda: self.sync_all(self.nodes[:2]),
+                    nblocks=1,
+                )[0],
+                16,
+            )
+        ]
 
         # Notice above how we called an RPC by calling a method with the same
         # name on the node object. Notice also how we used a keyword argument

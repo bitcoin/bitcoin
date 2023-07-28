@@ -181,7 +181,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.log.debug("Prevent bitcoind from writing mempool.dat to disk. Verify that `savemempool` fails")
         # to test the exception we are creating a tmp folder called mempool.dat.new
         # which is an implementation detail that could change and break this test
-        mempooldotnew1 = mempooldat1 + '.new'
+        mempooldotnew1 = f'{mempooldat1}.new'
         os.mkdir(mempooldotnew1)
         assert_raises_rpc_error(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
         os.rmdir(mempooldotnew1)
