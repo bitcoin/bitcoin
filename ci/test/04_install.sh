@@ -22,15 +22,14 @@ if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASa
   CI_CONTAINER_CAP="--cap-add SYS_PTRACE"
 fi
 
-export P_CI_DIR="$PWD"
-export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
-
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Export all env vars to avoid missing some.
   # Though, exclude those with newlines to avoid parsing problems.
-  python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value and "HOME" not in key]' | tee /tmp/env
+  python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value and "HOME" != key and "PATH" != key and "USER" != key]' | tee /tmp/env
+  # System-dependent env vars must be kept as is. So read them from the container.
+  docker run --rm "${CI_IMAGE_NAME_TAG}" bash -c "env | grep --extended-regexp '^(HOME|PATH|USER)='" | tee --append /tmp/env
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
-  DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
+  DOCKER_BUILDKIT=1 docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
@@ -53,7 +52,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
-                  -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
                   $CONTAINER_NAME)
@@ -64,7 +62,7 @@ else
 fi
 
 CI_EXEC () {
-  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:\$PATH && cd \"$P_CI_DIR\" && $*"
+  $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:${BASE_ROOT_DIR}/ci/retry:\$PATH && cd \"${BASE_ROOT_DIR}\" && $*"
 }
 export -f CI_EXEC
 
