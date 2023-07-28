@@ -63,7 +63,7 @@ public:
         bool capture_messages{false};
     };
 
-    static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
+    static std::unique_ptr<PeerManager> make(ConnectionsInterface& connman, AddrMan& addrman,
                                              EvictionManager& evictionman, BanMan* banman,
                                              ChainstateManager& chainman, CTxMemPool& pool,
                                              Options opts);

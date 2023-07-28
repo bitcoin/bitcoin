@@ -214,7 +214,7 @@ struct Peer {
 
     /** Services we offered to this peer.
      *
-     *  This is supplied by CConnman during peer initialization. It's const
+     *  This is supplied by ConnectionsInterface during peer initialization. It's const
      *  because there is no protocol defined for renegotiating services
      *  initially offered to a peer. The set of local services we offer should
      *  not change after initialization.
@@ -533,7 +533,7 @@ struct CNodeState {
 class PeerManagerImpl final : public PeerManager
 {
 public:
-    PeerManagerImpl(CConnman& connman, AddrMan& addrman, EvictionManager& evictionman,
+    PeerManagerImpl(ConnectionsInterface& connman, AddrMan& addrman, EvictionManager& evictionman,
                     BanMan* banman, ChainstateManager& chainman,
                     CTxMemPool& pool, Options opts);
 
@@ -747,7 +747,7 @@ private:
     void MaybeSendFeefilter(Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     const CChainParams& m_chainparams;
-    CConnman& m_connman;
+    ConnectionsInterface& m_connman;
     AddrMan& m_addrman;
     EvictionManager& m_evictionman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
@@ -1870,14 +1870,14 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     return std::nullopt;
 }
 
-std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrman, EvictionManager& evictionman,
+std::unique_ptr<PeerManager> PeerManager::make(ConnectionsInterface& connman, AddrMan& addrman, EvictionManager& evictionman,
                                                BanMan* banman, ChainstateManager& chainman,
                                                CTxMemPool& pool, Options opts)
 {
     return std::make_unique<PeerManagerImpl>(connman, addrman, evictionman, banman, chainman, pool, opts);
 }
 
-PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman, EvictionManager& evictionman,
+PeerManagerImpl::PeerManagerImpl(ConnectionsInterface& connman, AddrMan& addrman, EvictionManager& evictionman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, Options opts)
     : m_chainparams(chainman.GetParams()),
