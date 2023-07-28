@@ -93,7 +93,7 @@ class HeadersSyncTest(BitcoinTestFramework):
 
         self.log.info("Check that the remaining peer received a getheaders as well")
         expected_peer = peer2
-        if peer2 == peer_receiving_getheaders:
+        if expected_peer == peer_receiving_getheaders:
             expected_peer = peer3
 
         expected_peer.wait_for_getheaders()

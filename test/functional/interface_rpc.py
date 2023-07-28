@@ -61,10 +61,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
             {"method": "getblockhash", "id": 3, "params": [0]},
         ])
 
-        result_by_id = {}
-        for res in results:
-            result_by_id[res["id"]] = res
-
+        result_by_id = {res["id"]: res for res in results}
         assert_equal(result_by_id[1]['error'], None)
         assert_equal(result_by_id[1]['result'], 0)
 

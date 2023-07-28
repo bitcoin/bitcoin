@@ -33,7 +33,10 @@ def check_package_limits(func):
 
         # Clear mempool and check that the package passes now
         self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
+        assert all(
+            res["allowed"]
+            for res in node.testmempoolaccept(rawtxs=package_hex)
+        )
 
     return func_wrapper
 
@@ -112,13 +115,11 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         # Top parent in mempool, M1
         m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
 
-        package_hex = []
         # Chain A (M2a... M12a)
         chain_a_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=11, utxo_to_spend=m1_utxos[0])[-1]["new_utxo"]
         # Pa
         pa_hex = self.wallet.create_self_transfer(utxo_to_spend=chain_a_tip_utxo)["hex"]
-        package_hex.append(pa_hex)
-
+        package_hex = [pa_hex]
         # Chain B (M2b... M13b)
         chain_b_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12, utxo_to_spend=m1_utxos[1])[-1]["new_utxo"]
         # Pb
@@ -149,7 +150,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         """
 
         node = self.nodes[0]
-        package_hex = []
         # M1
         m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
 
@@ -158,8 +158,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         # P1
         p1_tx = self.wallet.create_self_transfer(utxo_to_spend=m1_utxos[1])
-        package_hex.append(p1_tx["hex"])
-
+        package_hex = [p1_tx["hex"]]
         # P2
         p2_tx = self.wallet.create_self_transfer(utxo_to_spend=p1_tx["new_utxo"])
         package_hex.append(p2_tx["hex"])
@@ -259,9 +258,10 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         package_hex = []
         pc_parent_utxos = []
         for _ in range(5): # Make package transactions P0 ... P4
-            pc_grandparent_utxos = []
-            for _ in range(4): # Make mempool transactions M(4i+1)...M(4i+4)
-                pc_grandparent_utxos.append(self.wallet.send_self_transfer(from_node=node)["new_utxo"])
+            pc_grandparent_utxos = [
+                self.wallet.send_self_transfer(from_node=node)["new_utxo"]
+                for _ in range(4)
+            ]
             # Package transaction Pi
             pi_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_grandparent_utxos)
             package_hex.append(pi_tx["hex"])

@@ -63,10 +63,8 @@ class SignetBasicTest(BitcoinTestFramework):
 
         self.log.info("pregenerated signet blocks check")
 
-        height = 0
-        for block in signet_blocks:
+        for height, block in enumerate(signet_blocks, start=1):
             assert_equal(self.nodes[2].submitblock(block), None)
-            height += 1
             assert_equal(self.nodes[2].getblockcount(), height)
 
         self.log.info("pregenerated signet blocks check (incompatible solution)")

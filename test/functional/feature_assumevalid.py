@@ -139,11 +139,11 @@ class AssumeValidTest(BitcoinTestFramework):
             height += 1
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
-        self.start_node(1, extra_args=["-assumevalid=" + hex(block102.sha256)])
-        self.start_node(2, extra_args=["-assumevalid=" + hex(block102.sha256)])
+        self.start_node(1, extra_args=[f"-assumevalid={hex(block102.sha256)}"])
+        self.start_node(2, extra_args=[f"-assumevalid={hex(block102.sha256)}"])
 
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
-        p2p0.send_header_for_blocks(self.blocks[0:2000])
+        p2p0.send_header_for_blocks(self.blocks[:2000])
         p2p0.send_header_for_blocks(self.blocks[2000:])
 
         # Send blocks to node0. Block 102 will be rejected.
@@ -152,7 +152,7 @@ class AssumeValidTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), COINBASE_MATURITY + 1)
 
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
-        p2p1.send_header_for_blocks(self.blocks[0:2000])
+        p2p1.send_header_for_blocks(self.blocks[:2000])
         p2p1.send_header_for_blocks(self.blocks[2000:])
 
         # Send all blocks to node1. All blocks will be accepted.
@@ -163,7 +163,7 @@ class AssumeValidTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
-        p2p2.send_header_for_blocks(self.blocks[0:200])
+        p2p2.send_header_for_blocks(self.blocks[:200])
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)

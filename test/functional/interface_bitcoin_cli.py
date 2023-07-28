@@ -43,7 +43,7 @@ def cli_get_info_string_to_dict(cli_get_info_string):
         if "Balances" in line:
             # When "Balances" appears in a line, all of the following lines contain "balance: wallet" until an empty line
             cli_get_info["Balances"] = {}
-            while line_idx < len(lines) and not (lines[line_idx + 1] == ''):
+            while line_idx < len(lines) and lines[line_idx + 1] != '':
                 line_idx += 1
                 balance, wallet = lines[line_idx].strip().split(" ")
                 # Remove right justification padding

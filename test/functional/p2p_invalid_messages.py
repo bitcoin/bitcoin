@@ -47,7 +47,7 @@ class msg_unrecognized:
         return ser_string(self.str_data)
 
     def __repr__(self):
-        return "{}(data={})".format(self.msgtype, self.str_data)
+        return f"{self.msgtype}(data={self.str_data})"
 
 
 class SenderOfAddrV2(P2PInterface):
@@ -167,7 +167,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # will produce unexpected results.
         conn.wait_for_sendaddrv2()
 
-        self.log.info('Test addrv2: ' + label)
+        self.log.info(f'Test addrv2: {label}')
 
         msg = msg_unrecognized(str_data=b'')
         msg.msgtype = b'addrv2'
@@ -238,8 +238,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_oversized_msg(self, msg, size):
         msg_type = msg.msgtype.decode('ascii')
-        self.log.info("Test {} message of size {} is logged as misbehaving".format(msg_type, size))
-        with self.nodes[0].assert_debug_log(['Misbehaving', '{} message size = {}'.format(msg_type, size)]):
+        self.log.info(
+            f"Test {msg_type} message of size {size} is logged as misbehaving"
+        )
+        with self.nodes[0].assert_debug_log(['Misbehaving', f'{msg_type} message size = {size}']):
             self.nodes[0].add_p2p_connection(P2PInterface()).send_and_ping(msg)
         self.nodes[0].disconnect_p2ps()
 
@@ -288,10 +290,12 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_noncontinuous_headers_msg(self):
         self.log.info("Test headers message with non-continuous headers sequence is logged as misbehaving")
         block_hashes = self.generate(self.nodes[0], 10)
-        block_headers = []
-        for block_hash in block_hashes:
-            block_headers.append(from_hex(CBlockHeader(), self.nodes[0].getblockheader(block_hash, False)))
-
+        block_headers = [
+            from_hex(
+                CBlockHeader(), self.nodes[0].getblockheader(block_hash, False)
+            )
+            for block_hash in block_hashes
+        ]
         # continuous headers sequence should be fine
         MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS = ['Misbehaving', 'non-continuous headers sequence']
         peer = self.nodes[0].add_p2p_connection(P2PInterface())

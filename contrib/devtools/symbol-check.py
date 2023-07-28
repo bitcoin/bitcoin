@@ -177,8 +177,8 @@ PE_ALLOWED_LIBRARIES = {
 
 def check_version(max_versions, version, arch) -> bool:
     (lib, _, ver) = version.rpartition('_')
-    ver = tuple([int(x) for x in ver.split('.')])
-    if not lib in max_versions:
+    ver = tuple(int(x) for x in ver.split('.'))
+    if lib not in max_versions:
         return False
     if isinstance(max_versions[lib], tuple):
         return ver <= max_versions[lib]
@@ -232,14 +232,10 @@ def check_MACHO_libraries(binary) -> bool:
     return ok
 
 def check_MACHO_min_os(binary) -> bool:
-    if binary.build_version.minos == [11,0,0]:
-        return True
-    return False
+    return binary.build_version.minos == [11,0,0]
 
 def check_MACHO_sdk(binary) -> bool:
-    if binary.build_version.sdk == [11, 0, 0]:
-        return True
-    return False
+    return binary.build_version.sdk == [11, 0, 0]
 
 def check_PE_libraries(binary) -> bool:
     ok: bool = True
@@ -252,9 +248,7 @@ def check_PE_libraries(binary) -> bool:
 def check_PE_subsystem_version(binary) -> bool:
     major: int = binary.optional_header.major_subsystem_version
     minor: int = binary.optional_header.minor_subsystem_version
-    if major == 6 and minor == 1:
-        return True
-    return False
+    return major == 6 and minor == 1
 
 def check_ELF_interpreter(binary) -> bool:
     expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
@@ -297,11 +291,9 @@ if __name__ == '__main__':
                 retval = 1
                 continue
 
-            failed: List[str] = []
-            for (name, func) in CHECKS[etype]:
-                if not func(binary):
-                    failed.append(name)
-            if failed:
+            if failed := [
+                name for name, func in CHECKS[etype] if not func(binary)
+            ]:
                 print(f'{filename}: failed {" ".join(failed)}')
                 retval = 1
         except IOError:

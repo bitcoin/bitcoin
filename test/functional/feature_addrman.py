@@ -82,13 +82,13 @@ class AddrmanTest(BitcoinTestFramework):
         self.log.info("Check that addrman from future is overwritten with new addrman")
         self.stop_node(0)
         write_addrman(peers_dat, lowest_compatible=111)
-        assert_equal(os.path.exists(peers_dat + ".bak"), False)
+        assert_equal(os.path.exists(f"{peers_dat}.bak"), False)
         with self.nodes[0].assert_debug_log([
                 f'Creating new peers.dat because the file version was not compatible ("{peers_dat}"). Original backed up to peers.dat.bak',
         ]):
             self.start_node(0)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
-        assert_equal(os.path.exists(peers_dat + ".bak"), True)
+        assert_equal(os.path.exists(f"{peers_dat}.bak"), True)
 
         self.log.info("Check that corrupt addrman cannot be read (EOF)")
         self.stop_node(0)

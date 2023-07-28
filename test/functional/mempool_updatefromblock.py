@@ -39,27 +39,22 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         first_block_hash = ''
         tx_id = []
         tx_size = []
-        self.log.info('Creating {} transactions...'.format(size))
+        self.log.info(f'Creating {size} transactions...')
         for i in range(0, size):
-            self.log.debug('Preparing transaction #{}...'.format(i))
+            self.log.debug(f'Preparing transaction #{i}...')
             # Prepare inputs.
             if i == 0:
                 inputs = [wallet.get_utxo()]  # let MiniWallet provide a start UTXO
             else:
                 inputs = []
-                for j, tx in enumerate(tx_id[0:i]):
+                for j, tx in enumerate(tx_id[:i]):
                     # Transaction tx[K] is a child of each of previous transactions tx[0]..tx[K-1] at their output K-1.
                     vout = i - j - 1
                     inputs.append(wallet.get_utxo(txid=tx_id[j], vout=vout))
 
             # Prepare outputs.
             tx_count = i + 1
-            if tx_count < size:
-                # Transaction tx[K] is an ancestor of each of subsequent transactions tx[K+1]..tx[N-1].
-                n_outputs = size - tx_count
-            else:
-                n_outputs = 1
-
+            n_outputs = size - tx_count if tx_count < size else 1
             # Create a new transaction.
             new_tx = wallet.send_self_transfer_multi(
                 from_node=self.nodes[0],
@@ -72,7 +67,9 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
             if tx_count in n_tx_to_mine:
                 # The created transactions are mined into blocks by batches.
-                self.log.info('The batch of {} transactions has been accepted into the mempool.'.format(len(self.nodes[0].getrawmempool())))
+                self.log.info(
+                    f'The batch of {len(self.nodes[0].getrawmempool())} transactions has been accepted into the mempool.'
+                )
                 block_hash = self.generate(self.nodes[0], 1)[0]
                 if not first_block_hash:
                     first_block_hash = block_hash
@@ -81,21 +78,25 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
             elif tx_count == size:
                 # At the end all of the mined blocks are invalidated, and all of the created
                 # transactions should be re-added from disconnected blocks to the mempool.
-                self.log.info('The last batch of {} transactions has been accepted into the mempool.'.format(len(self.nodes[0].getrawmempool())))
+                self.log.info(
+                    f'The last batch of {len(self.nodes[0].getrawmempool())} transactions has been accepted into the mempool.'
+                )
                 start = time.time()
                 self.nodes[0].invalidateblock(first_block_hash)
                 end = time.time()
                 assert_equal(len(self.nodes[0].getrawmempool()), size)
-                self.log.info('All of the recently mined transactions have been re-added into the mempool in {} seconds.'.format(end - start))
+                self.log.info(
+                    f'All of the recently mined transactions have been re-added into the mempool in {end - start} seconds.'
+                )
 
         self.log.info('Checking descendants/ancestors properties of all of the in-mempool transactions...')
         for k, tx in enumerate(tx_id):
-            self.log.debug('Check transaction #{}.'.format(k))
+            self.log.debug(f'Check transaction #{k}.')
             entry = self.nodes[0].getmempoolentry(tx)
             assert_equal(entry['descendantcount'], size - k)
             assert_equal(entry['descendantsize'], sum(tx_size[k:size]))
             assert_equal(entry['ancestorcount'], k + 1)
-            assert_equal(entry['ancestorsize'], sum(tx_size[0:(k + 1)]))
+            assert_equal(entry['ancestorsize'], sum(tx_size[:k + 1]))
 
     def run_test(self):
         # Use batch size limited by DEFAULT_ANCESTOR_LIMIT = 25 to not fire "too many unconfirmed parents" error.

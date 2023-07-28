@@ -32,9 +32,7 @@ class AddrReceiver(P2PInterface):
             return self.received_addrs
 
     def on_addr(self, message):
-        self.received_addrs = []
-        for addr in message.addrs:
-            self.received_addrs.append(addr.ip)
+        self.received_addrs = [addr.ip for addr in message.addrs]
 
     def addr_received(self):
         return self.received_addrs is not None
@@ -55,7 +53,7 @@ class AddrTest(BitcoinTestFramework):
         for i in range(10000):
             first_octet = i >> 8
             second_octet = i % 256
-            a = "{}.{}.1.1".format(first_octet, second_octet)
+            a = f"{first_octet}.{second_octet}.1.1"
             self.nodes[0].addpeeraddress(a, 8333)
 
         # Need to make sure we hit MAX_ADDR_TO_SEND records in the addr response later because

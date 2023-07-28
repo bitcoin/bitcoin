@@ -19,8 +19,7 @@ if sys.version_info < (3, 9):
         buf = buf[:329] + bytes(16) + buf[345:]
         # recompute checksum
         chksum = tarfile.calc_chksums(buf)[0]
-        buf = buf[:-364] + bytes("%06o\0" % chksum, "ascii") + buf[-357:]
-        return buf
+        return buf[:-364] + bytes("%06o\0" % chksum, "ascii") + buf[-357:]
     tarfile.TarInfo._create_header = staticmethod(_create_header)
 
 @contextlib.contextmanager

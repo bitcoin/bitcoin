@@ -355,7 +355,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         # that the handle_* functions succeeded.
         EXPECTED_HANDLE_FLUSH_SUCCESS = 3
         handle_flush_succeeds = 0
-        expected_flushes = list()
+        expected_flushes = []
 
         def handle_utxocache_flush(_, data, __):
             nonlocal handle_flush_succeeds
@@ -403,7 +403,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0)
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
-        self.log.info(f"prune blockchain to trigger a flush for pruning")
+        self.log.info("prune blockchain to trigger a flush for pruning")
         expected_flushes.append({"mode": "NONE", "for_prune": True, "size": 0})
         self.nodes[0].pruneblockchain(315)
 
@@ -411,7 +411,8 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         bpf.cleanup()
 
         self.log.info(
-            f"check that we don't expect additional flushes and that the handle_* function succeeded")
+            "check that we don't expect additional flushes and that the handle_* function succeeded"
+        )
         assert_equal(0, len(expected_flushes))
         assert_equal(EXPECTED_HANDLE_FLUSH_SUCCESS, handle_flush_succeeds)
 

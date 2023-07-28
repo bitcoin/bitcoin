@@ -101,7 +101,7 @@ class Peer:
         self.id = id
         self.address = address
         self.connection_type = connection_type
-        self.last_messages = list()
+        self.last_messages = []
 
     def add_message(self, message):
         self.last_messages.append(message)
@@ -116,7 +116,7 @@ class Peer:
 
 
 def main(bitcoind_path):
-    peers = dict()
+    peers = {}
 
     bitcoind_with_usdts = USDT(path=str(bitcoind_path))
 
@@ -179,16 +179,23 @@ def loop(screen, bpf, peers):
             bpf.perf_buffer_poll(timeout=50)
 
             ch = screen.getch()
-            if (ch == curses.KEY_DOWN or ch == ord("j")) and cur_list_pos < len(
-                    peers.keys()) -1 and info_panel.hidden():
+            if (
+                ch in [curses.KEY_DOWN, ord("j")]
+                and cur_list_pos < len(peers.keys()) - 1
+                and info_panel.hidden()
+            ):
                 cur_list_pos += 1
                 if cur_list_pos >= ROWS_AVALIABLE_FOR_LIST:
                     scroll += 1
-            if (ch == curses.KEY_UP or ch == ord("k")) and cur_list_pos > 0 and info_panel.hidden():
+            if (
+                ch in [curses.KEY_UP, ord("k")]
+                and cur_list_pos > 0
+                and info_panel.hidden()
+            ):
                 cur_list_pos -= 1
                 if scroll > 0:
                     scroll -= 1
-            if ch == ord('\n') or ch == ord(' '):
+            if ch in [ord('\n'), ord(' ')]:
                 if info_panel.hidden():
                     info_panel.show()
                 else:

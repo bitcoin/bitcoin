@@ -33,7 +33,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         }
         self.wait_until(lambda: self.nodes[1].getindexinfo() == expected_stats)
 
-        expected = {**expected_filter, **expected_stats}
+        expected = expected_filter | expected_stats
         self.wait_until(lambda: self.nodes[2].getindexinfo() == expected)
 
     def reconnect_nodes(self):

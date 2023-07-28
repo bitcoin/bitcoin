@@ -104,8 +104,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def create_self_transfer_from_utxo(self, input_tx):
         utxo = self.miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
-        tx = self.miniwallet.create_self_transfer(utxo_to_spend=utxo)['tx']
-        return tx
+        return self.miniwallet.create_self_transfer(utxo_to_spend=utxo)['tx']
 
     def create_bip112special(self, input, txversion):
         tx = self.create_self_transfer_from_utxo(input)
@@ -203,29 +202,19 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks(test_blocks)
         assert not softfork_active(self.nodes[0], 'csv')
 
-        # Inputs at height = 431
-        #
-        # Put inputs for all tests in the chain at height 431 (tip now = 430) (time increases by 600s per block)
-        # Note we reuse inputs for v1 and v2 txs so must test these separately
-        # 16 normal inputs
-        bip68inputs = []
-        for _ in range(16):
-            bip68inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
-
+        bip68inputs = [
+            self.send_generic_input_tx(self.coinbase_blocks) for _ in range(16)
+        ]
         # 2 sets of 16 inputs with 10 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112basicinputs = []
         for _ in range(2):
-            inputs = []
-            for _ in range(16):
-                inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
+            inputs = [self.send_generic_input_tx(self.coinbase_blocks) for _ in range(16)]
             bip112basicinputs.append(inputs)
 
         # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112diverseinputs = []
         for _ in range(2):
-            inputs = []
-            for _ in range(16):
-                inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
+            inputs = [self.send_generic_input_tx(self.coinbase_blocks) for _ in range(16)]
             bip112diverseinputs.append(inputs)
 
         # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
@@ -290,13 +279,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Pre-Soft Fork Tests. All txs should pass.")
         self.log.info("Test version 1 txs")
 
-        success_txs = []
         # BIP113 tx, -1 CSV tx and empty stack CSV tx should succeed
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         self.miniwallet.sign_tx(bip113tx_v1)
-        success_txs.append(bip113tx_v1)
-        success_txs.append(bip112tx_special_v1)
-        success_txs.append(bip112tx_emptystack_v1)
+        success_txs = [bip113tx_v1, bip112tx_special_v1, bip112tx_emptystack_v1]
         # add BIP 68 txs
         success_txs.extend(all_rlt_txs(bip68txs_v1))
         # add BIP 112 with seq=10 txs
@@ -314,9 +300,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # BIP113 tx, -1 CSV tx and empty stack CSV tx should succeed
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         self.miniwallet.sign_tx(bip113tx_v2)
-        success_txs.append(bip113tx_v2)
-        success_txs.append(bip112tx_special_v2)
-        success_txs.append(bip112tx_emptystack_v2)
+        success_txs.extend((bip113tx_v2, bip112tx_special_v2, bip112tx_emptystack_v2))
         # add BIP 68 txs
         success_txs.extend(all_rlt_txs(bip68txs_v2))
         # add BIP 112 with seq=10 txs

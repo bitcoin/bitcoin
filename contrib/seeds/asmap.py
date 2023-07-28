@@ -239,9 +239,9 @@ class _BinNode:
         based on the next input bit. It exploits shortcuts that are possible in the encoding,
         and uses either a JUMP, MATCH, or END instruction.
         """
-        if node0.ins == _Instruction.END and node1.ins == _Instruction.END:
-            return node0
         if node0.ins == _Instruction.END:
+            if node1.ins == _Instruction.END:
+                return node0
             if node1.ins == _Instruction.MATCH and node1.arg1 <= 0xFF:
                 return _BinNode(node1.ins, node1.arg1 + (1 << node1.arg1.bit_length()), node1.arg2)
             return _BinNode(_Instruction.MATCH, 3, node1)
@@ -349,9 +349,7 @@ class ASMap:
             if len(node) == 1:
                 break
             node = node[bit]
-        if len(node) == 1:
-            return node[0]
-        return None
+        return node[0] if len(node) == 1 else None
 
     def _to_entries_flat(self, fill: bool = False) -> List[ASNEntry]:
         """Convert an ASMap object to a list of non-overlapping (prefix, asn) objects."""
@@ -369,10 +367,11 @@ class ASMap:
                 ret += recurse(node[1])
                 prefix.pop()
                 if fill and len(ret) > 1:
-                    asns = set(x[1] for x in ret)
+                    asns = {x[1] for x in ret}
                     if len(asns) == 1:
                         ret = [(list(prefix), list(asns)[0])]
             return ret
+
         return recurse(self._trie)
 
     def _to_entries_minimal(self, fill: bool = False) -> List[ASNEntry]:
@@ -493,7 +492,7 @@ class ASMap:
                 candidate(ctx, left.get(None), right.get(ctx), _BinNode.make_branch)
                 candidate(ctx, left.get(ctx), right.get(None), _BinNode.make_branch)
             if not hole:
-                for ctx in set(ret) - set([None]):
+                for ctx in set(ret) - {None}:
                     candidate(None, ctx, ret[ctx], _BinNode.make_default)
             if None in ret:
                 ret = {ctx:enc for ctx, enc in ret.items()
@@ -501,6 +500,7 @@ class ASMap:
             if hole:
                 ret = {ctx:enc for ctx, enc in ret.items() if ctx is None or ctx == 0}
             return ret, hole
+
         res, _ = recurse(self._trie)
         return res[0] if 0 in res else res[None]
 
@@ -518,13 +518,11 @@ class ASMap:
                 while val >= 2:
                     bit = val & 1
                     val >>= 1
-                    if bit:
-                        sub = [[default], sub]
-                    else:
-                        sub = [sub, [default]]
+                    sub = [[default], sub] if bit else [sub, [default]]
                 return sub
             assert node.ins == _Instruction.DEFAULT
             return recurse(node.arg2, node.arg1)
+
         ret = ASMap()
         if binnode.ins != _Instruction.END:
             #pylint: disable=protected-access
@@ -608,7 +606,7 @@ class ASMap:
             sub, bitpos = recurse(bitpos)
             return _BinNode(ins, asn, sub), bitpos
 
-        if len(bits) == 0:
+        if not bits:
             binnode = _BinNode(_Instruction.END)
         else:
             try:
@@ -617,7 +615,7 @@ class ASMap:
                 return None
             if bitpos < len(bits) - 7:
                 return None
-            if not all(bit == 0 for bit in bits[bitpos:]):
+            if any(bit != 0 for bit in bits[bitpos:]):
                 return None
 
         return ASMap._from_binnode(binnode)
@@ -626,9 +624,7 @@ class ASMap:
         return self._trie < other._trie
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, ASMap):
-            return self._trie == other._trie
-        return False
+        return self._trie == other._trie if isinstance(other, ASMap) else False
 
     def extends(self, req: "ASMap") -> bool:
         """Determine whether this matches req for all subranges where req is assigned."""
@@ -637,11 +633,12 @@ class ASMap:
                 return True
             if len(require) == 1:
                 if len(actual) == 1:
-                    return bool(require[0] == actual[0])
+                    return require[0] == actual[0]
                 return recurse(actual[0], require) and recurse(actual[1], require)
             if len(actual) == 2:
                 return recurse(actual[0], require[0]) and recurse(actual[1], require[1])
             return recurse(actual, require[0]) and recurse(actual, require[1])
+
         assert isinstance(req, ASMap)
         #pylint: disable=protected-access
         return recurse(self._trie, req._trie)
