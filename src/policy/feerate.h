@@ -41,7 +41,7 @@ public:
     template<typename I>
     explicit CFeeRate(const I _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) {
         // We've previously had bugs creep in from silent double->int conversion...
-        static_assert(std::is_integral<I>::value, "CFeeRate should be used without floats");
+        static_assert(std::is_integral_v<I>, "CFeeRate should be used without floats");
     }
 
     /**

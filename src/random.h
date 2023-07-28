@@ -15,6 +15,7 @@
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 #include <vector>
 
 /**
@@ -78,13 +79,13 @@ uint64_t GetRandInternal(uint64_t nMax) noexcept;
  */
 template<typename T>
 T GetRand(T nMax=std::numeric_limits<T>::max()) noexcept {
-    static_assert(std::is_integral<T>(), "T must be integral");
+    static_assert(std::is_integral_v<T>, "T must be integral");
     static_assert(std::numeric_limits<T>::max() <= std::numeric_limits<uint64_t>::max(), "GetRand only supports up to uint64_t");
     return T(GetRandInternal(nMax));
 }
 /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
 template <typename D>
-D GetRandomDuration(typename std::common_type<D>::type max) noexcept
+D GetRandomDuration(typename std::common_type_t<D> max) noexcept
 // Having the compiler infer the template argument from the function argument
 // is dangerous, because the desired return value generally has a different
 // type than the function argument. So std::common_type is used to force the

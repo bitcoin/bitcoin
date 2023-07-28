@@ -241,7 +241,7 @@ public:
      friend class reverse_lock;
 };
 
-#define REVERSE_LOCK(g) typename std::decay<decltype(g)>::type::reverse_lock UNIQUE_NAME(revlock)(g, #g, __FILE__, __LINE__)
+#define REVERSE_LOCK(g) typename std::decay_t<decltype(g)>::reverse_lock UNIQUE_NAME(revlock)(g, #g, __FILE__, __LINE__)
 
 // When locking a Mutex, require negative capability to ensure the lock
 // is not already held

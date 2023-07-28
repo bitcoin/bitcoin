@@ -13,6 +13,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -233,7 +234,7 @@ namespace {
 template <typename T>
 bool ParseIntegral(std::string_view str, T* out)
 {
-    static_assert(std::is_integral<T>::value);
+    static_assert(std::is_integral_v<T>);
     // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
     // handling leading +/- for backwards compatibility.
     if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {

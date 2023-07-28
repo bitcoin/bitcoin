@@ -14,6 +14,7 @@
 #include <chrono>
 #include <optional>
 #include <string>
+#include <type_traits>
 
 
 namespace BCLog {
@@ -67,11 +68,11 @@ public:
         }
         const auto duration{end_time - *m_start_t};
 
-        if constexpr (std::is_same<TimeType, std::chrono::microseconds>::value) {
+        if constexpr (std::is_same_v<TimeType, std::chrono::microseconds>) {
             return strprintf("%s: %s (%iμs)", m_prefix, msg, Ticks<std::chrono::microseconds>(duration));
-        } else if constexpr (std::is_same<TimeType, std::chrono::milliseconds>::value) {
+        } else if constexpr (std::is_same_v<TimeType, std::chrono::milliseconds>) {
             return strprintf("%s: %s (%.2fms)", m_prefix, msg, Ticks<MillisecondsDouble>(duration));
-        } else if constexpr (std::is_same<TimeType, std::chrono::seconds>::value) {
+        } else if constexpr (std::is_same_v<TimeType, std::chrono::seconds>) {
             return strprintf("%s: %s (%.2fs)", m_prefix, msg, Ticks<SecondsDouble>(duration));
         } else {
             static_assert(ALWAYS_FALSE<TimeType>, "Error: unexpected time type");

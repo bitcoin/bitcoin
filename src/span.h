@@ -103,7 +103,7 @@ class Span
     template <class T>
     struct is_Span_int<Span<T>> : public std::true_type {};
     template <class T>
-    struct is_Span : public is_Span_int<typename std::remove_cv<T>::type>{};
+    struct is_Span : public is_Span_int<typename std::remove_cv_t<T>>{};
 
 
 public:
@@ -114,7 +114,7 @@ public:
      * This implements a subset of the iterator-based std::span constructor in C++20,
      * which is hard to implement without std::address_of.
      */
-    template <typename T, typename std::enable_if<std::is_convertible<T (*)[], C (*)[]>::value, int>::type = 0>
+    template <typename T, typename std::enable_if_t<std::is_convertible_v<T (*)[], C (*)[]>, int> = 0>
     constexpr Span(T* begin, std::size_t size) noexcept : m_data(begin), m_size(size) {}
 
     /** Construct a span from a begin and end pointer.
@@ -122,7 +122,7 @@ public:
      * This implements a subset of the iterator-based std::span constructor in C++20,
      * which is hard to implement without std::address_of.
      */
-    template <typename T, typename std::enable_if<std::is_convertible<T (*)[], C (*)[]>::value, int>::type = 0>
+    template <typename T, typename std::enable_if_t<std::is_convertible_v<T (*)[], C (*)[]>, int> = 0>
     CONSTEXPR_IF_NOT_DEBUG Span(T* begin, T* end) noexcept : m_data(begin), m_size(end - begin)
     {
         ASSERT_IF_DEBUG(end >= begin);
@@ -136,7 +136,7 @@ public:
      *
      *  For example this means that a Span<T> can be converted into a Span<const T>.
      */
-    template <typename O, typename std::enable_if<std::is_convertible<O (*)[], C (*)[]>::value, int>::type = 0>
+    template <typename O, typename std::enable_if_t<std::is_convertible_v<O (*)[], C (*)[]>, int> = 0>
     constexpr Span(const Span<O>& other) noexcept : m_data(other.m_data), m_size(other.m_size) {}
 
     /** Default copy constructor. */
@@ -158,16 +158,16 @@ public:
      */
     template <typename V>
     constexpr Span(V& other SPAN_ATTR_LIFETIMEBOUND,
-        typename std::enable_if<!is_Span<V>::value &&
-                                std::is_convertible<typename std::remove_pointer<decltype(std::declval<V&>().data())>::type (*)[], C (*)[]>::value &&
-                                std::is_convertible<decltype(std::declval<V&>().size()), std::size_t>::value, std::nullptr_t>::type = nullptr)
+        typename std::enable_if_t<!is_Span<V>::value &&
+                                std::is_convertible_v<typename std::remove_pointer_t<decltype(std::declval<V&>().data())> (*)[], C (*)[]> &&
+                                std::is_convertible_v<decltype(std::declval<V&>().size()), std::size_t>, std::nullptr_t> = nullptr)
         : m_data(other.data()), m_size(other.size()){}
 
     template <typename V>
     constexpr Span(const V& other SPAN_ATTR_LIFETIMEBOUND,
-        typename std::enable_if<!is_Span<V>::value &&
-                                std::is_convertible<typename std::remove_pointer<decltype(std::declval<const V&>().data())>::type (*)[], C (*)[]>::value &&
-                                std::is_convertible<decltype(std::declval<const V&>().size()), std::size_t>::value, std::nullptr_t>::type = nullptr)
+        typename std::enable_if_t<!is_Span<V>::value &&
+                                std::is_convertible_v<typename std::remove_pointer_t<decltype(std::declval<const V&>().data())> (*)[], C (*)[]> &&
+                                std::is_convertible_v<decltype(std::declval<const V&>().size()), std::size_t>, std::nullptr_t> = nullptr)
         : m_data(other.data()), m_size(other.size()){}
 
     constexpr C* data() const noexcept { return m_data; }
@@ -275,7 +275,7 @@ inline const unsigned char* UCharCast(const unsigned char* c) { return c; }
 inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_cast<const unsigned char*>(c); }
 
 // Helper function to safely convert a Span to a Span<[const] unsigned char>.
-template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
+template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer_t<decltype(UCharCast(s.data()))>> { return {UCharCast(s.data()), s.size()}; }
 
 /** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(Span{std::forward<V>(v)})) { return UCharSpanCast(Span{std::forward<V>(v)}); }

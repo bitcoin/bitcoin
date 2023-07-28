@@ -35,9 +35,9 @@ extern const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUM
 // Enable BOOST_CHECK_EQUAL for enum class types
 namespace std {
 template <typename T>
-std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+std::ostream& operator<<(typename std::enable_if_t<std::is_enum_v<T>, std::ostream>& stream, const T& e)
 {
-    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+    return stream << static_cast<typename std::underlying_type_t<T>>(e);
 }
 } // namespace std
 
