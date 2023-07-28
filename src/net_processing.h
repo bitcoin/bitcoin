@@ -47,6 +47,8 @@ struct PeerStats {
     bool m_bip152_highbandwidth_from{false};
     int64_t m_time_offset{0};
     int m_version{0};
+    // Our address, as reported by the peer
+    std::string m_addr_local;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface

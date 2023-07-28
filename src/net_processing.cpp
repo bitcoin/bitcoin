@@ -420,11 +420,33 @@ struct Peer {
         , m_our_services{our_services}
     {}
 
+    CService GetAddrLocal() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex)
+    {
+        return WITH_LOCK(m_addr_local_mutex, return m_addr_local);
+    }
+
+    void SetAddrLocal(const CService& addr_local)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex)
+    {
+        LOCK(m_addr_local_mutex);
+        if (m_addr_local.IsValid()) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Addr local already set for node: %i. Refusing to change from %s to %s\n",
+                          m_id, m_addr_local.ToStringAddrPort(), addr_local.ToStringAddrPort());
+        } else {
+            m_addr_local = addr_local;
+        }
+    }
+
 private:
     mutable Mutex m_tx_relay_mutex;
 
     /** Transaction relay data. May be a nullptr. */
     std::unique_ptr<TxRelay> m_tx_relay GUARDED_BY(m_tx_relay_mutex);
+
+    /** Our address, as reported by the peer. */
+    mutable Mutex m_addr_local_mutex;
+    CService m_addr_local GUARDED_BY(m_addr_local_mutex);
 };
 
 using PeerRef = std::shared_ptr<Peer>;
@@ -1688,6 +1710,13 @@ bool PeerManagerImpl::GetPeerStats(NodeId nodeid, PeerStats& stats) const
     stats.m_bip152_highbandwidth_from = peer->m_bip152_highbandwidth_from;
     stats.m_time_offset = peer->m_time_offset;
     stats.m_version = peer->m_version;
+
+    // Leave string empty if addrLocal invalid (not filled in yet)
+    CService addr_local{peer->GetAddrLocal()};
+    stats.m_addr_local =
+        addr_local.IsValid() ?
+            addr_local.ToStringAddrPort() :
+            "";
 
     return true;
 }
@@ -3449,7 +3478,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         m_evictionman.UpdateRelevantServices(pfrom.GetId(), HasAllDesirableServiceFlags(nServices));
         peer->m_their_services = nServices;
-        pfrom.SetAddrLocal(addrMe);
+		peer->SetAddrLocal(addrMe);
         WITH_LOCK(peer->m_subver_mutex, peer->m_clean_subversion = cleanSubVer);
         peer->m_starting_height = starting_height;
 
@@ -5249,7 +5278,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
         if (peer.m_next_local_addr_send != 0us) {
             peer.m_addr_known->reset();
         }
-        if (std::optional<CService> local_service = GetLocalAddrForPeer(node)) {
+        if (std::optional<CService> local_service = GetLocalAddrForPeer(node, peer.GetAddrLocal())) {
             CAddress local_addr{*local_service, peer.m_our_services, Now<NodeSeconds>()};
             FastRandomContext insecure_rand;
             PushAddress(peer, local_addr, insecure_rand);

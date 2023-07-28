@@ -52,20 +52,12 @@ FUZZ_TARGET(net, .init = initialize_net)
                 }
             },
             [&] {
-                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);
-                if (!service_opt) {
-                    return;
-                }
-                node.SetAddrLocal(*service_opt);
-            },
-            [&] {
                 const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
                 bool complete;
                 node.ReceiveMsgBytes(b, complete);
             });
     }
 
-    (void)node.GetAddrLocal();
     (void)node.GetId();
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);

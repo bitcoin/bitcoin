@@ -199,8 +199,8 @@ static RPCHelpMan getpeerinfo()
         if (stats.addrBind.IsValid()) {
             obj.pushKV("addrbind", stats.addrBind.ToStringAddrPort());
         }
-        if (!(stats.addrLocal.empty())) {
-            obj.pushKV("addrlocal", stats.addrLocal);
+        if (!(peer_stats.m_addr_local.empty())) {
+            obj.pushKV("addrlocal", peer_stats.m_addr_local);
         }
         obj.pushKV("network", GetNetworkName(stats.m_network));
         if (stats.m_mapped_as != 0) {
