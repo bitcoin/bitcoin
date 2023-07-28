@@ -4852,7 +4852,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     const auto ping_time = ping_end - peer->m_ping_start.load();
                     if (ping_time.count() >= 0) {
                         // Let connman know about this successful ping-pong
-                        pfrom.PongReceived(ping_time);
+                        m_connman.PongReceived(peer->m_id, ping_time);
                         m_evictionman.UpdateMinPingTime(pfrom.GetId(), ping_time);
                     } else {
                         // This should never happen

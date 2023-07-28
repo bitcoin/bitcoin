@@ -706,6 +706,8 @@ public:
     /** Check whether more data should be send on this connection. */
     bool IsSendingPaused(NodeId id) const;
 
+    void PongReceived(NodeId id, std::chrono::microseconds ping_time);
+
     //! Used to convey which local services we are offering peers during node
     //! connection.
     //!

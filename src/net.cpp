@@ -2669,6 +2669,15 @@ bool CConnman::IsSendingPaused(NodeId id) const
            it->second->fPauseSend;
 }
 
+void CConnman::PongReceived(NodeId id, std::chrono::microseconds ping_time)
+{
+    LOCK(m_nodes_mutex);
+    auto it = m_nodes.find(id);
+    if (it == m_nodes.end()) return;
+
+    it->second->PongReceived(ping_time);
+}
+
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     nTotalBytesRecv += bytes;
