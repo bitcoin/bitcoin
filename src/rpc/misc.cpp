@@ -8,6 +8,8 @@
 #include <consensus/consensus.h>
 #include <evo/mnauth.h>
 #include <httpserver.h>
+#include <index/blockfilterindex.h>
+#include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
@@ -194,7 +196,7 @@ static UniValue sporkupdate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
     }
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (!node.connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
@@ -571,14 +573,17 @@ static UniValue mnauth(const JSONRPCRequest& request)
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
     }
+
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+
     CBLSPublicKey publicKey;
-    bool bls_legacy_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    bool bls_legacy_scheme = !llmq::utils::IsV19Active(chainman.ActiveChain().Tip());
     publicKey.SetHexStr(request.params[2].get_str(), bls_legacy_scheme);
     if (!publicKey.IsValid()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     bool fSuccess = node.connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
         pNode->SetVerifiedProRegTxHash(proTxHash);
         pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
@@ -697,7 +702,7 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
 
     std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > indexes;
 
-    CTxMemPool& mempool = EnsureMemPool(request.context);
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     if (!mempool.getAddressIndex(addresses, indexes)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
     }
@@ -922,7 +927,8 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
         }
     }
 
-    int nHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    int nHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Height());
 
     CAmount balance = 0;
     CAmount balance_spendable = 0;
@@ -1066,7 +1072,7 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
     CSpentIndexKey key(txid, outputIndex);
     CSpentIndexValue value;
 
-    CTxMemPool& mempool = EnsureMemPool(request.context);
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     if (!GetSpentIndex(mempool, key, value)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to get spent info");
     }
@@ -1302,6 +1308,60 @@ static UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_name)
+{
+    UniValue ret_summary(UniValue::VOBJ);
+    if (!index_name.empty() && index_name != summary.name) return ret_summary;
+
+    UniValue entry(UniValue::VOBJ);
+    entry.pushKV("synced", summary.synced);
+    entry.pushKV("best_block_height", summary.best_block_height);
+    ret_summary.pushKV(summary.name, entry);
+    return ret_summary;
+}
+
+static RPCHelpMan getindexinfo()
+{
+    return RPCHelpMan{"getindexinfo",
+                "\nReturns the status of one or all available indices currently running in the node.\n",
+                {
+                    {"index_name", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Filter results for an index with a specific name."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "", {
+                        {
+                            RPCResult::Type::OBJ, "name", "The name of the index",
+                            {
+                                {RPCResult::Type::BOOL, "synced", "Whether the index is synced or not"},
+                                {RPCResult::Type::NUM, "best_block_height", "The block height to which the index is synced"},
+                            }
+                        },
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("getindexinfo", "")
+                  + HelpExampleRpc("getindexinfo", "")
+                  + HelpExampleCli("getindexinfo", "txindex")
+                  + HelpExampleRpc("getindexinfo", "txindex")
+                },
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue result(UniValue::VOBJ);
+    const std::string index_name = request.params[0].isNull() ? "" : request.params[0].get_str();
+
+    if (g_txindex) {
+        result.pushKVs(SummaryToJSON(g_txindex->GetSummary(), index_name));
+    }
+
+    ForEachBlockFilterIndex([&result, &index_name](const BlockFilterIndex& index) {
+        result.pushKVs(SummaryToJSON(index.GetSummary(), index_name));
+    });
+
+    return result;
+},
+    };
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1315,6 +1375,7 @@ static const CRPCCommand commands[] =
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+    { "util",               "getindexinfo",           &getindexinfo,           {"index_name"} },
     { "blockchain",         "getspentinfo",           &getspentinfo,           {"json"} },
 
     /* Address index */

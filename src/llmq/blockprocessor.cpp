@@ -15,6 +15,7 @@
 #include <consensus/validation.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <saltedhasher.h>

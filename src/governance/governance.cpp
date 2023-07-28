@@ -555,7 +555,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
         return false;
     }
 
-    const auto& [_, inserted] = setHash->insert(inv.hash);
+    const auto& [_itr, inserted] = setHash->insert(inv.hash);
 
     if (inserted) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added inv to requested set\n");

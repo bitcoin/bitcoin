@@ -54,11 +54,12 @@
  * or from the last difficulty change if 'lookup' is nonpositive.
  * If 'height' is nonnegative, compute the estimate at the time when a given block was found.
  */
-static UniValue GetNetworkHashPS(int lookup, int height) {
-    CBlockIndex *pb = ::ChainActive().Tip();
+static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_chain) {
+    const CBlockIndex* pb = active_chain.Tip();
 
-    if (height >= 0 && height < ::ChainActive().Height())
-        pb = ::ChainActive()[height];
+    if (height >= 0 && height < active_chain.Height()) {
+        pb = active_chain[height];
+    }
 
     if (pb == nullptr || !pb->nHeight)
         return 0;
@@ -71,7 +72,7 @@ static UniValue GetNetworkHashPS(int lookup, int height) {
     if (lookup > pb->nHeight)
         lookup = pb->nHeight;
 
-    CBlockIndex *pb0 = pb;
+    const CBlockIndex* pb0 = pb;
     int64_t minTime = pb0->GetBlockTime();
     int64_t maxTime = minTime;
     for (int i = 0; i < lookup; i++) {
@@ -109,8 +110,9 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
-    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
+    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1, chainman.ActiveChain());
 }
 
 #if ENABLE_MINER
@@ -120,7 +122,8 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     {
         LOCK(cs_main);
-        IncrementExtraNonce(&block, ::ChainActive().Tip(), extra_nonce);
+        CHECK_NONFATAL(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
+        IncrementExtraNonce(&block, chainman.ActiveChain().Tip(), extra_nonce);
     }
 
     CChainParams chainparams(Params());
@@ -154,14 +157,15 @@ static UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& me
 
     {   // Don't keep cs_main locked
         LOCK(cs_main);
-        nHeight = ::ChainActive().Height();
+        CHECK_NONFATAL(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
+        nHeight = chainman.ActiveChain().Height();
         nHeightEnd = nHeight+nGenerate;
     }
     unsigned int nExtraNonce = 0;
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(*sporkManager, *governance, quorum_block_processor, clhandler, isman, evodb, ::ChainstateActive(), mempool, Params()).CreateNewBlock(coinbase_script));
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(*sporkManager, *governance, quorum_block_processor, clhandler, isman, evodb, chainman.ActiveChainstate(), mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
@@ -243,12 +247,12 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
-    const NodeContext& node_context = EnsureNodeContext(request.context);
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
-    ChainstateManager& chainman = EnsureChainman(request.context);
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    ChainstateManager& chainman = EnsureChainman(node);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    return generateBlocks(chainman, mempool, *node_context.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbase_script, num_blocks, max_tries);
+    return generateBlocks(chainman, mempool, *node.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbase_script, num_blocks, max_tries);
 }
 
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -280,14 +284,14 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
 
-    const NodeContext& node_context = EnsureNodeContext(request.context);
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
-    ChainstateManager& chainman = EnsureChainman(request.context);
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    ChainstateManager& chainman = EnsureChainman(node);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     CScript coinbase_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, mempool, *node_context.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbase_script, num_blocks, max_tries);
+    return generateBlocks(chainman, mempool, *node.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbase_script, num_blocks, max_tries);
 }
 
 static UniValue generateblock(const JSONRPCRequest& request)
@@ -329,8 +333,8 @@ static UniValue generateblock(const JSONRPCRequest& request)
         coinbase_script = GetScriptForDestination(destination);
     }
 
-    const NodeContext& node_context = EnsureNodeContext(request.context);
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
     const auto raw_txs_or_txids = request.params[1].get_array();
@@ -357,14 +361,17 @@ static UniValue generateblock(const JSONRPCRequest& request)
     }
 
     CChainParams chainparams(Params());
-    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     CBlock block;
+
+    ChainstateManager& chainman = EnsureChainman(node);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
     {
         LOCK(cs_main);
 
         CTxMemPool empty_mempool;
-        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(*sporkManager, *governance, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, *node_context.evodb, ::ChainstateActive(), empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(*sporkManager, *governance, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, *node.evodb, active_chainstate, empty_mempool, chainparams).CreateNewBlock(coinbase_script));
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
@@ -381,7 +388,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
         LOCK(cs_main);
 
         BlockValidationState state;
-        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *node_context.evodb, chainparams, ::ChainstateActive(), block, g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
+        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *node.evodb, chainparams, active_chainstate, block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.GetRejectReason()));
         }
     }
@@ -390,7 +397,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
     uint64_t max_tries{DEFAULT_MAX_TRIES};
     unsigned int extra_nonce{0};
 
-    if (!GenerateBlock(EnsureChainman(request.context), block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
+    if (!GenerateBlock(chainman, block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
     }
 
@@ -436,14 +443,19 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    const CChain& active_chain = chainman.ActiveChain();
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("blocks",           (int)::ChainActive().Height());
+    obj.pushKV("blocks",           active_chain.Height());
     if (BlockAssembler::m_last_block_size) obj.pushKV("currentblocksize", *BlockAssembler::m_last_block_size);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
-    obj.pushKV("difficulty",       (double)GetDifficulty(::ChainActive().Tip()));
+    obj.pushKV("difficulty",       (double)GetDifficulty(active_chain.Tip()));
     obj.pushKV("networkhashps",    getnetworkhashps(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
     obj.pushKV("chain",            Params().NetworkIDString());
@@ -477,7 +489,7 @@ static UniValue prioritisetransaction(const JSONRPCRequest& request)
     uint256 hash(ParseHashV(request.params[0].get_str(), "txid"));
     CAmount nAmount = request.params[1].get_int64();
 
-    EnsureMemPool(request.context).PrioritiseTransaction(hash, nAmount);
+    EnsureAnyMemPool(request.context).PrioritiseTransaction(hash, nAmount);
     return true;
 }
 
@@ -618,14 +630,17 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    LOCK(cs_main);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    const NodeContext& node_context = EnsureNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    LOCK(cs_main);
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set<std::string> setClientRules;
     int64_t nMaxVersionPreVB = -1;
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    CChain& active_chain = active_chainstate.m_chain;
     if (!request.params[0].isNull())
     {
         const UniValue& oparam = request.params[0].get_obj();
@@ -651,7 +666,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
             uint256 hash = block.GetHash();
-            const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+            const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
             if (pindex) {
                 if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
                     return "duplicate";
@@ -660,14 +675,14 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 return "duplicate-inconclusive";
             }
 
-            LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+            LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-            CBlockIndex* const pindexPrev = ::ChainActive().Tip();
+            CBlockIndex* const pindexPrev = active_chain.Tip();
             // TestBlockValidity only supports blocks built on the current Tip
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             BlockValidationState state;
-            TestBlockValidity(state, *llmq_ctx.clhandler, *node_context.evodb, Params(), ::ChainstateActive(), block, pindexPrev, false, true);
+            TestBlockValidity(state, *llmq_ctx.clhandler, *node.evodb, Params(), active_chainstate, block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
         }
 
@@ -689,24 +704,23 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
 
-    if (::ChainstateActive().IsInitialBlockDownload())
+    if (active_chainstate.IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (AreSuperblocksEnabled(*sporkManager)
         && !::masternodeSync->IsSynced()
-        && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
+        && CSuperblock::IsValidBlockHeight(active_chain.Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
 
     if (!lpval.isNull())
     {
@@ -726,7 +740,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         else
         {
             // NOTE: Spec does not specify behaviour for non-string longpollid, but this makes testing easier
-            hashWatchedChain = ::ChainActive().Tip()->GetBlockHash();
+            hashWatchedChain = active_chain.Tip()->GetBlockHash();
             nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
         }
 
@@ -759,7 +773,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
     static std::unique_ptr<CBlockTemplate> pblocktemplate;
-    if (pindexPrev != ::ChainActive().Tip() ||
+    if (pindexPrev != active_chain.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
@@ -767,13 +781,13 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
         // Store the ::ChainActive().Tip() used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = ::ChainActive().Tip();
+        CBlockIndex* pindexPrevNew = active_chain.Tip();
         nStart = GetTime();
 
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
-        LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
-        pblocktemplate = BlockAssembler(*sporkManager, *governance, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, *node_context.evodb, ::ChainstateActive(), mempool, Params()).CreateNewBlock(scriptDummy);
+        LLMQContext& llmq_ctx = EnsureAnyLLMQContext(request.context);
+        pblocktemplate = BlockAssembler(*sporkManager, *governance, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, *node.evodb, active_chainstate, mempool, Params()).CreateNewBlock(scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -893,7 +907,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->GetValueOut());
-    result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", active_chain.Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
     result.pushKV("mutable", aMutable);
@@ -987,10 +1001,11 @@ static UniValue submitblock(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block does not start with a coinbase");
     }
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hash = block.GetHash();
     {
         LOCK(cs_main);
-        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (pindex) {
             if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
                 return "duplicate";
@@ -1004,7 +1019,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     bool new_block;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool accepted = EnsureChainman(request.context).ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    bool accepted = chainman.ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
     UnregisterValidationInterface(&sc);
     if (!new_block && accepted) {
         return "duplicate";
@@ -1035,15 +1050,16 @@ static UniValue submitheader(const JSONRPCRequest& request)
     if (!DecodeHexBlockHeader(h, request.params[0].get_str())) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block header decode failed");
     }
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     {
         LOCK(cs_main);
-        if (!g_chainman.m_blockman.LookupBlockIndex(h.hashPrevBlock)) {
+        if (!chainman.m_blockman.LookupBlockIndex(h.hashPrevBlock)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, "Must submit previous header (" + h.hashPrevBlock.GetHex() + ") first");
         }
     }
 
     BlockValidationState state;
-    EnsureChainman(request.context).ProcessNewBlockHeaders({h}, state, Params());
+    chainman.ProcessNewBlockHeaders({h}, state, Params());
     if (state.IsValid()) return NullUniValue;
     if (state.IsError()) {
         throw JSONRPCError(RPC_VERIFY_ERROR, state.ToString());
@@ -1091,7 +1107,7 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
 
-    CBlockPolicyEstimator& fee_estimator = EnsureFeeEstimator(request.context);
+    CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
 
     unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
@@ -1176,7 +1192,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM}, true);
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
 
-    CBlockPolicyEstimator& fee_estimator = EnsureFeeEstimator(request.context);
+    CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
 
     unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);

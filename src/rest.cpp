@@ -12,6 +12,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -178,14 +179,16 @@ static bool rest_headers(const CoreContext& context,
     std::vector<const CBlockIndex *> headers;
     headers.reserve(count);
     {
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         LOCK(cs_main);
-        tip = ::ChainActive().Tip();
-        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
-        while (pindex != nullptr && ::ChainActive().Contains(pindex)) {
+        CChain& active_chain = chainman.ActiveChain();
+        tip = active_chain.Tip();
+        const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
+        while (pindex != nullptr && active_chain.Contains(pindex)) {
             headers.push_back(pindex);
             if (headers.size() == (unsigned long)count)
                 break;
-            pindex = ::ChainActive().Next(pindex);
+            pindex = active_chain.Next(pindex);
         }
     }
 
@@ -229,7 +232,8 @@ static bool rest_headers(const CoreContext& context,
     }
 }
 
-static bool rest_block(HTTPRequest* req,
+static bool rest_block(const CoreContext& context,
+                       HTTPRequest* req,
                        const std::string& strURIPart,
                        bool showTxDetails)
 {
@@ -246,9 +250,10 @@ static bool rest_block(HTTPRequest* req,
     CBlockIndex* pblockindex = nullptr;
     CBlockIndex* tip = nullptr;
     {
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         LOCK(cs_main);
-        tip = ::ChainActive().Tip();
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        tip = chainman.ActiveChain().Tip();
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
         }
@@ -295,12 +300,12 @@ static bool rest_block(HTTPRequest* req,
 
 static bool rest_block_extended(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    return rest_block(req, strURIPart, true);
+    return rest_block(context, req, strURIPart, true);
 }
 
 static bool rest_block_notxdetails(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    return rest_block(req, strURIPart, false);
+    return rest_block(context, req, strURIPart, false);
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
@@ -533,6 +538,7 @@ static bool rest_getutxos(const CoreContext& context, HTTPRequest* req, const st
     std::string bitmapStringRepresentation;
     std::vector<bool> hits;
     bitmap.resize((vOutPoints.size() + 7) / 8);
+    ChainstateManager& chainman = EnsureAnyChainman(context);
     {
         auto process_utxos = [&vOutPoints, &outs, &hits](const CCoinsView& view, const CTxMemPool& mempool) {
             for (const COutPoint& vOutPoint : vOutPoints) {
@@ -548,12 +554,12 @@ static bool rest_getutxos(const CoreContext& context, HTTPRequest* req, const st
             if (!mempool) return false;
             // use db+mempool as cache backend in case user likes to query mempool
             LOCK2(cs_main, mempool->cs);
-            CCoinsViewCache& viewChain = ::ChainstateActive().CoinsTip();
+            CCoinsViewCache& viewChain = chainman.ActiveChainstate().CoinsTip();
             CCoinsViewMemPool viewMempool(&viewChain, *mempool);
             process_utxos(viewMempool, *mempool);
         } else {
             LOCK(cs_main);  // no need to lock mempool!
-            process_utxos(::ChainstateActive().CoinsTip(), CTxMemPool());
+            process_utxos(chainman.ActiveChainstate().CoinsTip(), CTxMemPool());
         }
 
         for (size_t i = 0; i < hits.size(); ++i) {
@@ -568,7 +574,7 @@ static bool rest_getutxos(const CoreContext& context, HTTPRequest* req, const st
         // serialize data
         // use exact same output as mentioned in Bip64
         CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
-        ssGetUTXOResponse << ::ChainActive().Height() << ::ChainActive().Tip()->GetBlockHash() << bitmap << outs;
+        ssGetUTXOResponse << chainman.ActiveChain().Height() << chainman.ActiveChain().Tip()->GetBlockHash() << bitmap << outs;
         std::string ssGetUTXOResponseString = ssGetUTXOResponse.str();
 
         req->WriteHeader("Content-Type", "application/octet-stream");
@@ -578,7 +584,7 @@ static bool rest_getutxos(const CoreContext& context, HTTPRequest* req, const st
 
     case RetFormat::HEX: {
         CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
-        ssGetUTXOResponse << ::ChainActive().Height() << ::ChainActive().Tip()->GetBlockHash() << bitmap << outs;
+        ssGetUTXOResponse << chainman.ActiveChain().Height() << chainman.ActiveChain().Tip()->GetBlockHash() << bitmap << outs;
         std::string strHex = HexStr(ssGetUTXOResponse) + "\n";
 
         req->WriteHeader("Content-Type", "text/plain");
@@ -591,8 +597,8 @@ static bool rest_getutxos(const CoreContext& context, HTTPRequest* req, const st
 
         // pack in some essentials
         // use more or less the same output as mentioned in Bip64
-        objGetUTXOResponse.pushKV("chainHeight", ::ChainActive().Height());
-        objGetUTXOResponse.pushKV("chaintipHash", ::ChainActive().Tip()->GetBlockHash().GetHex());
+        objGetUTXOResponse.pushKV("chainHeight", chainman.ActiveChain().Height());
+        objGetUTXOResponse.pushKV("chaintipHash", chainman.ActiveChain().Tip()->GetBlockHash().GetHex());
         objGetUTXOResponse.pushKV("bitmap", bitmapStringRepresentation);
 
         UniValue utxos(UniValue::VARR);
@@ -635,11 +641,13 @@ static bool rest_blockhash_by_height(const CoreContext& context, HTTPRequest* re
 
     CBlockIndex* pblockindex = nullptr;
     {
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         LOCK(cs_main);
-        if (blockheight > ::ChainActive().Height()) {
+        const CChain& active_chain = chainman.ActiveChain();
+        if (blockheight > active_chain.Height()) {
             return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
         }
-        pblockindex = ::ChainActive()[blockheight];
+        pblockindex = active_chain[blockheight];
     }
     switch (rf) {
     case RetFormat::BINARY: {

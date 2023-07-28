@@ -366,7 +366,8 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     std::string strHash = govobj.GetHash().ToString();
 
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
     bool fMissingConfirmations;
     {
         if (g_txindex) {
@@ -390,7 +391,6 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
 
-    const NodeContext& node = EnsureNodeContext(request.context);
     if (fMissingConfirmations) {
         governance->AddPostponedObject(govobj);
         govobj.Relay(*node.connman);
@@ -488,7 +488,7 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
         nSuccessful++;
         statusObj.pushKV("result", "success");
@@ -510,7 +510,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome)
 {
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     {
         LOCK(governance->cs);
         CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
@@ -1119,7 +1119,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
         return "Voted successfully";
     } else {
@@ -1150,7 +1150,9 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
 
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    const auto* pindex = WITH_LOCK(cs_main, return ::ChainActive().Tip());
+
+    const ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    const auto* pindex = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int nBlockHeight = pindex->nHeight;
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);

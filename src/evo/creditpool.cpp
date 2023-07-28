@@ -12,6 +12,7 @@
 #include <chain.h>
 #include <logging.h>
 #include <validation.h>
+#include <node/blockstorage.h>
 
 #include <algorithm>
 #include <exception>

@@ -62,9 +62,10 @@ static UniValue coinjoin(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        const NodeContext& node = EnsureNodeContext(request.context);
-        CTxMemPool& mempool = EnsureMemPool(request.context);
-        bool result = it->second->DoAutomaticDenominating(*node.connman, *node.fee_estimator, mempool);
+        const NodeContext& node = EnsureAnyNodeContext(request.context);
+        CTxMemPool& mempool = EnsureMemPool(node);
+        CBlockPolicyEstimator& fee_estimator = EnsureFeeEstimator(node);
+        bool result = it->second->DoAutomaticDenominating(*node.connman, fee_estimator, mempool);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses().original + ", will retry"));
     }
 

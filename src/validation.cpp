@@ -18,9 +18,11 @@
 #include <cuckoocache.h>
 #include <flatfile.h>
 #include <hash.h>
+#include <index/blockfilterindex.h>
 #include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -1086,72 +1088,6 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     return nullptr;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// CBlock and CBlockIndex
-//
-
-static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart)
-{
-    // Open history file to append
-    CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
-        return error("WriteBlockToDisk: OpenBlockFile failed");
-
-    // Write index header
-    unsigned int nSize = GetSerializeSize(block, fileout.GetVersion());
-    fileout << messageStart << nSize;
-
-    // Write block
-    long fileOutPos = ftell(fileout.Get());
-    if (fileOutPos < 0)
-        return error("WriteBlockToDisk: ftell failed");
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << block;
-
-    return true;
-}
-
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
-{
-    block.SetNull();
-
-    // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
-
-    // Read block
-    try {
-        filein >> block;
-    }
-    catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
-    }
-
-    // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
-
-    return true;
-}
-
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    FlatFilePos blockPos;
-    {
-        LOCK(cs_main);
-        blockPos = pindex->GetBlockPos();
-    }
-
-    if (!ReadBlockFromDisk(block, blockPos, consensusParams))
-        return false;
-    if (block.GetHash() != pindex->GetBlockHash())
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
-                pindex->ToString(), pindex->GetBlockPos().ToString());
-    return true;
-}
-
 double ConvertBitsToDouble(unsigned int nBits)
 {
     int nShift = (nBits >> 24) & 0xff;
@@ -1673,19 +1609,6 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
         return error("%s: Checksum mismatch", __func__);
 
     return true;
-}
-
-/** Abort with a message */
-static bool AbortNode(const std::string& strMessage, bilingual_str user_message = bilingual_str())
-{
-    SetMiscWarning(strMessage);
-    LogPrintf("*** %s\n", strMessage);
-    if (user_message.empty()) {
-        user_message = _("A fatal internal error occurred, see debug.log for details");
-    }
-    AbortError(user_message);
-    StartShutdown();
-    return false;
 }
 
 static bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str())
@@ -2615,14 +2538,21 @@ bool CChainState::FlushStateToDisk(
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState();
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
+            // make sure we don't prune above the blockfilterindexes bestblocks
+            // pruning is height-based
+            int last_prune = m_chain.Height(); // last height we can prune
+            ForEachBlockFilterIndex([&](BlockFilterIndex& index) {
+               last_prune = std::max(1, std::min(last_prune, index.GetSummary().best_block_height));
+            });
+
             if (nManualPruneHeight > 0) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCHMARK);
 
-                m_blockman.FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight, m_chain.Height());
+                m_blockman.FindFilesToPruneManual(setFilesToPrune, std::min(last_prune, nManualPruneHeight), m_chain.Height());
             } else {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCHMARK);
 
-                m_blockman.FindFilesToPrune(setFilesToPrune, m_params.PruneAfterHeight(), m_chain.Height(), IsInitialBlockDownload());
+                m_blockman.FindFilesToPrune(setFilesToPrune, m_params.PruneAfterHeight(), m_chain.Height(), last_prune, IsInitialBlockDownload());
                 fCheckForPruning = false;
             }
             if (!setFilesToPrune.empty()) {
@@ -3751,7 +3681,8 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     }
 }
 
-static bool FindBlockPos(FlatFilePos &pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown = false)
+// TODO move to blockstorage
+bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown = false)
 {
     LOCK(cs_LastBlockFile);
 
@@ -3762,7 +3693,7 @@ static bool FindBlockPos(FlatFilePos &pos, unsigned int nAddSize, unsigned int n
 
     bool finalize_undo = false;
     if (!fKnown) {
-        while (vinfoBlockFile[nFile].nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
+        while (vinfoBlockFile[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : MAX_BLOCKFILE_SIZE)) {
             // when the undo file is keeping up with the block file, we want to flush it explicitly
             // when it is lagging behind (more blocks arrive than are being connected), we let the
             // undo block write case handle it
@@ -4217,25 +4148,6 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp) {
-    unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
-    FlatFilePos blockPos;
-    if (dbp != nullptr)
-        blockPos = *dbp;
-    if (!FindBlockPos(blockPos, nBlockSize+8, nHeight, active_chain, block.GetBlockTime(), dbp != nullptr)) {
-        error("%s: FindBlockPos failed", __func__);
-        return FlatFilePos();
-    }
-    if (dbp == nullptr) {
-        if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart())) {
-            AbortNode("Failed to write block");
-            return FlatFilePos();
-        }
-    }
-    return blockPos;
-}
-
-/** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
 {
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
@@ -4512,7 +4424,7 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
     }
 }
 
-void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, bool is_ibd)
+void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd)
 {
     LOCK2(cs_main, cs_LastBlockFile);
     if (chain_tip_height < 0 || nPruneTarget == 0) {
@@ -4522,7 +4434,7 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
         return;
     }
 
-    unsigned int nLastBlockWeCanPrune = chain_tip_height - MIN_BLOCKS_TO_KEEP;
+    unsigned int nLastBlockWeCanPrune = std::min(prune_height, chain_tip_height - static_cast<int>(MIN_BLOCKS_TO_KEEP));
     uint64_t nCurrentUsage = CalculateCurrentUsage();
     // We don't check to prune until after we've allocated new space for files
     // So we should leave a buffer under our target to account for another allocation
@@ -4573,7 +4485,7 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
 
 static FlatFileSeq BlockFileSeq()
 {
-    return FlatFileSeq(GetBlocksDir(), "blk", BLOCKFILE_CHUNK_SIZE);
+    return FlatFileSeq(GetBlocksDir(), "blk", gArgs.GetBoolArg("-fastprune", false) ? 0x4000 /* 16kb */ : BLOCKFILE_CHUNK_SIZE);
 }
 
 static FlatFileSeq UndoFileSeq()

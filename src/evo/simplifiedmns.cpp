@@ -11,6 +11,7 @@
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
 #include <llmq/utils.h>
+#include <node/blockstorage.h>
 #include <evo/specialtx.h>
 
 #include <pubkey.h>

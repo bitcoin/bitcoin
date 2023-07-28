@@ -30,15 +30,6 @@
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-static void WaitForShutdown(NodeContext& node)
-{
-    while (!ShutdownRequested())
-    {
-        UninterruptibleSleep(std::chrono::milliseconds{200});
-    }
-    Interrupt(node);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
@@ -155,12 +146,10 @@ static bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(std::current_exception(), "AppInit()");
     }
 
-    if (!fRet)
-    {
-        Interrupt(node);
-    } else {
-        WaitForShutdown(node);
+    if (fRet) {
+        WaitForShutdown();
     }
+    Interrupt(node);
     Shutdown(node);
 
     return fRet;

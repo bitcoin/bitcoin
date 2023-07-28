@@ -34,6 +34,7 @@
 #include <set>
 #include <stdint.h>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -312,13 +313,6 @@ bool GetAddressUnspent(uint160 addressHash, int type,
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();
 
-
-/** Functions for disk access for blocks */
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
-
-bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
-
 /** Functions for validating blocks and updating the block tree */
 
 /** Context-independent validity checks */
@@ -400,7 +394,7 @@ private:
      *
      * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
      */
-    void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, bool is_ibd);
+    void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd);
 
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
@@ -921,6 +915,7 @@ private:
     friend CChain& ChainActive();
 
 public:
+    std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     BlockManager m_blockman GUARDED_BY(::cs_main);
