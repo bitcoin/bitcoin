@@ -7,4 +7,5 @@ P2P
   likely to connect even if `maxconnections` is reached and the node's inbound
   slots are full. This is achieved by attempting to force the eviction of a random,
   inbound, otherwise unprotected peer. Because this permission can be exploited
-  to disrupt existing connections, it should be used only with limited ranges.
+  to disrupt existing connections, a maximum of 8 forced inbound peers are allowed
+  simultaneously. (#27600)
