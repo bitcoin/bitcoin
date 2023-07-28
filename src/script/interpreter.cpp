@@ -1214,7 +1214,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 break;
 
                 default:
-                    return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    if (opcode == OP_VERIF || opcode == OP_VERNOTIF || opcode == OP_VER) {
+                        return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE);
+                    } else {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
             }
 
             // Size limits
