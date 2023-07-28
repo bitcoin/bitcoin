@@ -140,6 +140,8 @@ private:
     const CDBWrapper &parent;
     leveldb::Iterator *piter;
 
+    void SeekImpl(Span<const std::byte> ssKey);
+
 public:
 
     /**
@@ -158,8 +160,7 @@ public:
         DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
-        piter->Seek(slKey);
+        SeekImpl(ssKey);
     }
 
     void Next();
