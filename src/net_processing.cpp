@@ -5081,7 +5081,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     // Don't bother if send buffer is too full to respond anyway
     if (m_connman.IsSendingPaused(pfrom->GetId())) return false;
 
-    auto poll_result{pfrom->PollMessage()};
+    auto poll_result{m_connman.PollMessage(pfrom->GetId())};
     if (!poll_result) {
         // No message to process
         return false;
@@ -5089,19 +5089,6 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
 
     CNetMessage& msg{poll_result->first};
     bool fMoreWork = poll_result->second;
-
-    TRACE6(net, inbound_message,
-        pfrom->GetId(),
-        pfrom->m_addr_name.c_str(),
-        pfrom->ConnectionTypeAsString().c_str(),
-        msg.m_type.c_str(),
-        msg.m_recv.size(),
-        msg.m_recv.data()
-    );
-
-    if (m_opts.capture_messages) {
-        CaptureMessage(pfrom->GetContext().addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
-    }
 
     msg.SetVersion(peer->m_greatest_common_version);
 

@@ -2893,6 +2893,49 @@ void CConnman::PushMessage(NodeId id, CSerializedNetMsg&& msg)
     }
 }
 
+std::optional<std::pair<CNetMessage, bool>> CConnman::PollMessage(NodeId id)
+{
+    CNode* connection{nullptr};
+    {
+        LOCK(m_nodes_mutex);
+        auto it = m_nodes.find(id);
+        if (it != m_nodes.end()) {
+            connection = it->second;
+            connection->AddRef();
+        }
+    }
+
+
+    if (connection) {
+        auto poll_result{connection->PollMessage()};
+        if (!poll_result) {
+            // No message to process
+            connection->Release();
+            return std::nullopt;
+        }
+
+        CNetMessage& msg{poll_result->first};
+
+        TRACE6(net, inbound_message,
+               pfrom->GetId(),
+               pfrom->m_addr_name.c_str(),
+               pfrom->ConnectionTypeAsString().c_str(),
+               msg.m_type.c_str(),
+               msg.m_recv.size(),
+               msg.m_recv.data());
+
+        if (gArgs.GetBoolArg("-capturemessages", false)) {
+            CaptureMessage(connection->GetContext().addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
+        }
+
+        connection->Release();
+        bool more_work{poll_result->second};
+        return {{std::move(msg), more_work}};
+    }
+
+    return std::nullopt;
+}
+
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
     LOCK(m_nodes_mutex);
