@@ -903,7 +903,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
     BOOST_CHECK(sent);
 
-    m_node.peerman->FinalizeNode(*peer);
+    m_node.peerman->FinalizeNode(*peer, peer->fSuccessfullyConnected);
 
     connman.ClearTestNodes();
 

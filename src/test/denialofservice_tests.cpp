@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
                                                      // TODO need to use ConnmanTestMsg to register nodes in the map
     BOOST_CHECK(dummyNode1->fDisconnect == true);
 
-    peerman.FinalizeNode(*dummyNode1);
+    peerman.FinalizeNode(*dummyNode1, dummyNode1->fSuccessfullyConnected);
     connman->ClearTestNodes();
 
     TestOnlyResetTimeData();
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(nodes[2]->fDisconnect);
 
     for (CNode* node : nodes) {
-        peerLogic->FinalizeNode(*node);
+        peerLogic->FinalizeNode(*node, node->fSuccessfullyConnected);
     }
     connman->ClearTestNodes();
 
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     BOOST_CHECK(peerLogic->SendMessages(dummyNode));
     BOOST_CHECK(banman->IsDiscouraged(addr));
 
-    peerLogic->FinalizeNode(*dummyNode);
+    peerLogic->FinalizeNode(*dummyNode, dummyNode->fSuccessfullyConnected);
 
     connman->ClearTestNodes();
 

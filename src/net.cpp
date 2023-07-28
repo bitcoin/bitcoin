@@ -2460,7 +2460,7 @@ void CConnman::StopNodes()
 void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
-    m_msgproc->FinalizeNode(*pnode);
+    m_msgproc->FinalizeNode(*pnode, pnode->fSuccessfullyConnected);
     delete pnode;
 }
 

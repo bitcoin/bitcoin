@@ -498,7 +498,7 @@ public:
     virtual void InitializeNode(CNode& node, ServiceFlags our_services) = 0;
 
     /** Handle removal of a peer (clear state) */
-    virtual void FinalizeNode(const CNode& node) = 0;
+    virtual void FinalizeNode(const CNode& node, bool was_successfully_connected) = 0;
 
     /**
     * Process protocol messages received from a given node
