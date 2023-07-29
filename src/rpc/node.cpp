@@ -13,6 +13,7 @@
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 #include <kernel/cs_main.h>
+#include <logging.h>
 #include <node/context.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>

@@ -9,7 +9,6 @@
 #include <qt/bitcoin.h>
 
 #include <chainparams.h>
-#include <node/context.h>
 #include <common/args.h>
 #include <common/init.h>
 #include <common/system.h>
@@ -17,6 +16,8 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
+#include <logging.h>
+#include <node/context.h>
 #include <node/interface_ui.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
