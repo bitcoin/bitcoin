@@ -377,6 +377,7 @@ BASE_SCRIPTS = [
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
     'rpc_mempool_info.py',
+    'rpc_getgeneralinfo.py',
     'rpc_help.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
