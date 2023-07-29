@@ -1369,8 +1369,8 @@ static RPCHelpMan scriptthreadsinfo()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::BOOL, "enabled", "true is script verification threads are enabled (see setscriptthreadsenabled)."},
-                        {RPCResult::Type::NUM, "num_script_check_threads", "The total number of script verification threads."},
+                        {RPCResult::Type::BOOL, "enabled", "true if script verification threads are enabled (see setscriptthreadsenabled)."},
+                        {RPCResult::Type::NUM, "num_script_check_threads", "The total number of script verification threads, when enabled."},
                     },
                 },
                 RPCExamples{
@@ -1392,7 +1392,7 @@ static RPCHelpMan scriptthreadsinfo()
 static RPCHelpMan setscriptthreadsenabled()
 {
     return RPCHelpMan{"setscriptthreadsenabled",
-                "\nDisable/enable script verification threads and therefore reducing CPU usage on multicore systems.\n"
+                "\nDisable/enable script verification threads, thereby reducing CPU usage on multicore systems on demand.\n"
                 "Disabling script verification threads may result in a significant slow-down during synchronisation.\n"
                 "Has no effect on single core machines or if started with -par=<-<numcores>\n",
                 {
