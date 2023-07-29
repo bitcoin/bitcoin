@@ -24,7 +24,6 @@
 #include <vector>
 namespace leveldb {
 class Env;
-class Status;
 }
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
@@ -66,10 +65,6 @@ class CDBWrapper;
 /** These should be considered an implementation detail of the specific database.
  */
 namespace dbwrapper_private {
-
-/** Handle database error by throwing dbwrapper_error exception.
- */
-void HandleError(const leveldb::Status& status);
 
 /** Work around circular dependency, as well as for testing in dbwrapper_tests.
  * Database obfuscation should be considered an implementation detail of the
