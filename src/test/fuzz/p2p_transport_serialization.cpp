@@ -74,8 +74,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
     mutable_msg_bytes.insert(mutable_msg_bytes.end(), payload_bytes.begin(), payload_bytes.end());
     Span<const uint8_t> msg_bytes{mutable_msg_bytes};
     while (msg_bytes.size() > 0) {
-        const int handled = recv_transport.ReceivedBytes(msg_bytes);
-        if (handled < 0) {
+        if (!recv_transport.ReceivedBytes(msg_bytes)) {
             break;
         }
         if (recv_transport.ReceivedMessageComplete()) {

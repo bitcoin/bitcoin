@@ -268,9 +268,22 @@ public:
     virtual bool ReceivedMessageComplete() const = 0;
     /** Set the deserialization context version for objects returned by GetReceivedMessage. */
     virtual void SetReceiveVersion(int version) = 0;
-    /** Feed wire bytes to the transport; chops off consumed bytes off front of msg_bytes. */
-    virtual int ReceivedBytes(Span<const uint8_t>& msg_bytes) = 0;
-    /** Retrieve a completed message from transport (only when ReceivedMessageComplete). */
+
+    /** Feed wire bytes to the transport.
+     *
+     * @return false if some bytes were invalid, in which case the transport can't be used anymore.
+     *
+     * Consumed bytes are chopped off the front of msg_bytes.
+     */
+    virtual bool ReceivedBytes(Span<const uint8_t>& msg_bytes) = 0;
+
+    /** Retrieve a completed message from transport.
+     *
+     * This can only be called when ReceivedMessageComplete() is true.
+     *
+     * If reject_message=true is returned the message itself is invalid, but (other than false
+     * returned by ReceivedBytes) the transport is not in an inconsistent state.
+     */
     virtual CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) = 0;
 
     // 2. Sending side functions, for converting messages into bytes to be sent over the wire.
@@ -387,7 +400,7 @@ public:
         vRecv.SetVersion(nVersionIn);
     }
 
-    int ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
+    bool ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
         AssertLockNotHeld(m_recv_mutex);
         LOCK(m_recv_mutex);
@@ -397,7 +410,7 @@ public:
         } else {
             msg_bytes = msg_bytes.subspan(ret);
         }
-        return ret;
+        return ret >= 0;
     }
 
     CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
