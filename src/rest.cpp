@@ -1053,6 +1053,12 @@ static bool rest_getfee(const std::any& context, HTTPRequest* req, const std::st
         // create json for replying
         UniValue feejson(UniValue::VOBJ);
         if (estimatedfee != CFeeRate(0)) {
+            const CTxMemPool* mempool = GetMemPool(context, req);
+            if (mempool) {
+                CFeeRate min_mempool_feerate{mempool->GetMinFee()};
+                CFeeRate min_relay_feerate{mempool->m_opts.min_relay_feerate};
+                estimatedfee = std::max({estimatedfee, min_mempool_feerate, min_relay_feerate});
+            }
             feejson.pushKV("feerate", ValueFromAmount(estimatedfee.GetFeePerK()));
         } else {
             return RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Insufficient data or no feerate found");
