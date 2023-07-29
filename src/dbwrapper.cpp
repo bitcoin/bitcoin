@@ -32,6 +32,7 @@
 #include <leveldb/write_batch.h>
 #include <memory>
 #include <optional>
+#include <utility>
 
 bool DestroyDB(const std::string& path_str)
 {
@@ -306,26 +307,39 @@ bool CDBWrapper::IsEmpty()
     return !(it->Valid());
 }
 
+struct CDBIterator::IteratorImpl {
+    const std::unique_ptr<leveldb::Iterator> iter;
+
+    explicit IteratorImpl(leveldb::Iterator* _iter) : iter{_iter} {}
+};
+
+CDBIterator::CDBIterator(const CDBWrapper& _parent, std::unique_ptr<IteratorImpl> _piter) : parent(_parent), m_impl_iter(std::move(_piter)) {}
+
+CDBIterator* CDBWrapper::NewIterator()
+{
+    return new CDBIterator{*this, std::make_unique<CDBIterator::IteratorImpl>(pdb->NewIterator(iteroptions))};
+}
+
 void CDBIterator::SeekImpl(Span<const std::byte> ssKey)
 {
     leveldb::Slice slKey(CharCast(ssKey.data()), ssKey.size());
-    piter->Seek(slKey);
+    m_impl_iter->iter->Seek(slKey);
 }
 
 Span<const std::byte> CDBIterator::GetKeyImpl() const
 {
-    return MakeByteSpan(piter->key());
+    return MakeByteSpan(m_impl_iter->iter->key());
 }
 
 Span<const std::byte> CDBIterator::GetValueImpl() const
 {
-    return MakeByteSpan(piter->value());
+    return MakeByteSpan(m_impl_iter->iter->value());
 }
 
-CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() const { return piter->Valid(); }
-void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
-void CDBIterator::Next() { piter->Next(); }
+CDBIterator::~CDBIterator() = default;
+bool CDBIterator::Valid() const { return m_impl_iter->iter->Valid(); }
+void CDBIterator::SeekToFirst() { m_impl_iter->iter->SeekToFirst(); }
+void CDBIterator::Next() { m_impl_iter->iter->Next(); }
 
 namespace dbwrapper_private {
 
