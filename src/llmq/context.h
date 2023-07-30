@@ -27,27 +27,35 @@ class CInstantSendManager;
 }
 
 struct LLMQContext {
+    LLMQContext() = delete;
+    LLMQContext(const LLMQContext&) = delete;
     LLMQContext(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
                 const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     ~LLMQContext();
 
-    void Create(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
-                const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
-    void Destroy();
     void Interrupt();
     void Start();
     void Stop();
 
-    std::shared_ptr<CBLSWorker> bls_worker;
-    std::unique_ptr<llmq::CDKGDebugManager> dkg_debugman;
-    std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
-    std::unique_ptr<llmq::CSigSharesManager> shareman;
-    std::unique_ptr<llmq::CSigningManager> sigman;
-
-    llmq::CQuorumBlockProcessor* quorum_block_processor{nullptr};
-    llmq::CQuorumManager* qman{nullptr};
-    llmq::CChainLocksHandler* clhandler{nullptr};
-    llmq::CInstantSendManager* isman{nullptr};
+    /** Guaranteed if LLMQContext is initialized then all members are valid too
+     *
+     *  Please note, that members here should not be re-ordered, because initialization
+     *  some of them requires other member initialized.
+     *  For example, constructor `quorumManager` requires `bls_worker`.
+     *
+     *  Some objects are still global variables and their de-globalization is not trivial
+     *  at this point. LLMQContext keeps just a pointer to them and doesn't own these objects,
+     *  but it still guarantees that objects are created and valid
+     */
+    const std::shared_ptr<CBLSWorker> bls_worker;
+    const std::unique_ptr<llmq::CDKGDebugManager> dkg_debugman;
+    llmq::CQuorumBlockProcessor* const quorum_block_processor;
+    const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
+    llmq::CQuorumManager* const qman;
+    const std::unique_ptr<llmq::CSigningManager> sigman;
+    const std::unique_ptr<llmq::CSigSharesManager> shareman;
+    llmq::CChainLocksHandler* const clhandler;
+    llmq::CInstantSendManager* const isman;
 };
 
 #endif // BITCOIN_LLMQ_CONTEXT_H

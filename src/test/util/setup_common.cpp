@@ -346,8 +346,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
     CBlock block = BlockAssembler(
-            *sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor,
-            *m_node.llmq_ctx->clhandler, *m_node.llmq_ctx->isman, *m_node.evodb,
+            *sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb,
             ::ChainstateActive(), empty_pool, chainparams
         ).CreateNewBlock(scriptPubKey)->block;
 

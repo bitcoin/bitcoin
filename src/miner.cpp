@@ -28,6 +28,7 @@
 #include <governance/governance.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
+#include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <llmq/utils.h>
 #include <masternode/payments.h>
@@ -57,16 +58,15 @@ BlockAssembler::Options::Options() {
 }
 
 BlockAssembler::BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                               const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                               llmq::CInstantSendManager& isman, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
+                               LLMQContext& llmq_ctx, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate),
       spork_manager(sporkManager),
       governance_manager(governanceManager),
-      quorum_block_processor(quorumBlockProcessor),
-      m_clhandler(clhandler),
-      m_isman(isman),
+      quorum_block_processor(*llmq_ctx.quorum_block_processor),
+      m_clhandler(*llmq_ctx.clhandler),
+      m_isman(*llmq_ctx.isman),
       m_evoDb(evoDb)
 {
     blockMinFeeRate = options.blockMinFeeRate;
@@ -92,9 +92,8 @@ static BlockAssembler::Options DefaultOptions()
 }
 
 BlockAssembler::BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                               const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                               llmq::CInstantSendManager& isman, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params)
-    : BlockAssembler(sporkManager, governanceManager, quorumBlockProcessor, clhandler, isman, evoDb, chainstate, mempool, params, DefaultOptions()) {}
+                               LLMQContext& llmq_ctx, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params)
+    : BlockAssembler(sporkManager, governanceManager, llmq_ctx, evoDb, chainstate, mempool, params, DefaultOptions()) {}
 
 void BlockAssembler::resetBlock()
 {

@@ -24,6 +24,7 @@ class CCreditPoolDiff;
 class CGovernanceManager;
 class CScript;
 class CSporkManager;
+struct LLMQContext;
 
 namespace Consensus { struct Params; };
 namespace llmq {
@@ -172,11 +173,9 @@ public:
     };
 
     explicit BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                            const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                            llmq::CInstantSendManager& isman, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
+                            LLMQContext& llmq_ctx, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
     explicit BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                            const llmq::CQuorumBlockProcessor& quorumBlockProcessor, llmq::CChainLocksHandler& clhandler,
-                            llmq::CInstantSendManager& isman, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
+                            LLMQContext& llmq_ctx, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
