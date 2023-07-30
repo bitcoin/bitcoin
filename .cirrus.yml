@@ -4,7 +4,7 @@ env:  # Global defaults
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
-  CCACHE_SIZE: "200M"
+  CCACHE_MAXSIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
@@ -170,7 +170,7 @@ task:
   build_script:
     - '%x64_NATIVE_TOOLS%'
     - cd %CIRRUS_WORKING_DIR%
-    - ccache --zero-stats --max-size=%CCACHE_SIZE%
+    - ccache --zero-stats
     - python build_msvc\msvc-autogen.py
     - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
