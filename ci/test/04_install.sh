@@ -19,11 +19,11 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker run --rm "${CI_IMAGE_NAME_TAG}" bash -c "env | grep --extended-regexp '^(HOME|PATH|USER)='" | tee --append /tmp/env
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
   DOCKER_BUILDKIT=1 docker build \
-      --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
+      --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
       --tag="${CONTAINER_NAME}" \
-      "${BASE_ROOT_DIR}"
+      "${BASE_READ_ONLY_DIR}"
   docker volume create "${CONTAINER_NAME}_ccache" || true
   docker volume create "${CONTAINER_NAME}_depends" || true
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
@@ -37,7 +37,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   # shellcheck disable=SC2086
   CI_CONTAINER_ID=$(docker run $CI_CONTAINER_CAP --rm --interactive --detach --tty \
-                  --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
+                  --mount type=bind,src=$BASE_READ_ONLY_DIR,dst=/ro_base,readonly \
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
