@@ -313,7 +313,7 @@ void TestChainSetup::mineBlocks(int num_blocks)
     }
 
     g_txindex = std::make_unique<TxIndex>(1 << 20, true);
-    g_txindex->Start();
+    assert(g_txindex->Start());
 
     // Allow tx index to catch up with the block index.
     constexpr int64_t timeout_ms = 10 * 1000;

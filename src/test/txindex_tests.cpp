@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    txindex.Start();
+    BOOST_REQUIRE(txindex.Start());
 
     // Allow tx index to catch up with the block index.
     constexpr int64_t timeout_ms = 10 * 1000;
