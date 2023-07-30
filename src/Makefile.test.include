@@ -87,6 +87,7 @@ BITCOIN_TESTS =\
   test/cachemap_tests.cpp \
   test/cachemultimap_tests.cpp \
   test/coins_tests.cpp \
+  test/coinstatsindex_tests.cpp \
   test/compilerbug_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \

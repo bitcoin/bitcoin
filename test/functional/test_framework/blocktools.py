@@ -48,7 +48,7 @@ def script_BIP34_coinbase_height(height):
     return CScript([CScriptNum(height)])
 
 
-def create_coinbase(height, pubkey=None, dip4_activated=False, v20_activated=False):
+def create_coinbase(height, pubkey=None, dip4_activated=False, v20_activated=False, nValue=500):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -56,9 +56,10 @@ def create_coinbase(height, pubkey=None, dip4_activated=False, v20_activated=Fal
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
-    coinbaseoutput.nValue = 500 * COIN
-    halvings = int(height / 150)  # regtest
-    coinbaseoutput.nValue >>= halvings
+    coinbaseoutput.nValue = nValue * COIN
+    if nValue == 500:
+        halvings = int(height / 150)  # regtest
+        coinbaseoutput.nValue >>= halvings
     if (pubkey is not None):
         coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
     else:

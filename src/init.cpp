@@ -26,6 +26,7 @@
 #include <httprpc.h>
 #include <interfaces/chain.h>
 #include <index/blockfilterindex.h>
+#include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <interfaces/node.h>
 #include <key.h>
@@ -205,6 +206,9 @@ void Interrupt(NodeContext& node)
         g_txindex->Interrupt();
     }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
+    if (g_coin_stats_index) {
+        g_coin_stats_index->Interrupt();
+    }
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
@@ -326,6 +330,10 @@ void PrepareShutdown(NodeContext& node)
     if (g_txindex) {
         g_txindex->Stop();
         g_txindex.reset();
+    }
+    if (g_coin_stats_index) {
+        g_coin_stats_index->Stop();
+        g_coin_stats_index.reset();
     }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
     DestroyAllBlockFilterIndexes();
@@ -521,6 +529,7 @@ void SetupServerArgs(NodeContext& node)
 #endif
     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Automatic broadcast and rebroadcast of any transactions from inbound peers is disabled, unless the peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-coinstatsindex", strprintf("Maintain coinstats index used by the gettxoutset RPC (default: %u)", DEFAULT_COINSTATSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-conf=<file>", strprintf("Specify path to read-only configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
@@ -537,7 +546,7 @@ void SetupServerArgs(NodeContext& node)
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", BITCOIN_PID_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. "
+    argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -coinstatsindex, -rescan and -disablegovernance=false. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -866,9 +875,9 @@ static void CleanupBlockRevFiles()
 static void PeriodicStats(ArgsManager& args, const CTxMemPool& mempool)
 {
     assert(args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
-    CCoinsStats stats;
+    CCoinsStats stats{CoinStatsHashType::NONE};
     ::ChainstateActive().ForceFlushStateToDisk();
-    if (WITH_LOCK(cs_main, return GetUTXOStats(&::ChainstateActive().CoinsDB(), std::ref(g_chainman.m_blockman), stats, CoinStatsHashType::NONE, RpcInterruptionPoint))) {
+    if (WITH_LOCK(cs_main, return GetUTXOStats(&::ChainstateActive().CoinsDB(), std::ref(g_chainman.m_blockman), stats, RpcInterruptionPoint, ::ChainActive().Tip()))) {
         statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
@@ -1204,10 +1213,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
     }
 
-    // if using block pruning, then disallow txindex and require disabling governance validation
+    // if using block pruning, then disallow txindex, coinstatsindex and require disabling governance validation
     if (args.GetArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
+        if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
+            return InitError(_("Prune mode is incompatible with -coinstatsindex."));
         if (!args.GetBoolArg("-disablegovernance", false)) {
             return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
         }
@@ -2181,6 +2192,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
         GetBlockFilterIndex(filter_type)->Start();
+    }
+
+    if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
+        g_coin_stats_index = std::make_unique<CoinStatsIndex>(/* cache size */ 0, false, fReindex);
+        g_coin_stats_index->Start();
     }
 
     // ********************************************************* Step 9: load wallet
