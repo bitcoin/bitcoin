@@ -341,11 +341,32 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
     // Retrieve key
     auto key = ConsumePrivateKey(provider);
     if (!key.IsValid()) return {};
+    // Construct garbage
+    size_t garb_len = provider.ConsumeIntegralInRange<size_t>(0, V2Transport::MAX_GARBAGE_LEN);
+    std::vector<uint8_t> garb;
+    if (garb_len <= 64) {
+        // When the garbage length is up to 64 bytes, read it directly from the fuzzer input.
+        garb = provider.ConsumeBytes<uint8_t>(garb_len);
+        garb.resize(garb_len);
+    } else {
+        // If it's longer, generate it from the RNG. This avoids having large amounts of
+        // (hopefully) irrelevant data needing to be stored in the fuzzer data.
+        for (auto& v : garb) v = uint8_t(rng());
+    }
     // Retrieve entropy
     auto ent = provider.ConsumeBytes<std::byte>(32);
     ent.resize(32);
+    // Use as entropy SHA256(ent || garbage). This prevents a situation where the fuzzer manages to
+    // include the garbage terminator (which is a function of both ellswift keys) in the garbage.
+    // This is extremely unlikely (~2^-116) with random keys/garbage, but the fuzzer can choose
+    // both non-randomly and dependently. Since the entropy is hashed anyway inside the ellswift
+    // computation, no coverage should be lost by using a hash as entropy, and it removes the
+    // possibility of garbage that happens to contain what is effectively a hash of the keys.
+    CSHA256().Write(UCharCast(ent.data()), ent.size())
+             .Write(garb.data(), garb.size())
+             .Finalize(UCharCast(ent.data()));
 
-    return std::make_unique<V2Transport>(nodeid, initiator, SER_NETWORK, INIT_PROTO_VERSION, key, ent);
+    return std::make_unique<V2Transport>(nodeid, initiator, SER_NETWORK, INIT_PROTO_VERSION, key, ent, garb);
 }
 
 } // namespace

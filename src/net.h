@@ -556,9 +556,9 @@ private:
         /** Normal sending state.
          *
          * In this state, the ciphers are initialized, so packets can be sent. When this state is
-         * entered, the garbage terminator, garbage authentication packet, and version packet are
-         * appended to the send buffer (in addition to the key which may still be there). In this
-         * state a message can be provided if the send buffer is empty. */
+         * entered, the garbage, garbage terminator, garbage authentication packet, and version
+         * packet are appended to the send buffer (in addition to the key which may still be
+         * there). In this state a message can be provided if the send buffer is empty. */
         READY,
 
         /** This transport is using v1 fallback.
@@ -635,8 +635,8 @@ public:
      */
     V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept;
 
-    /** Construct a V2 transport with specified keys (test use only). */
-    V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32) noexcept;
+    /** Construct a V2 transport with specified keys and garbage (test use only). */
+    V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, Span<const uint8_t> garbage) noexcept;
 
     // Receive side functions.
     bool ReceivedMessageComplete() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
