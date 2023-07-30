@@ -57,11 +57,9 @@ static RPCHelpMan setmocktime()
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime cannot be negative: %s.", time));
     }
     SetMockTime(time);
-    auto node_context = util::AnyPtr<NodeContext>(request.context);
-    if (node_context) {
-        for (const auto& chain_client : node_context->chain_clients) {
-            chain_client->setMockTime(time);
-        }
+    const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
+    for (const auto& chain_client : node_context.chain_clients) {
+        chain_client->setMockTime(time);
     }
 
     return UniValue::VNULL;
@@ -89,10 +87,9 @@ static RPCHelpMan mockscheduler()
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }
 
-    auto node_context = CHECK_NONFATAL(util::AnyPtr<NodeContext>(request.context));
-    // protect against null pointer dereference
-    CHECK_NONFATAL(node_context->scheduler);
-    node_context->scheduler->MockForward(std::chrono::seconds(delta_seconds));
+    const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
+    CHECK_NONFATAL(node_context.scheduler)->MockForward(std::chrono::seconds{delta_seconds});
+    SyncWithValidationInterfaceQueue();
 
     return UniValue::VNULL;
 },
