@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     // is started.
     BOOST_CHECK(!coin_stats_index.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(coin_stats_index.Start());
+    BOOST_REQUIRE(coin_stats_index.Start(::ChainstateActive()));
 
     // Allow the CoinStatsIndex to catch up with the block index that is syncing
     // in a background thread.

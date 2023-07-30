@@ -1435,7 +1435,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
             CCoinsStats prev_stats{hash_type};
 
             if (pindex->nHeight > 0) {
-                GetUTXOStats(coins_view, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), prev_stats, node.rpc_interruption_point, pindex->pprev);
+                GetUTXOStats(coins_view, *blockman, prev_stats, node.rpc_interruption_point, pindex->pprev);
             }
 
             UniValue block_info(UniValue::VOBJ);
