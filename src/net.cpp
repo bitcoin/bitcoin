@@ -1317,6 +1317,9 @@ size_t V2Transport::GetMaxBytesToProcess() noexcept
 bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
 {
     AssertLockNotHeld(m_recv_mutex);
+    /** How many bytes to allocate in the receive buffer at most above what is received so far. */
+    static constexpr size_t MAX_RESERVE_AHEAD = 256 * 1024;
+
     LOCK(m_recv_mutex);
     if (m_recv_state == RecvState::V1) return m_v1_fallback.ReceivedBytes(msg_bytes);
 
@@ -1327,6 +1330,40 @@ bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
     while (!msg_bytes.empty()) {
         // Decide how many bytes to copy from msg_bytes to m_recv_buffer.
         size_t max_read = GetMaxBytesToProcess();
+
+        // Reserve space in the buffer if there is not enough.
+        if (m_recv_buffer.size() + std::min(msg_bytes.size(), max_read) > m_recv_buffer.capacity()) {
+            switch (m_recv_state) {
+            case RecvState::KEY_MAYBE_V1:
+            case RecvState::KEY:
+            case RecvState::GARB_GARBTERM:
+                // During the initial states (key/garbage), allocate once to fit the maximum (4111
+                // bytes).
+                m_recv_buffer.reserve(MAX_GARBAGE_LEN + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
+                break;
+            case RecvState::GARBAUTH:
+            case RecvState::VERSION:
+            case RecvState::APP: {
+                // During states where a packet is being received, as much as is expected but never
+                // more than MAX_RESERVE_AHEAD bytes in addition to what is received so far.
+                // This means attackers that want to cause us to waste allocated memory are limited
+                // to MAX_RESERVE_AHEAD above the largest allowed message contents size, and to
+                // MAX_RESERVE_AHEAD more than they've actually sent us.
+                size_t alloc_add = std::min(max_read, msg_bytes.size() + MAX_RESERVE_AHEAD);
+                m_recv_buffer.reserve(m_recv_buffer.size() + alloc_add);
+                break;
+            }
+            case RecvState::APP_READY:
+                // The buffer is empty in this state.
+                Assume(m_recv_buffer.empty());
+                break;
+            case RecvState::V1:
+                // Should have bailed out above.
+                Assume(false);
+                break;
+            }
+        }
+
         // Can't read more than provided input.
         max_read = std::min(msg_bytes.size(), max_read);
         // Copy data to buffer.
