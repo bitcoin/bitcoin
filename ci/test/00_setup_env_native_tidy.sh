@@ -16,4 +16,4 @@ export RUN_FUZZ_TESTS=false
 export RUN_TIDY=true
 export GOAL="install"
 export BITCOIN_CONFIG="CC=clang-16 CXX=clang++-16 --with-incompatible-bdb --disable-hardening CFLAGS='-O0 -g0' CXXFLAGS='-O0 -g0 -I/usr/lib/llvm-16/lib/clang/16/include'"
-export CCACHE_SIZE=200M
+export CCACHE_MAXSIZE=200M
