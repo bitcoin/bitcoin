@@ -17,133 +17,78 @@ extern UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(evo_trivialvalidation, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
+template<class T>
+void TestTxHelper(const CMutableTransaction& tx, bool expected_failure, const std::string& expected_error)
 {
-    //TODO: Provide raw data for basic scheme as well
-    bls::bls_legacy_scheme.store(true);
-    UniValue vectors = read_json(
-        std::string(json_tests::trivially_valid, json_tests::trivially_valid + sizeof(json_tests::trivially_valid))
-    );
+    T payload;
 
-    for (uint8_t idx = 1; idx < vectors.size(); idx++) {
+    const bool payload_to_fail = expected_failure && expected_error == "gettxpayload-fail";
+    BOOST_CHECK_EQUAL(GetTxPayload(tx, payload, false), !payload_to_fail);
+
+    // No need to check anything else if GetTxPayload() expected to fail
+    if (payload_to_fail) return;
+
+    TxValidationState dummy_state;
+    BOOST_CHECK_EQUAL(payload.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state), !expected_failure);
+    if (expected_failure) {
+        BOOST_CHECK_EQUAL(dummy_state.GetRejectReason(), expected_error);
+    }
+}
+
+void trivialvalidation_runner(const std::string& json)
+{
+    const UniValue vectors = read_json(json);
+
+    for (size_t idx = 1; idx < vectors.size(); idx++) {
         UniValue test = vectors[idx];
         uint256 txHash;
         std::string txType;
         CMutableTransaction tx;
+        bool expected;
+        std::string expected_err;
         try {
             // Additional data
-            int32_t txHeight = test[0].get_int();
-            txHash = uint256S(test[1].get_str());
-            txType = test[2].get_str();
+            txHash = uint256S(test[0].get_str());
+            BOOST_TEST_MESSAGE("tx: " << test[0].get_str());
+            txType = test[1].get_str();
             // Raw transaction
-            CDataStream stream(ParseHex(test[3].get_str()), SER_NETWORK, PROTOCOL_VERSION);
+            CDataStream stream(ParseHex(test[2].get_str()), SER_NETWORK, PROTOCOL_VERSION);
             stream >> tx;
+            expected = test.size() > 3;
+            if (expected) {
+                expected_err = test[3].get_str();
+            }
             // Sanity check
-            BOOST_CHECK(txHeight > 1);
             BOOST_CHECK_EQUAL(tx.nVersion, 3);
             BOOST_CHECK_EQUAL(tx.GetHash(), txHash);
             // Deserialization based on transaction nType
             TxValidationState dummy_state;
             switch (tx.nType) {
-                case TRANSACTION_PROVIDER_REGISTER: {
-                    BOOST_CHECK_EQUAL(txType, "proregtx");
-                    CProRegTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                    break;
-                }
-                case TRANSACTION_PROVIDER_UPDATE_SERVICE: {
-                    BOOST_CHECK_EQUAL(txType, "proupservtx");
-                    CProUpServTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                    break;
-                }
-                case TRANSACTION_PROVIDER_UPDATE_REGISTRAR: {
-                    BOOST_CHECK_EQUAL(txType, "proupregtx");
-                    CProUpRegTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                    break;
-                }
-                case TRANSACTION_PROVIDER_UPDATE_REVOKE: {
-                    BOOST_CHECK_EQUAL(txType, "prouprevtx");
-                    CProUpRevTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
-                    BOOST_CHECK(ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                    break;
-                }
-                default:
-                    // TRANSACTION_COINBASE and TRANSACTION_NORMAL
-                    // are not subject to trivial validation checks
-                    BOOST_CHECK(false);
-            }
-        } catch (...) {
-            BOOST_ERROR("Bad test, couldn't deserialize data: " << test.write());
-            continue;
-        }
-    }
-}
+            case TRANSACTION_PROVIDER_REGISTER: {
+                BOOST_CHECK_EQUAL(txType, "proregtx");
 
-BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
-{
-    //TODO: Provide raw data for basic scheme as well
-    bls::bls_legacy_scheme.store(true);
-    UniValue vectors = read_json(
-        std::string(json_tests::trivially_invalid, json_tests::trivially_invalid + sizeof(json_tests::trivially_invalid))
-    );
+                TestTxHelper<CProRegTx>(tx, expected, expected_err);
+                break;
+            }
+            case TRANSACTION_PROVIDER_UPDATE_SERVICE: {
+                BOOST_CHECK_EQUAL(txType, "proupservtx");
 
-    for (uint8_t idx = 1; idx < vectors.size(); idx++) {
-        UniValue test = vectors[idx];
-        uint256 txHash;
-        std::string txType;
-        CMutableTransaction tx;
-        try {
-            // Additional data
-            txHash = uint256S(test[0].get_str());
-            txType = test[1].get_str();
-            // Raw transaction
-            CDataStream stream(ParseHex(test[2].get_str()), SER_NETWORK, PROTOCOL_VERSION);
-            stream >> tx;
-            // Sanity check
-            BOOST_CHECK_EQUAL(tx.nVersion, 3);
-            BOOST_CHECK_EQUAL(tx.GetHash(), txHash);
-            // Deserialization based on transaction nType
-            TxValidationState dummy_state;
-            if (txType == "proregtx") {
-                CProRegTx ptx;
-                if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(!ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                } else {
-                    BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_REGISTER || ptx.nVersion == 0);
-                }
+                TestTxHelper<CProUpServTx>(tx, expected, expected_err);
+                break;
             }
-            else if (txType == "proupservtx") {
-                CProUpServTx ptx;
-                if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(!ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                } else {
-                    BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE || ptx.nVersion == 0);
-                }
+            case TRANSACTION_PROVIDER_UPDATE_REGISTRAR: {
+                BOOST_CHECK_EQUAL(txType, "proupregtx");
+
+                TestTxHelper<CProUpRegTx>(tx, expected, expected_err);
+                break;
             }
-            else if (txType == "proupregtx") {
-                CProUpRegTx ptx;
-                if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(!ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                }
-                else {
-                    BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR || ptx.nVersion == 0);
-                }
+            case TRANSACTION_PROVIDER_UPDATE_REVOKE: {
+                BOOST_CHECK_EQUAL(txType, "prouprevtx");
+
+                TestTxHelper<CProUpRevTx>(tx, expected, expected_err);
+                break;
             }
-            else if (txType == "prouprevtx") {
-                CProUpRevTx ptx;
-                if (GetTxPayload(tx, ptx, false)) {
-                    BOOST_CHECK(!ptx.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state));
-                } else {
-                    BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE || ptx.nVersion == 0);
-                }
-            }
-            else {
+            default:
                 // TRANSACTION_COINBASE and TRANSACTION_NORMAL
                 // are not subject to trivial validation checks
                 BOOST_CHECK(false);
@@ -153,6 +98,25 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             continue;
         }
     }
+
+}
+
+BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
+{
+    //TODO: Provide raw data for basic scheme as well
+    bls::bls_legacy_scheme.store(true);
+
+    const std::string json(json_tests::trivially_valid, json_tests::trivially_valid + sizeof(json_tests::trivially_valid));
+    trivialvalidation_runner(json);
+}
+
+BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
+{
+    //TODO: Provide raw data for basic scheme as well
+    bls::bls_legacy_scheme.store(true);
+
+    const std::string json(json_tests::trivially_invalid, json_tests::trivially_invalid + sizeof(json_tests::trivially_invalid));
+    trivialvalidation_runner(json);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
