@@ -102,8 +102,8 @@ private:
 
     FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
-    bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart) const;
-    bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart) const;
+    bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const;
+    bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const;
 
     /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
     void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
@@ -252,7 +252,7 @@ public:
     /** Functions for disk access for blocks */
     bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) const;
     bool ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) const;
-    bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start) const;
+    bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos) const;
 
     bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const;
 

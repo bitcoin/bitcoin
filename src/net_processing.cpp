@@ -2212,7 +2212,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
         std::vector<uint8_t> block_data;
-        if (!m_chainman.m_blockman.ReadRawBlockFromDisk(block_data, pindex->GetBlockPos(), m_chainparams.MessageStart())) {
+        if (!m_chainman.m_blockman.ReadRawBlockFromDisk(block_data, pindex->GetBlockPos())) {
             assert(!"cannot load block from disk");
         }
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, Span{block_data}));
