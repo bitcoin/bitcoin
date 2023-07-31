@@ -21,4 +21,4 @@ export SYSCOIN_CONFIG="--with-sanitizers=memory --disable-hardening --with-asm=n
 export USE_MEMORY_SANITIZER="true"
 export RUN_FUNCTIONAL_TESTS="false"
 export RUN_UNIT_TESTS="false" # SYSCOIN false-positive for use-of-uninitialized-value in bls-tests
-export CCACHE_SIZE=250M
+export CCACHE_MAXSIZE=250M
