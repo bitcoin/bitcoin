@@ -618,7 +618,7 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return BlockFileSeq().FileName(pos);
 }
 
-bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown)
+bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
 {
     LOCK(cs_LastBlockFile);
 
@@ -644,7 +644,7 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
             // when the undo file is keeping up with the block file, we want to flush it explicitly
             // when it is lagging behind (more blocks arrive than are being connected), we let the
             // undo block write case handle it
-            finalize_undo = (m_blockfile_info[nFile].nHeightLast == (unsigned int)active_chain.Tip()->nHeight);
+            finalize_undo = (m_blockfile_info[nFile].nHeightLast == m_undo_height_in_last_blockfile);
             nFile++;
             if (m_blockfile_info.size() <= nFile) {
                 m_blockfile_info.resize(nFile + 1);
@@ -660,6 +660,7 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
         }
         FlushBlockFile(!fKnown, finalize_undo);
         m_last_blockfile = nFile;
+        m_undo_height_in_last_blockfile = 0; // No undo data yet in the new file, so reset our undo-height tracking.
     }
 
     m_blockfile_info[nFile].AddBlock(nHeight, nTime);
@@ -749,8 +750,9 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
         // the FindBlockPos function
         if (_pos.nFile < m_last_blockfile && static_cast<uint32_t>(block.nHeight) == m_blockfile_info[_pos.nFile].nHeightLast) {
             FlushUndoFile(_pos.nFile, true);
+        } else if (_pos.nFile == m_last_blockfile && static_cast<uint32_t>(block.nHeight) > m_undo_height_in_last_blockfile) {
+            m_undo_height_in_last_blockfile = block.nHeight;
         }
-
         // update nUndoPos in block index
         block.nUndoPos = _pos.nPos;
         block.nStatus |= BLOCK_HAVE_UNDO;
@@ -839,7 +841,7 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     return true;
 }
 
-FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const FlatFilePos* dbp)
+FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp)
 {
     unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
     FlatFilePos blockPos;
@@ -852,7 +854,7 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CCha
         // we add BLOCK_SERIALIZATION_HEADER_SIZE only for new blocks since they will have the serialization header added when written to disk.
         nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
     }
-    if (!FindBlockPos(blockPos, nBlockSize, nHeight, active_chain, block.GetBlockTime(), position_known)) {
+    if (!FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)) {
         error("%s: FindBlockPos failed", __func__);
         return FlatFilePos();
     }
@@ -905,7 +907,7 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
+                chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
                 if (chainman.m_interrupt) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;
@@ -924,7 +926,7 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             FILE* file = fsbridge::fopen(path, "rb");
             if (file) {
                 LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
-                chainman.ActiveChainstate().LoadExternalBlockFile(file);
+                chainman.LoadExternalBlockFile(file);
                 if (chainman.m_interrupt) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;
