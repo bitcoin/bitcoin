@@ -3196,7 +3196,9 @@ void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
         // from, we can erase the block request now anyway (as we just stored
         // this block to disk).
         LOCK(cs_main);
-        RemoveBlockRequest(block->GetHash(), std::nullopt);
+        uint256 blockHash{block->GetHash()};
+        RemoveBlockRequest(blockHash, std::nullopt);
+        mapBlockSource.erase(blockHash);
     } else {
         LOCK(cs_main);
         mapBlockSource.erase(block->GetHash());
