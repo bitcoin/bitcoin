@@ -72,9 +72,9 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 "${DIR_IWYU}"/include-what-you-use
-  cmake -B "${DIR_IWYU}"/build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S "${DIR_IWYU}"/include-what-you-use
-  make -C "${DIR_IWYU}"/build/ install "$MAKEJOBS"
+  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 /include-what-you-use
+  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S /include-what-you-use
+  make -C /iwyu-build/ install "$MAKEJOBS"
 fi
 
 mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"

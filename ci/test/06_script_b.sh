@@ -158,13 +158,13 @@ if [ "${RUN_TIDY}" = "true" ]; then
   jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$") | not))' ../compile_commands.json > tmp.json
   mv tmp.json ../compile_commands.json
   cd "${BASE_BUILD_DIR}/bitcoin-$HOST/"
-  python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
+  python3 "/include-what-you-use/iwyu_tool.py" \
            -p . "${MAKEJOBS}" \
            -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp" \
            -Xiwyu --max_line_length=160 \
            2>&1 | tee /tmp/iwyu_ci.out
   cd "${BASE_ROOT_DIR}/src"
-  python3 "${DIR_IWYU}/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+  python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
   git --no-pager diff
 fi
 
