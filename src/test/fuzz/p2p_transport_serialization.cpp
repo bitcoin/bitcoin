@@ -328,6 +328,9 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
     // Make sure all expected messages were received.
     assert(expected[0].empty());
     assert(expected[1].empty());
+
+    // Compare session IDs.
+    assert(transports[0]->GetInfo().session_id == transports[1]->GetInfo().session_id);
 }
 
 std::unique_ptr<Transport> MakeV1Transport(NodeId nodeid) noexcept

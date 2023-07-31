@@ -232,6 +232,10 @@ public:
     Network m_network;
     uint32_t m_mapped_as;
     ConnectionType m_conn_type;
+    /** Transport protocol type. */
+    TransportProtocolType m_transport_type;
+    /** BIP324 session id string in hex, if any. */
+    std::string m_session_id;
 };
 
 
@@ -267,6 +271,15 @@ public:
 class Transport {
 public:
     virtual ~Transport() {}
+
+    struct Info
+    {
+        TransportProtocolType transport_type;
+        std::optional<uint256> session_id;
+    };
+
+    /** Retrieve information about this transport. */
+    virtual Info GetInfo() const noexcept = 0;
 
     // 1. Receiver side functions, for decoding bytes received on the wire into transport protocol
     // agnostic CNetMessage (message type & payload) objects.
@@ -425,6 +438,8 @@ public:
         AssertLockNotHeld(m_recv_mutex);
         return WITH_LOCK(m_recv_mutex, return CompleteInternal());
     }
+
+    Info GetInfo() const noexcept override;
 
     bool ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
@@ -664,6 +679,7 @@ public:
 
     // Miscellaneous functions.
     bool ShouldReconnectV1() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex, !m_send_mutex);
+    Info GetInfo() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
 };
 
 struct CNodeOptions

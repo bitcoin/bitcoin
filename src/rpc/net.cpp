@@ -45,6 +45,12 @@ const std::vector<std::string> CONNECTION_TYPE_DOC{
         "feeler (short-lived automatic connection for testing addresses)"
 };
 
+const std::vector<std::string> TRANSPORT_TYPE_DOC{
+    "detecting (peer could be v1 or v2)",
+    "v1 (plaintext transport protocol)",
+    "v2 (BIP324 encrypted transport protocol)"
+};
+
 static RPCHelpMan getconnectioncount()
 {
     return RPCHelpMan{"getconnectioncount",
@@ -164,6 +170,8 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
                                                               "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
                                                               "best capture connection behaviors."},
+                    {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
+                    {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
                 }},
             }},
         },
@@ -268,6 +276,8 @@ static RPCHelpMan getpeerinfo()
         }
         obj.pushKV("bytesrecv_per_msg", recvPerMsgType);
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
+        obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
+        obj.pushKV("session_id", stats.m_session_id);
 
         ret.push_back(obj);
     }
