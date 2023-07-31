@@ -9,7 +9,6 @@
 
 #include <init.h>
 
-#include <kernel/checks.h>
 #include <kernel/mempool_persist.h>
 #include <kernel/validation_cache_sizes.h>
 
@@ -78,6 +77,7 @@
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
 #include <util/result.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/syserror.h>
@@ -718,6 +718,17 @@ static bool AppInitServers(NodeContext& node)
     return true;
 }
 
+bool InitKernel(NodeContext& node)
+{
+    auto result{kernel::Context::MakeContext()};
+    if (!result) {
+        return InitError(strprintf(_("Initialization kernel sanity check failed: %s. %s is shutting down."),
+                                   util::ErrorString(result), PACKAGE_NAME));
+    }
+    node.kernel = std::move(result.value());
+    return true;
+}
+
 // Parameter interaction based on rules
 void InitParameterInteraction(ArgsManager& args)
 {
@@ -1064,14 +1075,9 @@ static bool LockDataDirectory(bool probeOnly)
     assert(false);
 }
 
-bool AppInitSanityChecks(const kernel::Context& kernel)
+bool AppInitSanityChecks()
 {
     // ********************************************************* Step 4: sanity checks
-    auto result{kernel::SanityChecks(kernel)};
-    if (!result) {
-        InitError(util::ErrorString(result));
-        return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
-    }
 
     // Probe the data directory lock to give an early error message, if possible
     // We cannot hold the data directory lock here, as the forking for daemon() hasn't yet happened,

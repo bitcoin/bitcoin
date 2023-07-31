@@ -15,6 +15,7 @@
 #include <util/chaintype.h> // IWYU pragma: export
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/signalinterrupt.h>
 #include <util/string.h>
 #include <util/vector.h>
 

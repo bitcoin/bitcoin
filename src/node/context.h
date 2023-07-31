@@ -31,6 +31,9 @@ class ChainClient;
 class Init;
 class WalletLoader;
 } // namespace interfaces
+namespace util {
+class SignalInterrupt;
+} // namespace util
 
 namespace node {
 class KernelNotifications;

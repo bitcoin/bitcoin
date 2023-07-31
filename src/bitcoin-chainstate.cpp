@@ -27,6 +27,7 @@
 #include <script/sigcache.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
+#include <util/signalinterrupt.h>
 #include <util/thread.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -55,11 +56,11 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Context
-    kernel::Context kernel_context{};
+    auto kernel_context{std::move(kernel::Context::MakeContext().value())};
     // We can't use a goto here, but we can use an assert since none of the
     // things instantiated so far requires running the epilogue to be torn down
     // properly
-    assert(kernel::SanityChecks(kernel_context));
+    assert(kernel::SanityChecks(*kernel_context));
 
     // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
     // which will try the script cache first and fall back to actually

@@ -138,7 +138,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     InitLogging(*m_node.args);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
-    m_node.kernel = std::make_unique<kernel::Context>();
+    m_node.kernel = std::move(kernel::Context::MakeContext().value());
     SetupEnvironment();
 
     ValidationCacheSizes validation_cache_sizes{};

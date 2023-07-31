@@ -19,9 +19,6 @@ class ArgsManager;
 namespace interfaces {
 struct BlockAndHeaderTipInfo;
 }
-namespace kernel {
-struct Context;
-}
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -39,6 +36,8 @@ void InitLogging(const ArgsManager& args);
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction(ArgsManager& args);
 
+bool InitKernel(node::NodeContext& node);
+
 /** Initialize bitcoin core: Basic context setup.
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
@@ -55,7 +54,7 @@ bool AppInitParameterInteraction(const ArgsManager& args);
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitParameterInteraction should have been called.
  */
-bool AppInitSanityChecks(const kernel::Context& kernel);
+bool AppInitSanityChecks();
 /**
  * Lock bitcoin core data directory.
  * @note This should only be done after daemonization. Do not call Shutdown() if this function fails.
