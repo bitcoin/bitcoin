@@ -72,7 +72,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         // entries from the mempool. This potentially overestimates the number of actual
         // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
         // times), but we just want to be conservative to avoid doing too much work.
-        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES && !ignore_rejects.count("too-many-replacements")) {
+        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES && !ignore_rejects.count("too-many-replacements") && !ignore_rejects.count("too many potential replacements")) {
             return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
                              txid.ToString(),
                              nConflictingCount,
