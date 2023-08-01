@@ -51,7 +51,8 @@ if [ "$BASEDIR" != "" ]; then
     [[ "$d" != "cache" ]] || continue # skip cache dir
     mkdir testlogs/$d
     PYTHONIOENCODING=UTF-8 ./test/functional/combine_logs.py -c ./testdatadirs/$BASEDIR/$d > ./testlogs/$d/combined.log
-    PYTHONIOENCODING=UTF-8 ./test/functional/combine_logs.py --html ./testdatadirs/$BASEDIR/$d > ./testlogs/$d/combined.html
+    # Disabled creation of combined.html: 40% smaller CI job artifacts
+    # PYTHONIOENCODING=UTF-8 ./test/functional/combine_logs.py --html ./testdatadirs/$BASEDIR/$d > ./testlogs/$d/combined.html
     cd testdatadirs/$BASEDIR/$d
     LOGFILES="$(find . -name 'debug.log' -or -name "test_framework.log")"
     cd ../../..
