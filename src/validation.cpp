@@ -1613,6 +1613,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
                    [](const auto& ws) { return ws.m_ptx->GetWitnessHash(); });
     TxValidationState placeholder_state;
     if (args.m_package_feerates &&
+        (!args.m_ignore_rejects.count("package-fee-too-low")) &&
         !CheckFeeRate(m_subpackage.m_total_vsize, m_subpackage.m_total_modified_fees, placeholder_state, empty_ignore_rejects)) {
         package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
         return PackageMempoolAcceptResult(package_state, {{workspaces.back().m_ptx->GetWitnessHash(),
