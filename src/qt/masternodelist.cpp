@@ -191,7 +191,7 @@ void MasternodeList::updateDIP3List()
 
     nTimeUpdatedDIP3 = GetTime();
 
-    auto projectedPayees = mnList.GetProjectedMNPayees();
+    auto projectedPayees = mnList.GetProjectedMNPayeesAtChainTip();
     std::map<uint256, int> nextPayments;
     for (size_t i = 0; i < projectedPayees.size(); i++) {
         const auto& dmn = projectedPayees[i];

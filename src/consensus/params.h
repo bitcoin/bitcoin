@@ -16,6 +16,7 @@ namespace Consensus {
 enum DeploymentPos {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_V20,     // Deployment of EHF, LLMQ Randomness Beacon
+    DEPLOYMENT_MN_RR,   // Deployment of Masternode Reward Location Reallocation
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };

@@ -182,10 +182,10 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(const CBlockIndex* pIndex)
     }
 
     bool isv19Active = llmq::utils::IsV19Active(pIndex);
-    // Starting from v19 and until v20 (Platform release), HPMN will be rewarded 4 blocks in a row
-    // TODO: Skip this code once v20 is active
+    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pIndex);
+    // Starting from v19 and until MNRewardReallocation (Platform release), HPMN will be rewarded 4 blocks in a row
     CDeterministicMNCPtr best = nullptr;
-    if (isv19Active) {
+    if (isv19Active && !isMNRewardReallocation) {
         ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
@@ -211,7 +211,12 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(const CBlockIndex* pIndex)
     return best;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int nCount) const
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayeesAtChainTip(int nCount) const
+{
+    return GetProjectedMNPayees(::ChainActive()[nHeight], nCount);
+}
+
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(const CBlockIndex* const pindex, int nCount) const
 {
     if (nCount < 0 ) {
         return {};
@@ -223,11 +228,12 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
 
     auto remaining_hpmn_payments = 0;
     CDeterministicMNCPtr hpmn_to_be_skipped = nullptr;
+    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindex);
     ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
         if (dmn->pdmnState->nLastPaidHeight == nHeight) {
             // We found the last MN Payee.
             // If the last payee is a HPMN, we need to check its consecutive payments and pay him again if needed
-            if (dmn->nType == MnType::HighPerformance && dmn->pdmnState->nConsecutivePayments < dmn_types::HighPerformance.voting_weight) {
+            if (!isMNRewardReallocation && dmn->nType == MnType::HighPerformance && dmn->pdmnState->nConsecutivePayments < dmn_types::HighPerformance.voting_weight) {
                 remaining_hpmn_payments = dmn_types::HighPerformance.voting_weight - dmn->pdmnState->nConsecutivePayments;
                 for ([[maybe_unused]] auto _ : irange::range(remaining_hpmn_payments)) {
                     result.emplace_back(dmn);
@@ -720,6 +726,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
     DecreasePoSePenalties(newList);
 
+    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
+
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
@@ -937,11 +945,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         auto dmn = newList.GetMN(payee->proTxHash);
         auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
         newState->nLastPaidHeight = nHeight;
-        // Starting from v19 and until v20, HPMN will be paid 4 blocks in a row
+        // Starting from v19 and until MNRewardReallocation, HPMN will be paid 4 blocks in a row
         // No need to check if v19 is active, since HPMN ProRegTx are allowed only after v19 activation
-        // TODO: Skip this code once v20 is active
         // Note: If the payee wasn't found in the current block that's fine
-        if (dmn->nType == MnType::HighPerformance) {
+        if (dmn->nType == MnType::HighPerformance && !isMNRewardReallocation) {
             ++newState->nConsecutivePayments;
             if (debugLogs) {
                 LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s is a HPMN, bumping nConsecutivePayments to %d\n",
@@ -959,8 +966,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     // reset nConsecutivePayments on non-paid HPMNs
     auto newList2 = newList;
     newList2.ForEachMN(false, [&](auto& dmn) {
-        if (payee != nullptr && dmn.proTxHash == payee->proTxHash) return;
         if (dmn.nType != MnType::HighPerformance) return;
+        if (payee != nullptr && dmn.proTxHash == payee->proTxHash && !isMNRewardReallocation) return;
         if (dmn.pdmnState->nConsecutivePayments == 0) return;
         if (debugLogs) {
             LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s, reset nConsecutivePayments %d->0\n",

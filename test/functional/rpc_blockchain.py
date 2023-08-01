@@ -148,6 +148,15 @@ class BlockchainTest(BitcoinTestFramework):
                     'timeout': 999999999999,
                     'since': 0
                 }, 'active': False},
+            'mn_rr': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 0
+                },
+                'active': False},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {

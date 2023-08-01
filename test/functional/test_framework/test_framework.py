@@ -1093,6 +1093,8 @@ class DashTestFramework(BitcoinTestFramework):
 
     def activate_v20(self, expected_activation_height=None):
         self.activate_by_name('v20', expected_activation_height)
+    def activate_mn_rr(self, expected_activation_height=None):
+        self.activate_by_name('mn_rr', expected_activation_height)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size

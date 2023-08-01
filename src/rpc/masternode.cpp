@@ -136,7 +136,7 @@ static UniValue masternode_count(const JSONRPCRequest& request)
 static UniValue GetNextMasternodeForPayment(int heightShift)
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto payees = mnList.GetProjectedMNPayees(heightShift);
+    auto payees = mnList.GetProjectedMNPayeesAtChainTip(heightShift);
     if (payees.empty())
         return "unknown";
     auto payee = payees.back();
@@ -362,7 +362,7 @@ static UniValue masternode_winners(const JSONRPCRequest& request, const Chainsta
         obj.pushKV(strprintf("%d", h), strPayments);
     }
 
-    auto projection = deterministicMNManager->GetListForBlock(pindexTip).GetProjectedMNPayees(20);
+    auto projection = deterministicMNManager->GetListForBlock(pindexTip).GetProjectedMNPayees(pindexTip, 20);
     for (size_t i = 0; i < projection.size(); i++) {
         int h = nChainTipHeight + 1 + i;
         std::string strPayments = GetRequiredPaymentsString(h, projection[i]);
