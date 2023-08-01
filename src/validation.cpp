@@ -857,7 +857,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 //
                 // Replaceability signaling of the original transactions may be
                 // ignored due to node setting.
-                const bool allow_rbf{m_pool.m_opts.full_rbf || SignalsOptInRBF(*ptxConflicting) || ptxConflicting->version == TRUC_VERSION};
+                const bool allow_rbf{(m_pool.m_opts.full_rbf || ignore_rejects.count("txn-mempool-conflict")) || SignalsOptInRBF(*ptxConflicting) || ptxConflicting->version == TRUC_VERSION};
                 if (!allow_rbf) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
