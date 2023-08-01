@@ -1083,6 +1083,51 @@ bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
     }
 }
 
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType type = Solver(input, solutions);
+
+    switch (type) {
+        // First check the conditional inputs: P2TR and P2SH
+        case TxoutType::SCRIPTHASH:
+            {
+                // Only P2SH-P2WPKH is supported. If it is any other type of P2SH, skip the input
+                // To determine if this input is a P2SH-P2WPKH, get the redeemScript and check the
+                // TxOutType. If we can't get the reedeemScript, we have know way of knowing what type
+                // the P2SH is, and don't have access to the spending data, anyways.
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                CScript script;
+                if (!provider->GetCScript(CScriptID(uint160(solutions[0])), script)) return false;
+                type = Solver(script, solutions);
+                if (type == TxoutType::WITNESS_V0_KEYHASH) return true;
+                return false;
+            }
+        case TxoutType::WITNESS_V1_TAPROOT:
+            {
+                // TODO: If the outer public key is H (the NUMS point defined in the BIP), skip the input
+                // if (pubkey == H) return false;
+                return true;
+            }
+        case TxoutType::PUBKEYHASH:
+        case TxoutType::WITNESS_V0_KEYHASH: { return true; }
+        // For all the rest, these can be included as inputs but
+        // are not used when deriving the shared secret
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        case TxoutType::MULTISIG:
+        case TxoutType::PUBKEY:
+        case TxoutType::NONSTANDARD:
+        case TxoutType::ANCHOR:
+        case TxoutType::NULL_DATA: { return false; }
+        case TxoutType::WITNESS_UNKNOWN:
+            // This should never happen, as this step takes place after coin selection
+            // and this input would have been filtered out during coin selection.
+            assert(false);
+    }
+    // No default case so the compiler can warn us if we've missed something
+    assert(false);
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
