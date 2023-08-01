@@ -24,6 +24,7 @@
 #include <wallet/fees.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
+#include <wallet/silentpayments.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
@@ -1035,6 +1036,43 @@ bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& walle
     assert(false);
 }
 
+std::map<size_t, WitnessV1Taproot> CreateSilentPaymentOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, V0SilentPaymentDestination> silent_payment_destinations,
+    const std::set<std::shared_ptr<COutput>>& selected_coins,
+    bilingual_str& error)
+{
+    std::vector<std::pair<CKey,bool>> input_private_keys;
+    std::vector<COutPoint> tx_outpoints;
+    tx_outpoints.reserve(selected_coins.size());
+    // in most cases, we will use all of the inputs for shared secret derivation,
+    // in rare cases, we will overallocate the vector, but this should be fine
+    input_private_keys.reserve(selected_coins.size());
+    for (const auto& input : selected_coins) {
+        tx_outpoints.push_back(input->outpoint);
+        if (!IsInputForSharedSecretDerivation(input->txout.scriptPubKey, wallet)) continue;
+        const auto& spk_managers = wallet.GetScriptPubKeyMans(input->txout.scriptPubKey);
+        if (spk_managers.size() != 1) {
+            error = _("Only one ScriptPubKeyManager was expected for the input.");
+            return {};
+        }
+        const auto* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(*spk_managers.begin());
+        const auto& [sender_secret_key, is_taproot]{spk_manager->GetPrivKeyForSilentPayment(input->txout.scriptPubKey)};
+        if (!sender_secret_key.IsValid()) {
+            error = _("The private key of one of the inputs was not found.");
+            return {};
+        }
+        input_private_keys.emplace_back(sender_secret_key, is_taproot);
+    }
+    if (input_private_keys.empty()) {
+        error = _("No silent payment eligible inputs were found.");
+        return {};
+    }
+    assert(tx_outpoints.size() > 0);
+    CKey scalar_ecdh_input = PrepareScalarECDHInput(input_private_keys, tx_outpoints);
+    return GenerateSilentPaymentTaprootDestinations(scalar_ecdh_input, silent_payment_destinations);
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
@@ -1152,19 +1190,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
-
-    // vouts to the payees
-    for (const auto& recipient : vecSend)
-    {
-        if (std::holds_alternative<V0SilentPaymentDestination>(recipient.dest)) continue;
-        CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
-
-        if (IsDust(txout, wallet.chain().relayDustFee())) {
-            return util::Error{_("Transaction amount too small")};
-        }
-        txNew.vout.push_back(txout);
-    }
-
     // Include the fees for things that aren't inputs, excluding the change output
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
     CAmount selection_target = recipients_sum + not_input_fees;
@@ -1200,6 +1225,34 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const SelectionResult& result = *select_coins_res;
     TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result.GetAlgo()).c_str(), result.GetTarget(), result.GetWaste(), result.GetSelectedValue());
 
+    std::vector<CRecipient> mutableVecSend = vecSend;
+    if (coin_control.m_silent_payment) {
+        // Get the silent payment destinations, generate the scriptPubKeys,
+        // and update vecSend with the generated scriptPubKeys
+        std::map<size_t, V0SilentPaymentDestination> sp_dests;
+        for (size_t i = 0; i < mutableVecSend.size(); ++i) {
+            if (const auto* sp = std::get_if<V0SilentPaymentDestination>(&mutableVecSend.at(i).dest)) {
+                // Keep track of the index in vecSend
+                sp_dests[i] = *sp;
+            }
+        }
+        const auto& silent_payment_tr_spks = CreateSilentPaymentOutputs(wallet, sp_dests, result.GetInputSet(), error);
+        for (const auto& [out_idx, tr_dest] : silent_payment_tr_spks) {
+            assert(out_idx < mutableVecSend.size());
+            mutableVecSend[out_idx].dest = tr_dest;
+        }
+
+    }
+    // vouts to the payees
+    for (const auto& recipient : mutableVecSend)
+    {
+        CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
+
+        if (IsDust(txout, wallet.chain().relayDustFee())) {
+            return util::Error{_("Transaction amount too small")};
+        }
+        txNew.vout.push_back(txout);
+    }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
@@ -1300,7 +1353,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CAmount to_reduce = fee_needed - current_fee;
         unsigned int i = 0;
         bool fFirst = true;
-        for (const auto& recipient : vecSend)
+        for (const auto& recipient : mutableVecSend)
         {
             if (change_pos && i == *change_pos) {
                 ++i;
