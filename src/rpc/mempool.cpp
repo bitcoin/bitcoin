@@ -57,6 +57,11 @@ static RPCHelpMan sendrawtransaction()
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
              "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
+            {"ignore_rejects", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Rejection conditions to ignore, eg 'txn-mempool-conflict'",
+                {
+                    {"reject_reason", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
+                },
+            },
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
@@ -88,12 +93,22 @@ static RPCHelpMan sendrawtransaction()
 
             CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
 
+            const UniValue* json_ign_rejs = &request.params[3];
+
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
+
+            ignore_rejects_type ignore_rejects;
+            if (!json_ign_rejs->isNull()) {
+                for (size_t i = 0; i < json_ign_rejs->size(); ++i) {
+                    const UniValue& json_ign_rej = (*json_ign_rejs)[i];
+                    ignore_rejects.insert(json_ign_rej.get_str());
+                }
+            }
 
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
-            const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee_rate, /*relay=*/true, /*wait_callback=*/true);
+            const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee_rate, /*relay=*/true, /*wait_callback=*/true, ignore_rejects);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }
