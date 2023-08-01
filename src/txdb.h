@@ -11,7 +11,6 @@
 #include <kernel/cs_main.h>
 #include <sync.h>
 #include <util/fs.h>
-#include <util/result.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -104,7 +103,5 @@ public:
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
-
-[[nodiscard]] util::Result<void> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
 
 #endif // BITCOIN_TXDB_H
