@@ -92,7 +92,7 @@ public:
      * @param[in]  block_index  The blockindex
      * @returns std::nullopt if a request was successfully made, otherwise an error message
      */
-    virtual std::optional<std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index) = 0;
+    virtual std::optional<std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index, bool retry) = 0;
 
     /** Begin running background tasks, should only be called once */
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
