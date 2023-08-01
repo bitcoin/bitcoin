@@ -31,7 +31,7 @@ def siphash_round(v0, v1, v2, v3):
 
 
 def siphash(k0, k1, data):
-    assert type(data) == bytes
+    assert type(data) is bytes
     v0 = 0x736f6d6570736575 ^ k0
     v1 = 0x646f72616e646f6d ^ k1
     v2 = 0x6c7967656e657261 ^ k0
@@ -61,5 +61,5 @@ def siphash(k0, k1, data):
 
 
 def siphash256(k0, k1, num):
-    assert type(num) == int
+    assert type(num) is int
     return siphash(k0, k1, num.to_bytes(32, 'little'))
