@@ -22,6 +22,7 @@
 #include <wallet/fees.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
+#include <wallet/silentpayments.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
@@ -861,6 +862,50 @@ bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& walle
     }
     // No default case so the compiler can warn us if we've missed something
     assert(false);
+}
+
+std::vector<CRecipient> CreateSilentPaymentOutputs(
+    const CWallet& wallet,
+    const std::vector<V0SilentPaymentDestination>& silent_payment_destinations,
+    const std::set<std::shared_ptr<COutput>>& selected_coins,
+    bilingual_str& error)
+{
+    std::vector<std::pair<CKey,bool>> input_private_keys;
+    std::vector<COutPoint> tx_outpoints;
+    tx_outpoints.reserve(selected_coins.size());
+    // in most cases, we will use all of the inputs for shared secret derivation,
+    // in rare cases, we will overallocate the vector, but this should be fine
+    input_private_keys.reserve(selected_coins.size());
+    for (const auto& input : selected_coins) {
+        tx_outpoints.push_back(input->outpoint);
+        if (!IsInputForSharedSecretDerivation(input->txout.scriptPubKey, wallet)) continue;
+        const auto& spk_managers = wallet.GetScriptPubKeyMans(input->txout.scriptPubKey);
+        if (spk_managers.size() != 1) {
+            error = _("Only one ScriptPubKeyManager was expected for the input.");
+            return {};
+        }
+        const auto* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(*spk_managers.begin());
+        const auto& [sender_secret_key, is_taproot]{spk_manager->GetPrivKeyForSilentPayment(input->txout.scriptPubKey)};
+        if (!sender_secret_key.IsValid()) {
+            error = _("The private key of one of the inputs was not found.");
+            return {};
+        }
+        input_private_keys.emplace_back(sender_secret_key, is_taproot);
+    }
+    if (input_private_keys.empty()) {
+        error = _("No silent payment eligible inputs were found.");
+        return {};
+    }
+    assert(tx_outpoints.size() > 0);
+    CKey scalar_ecdh_input = PrepareScalarECDHInput(input_private_keys, tx_outpoints);
+    std::vector<SilentPaymentRecipient> silent_payment_recipients = GroupSilentPaymentAddresses(silent_payment_destinations);
+    std::vector<CRecipient> outputs;
+    for (const auto& recipient : silent_payment_recipients) {
+        Sender sender{scalar_ecdh_input, recipient};
+        std::vector<CRecipient> recipient_spks = sender.GenerateRecipientScriptPubKeys();
+        outputs.insert(outputs.end(), recipient_spks.begin(), recipient_spks.end());
+    }
+    return outputs;
 }
 
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
