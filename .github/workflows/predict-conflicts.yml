@@ -25,6 +25,6 @@ jobs:
         with:
           ghToken: "${{ secrets.GITHUB_TOKEN }}"
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: validate potential conflicts
         run: pip3 install hjson && .github/workflows/handle_potential_conflicts.py "$conflicts"
