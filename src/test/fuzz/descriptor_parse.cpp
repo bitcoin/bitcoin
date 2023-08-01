@@ -85,7 +85,7 @@ public:
         std::string desc;
         desc.reserve(mocked_desc.size());
 
-        // Replace all occurences of '%' followed by two hex characters with the corresponding key.
+        // Replace all occurrences of '%' followed by two hex characters with the corresponding key.
         for (size_t i = 0; i < mocked_desc.size();) {
             if (mocked_desc[i] == '%') {
                 if (i + 3 >= mocked_desc.size()) return {};
