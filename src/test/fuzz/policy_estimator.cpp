@@ -49,7 +49,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                 const auto tx_has_mempool_parents = fuzzed_data_provider.ConsumeBool();
                 const auto tx_info = NewMempoolTransactionInfo(entry.GetSharedTx(), entry.GetFee(),
                                                                entry.GetTxSize(), entry.GetHeight(),
-                                                               /*mempool_limit_bypassed=*/false,
+                                                               empty_ignore_rejects,
                                                                tx_submitted_in_package,
                                                                /*chainstate_is_current=*/true,
                                                                tx_has_mempool_parents);
