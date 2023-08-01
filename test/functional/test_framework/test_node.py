@@ -421,6 +421,10 @@ class TestNode():
         return self.chain_path / 'debug.log'
 
     @property
+    def blocks_path(self) -> Path:
+        return self.chain_path / "blocks"
+
+    @property
     def wallets_path(self) -> Path:
         return self.chain_path / "wallets"
 

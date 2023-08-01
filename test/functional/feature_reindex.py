@@ -38,7 +38,7 @@ class ReindexTest(BitcoinTestFramework):
         # In this test environment, blocks will always be in order (since
         # we're generating them rather than getting them from peers), so to
         # test out-of-order handling, swap blocks 1 and 2 on disk.
-        blk0 = self.nodes[0].chain_path / "blocks" / "blk00000.dat"
+        blk0 = self.nodes[0].blocks_path / "blk00000.dat"
         with open(blk0, 'r+b') as bf:
             # Read at least the first few blocks (including genesis)
             b = bf.read(2000)
