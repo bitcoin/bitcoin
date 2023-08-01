@@ -54,7 +54,8 @@ bench_bench_syscoin_SOURCES = \
   bench/streams_findbyte.cpp \
   bench/strencodings.cpp \
   bench/util_time.cpp \
-  bench/verify_script.cpp
+  bench/verify_script.cpp \
+  bench/xor.cpp
 
 nodist_bench_bench_syscoin_SOURCES = $(GENERATED_BENCH_FILES)
 
