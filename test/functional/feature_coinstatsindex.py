@@ -9,6 +9,8 @@ between a node running the coinstatsindex and a node without
 the index.
 """
 
+import struct
+
 from decimal import Decimal
 
 from test_framework.blocktools import (
@@ -55,8 +57,21 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self._test_reorg_index()
         self._test_index_rejects_hash_serialized()
 
-    def block_sanity_check(self, block_info):
-        block_subsidy = 50
+    def block_subsidy(self, prev_bits):
+        # Subsidy calculations valid till block 4500
+        diff = 0x0000ffff / (prev_bits & 0x00ffffff)
+        subsidy = (1111.0 / (pow((diff+1.0),2.0)))
+        return min(500, max(1, subsidy))
+
+    def get_block_subsidy(self, prev_height):
+        prev_block = self.nodes[0].getblockheader(self.nodes[0].getblockhash(prev_height), True)
+        return self.block_subsidy(struct.unpack('!I', bytes.fromhex(prev_block['bits']))[0])
+
+    def block_sanity_check(self, block_info, prev_height):
+        if prev_height > 1:
+            block_subsidy = self.get_block_subsidy(prev_height)
+        else:
+            block_subsidy = 50 # see chainparams.cpp
         assert_equal(
             block_info['prevout_spent'] + block_subsidy,
             block_info['new_outputs_ex_coinbase'] + block_info['coinbase'] + block_info['unspendable']
@@ -133,7 +148,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
                     'unclaimed_rewards': 0
                 }
             })
-            self.block_sanity_check(res4['block_info'])
+            self.block_sanity_check(res4['block_info'], -1)
 
             # Test an older block height that included a normal tx
             res5 = index_node.gettxoutsetinfo(hash_option, 102)
@@ -150,7 +165,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
                     'unclaimed_rewards': 0
                 }
             })
-            self.block_sanity_check(res5['block_info'])
+            self.block_sanity_check(res5['block_info'], 101)
 
         # Generate and send a normal tx with two outputs
         tx1_inputs = []
@@ -194,7 +209,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
                     'unclaimed_rewards': 0
                 }
             })
-            self.block_sanity_check(res6['block_info'])
+            self.block_sanity_check(res6['block_info'], 107)
 
         # Create a coinbase that does not claim full subsidy and also
         # has two outputs
@@ -226,7 +241,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
                     'unclaimed_rewards': 10
                 }
             })
-            self.block_sanity_check(res7['block_info'])
+            self.block_sanity_check(res7['block_info'], 108)
 
         self.log.info("Test that the index is robust across restarts")
 
