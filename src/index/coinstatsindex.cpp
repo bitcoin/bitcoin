@@ -107,7 +107,7 @@ CoinStatsIndex::CoinStatsIndex(size_t n_cache_size, bool f_memory, bool f_wipe)
 bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     CBlockUndo block_undo;
-    const CAmount block_subsidy{GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus())};
+    const CAmount block_subsidy{pindex->nHeight > 0 ? GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus()) : Params().GenesisBlock().vtx[0]->GetValueOut()};
     m_total_subsidy += block_subsidy;
 
     // Ignore genesis block
@@ -377,7 +377,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
     CBlockUndo block_undo;
     std::pair<uint256, DBVal> read_out;
 
-    const CAmount block_subsidy{GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus())};
+    const CAmount block_subsidy{pindex->nHeight > 0 ? GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus()) : Params().GenesisBlock().vtx[0]->GetValueOut()};
     m_total_subsidy -= block_subsidy;
 
     // Ignore genesis block
