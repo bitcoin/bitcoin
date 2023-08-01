@@ -4387,7 +4387,7 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode)
     }
 
     // Disconnect and discourage all nodes sharing the address
-    LogPrintf("Disconnecting and discouraging peer %d!\n", peer_id);
+    LogPrint(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer_id);
     if (m_banman) {
         m_banman->Discourage(pnode.addr);
     }

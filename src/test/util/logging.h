@@ -32,7 +32,7 @@ class DebugLogHelper
     void check_found();
 
 public:
-    DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
+    explicit DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
     ~DebugLogHelper() { check_found(); }
 };
 

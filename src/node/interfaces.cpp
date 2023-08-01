@@ -194,7 +194,7 @@ public:
     MasternodeSyncImpl m_masternodeSync;
     CoinJoinOptionsImpl m_coinjoin;
 
-    NodeImpl(NodeContext* context) { setContext(context); }
+    explicit NodeImpl(NodeContext* context) { setContext(context); }
     void initError(const bilingual_str& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {

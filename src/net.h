@@ -41,11 +41,6 @@
 #include <queue>
 
 #ifndef WIN32
-#include <arpa/inet.h>
-#endif
-
-
-#ifndef WIN32
 #define USE_WAKEUP_PIPE
 #endif
 

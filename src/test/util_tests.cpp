@@ -239,7 +239,7 @@ public:
         std::optional<std::vector<std::string>> list_value;
         const char* error = nullptr;
 
-        Expect(util::SettingsValue s) : setting(std::move(s)) {}
+        explicit Expect(util::SettingsValue s) : setting(std::move(s)) {}
         Expect& DefaultString() { default_string = true; return *this; }
         Expect& DefaultInt() { default_int = true; return *this; }
         Expect& DefaultBool() { default_bool = true; return *this; }
