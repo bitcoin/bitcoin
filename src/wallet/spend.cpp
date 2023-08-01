@@ -908,6 +908,24 @@ std::vector<CRecipient> CreateSilentPaymentOutputs(
     return outputs;
 }
 
+std::pair<std::vector<CRecipient>, std::vector<V0SilentPaymentDestination>> SeparateDestinations(std::vector<Destination> destinations)
+{
+    std::vector<CRecipient> recipients;
+    std::vector<V0SilentPaymentDestination> silent_payment_destinations;
+    recipients.reserve(destinations.size());
+    silent_payment_destinations.reserve(destinations.size());
+    for (const auto& var : destinations) {
+        std::visit([&](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, CRecipient>)
+                recipients.push_back(arg);
+            else if constexpr (std::is_same_v<T, V0SilentPaymentDestination>)
+                silent_payment_destinations.push_back(arg);
+        }, var);
+    }
+    return {recipients, silent_payment_destinations};
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<Destination>& vecSend,
