@@ -133,6 +133,11 @@ static RPCHelpMan testmempoolaccept()
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
              "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
                  "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
+            {"ignore_rejects", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Rejection conditions to ignore, eg 'txn-mempool-conflict'",
+                {
+                    {"reject_reason", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
+                },
+            },
         },
         RPCResult{
             RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -179,6 +184,16 @@ static RPCHelpMan testmempoolaccept()
 
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
 
+            const UniValue* json_ign_rejs = &request.params[2];
+            ignore_rejects_type ignore_rejects;
+            if (!json_ign_rejs->isNull()) {
+                for (size_t i = 0; i < json_ign_rejs->size(); ++i) {
+                    const UniValue& json_ign_rej = (*json_ign_rejs)[i];
+                    const std::string& ign_rej = json_ign_rej.get_str();
+                    ignore_rejects.insert(ign_rej);
+                }
+            }
+
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
             for (const auto& rawtx : raw_transactions.getValues()) {
@@ -196,9 +211,9 @@ static RPCHelpMan testmempoolaccept()
             Chainstate& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{});
+                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{}, ignore_rejects);
                 return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
-                                                  chainman.ProcessTransaction(txns[0], /*test_accept=*/true));
+                                                  chainman.ProcessTransaction(txns[0], /*test_accept=*/true, ignore_rejects));
             }();
 
             UniValue rpc_result(UniValue::VARR);
@@ -228,7 +243,8 @@ static RPCHelpMan testmempoolaccept()
                     // Check that fee does not exceed maximum fee
                     const int64_t virtual_size = tx_result.m_vsize.value();
                     const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
-                    if (max_raw_tx_fee && fee > max_raw_tx_fee) {
+                    if (max_raw_tx_fee && fee > max_raw_tx_fee &&
+                        0 == (ignore_rejects.count("absurdly-high-fee") + ignore_rejects.count("max-fee-exceeded"))) {
                         result_inner.pushKV("allowed", false);
                         result_inner.pushKV("reject-reason", "max-fee-exceeded");
                         exit_early = true;
