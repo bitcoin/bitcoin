@@ -15,7 +15,7 @@
 #include <sync.h>
 #include <threadsafety.h>
 #include <unordered_lru_cache.h>
-#include <util/skip_set.h>
+#include <util/ranges_set.h>
 
 #include <optional>
 #include <unordered_set>
@@ -34,7 +34,7 @@ struct CCreditPool {
     // needs for logic of limits of unlocks
     CAmount currentLimit{0};
     CAmount latelyUnlocked{0};
-    CSkipSet indexes{};
+    CRangesSet indexes{};
 
     std::string ToString() const;
 

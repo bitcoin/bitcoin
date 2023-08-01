@@ -70,8 +70,8 @@ static UnlockDataPerBlock GetDataFromUnlockTxes(const std::vector<CTransactionRe
 
 std::string CCreditPool::ToString() const
 {
-    return strprintf("CCreditPool(locked=%lld, currentLimit=%lld, nIndexes=%lld)",
-            locked, currentLimit, indexes.Size());
+    return strprintf("CCreditPool(locked=%lld, currentLimit=%lld)",
+            locked, currentLimit);
 }
 
 std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex* const block_index)
@@ -130,7 +130,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
         // If reading of previous block is not successfully, but
         // prev contains credit pool related data, something strange happened
         assert(prev.locked == 0);
-        assert(prev.indexes.Size() == 0);
+        assert(prev.indexes.IsEmpty());
 
         CCreditPool emptyPool;
         AddToCache(block_index->GetBlockHash(), block_index->nHeight, emptyPool);
@@ -150,9 +150,9 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
     // Indexes should not be duplicated since genesis block, but the Unlock Amount
     // of withdrawal transaction is limited only by this window
     UnlockDataPerBlock blockData = GetDataFromUnlockTxes(block->vtx);
-    CSkipSet indexes{std::move(prev.indexes)};
+    CRangesSet indexes{std::move(prev.indexes)};
     if (std::any_of(blockData.indexes.begin(), blockData.indexes.end(), [&](const uint64_t index) { return !indexes.Add(index); })) {
-        throw std::runtime_error(strprintf("%s: failed-getcreditpool-index-exceed", __func__));
+        throw std::runtime_error(strprintf("%s: failed-getcreditpool-index-duplicated", __func__));
     }
 
     const CBlockIndex* distant_block_index = block_index;
@@ -264,10 +264,6 @@ bool CCreditPoolDiff::Unlock(const CTransaction& tx, TxValidationState& state)
 
     if (pool.indexes.Contains(index) || newIndexes.count(index)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-creditpool-unlock-duplicated-index");
-    }
-
-    if (!pool.indexes.CanBeAdded(index)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-creditpool-unlock-cant-add");
     }
 
     newIndexes.insert(index);
