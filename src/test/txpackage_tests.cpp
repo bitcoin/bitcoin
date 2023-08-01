@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
             auto it_parent = result_quit_early.m_tx_results.find(tx_parent_invalid->GetWitnessHash());
             auto it_child = result_quit_early.m_tx_results.find(tx_child->GetWitnessHash());
             BOOST_CHECK_EQUAL(it_parent->second.m_state.GetResult(), TxValidationResult::TX_WITNESS_MUTATED);
-            BOOST_CHECK_EQUAL(it_parent->second.m_state.GetRejectReason(), "bad-witness-nonstandard");
+            BOOST_CHECK_EQUAL(it_parent->second.m_state.GetRejectReason(), "bad-witness-nonwitness-input");
             BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MISSING_INPUTS);
             BOOST_CHECK_EQUAL(it_child->second.m_state.GetRejectReason(), "bad-txns-inputs-missingorspent");
         }

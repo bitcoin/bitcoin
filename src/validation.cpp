@@ -901,8 +901,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // Check for non-standard witnesses.
-    if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
-        MaybeReject(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+    if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view, "bad-witness-", reason, ignore_rejects)) {
+        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, reason);
     }
 
     int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
