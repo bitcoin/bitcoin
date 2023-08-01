@@ -12,20 +12,25 @@ unsigned-integer-overflow:*/include/c++/
 unsigned-integer-overflow:FuzzedDataProvider::ConsumeIntegralInRange
 unsigned-integer-overflow:leveldb/
 unsigned-integer-overflow:minisketch/
+unsigned-integer-overflow:secp256k1/
 unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 implicit-integer-sign-change:*/include/boost/
 implicit-integer-sign-change:*/include/c++/
 implicit-integer-sign-change:*/new_allocator.h
 implicit-integer-sign-change:crc32c/
 implicit-integer-sign-change:minisketch/
+implicit-integer-sign-change:secp256k1/
 implicit-signed-integer-truncation:*/include/c++/
 implicit-signed-integer-truncation:leveldb/
+implicit-signed-integer-truncation:secp256k1/
 implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:leveldb/
+implicit-unsigned-integer-truncation:secp256k1/
 implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 shift-base:*/include/c++/
 shift-base:leveldb/
 shift-base:minisketch/
+shift-base:secp256k1/
 shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 # Unsigned integer overflow occurs when the result of an unsigned integer
 # computation cannot be represented in its type. Unlike signed integer overflow,
