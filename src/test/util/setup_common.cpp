@@ -63,6 +63,7 @@
 #include <functional>
 #include <stdexcept>
 
+using kernel::CBlockTreeDB;
 using kernel::ValidationCacheSizes;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
