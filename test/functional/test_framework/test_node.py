@@ -649,10 +649,11 @@ class TestNode():
             p2p_conn.sync_with_ping()
 
             # Consistency check that the node received our user agent string.
-            # Find our connection in getpeerinfo by our address:port, as it is unique.
+            # Find our connection in getpeerinfo by our address:port and theirs, as this combination is unique.
             sockname = p2p_conn._transport.get_extra_info("socket").getsockname()
             our_addr_and_port = f"{sockname[0]}:{sockname[1]}"
-            info = [peer for peer in self.getpeerinfo() if peer["addr"] == our_addr_and_port]
+            dst_addr_and_port = f"{p2p_conn.dstaddr}:{p2p_conn.dstport}"
+            info = [peer for peer in self.getpeerinfo() if peer["addr"] == our_addr_and_port and peer["addrbind"] == dst_addr_and_port]
             assert_equal(len(info), 1)
             assert_equal(info[0]["subver"], P2P_SUBVERSION)
 
