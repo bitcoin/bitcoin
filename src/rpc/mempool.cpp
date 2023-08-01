@@ -52,11 +52,15 @@ static RPCHelpMan sendrawtransaction()
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
              "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
-                 "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
+                 "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate.",
+                RPCArgOptions{.skip_type_check = true}  // for ignore_rejects compatibility
+            },
             {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_BURN_AMOUNT)},
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
-             "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
+             "This check is based on heuristics and does not guarantee spendability of outputs.\n",
+                RPCArgOptions{.skip_type_check = true}  // for ignore_rejects compatibility
+            },
             {"ignore_rejects", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Rejection conditions to ignore, eg 'txn-mempool-conflict'",
                 {
                     {"reject_reason", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
@@ -78,7 +82,24 @@ static RPCHelpMan sendrawtransaction()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            CFeeRate max_raw_tx_fee_rate{DEFAULT_MAX_RAW_TX_FEE_RATE};
+            CAmount max_burn_amount{0};
+            const UniValue* json_ign_rejs = &request.params[3];
+
+            if (request.params[1].isArray() && request.params[2].isNull() && request.params[3].isNull()) {
+                // ignore_rejects used to occupy this position (v0.12.0.knots20160226.rc1-v0.17.1.knots20181229)
+                json_ign_rejs = &request.params[1];
+            } else {
+                if (!request.params[1].isNull()) {
+                    max_raw_tx_fee_rate = ParseFeeRate(self.Arg<UniValue>("maxfeerate"));
+                }
+                if (request.params[2].isArray() && request.params[3].isNull()) {
+                    // ignore_rejects used to occupy this position (v0.18.0.knots20190502-v23.0.knots20220529)
+                    json_ign_rejs = &request.params[2];
+                } else if (!request.params[2].isNull()) {
+                    max_burn_amount = AmountFromValue(request.params[2]);
+                }
+            }
 
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
@@ -92,10 +113,6 @@ static RPCHelpMan sendrawtransaction()
             }
 
             CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-
-            const UniValue* json_ign_rejs = &request.params[3];
-
-            const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
 
             ignore_rejects_type ignore_rejects;
             if (!json_ign_rejs->isNull()) {
