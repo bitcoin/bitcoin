@@ -1079,18 +1079,20 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const SelectionResult& result = *select_coins_res;
     TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result.GetAlgo()).c_str(), result.GetTarget(), result.GetWaste(), result.GetSelectedValue());
 
+    auto [recipients, silent_payment_destinations] = SeparateDestinations(vecSend);
+    if (!silent_payment_destinations.empty()) {
+        const auto& silent_payment_recipients = CreateSilentPaymentOutputs(wallet, silent_payment_destinations, result.GetInputSet(), error);
+        recipients.insert(recipients.end(), silent_payment_recipients.begin(), silent_payment_recipients.end());
+    }
     // vouts to the payees
-    for (const auto& destination : vecSend)
+    for (const auto& recipient : recipients)
     {
-        if (std::holds_alternative<CRecipient>(destination)) {
-            auto recipient = std::get<CRecipient>(destination);
-            CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
-            if (IsDust(txout, wallet.chain().relayDustFee())) {
-                return util::Error{_("Transaction amount too small")};
-            }
-            txNew.vout.push_back(txout);
+        if (IsDust(txout, wallet.chain().relayDustFee())) {
+            return util::Error{_("Transaction amount too small")};
         }
+        txNew.vout.push_back(txout);
     }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
