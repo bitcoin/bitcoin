@@ -148,6 +148,12 @@ pull request to pull request.
 When a pull request conflicts with the target branch, you may be asked to rebase it on top of the current target branch.
 The `git rebase` command will take care of rebuilding your commits on top of the new base.
 
+Avoid rebasing a non-conflicting pull request on top of the updated target
+branch if you requested a review already. If you need to tweak some commit in
+the middle, please rebase your branch on top of the same commit it was
+originally based on. Non-conflicting pull requests should be rebased on top of
+the current target branch by maintainers only.
+
 This project aims to have a clean git history, where code changes are only made in non-merge commits. This simplifies
 auditability because merge commits can be assumed to not contain arbitrary code changes. Merge commits should be signed,
 and the resulting git tree hash must be deterministic and reproducible. The script in
