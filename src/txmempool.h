@@ -6,14 +6,14 @@
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
-#include <kernel/mempool_limits.h>
-#include <kernel/mempool_options.h>
-
 #include <coins.h>
 #include <consensus/amount.h>
 #include <indirectmap.h>
 #include <kernel/cs_main.h>
-#include <kernel/mempool_entry.h>
+#include <kernel/mempool_entry.h>          // IWYU pragma: export
+#include <kernel/mempool_limits.h>         // IWYU pragma: export
+#include <kernel/mempool_options.h>        // IWYU pragma: export
+#include <kernel/mempool_removal_reason.h> // IWYU pragma: export
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
@@ -224,20 +224,6 @@ struct TxMempoolInfo
     /** The fee delta. */
     int64_t nFeeDelta;
 };
-
-/** Reason why a transaction was removed from the mempool,
- * this is passed to the notification signal.
- */
-enum class MemPoolRemovalReason {
-    EXPIRY,      //!< Expired from mempool
-    SIZELIMIT,   //!< Removed in size limiting
-    REORG,       //!< Removed for reorganization
-    BLOCK,       //!< Removed for block
-    CONFLICT,    //!< Removed for conflict with in-block transaction
-    REPLACED,    //!< Removed for replacement
-};
-
-std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
 
 /**
  * CTxMemPool stores valid-according-to-the-current-best-chain transactions
