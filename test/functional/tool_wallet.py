@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-wallet."""
 
-import hashlib
 import os
 import stat
 import subprocess
@@ -13,9 +12,10 @@ import textwrap
 from collections import OrderedDict
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
-
-BUFFER_SIZE = 16 * 1024
+from test_framework.util import (
+    assert_equal,
+    sha256sum_file,
+)
 
 
 class ToolWalletTest(BitcoinTestFramework):
@@ -53,12 +53,7 @@ class ToolWalletTest(BitcoinTestFramework):
         assert_equal(p.poll(), 0)
 
     def wallet_shasum(self):
-        h = hashlib.sha1()
-        mv = memoryview(bytearray(BUFFER_SIZE))
-        with open(self.wallet_path, 'rb', buffering=0) as f:
-            for n in iter(lambda: f.readinto(mv), 0):
-                h.update(mv[:n])
-        return h.hexdigest()
+        return sha256sum_file(self.wallet_path).hex()
 
     def wallet_timestamp(self):
         return os.path.getmtime(self.wallet_path)
