@@ -5,6 +5,7 @@
 #include <bloom.h>
 
 #include <primitives/transaction.h>
+#include <evo/assetlocktx.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <logging.h>
@@ -189,19 +190,53 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
         }
         return false;
     }
+    case(TRANSACTION_ASSET_LOCK): {
+        // inputs of Asset Lock transactions are standard. But some outputs are special
+        CAssetLockPayload assetLockTx;
+        if (GetTxPayload(tx, assetLockTx)) {
+            bool fFound = false;
+            const auto& extraOuts = assetLockTx.getCreditOutputs();
+            for (unsigned int i = 0; i < extraOuts.size(); ++i)
+            {
+                fFound = ProcessTxOut(extraOuts[i], tx.GetHash(), i) || fFound;
+            }
+            if (fFound) return true;
+        }
+        return false;
+    }
+    case(TRANSACTION_ASSET_UNLOCK): // Outputs are standard and no inputs.
     case(TRANSACTION_COINBASE):
     case(TRANSACTION_QUORUM_COMMITMENT):
     case(TRANSACTION_MNHF_SIGNAL):
         // No additional checks for this transaction types
         return false;
-    case(TRANSACTION_ASSET_LOCK):
-    case(TRANSACTION_ASSET_UNLOCK):
-        // TODO asset lock/unlock bloom?
-        return false;
     }
 
     LogPrintf("Unknown special transaction type in Bloom filter check.\n");
     return false;
+}
+
+bool CBloomFilter::ProcessTxOut(const CTxOut& txout, const uint256& hash, unsigned int index)
+{
+    // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
+    // If this matches, also add the specific output that was matched.
+    // This means clients don't have to update the filter themselves when a new relevant tx
+    // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
+    bool fFound = false;
+    if(CheckScript(txout.scriptPubKey)) {
+        fFound = true;
+        if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+            insert(COutPoint(hash, index));
+        else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
+        {
+            std::vector<std::vector<unsigned char> > vSolutions;
+            TxoutType type = Solver(txout.scriptPubKey, vSolutions);
+            if (type == TxoutType::PUBKEY || type == TxoutType::MULTISIG) {
+                insert(COutPoint(hash, index));
+            }
+        }
+    }
+    return fFound;
 }
 
 bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
@@ -220,24 +255,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
 
     for (unsigned int i = 0; i < tx.vout.size(); i++)
     {
-        const CTxOut& txout = tx.vout[i];
-        // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
-        // If this matches, also add the specific output that was matched.
-        // This means clients don't have to update the filter themselves when a new relevant tx
-        // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
-        if(CheckScript(txout.scriptPubKey)) {
-            fFound = true;
-            if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
-                insert(COutPoint(hash, i));
-            else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
-            {
-                std::vector<std::vector<unsigned char> > vSolutions;
-                TxoutType type = Solver(txout.scriptPubKey, vSolutions);
-                if (type == TxoutType::PUBKEY || type == TxoutType::MULTISIG) {
-                    insert(COutPoint(hash, i));
-                }
-            }
-        }
+        fFound = ProcessTxOut(tx.vout[i], hash, i) || fFound;
     }
 
     if (fFound)

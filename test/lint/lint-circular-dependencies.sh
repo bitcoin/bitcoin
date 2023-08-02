@@ -67,6 +67,11 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
     "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil"
 
+    "bloom -> evo/assetlocktx -> llmq/quorums -> net -> bloom"
+    "banman -> bloom -> evo/assetlocktx -> llmq/quorums -> net -> banman"
+    "banman -> bloom -> evo/assetlocktx -> llmq/quorums -> net_processing -> banman"
+    "bloom -> evo/assetlocktx -> llmq/quorums -> net_processing -> merkleblock -> bloom"
+
     "coinjoin/client -> net_processing -> coinjoin/client"
     "llmq/quorums -> net_processing -> llmq/quorums"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"

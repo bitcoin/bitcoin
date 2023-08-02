@@ -12,6 +12,7 @@
 class COutPoint;
 class CScript;
 class CTransaction;
+class CTxOut;
 class uint256;
 class uint160;
 
@@ -55,6 +56,8 @@ private:
 
     // Check matches for arbitrary script data elements
     bool CheckScript(const CScript& script) const;
+    // Check particular CTxOut helper
+    bool ProcessTxOut(const CTxOut& txout, const uint256& hash, unsigned int index);
     // Check additional matches for special transactions
     bool CheckSpecialTransactionMatchesAndUpdate(const CTransaction& tx);
 public:
