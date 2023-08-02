@@ -196,6 +196,7 @@ BASE_SCRIPTS = [
     'wallet_avoid_mixing_output_types.py --descriptors',
     'mempool_reorg.py',
     'p2p_block_sync.py',
+    'wallet_silentpayments_receiving.py --descriptors',
     'wallet_createwallet.py --legacy-wallet',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py --descriptors',
