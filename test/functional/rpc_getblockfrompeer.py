@@ -152,6 +152,13 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_equal(pruned_node.pruneblockchain(1000), pruneheight)
         assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
 
+        self.log.info("Fetch genesis block")
+        genesis_block_hash = self.nodes[0].getblockhash(0)
+        assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, genesis_block_hash)
+        result = pruned_node.getblockfrompeer(genesis_block_hash, pruned_node_peer_0_id)
+        self.wait_until(lambda: self.check_for_block(node=2, hash=genesis_block_hash), timeout=1)
+        assert_equal(result, {})
+
 
 if __name__ == '__main__':
     GetBlockFromPeerTest().main()
