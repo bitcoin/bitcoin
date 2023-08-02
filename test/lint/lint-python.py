@@ -9,11 +9,12 @@ Check for specified flake8 and mypy warnings in python files.
 """
 
 import os
-import pkg_resources
 import subprocess
 import sys
 
-DEPS = ['flake8', 'lief', 'mypy', 'pyzmq']
+from importlib.metadata import packages_distributions
+
+DEPS = ['flake8', 'lief', 'mypy', 'zmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
 
 # All .py files, except those in src/ (to exclude subtrees there)
@@ -99,7 +100,7 @@ ENABLED = (
 
 
 def check_dependencies():
-    working_set = {pkg.key for pkg in pkg_resources.working_set}
+    working_set = {pkg for pkg in packages_distributions()}
 
     for dep in DEPS:
         if dep not in working_set:
