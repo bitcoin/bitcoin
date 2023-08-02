@@ -104,6 +104,7 @@ BASE_SCRIPTS = [
     'feature_maxuploadtarget.py',
     'mempool_updatefromblock.py',
     'mempool_persist.py --descriptors',
+    'wallet_silentpayments_receiving.py',
     # vv Tests less than 60s vv
     'rpc_psbt.py --legacy-wallet',
     'rpc_psbt.py --descriptors',
