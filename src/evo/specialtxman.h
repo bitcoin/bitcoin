@@ -13,6 +13,7 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
+class CMNHFManager;
 class TxValidationState;
 namespace llmq {
 class CQuorumBlockProcessor;
@@ -26,10 +27,12 @@ extern RecursiveMutex cs_main;
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs,
                     TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
-                            const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,
-                            BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager,
+                              llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
+                              const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,
+                              BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager,
+                           llmq::CQuorumBlockProcessor& quorum_block_processor) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams,
                                 const CAmount blockReward, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
