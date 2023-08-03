@@ -76,12 +76,14 @@ were deprecated and how to re-enable them temporarily.
 
 ## Security
 
-The RPC interface allows other programs to control Bitcoin Core,
-including the ability to spend funds from your wallets, affect consensus
-verification, read private data, and otherwise perform operations that
-can cause loss of money, data, or privacy.  This section suggests how
-you should use and configure Bitcoin Core to reduce the risk that its
-RPC interface will be abused.
+> [!WARNING]
+> The RPC interface allows other programs to control Bitcoin Core,
+> including the ability to spend funds from your wallets, affect consensus
+> verification, read private data, and otherwise perform operations that
+> can cause loss of money, data, or privacy.
+
+This section suggests how you should use and configure Bitcoin Core to reduce
+the risk that its RPC interface will be abused.
 
 - **Securing the executable:** Anyone with physical or remote access to
   the computer, container, or virtual machine running Bitcoin Core can
@@ -188,11 +190,14 @@ this RPC may not yet be reflected as such in this RPC response.
 
 ## Limitations
 
-There is a known issue in the JSON-RPC interface that can cause a node to crash if
-too many http connections are being opened at the same time because the system runs
-out of available file descriptors. To prevent this from happening you might
-want to increase the number of maximum allowed file descriptors in your system
-and try to prevent opening too many connections to your JSON-RPC interface at the
-same time if this is under your control. It is hard to give general advice
-since this depends on your system but if you make several hundred requests at
-once you are definitely at risk of encountering this issue.
+> [!IMPORTANT]
+> There is a known issue in the JSON-RPC interface that can cause a node to
+> crash if too many http connections are being opened at the same time because
+> the system runs out of available file descriptors.
+
+To prevent this from happening you might want to increase the number of maximum
+allowed file descriptors in your system and try to prevent opening too many
+connections to your JSON-RPC interface at the same time if this is under your
+control. It is hard to give general advice since this depends on your system
+but if you make several hundred requests at once you are definitely at risk of
+encountering this issue.

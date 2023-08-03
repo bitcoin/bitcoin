@@ -27,11 +27,13 @@ By default, wallets are created in the `wallets` folder of the data directory, w
 
 The `wallet.dat` file is not encrypted by default and is, therefore, vulnerable if an attacker gains access to the device where the wallet or the backups are stored.
 
-Wallet encryption may prevent unauthorized access. However, this significantly increases the risk of losing coins due to forgotten passphrases. There is no way to recover a passphrase. This tradeoff should be well thought out by the user.
+> [!NOTE]
+> Wallet encryption may prevent unauthorized access. However, this significantly increases the risk of losing coins due to forgotten passphrases. There is no way to recover a passphrase. This tradeoff should be well thought out by the user.
 
 Wallet encryption may also not protect against more sophisticated attacks. An attacker can, for example, obtain the password by installing a keylogger on the user's machine.
 
-After encrypting the wallet or changing the passphrase, a new backup needs to be created immediately. The reason is that the keypool is flushed and a new HD seed is generated after encryption. Any bitcoins received by the new seed cannot be recovered from the previous backups.
+> [!WARNING]
+> After encrypting the wallet or changing the passphrase, a new backup needs to be created immediately. The reason is that the keypool is flushed and a new HD seed is generated after encryption. Any bitcoins received by the new seed cannot be recovered from the previous backups.
 
 The wallet's private key may be encrypted with the following command:
 
@@ -80,7 +82,8 @@ In the GUI, there is no specific menu item to unlock the wallet. When the user s
 
 ### 1.4 Backing Up the Wallet
 
-To backup the wallet, the `backupwallet` RPC or the `Backup Wallet` GUI menu item must be used to ensure the file is in a safe state when the copy is made.
+> [!IMPORTANT]
+> To backup the wallet, the `backupwallet` RPC or the `Backup Wallet` GUI menu item must be used to ensure the file is in a safe state when the copy is made.
 
 In the RPC, the destination parameter must include the name of the file. Otherwise, the command will return an error message like "Error: Wallet backup failed!" for descriptor wallets. If it is a legacy wallet, it will be copied and a file will be created with the default file name `wallet.dat`.
 
@@ -104,7 +107,8 @@ Bitcoin Core [version 0.13](https://github.com/bitcoin/bitcoin/blob/master/doc/r
 
 This means that a single backup is enough to recover the coins at any time. It is still recommended to make regular backups (once a week) or after a significant number of new transactions to maintain the metadata, such as labels. Metadata cannot be retrieved from a blockchain rescan, so if the backup is too old, the metadata will be lost forever.
 
-Wallets created before version 0.13 are not HD and must be backed up every 100 keys used since the previous backup, or even more often to maintain the metadata.
+> [!IMPORTANT]
+> Wallets created before version 0.13 are not HD and must be backed up every 100 keys used since the previous backup, or even more often to maintain the metadata.
 
 ### 1.6 Restoring the Wallet From a Backup
 
@@ -137,12 +141,16 @@ Migrated wallets will also generate new addresses differently. While the same BI
 used, the BIP 44, 49, 84, and 86 standard derivation paths will be used. After migrating, a new
 backup of the wallet(s) will need to be created.
 
-Given that there is an extremely large number of possible configurations for the scripts that
-Legacy wallets can know about, be watching for, and be able to sign for, `migratewallet` only
-makes a best effort attempt to capture all of these things into Descriptor wallets. There may be
-unforeseen configurations which result in some scripts being excluded. If a migration fails
-unexpectedly or otherwise misses any scripts, please create an issue on GitHub. A backup of the
-original wallet can be found in the wallet directory with the name `<name>-<timestamp>.legacy.bak`.
+> [!IMPORTANT]
+> Given that there is an extremely large number of possible configurations for
+> the scripts that Legacy wallets can know about, be watching for, and be able
+> to sign for, `migratewallet` only makes a best effort attempt to capture all
+> of these things into Descriptor wallets. There may be unforeseen
+> configurations which result in some scripts being excluded.
+
+If a migration fails unexpectedly or otherwise misses any scripts, please
+create an issue on GitHub. A backup of the original wallet can be found in the
+wallet directory with the name `<name>-<timestamp>.legacy.bak`.
 
 The backup can be restored using the methods discussed in the
 [Restoring the Wallet From a Backup](#16-restoring-the-wallet-from-a-backup) section.

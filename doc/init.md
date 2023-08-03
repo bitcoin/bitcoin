@@ -66,21 +66,23 @@ configuration file and data directory only readable by the bitcoin user and
 group. Access to bitcoin-cli and other bitcoind rpc clients can then be
 controlled by group membership.
 
-NOTE: When using the systemd .service file, the creation of the aforementioned
-directories and the setting of their permissions is automatically handled by
-systemd. Directories are given a permission of 710, giving the bitcoin group
-access to files under it _if_ the files themselves give permission to the
-bitcoin group to do so. This does not allow
-for the listing of files under the directory.
+> [!NOTE]
+> When using the systemd .service file, the creation of the aforementioned
+> directories and the setting of their permissions is automatically handled by
+> systemd. Directories are given a permission of 710, giving the bitcoin group
+> access to files under it _if_ the files themselves give permission to the
+> bitcoin group to do so. This does not allow for the listing of files under
+> the directory.
 
-NOTE: It is not currently possible to override `datadir` in
-`/etc/bitcoin/bitcoin.conf` with the current systemd, OpenRC, and Upstart init
-files out-of-the-box. This is because the command line options specified in the
-init files take precedence over the configurations in
-`/etc/bitcoin/bitcoin.conf`. However, some init systems have their own
-configuration mechanisms that would allow for overriding the command line
-options specified in the init files (e.g. setting `BITCOIND_DATADIR` for
-OpenRC).
+> [!NOTE]
+> It is not currently possible to override `datadir` in
+> `/etc/bitcoin/bitcoin.conf` with the current systemd, OpenRC, and Upstart
+> init files out-of-the-box. This is because the command line options specified
+> in the init files take precedence over the configurations in
+> `/etc/bitcoin/bitcoin.conf`. However, some init systems have their own
+> configuration mechanisms that would allow for overriding the command line
+> options specified in the init files (e.g. setting `BITCOIND_DATADIR` for
+> OpenRC).
 
 ### macOS
 
@@ -101,7 +103,8 @@ Installing this .service file consists of just copying it to
 To test, run `systemctl start bitcoind` and to enable for system startup run
 `systemctl enable bitcoind`
 
-NOTE: When installing for systemd in Debian/Ubuntu the .service file needs to be copied to the /lib/systemd/system directory instead.
+> [!NOTE]
+> When installing for systemd in Debian/Ubuntu the .service file needs to be copied to the /lib/systemd/system directory instead.
 
 ### OpenRC
 
@@ -117,8 +120,9 @@ Upstart is the default init system for Debian/Ubuntu versions older than 15.04. 
 Drop bitcoind.conf in /etc/init.  Test by running `service bitcoind start`
 it will automatically start on reboot.
 
-NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they
-use old versions of Upstart and do not supply the start-stop-daemon utility.
+> [!NOTE]
+> This script is incompatible with CentOS 5 and Amazon Linux 2014 as they use
+> old versions of Upstart and do not supply the start-stop-daemon utility.
 
 ### CentOS
 
@@ -135,9 +139,10 @@ running `launchctl load ~/Library/LaunchAgents/org.bitcoin.bitcoind.plist`.
 
 This Launch Agent will cause bitcoind to start whenever the user logs in.
 
-NOTE: This approach is intended for those wanting to run bitcoind as the current user.
-You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a
-Launch Daemon with a dedicated bitcoin user.
+> [!NOTE]
+> This approach is intended for those wanting to run bitcoind as the current
+> user. You will need to modify org.bitcoin.bitcoind.plist if you intend to use
+> it as a Launch Daemon with a dedicated bitcoin user.
 
 Auto-respawn
 -----------------------------------

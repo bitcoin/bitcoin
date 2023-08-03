@@ -38,10 +38,14 @@ pkg_add sqlite3
 ```
 
 ###### Legacy Wallet Support
-BerkeleyDB is only required to support legacy wallets.
 
-It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
-from ports. However you can build it yourself, [using depends](/depends).
+> [!NOTE]
+> BerkeleyDB is only required if legacy wallet support is required.
+
+> [!IMPORTANT]
+> It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB
+> library from ports. However you can build it yourself, [using
+> depends](/depends).
 
 ```bash
 gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
@@ -66,7 +70,8 @@ pkg_add qt5
 
 ## Building Bitcoin Core
 
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+> [!NOTE]
+> Use `gmake` (the non-GNU `make` will exit with an error).
 
 Preparation:
 ```bash

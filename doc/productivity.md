@@ -42,9 +42,11 @@ max_size = 50.0G  # or whatever cache size you prefer; default is 5G; 0 means un
 base_dir = /home/yourname  # or wherever you keep your source files
 ```
 
-Note: base_dir is required for ccache to share cached compiles of the same file across different repositories / paths; it will only do this for paths under base_dir. So this option is required for effective use of ccache with git worktrees (described below).
+> [!NOTE]
+> base_dir is required for ccache to share cached compiles of the same file across different repositories / paths; it will only do this for paths under base_dir. So this option is required for effective use of ccache with git worktrees (described below).
 
-You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).
+> [!NOTE]
+> You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).
 
 ### Disable features with `./configure`
 

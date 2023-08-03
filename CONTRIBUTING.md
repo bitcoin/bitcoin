@@ -127,7 +127,8 @@ If a particular commit references another issue, please add the reference. For
 example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
 will cause the corresponding issue to be closed when the pull request is merged.
 
-Commit messages should never contain any `@` mentions (usernames prefixed with "@").
+> [!NOTE]
+> Commit messages should never contain any `@` mentions (usernames prefixed with "@").
 
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
 about Git.
@@ -277,13 +278,14 @@ behaviour of code within the pull request (bugs must be preserved as is).
 Project maintainers aim for a quick turnaround on refactoring pull requests, so
 where possible keep them short, uncomplex and easy to verify.
 
-Pull requests that refactor the code should not be made by new contributors. It
-requires a certain level of experience to know where the code belongs to and to
-understand the full ramification (including rebase effort of open pull requests).
-
-Trivial pull requests or pull requests that refactor the code with no clear
-benefits may be immediately closed by the maintainers to reduce unnecessary
-workload on reviewing.
+> [!NOTE]
+> Pull requests that refactor the code should not be made by new contributors. It
+> requires a certain level of experience to know where the code belongs to and to
+> understand the full ramification (including rebase effort of open pull requests).
+>
+> Trivial pull requests or pull requests that refactor the code with no clear
+> benefits may be immediately closed by the maintainers to reduce unnecessary
+> workload on reviewing.
 
 
 "Decision Making" Process

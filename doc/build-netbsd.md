@@ -89,7 +89,8 @@ pkgin install python37
 
 ### Building Bitcoin Core
 
-**Note**: Use `gmake` (the non-GNU `make` will exit with an error).
+> [!Note]
+> Use `gmake` (the non-GNU `make` will exit with an error).
 
 
 ### 1. Configuration

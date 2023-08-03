@@ -36,10 +36,14 @@ pkg install sqlite3
 ```
 
 ###### Legacy Wallet Support
-BerkeleyDB is only required if legacy wallet support is required.
 
-It is required to use Berkeley DB 4.8. You **cannot** use the BerkeleyDB library
-from ports. However, you can build DB 4.8 yourself [using depends](/depends).
+> [!NOTE]
+> BerkeleyDB is only required if legacy wallet support is required.
+
+> [!IMPORTANT]
+> It is required to use Berkeley DB 4.8. You **cannot** use the BerkeleyDB
+> library from ports. However, you can build DB 4.8 yourself [using
+> depends](/depends).
 
 ```
 gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
@@ -124,7 +128,9 @@ This enables support for both wallet types and disables the GUI, assuming
 ```
 
 ### 2. Compile
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+
+> [!NOTE]
+> Use `gmake` (the non-GNU `make` will exit with an error).
 
 ```bash
 gmake # use "-j N" for N parallel jobs
