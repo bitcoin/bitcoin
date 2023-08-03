@@ -12,32 +12,53 @@ Upstream commits:
 @@ -44,6 +44,8 @@
  #include <QtCore/qfloat16.h>
  #include <QtCore/qglobal.h>
-
+ 
 +#include <limits>
 +
  // include stdlib.h and hope that it defines __GLIBC__ for glibc-based systems
  #include <stdlib.h>
  #include <string.h>
 
---- old/qtbase/src/corelib/tools/qbytearraymatcher.h
-+++ new/qtbase/src/corelib/tools/qbytearraymatcher.h
-@@ -42,6 +42,8 @@
-
- #include <QtCore/qbytearray.h>
-
+--- old/qtbase/src/corelib/global/qfloat16.h
++++ new/qtbase/src/corelib/global/qfloat16.h
+@@ -43,6 +43,7 @@
+ 
+ #include <QtCore/qglobal.h>
+ #include <QtCore/qmetatype.h>
 +#include <limits>
-+
- QT_BEGIN_NAMESPACE
-
+ #include <string.h>
+ 
+ #if defined(QT_COMPILER_SUPPORTS_F16C) && defined(__AVX2__) && !defined(__F16C__)
 
 --- old/qtbase/src/tools/moc/generator.cpp
 +++ new/qtbase/src/tools/moc/generator.cpp
-@@ -42,6 +42,7 @@
-
+@@ -40,6 +40,8 @@
+ #include <QtCore/qplugin.h>
+ #include <QtCore/qstringview.h>
+ 
++#include <limits>
++
  #include <math.h>
  #include <stdio.h>
+ 
+--- old/qtbase/src/corelib/text/qbytearraymatcher.h
++++ new/qtbase/src/corelib/text/qbytearraymatcher.h
+@@ -42,6 +42,8 @@
+ 
+ #include <QtCore/qbytearray.h>
+ 
 +#include <limits>
-
- #include <private/qmetaobject_p.h> //for the flags.
- #include <private/qplugin_p.h> //for the flags.
++
+ QT_BEGIN_NAMESPACE
+ 
+ 
+--- old/qtbase/src/corelib/tools/qoffsetstringarray_p.h
++++ new/qtbase/src/corelib/tools/qoffsetstringarray_p.h
+@@ -55,6 +55,7 @@
+ 
+ #include <tuple>
+ #include <array>
++#include <limits>
+ 
+ QT_BEGIN_NAMESPACE
 

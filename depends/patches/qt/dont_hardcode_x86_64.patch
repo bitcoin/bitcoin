@@ -9,14 +9,14 @@ https://codereview.qt-project.org/q/I70db7e4c27f0d3da5d0af33cb491d72c312d3fa8
 
 --- old/qtbase/configure.json
 +++ new/qtbase/configure.json
-@@ -208,11 +208,18 @@
+@@ -244,11 +244,18 @@
  
      "testTypeDependencies": {
-         "linkerSupportsFlag": [ "use_gold_linker" ],
--        "verifySpec": [ "shared", "use_gold_linker", "compiler-flags", "qmakeargs", "commit" ],
+         "linkerSupportsFlag": [ "use_bfd_linker", "use_gold_linker", "use_lld_linker" ],
+-        "verifySpec": [ "shared", "use_bfd_linker", "use_gold_linker", "use_lld_linker", "compiler-flags", "qmakeargs", "commit" ],
 +        "verifySpec": [
 +            "shared",
-+            "use_gold_linker",
++            "use_bfd_linker", "use_gold_linker", "use_lld_linker",
 +            "compiler-flags", "qmakeargs",
 +            "simulator_and_device",
 +            "thread",
@@ -30,7 +30,7 @@ https://codereview.qt-project.org/q/I70db7e4c27f0d3da5d0af33cb491d72c312d3fa8
      },
  
      "testTypeAliases": {
-@@ -653,7 +660,7 @@
+@@ -762,7 +769,7 @@
          },
          "architecture": {
              "label": "Architecture",
@@ -40,11 +40,10 @@ https://codereview.qt-project.org/q/I70db7e4c27f0d3da5d0af33cb491d72c312d3fa8
          "pkg-config": {
              "label": "Using pkg-config",
 diff --git a/configure.pri b/configure.pri
-index 33c90a8c2f..71767e29d6 100644
-
+index 49755f7abfd..8be9b10d7d4 100644
 --- old/qtbase/configure.pri
 +++ new/qtbase/configure.pri
-@@ -642,6 +642,13 @@ defineTest(qtConfOutput_commitOptions) {
+@@ -662,6 +662,13 @@ defineTest(qtConfOutput_commitOptions) {
      write_file($$QT_BUILD_TREE/mkspecs/qdevice.pri, $${currentConfig}.output.devicePro)|error()
  }
  
@@ -59,24 +58,22 @@ index 33c90a8c2f..71767e29d6 100644
  defineTest(processQtPath) {
      out_var = config.rel_input.$${2}
 diff --git a/mkspecs/common/macx.conf b/mkspecs/common/macx.conf
-index 7d4a406134..de96c12fc9 100644
-
+index d16b77acb8e..4ba0a8eaa36 100644
 --- old/qtbase/mkspecs/common/macx.conf
 +++ new/qtbase/mkspecs/common/macx.conf
 @@ -6,7 +6,6 @@ QMAKE_PLATFORM         += macos osx macx
  QMAKE_MAC_SDK           = macosx
  
- QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
+ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 -QMAKE_APPLE_DEVICE_ARCHS = x86_64
  
- QT_MAC_SDK_VERSION_MIN = 10.13
- QT_MAC_SDK_VERSION_MAX = 11.0
+ # Should be 10.15, but as long as the CI builds with
+ # older SDKs we have to keep this.
 diff --git a/mkspecs/features/mac/default_post.prf b/mkspecs/features/mac/default_post.prf
-index d052808c14..0a89effe87 100644
-
+index 92a9112bca6..d888731ec8d 100644
 --- old/qtbase/mkspecs/features/mac/default_post.prf
 +++ new/qtbase/mkspecs/features/mac/default_post.prf
-@@ -89,6 +89,11 @@ app_extension_api_only {
+@@ -90,6 +90,11 @@ app_extension_api_only {
      QMAKE_LFLAGS              += $$QMAKE_CFLAGS_APPLICATION_EXTENSION
  }
  
@@ -88,7 +85,7 @@ index d052808c14..0a89effe87 100644
  macx-xcode {
      qmake_pkginfo_typeinfo.name = QMAKE_PKGINFO_TYPEINFO
      !isEmpty(QMAKE_PKGINFO_TYPEINFO): \
-@@ -144,9 +149,6 @@ macx-xcode {
+@@ -145,9 +150,6 @@ macx-xcode {
      simulator: VALID_SIMULATOR_ARCHS = $$QMAKE_APPLE_SIMULATOR_ARCHS
      VALID_ARCHS = $$VALID_DEVICE_ARCHS $$VALID_SIMULATOR_ARCHS
  
@@ -99,8 +96,7 @@ index d052808c14..0a89effe87 100644
  
      ACTIVE_ARCHS = $(filter $(EXPORT_VALID_ARCHS), $(ARCHS))
 diff --git a/mkspecs/features/toolchain.prf b/mkspecs/features/toolchain.prf
-index 5003679bd0..c7c080cb07 100644
-
+index efbe7c1e55b..8add6dc8043 100644
 --- old/qtbase/mkspecs/features/toolchain.prf
 +++ new/qtbase/mkspecs/features/toolchain.prf
 @@ -182,9 +182,14 @@ isEmpty($${target_prefix}.INCDIRS) {

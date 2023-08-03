@@ -4,20 +4,8 @@
  load(qt_targets)
  
  # this builds on top of qt_common
--!internal_module:if(unix|mingw) {
+-!internal_module:if(unix|mingw):!if(darwin:debug_and_release:CONFIG(debug, debug|release)) {
 +if(unix|mingw):!if(darwin:debug_and_release:CONFIG(debug, debug|release)) {
      CONFIG += create_pc
      QMAKE_PKGCONFIG_DESTDIR = pkgconfig
      host_build: \
-@@ -284,9 +284,9 @@ load(qt_targets)
-         QMAKE_PKGCONFIG_CFLAGS = -D$$MODULE_DEFINE -I${includedir}/$$MODULE_INCNAME
-     }
-     QMAKE_PKGCONFIG_NAME = $$replace(TARGET, ^Qt, "Qt$$QT_MAJOR_VERSION ")
--    QMAKE_PKGCONFIG_FILE = $$replace(TARGET, ^Qt, Qt$$QT_MAJOR_VERSION)
-+    QMAKE_PKGCONFIG_FILE = $$replace(TARGET, ^Qt, Qt$$QT_MAJOR_VERSION)$$qtPlatformTargetSuffix()
-     for(i, MODULE_DEPENDS): \
--        QMAKE_PKGCONFIG_REQUIRES += $$replace(QT.$${i}.name, ^Qt, Qt$$section(QT.$${i}.VERSION, ., 0, 0))
-+        QMAKE_PKGCONFIG_REQUIRES += $$replace(QT.$${i}.name, ^Qt, Qt$$section(QT.$${i}.VERSION, ., 0, 0))$$qtPlatformTargetSuffix()
-     isEmpty(QMAKE_PKGCONFIG_DESCRIPTION): \
-         QMAKE_PKGCONFIG_DESCRIPTION = $$replace(TARGET, ^Qt, "Qt ") module
-     !isEmpty(lib_replace0.match) {
