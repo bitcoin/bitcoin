@@ -10,7 +10,7 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | [Automake](https://www.gnu.org/software/automake/) | [1.13](https://github.com/bitcoin/bitcoin/pull/18290) |
 | [Clang](https://clang.llvm.org) | [10.0](https://github.com/bitcoin/bitcoin/pull/27682) |
 | [GCC](https://gcc.gnu.org) | [9.1](https://github.com/bitcoin/bitcoin/pull/27662) |
-| [Python](https://www.python.org) (scripts, tests) | [3.8](https://github.com/bitcoin/bitcoin/pull/27483) |
+| [Python](https://www.python.org) (scripts, tests) | [3.9](https://github.com/bitcoin/bitcoin/pull/28211) |
 | [systemtap](https://sourceware.org/systemtap/) ([tracing](tracing.md))| N/A |
 
 ## Required

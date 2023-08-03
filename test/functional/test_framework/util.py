@@ -287,10 +287,10 @@ def sha256sum_file(filename):
     return h.digest()
 
 
-# TODO: Remove and use random.randbytes(n) instead, available in Python 3.9
+# TODO: Remove and use random.randbytes(n) directly
 def random_bytes(n):
     """Return a random bytes object of length n."""
-    return bytes(random.getrandbits(8) for i in range(n))
+    return random.randbytes(n)
 
 
 # RPC/P2P connection constants and functions
