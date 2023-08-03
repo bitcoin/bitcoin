@@ -63,12 +63,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="pruneSize"/>
+          <widget class="QSpinBox" name="pruneSizeMiB"/>
          </item>
          <item>
           <widget class="QLabel" name="pruneSizeUnitLabel">
            <property name="text">
-            <string>GB</string>
+            <string>MiB</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
