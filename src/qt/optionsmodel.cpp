@@ -53,7 +53,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::MapPortNatpmp: return "natpmp";
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
-    case OptionsModel::PruneSize: return "prune";
+    case OptionsModel::PruneSizeMiB: return "prune";
     case OptionsModel::Prune: return "prune";
     case OptionsModel::ProxyIP: return "proxy";
     case OptionsModel::ProxyPort: return "proxy";
@@ -73,7 +73,7 @@ static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID optio
         (option == OptionsModel::DatabaseCache ||
          option == OptionsModel::ThreadsScriptVerif ||
          option == OptionsModel::Prune ||
-         option == OptionsModel::PruneSize)) {
+         option == OptionsModel::PruneSizeMiB)) {
         // Write certain old settings as strings, even though they are numbers,
         // because Bitcoin 22.x releases try to read these specific settings as
         // strings in addOverriddenOption() calls at startup, triggering
@@ -88,10 +88,10 @@ static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID optio
 }
 
 //! Convert enabled/size values to bitcoin -prune setting.
-static common::SettingsValue PruneSetting(bool prune_enabled, int prune_size_gb)
+static common::SettingsValue PruneSettingFromMiB(bool prune_enabled, int prune_size_mib)
 {
-    assert(!prune_enabled || prune_size_gb >= 1); // PruneSizeGB and ParsePruneSizeGB never return less
-    return prune_enabled ? PruneGBtoMiB(prune_size_gb) : 0;
+    assert(!prune_enabled || prune_size_mib >= 1); // PruneSizeMiB and ParsePruneSizeMiB never return less
+    return prune_enabled ? prune_size_mib : 0;
 }
 
 //! Get pruning enabled value to show in GUI from bitcoin -prune setting.
@@ -103,18 +103,10 @@ static bool PruneEnabled(const common::SettingsValue& prune_setting)
 
 //! Get pruning size value to show in GUI from bitcoin -prune setting. If
 //! pruning is not enabled, just show default recommended pruning size (2GB).
-static int PruneSizeGB(const common::SettingsValue& prune_setting)
+static int PruneSizeAsMiB(const common::SettingsValue& prune_setting)
 {
     int value = SettingToInt(prune_setting, 0);
-    return value > 1 ? PruneMiBtoGB(value) : DEFAULT_PRUNE_TARGET_GB;
-}
-
-//! Parse pruning size value provided by user in GUI or loaded from QSettings
-//! (windows registry key or qt .conf file). Smallest value that the GUI can
-//! display is 1 GB, so round up if anything less is parsed.
-static int ParsePruneSizeGB(const QVariant& prune_size)
-{
-    return std::max(1, prune_size.toInt());
+    return value > 1 ? value : DEFAULT_PRUNE_TARGET_MiB;
 }
 
 struct ProxySetting {
@@ -380,10 +372,10 @@ static QString GetDefaultProxyAddress()
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
 }
 
-void OptionsModel::SetPruneTargetGB(int prune_target_gb)
+void OptionsModel::SetPruneTargetMiB(int prune_target_mib)
 {
     const common::SettingsValue cur_value = node().getPersistentSetting("prune");
-    const common::SettingsValue new_value = PruneSetting(prune_target_gb > 0, prune_target_gb);
+    const common::SettingsValue new_value = PruneSettingFromMiB(prune_target_mib > 0, prune_target_mib);
 
     // Force setting to take effect. It is still safe to change the value at
     // this point because this function is only called after the intro screen is
@@ -394,7 +386,7 @@ void OptionsModel::SetPruneTargetGB(int prune_target_gb)
     // from saved value. Avoid writing settings.json if bitcoin.conf value
     // doesn't need to be overridden.
     if (PruneEnabled(cur_value) != PruneEnabled(new_value) ||
-        PruneSizeGB(cur_value) != PruneSizeGB(new_value)) {
+        PruneSizeAsMiB(cur_value) != PruneSizeAsMiB(new_value)) {
         // Call UpdateRwSetting() instead of setOption() to avoid setting
         // RestartRequired flag
         UpdateRwSetting(node(), Prune, "", new_value);
@@ -514,10 +506,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return settings.value("enable_psbt_controls");
     case Prune:
         return PruneEnabled(setting());
-    case PruneSize:
-        return PruneEnabled(setting()) ? PruneSizeGB(setting()) :
+    case PruneSizeMiB:
+        return PruneEnabled(setting()) ? PruneSizeAsMiB(setting()) :
                suffix.empty()          ? getOption(option, "-prev") :
-                                         DEFAULT_PRUNE_TARGET_GB;
+                                         DEFAULT_PRUNE_TARGET_MiB;
     case DatabaseCache:
         return qlonglong(SettingToInt(setting(), DEFAULT_DB_CACHE >> 20));
     case ThreadsScriptVerif:
@@ -754,17 +746,17 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case Prune:
         if (changed()) {
             if (suffix.empty() && !value.toBool()) setOption(option, true, "-prev");
-            update(PruneSetting(value.toBool(), getOption(PruneSize).toInt()));
+            update(PruneSettingFromMiB(value.toBool(), getOption(PruneSizeMiB).toInt()));
             if (suffix.empty() && value.toBool()) UpdateRwSetting(node(), option, "-prev", {});
             if (suffix.empty()) setRestartRequired(true);
         }
         break;
-    case PruneSize:
+    case PruneSizeMiB:
         if (changed()) {
             if (suffix.empty() && !getOption(Prune).toBool()) {
                 setOption(option, value, "-prev");
             } else {
-                update(PruneSetting(true, ParsePruneSizeGB(value)));
+                update(PruneSettingFromMiB(true, value.toInt()));
             }
             if (suffix.empty() && getOption(Prune).toBool()) setRestartRequired(true);
         }
@@ -883,6 +875,11 @@ void OptionsModel::checkAndMigrate()
                 ProxySetting parsed = ParseProxyString(value.toString());
                 setOption(ProxyIPTor, parsed.ip);
                 setOption(ProxyPortTor, parsed.port);
+            } else if (option == PruneSizeMiB) {
+                // Stored as GB
+                const int64_t prune_size_gb = value.toInt();
+                const int prune_size_mib = std::max(prune_size_gb * GB_BYTES / MiB_BYTES, MIN_DISK_SPACE_FOR_BLOCK_FILES / MiB_BYTES);
+                setOption(option, prune_size_mib);
             } else {
                 setOption(option, value);
             }
@@ -900,7 +897,7 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(MapPortNatpmp, "fUseNatpmp");
     migrate_setting(Listen, "fListen");
     migrate_setting(Server, "server");
-    migrate_setting(PruneSize, "nPruneSize");
+    migrate_setting(PruneSizeMiB, "nPruneSize");
     migrate_setting(Prune, "bPrune");
     migrate_setting(ProxyIP, "addrProxy");
     migrate_setting(ProxyUse, "fUseProxy");
