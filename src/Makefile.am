@@ -234,6 +234,7 @@ BITCOIN_CORE_H = \
   policy/feerate.h \
   policy/fees.h \
   policy/fees_args.h \
+  policy/libstandardness.h \
   policy/packages.h \
   policy/policy.h \
   policy/rbf.h \
@@ -428,6 +429,7 @@ libbitcoin_node_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/fees_args.cpp \
+  policy/libstandardness.cpp \
   policy/packages.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
