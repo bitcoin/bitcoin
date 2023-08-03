@@ -151,7 +151,6 @@ public:
     interfaces::Node& node() const { return m_node; }
     interfaces::Wallet& wallet() const { return *m_wallet; }
     void setClientModel(ClientModel* client_model);
-    ClientModel& clientModel() const { return *m_client_model; }
     interfaces::CoinJoin::Client& coinJoin() const { return m_wallet->coinJoin(); }
 
     QString getWalletName() const;

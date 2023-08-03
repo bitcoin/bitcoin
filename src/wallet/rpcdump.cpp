@@ -1014,7 +1014,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << strprintf("%s %s ", EncodeSecret(key), strTime);
             const auto* address_book_entry = pwallet->FindAddressBookEntry(pkhash);
             if (address_book_entry) {
-                file << strprintf("label=%s", EncodeDumpString(address_book_entry->name));
+                file << strprintf("label=%s", EncodeDumpString(address_book_entry->GetLabel()));
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else {

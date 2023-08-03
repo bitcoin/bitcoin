@@ -1755,6 +1755,8 @@ static UniValue _bls(const JSONRPCRequest& request)
         bls_help();
     }
 }
+void RegisterEvoRPCCommands(CRPCTable &tableRPC)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
@@ -1763,8 +1765,6 @@ static const CRPCCommand commands[] =
     { "evo",                "protx",                  &protx,                  {}  },
 };
 // clang-format on
-void RegisterEvoRPCCommands(CRPCTable &tableRPC)
-{
     for (const auto& command : commands) {
         tableRPC.appendCommand(command.name, &command);
     }

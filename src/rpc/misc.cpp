@@ -1363,11 +1363,12 @@ static RPCHelpMan getindexinfo()
     });
 
     return result;
-},
+}
     };
 }
 
-// clang-format off
+void RegisterMiscRPCCommands(CRPCTable &t)
+{
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1404,8 +1405,6 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
 
-void RegisterMiscRPCCommands(CRPCTable &t)
-{
     for (const auto& command : commands) {
         t.appendCommand(command.name, &command);
     }

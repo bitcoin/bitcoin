@@ -532,7 +532,7 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
             {
                 const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
                 if (address_book_entry) {
-                    addressInfo.push_back(address_book_entry->name);
+                    addressInfo.push_back(address_book_entry->GetLabel());
                 }
             }
             jsonGrouping.push_back(addressInfo);
@@ -1151,7 +1151,7 @@ static UniValue ListReceived(const CWallet * const pwallet, const UniValue& para
     {
         if (item_it->second.IsChange()) continue;
         const CTxDestination& address = item_it->first;
-        const std::string& label = item_it->second.name;
+        const std::string& label = item_it->second.GetLabel();
         auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
@@ -1354,7 +1354,7 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
             entry.pushKV("amount", ValueFromAmount(-s.amount));
             const auto* address_book_entry = pwallet->FindAddressBookEntry(s.destination);
             if (address_book_entry) {
-                entry.pushKV("label", address_book_entry->name);
+                entry.pushKV("label", address_book_entry->GetLabel());
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
@@ -1373,7 +1373,7 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
             std::string label;
             const auto* address_book_entry = pwallet->FindAddressBookEntry(r.destination);
             if (address_book_entry) {
-                label = address_book_entry->name;
+                label = address_book_entry->GetLabel();
             }
             if (filter_label && label != *filter_label) {
                 continue;
@@ -1934,54 +1934,62 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    LOCK(pwallet->cs_wallet);
+    int64_t nSleepTime;
+    {
+        LOCK(pwallet->cs_wallet);
 
-    if (!pwallet->IsCrypted()) {
-        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
+        if (!pwallet->IsCrypted()) {
+            throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
+        }
+
+        // Note that the walletpassphrase is stored in request.params[0] which is not mlock()ed
+        SecureString strWalletPass;
+        strWalletPass.reserve(100);
+        // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+        // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+        strWalletPass = request.params[0].get_str().c_str();
+
+        // Get the timeout
+        nSleepTime = request.params[1].get_int64();
+        // Timeout cannot be negative, otherwise it will relock immediately
+        if (nSleepTime < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
+        }
+        // Clamp timeout
+        constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
+        if (nSleepTime > MAX_SLEEP_TIME) {
+            nSleepTime = MAX_SLEEP_TIME;
+        }
+
+        bool fForMixingOnly = false;
+        if (!request.params[2].isNull())
+            fForMixingOnly = request.params[2].get_bool();
+
+        if (fForMixingOnly && !pwallet->IsLocked()) {
+            // Downgrading from "fuly unlocked" mode to "mixing only" one is not supported.
+            // Updating unlock time when current unlock mode is not changed or when it is upgraded
+            // from "mixing only" to "fuly unlocked" is ok.
+            throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
+        }
+
+        if (strWalletPass.empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+        }
+
+        if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        }
+
+        pwallet->TopUpKeyPool();
+
+        pwallet->nRelockTime = GetTime() + nSleepTime;
+
     }
-
-    // Note that the walletpassphrase is stored in request.params[0] which is not mlock()ed
-    SecureString strWalletPass;
-    strWalletPass.reserve(100);
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-    strWalletPass = request.params[0].get_str().c_str();
-
-    // Get the timeout
-    int64_t nSleepTime = request.params[1].get_int64();
-    // Timeout cannot be negative, otherwise it will relock immediately
-    if (nSleepTime < 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
-    }
-    // Clamp timeout
-    constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
-    if (nSleepTime > MAX_SLEEP_TIME) {
-        nSleepTime = MAX_SLEEP_TIME;
-    }
-
-    bool fForMixingOnly = false;
-    if (!request.params[2].isNull())
-        fForMixingOnly = request.params[2].get_bool();
-
-    if (fForMixingOnly && !pwallet->IsLocked()) {
-        // Downgrading from "fuly unlocked" mode to "mixing only" one is not supported.
-        // Updating unlock time when current unlock mode is not changed or when it is upgraded
-        // from "mixing only" to "fuly unlocked" is ok.
-        throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
-    }
-
-    if (strWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
-    }
-
-    if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
-        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-    }
-
-    pwallet->TopUpKeyPool();
-
-    pwallet->nRelockTime = GetTime() + nSleepTime;
-
+    // rpcRunLater must be called without cs_wallet held otherwise a deadlock
+    // can occur. The deadlock would happen when RPCRunLater removes the
+    // previous timer (and waits for the callback to finish if already running)
+    // and the callback locks cs_wallet.
+    AssertLockNotHeld(wallet->cs_wallet);
     // Keep a weak pointer to the wallet so that it is possible to unload the
     // wallet before the following callback is called. If a valid shared pointer
     // is acquired in the callback then the wallet is still loaded.
@@ -3186,7 +3194,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
             const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
             if (address_book_entry) {
-                entry.pushKV("label", address_book_entry->name);
+                entry.pushKV("label", address_book_entry->GetLabel());
             }
 
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
@@ -3706,7 +3714,7 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
 {
     UniValue ret(UniValue::VOBJ);
     if (verbose) {
-        ret.pushKV("name", data.name);
+        ret.pushKV("name", data.GetLabel());
     }
     ret.pushKV("purpose", data.purpose);
     return ret;
@@ -3808,7 +3816,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // value of the name key/value pair in the labels array below.
     const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
     if (pwallet->chain().rpcEnableDeprecated("label") && address_book_entry) {
-        ret.pushKV("label", address_book_entry->name);
+        ret.pushKV("label", address_book_entry->GetLabel());
     }
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
@@ -3844,7 +3852,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
             labels.push_back(AddressBookDataToJSON(*address_book_entry, true));
         } else {
-            labels.push_back(address_book_entry->name);
+            labels.push_back(address_book_entry->GetLabel());
         }
     }
     ret.pushKV("labels", std::move(labels));
@@ -3887,7 +3895,7 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
     std::set<std::string> addresses;
     for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->m_address_book) {
         if (item.second.IsChange()) continue;
-        if (item.second.name == label) {
+        if (item.second.GetLabel() == label) {
             std::string address = EncodeDestination(item.first);
             // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
@@ -3950,7 +3958,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
     for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->m_address_book) {
         if (entry.second.IsChange()) continue;
         if (purpose.empty() || entry.second.purpose == purpose) {
-            label_set.insert(entry.second.name);
+            label_set.insert(entry.second.GetLabel());
         }
     }
 
@@ -4188,6 +4196,8 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
     return error.original;
 }
 
+Span<const CRPCCommand> GetWalletRPCCommands()
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           argNames
@@ -4258,7 +4268,5 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
 
-Span<const CRPCCommand> GetWalletRPCCommands()
-{
     return MakeSpan(commands);
 }

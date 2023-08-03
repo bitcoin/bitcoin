@@ -989,6 +989,8 @@ static UniValue verifyislock(const JSONRPCRequest& request)
     return llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
            llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
 }
+void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
@@ -998,8 +1000,6 @@ static const CRPCCommand commands[] =
     { "evo",                "verifyislock",           &verifyislock,           {"id", "txid", "signature", "maxHeight"}  },
 };
 // clang-format on
-void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
-{
     for (const auto& command : commands) {
         tableRPC.appendCommand(command.name, &command);
     }
