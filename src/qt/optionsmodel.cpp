@@ -409,6 +409,7 @@ void OptionsModel::SetPruneTargetMiB(int prune_target_mib)
         // Call UpdateRwSetting() instead of setOption() to avoid setting
         // RestartRequired flag
         UpdateRwSetting(node(), PruneTristate, "", new_value);
+        gArgs.ModifyRWConfigFile("prune", new_value.getValStr());
     }
 
     // Keep previous pruning size, if pruning was disabled.
@@ -766,7 +767,9 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         if (changed()) {
             const bool is_autoprune = (value.value<Qt::CheckState>() == Qt::Checked);
             if (suffix.empty() && !is_autoprune) setOption(option, true, "-prev");
-            update(PruneSettingFromMiB(value.value<Qt::CheckState>(), getOption(PruneSizeMiB).toInt()));
+            const auto prune_setting = PruneSettingFromMiB(value.value<Qt::CheckState>(), getOption(PruneSizeMiB).toInt());
+            update(prune_setting);
+            if (suffix.empty()) gArgs.ModifyRWConfigFile("prune", prune_setting.getValStr());
             if (suffix.empty() && is_autoprune) UpdateRwSetting(node(), option, "-prev", {});
             if (suffix.empty()) setRestartRequired(true);
         }
@@ -777,7 +780,9 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             if (suffix.empty() && !is_autoprune) {
                 setOption(option, value, "-prev");
             } else {
-                update(PruneSettingFromMiB(Qt::Checked, value.toInt()));
+                const auto prune_setting = PruneSettingFromMiB(Qt::Checked, value.toInt());
+                update(prune_setting);
+                if (suffix.empty()) gArgs.ModifyRWConfigFile("prune", prune_setting.getValStr());
             }
             if (suffix.empty() && is_autoprune) setRestartRequired(true);
         }
