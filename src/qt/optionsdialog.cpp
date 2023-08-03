@@ -307,7 +307,11 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
-    mapper->addMapping(ui->prune, OptionsModel::Prune);
+
+    if (model->data(model->index(OptionsModel::PruneTristate, 0), Qt::EditRole).value<Qt::CheckState>() == Qt::PartiallyChecked) {
+        ui->prune->setTristate();
+    }
+    mapper->addMapping(ui->prune, OptionsModel::PruneTristate);
     mapper->addMapping(ui->pruneSizeMiB, OptionsModel::PruneSizeMiB);
 
     /* Wallet */

@@ -54,7 +54,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
     case OptionsModel::PruneSizeMiB: return "prune";
-    case OptionsModel::Prune: return "prune";
+    case OptionsModel::PruneTristate: return "prune";
     case OptionsModel::ProxyIP: return "proxy";
     case OptionsModel::ProxyPort: return "proxy";
     case OptionsModel::ProxyUse: return "proxy";
@@ -72,7 +72,7 @@ static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID optio
     if (value.isNum() &&
         (option == OptionsModel::DatabaseCache ||
          option == OptionsModel::ThreadsScriptVerif ||
-         option == OptionsModel::Prune ||
+         option == OptionsModel::PruneTristate ||
          option == OptionsModel::PruneSizeMiB)) {
         // Write certain old settings as strings, even though they are numbers,
         // because Bitcoin 22.x releases try to read these specific settings as
@@ -88,10 +88,17 @@ static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID optio
 }
 
 //! Convert enabled/size values to bitcoin -prune setting.
-static common::SettingsValue PruneSettingFromMiB(bool prune_enabled, int prune_size_mib)
+static common::SettingsValue PruneSettingFromMiB(Qt::CheckState prune_enabled, int prune_size_mib)
 {
-    assert(!prune_enabled || prune_size_mib >= 1); // PruneSizeMiB and ParsePruneSizeMiB never return less
-    return prune_enabled ? prune_size_mib : 0;
+    assert(prune_enabled != Qt::Checked || prune_size_mib >= 1); // PruneSizeMiB and ParsePruneSizeMiB never return less
+    switch (prune_enabled) {
+    case Qt::Unchecked:
+        return 0;
+    case Qt::PartiallyChecked:
+        return 1;
+    default:
+        return prune_size_mib;
+    }
 }
 
 //! Get pruning enabled value to show in GUI from bitcoin -prune setting.
@@ -99,6 +106,19 @@ static bool PruneEnabled(const common::SettingsValue& prune_setting)
 {
     // -prune=1 setting is manual pruning mode, so disabled for purposes of the gui
     return SettingToInt(prune_setting, 0) > 1;
+}
+
+//! Get pruning enabled value to show in GUI from bitcoin -prune setting.
+static Qt::CheckState PruneSettingAsTristate(const common::SettingsValue& prune_setting)
+{
+    switch (SettingToInt(prune_setting, 0)) {
+    case 0:
+        return Qt::Unchecked;
+    case 1:
+        return Qt::PartiallyChecked;
+    default:
+        return Qt::Checked;
+    }
 }
 
 //! Get pruning size value to show in GUI from bitcoin -prune setting. If
@@ -216,7 +236,7 @@ bool OptionsModel::Init(bilingual_str& error)
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
-                            MapPortNatpmp, Listen, Server, Prune, ProxyUse, ProxyUseTor, Language}) {
+                            MapPortNatpmp, Listen, Server, PruneTristate, ProxyUse, ProxyUseTor, Language}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
@@ -375,7 +395,7 @@ static QString GetDefaultProxyAddress()
 void OptionsModel::SetPruneTargetMiB(int prune_target_mib)
 {
     const common::SettingsValue cur_value = node().getPersistentSetting("prune");
-    const common::SettingsValue new_value = PruneSettingFromMiB(prune_target_mib > 0, prune_target_mib);
+    const common::SettingsValue new_value = prune_target_mib;
 
     // Force setting to take effect. It is still safe to change the value at
     // this point because this function is only called after the intro screen is
@@ -385,16 +405,15 @@ void OptionsModel::SetPruneTargetMiB(int prune_target_mib)
     // Update settings.json if value configured in intro screen is different
     // from saved value. Avoid writing settings.json if bitcoin.conf value
     // doesn't need to be overridden.
-    if (PruneEnabled(cur_value) != PruneEnabled(new_value) ||
-        PruneSizeAsMiB(cur_value) != PruneSizeAsMiB(new_value)) {
+    if (cur_value.write() != new_value.write()) {
         // Call UpdateRwSetting() instead of setOption() to avoid setting
         // RestartRequired flag
-        UpdateRwSetting(node(), Prune, "", new_value);
+        UpdateRwSetting(node(), PruneTristate, "", new_value);
     }
 
     // Keep previous pruning size, if pruning was disabled.
     if (PruneEnabled(cur_value)) {
-        UpdateRwSetting(node(), Prune, "-prev", PruneEnabled(new_value) ? common::SettingsValue{} : cur_value);
+        UpdateRwSetting(node(), PruneTristate, "-prev", PruneEnabled(new_value) ? common::SettingsValue{} : cur_value);
     }
 }
 
@@ -504,8 +523,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return fCoinControlFeatures;
     case EnablePSBTControls:
         return settings.value("enable_psbt_controls");
-    case Prune:
-        return PruneEnabled(setting());
+    case PruneTristate:
+        return PruneSettingAsTristate(setting());
     case PruneSizeMiB:
         return PruneEnabled(setting()) ? PruneSizeAsMiB(setting()) :
                suffix.empty()          ? getOption(option, "-prev") :
@@ -743,22 +762,24 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         m_enable_psbt_controls = value.toBool();
         settings.setValue("enable_psbt_controls", m_enable_psbt_controls);
         break;
-    case Prune:
+    case PruneTristate:
         if (changed()) {
-            if (suffix.empty() && !value.toBool()) setOption(option, true, "-prev");
-            update(PruneSettingFromMiB(value.toBool(), getOption(PruneSizeMiB).toInt()));
-            if (suffix.empty() && value.toBool()) UpdateRwSetting(node(), option, "-prev", {});
+            const bool is_autoprune = (value.value<Qt::CheckState>() == Qt::Checked);
+            if (suffix.empty() && !is_autoprune) setOption(option, true, "-prev");
+            update(PruneSettingFromMiB(value.value<Qt::CheckState>(), getOption(PruneSizeMiB).toInt()));
+            if (suffix.empty() && is_autoprune) UpdateRwSetting(node(), option, "-prev", {});
             if (suffix.empty()) setRestartRequired(true);
         }
         break;
     case PruneSizeMiB:
         if (changed()) {
-            if (suffix.empty() && !getOption(Prune).toBool()) {
+            const bool is_autoprune = (Qt::Checked == getOption(PruneTristate).value<Qt::CheckState>());
+            if (suffix.empty() && !is_autoprune) {
                 setOption(option, value, "-prev");
             } else {
-                update(PruneSettingFromMiB(true, value.toInt()));
+                update(PruneSettingFromMiB(Qt::Checked, value.toInt()));
             }
-            if (suffix.empty() && getOption(Prune).toBool()) setRestartRequired(true);
+            if (suffix.empty() && is_autoprune) setRestartRequired(true);
         }
         break;
     case DatabaseCache:
@@ -880,6 +901,9 @@ void OptionsModel::checkAndMigrate()
                 const int64_t prune_size_gb = value.toInt();
                 const int prune_size_mib = std::max(prune_size_gb * GB_BYTES / MiB_BYTES, MIN_DISK_SPACE_FOR_BLOCK_FILES / MiB_BYTES);
                 setOption(option, prune_size_mib);
+            } else if (option == PruneTristate) {
+                // Stored as bool
+                setOption(option, value.toBool() ? Qt::Checked : Qt::Unchecked);
             } else {
                 setOption(option, value);
             }
@@ -898,7 +922,7 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(Listen, "fListen");
     migrate_setting(Server, "server");
     migrate_setting(PruneSizeMiB, "nPruneSize");
-    migrate_setting(Prune, "bPrune");
+    migrate_setting(PruneTristate, "bPrune");
     migrate_setting(ProxyIP, "addrProxy");
     migrate_setting(ProxyUse, "fUseProxy");
     migrate_setting(ProxyIPTor, "addrSeparateProxyTor");

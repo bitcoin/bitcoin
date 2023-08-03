@@ -59,7 +59,7 @@ public:
         CoinControlFeatures,    // bool
         SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
-        Prune,                  // bool
+        PruneTristate,          // Qt::CheckState
         PruneSizeMiB,           // int
         DatabaseCache,          // int
         ExternalSignerPath,     // QString
