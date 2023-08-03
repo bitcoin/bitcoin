@@ -1415,7 +1415,7 @@ std::optional<std::string> V2Transport::GetMessageType(Span<const uint8_t>& cont
     }
     // Strip message type bytes of contents.
     contents = contents.subspan(CMessageHeader::COMMAND_SIZE);
-    return {std::move(ret)};
+    return ret;
 }
 
 CNetMessage V2Transport::GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) noexcept
