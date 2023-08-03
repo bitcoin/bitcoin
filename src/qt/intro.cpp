@@ -142,22 +142,32 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     ui->pruneMiB->setRange(min_prune_target_MiB, std::numeric_limits<int>::max());
     if (gArgs.IsArgSet("-prune")) {
         m_prune_checkbox_is_default = false;
-        ui->prune->setChecked(gArgs.GetIntArg("-prune", 0) >= 1);
+        switch (gArgs.GetIntArg("-prune", 0)) {
+        case 0:
+            ui->prune->setChecked(false);
+            break;
+        case 1:
+            ui->prune->setTristate();
+            ui->prune->setCheckState(Qt::PartiallyChecked);
+            break;
+        default:
+            ui->prune->setChecked(true);
+        }
         ui->prune->setEnabled(false);
     }
     ui->pruneMiB->setValue(m_prune_target_mib);
     ui->pruneMiB->setToolTip(ui->prune->toolTip());
     ui->lblPruneSuffix->setToolTip(ui->prune->toolTip());
-    UpdatePruneLabels(ui->prune->isChecked());
+    UpdatePruneLabels(ui->prune->checkState() == Qt::Checked);
 
-    connect(ui->prune, &QCheckBox::toggled, [this](bool prune_checked) {
+    connect(ui->prune, &QCheckBox::stateChanged, [this](int prune_state) {
         m_prune_checkbox_is_default = false;
-        UpdatePruneLabels(prune_checked);
+        UpdatePruneLabels(prune_state == Qt::Checked);
         UpdateFreeSpaceLabel();
     });
     connect(ui->pruneMiB, qOverload<int>(&QSpinBox::valueChanged), [this](int prune_MiB) {
         m_prune_target_mib = prune_MiB;
-        UpdatePruneLabels(ui->prune->isChecked());
+        UpdatePruneLabels(ui->prune->checkState() == Qt::Checked);
         UpdateFreeSpaceLabel();
     });
 
@@ -197,6 +207,8 @@ int64_t Intro::getPruneMiB() const
     switch (ui->prune->checkState()) {
     case Qt::Checked:
         return m_prune_target_mib;
+    case Qt::PartiallyChecked:
+        return 1;
     case Qt::Unchecked: default:
         return 0;
     }
