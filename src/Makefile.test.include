@@ -295,6 +295,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/bitdeque.cpp \
  test/fuzz/block.cpp \
  test/fuzz/block_header.cpp \
+ test/fuzz/block_index.cpp \
  test/fuzz/blockfilter.cpp \
  test/fuzz/bloom_filter.cpp \
  test/fuzz/buffered_file.cpp \
