@@ -319,7 +319,7 @@ void Intro::UpdateFreeSpaceLabel()
         freeString += " " + tr("(of %n GB needed)", "", m_required_space_gb);
         ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
     } else if (m_bytes_available / GB_BYTES - m_required_space_gb < 10) {
-        freeString += " " + tr("(%n GB needed for full chain)", "", m_required_space_gb);
+        freeString += " " + tr("(%n GB needed)", "", m_required_space_gb);
         ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
     } else {
         ui->freeSpace->setStyleSheet("");
