@@ -134,6 +134,7 @@ public:
     void UpdateDIP8Parameters(int nActivationHeight);
     void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
+    bool UpdateMNActivationParam(int nBit, int height, int64_t timePast, bool fJustCheck) const;
     int PoolMinParticipants() const { return nPoolMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }

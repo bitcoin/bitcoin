@@ -48,6 +48,13 @@ struct BIP9Deployment {
      *  process (which takes at least 3 BIP9 intervals). Only tests that specifically test the
      *  behaviour during activation cannot use this. */
     static constexpr int64_t ALWAYS_ACTIVE = -1;
+
+    /** this value is used for forks activated by master nodes.
+      * negative values means it is regular fork, no masternodes confirmation is needed.
+      * 0 means that there's no approval from masternodes yet.
+      * Otherwise it shows minimum height when miner's signals for this block can be assumed
+      */
+    mutable int64_t nMNActivationHeight{-1};
 };
 
 /**

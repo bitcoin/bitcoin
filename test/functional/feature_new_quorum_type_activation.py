@@ -17,7 +17,7 @@ class NewQuorumTypeActivationTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-vbparams=testdummy:0:999999999999:10:8:6:5"]]
+        self.extra_args = [["-vbparams=testdummy:0:999999999999:10:8:6:5:-1"]]
 
     def run_test(self):
         self.log.info(get_bip9_details(self.nodes[0], 'testdummy'))
