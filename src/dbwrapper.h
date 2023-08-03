@@ -85,8 +85,8 @@ private:
 
     size_t size_estimate{0};
 
-    void WriteImpl(Span<const std::byte> ssKey, CDataStream& ssValue);
-    void EraseImpl(Span<const std::byte> ssKey);
+    void WriteImpl(Span<const std::byte> key, CDataStream& ssValue);
+    void EraseImpl(Span<const std::byte> key);
 
 public:
     /**
@@ -129,7 +129,7 @@ private:
     const CDBWrapper &parent;
     const std::unique_ptr<IteratorImpl> m_impl_iter;
 
-    void SeekImpl(Span<const std::byte> ssKey);
+    void SeekImpl(Span<const std::byte> key);
     Span<const std::byte> GetKeyImpl() const;
     Span<const std::byte> GetValueImpl() const;
 
@@ -206,9 +206,9 @@ private:
     //! whether or not the database resides in memory
     bool m_is_memory;
 
-    std::optional<std::string> ReadImpl(Span<const std::byte> ssKey) const;
-    bool ExistsImpl(Span<const std::byte> ssKey) const;
-    size_t EstimateSizeImpl(Span<const std::byte> ssKey1, Span<const std::byte> ssKey2) const;
+    std::optional<std::string> ReadImpl(Span<const std::byte> key) const;
+    bool ExistsImpl(Span<const std::byte> key) const;
+    size_t EstimateSizeImpl(Span<const std::byte> key1, Span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:
