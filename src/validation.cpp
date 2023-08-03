@@ -796,7 +796,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // No transactions are allowed below minRelayTxFee except from disconnected
     // blocks
-    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state)) return false;
+    // Checking of fee for MNHF_SIGNAL should be skipped: mnhf does not have
+    // inputs, outputs, or fee
+    if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
+        if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state)) return false;
+    }
 
     if (nAbsurdFee && nFees > nAbsurdFee)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD,
