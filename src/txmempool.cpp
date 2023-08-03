@@ -412,6 +412,7 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_max_datacarrier_bytes{opts.max_datacarrier_bytes},
       m_require_standard{opts.require_standard},
       m_full_rbf{opts.full_rbf},
+      m_persist_v1_dat{opts.persist_v1_dat},
       m_limits{opts.limits}
 {
 }

@@ -471,7 +471,7 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    const std::vector<std::byte> m_xor;
+    std::vector<std::byte> m_xor;
 
 public:
     explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={}) : m_file{file}, m_xor{std::move(data_xor)} {}
@@ -510,6 +510,9 @@ public:
     /** Return true if the wrapped FILE* is nullptr, false otherwise.
      */
     bool IsNull() const { return m_file == nullptr; }
+
+    /** Continue with a different XOR key */
+    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(Span<std::byte> dst);

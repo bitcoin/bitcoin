@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 #include <logging.h>
 #include <primitives/transaction.h>
+#include <random.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
@@ -34,14 +35,14 @@ using fsbridge::FopenFn;
 
 namespace kernel {
 
-static const uint64_t MEMPOOL_DUMP_VERSION = 1;
+static const uint64_t MEMPOOL_DUMP_VERSION_NO_XOR_KEY{1};
+static const uint64_t MEMPOOL_DUMP_VERSION{2};
 
 bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {
     if (load_path.empty()) return false;
 
-    FILE* filestr{opts.mockable_fopen_function(load_path, "rb")};
-    CAutoFile file{filestr, CLIENT_VERSION};
+    CAutoFile file{opts.mockable_fopen_function(load_path, "rb"), CLIENT_VERSION};
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
         return false;
@@ -57,9 +58,15 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     try {
         uint64_t version;
         file >> version;
-        if (version != MEMPOOL_DUMP_VERSION) {
+        std::vector<std::byte> xor_key;
+        if (version == MEMPOOL_DUMP_VERSION_NO_XOR_KEY) {
+            // Leave XOR-key empty
+        } else if (version == MEMPOOL_DUMP_VERSION) {
+            file >> xor_key;
+        } else {
             return false;
         }
+        file.SetXor(xor_key);
         uint64_t num;
         file >> num;
         while (num) {
@@ -151,16 +158,21 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     auto mid = SteadyClock::now();
 
+    CAutoFile file{mockable_fopen_function(dump_path + ".new", "wb"), CLIENT_VERSION};
+    if (file.IsNull()) {
+        return false;
+    }
+
     try {
-        FILE* filestr{mockable_fopen_function(dump_path + ".new", "wb")};
-        if (!filestr) {
-            return false;
-        }
-
-        CAutoFile file{filestr, CLIENT_VERSION};
-
-        uint64_t version = MEMPOOL_DUMP_VERSION;
+        const uint64_t version{pool.m_persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
         file << version;
+
+        std::vector<std::byte> xor_key(8);
+        if (!pool.m_persist_v1_dat) {
+            FastRandomContext{}.fillrand(xor_key);
+            file << xor_key;
+        }
+        file.SetXor(xor_key);
 
         file << (uint64_t)vinfo.size();
         for (const auto& i : vinfo) {
