@@ -263,40 +263,21 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
             [&] {
                 std::vector<CAddress> addresses;
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
-                    const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-                    if (!opt_address) {
-                        break;
-                    }
-                    addresses.push_back(*opt_address);
+                    addresses.push_back(ConsumeAddress(fuzzed_data_provider));
                 }
-                const std::optional<CNetAddr> opt_net_addr = ConsumeDeserializable<CNetAddr>(fuzzed_data_provider);
-                if (opt_net_addr) {
-                    addr_man.Add(addresses, *opt_net_addr, std::chrono::seconds{ConsumeTime(fuzzed_data_provider, 0, 100000000)});
-                }
+                addr_man.Add(addresses, ConsumeNetAddr(fuzzed_data_provider), std::chrono::seconds{ConsumeTime(fuzzed_data_provider, 0, 100000000)});
             },
             [&] {
-                const std::optional<CService> opt_service = ConsumeDeserializable<CService>(fuzzed_data_provider);
-                if (opt_service) {
-                    addr_man.Good(*opt_service, NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
-                }
+                addr_man.Good(ConsumeService(fuzzed_data_provider), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
             },
             [&] {
-                const std::optional<CService> opt_service = ConsumeDeserializable<CService>(fuzzed_data_provider);
-                if (opt_service) {
-                    addr_man.Attempt(*opt_service, fuzzed_data_provider.ConsumeBool(), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
-                }
+                addr_man.Attempt(ConsumeService(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool(), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
             },
             [&] {
-                const std::optional<CService> opt_service = ConsumeDeserializable<CService>(fuzzed_data_provider);
-                if (opt_service) {
-                    addr_man.Connected(*opt_service, NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
-                }
+                addr_man.Connected(ConsumeService(fuzzed_data_provider), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
             },
             [&] {
-                const std::optional<CService> opt_service = ConsumeDeserializable<CService>(fuzzed_data_provider);
-                if (opt_service) {
-                    addr_man.SetServices(*opt_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
-                }
+                addr_man.SetServices(ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             });
     }
     const AddrMan& const_addr_man{addr_man};
