@@ -155,8 +155,9 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
         }
         assert((exists_using_access_coin && exists_using_have_coin_in_cache && exists_using_have_coin && exists_using_get_coin) ||
                (!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin && !exists_using_get_coin));
+        // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
         const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoin(random_out_point);
-        if (exists_using_have_coin_in_backend) {
+        if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
         }
         Coin coin_using_backend_get_coin;
