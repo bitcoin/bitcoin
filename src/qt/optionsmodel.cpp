@@ -148,7 +148,7 @@ static const std::map<OutputType, std::pair<const char*, const char*>> Untransla
         QT_TRANSLATE_NOOP("Output type description", "Widest compatibility and best for health of the Bitcoin network, but may result in higher fees later. Recommended."),
     }},
     {OutputType::P2SH_SEGWIT, {
-        QT_TRANSLATE_NOOP("Output type name", "Base58 (P2SH-SegWit)"),
+        QT_TRANSLATE_NOOP("Output type name", "Base58 (P2SH Segwit)"),
         QT_TRANSLATE_NOOP("Output type description", "Compatible with most older wallets, and may result in lower fees than Legacy."),
     }},
     {OutputType::BECH32, {
