@@ -26,8 +26,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 2
+        # both nodes disable full-rbf to test BIP125 signaling
         self.extra_args = [
             [
+                "-mempoolfullrbf=0",
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
@@ -35,6 +37,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             ],
             # second node has default mempool parameters
             [
+                "-mempoolfullrbf=0",
             ],
         ]
         self.supports_cli = False
