@@ -640,6 +640,11 @@ public:
         src = fileIn;
     }
 
+    [[nodiscard]] bool IsNull() const
+    {
+        return src == nullptr;
+    }
+
     ~CBufferedFile()
     {
         fclose();
