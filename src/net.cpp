@@ -895,6 +895,7 @@ size_t CConnman::SocketSendData(CNode& node) const
  *   for each of several distinct characteristics which are difficult
  *   to forge.  In order to partition a node the attacker must be
  *   simultaneously better at all of them than honest peers.
+ *   If we find a candidate perform the eviction.
  */
 bool CConnman::AttemptToEvictConnection()
 {
@@ -928,13 +929,22 @@ bool CConnman::AttemptToEvictConnection()
     if (!node_id_to_evict) {
         return false;
     }
-    LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-        if (pnode->GetId() == *node_id_to_evict) {
-            LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
-            pnode->fDisconnect = true;
-            return true;
+    CNode* evicted_node{nullptr};
+    {
+        LOCK(m_nodes_mutex);
+        for (CNode* pnode : m_nodes) {
+            if (pnode->GetId() == *node_id_to_evict) {
+                LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
+                pnode->fDisconnect = true;
+                evicted_node = pnode;
+                break;
+            }
         }
+    }
+    if (evicted_node) {
+        DisconnectAndReleaseNode(evicted_node);
+        DeleteDisconnectedNode(evicted_node);
+        return true;
     }
     return false;
 }
@@ -1108,6 +1118,37 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     return true;
 }
 
+void CConnman::DeleteDisconnectedNode(CNode* pnode)
+{
+    // Destroy the object only after other threads have stopped using it.
+    // Prevent double free by setting nRefCount to -1 before delete.
+    int expectedRefCount = 0;
+    if (pnode->nRefCount.compare_exchange_strong(expectedRefCount, -1)) {
+        WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.remove(pnode));
+        DeleteNode(pnode);
+    }
+}
+
+void CConnman::DisconnectAndReleaseNode(CNode* pnode)
+{
+    LOCK(m_nodes_mutex);
+    if (std::find(m_nodes.begin(), m_nodes.end(), pnode) != m_nodes.end()) {
+
+        // remove from m_nodes
+        m_nodes.erase(remove(m_nodes.begin(), m_nodes.end(), pnode), m_nodes.end());
+
+        // release outbound grant (if any)
+        pnode->grantOutbound.Release();
+
+        // close socket and cleanup
+        pnode->CloseSocketDisconnect();
+
+        // hold in disconnected pool until all refs are released
+        pnode->Release();
+        WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.push_back(pnode));
+    }
+}
+
 void CConnman::DisconnectNodes()
 {
     {
@@ -1129,32 +1170,16 @@ void CConnman::DisconnectNodes()
         {
             if (pnode->fDisconnect)
             {
-                // remove from m_nodes
-                m_nodes.erase(remove(m_nodes.begin(), m_nodes.end(), pnode), m_nodes.end());
-
-                // release outbound grant (if any)
-                pnode->grantOutbound.Release();
-
-                // close socket and cleanup
-                pnode->CloseSocketDisconnect();
-
-                // hold in disconnected pool until all refs are released
-                pnode->Release();
-                m_nodes_disconnected.push_back(pnode);
+                DisconnectAndReleaseNode(pnode);
             }
         }
     }
+    // Delete disconnected nodes
+    std::list<CNode*> disconnected_nodes_copy{};
+    WITH_LOCK(m_nodes_disconnected_mutex, disconnected_nodes_copy = m_nodes_disconnected);
+    for (CNode* pnode : disconnected_nodes_copy)
     {
-        // Delete disconnected nodes
-        std::list<CNode*> nodes_disconnected_copy = m_nodes_disconnected;
-        for (CNode* pnode : nodes_disconnected_copy)
-        {
-            // Destroy the object only after other threads have stopped using it.
-            if (pnode->GetRefCount() <= 0) {
-                m_nodes_disconnected.remove(pnode);
-                DeleteNode(pnode);
-            }
-        }
+        DeleteDisconnectedNode(pnode);
     }
 }
 
@@ -2491,10 +2516,12 @@ void CConnman::StopNodes()
         DeleteNode(pnode);
     }
 
-    for (CNode* pnode : m_nodes_disconnected) {
+    std::list<CNode*> disconnected_nodes{};
+    WITH_LOCK(m_nodes_disconnected_mutex, disconnected_nodes = m_nodes_disconnected);
+    for (CNode* pnode : disconnected_nodes) {
         DeleteNode(pnode);
     }
-    m_nodes_disconnected.clear();
+    WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.clear());
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
