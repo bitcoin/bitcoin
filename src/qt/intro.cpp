@@ -153,7 +153,6 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
         default:
             ui->prune->setChecked(true);
         }
-        ui->prune->setEnabled(false);
     }
     ui->pruneMiB->setValue(m_prune_target_mib);
     ui->pruneMiB->setToolTip(ui->prune->toolTip());
