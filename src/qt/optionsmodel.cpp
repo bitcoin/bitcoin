@@ -237,6 +237,9 @@ bool OptionsModel::Init(bilingual_str& error)
     // and we want command-line parameters to overwrite the GUI settings.
     for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
                             MapPortNatpmp, Listen, Server, PruneTristate, ProxyUse, ProxyUseTor, Language}) {
+        // isSettingIgnored will have a false positive here during first-run prune changes
+        if (option == PruneTristate && m_prune_forced_by_gui) continue;
+
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
@@ -401,6 +404,7 @@ void OptionsModel::SetPruneTargetMiB(int prune_target_mib)
     // this point because this function is only called after the intro screen is
     // shown, before the node starts.
     node().forceSetting("prune", new_value);
+    m_prune_forced_by_gui = true;
 
     // Update settings.json if value configured in intro screen is different
     // from saved value. Avoid writing settings.json if bitcoin.conf value

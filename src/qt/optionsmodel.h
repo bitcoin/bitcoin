@@ -138,6 +138,7 @@ private:
 
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
+    bool m_prune_forced_by_gui{false};
 
     static QString FontChoiceToString(const OptionsModel::FontChoice&);
     static FontChoice FontChoiceFromString(const QString&);
