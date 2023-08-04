@@ -13,6 +13,7 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <timedata.h>
 #include <uint256.h>
 #include <validation.h>
@@ -143,14 +144,21 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     c2.InitCoinsDB(
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
 
+    // Reset IBD state so IsInitialBlockDownload() returns true and causes
+    // MaybeRebalancesCaches() to prioritize the snapshot chainstate, giving it
+    // more cache space than the snapshot chainstate. Calling ResetIbd() is
+    // necessary because m_cached_finished_ibd is already latched to true before
+    // the test starts due to the test setup. After ResetIbd() is called.
+    // IsInitialBlockDownload will return true because at this point the active
+    // chainstate has a null chain tip.
+    static_cast<TestChainstateManager&>(manager).ResetIbd();
+
     {
         LOCK(::cs_main);
         c2.InitCoinsCache(1 << 23);
         manager.MaybeRebalanceCaches();
     }
 
-    // Since both chainstates are considered to be in initial block download,
-    // the snapshot chainstate should take priority.
     BOOST_CHECK_CLOSE(c1.m_coinstip_cache_size_bytes, max_cache * 0.05, 1);
     BOOST_CHECK_CLOSE(c1.m_coinsdb_cache_size_bytes, max_cache * 0.05, 1);
     BOOST_CHECK_CLOSE(c2.m_coinstip_cache_size_bytes, max_cache * 0.95, 1);

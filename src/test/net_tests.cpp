@@ -841,11 +841,10 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     const int64_t time{0};
     const CNetMsgMaker msg_maker{PROTOCOL_VERSION};
 
-    // Force Chainstate::IsInitialBlockDownload() to return false.
+    // Force ChainstateManager::IsInitialBlockDownload() to return false.
     // Otherwise PushAddress() isn't called by PeerManager::ProcessMessage().
-    TestChainState& chainstate =
-        *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
-    chainstate.JumpOutOfIbd();
+    auto& chainman = static_cast<TestChainstateManager&>(*m_node.chainman);
+    chainman.JumpOutOfIbd();
 
     m_node.peerman->InitializeNode(peer, NODE_NETWORK);
 
@@ -895,7 +894,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     BOOST_CHECK(sent);
 
     CaptureMessage = CaptureMessageOrig;
-    chainstate.ResetIbd();
+    chainman.ResetIbd();
     m_node.args->ForceSetArg("-capturemessages", "0");
     m_node.args->ForceSetArg("-bind", "");
     // PeerManager::ProcessMessage() calls AddTimeData() which changes the internal state

@@ -752,9 +752,10 @@ static RPCHelpMan importmempool()
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
 
             CTxMemPool& mempool{EnsureMemPool(node)};
-            Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
+            ChainstateManager& chainman = EnsureChainman(node);
+            Chainstate& chainstate = chainman.ActiveChainstate();
 
-            if (chainstate.IsInitialBlockDownload()) {
+            if (chainman.IsInitialBlockDownload()) {
                 throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Can only import the mempool after the block download and sync is done.");
             }
 
