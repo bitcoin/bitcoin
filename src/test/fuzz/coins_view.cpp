@@ -42,11 +42,12 @@ void initialize_coins_view()
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend_coins_view)
+void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend_coins_view, bool is_db = false)
 {
     bool good_data{true};
 
     CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
+    if (is_db) coins_view_cache.SetBestBlock(uint256::ONE);
     COutPoint random_out_point;
     Coin random_coin;
     CMutableTransaction random_mutable_transaction;
@@ -85,7 +86,9 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 (void)coins_view_cache.Sync();
             },
             [&] {
-                coins_view_cache.SetBestBlock(ConsumeUInt256(fuzzed_data_provider));
+                uint256 best_block{ConsumeUInt256(fuzzed_data_provider)};
+                if (is_db && best_block.IsNull()) best_block = uint256::ONE;
+                coins_view_cache.SetBestBlock(best_block);
             },
             [&] {
                 Coin move_to;
@@ -153,7 +156,10 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 bool expected_code_path = false;
                 try {
                     auto cursor{CoinsViewCacheCursor(usage, sentinel, coins_map, /*will_erase=*/true)};
-                    coins_view_cache.BatchWrite(cursor, fuzzed_data_provider.ConsumeBool() ? ConsumeUInt256(fuzzed_data_provider) : coins_view_cache.GetBestBlock());
+                    uint256 best_block{coins_view_cache.GetBestBlock()};
+                    if (fuzzed_data_provider.ConsumeBool()) best_block = ConsumeUInt256(fuzzed_data_provider);
+                    if (is_db && best_block.IsNull()) best_block = uint256::ONE;
+                    coins_view_cache.BatchWrite(cursor, best_block);
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
                     if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}) {
@@ -207,7 +213,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
 
     {
         std::unique_ptr<CCoinsViewCursor> coins_view_cursor = backend_coins_view.Cursor();
-        assert(!coins_view_cursor);
+        assert(is_db ? !!coins_view_cursor : !coins_view_cursor);
         (void)backend_coins_view.EstimateSize();
         (void)backend_coins_view.GetBestBlock();
         (void)backend_coins_view.GetHeadBlocks();
@@ -299,4 +305,16 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CCoinsView backend_coins_view;
     TestCoinsView(fuzzed_data_provider, backend_coins_view);
+}
+
+FUZZ_TARGET(coins_db, .init = initialize_coins_view)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    auto db_params = DBParams{
+        .path = "", // Memory only.
+        .cache_bytes = 1 << 20, // 1MB.
+        .memory_only = true,
+    };
+    CCoinsViewDB coins_db{std::move(db_params), CoinsViewOptions{}};
+    TestCoinsView(fuzzed_data_provider, coins_db, /* is_db = */ true);
 }
