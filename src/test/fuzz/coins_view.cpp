@@ -163,7 +163,8 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
         Coin coin_using_backend_get_coin;
         if (backend_coins_view.GetCoin(random_out_point, coin_using_backend_get_coin)) {
             assert(exists_using_have_coin_in_backend);
-            assert(coin_using_get_coin == coin_using_backend_get_coin);
+            // Note we can't assert that `coin_using_get_coin == coin_using_backend_get_coin` because the coin in
+            // the cache may have been modified but not yet flushed.
         } else {
             assert(!exists_using_have_coin_in_backend);
         }
