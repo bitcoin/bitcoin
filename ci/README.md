@@ -39,9 +39,6 @@ the system package manager to install build dependencies. This guarantees that
 the tester is using the same versions as the release builds, which also use
 `./depends`.
 
-If no `FILE_ENV` has been specified or values are left out, `00_setup_env.sh`
-is used as the default configuration with fallback values.
-
 It is also possible to force a specific configuration without modifying the
 file. For example,
 
