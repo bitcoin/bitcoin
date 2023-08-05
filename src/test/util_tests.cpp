@@ -2204,14 +2204,14 @@ BOOST_AUTO_TEST_CASE(test_SkipSet)
         std::unordered_set<uint64_t> set_2;
         for (size_t iter = 0; iter < (1 << test) * 2; ++iter) {
             uint64_t value = dist_value(gen);
-            BOOST_CHECK(set_1.Contains(value) == !!set_2.count(value));
+            BOOST_CHECK_EQUAL(set_1.Contains(value), !!set_2.count(value));
             if (!set_1.Contains(value) && set_1.CanBeAdded(value)) {
                 BOOST_CHECK(!set_1.Contains(value));
                 BOOST_CHECK(set_1.Add(value));
                 set_2.insert(value);
             }
-            BOOST_CHECK(set_1.Contains(value) == !!set_2.count(value));
-            BOOST_CHECK(set_1.Size() == set_2.size());
+            BOOST_CHECK_EQUAL(set_1.Contains(value), !!set_2.count(value));
+            BOOST_CHECK_EQUAL(set_1.Size(), set_2.size());
         }
         if (test > 4) {
             BOOST_CHECK(set_1.Size() > ((1 << test) / 4));
