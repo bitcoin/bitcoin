@@ -19,6 +19,7 @@
 #include <util/batchpriority.h>
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
+#include <util/trace.h>
 #include <validation.h>
 
 #include <map>
@@ -774,6 +775,7 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
 
     // Read block
     try {
+        TRACE_RAII(block_manager, read_block_from_disk_unserialize);
         filein >> block;
     } catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
