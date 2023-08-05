@@ -1,0 +1,37 @@
+#!/usr/bin/env bpftrace
+
+/*
+
+  USAGE:
+
+  bpftrace contrib/tracing/raii_stats.bt
+
+  Collects runtime & call counts of a code block traced with TRACE_RAII.
+  The collected data (runtime, callcount, histogram) is printed on exit.
+*/
+
+BEGIN
+{
+    @duration_total_ns = (uint64)0;
+}
+
+/* Change the context & event to track a different TRACE_RAII block */
+usdt:./src/bitcoind:block_manager:read_block_from_disk_unserialize
+{
+    $isEntry = arg0;
+    if ($isEntry) {
+        @start_ns = nsecs;
+        @num_calls = count();
+    } else {
+        $duration_ns = nsecs - @start_ns;
+        @duration_total_ns += $duration_ns;
+        @duration_hist_ns = hist($duration_ns);
+    }
+}
+
+END
+{
+    @duration_total_ms = @duration_total_ns/1e6;
+    clear(@start_ns);
+    clear(@duration_total_ns);
+}
