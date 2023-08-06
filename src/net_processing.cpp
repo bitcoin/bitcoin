@@ -5142,10 +5142,12 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         // Pick the outbound-full-relay peer that least recently announced
         // us a new block, with ties broken by choosing the more recent
         // connection (higher node id)
+        // Protect peers from eviction if we don't have another connection
+        // to their network, counting both outbound-full-relay and manual peers.
         NodeId worst_peer = -1;
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
-        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
             AssertLockHeld(::cs_main);
 
             // Only consider outbound-full-relay peers that are not already
@@ -5155,6 +5157,9 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
+            // If this is the only connection on a particular network that is
+            // OUTBOUND_FULL_RELAY or MANUAL, protect it.
+            if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
             if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;

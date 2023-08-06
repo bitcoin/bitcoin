@@ -107,9 +107,19 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerman.FinalizeNode(dummyNode1);
 }
 
-static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType)
+static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType, bool onion_peer = false)
 {
-    CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
+    CAddress addr;
+
+    if (onion_peer) {
+        auto tor_addr{g_insecure_rand_ctx.randbytes(ADDR_TORV3_SIZE)};
+        BOOST_REQUIRE(addr.SetSpecial(OnionToString(tor_addr)));
+    }
+
+    while (!addr.IsRoutable()) {
+        addr = CAddress(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
+    }
+
     vNodes.emplace_back(new CNode{id++,
                                   /*sock=*/nullptr,
                                   addr,
@@ -196,6 +206,30 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     }
     BOOST_CHECK(vNodes[max_outbound_full_relay-1]->fDisconnect == true);
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
+
+    vNodes[max_outbound_full_relay - 1]->fDisconnect = false;
+
+    // Add an onion peer, that will be protected because it is the only one for
+    // its network, so another peer gets disconnected instead.
+    SetMockTime(time_init);
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
+    SetMockTime(time_later);
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    for (int i = 0; i < max_outbound_full_relay - 2; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+    BOOST_CHECK(vNodes[max_outbound_full_relay - 2]->fDisconnect == false);
+    BOOST_CHECK(vNodes[max_outbound_full_relay - 1]->fDisconnect == true);
+    BOOST_CHECK(vNodes[max_outbound_full_relay]->fDisconnect == false);
+
+    // Add a second onion peer which won't be protected
+    SetMockTime(time_init);
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
+    SetMockTime(time_later);
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    BOOST_CHECK(vNodes.back()->fDisconnect == true);
 
     for (const CNode *node : vNodes) {
         peerLogic->FinalizeNode(*node);

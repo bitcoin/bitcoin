@@ -465,6 +465,22 @@ public:
         return m_conn_type == ConnectionType::MANUAL;
     }
 
+    bool IsManualOrFullOutboundConn() const
+    {
+        switch (m_conn_type) {
+        case ConnectionType::INBOUND:
+        case ConnectionType::FEELER:
+        case ConnectionType::BLOCK_RELAY:
+        case ConnectionType::ADDR_FETCH:
+                return false;
+        case ConnectionType::OUTBOUND_FULL_RELAY:
+        case ConnectionType::MANUAL:
+                return true;
+        } // no default case, so the compiler can warn about missing cases
+
+        assert(false);
+    }
+
     bool IsBlockOnlyConn() const {
         return m_conn_type == ConnectionType::BLOCK_RELAY;
     }
@@ -777,6 +793,9 @@ public:
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
     bool CheckIncomingNonce(uint64_t nonce);
 
+    // alias for thread safety annotations only, not defined
+    RecursiveMutex& GetNodesMutex() const LOCK_RETURNED(m_nodes_mutex);
+
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
@@ -892,6 +911,8 @@ public:
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
+
+    bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
 private:
     struct ListenSocket {
@@ -1010,6 +1031,18 @@ private:
      */
     std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
 
+    /**
+     * Search for a "preferred" network, a reachable network to which we
+     * currently don't have any OUTBOUND_FULL_RELAY or MANUAL connections.
+     * There needs to be at least one address in AddrMan for a preferred
+     * network to be picked.
+     *
+     * @param[out]    network        Preferred network, if found.
+     *
+     * @return           bool        Whether a preferred network was found.
+     */
+    bool MaybePickPreferredNetwork(std::optional<Network>& network);
+
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
@@ -1047,6 +1080,9 @@ private:
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+
+    // Stores number of full-tx connections (outbound and manual) per network
+    std::array<unsigned int, Network::NET_MAX> m_network_conn_counts GUARDED_BY(m_nodes_mutex) = {};
 
     /**
      * Cache responses to addr requests to minimize privacy leak.
