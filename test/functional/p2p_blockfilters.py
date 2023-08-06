@@ -247,6 +247,14 @@ class CompactFiltersTest(BitcoinTestFramework):
                     stop_hash=123456789,
                 ), "requested invalid block hash"
             ),
+            (
+                # Request with (start block height > stop block height) results in disconnection.
+                msg_getcfheaders(
+                    filter_type=FILTER_TYPE_BASIC,
+                    start_height=1000,
+                    stop_hash=int(self.nodes[0].getblockhash(999), 16),
+                ), "sent invalid getcfilters/getcfheaders with start height 1000 and stop height 999"
+            ),
         ]
         for request, expected_log_msg in requests:
             peer_0 = self.nodes[0].add_p2p_connection(P2PInterface())
