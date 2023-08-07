@@ -160,7 +160,12 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // Display
     if (!settings.contains("DisplayBitcoinUnit")) {
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(BitcoinUnit::BTC));
+        auto init_unit = BitcoinUnit::BTC;
+        if (settings.contains("nDisplayUnit")) {
+            // Migrate to new setting
+            init_unit = BitcoinUnits::FromSetting(settings.value("nDisplayUnit").toString(), init_unit);
+        }
+        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(init_unit));
     }
     QVariant unit = settings.value("DisplayBitcoinUnit");
     if (settings.contains("DisplayBitcoinUnitKnots")) {

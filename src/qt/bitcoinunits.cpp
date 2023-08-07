@@ -348,15 +348,21 @@ BitcoinUnit FromQint8(qint8 num)
     }
     return BitcoinUnit::BTC;
 }
+} // namespace
 
-BitcoinUnit FromSetting(const QString& s, BitcoinUnit def)
+BitcoinUnit BitcoinUnits::FromSetting(const QString& s, BitcoinUnit def)
 {
+    if (s == "0") return BitcoinUnit::BTC;
+    if (s == "1") return BitcoinUnit::mBTC;
+    if (s == "2") return BitcoinUnit::uBTC;
+    if (s == "3") return BitcoinUnit::SAT;
+    if (s == "4") return BitcoinUnit::sTBC;
+    if (s == "5") return BitcoinUnit::TBC;
     if (s == "bTBC") return BitcoinUnit::bTBC;
     if (s == "sTBC") return BitcoinUnit::sTBC;
     if (s == "TBC")  return BitcoinUnit::TBC;
     return def;
 }
-} // namespace
 
 QDataStream& operator<<(QDataStream& out, const BitcoinUnit& unit)
 {
@@ -376,7 +382,7 @@ QDataStream& operator>>(QDataStream& in, BitcoinUnit& unit)
     if (!in.atEnd()) {
         QString setting_str;
         in >> setting_str;
-        unit = FromSetting(setting_str, unit);
+        unit = BitcoinUnits::FromSetting(setting_str, unit);
     }
     return in;
 }
