@@ -346,7 +346,7 @@ BitcoinUnit FromQint8(qint8 num)
     case 2: return BitcoinUnit::uBTC;
     case 3: return BitcoinUnit::SAT;
     }
-    assert(false);
+    return BitcoinUnit::BTC;
 }
 
 BitcoinUnit FromSetting(const QString& s, BitcoinUnit def)
