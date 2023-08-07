@@ -148,9 +148,13 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
+  cmake -B /tidy-build -DLLVM_DIR=/usr/lib/llvm-16/cmake -DCMAKE_BUILD_TYPE=Release -S "${BASE_ROOT_DIR}"/contrib/devtools/bitcoin-tidy
+  cmake --build /tidy-build "$MAKEJOBS"
+  cmake --build /tidy-build --target syscoin-tidy-tests "$MAKEJOBS"
+
   set -eo pipefail
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/src/"
-  ( run-clang-tidy-15 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  ( run-clang-tidy-15 -quiet -load="/tidy-build/libsyscoin-tidy.so" "${MAKEJOBS}" ) | grep -C5 "error"
   # Filter out files by regex here, because regex may not be
   # accepted in src/.bear-tidy-config
   # Filter out:
@@ -158,13 +162,13 @@ if [ "${RUN_TIDY}" = "true" ]; then
   jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$") | not))' ../compile_commands.json > tmp.json
   mv tmp.json ../compile_commands.json
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/"
-  python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
+  python3 "/include-what-you-use/iwyu_tool.py" \
            -p . "${MAKEJOBS}" \
            -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_BUILD_DIR}/syscoin-$HOST/contrib/devtools/iwyu/syscoin.core.imp" \
            -Xiwyu --max_line_length=160 \
            2>&1 | tee /tmp/iwyu_ci.out
   cd "${BASE_ROOT_DIR}/src"
-  python3 "${DIR_IWYU}/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+  python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
   git --no-pager diff
 fi
 
