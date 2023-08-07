@@ -38,7 +38,7 @@ std::string ScriptErrorString(const ScriptError serror)
         case SCRIPT_ERR_PUBKEY_COUNT:
             return "Pubkey count negative or limit exceeded";
         case SCRIPT_ERR_BAD_OPCODE:
-            return "Opcode missing or not understood";
+            return "Opcode reserved, missing or not understood";
         case SCRIPT_ERR_DISABLED_OPCODE:
             return "Attempted to use a disabled opcode";
         case SCRIPT_ERR_INVALID_STACK_OPERATION:
