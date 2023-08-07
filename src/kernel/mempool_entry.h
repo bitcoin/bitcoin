@@ -78,8 +78,8 @@ private:
     const int32_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
+    const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
     const unsigned int entryHeight; //!< Chain height when entering the mempool
-    const uint64_t entry_sequence;  //!< Sequence number used to determine w hether this transaction is too recent for relay
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
@@ -110,8 +110,8 @@ public:
           nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
-          entryHeight{entry_height},
           entry_sequence{entry_sequence},
+          entryHeight{entry_height},
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
           m_modified_fee{nFee},
