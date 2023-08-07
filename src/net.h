@@ -1393,12 +1393,8 @@ private:
      * currently don't have any OUTBOUND_FULL_RELAY or MANUAL connections.
      * There needs to be at least one address in AddrMan for a preferred
      * network to be picked.
-     *
-     * @param[out]    network        Preferred network, if found.
-     *
-     * @return           bool        Whether a preferred network was found.
      */
-    bool MaybePickPreferredNetwork(std::optional<Network>& network);
+    std::optional<Network> MaybePickPreferredNetwork() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);

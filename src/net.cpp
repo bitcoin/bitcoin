@@ -2434,24 +2434,23 @@ bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
     return m_network_conn_counts[net] > 1;
 }
 
-bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
+std::optional<Network> CConnman::MaybePickPreferredNetwork() const
 {
+    AssertLockNotHeld(m_nodes_mutex);
     std::array<Network, 5> nets{NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS};
     Shuffle(nets.begin(), nets.end(), FastRandomContext());
-
     LOCK(m_nodes_mutex);
     for (const auto net : nets) {
         if (g_reachable_nets.Contains(net) && m_network_conn_counts[net] == 0 && addrman.Size(net) != 0) {
-            network = net;
-            return true;
+            return net;
         }
     }
-
-    return false;
+    return std::nullopt;
 }
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
+    AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
     FastRandomContext rng;
@@ -2649,7 +2648,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         } else if (nOutboundFullRelay == m_max_outbound_full_relay &&
                    m_max_outbound_full_relay == MAX_OUTBOUND_FULL_RELAY_CONNECTIONS &&
                    now > next_extra_network_peer &&
-                   MaybePickPreferredNetwork(preferred_net)) {
+                   (preferred_net = MaybePickPreferredNetwork()).has_value()) {
             // Full outbound connection management: Attempt to get at least one
             // outbound peer from each reachable network by making extra connections
             // and then protecting "only" peers from a network during outbound eviction.
