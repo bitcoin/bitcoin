@@ -323,8 +323,7 @@ CAmount BitcoinUnits::maxMoney()
     return MAX_MONEY;
 }
 
-namespace {
-std::variant<qint8, QString> ToSetting(BitcoinUnit unit)
+std::variant<qint8, QString> BitcoinUnits::ToSetting(BitcoinUnit unit)
 {
     switch (unit) {
     case BitcoinUnit::BTC:  return qint8{0};
@@ -338,6 +337,7 @@ std::variant<qint8, QString> ToSetting(BitcoinUnit unit)
     assert(false);
 }
 
+namespace {
 BitcoinUnit FromQint8(qint8 num)
 {
     switch (num) {
@@ -366,7 +366,7 @@ BitcoinUnit BitcoinUnits::FromSetting(const QString& s, BitcoinUnit def)
 
 QDataStream& operator<<(QDataStream& out, const BitcoinUnit& unit)
 {
-    auto setting_val = ToSetting(unit);
+    auto setting_val = BitcoinUnits::ToSetting(unit);
     if (const QString* setting_str = std::get_if<QString>(&setting_val)) {
         return out << qint8{0} << *setting_str;
     } else {

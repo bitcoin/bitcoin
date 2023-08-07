@@ -667,6 +667,15 @@ void OptionsModel::setDisplayUnit(const QVariant& new_unit)
     } else {
         settings.setValue("DisplayBitcoinUnitKnots", QVariant::fromValue(m_display_bitcoin_unit));
     }
+    {
+        // For older versions:
+        auto setting_val = BitcoinUnits::ToSetting(m_display_bitcoin_unit);
+        if (const QString* setting_str = std::get_if<QString>(&setting_val)) {
+            settings.setValue("nDisplayUnit", *setting_str);
+        } else {
+            settings.setValue("nDisplayUnit", std::get<qint8>(setting_val));
+        }
+    }
     Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
 }
 
