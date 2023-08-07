@@ -63,6 +63,8 @@ public:
 
     //! Get list of units, for drop-down box
     static QList<Unit> availableUnits();
+    //! String for setting(s)
+    static std::variant<qint8, QString> ToSetting(Unit unit);
     //! Convert setting(s) string to unit
     static Unit FromSetting(const QString&, Unit def);
     //! Long name
