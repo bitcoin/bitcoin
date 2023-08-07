@@ -19,6 +19,7 @@
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <kernel/mempool_entry.h>
+#include <logging.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>

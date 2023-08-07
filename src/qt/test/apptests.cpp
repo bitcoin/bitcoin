@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <key.h>
+#include <logging.h>
 #include <qt/syscoin.h>
 #include <qt/syscoingui.h>
 #include <qt/networkstyle.h>
