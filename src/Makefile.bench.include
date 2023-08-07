@@ -46,6 +46,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/poly1305.cpp \
   bench/pool.cpp \
   bench/prevector.cpp \
+  bench/readblock.cpp \
   bench/rollingbloom.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
