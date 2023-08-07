@@ -6,15 +6,6 @@
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
-#include <atomic>
-#include <map>
-#include <optional>
-#include <set>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
-
 #include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
@@ -26,7 +17,6 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
-#include <random.h>
 #include <sync.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>
@@ -40,9 +30,16 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
-class CBlockIndex;
+#include <atomic>
+#include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
 class CChain;
-class Chainstate;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
