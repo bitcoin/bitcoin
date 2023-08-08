@@ -85,9 +85,9 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (ch == ' ') {
             // Final line, dispatch reply and clean up
             if (self->message.code >= 600) {
+                // (currently unused)
                 // Dispatch async notifications to async handler
                 // Synchronous and asynchronous messages are never interleaved
-                self->async_handler(*self, self->message);
             } else {
                 if (!self->reply_handlers.empty()) {
                     // Invoke reply handler with message

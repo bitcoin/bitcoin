@@ -11,7 +11,6 @@
 #include <netaddress.h>
 #include <util/fs.h>
 
-#include <boost/signals2/signal.hpp>
 
 #include <event2/bufferevent.h>
 #include <event2/event.h>
@@ -83,8 +82,6 @@ public:
      */
     bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler);
 
-    /** Response handlers for async replies */
-    boost::signals2::signal<void(TorControlConnection &,const TorControlReply &)> async_handler;
 private:
     /** Callback when ready for use */
     std::function<void(TorControlConnection&)> connected;
