@@ -493,6 +493,7 @@ public:
         const bool in_mempool;
         /** The fee delta added using PrioritiseTransaction(). */
         const CAmount delta;
+        const double priority_delta;
         /** The modified fee (base fee + delta) of this entry. Only present if in_mempool=true. */
         std::optional<CAmount> modified_fee;
         /** The prioritised transaction's txid. */

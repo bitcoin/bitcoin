@@ -986,7 +986,7 @@ std::vector<CTxMemPool::delta_info> CTxMemPool::GetPrioritisedTransactions() con
         const bool in_mempool{iter != mapTx.end()};
         std::optional<CAmount> modified_fee;
         if (in_mempool) modified_fee = iter->GetModifiedFee();
-        result.emplace_back(delta_info{in_mempool, delta.second, modified_fee, txid});
+        result.emplace_back(delta_info{in_mempool, delta.second, delta.first, modified_fee, txid});
     }
     return result;
 }
