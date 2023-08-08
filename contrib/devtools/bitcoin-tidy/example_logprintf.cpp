@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-// Warn about any use of LogPrintf that does not end with a newline.
 #include <string>
+
+// Test for bitcoin-unterminated-logprintf
 
 enum LogFlags {
     NONE
@@ -21,8 +22,6 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 #define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
 #define LogPrintf(...) LogPrintLevel_(LogFlags::NONE, Level::None, __VA_ARGS__)
 
-// Use a macro instead of a function for conditional logging to prevent
-// evaluating arguments when logging for the category is not enabled.
 #define LogPrint(category, ...) \
     do {                        \
         LogPrintf(__VA_ARGS__); \
