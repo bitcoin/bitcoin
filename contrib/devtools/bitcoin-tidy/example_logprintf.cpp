@@ -37,9 +37,9 @@ class CWallet
 
 public:
     template <typename... Params>
-    void WalletLogPrintf(std::string fmt, Params... parameters) const
+    void WalletLogPrintf(const char* fmt, Params... parameters) const
     {
-        LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
+        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
     };
 };
 
