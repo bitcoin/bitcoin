@@ -29,27 +29,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    const std::optional<CAddress> address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-    if (!address) {
-        return;
-    }
-    const std::optional<CAddress> address_bind = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-    if (!address_bind) {
-        return;
-    }
-
-    CNode node{fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-               static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()),
-               INVALID_SOCKET,
-               *address,
-               fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-               fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-               *address_bind,
-               fuzzed_data_provider.ConsumeRandomLengthString(32),
-               fuzzed_data_provider.ConsumeBool(),
-               fuzzed_data_provider.ConsumeBool(),
-               fuzzed_data_provider.ConsumeBool()
-           };
+    CNode node{ConsumeNode(fuzzed_data_provider)};
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,

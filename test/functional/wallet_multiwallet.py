@@ -25,9 +25,10 @@ FEATURE_LATEST = 120200
 
 got_loading_error = False
 
+
 def test_load_unload(node, name):
     global got_loading_error
-    for i in range(10):
+    while True:
         if got_loading_error:
             return
         try:
@@ -67,7 +68,7 @@ class MultiWalletTest(BitcoinTestFramework):
                 return wallet_dir(name, self.wallet_data_filename)
             return wallet_dir(name)
 
-        assert_equal(self.nodes[0].listwalletdir(), { 'wallets': [{ 'name': self.default_wallet_name }] })
+        assert_equal(self.nodes[0].listwalletdir(), {'wallets': [{'name': self.default_wallet_name}]})
 
         # check wallet.dat is created
         self.stop_nodes()
@@ -261,7 +262,7 @@ class MultiWalletTest(BitcoinTestFramework):
         threads = []
         for _ in range(3):
             n = node.cli if self.options.usecli else get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
-            t = Thread(target=test_load_unload, args=(n, wallet_names[2], ))
+            t = Thread(target=test_load_unload, args=(n, wallet_names[2]))
             t.start()
             threads.append(t)
         for t in threads:
