@@ -10,6 +10,7 @@
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
 
+#include <addresstype.h>
 #include <core_io.h>
 #include <hash.h>
 #include <pubkey.h>

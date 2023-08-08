@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <blockfilter.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>

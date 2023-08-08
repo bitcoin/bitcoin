@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <vector>
 
+#include <addresstype.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/blockstorage.h>

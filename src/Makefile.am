@@ -117,6 +117,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # bitcoin core #
 BITCOIN_CORE_H = \
+  addresstype.h \
   addrdb.h \
   addrman.h \
   addrman_impl.h \
@@ -657,6 +658,7 @@ libbitcoin_consensus_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
+  addresstype.cpp \
   base58.cpp \
   bech32.cpp \
   chainparams.cpp \

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGNINGPROVIDER_H
 #define BITCOIN_SCRIPT_SIGNINGPROVIDER_H
 
+#include <addresstype.h>
 #include <attributes.h>
 #include <key.h>
 #include <pubkey.h>
