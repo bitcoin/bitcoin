@@ -5,6 +5,7 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/util.h>
+#include <script/script.h>
 #include <util/bip32.h>
 #include <util/translation.h>
 #include <wallet/receive.h>

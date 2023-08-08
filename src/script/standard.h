@@ -21,15 +21,6 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 class CKeyID;
 class CScript;
 
-/** A reference to a CScript: the Hash160 of its serialization (see script.h) */
-class CScriptID : public BaseHash<uint160>
-{
-public:
-    CScriptID() : BaseHash() {}
-    explicit CScriptID(const CScript& in);
-    explicit CScriptID(const uint160& in) : BaseHash(in) {}
-};
-
 /**
  * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
  * +2 for the pushdata opcodes.

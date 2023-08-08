@@ -6,6 +6,7 @@
 #include <hash.h>
 #include <key_io.h>
 #include <rpc/util.h>
+#include <script/script.h>
 #include <util/moneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/receive.h>

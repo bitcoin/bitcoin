@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compressor.h>
+#include <script/script.h>
 #include <script/standard.h>
 #include <test/util/setup_common.h>
 
