@@ -144,9 +144,9 @@ class MnehfTest(DashTestFramework):
         node.generate(1)
         self.sync_all()
 
-        self.log.info(f"Check MnEhfTx {tx_sent} was mined...")
-        block = node.getblock(node.getbestblockhash())
-        assert tx_sent in block['tx']
+        ehf_block = node.getbestblockhash()
+        self.log.info(f"Check MnEhfTx {tx_sent} was mined in {ehf_block}")
+        assert tx_sent in node.getblock(ehf_block)['tx']
 
         self.log.info(f"MnEhf tx: '{tx}' is sent: {tx_sent}")
         self.log.info(f"mempool: {node.getmempoolinfo()}")
@@ -173,6 +173,41 @@ class MnehfTest(DashTestFramework):
             if i == 7:
                 self.restart_all_nodes()
 
+        self.check_fork('active')
+
+        block_fork_active = node.getbestblockhash()
+        self.log.info(f"Invalidate block: {ehf_block} with tip {block_fork_active}")
+        for inode in self.nodes:
+            inode.invalidateblock(ehf_block)
+
+        self.log.info("Expecting for fork to be defined in next blocks because no MnEHF tx here")
+        for i in range(12):
+            self.check_fork('defined')
+            node.generate(1)
+            self.sync_all()
+
+
+        self.log.info("Re-sending MnEHF for new fork")
+        tx_sent_2 = self.send_tx(tx)
+        node.generate(1)
+        self.sync_all()
+
+        ehf_block_2 = node.getbestblockhash()
+        self.log.info(f"Check MnEhfTx again {tx_sent_2} was mined in {ehf_block_2}")
+        assert tx_sent_2 in node.getblock(ehf_block_2)['tx']
+
+        self.log.info(f"Generate some more block to jump to `started` status")
+        for i in range(12):
+            node.generate(1)
+        self.check_fork('started')
+        self.restart_all_nodes()
+        self.check_fork('started')
+
+
+        self.log.info(f"Re-consider block {ehf_block} to the old MnEHF and forget new fork")
+        for inode in self.nodes:
+            inode.reconsiderblock(ehf_block)
+        assert_equal(node.getbestblockhash(), block_fork_active)
 
         self.check_fork('active')
         self.restart_all_nodes()
