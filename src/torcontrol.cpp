@@ -91,7 +91,7 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (s.size() < 4) // Short line
             continue;
         // <status>(-|+| )<data><CRLF>
-        self->message.code = LocaleIndependentAtoi<int>(s.substr(0,3));
+        self->message.code = ToIntegral<int>(s.substr(0, 3)).value_or(0);
         self->message.lines.push_back(s.substr(4));
         char ch = s[3]; // '-','+' or ' '
         if (ch == ' ') {
