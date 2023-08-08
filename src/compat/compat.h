@@ -32,7 +32,6 @@
 #include <netinet/tcp.h>// IWYU pragma: export
 #include <arpa/inet.h>// IWYU pragma: export
 #include <ifaddrs.h>// IWYU pragma: export
-#include <limits.h>
 #include <netdb.h>// IWYU pragma: export
 #include <unistd.h>// IWYU pragma: export
 #endif
