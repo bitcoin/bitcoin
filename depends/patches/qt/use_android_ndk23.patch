@@ -1,0 +1,13 @@
+Use Android NDK r23 LTS
+
+--- old/qtbase/mkspecs/features/android/default_pre.prf
++++ new/qtbase/mkspecs/features/android/default_pre.prf
+@@ -76,7 +76,7 @@ else: equals(QT_ARCH, x86_64): CROSS_COMPILE = $$NDK_LLVM_PATH/bin/x86_64-linux-
+ else: equals(QT_ARCH, arm64-v8a): CROSS_COMPILE = $$NDK_LLVM_PATH/bin/aarch64-linux-android-
+ else: CROSS_COMPILE = $$NDK_LLVM_PATH/bin/arm-linux-androideabi-
+ 
+-QMAKE_RANLIB            = $${CROSS_COMPILE}ranlib
++QMAKE_RANLIB            = $$NDK_LLVM_PATH/bin/llvm-ranlib
+ QMAKE_LINK_SHLIB        = $$QMAKE_LINK
+ QMAKE_LFLAGS            =
+ 

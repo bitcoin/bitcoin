@@ -7,6 +7,8 @@ $(package)_sha256_hash=5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared --disable-readline --disable-dynamic-extensions --enable-option-checking
 $(package)_config_opts_linux=--with-pic
+$(package)_config_opts_freebsd=--with-pic
+$(package)_config_opts_openbsd=--with-pic
 endef
 
 define $(package)_preprocess_cmds
