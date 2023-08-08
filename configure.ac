@@ -1685,7 +1685,11 @@ AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
 AC_MSG_CHECKING([whether to build test_dash])
 if test x$use_tests = xyes; then
-  AC_MSG_RESULT([yes])
+  if test "x$enable_fuzz" = "xyes"; then
+    AC_MSG_RESULT([no, because fuzzing is enabled])
+  else
+    AC_MSG_RESULT([yes])
+  fi
   BUILD_TEST="yes"
 else
   AC_MSG_RESULT([no])
@@ -1877,11 +1881,13 @@ if test x$bitcoin_enable_qt != xno; then
     echo "    with qr           = $use_qr"
 fi
 echo "  with zmq            = $use_zmq"
-echo "  with test           = $use_tests"
-echo "  with bench          = $use_bench"
-if test x$use_tests != xno; then
-    echo "  with fuzz           = $enable_fuzz"
+if test x$enable_fuzz == xno; then
+    echo "  with test     = $use_tests"
+else
+    echo "  with test     = not building test_dash because fuzzing is enabled"
+    echo "    with fuzz   = $enable_fuzz"
 fi
+echo "  with bench    = $use_bench"
 echo "  with upnp           = $use_upnp"
 echo "  with natpmp         = $use_natpmp"
 echo "  use asm             = $use_asm"
