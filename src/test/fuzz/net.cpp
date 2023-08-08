@@ -60,7 +60,7 @@ FUZZ_TARGET(net, .init = initialize_net)
     (void)node->GetAddrLocal();
     (void)node->GetId();
     (void)node->GetLocalNonce();
-    const int ref_count = node->GetRefCount();
+    const int ref_count = node.use_count();
     assert(ref_count >= 0);
     (void)node->GetCommonVersion();
 

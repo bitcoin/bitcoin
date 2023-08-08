@@ -1142,7 +1142,6 @@ void CConnman::DisconnectNodes()
                 if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
 
                 // hold in disconnected pool until all refs are released
-                pnode->Release();
                 m_nodes_disconnected.push_back(pnode);
             }
         }
@@ -1152,7 +1151,7 @@ void CConnman::DisconnectNodes()
         std::vector<CNodeRef> nodes_disconnected_copy = m_nodes_disconnected;
         for (auto& pnode : nodes_disconnected_copy) {
             // Destroy the object only after other threads have stopped using it.
-            if (pnode->GetRefCount() <= 0) {
+            if (pnode.use_count() == 2) {
                 DeleteNode(pnode);
                 m_nodes_disconnected.erase(remove(m_nodes_disconnected.begin(), m_nodes_disconnected.end(), pnode), m_nodes_disconnected.end());
             }
