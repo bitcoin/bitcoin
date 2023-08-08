@@ -787,8 +787,7 @@ public:
     using NodeFn = std::function<void(CNodeRef)>;
     void ForEachNode(const NodeFn& func)
     {
-        LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto& node : NodesSnapshot(*this)) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -796,8 +795,7 @@ public:
 
     void ForEachNode(const NodeFn& func) const
     {
-        LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto& node : NodesSnapshot(*this)) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -1208,7 +1206,7 @@ private:
     class NodesSnapshot
     {
     public:
-        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
+        explicit NodesSnapshot(const CConnman& connman, bool shuffle = false)
         {
             {
                 LOCK(connman.m_nodes_mutex);
@@ -1219,9 +1217,24 @@ private:
             }
         }
 
+        std::vector<CNodeRef>::const_iterator begin() const
+        {
+            return m_nodes_copy.begin();
+        }
+
+        std::vector<CNodeRef>::const_iterator end() const
+        {
+            return m_nodes_copy.end();
+        }
+
         const std::vector<CNodeRef>& Nodes() const
         {
             return m_nodes_copy;
+        }
+
+        size_t Size() const
+        {
+            return m_nodes_copy.size();
         }
 
     private:
