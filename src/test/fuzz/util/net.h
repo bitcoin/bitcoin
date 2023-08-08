@@ -120,7 +120,8 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        addr_name,
                                        conn_type,
                                        inbound_onion,
-                                       CNodeOptions{ .permission_flags = permission_flags });
+                                       nullptr,
+                                       CNodeOptions{.permission_flags = permission_flags});
     } else {
         return std::make_shared<CNode>(node_id,
                                        sock,
@@ -131,6 +132,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        addr_name,
                                        conn_type,
                                        inbound_onion,
+                                       nullptr,
                                        CNodeOptions{.permission_flags = permission_flags});
     }
 }

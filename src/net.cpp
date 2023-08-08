@@ -569,6 +569,7 @@ CNodeRef CConnman::ConnectNode(CAddress addrConnect, const char* pszDest, bool f
                                              pszDest ? pszDest : "",
                                              conn_type,
                                              /*inbound_onion=*/false,
+                                             this,
                                              CNodeOptions{
                                                  .i2p_sam_session = std::move(i2p_transient_session),
                                                  .recv_flood_size = nReceiveFloodSize,
@@ -1044,6 +1045,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                              /*addrNameIn=*/"",
                                              ConnectionType::INBOUND,
                                              inbound_onion,
+                                             this,
                                              CNodeOptions{
                                                  .permission_flags = permission_flags,
                                                  .prefer_evict = discouraged,
@@ -1142,7 +1144,6 @@ void CConnman::DisconnectNodes()
     for (auto& pnode : nodes_disconnected_copy) {
         // Destroy the object only after other threads have stopped using it.
         if (pnode.use_count() == 2) {
-            DeleteNode(pnode);
             m_nodes_disconnected.erase(remove(m_nodes_disconnected.begin(), m_nodes_disconnected.end(), pnode), m_nodes_disconnected.end());
         }
     }
@@ -2506,20 +2507,16 @@ void CConnman::StopNodes()
     WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
     for (auto& pnode : nodes) {
         pnode->CloseSocketDisconnect();
-        DeleteNode(pnode);
     }
     nodes.clear();
 
-    for (auto& pnode : m_nodes_disconnected) {
-        DeleteNode(pnode);
-    }
     m_nodes_disconnected.clear();
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
 }
 
-void CConnman::DeleteNode(CNodeRef pnode)
+void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
     m_msgproc->FinalizeNode(*pnode);
@@ -2796,6 +2793,7 @@ CNode::CNode(NodeId idIn,
              const std::string& addrNameIn,
              ConnectionType conn_type_in,
              bool inbound_onion,
+             CConnman* connman,
              CNodeOptions&& node_opts)
     : m_deserializer{std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION))},
       m_serializer{std::make_unique<V1TransportSerializer>(V1TransportSerializer())},
@@ -2812,7 +2810,8 @@ CNode::CNode(NodeId idIn,
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
       m_recv_flood_size{node_opts.recv_flood_size},
-      m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
+      m_i2p_sam_session{std::move(node_opts.i2p_sam_session)},
+      m_connman{connman}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 
@@ -2826,6 +2825,14 @@ CNode::CNode(NodeId idIn,
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
 }
+
+CNode::~CNode()
+{
+    if (m_connman) {
+        m_connman->DeleteNode(this);
+    }
+}
+
 
 void CNode::MarkReceivedMsgsForProcessing()
 {

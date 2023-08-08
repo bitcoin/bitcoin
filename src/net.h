@@ -45,6 +45,7 @@
 
 class AddrMan;
 class BanMan;
+class CConnman;
 class CNode;
 class CScheduler;
 struct bilingual_str;
@@ -568,9 +569,11 @@ public:
           const std::string& addrNameIn,
           ConnectionType conn_type_in,
           bool inbound_onion,
+          CConnman* connman = nullptr,
           CNodeOptions&& node_opts = {});
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
+    ~CNode();
 
     NodeId GetId() const {
         return id;
@@ -647,6 +650,7 @@ private:
      * Otherwise this unique_ptr is empty.
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
+    CConnman* m_connman;
 };
 
 using CNodeRef = std::shared_ptr<CNode>;
@@ -1242,6 +1246,7 @@ private:
     };
 
     friend struct ConnmanTestMsg;
+    friend class CNode;
 };
 
 /** Dump binary message to file, with timestamp */
