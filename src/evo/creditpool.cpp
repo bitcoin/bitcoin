@@ -142,7 +142,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
         if (!GetTxPayload(block->vtx[0]->vExtraPayload, cbTx)) {
             throw std::runtime_error(strprintf("%s: failed-getcreditpool-cbtx-payload", __func__));
         }
-        locked = cbTx.assetLockedAmount;
+        locked = cbTx.creditPoolBalance;
     }
 
     // We use here sliding window with LimitBlocksToTrace to determine
@@ -226,7 +226,7 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state
     }
 
     if (cbTx.nVersion == 3) {
-        targetLocked = cbTx.assetLockedAmount;
+        targetBalance = cbTx.creditPoolBalance;
     }
     return true;
 }

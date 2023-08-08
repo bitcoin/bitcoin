@@ -117,18 +117,18 @@ class AssetLocksTest(DashTestFramework):
         unlock_tx.vExtraPayload = unlockTx_payload.serialize()
         return unlock_tx
 
-    def get_credit_pool_amount(self, node = None, block_hash = None):
+    def get_credit_pool_balance(self, node = None, block_hash = None):
         if node is None:
             node = self.nodes[0]
 
         if block_hash is None:
             block_hash = node.getbestblockhash()
         block = node.getblock(block_hash)
-        return int(COIN * block['cbTx']['assetLockedAmount'])
+        return int(COIN * block['cbTx']['creditPoolBalance'])
 
-    def validate_credit_pool_amount(self, expected = None, block_hash = None):
+    def validate_credit_pool_balance(self, expected = None, block_hash = None):
         for node in self.nodes:
-            locked = self.get_credit_pool_amount(node=node, block_hash=block_hash)
+            locked = self.get_credit_pool_balance(node=node, block_hash=block_hash)
             if expected is None:
                 expected = locked
             else:
@@ -241,38 +241,38 @@ class AssetLocksTest(DashTestFramework):
         asset_lock_tx = self.create_assetlock(coin, locked_1, pubkey)
 
         self.check_mempool_result(tx=asset_lock_tx, result_expected={'allowed': True})
-        self.validate_credit_pool_amount(0)
+        self.validate_credit_pool_balance(0)
         txid_in_block = self.send_tx(asset_lock_tx)
-        self.validate_credit_pool_amount(0)
+        self.validate_credit_pool_balance(0)
         node.generate(1)
-        assert_equal(self.get_credit_pool_amount(node=node_wallet), 0)
-        assert_equal(self.get_credit_pool_amount(node=node), locked_1)
+        assert_equal(self.get_credit_pool_balance(node=node_wallet), 0)
+        assert_equal(self.get_credit_pool_balance(node=node), locked_1)
         self.log.info("Generate a number of blocks to ensure this is the longest chain for later in the test when we reconsiderblock")
         node.generate(12)
         self.sync_all()
 
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
 
         # tx is mined, let's get blockhash
         self.log.info("Invalidate block with asset lock tx...")
         block_hash_1 = node_wallet.gettransaction(txid_in_block)['blockhash']
         for inode in self.nodes:
             inode.invalidateblock(block_hash_1)
-            assert_equal(self.get_credit_pool_amount(node=inode), 0)
+            assert_equal(self.get_credit_pool_balance(node=inode), 0)
         node.generate(3)
         self.sync_all()
-        self.validate_credit_pool_amount(0)
+        self.validate_credit_pool_balance(0)
         self.log.info("Resubmit asset lock tx to new chain...")
         # NEW tx appears
         asset_lock_tx_2 = self.create_assetlock(coin, locked_2, pubkey)
         txid_in_block = self.send_tx(asset_lock_tx_2)
         node.generate(1)
         self.sync_all()
-        self.validate_credit_pool_amount(locked_2)
+        self.validate_credit_pool_balance(locked_2)
         self.log.info("Reconsider old blocks...")
         for inode in self.nodes:
             inode.reconsiderblock(block_hash_1)
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
         self.sync_all()
 
         self.log.info('Mine block with incorrect credit-pool value...')
@@ -281,7 +281,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.log.info("Mine a quorum...")
         self.mine_quorum()
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
 
         self.log.info("Testing asset unlock...")
         asset_unlock_tx_index_too_far = self.create_assetunlock(10001, COIN, pubkey)
@@ -294,7 +294,7 @@ class AssetLocksTest(DashTestFramework):
         self.ensure_tx_is_not_mined(tx_too_far_index)
 
         self.log.info("Generating several txes by same quorum....")
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
         asset_unlock_tx = self.create_assetunlock(101, COIN, pubkey)
         asset_unlock_tx_late = self.create_assetunlock(102, COIN, pubkey)
         asset_unlock_tx_too_late = self.create_assetunlock(103, COIN, pubkey)
@@ -322,11 +322,11 @@ class AssetLocksTest(DashTestFramework):
         self.send_tx(asset_unlock_tx)
         self.mempool_size += 1
         self.check_mempool_size()
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
         self.log.info("Mining one block - index '10001' can't be included in this block")
         node.generate(1)
         self.sync_all()
-        self.validate_credit_pool_amount(locked_1 - COIN)
+        self.validate_credit_pool_balance(locked_1 - COIN)
         self.mempool_size -= 1
         self.check_mempool_size()
         self.log.info("Tx should not be mined yet... mine one more block")
@@ -347,20 +347,20 @@ class AssetLocksTest(DashTestFramework):
             reason = "double index")
 
         self.log.info("Checking tx with too far index is mined too - it is not too far anymore...")
-        self.validate_credit_pool_amount(locked_1 - 2 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
         self.nodes[0].getrawtransaction(tx_too_far_index, 1)['blockhash']
 
         self.log.info("Mining next quorum to check tx 'asset_unlock_tx_late' is still valid...")
         self.mine_quorum()
         self.log.info("Checking credit pool amount is same...")
-        self.validate_credit_pool_amount(locked_1 - 2 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
         self.check_mempool_result(tx=asset_unlock_tx_late, result_expected={'allowed': True})
         self.log.info("Checking credit pool amount still is same...")
-        self.validate_credit_pool_amount(locked_1 - 2 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
         self.send_tx(asset_unlock_tx_late)
         node.generate(1)
         self.sync_all()
-        self.validate_credit_pool_amount(locked_1 - 3 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 3 * COIN)
 
         self.log.info("Generating many blocks to make quorum far behind (even still active)...")
         self.slowly_generate_batch(too_late_height - node.getblock(node.getbestblockhash())["height"] - 1)
@@ -380,12 +380,12 @@ class AssetLocksTest(DashTestFramework):
         self.log.info("Test block invalidation with asset unlock tx...")
         for inode in self.nodes:
             inode.invalidateblock(block_asset_unlock)
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
         self.slowly_generate_batch(50)
-        self.validate_credit_pool_amount(locked_1)
+        self.validate_credit_pool_balance(locked_1)
         for inode in self.nodes:
             inode.reconsiderblock(block_to_reconsider)
-        self.validate_credit_pool_amount(locked_1 - 3 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 3 * COIN)
 
         self.log.info("Forcibly mining asset_unlock_tx_too_late and ensure block is invalid...")
         self.create_and_check_block([asset_unlock_tx_too_late], expected_error = "bad-assetunlock-not-active-quorum")
@@ -393,11 +393,11 @@ class AssetLocksTest(DashTestFramework):
         node.generate(1)
         self.sync_all()
 
-        self.validate_credit_pool_amount(locked_1 - 3 * COIN)
-        self.validate_credit_pool_amount(block_hash=block_hash_1, expected=locked_1)
+        self.validate_credit_pool_balance(locked_1 - 3 * COIN)
+        self.validate_credit_pool_balance(block_hash=block_hash_1, expected=locked_1)
 
         self.log.info("Checking too big withdrawal... expected to not be mined")
-        asset_unlock_tx_full = self.create_assetunlock(201, 1 + self.get_credit_pool_amount(), pubkey)
+        asset_unlock_tx_full = self.create_assetunlock(201, 1 + self.get_credit_pool_balance(), pubkey)
 
         self.log.info("Checking that transaction with exceeding amount accepted by mempool...")
         # Mempool doesn't know about the size of the credit pool
@@ -413,7 +413,7 @@ class AssetLocksTest(DashTestFramework):
         self.create_and_check_block([asset_unlock_tx_full], expected_error = "failed-creditpool-unlock-too-much")
 
         self.mempool_size += 1
-        asset_unlock_tx_full = self.create_assetunlock(301, self.get_credit_pool_amount(), pubkey)
+        asset_unlock_tx_full = self.create_assetunlock(301, self.get_credit_pool_balance(), pubkey)
         self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True })
 
         txid_in_block = self.send_tx(asset_unlock_tx_full)
@@ -422,7 +422,7 @@ class AssetLocksTest(DashTestFramework):
         self.log.info("Check txid_in_block was mined...")
         block = node.getblock(node.getbestblockhash())
         assert txid_in_block in block['tx']
-        self.validate_credit_pool_amount(0)
+        self.validate_credit_pool_balance(0)
 
         self.log.info("After many blocks duplicated tx still should not be mined")
         self.send_tx(asset_unlock_tx_duplicate_index,
@@ -436,7 +436,7 @@ class AssetLocksTest(DashTestFramework):
         self.slowly_generate_batch(blocks_in_one_day  + 1)
         self.mine_quorum()
 
-        total = self.get_credit_pool_amount()
+        total = self.get_credit_pool_balance()
         while total <= 10_900 * COIN:
             self.log.info(f"Collecting coins in pool... Collected {total}/{10_900 * COIN}")
             coin = coins.pop()
@@ -449,8 +449,8 @@ class AssetLocksTest(DashTestFramework):
         self.sync_mempools()
         node.generate(1)
         self.sync_all()
-        credit_pool_amount_1 = self.get_credit_pool_amount()
-        assert_greater_than(credit_pool_amount_1, 10_900 * COIN)
+        credit_pool_balance_1 = self.get_credit_pool_balance()
+        assert_greater_than(credit_pool_balance_1, 10_900 * COIN)
         limit_amount_1 = 1000 * COIN
         # take most of limit by one big tx for faster testing and
         # create several tiny withdrawal with exactly 1 *invalid* / causes spend above limit tx
@@ -469,7 +469,7 @@ class AssetLocksTest(DashTestFramework):
         node.generate(1)
         self.sync_all()
 
-        new_total = self.get_credit_pool_amount()
+        new_total = self.get_credit_pool_balance()
         amount_actually_withdrawn = total - new_total
         block = node.getblock(node.getbestblockhash())
         self.log.info("Testing that we tried to withdraw more than we could...")
@@ -485,7 +485,7 @@ class AssetLocksTest(DashTestFramework):
         self.mempool_size = 1
         self.check_mempool_size()
 
-        assert_equal(new_total, self.get_credit_pool_amount())
+        assert_equal(new_total, self.get_credit_pool_balance())
         self.log.info("Fast forward to next day again...")
         self.slowly_generate_batch(blocks_in_one_day - 2)
         self.log.info("Checking mempool is empty now...")
@@ -493,18 +493,18 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_size()
 
         self.log.info("Creating new asset-unlock tx. It should be mined exactly 1 block after")
-        credit_pool_amount_2 = self.get_credit_pool_amount()
-        limit_amount_2 = credit_pool_amount_2 // 10
+        credit_pool_balance_2 = self.get_credit_pool_balance()
+        limit_amount_2 = credit_pool_balance_2 // 10
         index += 1
         asset_unlock_tx = self.create_assetunlock(index, limit_amount_2, pubkey)
         self.send_tx(asset_unlock_tx)
         node.generate(1)
         self.sync_all()
-        assert_equal(new_total, self.get_credit_pool_amount())
+        assert_equal(new_total, self.get_credit_pool_balance())
         node.generate(1)
         self.sync_all()
         new_total -= limit_amount_2
-        assert_equal(new_total, self.get_credit_pool_amount())
+        assert_equal(new_total, self.get_credit_pool_balance())
         self.log.info("Trying to withdraw more... expecting to fail")
         index += 1
         asset_unlock_tx = self.create_assetunlock(index, COIN * 100, pubkey)
@@ -515,7 +515,7 @@ class AssetLocksTest(DashTestFramework):
         self.log.info("generate many blocks to be sure that mempool is empty afterwards...")
         self.slowly_generate_batch(60)
         self.log.info("Checking that credit pool is not changed...")
-        assert_equal(new_total, self.get_credit_pool_amount())
+        assert_equal(new_total, self.get_credit_pool_balance())
         self.check_mempool_size()
 
 if __name__ == '__main__':

@@ -432,9 +432,9 @@ bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, co
 
 std::string CCbTx::ToString() const
 {
-    return strprintf("CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s, bestCLHeightDiff=%d, bestCLSig=%s, assetLockedAmount=%d.%08d)",
+    return strprintf("CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s, bestCLHeightDiff=%d, bestCLSig=%s, creditPoolBalance=%d.%08d)",
         nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString(), bestCLHeightDiff, bestCLSignature.ToString(),
-        assetLockedAmount / COIN, assetLockedAmount % COIN);
+        creditPoolBalance / COIN, creditPoolBalance % COIN);
 }
 
 std::optional<CCbTx> GetCoinbaseTx(const CBlockIndex* pindex)

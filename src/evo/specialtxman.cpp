@@ -160,7 +160,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         }
         if (creditPoolDiff != std::nullopt) {
             CAmount locked_proposed{0};
-            if(creditPoolDiff->GetTargetLocked()) locked_proposed = *creditPoolDiff->GetTargetLocked();
+            if(creditPoolDiff->GetTargetBalance()) locked_proposed = *creditPoolDiff->GetTargetBalance();
 
             CAmount locked_calculated = creditPoolDiff->GetTotalLocked();
             if (locked_proposed != locked_calculated) {

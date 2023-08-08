@@ -231,7 +231,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 assert(creditPoolDiff != std::nullopt);
-                cbTx.assetLockedAmount = creditPoolDiff->GetTotalLocked();
+                cbTx.creditPoolBalance = creditPoolDiff->GetTotalLocked();
             }
         }
 

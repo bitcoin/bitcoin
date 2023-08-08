@@ -37,7 +37,7 @@ public:
     uint256 merkleRootQuorums;
     uint32_t bestCLHeightDiff;
     CBLSSignature bestCLSignature;
-    CAmount assetLockedAmount{0};
+    CAmount creditPoolBalance{0};
 
     SERIALIZE_METHODS(CCbTx, obj)
     {
@@ -48,7 +48,7 @@ public:
             if (obj.nVersion >= CB_V20_VERSION) {
                 READWRITE(COMPACTSIZE(obj.bestCLHeightDiff));
                 READWRITE(obj.bestCLSignature);
-                READWRITE(obj.assetLockedAmount);
+                READWRITE(obj.creditPoolBalance);
             }
         }
 
@@ -68,7 +68,7 @@ public:
             if (nVersion >= CB_V20_VERSION) {
                 obj.pushKV("bestCLHeightDiff", static_cast<int>(bestCLHeightDiff));
                 obj.pushKV("bestCLSignature", bestCLSignature.ToString());
-                obj.pushKV("assetLockedAmount", ValueFromAmount(assetLockedAmount));
+                obj.pushKV("creditPoolBalance", ValueFromAmount(creditPoolBalance));
             }
         }
     }
