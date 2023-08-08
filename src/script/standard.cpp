@@ -17,7 +17,6 @@
 typedef std::vector<unsigned char> valtype;
 
 CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in)) {}
-CScriptID::CScriptID(const ScriptHash& in) : BaseHash(static_cast<uint160>(in)) {}
 
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
 ScriptHash::ScriptHash(const CScriptID& in) : BaseHash(static_cast<uint160>(in)) {}
@@ -36,6 +35,11 @@ CKeyID ToKeyID(const PKHash& key_hash)
 CKeyID ToKeyID(const WitnessV0KeyHash& key_hash)
 {
     return CKeyID{static_cast<uint160>(key_hash)};
+}
+
+CScriptID ToScriptID(const ScriptHash& script_hash)
+{
+    return CScriptID{static_cast<uint160>(script_hash)};
 }
 
 WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
