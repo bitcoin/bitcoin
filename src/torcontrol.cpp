@@ -14,14 +14,26 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <random.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/fs.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/thread.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <functional>
+#include <map>
+#include <optional>
 #include <set>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include <event2/buffer.h>

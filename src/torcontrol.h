@@ -11,17 +11,13 @@
 #include <netaddress.h>
 #include <util/fs.h>
 
+#include <event2/util.h>
 
-#include <event2/bufferevent.h>
-#include <event2/event.h>
-
-#include <cstdlib>
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <string>
 #include <vector>
-
-class CService;
 
 extern const std::string DEFAULT_TOR_CONTROL;
 static const bool DEFAULT_LISTEN_ONION = true;
