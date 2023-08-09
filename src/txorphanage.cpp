@@ -21,6 +21,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     LOCK(m_mutex);
 
     const uint256& hash = tx->GetHash();
+    const uint256& wtxid = tx->GetWitnessHash();
     if (m_orphans.count(hash))
         return false;
 
@@ -34,7 +35,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     unsigned int sz = GetTransactionWeight(*tx);
     if (sz > MAX_STANDARD_TX_WEIGHT)
     {
-        LogPrint(BCLog::MEMPOOL, "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
+        LogPrint(BCLog::MEMPOOL, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)\n", sz, hash.ToString(), wtxid.ToString());
         return false;
     }
 
@@ -47,7 +48,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
 
-    LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
+    LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (wtxid=%s) (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(),
              m_orphans.size(), m_outpoint_to_orphan_it.size());
     return true;
 }

@@ -2919,9 +2919,10 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
+        const uint256& orphan_wtxid = porphanTx->GetWitnessHash();
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
+            LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
             m_orphanage.AddChildrenToWorkSet(*porphanTx);
             m_orphanage.EraseTx(orphanHash);
@@ -2931,8 +2932,9 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (state.IsInvalid()) {
-                LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
+                LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s (wtxid=%s) from peer=%d. %s\n",
                     orphanHash.ToString(),
+                    orphan_wtxid.ToString(),
                     peer.m_id,
                     state.ToString());
                 // Maybe punish peer that gave us an invalid orphan tx
@@ -2940,7 +2942,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
-            LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
+            LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
             if (state.GetResult() != TxValidationResult::TX_WITNESS_STRIPPED) {
                 // We can add the wtxid of this transaction to our reject filter.
                 // Do not add txids of witness transactions or witness-stripped
@@ -4115,9 +4117,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
                 if (!m_mempool.exists(GenTxid::Txid(tx.GetHash()))) {
-                    LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+                    LogPrintf("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
+                              tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
                 } else {
-                    LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+                    LogPrintf("Force relaying tx %s (wtxid=%s) from peer=%d\n",
+                              tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
                     RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
                 }
             }
@@ -4137,9 +4141,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
 
-            LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
+            LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (wtxid=%s) (poolsz %u txn, %u kB)\n",
                 pfrom.GetId(),
                 tx.GetHash().ToString(),
+                tx.GetWitnessHash().ToString(),
                 m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
 
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
@@ -4191,7 +4196,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
                 m_orphanage.LimitOrphans(m_opts.max_orphan_txs);
             } else {
-                LogPrint(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s\n",tx.GetHash().ToString());
+                LogPrint(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)\n",
+                         tx.GetHash().ToString(),
+                         tx.GetWitnessHash().ToString());
                 // We will continue to reject this tx since it has rejected
                 // parents so avoid re-requesting it from other peers.
                 // Here we add both the txid and the wtxid, as we know that
@@ -4256,7 +4263,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // regardless of false positives.
 
         if (state.IsInvalid()) {
-            LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
+            LogPrint(BCLog::MEMPOOLREJ, "%s (wtxid=%s) from peer=%d was not accepted: %s\n",
+                tx.GetHash().ToString(),
+                tx.GetWitnessHash().ToString(),
                 pfrom.GetId(),
                 state.ToString());
             MaybePunishNodeForTx(pfrom.GetId(), state);
