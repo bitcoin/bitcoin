@@ -132,6 +132,7 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         self.generate(self.wallet, 100)
         self.address = self.wallet.get_address()
 
+        self.test_sponsor_swap()
         self.test_node_restart()
         self.test_fee_having_parent()
         self.test_multianchor()
@@ -357,8 +358,8 @@ class EphemeralAnchorTest(BitcoinTestFramework):
 
         third_package_hex = [package_hex[1], child_three["hex"]]
         third_package_txns = [package_txns[1], child_three["tx"]]
-        node.submitpackage(third_package_hex)
 
+        node.submitpackage(third_package_hex)
         # First parent not in mempool because it has been trimmed
         self.assert_mempool_contents(expected=third_package_txns, unexpected=[package_txns[0]])
 
@@ -379,6 +380,111 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         fourth_package_txns = [package_txns[0], child_four["tx"]]
         node.submitpackage(fourth_package_hex)
         self.assert_mempool_contents(expected=fourth_package_txns, unexpected=[child_three["tx"]])
+
+        # Mining everything
+        self.generate(node, 1)
+        assert_equal(node.getrawmempool(), [])
+
+
+    def test_sponsor_swap(self):
+        self.log.info("Test that EA txn is evicted when sponsoring tx doesn't spend anchor itself")
+        node = self.nodes[0]
+
+        # Coin to create 0-fee parent
+        parent_coin = self.coins[0]
+        del self.coins[0]
+
+        # Fee coin for sponsor which will be RBF'd
+        sponsor_coin = self.coins[0]
+        del self.coins[0]
+
+        package_hex = []
+        package_txns = []
+
+        parent_result = self.wallet.create_self_transfer(
+            fee_rate=0,
+            fee=0,
+            utxo_to_spend=parent_coin,
+            sequence=MAX_BIP125_RBF_SEQUENCE,
+            version=3
+        )
+
+        self.insert_additional_outputs(parent_result, [CTxOut(0, CScript([OP_TRUE]))])
+
+        non_ea_coin = parent_result["new_utxo"]
+        ea_coin = {**parent_result["new_utxo"], 'vout': 1, 'value': 0, 'anchor': True}
+
+        package_hex.append(parent_result["hex"])
+        package_txns.append(parent_result["tx"])
+
+        # Append sponsor_coin to possible spends
+        #child_inputs.append(sponsor_coin)
+
+        #assert_equal(len(child_inputs), 3)
+
+        # First child spends ephemeral anchor and sponsor
+        first_spend = [ea_coin, sponsor_coin]
+        child_one = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=first_spend,
+            num_outputs=1,
+            fee_per_output=int(COIN),
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        self.spend_ephemeral_anchor_witness(child_one, first_spend)
+
+        # Submit parent and child together
+        first_package_hex = [package_hex[0], child_one["hex"]]
+        first_package_txns = [package_txns[0], child_one["tx"]]
+        node.submitpackage(first_package_hex)
+        self.assert_mempool_contents(expected=first_package_txns, unexpected=[])
+
+        # Now we need to stage:
+        # (a) 1-input-1-output spend of non_ea_coin
+        # (b) 1-input-1-output double-spend of sponsor_coin
+        # (c) 2-input-1-output spend of (a) and (b)
+        #
+        # This creates an ancestor package will would pass
+        # ancestor package sanity checks to trigger package evaluation,
+        # but (a) should be rejected for not spending ea_coin using
+        # mempool-contextual checks. This is to catch
+        # sub-package evaluation of just (a) allowing it through.
+
+        a_spend = [non_ea_coin]
+        child_a = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=a_spend,
+            num_outputs=1,
+            fee_per_output=int(COIN)*2,
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        b_spend = [sponsor_coin]
+        child_b = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=b_spend,
+            num_outputs=1,
+            fee_per_output=int(COIN)*2,
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        # This tx should never work because of v3 package limits, but that's not
+        # the error we're interested in exercising here
+        c_spend = [child_a["new_utxos"][0], child_b["new_utxos"][0]]
+        child_c = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=c_spend,
+            num_outputs=1,
+            fee_per_output=int(COIN)*2,
+            sequence=MAX_BIP125_RBF_SEQUENCE - 1,
+            version=3
+        )
+
+        # Submit a + b + c ancestor package
+        assert_raises_rpc_error(-26, "v3-tx-nonstandard", node.submitpackage, [child_a["hex"], child_b["hex"], child_c["hex"]])
+
+        # Only the sponsor RBF makes it into mempool, parent is evicted and other descendants have been rejected for V3 violations
+        assert_equal(node.getrawmempool(), [child_b["txid"]])
 
         # Mining everything
         self.generate(node, 1)
