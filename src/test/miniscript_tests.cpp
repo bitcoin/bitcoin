@@ -19,7 +19,6 @@
 #include <crypto/sha256.h>
 #include <script/interpreter.h>
 #include <script/miniscript.h>
-#include <script/standard.h>
 #include <script/script_error.h>
 
 namespace {

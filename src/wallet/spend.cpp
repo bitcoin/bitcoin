@@ -13,6 +13,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <script/standard.h>
 #include <util/check.h>
 #include <util/fees.h>
 #include <util/moneystr.h>

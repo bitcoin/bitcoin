@@ -6,7 +6,6 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
-#include <script/standard.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>

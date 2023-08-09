@@ -9,6 +9,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/sign.h>
+#include <script/standard.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/string.h>

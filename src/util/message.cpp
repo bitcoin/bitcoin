@@ -7,7 +7,6 @@
 #include <key.h>
 #include <key_io.h>
 #include <pubkey.h>
-#include <script/standard.h>
 #include <uint256.h>
 #include <util/message.h>
 #include <util/strencodings.h>

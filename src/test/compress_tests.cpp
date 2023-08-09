@@ -4,7 +4,6 @@
 
 #include <compressor.h>
 #include <script/script.h>
-#include <script/standard.h>
 #include <test/util/setup_common.h>
 
 #include <stdint.h>

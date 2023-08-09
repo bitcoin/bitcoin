@@ -5,7 +5,6 @@
 #include <addresstype.h>
 #include <clientversion.h>
 #include <coins.h>
-#include <script/standard.h>
 #include <streams.h>
 #include <test/util/poolresourcetester.h>
 #include <test/util/random.h>

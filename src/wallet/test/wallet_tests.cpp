@@ -15,6 +15,7 @@
 #include <node/blockstorage.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
+#include <script/standard.h>
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>

@@ -14,7 +14,6 @@
 #include <merkleblock.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
