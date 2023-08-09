@@ -7,16 +7,15 @@
 #define BITCOIN_SCRIPT_STANDARD_H
 
 #include <attributes.h>
-#include <pubkey.h>
-#include <script/interpreter.h>
-#include <uint256.h>
-#include <util/hash_type.h>
+#include <script/script.h>
 
-#include <map>
 #include <string>
-#include <variant>
+#include <optional>
+#include <utility>
+#include <vector>
 
-class CScript;
+class CPubKey;
+template <typename C> class Span;
 
 enum class TxoutType {
     NONSTANDARD,
