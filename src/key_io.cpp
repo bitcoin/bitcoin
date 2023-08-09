@@ -77,6 +77,7 @@ public:
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
+    std::string operator()(const PubKeyDestination& pk) const { return {}; }
 };
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)

@@ -27,6 +27,19 @@ public:
     friend bool operator<(const CNoDestination& a, const CNoDestination& b) { return a.GetScript() < b.GetScript(); }
 };
 
+struct PubKeyDestination {
+private:
+    CPubKey m_pubkey;
+
+public:
+    PubKeyDestination(const CPubKey& pubkey) : m_pubkey(pubkey) {}
+
+    const CPubKey& GetPubKey() const LIFETIMEBOUND { return m_pubkey; }
+
+    friend bool operator==(const PubKeyDestination& a, const PubKeyDestination& b) { return a.GetPubKey() == b.GetPubKey(); }
+    friend bool operator<(const PubKeyDestination& a, const PubKeyDestination& b) { return a.GetPubKey() < b.GetPubKey(); }
+};
+
 struct PKHash : public BaseHash<uint160>
 {
     PKHash() : BaseHash() {}
@@ -103,6 +116,7 @@ public:
 /**
  * A txout script categorized into standard templates.
  *  * CNoDestination: Optionally a script, no corresponding address.
+ *  * PubKeyDestination: TxoutType::PUBKEY (P2PK), no corresponding address
  *  * PKHash: TxoutType::PUBKEYHASH destination (P2PKH address)
  *  * ScriptHash: TxoutType::SCRIPTHASH destination (P2SH address)
  *  * WitnessV0ScriptHash: TxoutType::WITNESS_V0_SCRIPTHASH destination (P2WSH address)
@@ -111,9 +125,9 @@ public:
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W??? address)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-using CTxDestination = std::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, WitnessUnknown>;
 
-/** Check whether a CTxDestination is a CNoDestination. */
+/** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);
 
 /**
@@ -123,8 +137,8 @@ bool IsValidDestination(const CTxDestination& dest);
  * is assigned to addressRet.
  * For all other scripts. addressRet is assigned as a CNoDestination containing the scriptPubKey.
  *
- * Returns true for standard destinations - P2PK, P2PKH, P2SH, P2WPKH, P2WSH, and P2TR scripts.
- * Returns false for non-standard destinations - P2PK with invalid pubkeys, P2W???, bare multisig, null data, and nonstandard scripts.
+ * Returns true for standard destinations with addresses - P2PKH, P2SH, P2WPKH, P2WSH, P2TR and P2W??? scripts.
+ * Returns false for non-standard destinations and those without addresses - P2PK, bare multisig, null data, and nonstandard scripts.
  */
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 

@@ -490,8 +490,15 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     coins_params.skip_locked = false;
     for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
         CTxDestination address;
-        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
-            ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable))) {
+            if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+                // For backwards compatibility, we convert P2PK output scripts into PKHash destinations
+                if (auto pk_dest = std::get_if<PubKeyDestination>(&address)) {
+                    address = PKHash(pk_dest->GetPubKey());
+                } else {
+                    continue;
+                }
+            }
             result[address].emplace_back(coin);
         }
     }

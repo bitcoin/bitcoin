@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     // TxoutType::PUBKEY
     s.clear();
     s << ToByteVector(pubkey) << OP_CHECKSIG;
-    BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<PKHash>(address) == PKHash(pubkey));
+    BOOST_CHECK(!ExtractDestination(s, address));
+    BOOST_CHECK(std::get<PubKeyDestination>(address) == PubKeyDestination(pubkey));
 
     // TxoutType::PUBKEYHASH
     s.clear();

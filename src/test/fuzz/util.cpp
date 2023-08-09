@@ -173,6 +173,15 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = CNoDestination{};
         },
         [&] {
+            bool compressed = fuzzed_data_provider.ConsumeBool();
+            CPubKey pk{ConstructPubKeyBytes(
+                    fuzzed_data_provider,
+                    ConsumeFixedLengthByteVector(fuzzed_data_provider, (compressed ? CPubKey::COMPRESSED_SIZE : CPubKey::SIZE)),
+                    compressed
+            )};
+            tx_destination = PubKeyDestination{pk};
+        },
+        [&] {
             tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
         },
         [&] {
