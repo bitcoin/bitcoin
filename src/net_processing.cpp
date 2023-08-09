@@ -2840,7 +2840,9 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
     // See ChainSyncTimeoutState.
     if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
         if (m_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
-            LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Protecting from eviction for bad or slow chain: %s peer=%d net=%s%s\n",
+                          pfrom.ConnectionTypeAsString(), pfrom.GetId(), GetNetworkName(pfrom.addr.GetNetwork()),
+                          fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
             nodestate->m_chain_sync.m_protect = true;
             ++m_outbound_peers_with_protect_from_disconnect;
         }
@@ -5217,7 +5219,13 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             if (state->m_chain_sync.m_protect) return;
             // If this is the only connection on a particular network that is
             // OUTBOUND_FULL_RELAY or MANUAL, protect it.
-            if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
+            if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) {
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Protecting from eviction last remaining %s outbound peer=%d that relays transactions%s (%s)\n",
+                              GetNetworkName(pnode->addr.GetNetwork()), pnode->GetId(),
+                              fLogIPs ? strprintf(": %s", pnode->addr.ToStringAddrPort()) : "",
+                              pnode->ConnectionTypeAsString());
+                return;
+            }
             if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;

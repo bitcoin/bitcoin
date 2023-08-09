@@ -1712,7 +1712,9 @@ bool CConnman::AttemptToEvictConnection()
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
         if (pnode->GetId() == *node_id_to_evict) {
-            LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Selected %s connection for eviction, disconnecting: peer=%d net=%s%s\n",
+                          pnode->ConnectionTypeAsString(), pnode->GetId(), GetNetworkName(pnode->ConnectedThroughNetwork()),
+                          fLogIPs ? strprintf(", peeraddr=%s", pnode->addr.ToStringAddrPort()) : "");
             pnode->fDisconnect = true;
             return true;
         }
