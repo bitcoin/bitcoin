@@ -5,13 +5,11 @@
 #ifndef NAVCOIN_BLSCT_GENERATOR_DERIVER_H
 #define NAVCOIN_BLSCT_GENERATOR_DERIVER_H
 
-#include <blsct/arith/mcl/mcl.h>
 #include <ctokens/tokenid.h>
 #include <optional>
 #include <string>
 
-using Point = Mcl::Point;
-
+template <typename Point>
 class GeneratorDeriver {
 public:
     GeneratorDeriver(const std::string& salt_str): salt_str{salt_str} {}

@@ -27,8 +27,13 @@ public:
      * throws exception if such a number exceeds the maximum
      */
     static size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_vec_len);
-};
 
+    template <typename T>
+    static std::vector<T> TrimPreceedingZeros(const std::vector<T>& vec);
+
+    template <typename T>
+    static void AddZeroIfEmpty(std::vector<T>& vec);
+};
 }
 
 #endif  // NAVCOIN_BLSCT_COMMON_H

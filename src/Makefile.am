@@ -160,6 +160,7 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_init.h \
   blsct/arith/mcl/mcl_scalar.h \
+  blsct/arith/mcl/mcl_util.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
   blsct/building_block/fiat_shamir.h \
@@ -167,18 +168,26 @@ BITCOIN_CORE_H = \
   blsct/building_block/g_h_gi_hi_zero_verifier.h \
   blsct/building_block/imp_inner_prod_arg.h \
   blsct/building_block/lazy_point.h \
+  blsct/building_block/lazy_points.h \
   blsct/building_block/pedersen_commitment.h \
+  blsct/building_block/weighted_inner_prod_arg.h \
   blsct/common.h \
   blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
+  blsct/range_proof/common.h \
   blsct/range_proof/generators.h \
-  blsct/range_proof/range_proof_logic.h \
+  blsct/range_proof/proof_base.h \
   blsct/range_proof/range_proof_setup.h \
-  blsct/range_proof/range_proof_with_transcript.h \
-  blsct/range_proof/range_proof.h \
+  blsct/range_proof/bulletproofs/range_proof_logic.h \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.h \
+  blsct/range_proof/bulletproofs/range_proof.h \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.h \
+  blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.h \
+  blsct/range_proof/bulletproofs_plus/range_proof.h \
+  blsct/range_proof/bulletproofs_plus/util.h \
   blsct/set_mem_proof/set_mem_proof_setup.h \
   blsct/set_mem_proof/set_mem_proof.h \
   blsct/set_mem_proof/set_mem_proof_prover.h \
@@ -437,19 +446,27 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
   blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
   blsct/building_block/lazy_point.cpp \
-  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/lazy_points.cpp \
+  blsct/building_block/weighted_inner_prod_arg.cpp \
   blsct/common.cpp \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
+  blsct/range_proof/common.cpp \
   blsct/range_proof/generators.cpp \
-  blsct/range_proof/range_proof_logic.cpp \
-  blsct/range_proof/range_proof.cpp \
-  blsct/range_proof/range_proof_with_transcript.cpp \
+  blsct/range_proof/proof_base.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/util.cpp \
   blsct/set_mem_proof/set_mem_proof.cpp \
   blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
@@ -704,7 +721,13 @@ libbitcoin_consensus_a_SOURCES = \
   blsct/arith/elements.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
-  blsct/range_proof/range_proof.cpp \
+  blsct/building_block/generator_deriver.cpp \
+  blsct/common.cpp \
+  blsct/range_proof/common.cpp \
+  blsct/range_proof/generators.cpp \
+  blsct/range_proof/proof_base.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/signature.cpp \
   consensus/amount.h \
   consensus/merkle.cpp \
@@ -799,6 +822,7 @@ libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
   blsct/arith/elements.cpp \
+  blsct/common.cpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -1015,12 +1039,16 @@ libbitcoinkernel_la_SOURCES = \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/arith/secp256k1/secp256k1_point.cpp \
+  blsct/arith/secp256k1/secp256k1_scalar.cpp \
   blsct/arith/elements.cpp \
   blsct/double_public_key.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
-  blsct/range_proof/range_proof.cpp \
+  blsct/range_proof/common.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/signature.cpp \
   chain.cpp \
   chainparamsbase.cpp \

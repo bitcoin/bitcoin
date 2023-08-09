@@ -11,164 +11,35 @@
 #include <cmath>
 #include <limits>
 
-#define SCALAR_CURVE_ORDER_MINUS_1(x) MclScalar x("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000", 16)
-#define SCALAR_INT64_MIN(x) MclScalar x("52435875175126190479447740508185965837690552500527637822594435327901726408705", 10);
+#define CURVE_ORDER_VEC(x) \
+std::vector<uint8_t> x = { \
+    0x73, 0xed, 0xa7, 0x53, 0x29, 0x9d, 0x7d, 0x48, \
+    0x33, 0x39, 0xd8, 0x08, 0x09, 0xa1, 0xd8, 0x05, \
+    0x53, 0xbd, 0xa4, 0x02, 0xff, 0xfe, 0x5b, 0xfe, \
+    0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x01, \
+};
+
+#define CURVE_ORDER_MINUS_1_VEC(x) \
+std::vector<uint8_t> x = { \
+    0x73, 0xed, 0xa7, 0x53, 0x29, 0x9d, 0x7d, 0x48, \
+    0x33, 0x39, 0xd8, 0x08, 0x09, 0xa1, 0xd8, 0x05, \
+    0x53, 0xbd, 0xa4, 0x02, 0xff, 0xfe, 0x5b, 0xfe, \
+    0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, \
+};
+
+#define CURVE_ORDER_MINUS_1_STR "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000"
+
+#define CURVE_ORDER_MINUS_1_SCALAR(x) Scalar x("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000", 16)
+#define SCALAR_INT64_MIN(x) Scalar x("52435875175126190479447740508185965837690552500527637822594435327901726408705", 10);
+
+using Scalar = MclScalar;
 
 BOOST_FIXTURE_TEST_SUITE(mcl_scalar_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_default_constructor)
+#include "../shared_scalar_tests.h"
+
+BOOST_AUTO_TEST_CASE(test_ctor_uint256_int64)
 {
-    MclScalar p;
-    BOOST_CHECK(p.IsZero());
-
-    MclScalar p2;
-    BOOST_CHECK(p.GetVch() == p2.GetVch());
-    BOOST_CHECK(p == p2);
-}
-
-BOOST_AUTO_TEST_CASE(test_ctor_vec_uint8)
-{
-    // input vector modulo curve order r should be set to Scalar
-
-    std::vector<uint8_t> one_zeros_be{
-        0x01,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    };
-    // input of curve order r - 1 should remain the same in Scalar
-    std::vector<uint8_t> order_r_minus_1_be{
-        0x73,
-        0xed,
-        0xa7,
-        0x53,
-        0x29,
-        0x9d,
-        0x7d,
-        0x48,
-        0x33,
-        0x39,
-        0xd8,
-        0x08,
-        0x09,
-        0xa1,
-        0xd8,
-        0x05,
-        0x53,
-        0xbd,
-        0xa4,
-        0x02,
-        0xff,
-        0xfe,
-        0x5b,
-        0xfe,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    };
-    // input of curve order r should become zero in Scalar
-    std::vector<uint8_t> order_r_be{
-        0x73,
-        0xed,
-        0xa7,
-        0x53,
-        0x29,
-        0x9d,
-        0x7d,
-        0x48,
-        0x33,
-        0x39,
-        0xd8,
-        0x08,
-        0x09,
-        0xa1,
-        0xd8,
-        0x05,
-        0x53,
-        0xbd,
-        0xa4,
-        0x02,
-        0xff,
-        0xfe,
-        0x5b,
-        0xfe,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0x00,
-        0x00,
-        0x01,
-    };
-
-    //// uint256
-    // uint256 constructor expects input vector to be big-endian
-    {
-        uint256 ui(one_zeros_be);
-        MclScalar a(ui);
-        // Scalar::GetString drops preceding 0s
-        BOOST_CHECK_EQUAL(a.GetString(), "100000000000000000000000000000000000000000000000000000000000000");
-    }
-    {
-        uint256 ui(order_r_minus_1_be);
-        MclScalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetString(), "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
-    }
-    {
-        uint256 ui(order_r_be);
-        MclScalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetString(), "0");
-    }
-
-    //// vector<uint8_t>
-    // input vector is expected to be big-endian
-    {
-        MclScalar a(one_zeros_be);
-        BOOST_CHECK_EQUAL(a.GetString(), "100000000000000000000000000000000000000000000000000000000000000");
-    }
-    {
-        MclScalar a(order_r_minus_1_be);
-        BOOST_CHECK_EQUAL(a.GetString(), "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
-    }
-    {
-        MclScalar a(order_r_be);
-        BOOST_CHECK_EQUAL(a.GetString(), "0");
-    }
-
     //// int64_t
     {
         uint64_t one = 1;
@@ -176,105 +47,51 @@ BOOST_AUTO_TEST_CASE(test_ctor_vec_uint8)
             // test up to shift = 62 excluding the sign bit
             for (size_t shift = 0; shift < 63; ++shift) {
                 int64_t i = one << shift;
-                MclScalar a(i);
+                Scalar a(i);
                 BOOST_CHECK_EQUAL(a.GetUint64(), i);
             }
         }
         {
             int64_t i = -1;
-            MclScalar a(i);
+            Scalar a(i);
             // fr order: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
             //       -1: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
             BOOST_CHECK_EQUAL(a.GetString().c_str(), "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
         }
     }
-
-    /// default
-    {
-        MclScalar a;
-        BOOST_CHECK(mclBnFr_isZero(&a.m_fr) != 0);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_add)
-{
-    {
-        MclScalar a(1);
-        MclScalar b(2);
-        MclScalar c(3);
-        BOOST_CHECK((a + b) == c);
-    }
-    {
-        SCALAR_CURVE_ORDER_MINUS_1(a);
-        MclScalar b(1);
-        MclScalar c(0);
-        BOOST_CHECK((a + b) == c);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_sub)
-{
-    {
-        MclScalar a(5);
-        MclScalar b(3);
-        MclScalar c(2);
-        BOOST_CHECK((a - b) == c);
-    }
-    {
-        MclScalar a(0);
-        MclScalar b(1);
-        SCALAR_CURVE_ORDER_MINUS_1(c);
-        BOOST_CHECK((a - b) == c);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_mul)
-{
-    MclScalar a(2);
-    MclScalar b(3);
-    MclScalar c(6);
-    BOOST_CHECK((a * b) == c);
-}
-
-BOOST_AUTO_TEST_CASE(test_div)
-{
-    MclScalar a(6);
-    MclScalar b(3);
-    MclScalar c(2);
-    BOOST_CHECK((a / b) == c);
 }
 
 BOOST_AUTO_TEST_CASE(test_bitwise_or)
 {
     {
         // there is no bit that has 1 in both a and b
-        MclScalar a(0b0001000100010001);
-        MclScalar b(0b1100110011001100);
-        MclScalar exp(0b1101110111011101);
+        Scalar a(0b0001000100010001);
+        Scalar b(0b1100110011001100);
+        Scalar exp(0b1101110111011101);
         auto act = a | b;
         BOOST_CHECK(act == exp);
     }
     {
         // there are bits that have 1 in both aband b
-        MclScalar a(0b0001000100010001);
-        MclScalar b(0b1101110111001101);
-        MclScalar exp(0b1101110111011101);
+        Scalar a(0b0001000100010001);
+        Scalar b(0b1101110111001101);
+        Scalar exp(0b1101110111011101);
         auto act = a | b;
         BOOST_CHECK(act == exp);
     }
     {
         // a is shorter than b. expects big-endian merge
-        MclScalar a(0b11111111);
-        MclScalar b(0b1000100010001000);
-        MclScalar exp(0b1000100011111111);
+        Scalar a(0b11111111);
+        Scalar b(0b1000100010001000);
+        Scalar exp(0b1000100011111111);
         auto act = a | b;
         BOOST_CHECK(act == exp);
     }
     {
         // a is longer than b. expects big-endian merge
-        MclScalar a(0b1000100010001000);
-        MclScalar b(0b11111111);
-        MclScalar exp(0b1000100011111111);
+        Scalar a(0b1000100010001000);
+        Scalar b(0b11111111);
+        Scalar exp(0b1000100011111111);
         auto act = a | b;
         BOOST_CHECK(act == exp);
     }
@@ -284,33 +101,33 @@ BOOST_AUTO_TEST_CASE(test_bitwise_xor)
 {
     {
         // there is no bit that has 1 in both a and b
-        MclScalar a(0b0001000100010001);
-        MclScalar b(0b1100110011001100);
-        MclScalar exp(0b1101110111011101);
+        Scalar a(0b0001000100010001);
+        Scalar b(0b1100110011001100);
+        Scalar exp(0b1101110111011101);
         auto act = a ^ b;
         BOOST_CHECK(act == exp);
     }
     {
         // there are bits that have 1 in both aband b
-        MclScalar a(0b0001000100010001);
-        MclScalar b(0b1101110111001101);
-        MclScalar exp(0b1100110011011100);
+        Scalar a(0b0001000100010001);
+        Scalar b(0b1101110111001101);
+        Scalar exp(0b1100110011011100);
         auto act = a ^ b;
         BOOST_CHECK(act == exp);
     }
     {
         // a is shorter than b. expects big-endian merge
-        MclScalar a(0b11111111);
-        MclScalar b(0b1000100010001000);
-        MclScalar exp(0b1000100001110111);
+        Scalar a(0b11111111);
+        Scalar b(0b1000100010001000);
+        Scalar exp(0b1000100001110111);
         auto act = a ^ b;
         BOOST_CHECK(act == exp);
     }
     {
         // a is longer than b. expects big-endian merge
-        MclScalar a(0b1000100010001000);
-        MclScalar b(0b11111111);
-        MclScalar exp(0b1000100001110111);
+        Scalar a(0b1000100010001000);
+        Scalar b(0b11111111);
+        Scalar exp(0b1000100001110111);
         auto act = a ^ b;
         BOOST_CHECK(act == exp);
     }
@@ -320,33 +137,33 @@ BOOST_AUTO_TEST_CASE(test_bitwise_and)
 {
     {
         // there is no bit that has 1 in both a and b
-        MclScalar a(0b0001000100010001);
-        MclScalar b(0b1100110011001100);
-        MclScalar exp(0b0);
+        Scalar a(0b0001000100010001);
+        Scalar b(0b1100110011001100);
+        Scalar exp(0b0);
         auto act = a & b;
         BOOST_CHECK(act == exp);
     }
     {
         // there are bits that have 1 in both aband b
-        MclScalar a(0b0001000100010001);
-        MclScalar b(0b1101110111001101);
-        MclScalar exp(0b1000100000001);
+        Scalar a(0b0001000100010001);
+        Scalar b(0b1101110111001101);
+        Scalar exp(0b1000100000001);
         auto act = a & b;
         BOOST_CHECK(act == exp);
     }
     {
         // a is shorter than b. expects big-endian merge
-        MclScalar a(0b11111111);
-        MclScalar b(0b1000100010001000);
-        MclScalar exp(0b10001000);
+        Scalar a(0b11111111);
+        Scalar b(0b1000100010001000);
+        Scalar exp(0b10001000);
         auto act = a & b;
         BOOST_CHECK(act == exp);
     }
     {
         // a is longer than b. expects big-endian merge
-        MclScalar a(0b1000100010001000);
-        MclScalar b(0b11111111);
-        MclScalar exp(0b10001000);
+        Scalar a(0b1000100010001000);
+        Scalar b(0b11111111);
+        Scalar exp(0b10001000);
         auto act = a & b;
         BOOST_CHECK(act == exp);
     }
@@ -359,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_bitwise_compl)
     // which is 1 inverted in 32-byte buffer
     // due to limitation of mclBnFr_deserialize
     int64_t n = INT64_MAX;
-    MclScalar a(n);
+    Scalar a(n);
     auto act = (~a).GetString(16);
 
     // ~INT64MAX is -9223372036854775808 which equals below in Fr
@@ -369,11 +186,11 @@ BOOST_AUTO_TEST_CASE(test_bitwise_compl)
 
 BOOST_AUTO_TEST_CASE(test_shift_left)
 {
-    MclScalar one(1);
+    Scalar one(1);
     uint64_t exp = 1;
     // test up to the positive max of int64_t since assignment op takes int64_t as an input
     for (size_t i = 0; i < 63; ++i) {
-        MclScalar act = one << i;
+        Scalar act = one << i;
         BOOST_CHECK_EQUAL(act.GetUint64(), exp);
         exp <<= 1;
     }
@@ -381,15 +198,15 @@ BOOST_AUTO_TEST_CASE(test_shift_left)
 
 BOOST_AUTO_TEST_CASE(test_shift_right)
 {
-    MclScalar eight(8);
-    MclScalar seven(7);
-    MclScalar six(6);
-    MclScalar five(5);
-    MclScalar four(4);
-    MclScalar three(3);
-    MclScalar two(2);
-    MclScalar one(1);
-    MclScalar zero(0);
+    Scalar eight(8);
+    Scalar seven(7);
+    Scalar six(6);
+    Scalar five(5);
+    Scalar four(4);
+    Scalar three(3);
+    Scalar two(2);
+    Scalar one(1);
+    Scalar zero(0);
 
     BOOST_CHECK((eight >> 1) == four);
     BOOST_CHECK((seven >> 1) == three);
@@ -401,144 +218,43 @@ BOOST_AUTO_TEST_CASE(test_shift_right)
     BOOST_CHECK((one >> 1) == zero);
 }
 
-BOOST_AUTO_TEST_CASE(test_assign)
+BOOST_AUTO_TEST_CASE(test_assign_int64)
 {
     {
         int64_t n = INT64_MAX;
-        MclScalar a = n;
+        Scalar a = n;
         BOOST_CHECK_EQUAL(a.GetUint64(), n);
     }
     {
-        MclScalar a(INT64_MIN);
+        Scalar a(INT64_MIN);
         SCALAR_INT64_MIN(b);
         BOOST_CHECK_EQUAL(a.GetString(16), b.GetString(16));
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_equal_or_not_equal_to_integer)
-{
-    MclScalar a(6);
-    int b = 6;
-    int c = 5;
-    BOOST_CHECK(a == b);
-    BOOST_CHECK(a != c);
-}
 
-BOOST_AUTO_TEST_CASE(test_equal_or_not_equal_to_scalar)
-{
-    MclScalar a(6);
-    MclScalar b(6);
-    MclScalar c(5);
-    BOOST_CHECK(a == b);
-    BOOST_CHECK(a != c);
-}
-
-BOOST_AUTO_TEST_CASE(test_invert)
-{
-    MclScalar a(6);
-    MclScalar b = a.Invert();
-    MclScalar c = b.Invert();
-    BOOST_CHECK(a == c);
-}
-
-BOOST_AUTO_TEST_CASE(test_invert_zero)
-{
-    MclScalar a(0);
-    BOOST_CHECK_THROW(a.Invert(), std::runtime_error);
-}
-
-BOOST_AUTO_TEST_CASE(test_negate)
-{
-    MclScalar a(6);
-    MclScalar b(-6);
-    MclScalar c = a.Negate();
-    BOOST_CHECK(b == c);
-}
-
-BOOST_AUTO_TEST_CASE(test_square)
-{
-    MclScalar a(9);
-    MclScalar b(81);
-    MclScalar c = a.Square();
-    BOOST_CHECK(b == c);
-}
-
-BOOST_AUTO_TEST_CASE(test_cube)
-{
-    MclScalar a(3);
-    MclScalar b(27);
-    MclScalar c = a.Cube();
-    BOOST_CHECK(b == c);
-}
-
-BOOST_AUTO_TEST_CASE(test_pow)
-{
-    struct TestCase {
-        int64_t a;
-        int64_t b;
-        int64_t c;
-    };
-    std::vector test_cases{
-        TestCase{2, 0, 1},
-        TestCase{2, 1, 2},
-        TestCase{2, 2, 4},
-        TestCase{2, 3, 8},
-        TestCase{3, 5, 243},
-        TestCase{195, 7, 10721172396796875},
-    };
-    for (auto tc : test_cases) {
-        MclScalar a(tc.a);
-        MclScalar b(tc.b);
-        MclScalar c(tc.c);
-        MclScalar d = a.Pow(b);
-        BOOST_CHECK(c == d);
-    }
-
-    // this is to check if calculation finishes within a reasonable amount of time
-    MclScalar y(1);
-    y.Invert().Pow(y.Invert());
-}
-
-BOOST_AUTO_TEST_CASE(test_rand)
-{
-    std::vector<bool> tf{true, false};
-    for (auto exclude_zero : tf) {
-        unsigned int num_tries = 1000000;
-        unsigned int num_dups = 0;
-        auto x = MclScalar::Rand();
-
-        for (size_t i = 0; i < num_tries; ++i) {
-            auto y = MclScalar::Rand(exclude_zero);
-            if (exclude_zero && y == 0) BOOST_FAIL("expected non-zero");
-            if (x == y) ++num_dups;
-        }
-        auto dup_ratio = num_dups / (float)num_tries;
-        BOOST_CHECK(dup_ratio < 0.000001);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_getuint64)
+BOOST_AUTO_TEST_CASE(test_get_uint64)
 {
     {
         // Scalar(int) operator takes int64_t, so let it take INT64_MAX
-        MclScalar a(INT64_MAX);
+        Scalar a(INT64_MAX);
         uint64_t b = a.GetUint64();
         uint64_t c = 9223372036854775807ul; // is INT64_MAX
         BOOST_CHECK_EQUAL(b, c);
     }
     {
         // assignment operator takes int64_t
-        MclScalar base(0b1);
+        Scalar base(0b1);
         int64_t n = 1;
         for (uint8_t i = 0; i < 63; ++i) { // test up to positive max of int64_t
-            MclScalar a = base << i;
+            Scalar a = base << i;
             BOOST_CHECK_EQUAL(a.GetUint64(), n);
             n <<= 1;
         }
     }
     {
         int64_t int64_t_min = std::numeric_limits<int64_t>::min();
-        MclScalar s(int64_t_min);
+        Scalar s(int64_t_min);
 
         // int64_t minimum value maps to:
         // '0b111111111111111111111111111111100000000000000000000000000000001'
@@ -549,249 +265,14 @@ BOOST_AUTO_TEST_CASE(test_getuint64)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_getvch)
-{
-    std::vector<uint8_t> vec{
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-    };
-    MclScalar a(vec);
-    {
-        auto a_vec = a.GetVch();
-        BOOST_CHECK(vec == a_vec);
-    }
-    {
-        // with trim option on, the first 0 should have been removed in act
-        auto act = a.GetVch(true);
-        std::vector<uint8_t> exp(vec.size() - 1);
-        std::copy(vec.begin() + 1, vec.end(), exp.begin());
-        BOOST_CHECK(act == exp);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_setvch)
-{
-    {
-        std::vector<uint8_t> vec{
-            0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-        };
-        MclScalar a;
-        a.SetVch(vec);
-
-        MclScalar b(vec);
-        BOOST_CHECK(a == b);
-    }
-    {
-        // setting curveOrder - 1 should succeed
-        std::vector<uint8_t> vec{
-            115,
-            237,
-            167,
-            83,
-            41,
-            157,
-            125,
-            72,
-            51,
-            57,
-            216,
-            8,
-            9,
-            161,
-            216,
-            5,
-            83,
-            189,
-            164,
-            2,
-            255,
-            254,
-            91,
-            254,
-            255,
-            255,
-            255,
-            255,
-            0,
-            0,
-            0,
-            0,
-        };
-        MclScalar a;
-        a.SetVch(vec);
-        MclScalar b(vec);
-        BOOST_CHECK(a == b);
-    }
-    {
-        // setting curveOrder should succeed, but Scalar should get the modulo value
-        std::vector<uint8_t> vec{
-            115,
-            237,
-            167,
-            83,
-            41,
-            157,
-            125,
-            72,
-            51,
-            57,
-            216,
-            8,
-            9,
-            161,
-            216,
-            5,
-            83,
-            189,
-            164,
-            2,
-            255,
-            254,
-            91,
-            254,
-            255,
-            255,
-            255,
-            255,
-            0,
-            0,
-            0,
-            1,
-        };
-        MclScalar a;
-        a.SetVch(vec);
-        BOOST_CHECK_EQUAL(a.GetString(), "0");
-    }
-    {
-        std::vector<uint8_t> vec;
-        MclScalar a(100);
-        a.SetVch(vec);
-        BOOST_CHECK_EQUAL(a.GetUint64(), 0);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_get_and_setvch)
-{
-    std::vector<uint8_t> vec{
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-    };
-    MclScalar a(vec);
-    auto a_vec = a.GetVch();
-
-    MclScalar b(0);
-    b.SetVch(a_vec);
-    BOOST_CHECK(a == b);
-}
-
-BOOST_AUTO_TEST_CASE(test_setpow2)
-{
-    for (size_t i = 0; i < 10; ++i) {
-        MclScalar a;
-        a.SetPow2(i);
-        BOOST_CHECK_EQUAL(a.GetUint64(), std::pow(2, i));
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_hash)
+BOOST_AUTO_TEST_CASE(test_hash_with_salt)
 {
     // upon generating the digest, following data is added to the hasher:
     // - 1 byte storing the size of the following array
     // - 32-byte big-endian array representing the Scalar value
     // - 4-byte little-endian array representing the parameter of Hash function
 
-    MclScalar a(1);
+    Scalar a(1);
     const int n = 51;
     uint256 digest = a.GetHashWithSalt(n);
     auto act = digest.GetHex();
@@ -799,10 +280,9 @@ BOOST_AUTO_TEST_CASE(test_hash)
     BOOST_CHECK(act == exp);
 }
 
-// TODO fix this test
-BOOST_AUTO_TEST_CASE(test_getstring)
+BOOST_AUTO_TEST_CASE(test_getstring_base_2_10_16)
 {
-    MclScalar a(0xffff);
+    Scalar a(0xffff);
 
     auto act16 = a.GetString(16);
     std::string exp16("ffff");
@@ -818,7 +298,7 @@ BOOST_AUTO_TEST_CASE(test_getstring)
 
     int64_t n = INT64_MIN;
     std::string s("52435875175126190479447740508185965837690552500527637822594435327901726408705");
-    MclScalar b(n);
+    Scalar b(n);
     auto act_int64_min = b.GetString(10);
     BOOST_CHECK(act_int64_min == s);
 }
@@ -864,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_get_bits)
     std::string n_bin("111001111101101101001110101001100101001100111010111110101001000001100110011100111011000000010000000100110100001110110000000010101010011101111011010010000000010111111111111111001011011111111101111111111111111111111111111111100000000000000000000000000000000");
 
     auto u = uint256(n_vec);
-    MclScalar s(u);
+    Scalar s(u);
 
     std::string exp = n_bin;
     auto bs = s.ToBinaryVec();
@@ -880,7 +360,7 @@ BOOST_AUTO_TEST_CASE(test_get_bits)
 BOOST_AUTO_TEST_CASE(test_get_bit)
 {
     {
-        MclScalar a(0b100000001);
+        Scalar a(0b100000001);
         BOOST_CHECK_EQUAL(a.GetSeriBit(0), true); // 1st byte
         BOOST_CHECK_EQUAL(a.GetSeriBit(1), false);
         BOOST_CHECK_EQUAL(a.GetSeriBit(2), false);
@@ -893,7 +373,7 @@ BOOST_AUTO_TEST_CASE(test_get_bit)
         BOOST_CHECK_EQUAL(a.GetSeriBit(9), false);
     }
     {
-        SCALAR_CURVE_ORDER_MINUS_1(a);
+        CURVE_ORDER_MINUS_1_SCALAR(a);
         auto v = a.GetVch();
 
         // 5th byte from the last is 255
@@ -958,7 +438,7 @@ BOOST_AUTO_TEST_CASE(test_create_64_bit_shift)
         0,
         0,
         1};
-    MclScalar excess;
+    Scalar excess;
     excess.SetVch(excess_ser);
 
     std::vector<unsigned char> vMsg = (excess >> 64).GetVch();
@@ -974,5 +454,72 @@ BOOST_AUTO_TEST_CASE(test_create_64_bit_shift)
     std::string s(vMsg.begin(), vMsg.end());
     BOOST_CHECK(s == "spaghetti meatballs");
 }
+
+BOOST_AUTO_TEST_CASE(test_setvch)
+{
+    {
+        std::vector<uint8_t> vec{
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+        };
+        Scalar a;
+        a.SetVch(vec);
+
+        Scalar b(vec);
+        BOOST_CHECK(a == b);
+    }
+    {
+        // setting curveOrder - 1 should succeed
+        CURVE_ORDER_MINUS_1_VEC(vec);
+        Scalar a;
+        a.SetVch(vec);
+        Scalar b(vec);
+        BOOST_CHECK(a == b);
+    }
+    {
+        // setting curve order should succeed, but Scalar should get the modulo value
+        CURVE_ORDER_VEC(vec);
+        Scalar a;
+        a.SetVch(vec);
+        BOOST_CHECK_EQUAL(a.GetString(), "0");
+    }
+    {
+        std::vector<uint8_t> vec;
+        Scalar a(100);
+        a.SetVch(vec);
+        BOOST_CHECK_EQUAL(a.GetUint64(), 0);
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

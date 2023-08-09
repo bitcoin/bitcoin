@@ -57,7 +57,7 @@ void PrivateKey::SetToZero()
 
 Signature PrivateKey::CoreSign(const Message& msg) const
 {
-    blsSecretKey bls_sk { GetScalar().Underlying() };
+    blsSecretKey bls_sk { GetScalar().GetUnderlying() };
 
     Signature sig;
     blsSign(&sig.m_data, &bls_sk, &msg[0], msg.size());

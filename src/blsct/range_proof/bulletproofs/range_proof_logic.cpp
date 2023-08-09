@@ -7,32 +7,17 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
-#include <blsct/building_block/lazy_point.h>
+#include <blsct/building_block/lazy_points.h>
 #include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
 #include <blsct/common.h>
-#include <blsct/range_proof/range_proof_logic.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
+#include <blsct/range_proof/common.h>
 #include <tinyformat.h>
 
-template <typename T>
-typename T::Scalar* RangeProofLogic<T>::m_one = nullptr;
+namespace bulletproofs {
 
 template <typename T>
-typename T::Scalar* RangeProofLogic<T>::m_two = nullptr;
-
-template <typename T>
-Elements<typename T::Scalar>* RangeProofLogic<T>::m_two_pows_64 = nullptr;
-
-template <typename T>
-typename T::Scalar* RangeProofLogic<T>::m_inner_prod_1x2_pows_64 = nullptr;
-
-template <typename T>
-typename T::Scalar* RangeProofLogic<T>::m_uint64_max = nullptr;
-
-template <typename T>
-GeneratorsFactory<T>* RangeProofLogic<T>::m_gf = nullptr;
-
-template <typename T>
-AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, size_t& index, typename T::Point& nonce)
+AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, typename T::Point& nonce)
 {
     auto proof_with_transcript = RangeProofWithTranscript<T>::Build(proof);
 
@@ -48,7 +33,7 @@ AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, size
         nonce};
     return req;
 }
-template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(RangeProof<Mcl>&, size_t&, Mcl::Point&);
+template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(RangeProof<Mcl>&, Mcl::Point&);
 
 template <typename T>
 AmountRecoveryResult<T> AmountRecoveryResult<T>::failure()
@@ -60,67 +45,23 @@ AmountRecoveryResult<T> AmountRecoveryResult<T>::failure()
 template AmountRecoveryResult<Mcl> AmountRecoveryResult<Mcl>::failure();
 
 template <typename T>
-RangeProofLogic<T>::RangeProofLogic()
-{
-    using Scalar = typename T::Scalar;
-    using Scalars = Elements<Scalar>;
-
-    if (m_is_initialized) return;
-    std::lock_guard<std::mutex> lock(RangeProofLogic<T>::m_init_mutex);
-
-    RangeProofLogic<T>::m_one = new Scalar(1);
-    RangeProofLogic<T>::m_two = new Scalar(2);
-    RangeProofLogic<T>::m_gf = new GeneratorsFactory<T>();
-    {
-        auto two_pows_64 = Scalars::FirstNPow(*m_two, RangeProofSetup::m_input_value_bits);
-        RangeProofLogic<T>::m_two_pows_64 = new Scalars(two_pows_64);
-        auto ones_64 = Scalars::RepeatN(*RangeProofLogic<T>::m_one, RangeProofSetup::m_input_value_bits);
-        RangeProofLogic<T>::m_inner_prod_1x2_pows_64 =
-            new Scalar((ones_64 * *RangeProofLogic<T>::m_two_pows_64).Sum());
-    }
-    {
-        Scalar int64_max(INT64_MAX);
-        Scalar one(1);
-        Scalar uint64_max = (int64_max << 1) + one;
-        RangeProofLogic<T>::m_uint64_max = new Scalar(uint64_max);
-    }
-    m_is_initialized = true;
-}
-template RangeProofLogic<Mcl>::RangeProofLogic();
-
-template <typename T>
-typename T::Scalar RangeProofLogic<T>::GetUint64Max() const
-{
-    return *m_uint64_max;
-}
-template Mcl::Scalar RangeProofLogic<Mcl>::GetUint64Max() const;
-
-template <typename T>
 RangeProof<T> RangeProofLogic<T>::Prove(
     Elements<typename T::Scalar>& vs,
     typename T::Point& nonce,
     const std::vector<uint8_t>& message,
-    const TokenId& token_id) const
-{
+    const TokenId& token_id
+) const {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
-    if (message.size() > RangeProofSetup::m_max_message_size) {
-        throw std::runtime_error(strprintf("%s: message size is too large", __func__));
-    }
-    if (vs.Empty()) {
-        throw std::runtime_error(strprintf("%s: no input values to prove", __func__));
-    }
-    if (vs.Size() > RangeProofSetup::m_max_input_values) {
-        throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
-    }
+    range_proof::Common<T>::ValidateParameters(vs, message);
 
     const size_t num_input_values_power_of_2 =
         blsct::Common::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
 
     // this is power of 2 as well since m_input_value_bits is power of 2
     const size_t concat_input_values_in_bits =
-        num_input_values_power_of_2 * RangeProofSetup::m_input_value_bits;
+        num_input_values_power_of_2 * RangeProofSetup::num_input_value_bits;
 
     ////////////// Proving steps
     RangeProof<T> proof;
@@ -138,10 +79,10 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     }
 
     // Get Generators<P> for the token_id
-    Generators<T> gens = m_gf->GetInstance(token_id);
+    range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
-    auto H = gens.H.get();
+    auto H = gens.H;
     auto G = gens.G;
 
     // This hash is updated for Fiat-Shamir throughout the proof
@@ -159,7 +100,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     // only the first 64 bits of each Scalar<S> is picked up
     Scalars aL;                  // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v : vs.m_vec) { // for each input value
-        for (size_t i = 0; i < RangeProofSetup::m_input_value_bits; ++i) {
+        for (size_t i = 0; i < RangeProofSetup::num_input_value_bits; ++i) {
             aL.Add(v.GetSeriBit(i) ? 1 : 0);
         }
     }
@@ -168,7 +109,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
         aL.Add(0);
     }
 
-    auto one_value_concat_bits = Scalars::RepeatN(*m_one, concat_input_values_in_bits);
+    auto one_value_concat_bits = Scalars::RepeatN(m_common.One(), concat_input_values_in_bits);
 
     // aR is aL - 1
     Scalars aR = aL - one_value_concat_bits;
@@ -180,14 +121,17 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
 
     // part of the message up to RangeProofSetup::m_message_1_max_size
     Scalar msg1(
-        message.size() > RangeProofSetup::m_message_1_max_size ?
-            std::vector<uint8_t>(message.begin(), message.begin() + RangeProofSetup::m_message_1_max_size) :
+        message.size() > RangeProofSetup::message_1_max_size ?
+            std::vector<uint8_t>(message.begin(), message.begin() + RangeProofSetup::message_1_max_size) :
             message);
     // message followed by 64-bit vs[0]
-    Scalar msg1_v0 = (msg1 << RangeProofSetup::m_input_value_bits) | vs[0];
+    Scalar msg1_vs0 = (msg1 << RangeProofSetup::num_input_value_bits) | vs[0];
 
-    Scalar alpha = nonce.GetHashWithSalt(1);
-    alpha = alpha + msg1_v0;
+    Scalar alpha;
+    {
+        Scalar nonce_1 = nonce.GetHashWithSalt(1);
+        alpha = nonce_1 + msg1_vs0;
+    }
 
     // Using generator H for alpha following the paper
     proof.A = (LazyPoints<T>(Gi, aL) + LazyPoints<T>(Hi, aR) + LazyPoint<T>(H, alpha)).Sum();
@@ -226,8 +170,8 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto base_z_pow = z_pows_from_2[i]; // use different Scalar<S> for each input value
 
-        for (size_t bit_idx = 0; bit_idx < RangeProofSetup::m_input_value_bits; ++bit_idx) {
-            z_pow_twos.Add(base_z_pow * (*m_two_pows_64)[bit_idx]);
+        for (size_t bit_idx = 0; bit_idx < RangeProofSetup::num_input_value_bits; ++bit_idx) {
+            z_pow_twos.Add(base_z_pow * m_common.TwoPows64()[bit_idx]);
         }
     }
 
@@ -244,8 +188,8 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
     // part of the message after RangeProofSetup::m_message_1_max_size
-    Scalar msg2 = Scalar({message.size() > RangeProofSetup::m_message_1_max_size ?
-                              std::vector<uint8_t>(message.begin() + RangeProofSetup::m_message_1_max_size, message.end()) :
+    Scalar msg2 = Scalar({message.size() > RangeProofSetup::message_1_max_size ?
+                              std::vector<uint8_t>(message.begin() + RangeProofSetup::message_1_max_size, message.end()) :
                               std::vector<uint8_t>()});
     tau1 = tau1 + msg2;
 
@@ -305,51 +249,22 @@ template RangeProof<Mcl> RangeProofLogic<Mcl>::Prove(
     Elements<Mcl::Scalar>&,
     Mcl::Point&,
     const std::vector<uint8_t>&,
-    const TokenId&) const;
-
-template <typename T>
-void RangeProofLogic<T>::ValidateProofsBySizes(
-    const std::vector<RangeProof<T>>& proofs)
-{
-    for (const RangeProof<T>& proof : proofs) {
-        size_t num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(proof.Vs.Size());
-
-        // proof must contain input values
-        if (proof.Vs.Size() == 0)
-            throw std::runtime_error(strprintf("%s: no input value", __func__));
-
-        // invalid if # of input values are lager than maximum
-        if (proof.Vs.Size() > RangeProofSetup::m_max_input_values)
-            throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum %ld",
-                                               __func__, RangeProofSetup::m_max_input_values));
-
-        // L,R keep track of aggregation history and the size should equal to # of rounds
-        if (proof.Ls.Size() != num_rounds)
-            throw std::runtime_error(strprintf("%s: size of Ls (%ld) differs from number of rounds (%ld)",
-                                               __func__, proof.Ls.Size(), num_rounds));
-
-        // if Ls and Rs should have the same size
-        if (proof.Ls.Size() != proof.Rs.Size())
-            throw std::runtime_error(strprintf("%s: size of Ls (%ld) differs from size of Rs (%ld)",
-                                               __func__, proof.Ls.Size(), proof.Rs.Size()));
-    }
-}
-template void RangeProofLogic<Mcl>::ValidateProofsBySizes(
-    const std::vector<RangeProof<Mcl>>&);
+    const TokenId&
+) const;
 
 template <typename T>
 bool RangeProofLogic<T>::VerifyProofs(
     const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-    const Generators<T>& gens,
-    const size_t& max_mn) const
-{
+    const range_proof::Generators<T>& gens,
+    const size_t& max_mn
+) const {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
     G_H_Gi_Hi_ZeroVerifier<T> verifier(max_mn);
 
     for (const RangeProofWithTranscript<T>& p : proof_transcripts) {
-        auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(p.proof.Vs.Size());
+        auto num_rounds = range_proof::Common<T>::GetNumRoundsExclLast(p.proof.Vs.Size());
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
@@ -371,7 +286,7 @@ bool RangeProofLogic<T>::VerifyProofs(
             - (z_pows_from_2[0] * y_pows_sum); // (2)
         for (size_t i = 1; i <= p.num_input_values_power_2; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
-            delta_yz = delta_yz - z_pows_from_2[i] * *RangeProofLogic<T>::m_inner_prod_1x2_pows_64; // (3)
+            delta_yz = delta_yz - z_pows_from_2[i] * m_common.InnerProd1x2Pows64(); // (3)
         }
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
@@ -412,8 +327,8 @@ bool RangeProofLogic<T>::VerifyProofs(
 
             // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             Scalar tmp =
-                z_pows_from_2[i / RangeProofSetup::m_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
-                (*m_two_pows_64)[i % RangeProofSetup::m_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
+                z_pows_from_2[i / RangeProofSetup::num_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
+                m_common.TwoPows64()[i % RangeProofSetup::num_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
 
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
@@ -431,28 +346,28 @@ bool RangeProofLogic<T>::VerifyProofs(
             verifier.AddPoint(LazyPoint<T>(p.proof.Rs[i], x_invs[i].Square() * weight_z));
         }
 
-        verifier.AddPositiveG((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
+        verifier.AddPositiveG((p.proof.t_hat - p.proof.a * p.proof.b) * p.c_factor * weight_z);
     }
 
     return verifier.Verify(
         gens.G,
-        gens.H.get(),
+        gens.H,
         gens.GetGiSubset(max_mn),
         gens.GetHiSubset(max_mn)
     );
 }
 template bool RangeProofLogic<Mcl>::VerifyProofs(
     const std::vector<RangeProofWithTranscript<Mcl>>&,
-    const Generators<Mcl>&,
+    const range_proof::Generators<Mcl>&,
     const size_t&
 ) const;
 
 template <typename T>
 bool RangeProofLogic<T>::Verify(
     const std::vector<RangeProof<T>>& proofs,
-    const TokenId& token_id) const
-{
-    ValidateProofsBySizes(proofs);
+    const TokenId& token_id
+) const {
+    range_proof::Common<T>::ValidateProofsBySizes(proofs);
 
     std::vector<RangeProofWithTranscript<T>> proof_transcripts;
     size_t max_num_rounds = 0;
@@ -467,7 +382,7 @@ bool RangeProofLogic<T>::Verify(
     }
 
     const size_t max_mn = 1ull << max_num_rounds;
-    const Generators<T> gens = m_gf->GetInstance(token_id);
+    const range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
 
     return VerifyProofs(
         proof_transcripts,
@@ -477,13 +392,14 @@ bool RangeProofLogic<T>::Verify(
 }
 template bool RangeProofLogic<Mcl>::Verify(
     const std::vector<RangeProof<Mcl>>&,
-    const TokenId&) const;
+    const TokenId&
+) const;
 
 template <typename T>
 AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     const std::vector<AmountRecoveryRequest<T>>& reqs,
-    const TokenId& token_id) const
-{
+    const TokenId& token_id
+) const {
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
 
@@ -491,9 +407,9 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     std::vector<RecoveredAmount<T>> recovered_amounts;
 
     for (const AmountRecoveryRequest<T>& req : reqs) {
-        const Generators<T> gens = m_gf->GetInstance(token_id);
+        const range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
         Point G = gens.G;
-        Point H = gens.H.get();
+        Point H = gens.H;
 
         // failure if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
@@ -510,32 +426,32 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         const Scalar rho = req.nonce.GetHashWithSalt(2);
         const Scalar tau1 = req.nonce.GetHashWithSalt(3);
         const Scalar tau2 = req.nonce.GetHashWithSalt(4);
-        const Scalar input_value0_gamma = req.nonce.GetHashWithSalt(100); // gamma for vs[0]
+        const Scalar gamma_vs0 = req.nonce.GetHashWithSalt(100); // gamma for vs[0]
 
         // breakdown of mu is:
         // mu = alpha + rho * x ... (62)
         //
-        // and this alpha is the alpha from nonce + (message << 64 | 64-bit v[0])
+        // and this alpha is the alpha from nonce + (msg1 << 64 | 64-bit vs[0])
         // so, subtracting rho * x from mu equals to:
         //
-        // alpha from nonce + (message << 64 | 64-bit v[0])
+        // alpha from nonce + (msg1 << 64 | 64-bit vs[0])
         //
         // subtracting alpha from nonce from it results in:
-        // (message << 64 | 64-bit v[0])
+        // (msg1 << 64 | 64-bit vs[0])
         //
-        const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
-        const Scalar input_value0 = message_v0 & *RangeProofLogic<T>::m_uint64_max;
+        const Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
+        const Scalar vs0 = m_common.Uint64Max();
 
-        // skip this request if recovered input value 0 commitment doesn't match with Vs[0]
-        Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);
-        if (input_value0_commitment != req.Vs[0]) {
+        // failure if commitment created from recoverted amount doesn't match
+        Point commitment_vs0 = (H * gamma_vs0) + (G * vs0);
+        if (commitment_vs0 != req.Vs[0]) {
             continue;
         }
 
         // generate message and set to data
-        // extract the message part from (up-to-23-byte message || 64-bit v[0])
+        // extract the message part from (up-to-23-byte message || 64-bit vs[0])
         // by 64-bit to the right
-        std::vector<uint8_t> msg1 = (message_v0 >> 64).GetVch(true);
+        std::vector<uint8_t> msg1 = (msg1_vs0 >> 64).GetVch(true);
         auto tau_x = req.tau_x;
         auto x = req.x;
         auto z = req.z;
@@ -550,20 +466,24 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         // since tau1 in (61) is tau1 (C) + msg2, by subtracting tau1 (C) from RHS of (D)
         // msg2 can be extracted
         //
-        Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
+        Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * gamma_vs0)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
         RecoveredAmount<T> recovered_amount(
             req.id,
-            (int64_t)input_value0.GetUint64(), // valid values are of type int64_t
-            input_value0_gamma,
+            (int64_t) vs0.GetUint64(), // valid values are of type int64_t
+            gamma_vs0,
             std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end()));
         recovered_amounts.push_back(recovered_amount);
     }
     return {
         true,
-        recovered_amounts};
+        recovered_amounts
+    };
 }
 template AmountRecoveryResult<Mcl> RangeProofLogic<Mcl>::RecoverAmounts(
     const std::vector<AmountRecoveryRequest<Mcl>>&,
-    const TokenId&) const;
+    const TokenId&
+) const;
+
+} // namespace bulletproofs

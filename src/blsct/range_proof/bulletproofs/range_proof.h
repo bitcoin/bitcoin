@@ -2,32 +2,32 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_H
-#define NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_H
+#ifndef NAVCOIN_BLSCT_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_H
+#define NAVCOIN_BLSCT_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_H
 
 #include <blsct/arith/elements.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
+#include <blsct/range_proof/proof_base.h>
 #include <span.h>
 #include <streams.h>
 
+namespace bulletproofs {
+
 template <typename T>
-struct RangeProof {
+struct RangeProof: public range_proof::ProofBase<T> {
     using Point = typename T::Point;
     using Scalar = typename T::Scalar;
     using Points = Elements<Point>;
 
     // intermediate values used to derive random values later
-    Points Vs;
     Point A;
     Point S;
     Point T1;
     Point T2;
     Scalar mu;
     Scalar tau_x;
-    Points Ls;
-    Points Rs;
 
     // proof results
     Scalar a;     // result of inner product argument
@@ -40,9 +40,7 @@ struct RangeProof {
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        ::Serialize(s, Vs);
-        ::Serialize(s, Ls);
-        ::Serialize(s, Rs);
+        range_proof::ProofBase<T>::Serialize(s);
         ::Serialize(s, A);
         ::Serialize(s, S);
         ::Serialize(s, T1);
@@ -57,9 +55,7 @@ struct RangeProof {
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        ::Unserialize(s, Vs);
-        ::Unserialize(s, Ls);
-        ::Unserialize(s, Rs);
+        range_proof::ProofBase<T>::Unserialize(s);
         ::Unserialize(s, A);
         ::Unserialize(s, S);
         ::Unserialize(s, T1);
@@ -69,10 +65,9 @@ struct RangeProof {
         ::Unserialize(s, a);
         ::Unserialize(s, b);
         ::Unserialize(s, t_hat);
-
-        if (Vs.HasZero() || Ls.HasZero() || Rs.HasZero() || A.IsZero() || S.IsZero() || T1.IsZero() || T2.IsZero())
-            throw std::runtime_error("RangeProof::Unserialize: Invalid proof, at least one point is infinity");
     }
 };
 
-#endif // NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_H
+} // namespace bulletproofs
+
+#endif // NAVCOIN_BLSCT_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_H

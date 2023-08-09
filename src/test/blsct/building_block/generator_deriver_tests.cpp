@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(test_derive)
 
     std::vector<Point> xs;
 
-    GeneratorDeriver deriver("pro-micro");
+    GeneratorDeriver<Point> deriver("pro-micro");
 
     for (size_t i=0; i<10; ++i) {
         auto p = deriver.Derive(g, i, std::nullopt);

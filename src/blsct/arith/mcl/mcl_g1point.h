@@ -8,43 +8,44 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-
-#include <iostream>
-#include <util/strencodings.h> // FOR TESTING. DROP THIS!!!
+#include <uint256.h>
 
 class MclG1Point
 {
 public:
+    using Underlying = mclBnG1;
+    using Scalar = MclScalar;
+
     MclG1Point();
     MclG1Point(const std::vector<uint8_t>& v);
-    MclG1Point(const uint256& b);
-    MclG1Point(const mclBnG1& p);
+    MclG1Point(const uint256& n);
+    MclG1Point(const Underlying& p);
 
-    MclG1Point operator=(const mclBnG1& rhs);
+    MclG1Point operator=(const Underlying& rhs);
     MclG1Point operator+(const MclG1Point& rhs) const;
     MclG1Point operator-(const MclG1Point& rhs) const;
-    MclG1Point operator*(const MclScalar& rhs) const;
+    MclG1Point operator*(const Scalar& rhs) const;
 
     /**
      * Because  Elements cannot be used here, std::vector is used instead
      */
-    std::vector<MclG1Point> operator*(const std::vector<MclScalar>& ss) const;
+    std::vector<MclG1Point> operator*(const std::vector<Scalar>& ss) const;
 
     bool operator==(const MclG1Point& rhs) const;
     bool operator!=(const MclG1Point& rhs) const;
 
     MclG1Point Double() const;
-    mclBnG1 Underlying() const;
+    const Underlying& GetUnderlying() const;
 
     static MclG1Point GetBasePoint();
-    static MclG1Point GetInfinity();
-    static MclG1Point MapToG1(const std::vector<uint8_t>& vec, const Endianness e = Endianness::Little);
-    static MclG1Point MapToG1(const std::string& s, const Endianness e = Endianness::Little);
+    static MclG1Point MapToPoint(const std::vector<uint8_t>& vec, const Endianness e = Endianness::Little);
+    static MclG1Point MapToPoint(const std::string& s, const Endianness e = Endianness::Little);
     static MclG1Point HashAndMap(const std::vector<uint8_t>& vec);
     static MclG1Point Rand();
 
@@ -55,7 +56,7 @@ public:
     bool SetVch(const std::vector<uint8_t>& vec);
 
     std::string GetString(const uint8_t& radix = 16) const;
-    MclScalar GetHashWithSalt(const uint64_t salt) const;
+    Scalar GetHashWithSalt(const uint64_t salt) const;
 
     template <typename Stream>
     void Serialize(Stream& s) const
@@ -72,8 +73,7 @@ public:
         SetVch(vec);
     }
 
-    using UnderlyingType = mclBnG1;
-    UnderlyingType m_p;
+    Underlying m_point;
 
     static constexpr int SERIALIZATION_SIZE = 384 / 8;
 };

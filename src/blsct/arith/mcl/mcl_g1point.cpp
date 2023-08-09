@@ -9,7 +9,7 @@
 MclG1Point::MclG1Point()
 {
     // Replacement of mclBnG1_clear to avoid segfault in static context
-    std::memset(&m_p, 0, sizeof(MclG1Point::UnderlyingType));
+    std::memset(&m_point, 0, sizeof(MclG1Point::Underlying));
 }
 
 MclG1Point::MclG1Point(const std::vector<uint8_t>& v)
@@ -17,61 +17,61 @@ MclG1Point::MclG1Point(const std::vector<uint8_t>& v)
     MclG1Point::SetVch(v);
 }
 
-MclG1Point::MclG1Point(const mclBnG1& q)
+MclG1Point::MclG1Point(const MclG1Point::Underlying& p)
 {
-    m_p = q;
+    m_point = p;
 }
 
-MclG1Point::MclG1Point(const uint256& b)
+MclG1Point::MclG1Point(const uint256& n)
 {
-    // Not using MclG1Point::MapToG1 since uint256 deserialization is big-endian
+    // Not using MclG1Point::MapToPoint since uint256 deserialization is big-endian
     MclG1Point temp;
     mclBnFp v;
-    if (mclBnFp_setBigEndianMod(&v, b.data(), b.size()) != 0) {
+    if (mclBnFp_setBigEndianMod(&v, n.data(), n.size()) != 0) {
         throw std::runtime_error("MclG1Point(uint256): mclBnFp_setLittleEndianMod failed");
     }
-    if (mclBnFp_mapToG1(&temp.m_p, &v) != 0) {
+    if (mclBnFp_mapToG1(&temp.m_point, &v) != 0) {
         throw std::runtime_error("MclG1Point(uint256): mclBnFp_mapToG1 failed");
     }
-    m_p = temp.m_p;
+    m_point = temp.m_point;
 }
 
-mclBnG1 MclG1Point::Underlying() const
+const MclG1Point::Underlying& MclG1Point::GetUnderlying() const
 {
-    return m_p;
+    return m_point;
 }
 
-MclG1Point MclG1Point::operator=(const mclBnG1& q)
+MclG1Point MclG1Point::operator=(const Underlying& rhs)
 {
-    m_p = q;
+    m_point = rhs;
     return *this;
 }
 
-MclG1Point MclG1Point::operator+(const MclG1Point& p) const
+MclG1Point MclG1Point::operator+(const MclG1Point& rhs) const
 {
     MclG1Point ret;
-    mclBnG1_add(&ret.m_p, &m_p, &p.m_p);
+    mclBnG1_add(&ret.m_point, &m_point, &rhs.m_point);
     return ret;
 }
 
-MclG1Point MclG1Point::operator-(const MclG1Point& p) const
+MclG1Point MclG1Point::operator-(const MclG1Point& rhs) const
 {
     MclG1Point ret;
-    mclBnG1_sub(&ret.m_p, &m_p, &p.m_p);
+    mclBnG1_sub(&ret.m_point, &m_point, &rhs.m_point);
     return ret;
 }
 
-MclG1Point MclG1Point::operator*(const MclScalar& s) const
+MclG1Point MclG1Point::operator*(const MclG1Point::Scalar& rhs) const
 {
     MclG1Point ret;
-    mclBnG1_mul(&ret.m_p, &m_p, &s.m_fr);
+    mclBnG1_mul(&ret.m_point, &m_point, &rhs.m_scalar);
     return ret;
 }
 
-std::vector<MclG1Point> MclG1Point::operator*(const std::vector<MclScalar>& ss) const
+std::vector<MclG1Point> MclG1Point::operator*(const std::vector<MclG1Point::Scalar>& ss) const
 {
     if (ss.size() == 0) {
-        throw std::runtime_error("MclG1Point::operator*: cannot multiplyMclG1Point by empty Scalars");
+        throw std::runtime_error("Cannot multiply MclG1Point by empty scalar vector");
     }
     std::vector<MclG1Point> ret;
 
@@ -86,15 +86,16 @@ std::vector<MclG1Point> MclG1Point::operator*(const std::vector<MclScalar>& ss) 
 MclG1Point MclG1Point::Double() const
 {
     MclG1Point temp;
-    mclBnG1_dbl(&temp.m_p, &m_p);
+    mclBnG1_dbl(&temp.m_point, &m_point);
     return temp;
 }
 
 MclG1Point MclG1Point::GetBasePoint()
 {
-    static mclBnG1* g = nullptr;
+    using Point = MclG1Point::Underlying;
+    static Point* g = nullptr;
     if (g == nullptr) {
-        g = new mclBnG1();
+        g = new Point();
         auto g_str = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s;
         if (mclBnG1_setStr(g, g_str.c_str(), g_str.length(), 10) == -1) {
             throw std::runtime_error("MclG1Point::GetBasePoint(): mclBnG1_setStr failed");
@@ -104,44 +105,35 @@ MclG1Point MclG1Point::GetBasePoint()
     return ret;
 }
 
-MclG1Point MclG1Point::GetInfinity()
-{
-    static mclBnG1* g = nullptr;
-    if (g == nullptr) {
-        g = new mclBnG1();
-        mclBnG1_clear(g);
-    }
-    MclG1Point ret(*g);
-    return ret;
-}
-
-
-MclG1Point MclG1Point::MapToG1(const std::vector<uint8_t>& vec, const Endianness e)
+MclG1Point MclG1Point::MapToPoint(const std::vector<uint8_t>& vec, const Endianness e)
 {
     if (vec.size() == 0) {
-        throw std::runtime_error("MclG1Point::MapToG1(): input vector is empty");
+        throw std::runtime_error("Cannot map empty input vector to a point");
+    }
+    if (vec.size() > sizeof(mclBnFp) * 2) {
+        throw std::runtime_error("Size of vector must be smaller or equal to the size of mclBnFp * 2");
     }
     MclG1Point temp;
     mclBnFp v;
     if (e == Endianness::Little) {
         if (mclBnFp_setLittleEndianMod(&v, &vec[0], vec.size()) != 0) {
-            throw std::runtime_error("MclG1Point::MapToG1(): mclBnFp_setLittleEndianMod failed");
+            throw std::runtime_error("MclG1Point::MapToPoint(): mclBnFp_setLittleEndianMod failed");
         }
     } else {
         if (mclBnFp_setBigEndianMod(&v, &vec[0], vec.size()) != 0) {
-            throw std::runtime_error("MclG1Point::MapToG1(): mclBnFp_setBigEndianMod failed");
+            throw std::runtime_error("MclG1Point::MapToPoint(): mclBnFp_setBigEndianMod failed");
         }
     }
-    if (mclBnFp_mapToG1(&temp.m_p, &v) != 0) {
-        throw std::runtime_error("MclG1Point::MapToG1(): mclBnFp_mapToG1 failed");
+    if (mclBnFp_mapToG1(&temp.m_point, &v) != 0) {
+        throw std::runtime_error("MclG1Point::MapToPoint(): mclBnFp_mapToG1 failed");
     }
     return temp;
 }
 
-MclG1Point MclG1Point::MapToG1(const std::string& s, const Endianness e)
+MclG1Point MclG1Point::MapToPoint(const std::string& s, const Endianness e)
 {
     std::vector<uint8_t> vec(s.begin(), s.end());
-    return MapToG1(vec, e);
+    return MapToPoint(vec, e);
 }
 
 MclG1Point MclG1Point::HashAndMap(const std::vector<uint8_t>& vec)
@@ -154,14 +146,14 @@ MclG1Point MclG1Point::HashAndMap(const std::vector<uint8_t>& vec)
     return temp;
 }
 
-bool MclG1Point::operator==(const MclG1Point& b) const
+bool MclG1Point::operator==(const MclG1Point& rhs) const
 {
-    return mclBnG1_isEqual(&m_p, &b.m_p);
+    return mclBnG1_isEqual(&m_point, &rhs.m_point);
 }
 
-bool MclG1Point::operator!=(const MclG1Point& b) const
+bool MclG1Point::operator!=(const MclG1Point& rhs) const
 {
-    return !operator==(b);
+    return !operator==(rhs);
 }
 
 MclG1Point MclG1Point::Rand()
@@ -172,31 +164,30 @@ MclG1Point MclG1Point::Rand()
 
 bool MclG1Point::IsValid() const
 {
-    return mclBnG1_isValid(&m_p) == 1;
+    return mclBnG1_isValid(&m_point) == 1;
 }
 
 bool MclG1Point::IsZero() const
 {
-    return mclBnG1_isZero(&m_p);
+    return mclBnG1_isZero(&m_point);
 }
 
 std::vector<uint8_t> MclG1Point::GetVch() const
 {
     std::vector<uint8_t> b(SERIALIZATION_SIZE);
-    if (mclBnG1_serialize(&b[0], SERIALIZATION_SIZE, &m_p) == 0) {
-        MclG1Point unity;
-        auto ret = unity.GetVch();
-        return ret;
+    if (mclBnG1_serialize(&b[0], SERIALIZATION_SIZE, &m_point) == 0) {
+        MclG1Point ret;
+        return ret.GetVch();
     }
     return b;
 }
 
 bool MclG1Point::SetVch(const std::vector<uint8_t>& b)
 {
-    if (mclBnG1_deserialize(&m_p, &b[0], b.size()) == 0) {
+    if (mclBnG1_deserialize(&m_point, &b[0], b.size()) == 0) {
         mclBnG1 x;
         mclBnG1_clear(&x);
-        m_p = x;
+        m_point = x;
         return false;
     }
     return true;
@@ -205,13 +196,13 @@ bool MclG1Point::SetVch(const std::vector<uint8_t>& b)
 std::string MclG1Point::GetString(const uint8_t& radix) const
 {
     char str[1024];
-    if (mclBnG1_getStr(str, sizeof(str), &m_p, radix) == 0) {
+    if (mclBnG1_getStr(str, sizeof(str), &m_point, radix) == 0) {
         throw std::runtime_error("MclG1Point::GetString(): mclBnG1_getStr failed");
     }
     return std::string(str);
 }
 
-MclScalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
+MclG1Point::Scalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
     CHashWriter hasher(0, 0);
     hasher << *this;

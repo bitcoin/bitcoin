@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/building_block/imp_inner_prod_arg.h>
+#include <blsct/range_proof/range_proof_setup.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <hash.h>

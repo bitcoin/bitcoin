@@ -8,7 +8,7 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/private_key.h>
-#include <blsct/range_proof/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/signature.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -166,7 +166,7 @@ public:
     MclG1Point spendingKey;
     MclG1Point ephemeralKey;
     MclG1Point blindingKey;
-    RangeProof<Mcl> rangeProof;
+    bulletproofs::RangeProof<Mcl> rangeProof;
     uint16_t viewTag;
 
     CTxOutBLSCTData()

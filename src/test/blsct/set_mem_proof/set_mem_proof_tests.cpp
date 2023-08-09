@@ -14,7 +14,7 @@
 
 using Scalar = Mcl::Scalar;
 using Point = Mcl::Point;
-using Points = Elements<Mcl::Point>;
+using Points = Elements<Point>;
 
 BOOST_FIXTURE_TEST_SUITE(set_mem_proof_tests, BasicTestingSetup)
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(test_equal)
     Scalar b(8);
     Scalar omega(9);
 
-    auto p = SetMemProof(
+    auto p = SetMemProof<Mcl>(
         phi,
         A1,
         A2,
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(test_equal)
         omega
     );
 
-    auto q = SetMemProof(
+    auto q = SetMemProof<Mcl>(
         phi,
         g,
         A2,
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     Scalar b(8);
     Scalar omega(9);
 
-    auto p = SetMemProof(
+    auto p = SetMemProof<Mcl>(
         phi,
         A1,
         A2,
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
     p.Serialize(st);
 
-    SetMemProof q;
+    SetMemProof<Mcl> q;
     q.Unserialize(st);
 
     BOOST_CHECK(p  == q);

@@ -52,5 +52,125 @@ BOOST_AUTO_TEST_CASE(test_get_first_power_of_2_greater_or_eq_to)
     BOOST_CHECK(blsct::Common::GetFirstPowerOf2GreaterOrEqTo(9) == 16);
 }
 
+BOOST_AUTO_TEST_CASE(test_trim_preceeding_zeros)
+{
+    {
+        std::vector<bool> vec {};
+        auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
+        std::vector<bool> exp {};
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> vec {};
+        auto act = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
+        std::vector<uint8_t> exp {};
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<bool> vec { false };
+        auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
+        std::vector<bool> exp {};
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> vec { 0 };
+        auto act = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
+        std::vector<uint8_t> exp {};
+        BOOST_CHECK(exp == act);
+    }
+    // one should remain one
+    {
+        std::vector<bool> vec { true };
+        auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
+        std::vector<bool> exp { true };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> vec { 1 };
+        auto act = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
+        std::vector<uint8_t> exp { 1 };
+        BOOST_CHECK(exp == act);
+    }
+    // preceeding zero should be removed
+    {
+        std::vector<bool> vec { false, true };
+        auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
+        std::vector<bool> exp { true };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> vec { 0, 1 };
+        auto act = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
+        std::vector<uint8_t> exp { 1 };
+        BOOST_CHECK(exp == act);
+    }
+    // multiple preceeding zeroes should be removed
+    {
+        std::vector<bool> vec { false, false, true };
+        auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
+        std::vector<bool> exp { true };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> vec { 0, 0, 1 };
+        auto act = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
+        std::vector<uint8_t> exp { 1 };
+        BOOST_CHECK(exp == act);
+    }
+    // zero after first one should be preserved
+    {
+        std::vector<bool> vec { false, true, false };
+        auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
+        std::vector<bool> exp { true, false };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> vec { 0, 1, 0 };
+        auto act = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
+        std::vector<uint8_t> exp { 1, 0 };
+        BOOST_CHECK(exp == act);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_add_zero_if_empty)
+{
+    {
+        std::vector<uint8_t> act { 0 };
+        blsct::Common::AddZeroIfEmpty<uint8_t>(act);
+        std::vector<uint8_t> exp { 0 };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> act { 1 };
+        blsct::Common::AddZeroIfEmpty<uint8_t>(act);
+        std::vector<uint8_t> exp { 1 };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<uint8_t> act {};
+        blsct::Common::AddZeroIfEmpty<uint8_t>(act);
+        std::vector<uint8_t> exp { 0 };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<bool> act { false };
+        blsct::Common::AddZeroIfEmpty<bool>(act);
+        std::vector<bool> exp { false };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<bool> act { true };
+        blsct::Common::AddZeroIfEmpty<bool>(act);
+        std::vector<bool> exp { true };
+        BOOST_CHECK(exp == act);
+    }
+    {
+        std::vector<bool> act {};
+        blsct::Common::AddZeroIfEmpty<bool>(act);
+        std::vector<bool> exp { false };
+        BOOST_CHECK(exp == act);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

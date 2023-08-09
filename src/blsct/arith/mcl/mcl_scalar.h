@@ -28,14 +28,17 @@ using namespace std::literals::string_literals;
 class MclScalar
 {
 public:
+    using Underlying = mclBnFr;
+
     MclScalar();
     MclScalar(const int64_t& n);
     MclScalar(const std::vector<uint8_t>& v);
     template <size_t L>
     MclScalar(const std::array<uint8_t, L>& a);
-    MclScalar(const mclBnFr& n_fr);
+    MclScalar(const Underlying& other_underlying);
     MclScalar(const uint256& n);
     MclScalar(const std::string& s, int radix);
+    MclScalar(const std::vector<uint8_t>& msg, uint8_t index);
 
     MclScalar ApplyBitwiseOp(const MclScalar& a, const MclScalar& b,
                              std::function<uint8_t(uint8_t, uint8_t)> op) const;
@@ -58,7 +61,7 @@ public:
     bool operator!=(const MclScalar& b) const;
     bool operator!=(const int32_t& b) const;
 
-    mclBnFr Underlying() const;
+    const Underlying& GetUnderlying() const;
     bool IsValid() const;
     bool IsZero() const;
 
@@ -68,7 +71,7 @@ public:
     MclScalar Cube() const;
     MclScalar Pow(const MclScalar& n) const;
 
-    static MclScalar Rand(const bool exclude_zero = false);
+    static MclScalar Rand(const bool exclude_zero = true);
 
     uint64_t GetUint64() const;
 
@@ -90,7 +93,7 @@ public:
     bool GetSeriBit(const uint8_t& n) const;
 
     /**
-     * returns the binary representation m_fr
+     * returns the binary representation of m_scalar
      */
     std::vector<bool> ToBinaryVec() const;
 
@@ -111,8 +114,7 @@ public:
 
     static constexpr int SERIALIZATION_SIZE = 32;
 
-    using UnderlyingType = mclBnFr;
-    UnderlyingType m_fr;
+    Underlying m_scalar;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H

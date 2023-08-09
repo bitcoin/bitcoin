@@ -3,16 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl_scalar.h>
+#include <blsct/common.h>
+#include <crypto/sha256.h>
 
 MclScalar::MclScalar()
 {
     // Replacement of mclBnFr_clear to avoid segfault in static context
-    std::memset(&m_fr, 0, sizeof(MclScalar::UnderlyingType));
+    std::memset(&m_scalar, 0, sizeof(MclScalar::Underlying));
 }
 
 MclScalar::MclScalar(const int64_t& n)
 {
-    mclBnFr_setInt(&m_fr, n); // this takes int64_t
+    mclBnFr_setInt(&m_scalar, n); // this takes int64_t
 }
 
 MclScalar::MclScalar(const std::vector<uint8_t>& v)
@@ -28,50 +30,67 @@ MclScalar::MclScalar(const std::array<uint8_t, L>& a)
 }
 template MclScalar::MclScalar(const std::array<uint8_t, 48ul>& v);
 
-MclScalar::MclScalar(const mclBnFr& other_fr)
+MclScalar::MclScalar(const MclScalar::Underlying& other_underlying)
 {
-    m_fr = other_fr;
+    m_scalar = other_underlying;
 }
 
 MclScalar::MclScalar(const uint256& n)
 {
     // uint256 deserialization is big-endian
-    mclBnFr_setBigEndianMod(&m_fr, n.data(), 32);
+    mclBnFr_setBigEndianMod(&m_scalar, n.data(), 32);
 }
 
 MclScalar::MclScalar(const std::string& s, int radix)
 {
-    auto r = mclBnFr_setStr(&m_fr, s.c_str(), s.length(), radix);
+    auto r = mclBnFr_setStr(&m_scalar, s.c_str(), s.length(), radix);
     if (r == -1) {
         throw std::runtime_error(std::string("Failed to instantiate Scalar from '") + s);
+    }
+}
+
+MclScalar::MclScalar(const std::vector<uint8_t>& msg, uint8_t index)
+{
+    std::vector<uint8_t> vec;
+    vec.resize(msg.size() + 1);
+    vec[0] = index;
+    std::copy(msg.begin(), msg.end(), &vec[1]);
+
+    CSHA256 hasher; // creating local instance for thread safely
+    hasher.Write(&vec[0], vec.size());
+    uint8_t hash[CSHA256::OUTPUT_SIZE];
+    hasher.Finalize(hash);
+
+    if (mclBnFr_setLittleEndianMod(&m_scalar, hash, CSHA256::OUTPUT_SIZE) == -1) {
+        throw std::runtime_error("Hash size is greater than or equal to m_scalar size * 2. Check code");
     }
 }
 
 MclScalar MclScalar::operator+(const MclScalar& rhs) const
 {
     MclScalar ret;
-    mclBnFr_add(&ret.m_fr, &m_fr, &rhs.m_fr);
+    mclBnFr_add(&ret.m_scalar, &m_scalar, &rhs.m_scalar);
     return ret;
 }
 
 MclScalar MclScalar::operator-(const MclScalar& rhs) const
 {
     MclScalar ret;
-    mclBnFr_sub(&ret.m_fr, &m_fr, &rhs.m_fr);
+    mclBnFr_sub(&ret.m_scalar, &m_scalar, &rhs.m_scalar);
     return ret;
 }
 
 MclScalar MclScalar::operator*(const MclScalar& rhs) const
 {
     MclScalar ret;
-    mclBnFr_mul(&ret.m_fr, &m_fr, &rhs.m_fr);
+    mclBnFr_mul(&ret.m_scalar, &m_scalar, &rhs.m_scalar);
     return ret;
 }
 
 MclScalar MclScalar::operator/(const MclScalar& rhs) const
 {
     MclScalar ret;
-    mclBnFr_div(&ret.m_fr, &m_fr, &rhs.m_fr);
+    mclBnFr_div(&ret.m_scalar, &m_scalar, &rhs.m_scalar);
     return ret;
 }
 
@@ -135,7 +154,7 @@ MclScalar MclScalar::operator~() const
 MclScalar MclScalar::operator<<(const uint32_t& shift) const
 {
     mclBnFr next;
-    mclBnFr prev = m_fr;
+    mclBnFr prev = m_scalar;
     for (size_t i = 0; i < shift; ++i) {
         mclBnFr_add(&next, &prev, &prev);
         prev = next;
@@ -152,7 +171,7 @@ MclScalar MclScalar::operator>>(const uint32_t& shift) const
     mclBnFr_setInt(&one, 1);
     mclBnFr_setInt(&two, 2);
 
-    mclBnFr temp = m_fr;
+    mclBnFr temp = m_scalar;
     uint32_t n = shift;
 
     while (n > 0) {
@@ -168,22 +187,22 @@ MclScalar MclScalar::operator>>(const uint32_t& shift) const
 
 void MclScalar::operator=(const int64_t& n)
 {
-    mclBnFr_setInt(&m_fr, n);
+    mclBnFr_setInt(&m_scalar, n);
 }
 
 bool MclScalar::operator==(const int32_t& rhs) const
 {
     MclScalar temp;
     temp = rhs;
-    return mclBnFr_isEqual(&m_fr, &temp.m_fr);
+    return mclBnFr_isEqual(&m_scalar, &temp.m_scalar);
 }
 
 bool MclScalar::operator==(const MclScalar& rhs) const
 {
-    return mclBnFr_isEqual(&m_fr, &rhs.m_fr);
+    return mclBnFr_isEqual(&m_scalar, &rhs.m_scalar);
 }
 
-bool MclScalar::operator!=(const int& b) const
+bool MclScalar::operator!=(const int32_t& b) const
 {
     return !operator==(b);
 }
@@ -193,48 +212,48 @@ bool MclScalar::operator!=(const MclScalar& b) const
     return !operator==(b);
 }
 
-mclBnFr MclScalar::Underlying() const
+const MclScalar::Underlying& MclScalar::GetUnderlying() const
 {
-    return m_fr;
+    return m_scalar;
 }
 
 bool MclScalar::IsValid() const
 {
-    return mclBnFr_isValid(&m_fr) == 1;
+    return mclBnFr_isValid(&m_scalar) == 1;
 }
 
 bool MclScalar::IsZero() const
 {
-    return mclBnFr_isZero(&m_fr) == 1;
+    return mclBnFr_isZero(&m_scalar) == 1;
 }
 
 MclScalar MclScalar::Invert() const
 {
-    if (mclBnFr_isZero(&m_fr) == 1) {
+    if (mclBnFr_isZero(&m_scalar) == 1) {
         throw std::runtime_error("Inverse of zero is undefined");
     }
     MclScalar temp;
-    mclBnFr_inv(&temp.m_fr, &m_fr);
+    mclBnFr_inv(&temp.m_scalar, &m_scalar);
     return temp;
 }
 
 MclScalar MclScalar::Negate() const
 {
     MclScalar temp;
-    mclBnFr_neg(&temp.m_fr, &m_fr);
+    mclBnFr_neg(&temp.m_scalar, &m_scalar);
     return temp;
 }
 
 MclScalar MclScalar::Square() const
 {
     MclScalar temp;
-    mclBnFr_sqr(&temp.m_fr, &m_fr);
+    mclBnFr_sqr(&temp.m_scalar, &m_scalar);
     return temp;
 }
 
 MclScalar MclScalar::Cube() const
 {
-    MclScalar temp(m_fr);
+    MclScalar temp(m_scalar);
     temp = temp * temp.Square();
     return temp;
 }
@@ -244,13 +263,13 @@ MclScalar MclScalar::Pow(const MclScalar& n) const
     // A variant of double-and-add method
     MclScalar temp(1);
     mclBnFr bit_val;
-    bit_val = m_fr;
+    bit_val = m_scalar;
     auto bits = n.ToBinaryVec();
 
     for (auto it = bits.rbegin(); it != bits.rend(); ++it) {
         MclScalar s(bit_val);
         if (*it) {
-            mclBnFr_mul(&temp.m_fr, &temp.m_fr, &bit_val);
+            mclBnFr_mul(&temp.m_scalar, &temp.m_scalar, &bit_val);
         }
         mclBnFr_mul(&bit_val, &bit_val, &bit_val);
     }
@@ -262,10 +281,10 @@ MclScalar MclScalar::Rand(bool exclude_zero)
     MclScalar temp;
 
     while (true) {
-        if (mclBnFr_setByCSPRNG(&temp.m_fr) != 0) {
+        if (mclBnFr_setByCSPRNG(&temp.m_scalar) != 0) {
             throw std::runtime_error(std::string("Failed to generate random number"));
         }
-        if (!exclude_zero || mclBnFr_isZero(&temp.m_fr) != 1) break;
+        if (!exclude_zero || mclBnFr_isZero(&temp.m_scalar) != 1) break;
     }
     return temp;
 }
@@ -284,23 +303,17 @@ std::vector<uint8_t> MclScalar::GetVch(const bool trim_preceeding_zeros) const
 {
     auto seri_size = MclScalar::SERIALIZATION_SIZE;
     std::vector<uint8_t> vec(seri_size);
-    if (mclBnFr_serialize(&vec[0], seri_size, &m_fr) == 0) {
+    if (mclBnFr_serialize(&vec[0], seri_size, &m_scalar) == 0) {
         // We avoid throwing an exception as the fuzzer would crash when injecting random data
         // through a transaction in one of the mcl fields.
         // The default value is the same of the constructor (0)
         MclScalar ret;
         return ret.GetVch();
     }
-    if (!trim_preceeding_zeros) return vec;
-
-    std::vector<uint8_t> trimmed_vec;
-
-    bool take_char = false;
-    for (auto c : vec) {
-        if (!take_char && c != '\0') take_char = true;
-        if (take_char) trimmed_vec.push_back(c);
+    if (trim_preceeding_zeros) {
+        vec = blsct::Common::TrimPreceedingZeros<uint8_t>(vec);
     }
-    return trimmed_vec;
+    return vec;
 }
 
 void MclScalar::SetVch(const std::vector<uint8_t>& v)
@@ -308,12 +321,12 @@ void MclScalar::SetVch(const std::vector<uint8_t>& v)
     if (v.size() == 0) {
         mclBnFr x;
         mclBnFr_clear(&x);
-        m_fr = x;
+        m_scalar = x;
     } else {
-        if (mclBnFr_setBigEndianMod(&m_fr, &v[0], v.size()) == -1) {
+        if (mclBnFr_setBigEndianMod(&m_scalar, &v[0], v.size()) == -1) {
             mclBnFr x;
             mclBnFr_clear(&x);
-            m_fr = x;
+            m_scalar = x;
         }
     }
 }
@@ -327,7 +340,7 @@ void MclScalar::SetPow2(const uint32_t& n)
         temp = temp * 2;
         --i;
     }
-    m_fr = temp.m_fr;
+    m_scalar= temp.m_scalar;
 }
 
 uint256 MclScalar::GetHashWithSalt(const uint64_t& salt) const
@@ -342,7 +355,7 @@ std::string MclScalar::GetString(const int8_t& radix) const
 {
     char str[1024];
 
-    if (mclBnFr_getStr(str, sizeof(str), &m_fr, radix) == 0) {
+    if (mclBnFr_getStr(str, sizeof(str), &m_scalar, radix) == 0) {
         throw std::runtime_error(std::string("Failed to get string representation of mclBnFr"));
     }
     return std::string(str);

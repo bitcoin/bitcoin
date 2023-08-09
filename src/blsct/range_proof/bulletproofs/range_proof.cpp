@@ -2,21 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/range_proof/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/arith/mcl/mcl.h>
+
+namespace bulletproofs {
 
 template <typename T>
 bool RangeProof<T>::operator==(const RangeProof<T>& other) const
 {
-    return Vs == other.Vs &&
+    return range_proof::ProofBase<T>::operator==(other) &&
         A == other.A &&
         S == other.S &&
         T1 == other.T1 &&
         T2 == other.T2 &&
         mu == other.mu &&
         tau_x == other.tau_x &&
-        Ls == other.Ls &&
-        Rs == other.Rs &&
         a == other.a &&
         b == other.b &&
         t_hat == other.t_hat;
@@ -32,3 +32,4 @@ bool RangeProof<T>::operator!=(const RangeProof<T>& other) const
 template
 bool RangeProof<Mcl>::operator!=(const RangeProof<Mcl>& other) const;
 
+} // namespace bulletproofs

@@ -7,16 +7,20 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
-#include <blsct/range_proof/range_proof_with_transcript.h>
+#include <blsct/range_proof/bulletproofs/range_proof_with_transcript.h>
+#include <blsct/range_proof/common.h>
 #include <blsct/range_proof/range_proof_setup.h>
 #include <blsct/common.h>
 #include <hash.h>
+#include <cmath>
+
+namespace bulletproofs {
 
 template <typename T>
 RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<T>& proof) {
     using Scalar = typename T::Scalar;
 
-    // build transcript in the same way it was built in the prove function
+    // build transcript in the same way the prove function builds it
     CHashWriter fiat_shamir(0,0);
 retry:
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
@@ -39,12 +43,19 @@ retry:
 
     GEN_FIAT_SHAMIR_VAR(c_factor, fiat_shamir, retry);
 
-    auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(proof.Vs.Size());
-    auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
+    auto num_rounds = range_proof::Common<T>::GetNumRoundsExclLast(
+        proof.Vs.Size()
+    );
+    auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(
+        num_rounds,
+        proof.Ls,
+        proof.Rs,
+        fiat_shamir
+    );
     if (!maybe_xs.has_value()) goto retry;
 
     size_t num_input_values_power_2 = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
-    size_t concat_input_values_in_bits = num_input_values_power_2 * RangeProofSetup::m_input_value_bits;
+    size_t concat_input_values_in_bits = num_input_values_power_2 * RangeProofSetup::num_input_value_bits;
 
     return RangeProofWithTranscript<T>(
         proof,
@@ -59,15 +70,4 @@ retry:
 }
 template RangeProofWithTranscript<Mcl> RangeProofWithTranscript<Mcl>::Build(const RangeProof<Mcl>&);
 
-template <typename T>
-size_t RangeProofWithTranscript<T>::RecoverNumRounds(const size_t& num_input_values)
-{
-    auto num_input_values_pow2 =
-        blsct::Common::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
-    auto num_rounds =
-        ((int) std::log2(num_input_values_pow2)) +
-        RangeProofSetup::m_inupt_value_bits_log2;
-
-    return num_rounds;
-}
-template size_t RangeProofWithTranscript<Mcl>::RecoverNumRounds(const size_t&);
+} // namespace bulletproofs

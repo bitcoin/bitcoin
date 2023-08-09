@@ -5,16 +5,16 @@
 #ifndef NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
 #define NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
 
-#include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <streams.h>
 
-using Scalar = Mcl::Scalar;
-using Point = Mcl::Point;
-using Scalars = Elements<Scalar>;
-using Points = Elements<Point>;
-
+template <typename T>
 struct SetMemProof {
+    using Scalar = typename T::Scalar;
+    using Point = typename T::Point;
+    using Scalars = Elements<Scalar>;
+    using Points = Elements<Point>;
+
     // sigma excluding l and r
     Point phi;
     Point A1;

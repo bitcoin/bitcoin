@@ -12,6 +12,7 @@
 #include <serialize.h>
 
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <vector>
 
@@ -19,6 +20,8 @@ template <typename T>
 class Elements
 {
 public:
+    using value_type = T;
+
     Elements();
     Elements(const std::vector<T>& vec);
     Elements(const size_t& size, const T& default_value);
@@ -33,11 +36,17 @@ public:
     bool Empty() const;
     std::vector<uint8_t> GetVch() const;
 
-    bool HasZero() const;
-
     void ConfirmIndexInsideRange(const uint32_t& index) const;
     void ConfirmSizesMatch(const size_t& other_size) const;
+
+    /**
+     * returns a geometric series of k with n terms i.e.
+     * k^0, k^1, ..., k^{n-1}
+     * if from_index is specified, it returns a geometrix series
+     * k^{from_index}, ..., k^{from_index + n - 1}
+     */
     static Elements<T> FirstNPow(const T& k, const size_t& n, const size_t& from_index = 0);
+
     static Elements<T> RepeatN(const T& k, const size_t& n);
     static Elements<T> RandVec(const size_t& n, const bool exclude_zero = false);
 
@@ -90,6 +99,14 @@ public:
     Elements<T> Negate() const;
 
     Elements<T> Invert() const;
+
+    Elements<T> Reverse() const;
+
+    T Product() const;
+
+    Elements<T> Square() const;
+
+    std::string GetString(const uint8_t& radix = 16) const;
 
     template <typename Stream>
     void Serialize(Stream& s) const

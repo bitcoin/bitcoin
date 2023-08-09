@@ -168,7 +168,7 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
     out.pushKV("type", GetTxnOutputType(type));
 }
 
-void RangeProofToUniv(const RangeProof<Mcl>& rp, UniValue& entry, const bool& extended)
+void RangeProofToUniv(const bulletproofs::RangeProof<Mcl>& rp, UniValue& entry, const bool& extended)
 {
     UniValue Vs{UniValue::VARR};
     for (size_t i = 0; i < rp.Vs.Size(); i++) {
