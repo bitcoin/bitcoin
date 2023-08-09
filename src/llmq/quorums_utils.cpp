@@ -18,6 +18,7 @@
 #include <masternode/masternodemeta.h>
 #include <util/ranges.h>
 #include <common/args.h>
+#include <logging.h>
 namespace llmq
 {
 bool CLLMQUtils::IsV19Active(const int nHeight)

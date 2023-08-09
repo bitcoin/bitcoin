@@ -19,6 +19,7 @@
 #include <univalue.h>
 #include <shutdown.h>
 #include <common/args.h>
+#include <logging.h>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";

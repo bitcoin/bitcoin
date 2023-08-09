@@ -15,6 +15,7 @@
 #include <key_io.h>
 #include <timedata.h>
 #include <util/ranges.h>
+#include <logging.h>
 const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 CSporkManager sporkManager;

@@ -22,6 +22,7 @@
 #include <llmq/quorums_chainlocks.h>
 #include <key_io.h>
 #include <common/args.h>
+#include <logging.h>
 using node::GetTransaction;
 extern RecursiveMutex cs_setethstatus;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {

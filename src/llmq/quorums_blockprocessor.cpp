@@ -23,6 +23,7 @@
 #include <saltedhasher.h>
 #include <sync.h>
 #include <map>
+#include <logging.h>
 namespace llmq
 {
 
