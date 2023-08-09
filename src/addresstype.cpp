@@ -4,7 +4,7 @@
 
 #include <addresstype.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <hash.h>
 #include <pubkey.h>
 #include <uint256.h>

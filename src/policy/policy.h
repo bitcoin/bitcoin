@@ -10,7 +10,7 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/solver.h>
 
 #include <cstdint>
 #include <string>

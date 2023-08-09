@@ -10,7 +10,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 
