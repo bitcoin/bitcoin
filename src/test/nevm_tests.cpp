@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(nevmspv_valid)
     // Inner arrays are either [ "comment" ]
     // [[spv_root, spv_parent_node, spv_value, spv_path]]
 
-    UniValue tests = read_json(std::string(json_tests::nevmspv_valid, json_tests::nevmspv_valid + sizeof(json_tests::nevmspv_valid)));
+    UniValue tests = read_json(json_tests::nevmspv_valid);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue &test = tests[idx];
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(nevmspv_invalid)
     // Inner arrays are either [ "comment" ]
     // [[spv_root, spv_parent_node, spv_value, spv_path]]
 
-    UniValue tests = read_json(std::string(json_tests::nevmspv_invalid, json_tests::nevmspv_invalid + sizeof(json_tests::nevmspv_invalid)));
+    UniValue tests = read_json(json_tests::nevmspv_invalid);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue &test = tests[idx];

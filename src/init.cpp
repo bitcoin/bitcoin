@@ -1705,7 +1705,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         ChainstateManager& chainman = *node.chainman;
         // SYSCOIN
         node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
-                                     chainman, *node.mempool, ignores_incoming_txs);
+                                     chainman, *node.mempool, peerman_opts);
         
         // SYSCOIN
         node::ChainstateLoadOptions options;
@@ -1799,7 +1799,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
         RegisterValidationInterface(activeMasternodeManager.get());
     }
-    ChainstateManager& chainman = *Assert(node.chainman);
+
     fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
     if(fNEVMConnection) {
         if(!node.chainman->ActiveChainstate().DoGethStartupProcedure()) {
