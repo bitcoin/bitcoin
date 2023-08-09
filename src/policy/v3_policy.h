@@ -49,6 +49,12 @@ std::optional<uint256> CheckEphemeralSpends(const Package& package);
 std::optional<std::string> CheckEphemeralSpends(const CTransactionRef& ptx,
                                                 const CTxMemPool::setEntries& ancestors);
 
+/** If the tx has an ephemeral anchor, do the package context-less checks */
+bool CheckValidEphemeralTx(const CTransaction& tx,
+                           TxValidationState& state,
+                           CAmount& txfee,
+                           bool package_context);
+
 /** The following rules apply to V3 transactions:
  * 1. Tx with all of its ancestors (including non-nVersion=3) must be within V3_ANCESTOR_SIZE_LIMIT_KVB.
  * 2. Tx with all of its ancestors must be within V3_ANCESTOR_LIMIT.

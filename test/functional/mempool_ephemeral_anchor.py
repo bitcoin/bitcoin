@@ -152,21 +152,9 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         node.submitpackage(package_hex1)
         self.assert_mempool_contents(expected=package_txns1, unexpected=[])
 
-        # Raise minrelay fee to orphan the child, with parent prioritised to safety
+        # Node restarts; doesn't allow allow ephemeral transaction back in due to individual submission
         self.restart_node(0)
-
-        self.assert_mempool_contents(expected=package_txns1, unexpected=[])
-
-        # Raise minrelay fee to orphan the child, with parent prioritised to safety
-        node.prioritisetransaction(node.decoderawtransaction(package_hex1[0])["txid"], 0, COIN)
-        self.restart_node(0, extra_args=["-minrelaytxfee=0.01"])
-
-        self.assert_mempool_contents(expected=[package_txns1[0]], unexpected=[package_txns1[1]])
-
-        self.generate(node, 1)
-
-        # Set node back to default settings
-        self.restart_node(0)
+        assert_equal(node.getrawmempool(), [])
 
     def test_fee_having_parent(self):
         self.log.info("Test that a transaction with ephemeral anchor may not have base fee")
@@ -266,7 +254,13 @@ class EphemeralAnchorTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "missing-ephemeral-spends", node.submitpackage, package_hex0)
         assert_equal(node.getrawmempool(), [])
 
-        # One more time, correct nversion
+        # Individual submission also fails
+        hex0_txid = node.decoderawtransaction(package_hex0[0])["txid"]
+        node.prioritisetransaction(hex0_txid, 0, COIN)
+        assert_raises_rpc_error(-26, "missing-ephemeral-spends", node.sendrawtransaction, package_hex0[0])
+        assert_equal(node.getrawmempool(), [])
+
+        # One more time
         package_hex3, package_txns3 = self.create_simple_package(parent_coin=parent_coin, parent_fee=0, child_fee=DEFAULT_FEE)
         node.submitpackage(package_hex3)
         self.assert_mempool_contents(expected=package_txns3, unexpected=[])

@@ -126,6 +126,28 @@ std::optional<std::string> CheckEphemeralSpends(const CTransactionRef& ptx,
     return std::nullopt;
 }
 
+bool CheckValidEphemeralTx(const CTransaction& tx, TxValidationState& state, CAmount& txfee, bool package_context)
+{
+    // No anchor; it's ok
+    if (!HasPayToAnchor(tx)) {
+        return true;
+    }
+
+    /* Only allow in package feerate context */
+    if (!package_context) {
+        /* Allows re-evaluation in package context */
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends");
+    }
+
+    if (tx.nVersion != 3) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "wrong-ephemeral-nversion");
+    } else if (txfee != 0) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "invalid-ephemeral-fee");
+    }
+
+    return true;
+}
+
 std::optional<std::string> ApplyV3Rules(const CTransactionRef& ptx,
                                         const CTxMemPool::setEntries& ancestors,
                                         const std::set<uint256>& direct_conflicts)

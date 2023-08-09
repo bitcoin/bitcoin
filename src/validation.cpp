@@ -842,13 +842,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return false; // state filled in by CheckTxInputs
     }
 
-    // We check for 0-base-fee transaction here now that we have access to ws.m_base_fees.
-    if (HasPayToAnchor(tx)) {
-        if (ws.m_base_fees != 0) {
-            return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "invalid-ephemeral-fee");
-        } else if (tx.nVersion != 3) {
-            return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "wrong-ephemeral-nversion");
-        }
+    // We check for ephemeral tx properties now that we have access to ws.m_base_fees.
+    if (!CheckValidEphemeralTx(tx, state, ws.m_base_fees, args.m_package_submission)) {
+        return false; // state filled in by CheckValidEphemeralTx
     }
 
     if (m_pool.m_require_standard && !AreInputsStandard(tx, m_view)) {
