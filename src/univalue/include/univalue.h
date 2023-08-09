@@ -7,15 +7,13 @@
 #define BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_H
 
 #include <charconv>
-#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 class UniValue {
@@ -96,7 +94,9 @@ public:
     std::string write(unsigned int prettyIndent = 0,
                       unsigned int indentLevel = 0) const;
 
-    bool read(std::string_view raw);
+    bool read(const char *raw, size_t len);
+    bool read(const char *raw) { return read(raw, strlen(raw)); }
+    bool read(std::string_view raw) { return read(raw.data(), raw.size()); }
 
 private:
     UniValue::VType typ;

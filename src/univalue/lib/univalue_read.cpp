@@ -5,11 +5,10 @@
 #include <univalue.h>
 #include <univalue_utffilter.h>
 
-#include <cstdint>
 #include <cstdio>
+#include <cstdint>
 #include <cstring>
 #include <string>
-#include <string_view>
 #include <vector>
 
 /*
@@ -260,7 +259,7 @@ enum expect_bits : unsigned {
 #define setExpect(bit) (expectMask |= EXP_##bit)
 #define clearExpect(bit) (expectMask &= ~EXP_##bit)
 
-bool UniValue::read(std::string_view str_in)
+bool UniValue::read(const char *raw, size_t size)
 {
     clear();
 
@@ -271,8 +270,7 @@ bool UniValue::read(std::string_view str_in)
     unsigned int consumed;
     enum jtokentype tok = JTOK_NONE;
     enum jtokentype last_tok = JTOK_NONE;
-    const char* raw{str_in.data()};
-    const char* end{raw + str_in.size()};
+    const char* end = raw + size;
     do {
         last_tok = tok;
 

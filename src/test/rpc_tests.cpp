@@ -20,7 +20,7 @@
 static UniValue JSON(std::string_view json)
 {
     UniValue value;
-    BOOST_CHECK(value.read(json));
+    BOOST_CHECK(value.read(json.data(), json.size()));
     return value;
 }
 
