@@ -2213,15 +2213,13 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        std::vector<std::vector<uint8_t>> dummy;
-        const TxoutType type{Solver(recipient.scriptPubKey, dummy)};
-        if (type == TxoutType::WITNESS_V1_TAPROOT) {
+        if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
             any_tr = true;
-        } else if (type == TxoutType::WITNESS_V0_KEYHASH) {
+        } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
             any_wpkh = true;
-        } else if (type == TxoutType::SCRIPTHASH) {
+        } else if (std::get_if<ScriptHash>(&recipient.dest)) {
             any_sh = true;
-        } else if (type == TxoutType::PUBKEYHASH) {
+        } else if (std::get_if<PKHash>(&recipient.dest)) {
             any_pkh = true;
         }
     }

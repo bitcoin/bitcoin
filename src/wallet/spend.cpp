@@ -1044,7 +1044,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // vouts to the payees
     for (const auto& recipient : vecSend)
     {
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
 
         // Include the fee cost for outputs.
         coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
@@ -1292,7 +1292,9 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CTxDestination dest;
+        ExtractDestination(txOut.scriptPubKey, dest);
+        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 

@@ -39,7 +39,6 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
         }
         destinations.insert(dest);
 
-        CScript script_pub_key = GetScriptForDestination(dest);
         CAmount amount = AmountFromValue(address_amounts[i++]);
 
         bool subtract_fee = false;
@@ -50,7 +49,7 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
             }
         }
 
-        CRecipient recipient = {script_pub_key, amount, subtract_fee};
+        CRecipient recipient = {dest, amount, subtract_fee};
         recipients.push_back(recipient);
     }
 }

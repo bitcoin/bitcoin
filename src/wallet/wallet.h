@@ -288,7 +288,7 @@ inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)
 
 struct CRecipient
 {
-    CScript scriptPubKey;
+    CTxDestination dest;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
 };
