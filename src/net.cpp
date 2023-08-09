@@ -1118,7 +1118,7 @@ void CConnman::DisconnectNodes()
     }
     {
         // Disconnect unused nodes
-        LOCK(m_nodes_mutex); // While modifying m_nodes
+        LOCK2(m_nodes_mutex, m_nodes_disconnected_mutex);
         for (auto& pnode : snapshot) {
             if (pnode->fDisconnect)
             {
@@ -1139,13 +1139,19 @@ void CConnman::DisconnectNodes()
             }
         }
     }
-    // Delete disconnected nodes
-    std::vector<CNodeRef> nodes_disconnected_copy = m_nodes_disconnected;
-    for (auto& pnode : nodes_disconnected_copy) {
-        // Destroy the object only after other threads have stopped using it.
-        if (pnode.use_count() == 2) {
-            m_nodes_disconnected.erase(remove(m_nodes_disconnected.begin(), m_nodes_disconnected.end(), pnode), m_nodes_disconnected.end());
+    {
+        LOCK(m_nodes_disconnected_mutex);
+        // Delete disconnected nodes
+        std::vector<CNodeRef> nodes_still_referenced{};
+        for (auto& pnode : m_nodes_disconnected) {
+            // Destroy the object when we have the final reference to it
+            if (pnode.use_count() == 1) {
+                m_nodes_disconnected.erase(remove(m_nodes_disconnected.begin(), m_nodes_disconnected.end(), pnode), m_nodes_disconnected.end());
+            } else {
+                nodes_still_referenced.push_back(pnode);
+            }
         }
+        m_nodes_disconnected.swap(nodes_still_referenced);
     }
 }
 
@@ -2510,7 +2516,7 @@ void CConnman::StopNodes()
     }
     nodes.clear();
 
-    m_nodes_disconnected.clear();
+    WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.clear());
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
