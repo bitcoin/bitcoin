@@ -480,8 +480,8 @@ class EphemeralAnchorTest(BitcoinTestFramework):
             version=3
         )
 
-        # Submit a + b + c ancestor package
-        assert_raises_rpc_error(-26, "v3-tx-nonstandard", node.submitpackage, [child_a["hex"], child_b["hex"], child_c["hex"]])
+        # Submit a + b + c ancestor package, (a) is rejected for not spending parent anchors
+        assert_raises_rpc_error(-26, "v3-tx-nonstandard, tx does not spend all parent ephemeral anchors", node.submitpackage, [child_a["hex"], child_b["hex"], child_c["hex"]])
 
         # Only the sponsor RBF makes it into mempool, parent is evicted and other descendants have been rejected for V3 violations
         assert_equal(node.getrawmempool(), [child_b["txid"]])
