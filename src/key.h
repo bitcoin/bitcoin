@@ -74,6 +74,13 @@ public:
             memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
     }
 
+    void Invalidate()
+    {
+        keydata.clear();
+        keydata.resize(32);
+        fValid = false;
+    }
+
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
