@@ -516,7 +516,7 @@ public:
                             /* m_coins_to_uncache */ package_args.m_coins_to_uncache,
                             /* m_test_accept */ package_args.m_test_accept,
                             /* m_allow_replacement */ true,
-                            /* m_package_submission */ false,
+                            /* m_package_submission */ true, // do not LimitMempool
                             /* m_package_feerates */ false, // only 1 transaction
             };
         }
@@ -1184,32 +1184,21 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         }
     }
 
-    // It may or may not be the case that all the transactions made it into the mempool. Regardless,
-    // make sure we haven't exceeded max mempool size.
-    LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
-
     std::vector<uint256> all_package_wtxids;
     all_package_wtxids.reserve(workspaces.size());
     std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(all_package_wtxids),
                    [](const auto& ws) { return ws.m_ptx->GetWitnessHash(); });
-    // Find the wtxids of the transactions that made it into the mempool. Allow partial submission,
-    // but don't report success unless they all made it into the mempool.
+
+    // Add successful results. The returned results may change later if LimitMempool() evicts them.
     for (Workspace& ws : workspaces) {
         const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
             CFeeRate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
         const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
             std::vector<uint256>({ws.m_ptx->GetWitnessHash()});
-        if (m_pool.exists(GenTxid::Wtxid(ws.m_ptx->GetWitnessHash()))) {
-            results.emplace(ws.m_ptx->GetWitnessHash(),
-                MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
-                                             ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
-            GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
-        } else {
-            all_submitted = false;
-            ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
-            package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
-            results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
-        }
+        results.emplace(ws.m_ptx->GetWitnessHash(),
+                        MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
+                                         ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
+        GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
     }
     return all_submitted;
 }
@@ -1483,16 +1472,37 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     auto final_submission_result = quit_early || txns_package_eval.empty() ? PackageMempoolAcceptResult(package_state_quit_early, {}) :
         AcceptSubPackage(txns_package_eval, args);
 
+    // Make sure we haven't exceeded max mempool size.
+    // Package transactions that were submitted to mempool or already in mempool may be evicted.
+    LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+
     for (const auto& tx : package) {
+        // In case a transaction was in mempool but was evicted in the call to LimitMempoolSize().
+        TxValidationState mempool_full_state;
+        mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
         const auto& wtxid = tx->GetWitnessHash();
         if (final_submission_result.m_tx_results.count(wtxid) > 0) {
             // We shouldn't have re-submitted if the tx result was already in results_final.
             Assume(results_final.count(wtxid) == 0);
+            // If the result was valid, check to see if it's still in mempool. If not, change its
+            // result to failure due to mempool getting full.
+            if (final_submission_result.m_tx_results.at(wtxid).m_result_type == MempoolAcceptResult::ResultType::VALID &&
+                !m_pool.exists(GenTxid::Wtxid(wtxid))) {
+                final_submission_result.m_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                final_submission_result.m_tx_results.erase(wtxid);
+                final_submission_result.m_tx_results.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
+            }
         } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
-            // Already-in-mempool transaction.
+            // Already-in-mempool transaction. Check to see if it's still in the mempool.
             Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
             Assume(individual_results_nonfinal.count(wtxid) == 0);
-            final_submission_result.m_tx_results.emplace(wtxid, it->second);
+            // Need to check by txid to include the same-txid-different-witness transaction case.
+            if (m_pool.exists(GenTxid::Txid(tx->GetHash()))) {
+                final_submission_result.m_tx_results.emplace(wtxid, it->second);
+            } else {
+                final_submission_result.m_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                final_submission_result.m_tx_results.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
+            }
         } else if (const auto it{individual_results_nonfinal.find(wtxid)}; it != individual_results_nonfinal.end()) {
             Assume(it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
             // Interesting result from previous processing.
