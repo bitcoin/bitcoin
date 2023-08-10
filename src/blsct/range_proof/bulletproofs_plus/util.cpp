@@ -1,4 +1,5 @@
 #include <blsct/range_proof/bulletproofs_plus/util.h>
+#include <uint256.h>
 
 namespace bulletproofs_plus {
 
@@ -15,7 +16,8 @@ Elements<typename T::Scalar> Util<T>::GetYPows(
     for (size_t i=0; i<y_pows.Size(); ++i) {
         fiat_shamir << y_pows[i];
     }
-    fiat_shamir << y_pows.Size();
+    uint256 y_pows_size(y_pows.Size());
+    fiat_shamir << y_pows_size;
 
     return y_pows;
 }

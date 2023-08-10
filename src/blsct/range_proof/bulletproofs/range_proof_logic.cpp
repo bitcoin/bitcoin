@@ -432,11 +432,11 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         // mu = alpha + rho * x ... (62)
         //
         // and this alpha is the alpha from nonce + (msg1 << 64 | 64-bit vs[0])
-        // so, subtracting rho * x from mu equals to:
+        // so, subtracting rho * x from mu is equal to:
         //
         // alpha from nonce + (msg1 << 64 | 64-bit vs[0])
         //
-        // subtracting alpha from nonce from it results in:
+        // subtracting alpha from nonce from it then equals:
         // (msg1 << 64 | 64-bit vs[0])
         //
         const Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
@@ -458,13 +458,13 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
 
         // tau_x = tau2 * x^2 + tau1 * x + z^2 * gamma ... (61)
         //
-        // solving this equation for tau1, you get:
+        // solving this equation for tau1, we get:
         //
         // tau_x - tau2 * x^2 - z^2 * gamma = tau1 * x
         // tau1 = (tau_x - tau2 * x^2 - z^2 * gamma) * x^-1 ... (D)
         //
-        // since tau1 in (61) is tau1 (C) + msg2, by subtracting tau1 (C) from RHS of (D)
-        // msg2 can be extracted
+        // since tau1 in (61) is tau1 (C) + msg2, msg2 can be extracted
+        // by subtracting tau1 (C) from RHS of (D)
         //
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * gamma_vs0)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);

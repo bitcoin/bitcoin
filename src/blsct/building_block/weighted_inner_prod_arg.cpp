@@ -97,7 +97,6 @@ std::optional<WeightedInnerProdArgResult<T>> WeightedInnerProdArg::Run(
     };
 
     Scalars y_pows = bulletproofs_plus::Util<T>::GetYPows(y, n, fiat_shamir);
-    //Scalars y_pows = Scalars::FirstNPow(y, n, 1);
 
     while (n > 0) {
         if (n == 1) {
