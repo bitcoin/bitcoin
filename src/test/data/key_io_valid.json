@@ -606,5 +606,56 @@
             "chain": "signet",
             "isPrivkey": false
         }
+    ],
+    [
+        "sp1qq22l5s6l9460ww6t4tkzsy2a7zejurcmzz35pt0ffrzk5erlaykdcqugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68gdjvfn2",
+        "0295fa435f2d74f73b4baaec28115df0b32e0f1b10a340ade948c56a647fe92cdc0388ce2529c809f21008959fd3b2697f6f7cf5a116acd7a93f3b1c369aab0c7a3a",
+        {
+            "chain": "main",
+            "isPrivkey": false,
+            "isSilentPayment": true,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "sp1pq22l5s6l9460ww6t4tkzsy2a7zejurcmzz35pt0ffrzk5erlaykdcqugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68t02m0h0s8cwhy",
+        "0295fa435f2d74f73b4baaec28115df0b32e0f1b10a340ade948c56a647fe92cdc0388ce2529c809f21008959fd3b2697f6f7cf5a116acd7a93f3b1c369aab0c7a3adeadbeef",
+        {
+            "chain": "main",
+            "isPrivkey": false,
+            "isSilentPayment": true,
+            "silentPaymentVersion": 1,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tsp1qqthpye3hdcnydp9temp7yduy6uw5h2nw8u9fz677ccrna280qwj3uq60zeqs3zfpj3age62h4ljq2lyawwdecmk8a545yysk4x3tu3skjqm2thu6",
+        "02ee1266376e264684abcec3e23784d71d4baa6e3f0a916bdec6073ea8ef03a51e034f1641088921947a8ce957afe4057c9d739b9c6ec7ed2b421216a9a2be461690",
+        {
+            "chain": "testnet4",
+            "isPrivkey": false,
+            "isSilentPayment": true,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tsp1qqvrl2accqtatgtkllv5fdsfapq6vqnrr0uf2whhmjyas4teg7ljfqqlpec0ze90m97t3stv92p5ekzkcwzmpx0x8p7ljj9xqcjjpvnfurc00tjn9",
+        "0307f5771802fab42edffb2896c13d0834c04c637f12a75efb913b0aaf28f7e49003e1ce1e2c95fb2f97182d8550699b0ad870b6133cc70fbf2914c0c4a4164d3c1e",
+        {
+            "chain": "signet",
+            "isPrivkey": false,
+            "isSilentPayment": true,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "sprt1qq04xgllnqqfdlxjkr355rmsahfn9t8l6sd0k20t4uka4c73nvvpnwqu4kvg0nm62d5jtmqp54lkc7tul0dzt25ejtn4f80505z3u0h5jag59rdg4",
+        "03ea647ff30012df9a561c6941ee1dba66559ffa835f653d75e5bb5c7a336303370395b310f9ef4a6d24bd8034afed8f2f9f7b44b553325cea93be8fa0a3c7de92ea",
+        {
+            "chain": "regtest",
+            "isPrivkey": false,
+            "isSilentPayment": true,
+            "tryCaseFlip": true
+        }
     ]
 ]
