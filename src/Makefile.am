@@ -124,6 +124,7 @@ BITCOIN_CORE_H = \
   banman.h \
   base58.h \
   bech32.h \
+  bip324.h \
   blockencodings.h \
   blockfilter.h \
   chain.h \
@@ -376,6 +377,7 @@ libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
+  bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
@@ -546,10 +548,10 @@ crypto_libbitcoin_crypto_base_la_LDFLAGS = $(AM_LDFLAGS) -static
 crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/chacha_poly_aead.h \
-  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
+  crypto/chacha20poly1305.h \
+  crypto/chacha20poly1305.cpp \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
