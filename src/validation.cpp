@@ -455,7 +455,7 @@ public:
          * any transaction spending the same inputs as a transaction in the mempool is considered
          * a conflict. */
         const bool m_allow_replacement;
-        /** When true, the mempool will not be trimmed when individual transactions are submitted in
+        /** When true, the mempool will not be trimmed when any transactions are submitted in
          * Finalize(). Instead, limits should be enforced at the end to ensure the package is not
          * partially submitted.
          */
@@ -516,7 +516,7 @@ public:
                             /* m_coins_to_uncache */ package_args.m_coins_to_uncache,
                             /* m_test_accept */ package_args.m_test_accept,
                             /* m_allow_replacement */ true,
-                            /* m_package_submission */ false,
+                            /* m_package_submission */ true, // do not LimitMempoolSize in Finalize()
                             /* m_package_feerates */ false, // only 1 transaction
             };
         }
@@ -652,8 +652,7 @@ private:
 
     // Submit all transactions to the mempool and call ConsensusScriptChecks to add to the script
     // cache - should only be called after successful validation of all transactions in the package.
-    // The package may end up partially-submitted after size limiting; returns true if all
-    // transactions are successfully added to the mempool, false otherwise.
+    // Does not call LimitMempoolSize(), so mempool max_size_bytes may be temporarily exceeded.
     bool SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& workspaces, PackageValidationState& package_state,
                        std::map<uint256, MempoolAcceptResult>& results)
          EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
@@ -1187,32 +1186,21 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         }
     }
 
-    // It may or may not be the case that all the transactions made it into the mempool. Regardless,
-    // make sure we haven't exceeded max mempool size.
-    LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
-
     std::vector<uint256> all_package_wtxids;
     all_package_wtxids.reserve(workspaces.size());
     std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(all_package_wtxids),
                    [](const auto& ws) { return ws.m_ptx->GetWitnessHash(); });
-    // Find the wtxids of the transactions that made it into the mempool. Allow partial submission,
-    // but don't report success unless they all made it into the mempool.
+
+    // Add successful results. The returned results may change later if LimitMempoolSize() evicts them.
     for (Workspace& ws : workspaces) {
         const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
             CFeeRate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
         const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
             std::vector<uint256>({ws.m_ptx->GetWitnessHash()});
-        if (m_pool.exists(GenTxid::Wtxid(ws.m_ptx->GetWitnessHash()))) {
-            results.emplace(ws.m_ptx->GetWitnessHash(),
-                MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
-                                             ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
-            GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
-        } else {
-            all_submitted = false;
-            ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
-            package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
-            results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
-        }
+        results.emplace(ws.m_ptx->GetWitnessHash(),
+                        MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
+                                         ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
+        GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
     }
     return all_submitted;
 }
@@ -1518,12 +1506,26 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         AcceptSubPackage(txns_package_eval, args);
     PackageValidationState& package_state_final = multi_submission_result.m_state;
 
+    // Make sure we haven't exceeded max mempool size.
+    // Package transactions that were submitted to mempool or already in mempool may be evicted.
+    LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
         if (multi_submission_result.m_tx_results.count(wtxid) > 0) {
             // We shouldn't have re-submitted if the tx result was already in results_final.
             Assume(results_final.count(wtxid) == 0);
-            results_final.emplace(wtxid, multi_submission_result.m_tx_results.at(wtxid));
+            // If it was submitted, check to see if the tx is still in the mempool. It could have
+            // been evicted due to LimitMempoolSize() above.
+            const auto& txresult = multi_submission_result.m_tx_results.at(wtxid);
+            if (txresult.m_result_type == MempoolAcceptResult::ResultType::VALID && !m_pool.exists(GenTxid::Wtxid(wtxid))) {
+                package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                TxValidationState mempool_full_state;
+                mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
+                results_final.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
+            } else {
+                results_final.emplace(wtxid, txresult);
+            }
         } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
             // Already-in-mempool transaction. Check to see if it's still there, as it could have
             // been evicted when LimitMempoolSize() was called.
