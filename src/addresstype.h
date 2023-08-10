@@ -127,6 +127,25 @@ struct PayToAnchor : public WitnessUnknown
     };
 };
 
+struct V0SilentPaymentDestination
+{
+    CPubKey m_scan_pubkey;
+    CPubKey m_spend_pubkey;
+
+    friend bool operator==(const V0SilentPaymentDestination& a, const V0SilentPaymentDestination& b) {
+        if (a.m_scan_pubkey != b.m_scan_pubkey) return false;
+        if (a.m_spend_pubkey != b.m_spend_pubkey) return false;
+        return true;
+    }
+
+    friend bool operator<(const V0SilentPaymentDestination& a, const V0SilentPaymentDestination& b) {
+        if (a.m_scan_pubkey < b.m_scan_pubkey) return true;
+        if (a.m_scan_pubkey > b.m_scan_pubkey) return false;
+        if (a.m_spend_pubkey < b.m_spend_pubkey) return true;
+        return false;
+    }
+};
+
 /**
  * A txout script categorized into standard templates.
  *  * CNoDestination: Optionally a script, no corresponding address.
@@ -140,7 +159,7 @@ struct PayToAnchor : public WitnessUnknown
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W??? address)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, V0SilentPaymentDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, WitnessUnknown>;
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);
