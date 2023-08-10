@@ -70,6 +70,7 @@
 #include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
+#include <wallet/silentpayments.h>
 
 #include <algorithm>
 #include <cassert>

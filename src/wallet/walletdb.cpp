@@ -52,6 +52,11 @@ const std::string ORDERPOSNEXT{"orderposnext"};
 const std::string POOL{"pool"};
 const std::string PURPOSE{"purpose"};
 const std::string SETTINGS{"settings"};
+const std::string SPMETA{"spmeta"};
+const std::string SPSCANKEY{"spscankey"};
+const std::string SPSPENDKEY{"spspendkey"};
+const std::string SPSPENDCKEY{"spspendckey"};
+const std::string SPTWEAK{"sptweak"};
 const std::string TX{"tx"};
 const std::string VERSION{"version"};
 const std::string WALLETDESCRIPTOR{"walletdescriptor"};
@@ -297,6 +302,47 @@ bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
 bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
 {
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
+}
+
+bool WalletBatch::WriteSilentPaymentsMetadata(const uint256& id, int64_t timestamp, int64_t last_label)
+{
+    return WriteIC(std::make_pair(DBKeys::SPMETA, id), std::make_pair(timestamp, last_label));
+}
+
+bool WalletBatch::WriteSilentPaymentsScanKey(const uint256& id, const CPrivKey& privkey, const CPubKey& pubkey)
+{
+    // hash pubkey/privkey to accelerate wallet load
+    std::vector<unsigned char> key;
+    key.reserve(pubkey.size() + privkey.size());
+    key.insert(key.end(), pubkey.begin(), pubkey.end());
+    key.insert(key.end(), privkey.begin(), privkey.end());
+
+    return WriteIC(std::make_pair(DBKeys::SPSCANKEY, std::make_pair(id, pubkey)), std::make_pair(privkey, Hash(key)), false);
+}
+
+bool WalletBatch::WriteSilentPaymentsSpendKey(const uint256& id, const CPrivKey& privkey, const CPubKey& pubkey)
+{
+    // hash pubkey/privkey to accelerate wallet load
+    std::vector<unsigned char> key;
+    key.reserve(pubkey.size() + privkey.size());
+    key.insert(key.end(), pubkey.begin(), pubkey.end());
+    key.insert(key.end(), privkey.begin(), privkey.end());
+
+    return WriteIC(std::make_pair(DBKeys::SPSPENDKEY, std::make_pair(id, pubkey)), std::make_pair(privkey, Hash(key)), false);
+}
+
+bool WalletBatch::WriteSilentPaymentsSpendCryptedKey(const uint256& id, std::vector<unsigned char>& crypted_key, const CPubKey& pubkey)
+{
+    if (!WriteIC(std::make_pair(DBKeys::SPSPENDCKEY, std::make_pair(id, pubkey)), crypted_key, false)) {
+        return false;
+    }
+    EraseIC(std::make_pair(DBKeys::SPSPENDKEY, std::make_pair(id, pubkey)));
+    return true;
+}
+
+bool WalletBatch::WriteSilentPaymentsTweak(const uint256& id, const uint256& tweak)
+{
+    return WriteIC(std::make_pair(DBKeys::SPTWEAK, id), tweak);
 }
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
