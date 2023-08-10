@@ -1480,32 +1480,27 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         }
     }
 
-    // Quit early because package validation won't change the result or the entire package has
-    // already been submitted.
-    if (quit_early || txns_package_eval.empty()) {
-        for (const auto& [wtxid, mempoolaccept_res] : individual_results_nonfinal) {
-            Assume(results_final.emplace(wtxid, mempoolaccept_res).second);
-            Assume(mempoolaccept_res.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+    auto final_submission_result = quit_early || txns_package_eval.empty() ? PackageMempoolAcceptResult(package_state_quit_early, {}) :
+        AcceptSubPackage(txns_package_eval, args);
+
+    for (const auto& tx : package) {
+        const auto& wtxid = tx->GetWitnessHash();
+        if (final_submission_result.m_tx_results.count(wtxid) > 0) {
+            // We shouldn't have re-submitted if the tx result was already in results_final.
+            Assume(results_final.count(wtxid) == 0);
+        } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
+            // Already-in-mempool transaction.
+            Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
+            Assume(individual_results_nonfinal.count(wtxid) == 0);
+            final_submission_result.m_tx_results.emplace(wtxid, it->second);
+        } else if (const auto it{individual_results_nonfinal.find(wtxid)}; it != individual_results_nonfinal.end()) {
+            Assume(it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+            // Interesting result from previous processing.
+            final_submission_result.m_tx_results.emplace(wtxid, it->second);
         }
-        return PackageMempoolAcceptResult(package_state_quit_early, std::move(results_final));
     }
-    // Validate the (deduplicated) transactions as a package. Note that submission_result has its
-    // own PackageValidationState; package_state_quit_early is unused past this point.
-    auto submission_result = AcceptSubPackage(txns_package_eval, args);
-    // Include already-in-mempool transaction results in the final result.
-    for (const auto& [wtxid, mempoolaccept_res] : results_final) {
-        Assume(submission_result.m_tx_results.emplace(wtxid, mempoolaccept_res).second);
-        Assume(mempoolaccept_res.m_result_type != MempoolAcceptResult::ResultType::INVALID);
-    }
-    if (submission_result.m_state.GetResult() == PackageValidationResult::PCKG_TX) {
-        // Package validation failed because one or more transactions failed. Provide a result for
-        // each transaction; if a transaction doesn't have an entry in submission_result,
-        // include the previous individual failure reason.
-        submission_result.m_tx_results.insert(individual_results_nonfinal.cbegin(),
-                                              individual_results_nonfinal.cend());
-        Assume(submission_result.m_tx_results.size() == package.size());
-    }
-    return submission_result;
+    Assume(final_submission_result.m_tx_results.size() == package.size());
+    return final_submission_result;
 }
 
 } // anon namespace
