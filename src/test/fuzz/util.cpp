@@ -12,6 +12,7 @@
 #include <util/time.h>
 
 #include <memory>
+#include <stdexcept>
 
 std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, std::span<const uint8_t> byte_data, const bool compressed) noexcept
 {
@@ -215,6 +216,25 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
         },
         [&] {
             tx_destination = PayToAnchor{};
+        },
+        [&] {
+            CPubKey scan_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            CPubKey spend_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            try {
+                tx_destination = V0SilentPaymentsDestination{scan_pk, spend_pk};
+            } catch (const std::invalid_argument&) {
+                tx_destination = CNoDestination{};
+            }
+        },
+        [&] {
+            unsigned int version{fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 30)};
+            CPubKey scan_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            CPubKey spend_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            try {
+                tx_destination = UnknownSilentPaymentsDestination{version, scan_pk, spend_pk, ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/565)};
+            } catch (const std::invalid_argument&) {
+                tx_destination = CNoDestination{};
+            }
         },
         [&] {
             std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
