@@ -104,6 +104,10 @@ namespace {
 class CScriptVisitor
 {
 public:
+    CScript operator()(const V0SilentPaymentDestination& dest) const
+    {
+        return CScript();
+    }
     CScript operator()(const CNoDestination& dest) const
     {
         return dest.GetScript();
@@ -152,6 +156,7 @@ public:
     bool operator()(const PubKeyDestination& dest) const { return false; }
     bool operator()(const PKHash& dest) const { return true; }
     bool operator()(const ScriptHash& dest) const { return true; }
+    bool operator()(const V0SilentPaymentDestination& dest) const { return true; }
     bool operator()(const WitnessV0KeyHash& dest) const { return true; }
     bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
     bool operator()(const WitnessV1Taproot& dest) const { return true; }
