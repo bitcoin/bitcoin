@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
         const std::vector<std::byte> exp_payload{ParseHex<std::byte>(test[1].get_str())};
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = metadata.find_value("isPrivkey").get_bool();
+        bool isSilentPayments = !metadata.find_value("isSilentPayments").isNull() && metadata.find_value("isSilentPayments").get_bool();
         SelectParams(ChainTypeFromString(metadata.find_value("chain").get_str()).value());
         bool try_case_flip = metadata.find_value("tryCaseFlip").isNull() ? false : metadata.find_value("tryCaseFlip").get_bool();
         if (isPrivkey) {
@@ -53,11 +54,20 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid privkey as pubkey:" + strTest);
         } else {
-            // Must be valid public key
+            // Must be a valid destination
             destination = DecodeDestination(exp_base58string);
-            CScript script = GetScriptForDestination(destination);
             BOOST_CHECK_MESSAGE(IsValidDestination(destination), "!IsValid:" + strTest);
-            BOOST_CHECK_EQUAL(HexStr(script), HexStr(exp_payload));
+
+            // Payload check depends on address type
+            if (isSilentPayments) {
+                const auto* sp = std::get_if<SilentPaymentsDestination>(&destination);
+                BOOST_REQUIRE_MESSAGE(sp != nullptr, "Not a SilentPaymentsDestination:" + strTest);
+                BOOST_CHECK_EQUAL(HexStr(sp->GetScanPubKey()) + HexStr(sp->GetSpendPubKey())
+                    + HexStr(sp->GetExtensionData()), HexStr(exp_payload));
+            } else {
+                CScript script = GetScriptForDestination(destination);
+                BOOST_CHECK_EQUAL(HexStr(script), HexStr(exp_payload));
+            }
 
             // Try flipped case version
             for (char& c : exp_base58string) {
@@ -69,14 +79,14 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             }
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(IsValidDestination(destination) == try_case_flip, "!IsValid case flipped:" + strTest);
-            if (IsValidDestination(destination)) {
-                script = GetScriptForDestination(destination);
+            if (!isSilentPayments && IsValidDestination(destination)) {
+                CScript script = GetScriptForDestination(destination);
                 BOOST_CHECK_EQUAL(HexStr(script), HexStr(exp_payload));
             }
 
-            // Public key must be invalid private key
+            // Address must be invalid as a private key
             privkey = DecodeSecret(exp_base58string);
-            BOOST_CHECK_MESSAGE(!privkey.IsValid(), "IsValid pubkey as privkey:" + strTest);
+            BOOST_CHECK_MESSAGE(!privkey.IsValid(), "IsValid addr as privkey:" + strTest);
         }
     }
 }
@@ -98,6 +108,8 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
         std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = metadata.find_value("isPrivkey").get_bool();
+        bool isSilentPayments = !metadata.find_value("isSilentPayments").isNull() && metadata.find_value("isSilentPayments").get_bool();
+        int silentPaymentsVersion = metadata.find_value("silentPaymentsVersion").isNull() ? 0 : metadata.find_value("silentPaymentsVersion").getInt<int>();
         SelectParams(ChainTypeFromString(metadata.find_value("chain").get_str()).value());
         if (isPrivkey) {
             bool isCompressed = metadata.find_value("isCompressed").get_bool();
@@ -105,6 +117,13 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
             key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
             assert(key.IsValid());
             BOOST_CHECK_MESSAGE(EncodeSecret(key) == exp_base58string, "result mismatch: " + strTest);
+        } else if (isSilentPayments) {
+            CPubKey scan_pubkey{exp_payload.begin(), exp_payload.begin() + CPubKey::COMPRESSED_SIZE};
+            CPubKey spend_pubkey{exp_payload.begin() + CPubKey::COMPRESSED_SIZE, exp_payload.begin() + 2 * CPubKey::COMPRESSED_SIZE};
+            std::vector<unsigned char> extension_data{exp_payload.begin() + 2 * CPubKey::COMPRESSED_SIZE, exp_payload.end()};
+            auto dest = SilentPaymentsDestination::From(scan_pubkey, spend_pubkey, static_cast<uint8_t>(silentPaymentsVersion), extension_data);
+            BOOST_REQUIRE(dest);
+            BOOST_CHECK_EQUAL(EncodeDestination(*dest), exp_base58string);
         } else {
             CTxDestination dest;
             CScript exp_script(exp_payload.begin(), exp_payload.end());

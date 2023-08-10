@@ -125,6 +125,12 @@ INVALID_DATA = [
         [],
     ),
     ("bc1gmk9yu", "Empty Bech32 data section", []),
+    # Silent Payments
+    (
+        "sp1qqgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqf26rn7",
+        "Invalid Silent payments address",
+        []
+    )
 ]
 VALID_DATA = [
     # BIP 350
@@ -171,6 +177,15 @@ VALID_DATA = [
         "bc1pfeessrawgf",
         "51024e73",
     ),
+    # Silent Payments
+    (
+        "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv", # V0 Silent Payments address
+        None
+    ),
+    (
+        "sp1pq22l5s6l9460ww6t4tkzsy2a7zejurcmzz35pt0ffrzk5erlaykdcqugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68t02m0h0s8cwhy", # V1 Silent Payments address
+        None
+    ),
 ]
 
 
@@ -184,7 +199,11 @@ class ValidateAddressMainTest(BitcoinTestFramework):
     def check_valid(self, addr, spk):
         info = self.nodes[0].validateaddress(addr)
         assert_equal(info["isvalid"], True)
-        assert_equal(info["scriptPubKey"], spk)
+        if (spk is None):
+            assert_equal("isscript" in info, False)
+            assert_equal(info["scriptPubKey"], '')
+        else:
+            assert_equal(info["scriptPubKey"], spk)
         assert "error" not in info
         assert "error_locations" not in info
 

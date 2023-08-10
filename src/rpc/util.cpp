@@ -276,6 +276,11 @@ public:
         return UniValue(UniValue::VOBJ);
     }
 
+    UniValue operator()(const SilentPaymentsDestination& dest) const
+    {
+        return UniValue(UniValue::VOBJ);
+    }
+
     UniValue operator()(const PubKeyDestination& dest) const
     {
         return UniValue(UniValue::VOBJ);
