@@ -846,7 +846,7 @@ static RPCHelpMan submitpackage()
                         auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
                         if (it != package_result.m_tx_results.end() && it->second.m_state.IsInvalid()) {
                             throw JSONRPCTransactionError(TransactionError::MEMPOOL_REJECTED,
-                                strprintf("%s failed: %s", tx->GetHash().ToString(), it->second.m_state.GetRejectReason()));
+                                strprintf("%s failed: %s", tx->GetHash().ToString(), it->second.m_state.ToString()));
                         }
                     }
                     // If a PCKG_TX error was returned, there must have been an invalid transaction.
