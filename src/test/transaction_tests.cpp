@@ -1163,8 +1163,8 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     std::vector<std::vector<uint8_t>> sol_dummy;
 
     // CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash,
-    // WitnessV1Taproot, PayToAnchor, WitnessUnknown.
-    static_assert(std::variant_size_v<CTxDestination> == 9);
+    // WitnessV1Taproot, PayToAnchor, V0SilentPaymentDestination, WitnessUnknown.
+    static_assert(std::variant_size_v<CTxDestination> == 10);
 
     // Go through all defined output types and sanity check SpendsNonAnchorWitnessProg.
 
