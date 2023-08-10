@@ -214,6 +214,11 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
         },
         [&] {
+            CPubKey scan_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            CPubKey spend_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            tx_destination = V0SilentPaymentDestination{scan_pk, spend_pk};
+        },
+        [&] {
             std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
             if (program.size() < 2) {
                 program = {0, 0};
