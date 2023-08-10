@@ -196,4 +196,105 @@ private:
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context);
 
+/** Mocked version of the interface between CConnman and PeerManager.
+ *
+ * (Useful for isolated testing of PeerManager) */
+class MockedConnectionsInterface : public ConnectionsInterface
+{
+public:
+    struct Connection {
+        const ConnectionContext ctx;
+        //! Serialized messages pushed to the connection by peerman
+        std::vector<CSerializedNetMsg> pushed_messages{};
+        //! Serialized messages to be polled by peerman
+        std::list<CSerializedNetMsg> msgs_to_be_polled{};
+        //! Stats for received messages types, mapping the message to a
+        //! counter of how often that type has been received.
+        //! ("received" meaning pushed to the connection by peerman)
+        std::map<std::string, uint64_t> message_types_received{};
+		//! Whether the version handshake has completed on this connection
+        bool successfully_connected{false};
+		//! Whether this connection was marked for disconnection
+        bool disconnected{false};
+    };
+    std::map<NodeId, Connection> m_connections;
+
+
+    Connection& NewConnection(const ConnectionContext&& ctx)
+    {
+        auto [it, inserted] = m_connections.emplace(ctx.id, Connection{ctx});
+        assert(inserted);
+        return it->second;
+    }
+
+    void PushMessage(NodeId id, CSerializedNetMsg&& msg) override
+    {
+        auto& conn = m_connections.at(id);
+        ++conn.message_types_received[msg.m_type];
+        conn.pushed_messages.emplace_back(std::move(msg));
+    }
+    std::optional<std::pair<CNetMessage, bool>> PollMessage(NodeId id) override
+    {
+        auto& conn = m_connections.at(id);
+        if (conn.msgs_to_be_polled.empty()) return std::nullopt;
+
+        auto& msg = conn.msgs_to_be_polled.front();
+
+        CNetMessage net_msg(CDataStream{msg.data, SER_NETWORK, PROTOCOL_VERSION});
+        net_msg.m_type = msg.m_type;
+        net_msg.m_message_size = msg.data.size();
+        net_msg.m_time = GetTime<std::chrono::microseconds>();
+        conn.msgs_to_be_polled.pop_front();
+
+        return std::make_pair(std::move(net_msg), !conn.msgs_to_be_polled.empty());
+    }
+
+    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct,
+                                       std::optional<Network> network) const override
+    {
+        return {};
+    }
+    std::vector<CAddress> GetAddresses(const ConnectionContext& requestor,
+                                       size_t max_addresses, size_t max_pct) override
+    {
+        return {};
+    }
+
+    bool m_try_new_outbound{false};
+    void SetTryNewOutboundPeer(bool flag) override { m_try_new_outbound = flag; }
+    bool GetTryNewOutboundPeer() const override { return m_try_new_outbound; }
+
+    void StartExtraBlockRelayPeers() override {}
+    int GetExtraFullOutboundCount() const override { return 0; }
+    int GetExtraBlockRelayCount() const override { return 0; }
+    uint32_t GetMappedAS(const CNetAddr& addr) const override { return 0; }
+
+    bool DisconnectNode(const CNetAddr& addr) override { return false; }
+    bool DisconnectNode(NodeId id) override { return m_connections.at(id).disconnected = true; }
+    bool IsDisconnected(NodeId id) const override { return m_connections.at(id).disconnected; }
+
+    bool IsSuccessfullyConnected(NodeId id) const override { return m_connections.at(id).successfully_connected; }
+    void SetSuccessfullyConnected(NodeId id) override
+    {
+        m_connections.at(id).successfully_connected = true;
+    }
+
+    bool IsSendingPaused(NodeId id) const override { return false; }
+    void PongReceived(NodeId id, std::chrono::microseconds ping_time) override {}
+    bool OutboundTargetReached(bool historicalBlockServingLimit) const override { return false; }
+
+    CSipHasher GetDeterministicRandomizer(uint64_t id) const override { return CSipHasher(0, 0); }
+    void WakeMessageHandler() override {}
+
+    bool m_should_run_inactivity_check{false};
+    bool ShouldRunInactivityChecks(const ConnectionContext& conn_ctx,
+                                   std::chrono::seconds now) const override
+    {
+        return m_should_run_inactivity_check;
+    }
+
+    bool GetNetworkActive() const override { return true; }
+    bool GetUseAddrmanOutgoing() const override { return true; }
+};
+
 #endif // BITCOIN_TEST_UTIL_NET_H
