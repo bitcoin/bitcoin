@@ -440,7 +440,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         // (msg1 << 64 | 64-bit vs[0])
         //
         const Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
-        const Scalar vs0 = m_common.Uint64Max();
+        const Scalar vs0 = msg1_vs0 & m_common.Uint64Max();
 
         // failure if commitment created from recoverted amount doesn't match
         Point commitment_vs0 = (H * gamma_vs0) + (G * vs0);

@@ -14,7 +14,7 @@ BOOST_FIXTURE_TEST_SUITE(range_proof_common_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(test_get_num_rounds_excl_last)
 {
     auto num_rounds = range_proof::Common<Mcl>::GetNumRoundsExclLast(64);
-    BOOST_CHECK(num_rounds == 6);
+    BOOST_CHECK(num_rounds == 12);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

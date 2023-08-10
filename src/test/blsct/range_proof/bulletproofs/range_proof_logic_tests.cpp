@@ -77,9 +77,6 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
     auto token_id = GenTokenId();
 
     Scalar one(1);
-    std::vector<Scalar> vs_vec;
-    vs_vec.push_back(one);
-
     Scalars vs;
     vs.Add(one);
 
