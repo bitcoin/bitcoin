@@ -429,10 +429,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             return nullptr;
 
         // Look for an existing connection
-        CNode* pnode = WITH_LOCK(m_nodes_mutex, return FindNode(static_cast<CService>(addrConnect)));
-        if (pnode)
-        {
-            LogPrintf("Failed to open new connection, already connected\n");
+        if (AlreadyConnectedToAddress(addrConnect, conn_type)) {
             return nullptr;
         }
     }
@@ -456,10 +453,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
             // In that case, drop the connection that was just created.
-            LOCK(m_nodes_mutex);
-            CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-            if (pnode) {
-                LogPrintf("Failed to open new connection, already connected\n");
+            if (AlreadyConnectedToAddress(addrConnect, conn_type)) {
                 return nullptr;
             }
         }
