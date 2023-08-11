@@ -6,7 +6,6 @@
 #include <blsct/range_proof/message.h>
 #include <blsct/range_proof/setup.h>
 #include <string>
-#include <vector>
 
 namespace range_proof {
 
@@ -15,19 +14,42 @@ MsgWithAmt MsgWithAmt::of(const std::string& msg, const int64_t& amount)
     return MsgWithAmt {msg, amount};
 }
 
+// msg1 = first 23 bytes of the msg
+// msg2 = remaining part of the msg after msg1. can be empty
+
+template <typename T>
+typename T::Scalar Message<T>::ExtractMsg2(
+    const std::vector<uint8_t>& msg
+) {
+    if (msg.size() > range_proof::Setup::message_1_max_size) {
+        auto vec = std::vector<uint8_t>(
+            msg.begin() + range_proof::Setup::message_1_max_size,
+            msg.end()
+        );
+        return Scalar(vec);
+
+    } else {
+        return Scalar(0);
+    }
+}
+template
+Mcl::Scalar Message<Mcl>::ExtractMsg2(
+    const std::vector<uint8_t>& msg
+);
+
 template <typename T>
 typename T::Scalar Message<T>::ComputeAlpha(
-    const std::string& msg,
+    const std::vector<uint8_t>& msg,
     const Scalar& vs0,
-    const typename T::Point& nonce
+    const Point& nonce
 ) {
-    // part of the message up to range_proof::Setup::m_message_1_max_size
+    // extract msg1
     Scalar msg1(msg.size() > range_proof::Setup::message_1_max_size ?
         std::vector<uint8_t>(msg.begin(), msg.begin() + range_proof::Setup::message_1_max_size) :
-        std::vector<uint8_t>(msg.begin(), msg.end())
+        msg
     );
 
-    // message followed by 64-bit vs0
+    // msg1 followed by 64-bit vs0
     Scalar msg1_vs0 = (msg1 << range_proof::Setup::num_input_value_bits) | vs0;
 
     Scalar nonce_1 = nonce.GetHashWithSalt(1);
@@ -35,13 +57,22 @@ typename T::Scalar Message<T>::ComputeAlpha(
 
     return alpha;
 }
+template Mcl::Scalar Message<Mcl>::ComputeAlpha(
+    const std::vector<uint8_t>& msg,
+    const Mcl::Scalar& vs0,
+    const Mcl::Point& nonce
+);
 
 template <typename T>
 typename T::Scalar Message<T>::ComputeTauX(
     const std::vector<uint8_t>& msg,
-    const typename T::Scalar& x,
-    const typename T::Scalar& z,
-    const typename T::Point& nonce
+    const Scalar& x,
+    const Scalar& z,
+    const Scalar& tau1,
+    const Scalar& tau2,
+    const Scalars& z_pows_from_2,
+    const Scalars& gammas,
+    const Point& nonce
 ) {
     // part of the message after range_proof::Setup::m_message_1_max_size
     Scalar msg2 = Scalar({msg.size() > range_proof::Setup::message_1_max_size ?
@@ -49,36 +80,40 @@ typename T::Scalar Message<T>::ComputeTauX(
         std::vector<uint8_t>()}
     );
 
-    Scalar tau1 = nonce.GetHashWithSalt(3);
-    Scalar tau2 = nonce.GetHashWithSalt(4);
-    Scalar gamma_vs0 = nonce.GetHashWithSalt(100); // gamma for vs[0]
-
     Scalar tau_x =
         (tau2 * x.Square())
         + ((tau1 + msg2) * x)
-        + (z.Square() * gamma_vs0)
+        + (z_pows_from_2 * gammas).Sum()
         ;
 
     return tau_x;
 }
+template Mcl::Scalar Message<Mcl>::ComputeTauX(
+    const std::vector<uint8_t>& msg,
+    const Scalar& x,
+    const Scalar& z,
+    const Scalar& tau1,
+    const Scalar& tau2,
+    const Scalars& z_pows_from_2,
+    const Scalars& gammas,
+    const Point& nonce
+);
 
 template <typename T>
 std::optional<MsgWithAmt> Message<T>::Recover(
-    const typename T::Scalar& msg1_vs0,
-    const typename T::Scalar& tau_x,
-    const typename T::Scalar& x,
-    const typename T::Scalar& z,
-    const typename T::Scalar& uint64_max,
-    const typename T::Point& H,
-    const typename T::Point& G,
-    const typename T::Point& exp_vs0_commitment,
-    const typename T::Point& nonce
+    const Scalar& msg1_vs0,
+    const Scalar& gamma_vs0,
+    const Scalar& tau1,
+    const Scalar& tau2,
+    const Scalar& tau_x,
+    const Scalar& x,
+    const Scalar& z,
+    const Scalar& uint64_max,
+    const Point& H,
+    const Point& G,
+    const Point& exp_vs0_commitment,
+    const Point& nonce
 ) {
-    // recover Scalar values from nonce
-    Scalar tau1 = nonce.GetHashWithSalt(3);
-    Scalar tau2 = nonce.GetHashWithSalt(4);
-    Scalar gamma_vs0 = nonce.GetHashWithSalt(100); // gamma for vs[0]
-
     // lower 64 bits of msg1_vs0 is vs0
     Scalar vs0 = msg1_vs0 & uint64_max;
 
@@ -114,6 +149,9 @@ std::optional<MsgWithAmt> Message<T>::Recover(
 }
 template std::optional<MsgWithAmt> Message<Mcl>::Recover(
     const Mcl::Scalar& msg1_vs0,
+    const Mcl::Scalar& gamma_vs0,
+    const Mcl::Scalar& tau1,
+    const Mcl::Scalar& tau2,
     const Mcl::Scalar& tau_x,
     const Mcl::Scalar& x,
     const Mcl::Scalar& z,

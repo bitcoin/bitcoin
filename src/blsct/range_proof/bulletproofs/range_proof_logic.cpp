@@ -92,20 +92,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
 
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
-
-    // part of the message up to range_proof::Setup::m_message_1_max_size
-    Scalar msg1(
-        message.size() > range_proof::Setup::message_1_max_size ?
-            std::vector<uint8_t>(message.begin(), message.begin() + range_proof::Setup::message_1_max_size) :
-            message);
-    // message followed by 64-bit vs[0]
-    Scalar msg1_vs0 = (msg1 << range_proof::Setup::num_input_value_bits) | vs[0];
-
-    Scalar alpha;
-    {
-        Scalar nonce_1 = nonce.GetHashWithSalt(1);
-        alpha = nonce_1 + msg1_vs0;
-    }
+    Scalar alpha = range_proof::Message<T>::ComputeAlpha(message, vs[0], nonce);
 
     // Using generator H for alpha following the paper
     proof.A = (LazyPoints<T>(Gi, aL) + LazyPoints<T>(Hi, aR) + LazyPoint<T>(H, alpha)).Sum();
@@ -158,14 +145,11 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     Scalar t2 = (l1 * r1).Sum();
 
     // (52)-(53)
-    Scalar tau1 = nonce.GetHashWithSalt(3);
+    Scalar nonce_tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
-    // part of the message after range_proof::Setup::m_message_1_max_size
-    Scalar msg2 = Scalar({message.size() > range_proof::Setup::message_1_max_size ?
-                              std::vector<uint8_t>(message.begin() + range_proof::Setup::message_1_max_size, message.end()) :
-                              std::vector<uint8_t>()});
-    tau1 = tau1 + msg2;
+    Scalar msg2 = range_proof::Message<T>::ExtractMsg2(message);
+    Scalar tau1 = nonce_tau1 + msg2;
 
     proof.T1 = (G * t1) + (H * tau1);
     proof.T2 = (G * t2) + (H * tau2);
@@ -192,7 +176,17 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
     // resize z_pows so that the length matches with gammas
-    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows_from_2 * gammas).Sum(); // (61)
+    proof.tau_x = range_proof::Message<T>::ComputeTauX(
+        message,
+        x,
+        z,
+        nonce_tau1,
+        tau2,
+        z_pows_from_2,
+        gammas,
+        nonce
+    );
+    // (tau2 * x.Square()) + (tau1 * x) + (z_pows_from_2 * gammas).Sum(); // (61)
     proof.mu = alpha + (rho * x);                                                    // (62)
 
     // (63)
@@ -405,10 +399,17 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         //
         Scalar alpha = req.nonce.GetHashWithSalt(1);
         Scalar rho = req.nonce.GetHashWithSalt(2);
+        Scalar tau1 = req.nonce.GetHashWithSalt(3);
+        Scalar tau2 = req.nonce.GetHashWithSalt(4);
+        Scalar gamma_vs0 = req.nonce.GetHashWithSalt(100);
+
         Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
 
         auto maybe_msg_with_amt = range_proof::Message<T>::Recover(
             msg1_vs0,
+            gamma_vs0,
+            tau1,
+            tau2,
             req.tau_x,
             req.x,
             req.z,

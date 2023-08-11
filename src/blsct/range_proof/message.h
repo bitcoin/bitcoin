@@ -9,7 +9,7 @@
 
 #include <cstdint>
 #include <optional>
-#include <string>
+#include <vector>
 
 namespace range_proof {
 
@@ -28,8 +28,12 @@ struct Message
     using Scalar = typename T::Scalar;
     using Scalars = Elements<typename T::Scalar>;
 
+    static Scalar ExtractMsg2(
+        const std::vector<uint8_t>& msg
+    );
+
     static Scalar ComputeAlpha(
-        const std::string& msg,
+        const std::vector<uint8_t>& msg,
         const Scalar& vs0,
         const Point& nonce
     );
@@ -38,11 +42,18 @@ struct Message
         const std::vector<uint8_t>& msg,
         const Scalar& x,
         const Scalar& z,
+        const Scalar& tau1,
+        const Scalar& tau2,
+        const Scalars& z_pows_from_2,
+        const Scalars& gammas,
         const Point& nonce
     );
 
     static std::optional<MsgWithAmt> Recover(
         const Scalar& msg1_vs0,
+        const Scalar& gamma_vs0,
+        const Scalar& tau1,
+        const Scalar& tau2,
         const Scalar& tau_x,
         const Scalar& x,
         const Scalar& z,
