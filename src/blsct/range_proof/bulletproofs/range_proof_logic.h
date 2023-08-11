@@ -41,16 +41,16 @@ public:
         const std::vector<RangeProof<T>>& proofs,
         const TokenId& token_id) const;
 
-    bool VerifyProofs(
-        const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-        const range_proof::Generators<T>& gens,
-        const size_t& max_mn) const;
-
     AmountRecoveryResult<T> RecoverAmounts(
         const std::vector<AmountRecoveryRequest<T>>& reqs,
         const TokenId& token_id) const;
 
 private:
+    bool VerifyProofs(
+        const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
+        const range_proof::Generators<T>& gens,
+        const size_t& max_mn) const;
+
     range_proof::Common<T> m_common;
 };
 
