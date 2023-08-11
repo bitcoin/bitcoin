@@ -302,6 +302,16 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
         alpha = nonce_1 + msg1_vs0;
     }
 
+    // part of the message after RangeProofSetup::m_message_1_max_size
+    Scalar msg2 = Scalar({message.size() > RangeProofSetup::message_1_max_size ?
+                              std::vector<uint8_t>(message.begin() + RangeProofSetup::message_1_max_size, message.end()) :
+                              std::vector<uint8_t>()});
+
+    Scalar tau1 = nonce.GetHashWithSalt(2);
+    Scalar tau2 = nonce.GetHashWithSalt(3);
+    Scalars z_pows_from_2 = Scalars::FirstNPow(z, gammas.Size(), 2);
+    proof.tau_x = (tau2 * y.Square()) + ((tau1 + msg2) * y) + (z_pows_from_2 * gammas).Sum();
+
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
     // only the first 64 bits of each Scalar<S> is picked up
     Scalars aL;                  // ** size of aL can be shorter than concat_input_values_in_bits

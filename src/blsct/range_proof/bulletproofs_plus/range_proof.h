@@ -33,6 +33,8 @@ struct RangeProof: public range_proof::ProofBase<T> {
     // but alpha_hat is not explicitly passed to verifier in the argument
     Scalar alpha_hat;
 
+    Scalar tau_x;  // added to embed msg2
+
     bool operator==(const RangeProof<T>& other) const;
     bool operator!=(const RangeProof<T>& other) const;
 
