@@ -7,5 +7,4 @@
 
 #include <policy/policy.h>
 
-bool gEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
