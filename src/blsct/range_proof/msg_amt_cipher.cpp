@@ -3,22 +3,19 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl.h>
-#include <blsct/range_proof/message.h>
+#include <blsct/range_proof/msg_amt_cipher.h>
 #include <blsct/range_proof/setup.h>
 #include <string>
 
 namespace range_proof {
 
-MsgWithAmt MsgWithAmt::of(const std::string& msg, const int64_t& amount)
+MsgAmt MsgAmt::of(const std::string& msg, const int64_t& amount)
 {
-    return MsgWithAmt {msg, amount};
+    return MsgAmt {msg, amount};
 }
 
-// msg1 = first 23 bytes of the msg
-// msg2 = remaining part of the msg after msg1. can be empty
-
 template <typename T>
-typename T::Scalar Message<T>::ExtractMsg2(
+typename T::Scalar MsgAmtCipher<T>::RetrieveMsg2(
     const std::vector<uint8_t>& msg
 ) {
     if (msg.size() > range_proof::Setup::message_1_max_size) {
@@ -33,15 +30,15 @@ typename T::Scalar Message<T>::ExtractMsg2(
     }
 }
 template
-Mcl::Scalar Message<Mcl>::ExtractMsg2(
+Mcl::Scalar MsgAmtCipher<Mcl>::RetrieveMsg2(
     const std::vector<uint8_t>& msg
 );
 
 template <typename T>
-typename T::Scalar Message<T>::ComputeAlpha(
+typename T::Scalar MsgAmtCipher<T>::ComputeAlpha(
     const std::vector<uint8_t>& msg,
     const Scalar& vs0,
-    const Point& nonce
+    const Scalar& nonce_alpha
 ) {
     // extract msg1
     Scalar msg1(msg.size() > range_proof::Setup::message_1_max_size ?
@@ -52,29 +49,27 @@ typename T::Scalar Message<T>::ComputeAlpha(
     // msg1 followed by 64-bit vs0
     Scalar msg1_vs0 = (msg1 << range_proof::Setup::num_input_value_bits) | vs0;
 
-    Scalar nonce_1 = nonce.GetHashWithSalt(1);
-    Scalar alpha = nonce_1 + msg1_vs0;
+    Scalar alpha = nonce_alpha + msg1_vs0;
 
     return alpha;
 }
-template Mcl::Scalar Message<Mcl>::ComputeAlpha(
+template Mcl::Scalar MsgAmtCipher<Mcl>::ComputeAlpha(
     const std::vector<uint8_t>& msg,
     const Mcl::Scalar& vs0,
-    const Mcl::Point& nonce
+    const Mcl::Scalar& nonce_alpha
 );
 
 template <typename T>
-typename T::Scalar Message<T>::ComputeTauX(
+typename T::Scalar MsgAmtCipher<T>::ComputeTauX(
     const std::vector<uint8_t>& msg,
     const Scalar& x,
     const Scalar& z,
     const Scalar& tau1,
     const Scalar& tau2,
     const Scalars& z_pows_from_2,
-    const Scalars& gammas,
-    const Point& nonce
+    const Scalars& gammas
 ) {
-    Scalar msg2 = ExtractMsg2(msg);
+    Scalar msg2 = RetrieveMsg2(msg);
 
     Scalar tau_x =
         (tau2 * x.Square())
@@ -84,19 +79,18 @@ typename T::Scalar Message<T>::ComputeTauX(
 
     return tau_x;
 }
-template Mcl::Scalar Message<Mcl>::ComputeTauX(
+template Mcl::Scalar MsgAmtCipher<Mcl>::ComputeTauX(
     const std::vector<uint8_t>& msg,
     const Scalar& x,
     const Scalar& z,
     const Scalar& tau1,
     const Scalar& tau2,
     const Scalars& z_pows_from_2,
-    const Scalars& gammas,
-    const Point& nonce
+    const Scalars& gammas
 );
 
 template <typename T>
-std::optional<MsgWithAmt> Message<T>::Recover(
+std::optional<MsgAmt> MsgAmtCipher<T>::Decrypt(
     const Scalar& msg1_vs0,
     const Scalar& gamma_vs0,
     const Scalar& tau1,
@@ -107,8 +101,7 @@ std::optional<MsgWithAmt> Message<T>::Recover(
     const Scalar& uint64_max,
     const Point& H,
     const Point& G,
-    const Point& exp_vs0_commitment,
-    const Point& nonce
+    const Point& exp_vs0_commitment
 ) {
     // lower 64 bits of msg1_vs0 is vs0
     Scalar vs0 = msg1_vs0 & uint64_max;
@@ -141,9 +134,9 @@ std::optional<MsgWithAmt> Message<T>::Recover(
 
     int64_t amount = (int64_t) vs0.GetUint64();
 
-    return std::optional<MsgWithAmt> {MsgWithAmt::of(msg, amount)};
+    return std::optional<MsgAmt> {MsgAmt::of(msg, amount)};
 }
-template std::optional<MsgWithAmt> Message<Mcl>::Recover(
+template std::optional<MsgAmt> MsgAmtCipher<Mcl>::Decrypt(
     const Mcl::Scalar& msg1_vs0,
     const Mcl::Scalar& gamma_vs0,
     const Mcl::Scalar& tau1,
@@ -154,8 +147,7 @@ template std::optional<MsgWithAmt> Message<Mcl>::Recover(
     const Mcl::Scalar& uint64_max,
     const Mcl::Point& H,
     const Mcl::Point& G,
-    const Mcl::Point& exp_vs0_commitment,
-    const Mcl::Point& nonce
+    const Mcl::Point& exp_vs0_commitment
 );
 
 } // namespace range_proof

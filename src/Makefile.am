@@ -190,7 +190,7 @@ BITCOIN_CORE_H = \
   blsct/range_proof/bulletproofs_plus/util.h \
   blsct/range_proof/common.h \
   blsct/range_proof/generators.h \
-  blsct/range_proof/message.h \
+  blsct/range_proof/msg_amt_ciphner.h \
   blsct/range_proof/proof_base.h \
   blsct/range_proof/recovered_data.h \
   blsct/range_proof/setup.h \
@@ -476,7 +476,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/range_proof/bulletproofs_plus/util.cpp \
   blsct/range_proof/common.cpp \
   blsct/range_proof/generators.cpp \
-  blsct/range_proof/message.cpp \
+  blsct/range_proof/msg_amt_cipher.cpp \
   blsct/range_proof/proof_base.cpp \
   blsct/set_mem_proof/set_mem_proof.cpp \
   blsct/set_mem_proof/set_mem_proof_setup.cpp \

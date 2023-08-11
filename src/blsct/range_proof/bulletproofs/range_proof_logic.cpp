@@ -12,7 +12,7 @@
 #include <blsct/common.h>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/range_proof/common.h>
-#include <blsct/range_proof/message.h>
+#include <blsct/range_proof/msg_amt_cipher.h>
 #include <tinyformat.h>
 #include <optional>
 
@@ -92,7 +92,8 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
 
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
-    Scalar alpha = range_proof::Message<T>::ComputeAlpha(message, vs[0], nonce);
+    Scalar nonce_alpha = nonce.GetHashWithSalt(1);
+    Scalar alpha = range_proof::MsgAmtCipher<T>::ComputeAlpha(message, vs[0], nonce_alpha);
 
     // Using generator H for alpha following the paper
     proof.A = (LazyPoints<T>(Gi, aL) + LazyPoints<T>(Hi, aR) + LazyPoint<T>(H, alpha)).Sum();
@@ -148,7 +149,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     Scalar nonce_tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
-    Scalar msg2 = range_proof::Message<T>::ExtractMsg2(message);
+    Scalar msg2 = range_proof::MsgAmtCipher<T>::RetrieveMsg2(message);
     Scalar tau1 = nonce_tau1 + msg2;
 
     proof.T1 = (G * t1) + (H * tau1);
@@ -175,15 +176,14 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     if (proof.t_hat != t_of_x)
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
-    proof.tau_x = range_proof::Message<T>::ComputeTauX(
+    proof.tau_x = range_proof::MsgAmtCipher<T>::ComputeTauX(
         message,
         x,
         z,
         nonce_tau1,
         tau2,
         z_pows_from_2,
-        gammas,
-        nonce
+        gammas
     );
     proof.mu = alpha + (rho * x);                                                    // (62)
 
@@ -403,7 +403,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
 
         Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
 
-        auto maybe_msg_with_amt = range_proof::Message<T>::Recover(
+        auto maybe_msg_amt = range_proof::MsgAmtCipher<T>::Decrypt(
             msg1_vs0,
             gamma_vs0,
             tau1,
@@ -414,19 +414,18 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
             m_common.Uint64Max(),
             H,
             G,
-            req.Vs[0],
-            req.nonce
+            req.Vs[0]
         );
-        if (maybe_msg_with_amt == std::nullopt) {
+        if (maybe_msg_amt == std::nullopt) {
             continue;
         }
-        auto msg_with_amt = maybe_msg_with_amt.value();
+        auto msg_amt = maybe_msg_amt.value();
 
         auto x = range_proof::RecoveredData<T>(
             req.id,
-            msg_with_amt.amount,
+            msg_amt.amount,
             req.nonce.GetHashWithSalt(100), // gamma for vs[0]
-            msg_with_amt.msg
+            msg_amt.msg
         );
         xs.push_back(x);
     }

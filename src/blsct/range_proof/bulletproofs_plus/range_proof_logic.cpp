@@ -12,7 +12,7 @@
 #include <blsct/common.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof_logic.h>
 #include <blsct/range_proof/common.h>
-#include <blsct/range_proof/message.h>
+#include <blsct/range_proof/msg_amt_cipher.h>
 #include <tinyformat.h>
 
 // Bulletproofs+ implementation based on
@@ -258,22 +258,22 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     GEN_FIAT_SHAMIR_VAR(z, fiat_shamir, retry);
 
     // Commitment to aL and aR (obfuscated with alpha)
-    Scalar alpha = range_proof::Message<T>::ComputeAlpha(message, vs[0], nonce);
+    Scalar nonce_alpha = nonce.GetHashWithSalt(1);
+    Scalar alpha = range_proof::MsgAmtCipher<T>::ComputeAlpha(message, vs[0], nonce_alpha);
 
     Scalar tau1 = nonce.GetHashWithSalt(2);
     Scalar tau2 = nonce.GetHashWithSalt(3);
     Scalars z_pows_from_2 = Scalars::FirstNPow(z, gammas.Size(), 2);
 
     //proof.tau_x = (tau2 * y.Square()) + ((tau1 + msg2) * y) + (z_pows_from_2 * gammas).Sum();
-    proof.tau_x = range_proof::Message<T>::ComputeTauX(
+    proof.tau_x = range_proof::MsgAmtCipher<T>::ComputeTauX(
         message,
         y,
         z,
         tau1,
         tau2,
         z_pows_from_2,
-        gammas,
-        nonce
+        gammas
     );
 
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
@@ -581,7 +581,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         Scalar tau1 = req.nonce.GetHashWithSalt(2);
         Scalar tau2 = req.nonce.GetHashWithSalt(3);
 
-        auto maybe_msg_with_amt = range_proof::Message<T>::Recover(
+        auto maybe_msg_amt = range_proof::MsgAmtCipher<T>::Decrypt(
             msg1_vs0,
             gamma_vs0,
             tau1,
@@ -592,19 +592,18 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
             m_common.Uint64Max(),
             h,
             g,
-            req.Vs[0],
-            req.nonce
+            req.Vs[0]
         );
-        if (maybe_msg_with_amt == std::nullopt) {
+        if (maybe_msg_amt == std::nullopt) {
             continue;
         }
-        auto msg_with_amt = maybe_msg_with_amt.value();
+        auto msg_amt = maybe_msg_amt.value();
 
         auto x = range_proof::RecoveredData<T>(
             req.id,
-            msg_with_amt.amount,
+            msg_amt.amount,
             req.nonce.GetHashWithSalt(100), // gamma for vs[0]
-            msg_with_amt.msg
+            msg_amt.msg
         );
         xs.push_back(x);
 
