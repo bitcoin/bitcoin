@@ -16,8 +16,6 @@
 #include <string>
 #include <vector>
 
-namespace
-{
 static bool ParsePrechecks(const std::string& str)
 {
     if (str.empty()) // No empty string allowed
@@ -29,7 +27,7 @@ static bool ParsePrechecks(const std::string& str)
     return true;
 }
 
-bool ParseDouble(const std::string& str, double *out)
+static bool ParseDouble(const std::string& str, double *out)
 {
     if (!ParsePrechecks(str))
         return false;
@@ -41,7 +39,6 @@ bool ParseDouble(const std::string& str, double *out)
     text >> result;
     if(out) *out = result;
     return text.eof() && !text.fail();
-}
 }
 
 const std::vector<std::string>& UniValue::getKeys() const
