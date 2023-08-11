@@ -55,6 +55,14 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
+        self.log.info("Running test RPC rbf_policy")
+        def test_rpc_rbf_policy():
+            assert_equal(self.nodes[0].getmempoolinfo()["rbf_policy"], 'optin')
+            assert_equal(self.nodes[1].getmempoolinfo()["rbf_policy"], 'optin')
+            assert_equal(self.nodes[2].getmempoolinfo()["rbf_policy"], 'never')
+            assert_equal(self.nodes[3].getmempoolinfo()["rbf_policy"], 'always')
+        test_rpc_rbf_policy()
+
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
 
@@ -777,6 +785,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         confirmed_utxo = self.make_utxo(self.nodes[0], int(2 * COIN))
         self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
         assert self.nodes[0].getmempoolinfo()["fullrbf"]
+        assert_equal(self.nodes[0].getmempoolinfo()["rbf_policy"], 'always')
 
         # Create an explicitly opt-out transaction
         optout_tx = self.wallet.send_self_transfer(
