@@ -181,12 +181,18 @@ BITCOIN_CORE_H = \
   blsct/range_proof/generators.h \
   blsct/range_proof/proof_base.h \
   blsct/range_proof/range_proof_setup.h \
+  blsct/range_proof/bulletproofs/amount_recovery_request.h \
+  blsct/range_proof/bulletproofs/amount_recovery_result.h \
   blsct/range_proof/bulletproofs/range_proof_logic.h \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.h \
   blsct/range_proof/bulletproofs/range_proof.h \
+  blsct/range_proof/bulletproofs/recovered_amount.h \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_request.h \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_result.h \
   blsct/range_proof/bulletproofs_plus/range_proof_logic.h \
   blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.h \
   blsct/range_proof/bulletproofs_plus/range_proof.h \
+  blsct/range_proof/bulletproofs_plus/recovered_amount.h \
   blsct/range_proof/bulletproofs_plus/util.h \
   blsct/set_mem_proof/set_mem_proof_setup.h \
   blsct/set_mem_proof/set_mem_proof.h \
@@ -460,9 +466,13 @@ libbitcoin_node_a_SOURCES = \
   blsct/range_proof/common.cpp \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/proof_base.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \

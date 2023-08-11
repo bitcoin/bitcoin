@@ -313,9 +313,8 @@ static void RunTestCase(
             BOOST_CHECK(((uint64_t) x.amount) == test_case.values[i].GetUint64());
             BOOST_CHECK(x.gamma == gamma);
 
-            // TODO uncomment this after msg2 supprt is added
-            // std::vector<unsigned char> x_msg(x.message.begin(), x.message.end());
-            // BOOST_CHECK(x_msg == test_case.msg.second);
+            std::vector<unsigned char> x_msg(x.message.begin(), x.message.end());
+            BOOST_CHECK(x_msg == test_case.msg.second);
         }
     }
 }

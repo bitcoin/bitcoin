@@ -21,37 +21,6 @@
 namespace bulletproofs_plus {
 
 template <typename T>
-AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, typename T::Point& nonce)
-{
-    auto proof_with_transcript = RangeProofWithTranscript<T>::Build(proof);
-
-    AmountRecoveryRequest<T> req {
-        1,
-        proof_with_transcript.y,
-        proof_with_transcript.z,
-        proof.alpha_hat,
-        proof.Vs,
-        proof.Ls,
-        proof.Rs,
-        proof_with_transcript.m,
-        proof_with_transcript.n,
-        proof_with_transcript.mn,
-        nonce
-    };
-    return req;
-}
-template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(RangeProof<Mcl>&, Mcl::Point&);
-
-template <typename T>
-AmountRecoveryResult<T> AmountRecoveryResult<T>::failure()
-{
-    return {
-        false,
-        std::vector<RecoveredAmount<T>>()};
-}
-template AmountRecoveryResult<Mcl> AmountRecoveryResult<Mcl>::failure();
-
-template <typename T>
 Elements<typename T::Scalar> RangeProofLogic<T>::Compute_D(
     const Scalars& z_asc_by_2_pows,
     const Scalars& two_pows,
@@ -626,7 +595,11 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
 
         // extract msg1 from msg1_vs0
         std::vector<uint8_t> msg1 = (msg1_vs0 >> 64).GetVch(true);
-        std::vector<uint8_t> msg2;  // TODO support this
+
+        Scalar tau1 = req.nonce.GetHashWithSalt(2);
+        Scalar tau2 = req.nonce.GetHashWithSalt(3);
+        Scalar msg2_scalar = ((req.tau_x - (tau2 * req.y.Square()) - (req.z.Square() * gamma_vs0)) * req.y.Invert()) - tau1;
+        std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
         RecoveredAmount<T> recovered_amount(
             req.id,

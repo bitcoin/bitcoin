@@ -17,34 +17,6 @@
 namespace bulletproofs {
 
 template <typename T>
-AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, typename T::Point& nonce)
-{
-    auto proof_with_transcript = RangeProofWithTranscript<T>::Build(proof);
-
-    AmountRecoveryRequest<T> req{
-        1,
-        proof_with_transcript.x,
-        proof_with_transcript.z,
-        proof.Vs,
-        proof.Ls,
-        proof.Rs,
-        proof.mu,
-        proof.tau_x,
-        nonce};
-    return req;
-}
-template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(RangeProof<Mcl>&, Mcl::Point&);
-
-template <typename T>
-AmountRecoveryResult<T> AmountRecoveryResult<T>::failure()
-{
-    return {
-        false,
-        std::vector<RecoveredAmount<T>>()};
-}
-template AmountRecoveryResult<Mcl> AmountRecoveryResult<Mcl>::failure();
-
-template <typename T>
 RangeProof<T> RangeProofLogic<T>::Prove(
     Elements<typename T::Scalar>& vs,
     typename T::Point& nonce,

@@ -11,57 +11,15 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/range_proof/common.h>
+#include <blsct/range_proof/bulletproofs_plus/amount_recovery_request.h>
+#include <blsct/range_proof/bulletproofs_plus/amount_recovery_result.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.h>
+#include <blsct/range_proof/bulletproofs_plus/recovered_amount.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 #include <hash.h>
 
 namespace bulletproofs_plus {
-
-template <typename T>
-struct AmountRecoveryRequest {
-    using Scalar = typename T::Scalar;
-    using Point = typename T::Point;
-    using Points = Elements<Point>;
-
-    size_t id;
-    Scalar y;
-    Scalar z;
-    Scalar alpha_hat;
-    Points Vs;
-    Points Ls;
-    Points Rs;
-    size_t m;
-    size_t n;
-    size_t mn;
-    Point nonce;
-
-    static AmountRecoveryRequest<T> of(RangeProof<T>& proof, Point& nonce);
-};
-
-template <typename T>
-struct RecoveredAmount {
-    using Scalar = typename T::Scalar;
-
-    RecoveredAmount(
-        const size_t& id,
-        const CAmount& amount,
-        const Scalar& gamma,
-        const std::string& message) : id{id}, amount{amount}, gamma{gamma}, message{message} {}
-
-    size_t id;
-    CAmount amount;
-    Scalar gamma;
-    std::string message;
-};
-
-template <typename T>
-struct AmountRecoveryResult {
-    bool is_completed; // does not mean recovery success
-    std::vector<RecoveredAmount<T>> amounts;
-
-    static AmountRecoveryResult<T> failure();
-};
 
 // implementation of range proof algorithms described in:
 // https://eprint.iacr.org/2020/735.pdf

@@ -33,7 +33,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
     // but alpha_hat is not explicitly passed to verifier in the argument
     Scalar alpha_hat;
 
-    Scalar tau_x;  // added to embed msg2
+    Scalar tau_x;  // value to embed msg2
 
     bool operator==(const RangeProof<T>& other) const;
     bool operator!=(const RangeProof<T>& other) const;
@@ -49,6 +49,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
         ::Serialize(s, s_prime);
         ::Serialize(s, delta_prime);
         ::Serialize(s, alpha_hat);
+        ::Serialize(s, tau_x);
     }
 
     template <typename Stream>
@@ -62,6 +63,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
         ::Unserialize(s, s_prime);
         ::Unserialize(s, delta_prime);
         ::Unserialize(s, alpha_hat);
+        ::Unserialize(s, tau_x);
     }
 };
 
