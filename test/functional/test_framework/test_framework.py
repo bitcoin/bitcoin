@@ -761,7 +761,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             if pool.count(pool[0]) == len(rpc_connections):
                 if flush_scheduler:
                     for r in rpc_connections:
-                        r.syncwithvalidationinterfacequeue()
+                        if r.version_is_at_least(170000):
+                            r.syncwithvalidationinterfacequeue()
                 return
             # Check that each peer has at least one connection
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
