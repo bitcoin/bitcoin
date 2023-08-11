@@ -175,7 +175,6 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     if (proof.t_hat != t_of_x)
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
-    // resize z_pows so that the length matches with gammas
     proof.tau_x = range_proof::Message<T>::ComputeTauX(
         message,
         x,
@@ -186,7 +185,6 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
         gammas,
         nonce
     );
-    // (tau2 * x.Square()) + (tau1 * x) + (z_pows_from_2 * gammas).Sum(); // (61)
     proof.mu = alpha + (rho * x);                                                    // (62)
 
     // (63)

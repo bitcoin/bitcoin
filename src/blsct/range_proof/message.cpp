@@ -74,11 +74,7 @@ typename T::Scalar Message<T>::ComputeTauX(
     const Scalars& gammas,
     const Point& nonce
 ) {
-    // part of the message after range_proof::Setup::m_message_1_max_size
-    Scalar msg2 = Scalar({msg.size() > range_proof::Setup::message_1_max_size ?
-        std::vector<uint8_t>(msg.begin() + range_proof::Setup::message_1_max_size, msg.end()) :
-        std::vector<uint8_t>()}
-    );
+    Scalar msg2 = ExtractMsg2(msg);
 
     Scalar tau_x =
         (tau2 * x.Square())

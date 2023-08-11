@@ -12,6 +12,7 @@
 #include <blsct/common.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof_logic.h>
 #include <blsct/range_proof/common.h>
+#include <blsct/range_proof/message.h>
 #include <tinyformat.h>
 
 // Bulletproofs+ implementation based on
@@ -257,29 +258,23 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     GEN_FIAT_SHAMIR_VAR(z, fiat_shamir, retry);
 
     // Commitment to aL and aR (obfuscated with alpha)
-
-    // part of the message up to range_proof::Setup::m_message_1_max_size
-    Scalar msg1(message.size() > range_proof::Setup::message_1_max_size ?
-        std::vector<uint8_t>(message.begin(), message.begin() + range_proof::Setup::message_1_max_size) :
-        message);
-    // message followed by 64-bit vs[0]
-    Scalar msg1_vs0 = (msg1 << range_proof::Setup::num_input_value_bits) | vs[0];
-
-    Scalar alpha;
-    {
-        Scalar nonce_1 = nonce.GetHashWithSalt(1);
-        alpha = nonce_1 + msg1_vs0;
-    }
-
-    // part of the message after range_proof::Setup::m_message_1_max_size
-    Scalar msg2 = Scalar({message.size() > range_proof::Setup::message_1_max_size ?
-                              std::vector<uint8_t>(message.begin() + range_proof::Setup::message_1_max_size, message.end()) :
-                              std::vector<uint8_t>()});
+    Scalar alpha = range_proof::Message<T>::ComputeAlpha(message, vs[0], nonce);
 
     Scalar tau1 = nonce.GetHashWithSalt(2);
     Scalar tau2 = nonce.GetHashWithSalt(3);
     Scalars z_pows_from_2 = Scalars::FirstNPow(z, gammas.Size(), 2);
-    proof.tau_x = (tau2 * y.Square()) + ((tau1 + msg2) * y) + (z_pows_from_2 * gammas).Sum();
+
+    //proof.tau_x = (tau2 * y.Square()) + ((tau1 + msg2) * y) + (z_pows_from_2 * gammas).Sum();
+    proof.tau_x = range_proof::Message<T>::ComputeTauX(
+        message,
+        y,
+        z,
+        tau1,
+        tau2,
+        z_pows_from_2,
+        gammas,
+        nonce
+    );
 
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
     // only the first 64 bits of each Scalar<S> is picked up
@@ -538,7 +533,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     using Point = typename T::Point;
 
     // will contain result of successful requests only
-std::vector<range_proof::RecoveredData<T>> recovered_amounts;
+    std::vector<range_proof::RecoveredData<T>> xs;
 
     for (const AmountRecoveryRequest<T>& req : reqs) {
         range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
@@ -583,35 +578,42 @@ std::vector<range_proof::RecoveredData<T>> recovered_amounts;
             Scalar nonce_1 = req.nonce.GetHashWithSalt(1);
             msg1_vs0 = req.alpha_hat - nonce_1 - alpha_hat_sum;
         }
-
-        // extract vs0 from msg1_vs0
-        const Scalar vs0 = msg1_vs0 & m_common.Uint64Max();
-
-        // failure if commitment created from recoverted amount doesn't match
-        Point commitment_vs0 = (h * gamma_vs0) + (g * vs0);
-        if (commitment_vs0 != req.Vs[0]) {
-            continue;
-        }
-
-        // extract msg1 from msg1_vs0
-        std::vector<uint8_t> msg1 = (msg1_vs0 >> 64).GetVch(true);
-
         Scalar tau1 = req.nonce.GetHashWithSalt(2);
         Scalar tau2 = req.nonce.GetHashWithSalt(3);
+
+        auto maybe_msg_with_amt = range_proof::Message<T>::Recover(
+            msg1_vs0,
+            gamma_vs0,
+            tau1,
+            tau2,
+            req.tau_x,
+            req.y,
+            req.z,
+            m_common.Uint64Max(),
+            h,
+            g,
+            req.Vs[0],
+            req.nonce
+        );
+        if (maybe_msg_with_amt == std::nullopt) {
+            continue;
+        }
+        auto msg_with_amt = maybe_msg_with_amt.value();
+
+        auto x = range_proof::RecoveredData<T>(
+            req.id,
+            msg_with_amt.amount,
+            req.nonce.GetHashWithSalt(100), // gamma for vs[0]
+            msg_with_amt.msg
+        );
+        xs.push_back(x);
+
         Scalar msg2_scalar = ((req.tau_x - (tau2 * req.y.Square()) - (req.z.Square() * gamma_vs0)) * req.y.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
-
-        range_proof::RecoveredData<T> recovered_amount(
-            req.id,
-            (int64_t) vs0.GetUint64(),
-            gamma_vs0,
-            std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())
-        );
-        recovered_amounts.push_back(recovered_amount);
     }
     return {
         true,
-        recovered_amounts
+        xs
     };
 }
 template AmountRecoveryResult<Mcl> RangeProofLogic<Mcl>::RecoverAmounts(
