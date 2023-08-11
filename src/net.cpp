@@ -2745,6 +2745,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
             }
 
+            // Do not make automatic outbound connections to addnode peers,
+            // to allocate our limited outbound slots correctly and to ensure
+            // addnode connections benefit from their intended protections.
+            if (AddedNodesContain(addr)) {
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Not making automatic %s%s connection to %s peer selected for manual (addnode) connection%s\n",
+                              preferred_net.has_value() ? "network-specific " : "",
+                              ConnectionTypeAsString(conn_type), GetNetworkName(addr.GetNetwork()),
+                              fLogIPs ? strprintf(": %s", addr.ToStringAddrPort()) : "");
+                continue;
+            }
+
             addrConnect = addr;
             break;
         }
@@ -3473,6 +3484,18 @@ bool CConnman::RemoveAddedNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
     return m_added_node_params.erase(params);
+}
+
+bool CConnman::AddedNodesContain(const CAddress& addr) const
+{
+    AssertLockNotHeld(m_added_nodes_mutex);
+    const std::string addr_str{addr.ToStringAddr()};
+    const std::string addr_port_str{addr.ToStringAddrPort()};
+    LOCK(m_added_nodes_mutex);
+    return m_added_node_params.count({addr_str, /*m_use_v2transport=*/true})
+        || m_added_node_params.count({addr_str, /*m_use_v2transport=*/false})
+        || m_added_node_params.count({addr_port_str, /*m_use_v2transport=*/true})
+        || m_added_node_params.count({addr_port_str, /*m_use_v2transport=*/false});
 }
 
 size_t CConnman::GetNodeCount(ConnectionDirection flags) const
