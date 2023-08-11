@@ -1855,7 +1855,9 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     pnode->AddRef();
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
-    LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "New %s connection accepted: peer=%d, net=%s%s\n",
+                  pnode->ConnectionTypeAsString(), pnode->GetId(), GetNetworkName(pnode->ConnectedThroughNetwork()),
+                  fLogIPs ? strprintf(", peeraddr=%s", addr.ToStringAddrPort()) : "");
 
     {
         LOCK(m_nodes_mutex);
@@ -2673,7 +2675,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
-                LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToStringAddrPort());
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying %s anchor connection to net=%s%s\n",
+                              ConnectionTypeAsString(conn_type), GetNetworkName(addrConnect.GetNetwork()),
+                              fLogIPs ? strprintf(", peeraddr=%s", addrConnect.ToStringAddrPort()) : "");
                 break;
             }
 
@@ -2770,7 +2774,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 }
             }
 
-            if (preferred_net != std::nullopt) LogPrint(BCLog::NET, "Making network specific connection to %s on %s.\n", addrConnect.ToStringAddrPort(), GetNetworkName(preferred_net.value()));
+            if (preferred_net.has_value()) {
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying automatic network-specific %s connection %s(%s)\n",
+                              GetNetworkName(preferred_net.value()), fLogIPs ? strprintf("to %s ", addrConnect.ToStringAddrPort()) : "", ConnectionTypeAsString(conn_type));
+            }
 
             // Record addrman failure attempts when node has at least 2 persistent outbound connections to peers with
             // different netgroups in ipv4/ipv6 networks + all peers in Tor/I2P/CJDNS networks.
