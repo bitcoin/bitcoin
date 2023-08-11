@@ -1,7 +1,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/common.h>
 #include <blsct/range_proof/common.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof.h>
 #include <tinyformat.h>
@@ -109,9 +109,9 @@ Common<T>::Common()
     Common<T>::m_two = new Scalar(2);
     Common<T>::m_gf = new range_proof::GeneratorsFactory<T>();
     {
-        auto two_pows_64 = Scalars::FirstNPow(*m_two, RangeProofSetup::num_input_value_bits);
+        auto two_pows_64 = Scalars::FirstNPow(*m_two, range_proof::Setup::num_input_value_bits);
         Common<T>::m_two_pows_64 = new Scalars(two_pows_64);
-        auto ones_64 = Scalars::RepeatN(*Common<T>::m_one, RangeProofSetup::num_input_value_bits);
+        auto ones_64 = Scalars::RepeatN(*Common<T>::m_one, range_proof::Setup::num_input_value_bits);
         Common<T>::m_inner_prod_1x2_pows_64 =
             new Scalar((ones_64 * *Common<T>::m_two_pows_64).Sum());
     }
@@ -133,7 +133,7 @@ size_t Common<T>::GetNumRoundsExclLast(
         blsct::Common::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
     auto num_rounds =
         static_cast<size_t>(std::log2(num_input_values_pow2)) +
-        static_cast<size_t>(std::log2(RangeProofSetup::num_input_value_bits));
+        static_cast<size_t>(std::log2(range_proof::Setup::num_input_value_bits));
 
     return num_rounds;
 }
@@ -147,13 +147,13 @@ void Common<T>::ValidateParameters(
     const Elements<typename T::Scalar>& vs,
     const std::vector<uint8_t>& message
 ) {
-    if (message.size() > RangeProofSetup::max_message_size) {
+    if (message.size() > range_proof::Setup::max_message_size) {
         throw std::runtime_error(strprintf("%s: message size is too large", __func__));
     }
     if (vs.Empty()) {
         throw std::runtime_error(strprintf("%s: no input values to prove", __func__));
     }
-    if (vs.Size() > RangeProofSetup::max_input_values) {
+    if (vs.Size() > range_proof::Setup::max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
 }
@@ -174,9 +174,9 @@ void Common<T>::ValidateProofsBySizes(
             throw std::runtime_error(strprintf("%s: no input value", __func__));
 
         // invalid if # of input values are lager than maximum
-        if (proof.Vs.Size() > RangeProofSetup::max_input_values)
+        if (proof.Vs.Size() > range_proof::Setup::max_input_values)
             throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum %ld",
-                                               __func__, RangeProofSetup::max_input_values));
+                                               __func__, range_proof::Setup::max_input_values));
 
         // L,R keep track of aggregation history and the size should equal to # of rounds
         size_t num_rounds = range_proof::Common<T>::GetNumRoundsExclLast(proof.Vs.Size());

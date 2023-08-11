@@ -4,7 +4,7 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/generators.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     TokenId token_id_2(uint256(2), 22ULL);
     range_proof::Generators<T> gens2 = gf.GetInstance(token_id_2);
 
-    auto max_size = RangeProofSetup::max_input_value_vec_len;
+    auto max_size = range_proof::Setup::max_input_value_vec_len;
 
     // regardless of the token_id, the same Gi and Hi should be returned
     // same token_id
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_generators_get_gihi_subset)
     BOOST_CHECK_NO_THROW(gens.GetGiSubset(0));
     BOOST_CHECK_NO_THROW(gens.GetHiSubset(0));
 
-    auto max_size = RangeProofSetup::max_input_value_vec_len;
+    auto max_size = range_proof::Setup::max_input_value_vec_len;
 
     // should be able to get Gi and Hi up to of size max_input_value_vec_len
     BOOST_CHECK_NO_THROW(gens.GetGiSubset(max_size));

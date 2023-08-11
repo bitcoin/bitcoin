@@ -219,7 +219,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     RangeProof<T> proof;
 
     const size_t m = num_input_values_power_of_2;
-    const size_t n = RangeProofSetup::num_input_value_bits;
+    const size_t n = range_proof::Setup::num_input_value_bits;
     const size_t mn = m * n;
 
     // generate gammas
@@ -258,12 +258,12 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
 
     // Commitment to aL and aR (obfuscated with alpha)
 
-    // part of the message up to RangeProofSetup::m_message_1_max_size
-    Scalar msg1(message.size() > RangeProofSetup::message_1_max_size ?
-        std::vector<uint8_t>(message.begin(), message.begin() + RangeProofSetup::message_1_max_size) :
+    // part of the message up to range_proof::Setup::m_message_1_max_size
+    Scalar msg1(message.size() > range_proof::Setup::message_1_max_size ?
+        std::vector<uint8_t>(message.begin(), message.begin() + range_proof::Setup::message_1_max_size) :
         message);
     // message followed by 64-bit vs[0]
-    Scalar msg1_vs0 = (msg1 << RangeProofSetup::num_input_value_bits) | vs[0];
+    Scalar msg1_vs0 = (msg1 << range_proof::Setup::num_input_value_bits) | vs[0];
 
     Scalar alpha;
     {
@@ -271,9 +271,9 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
         alpha = nonce_1 + msg1_vs0;
     }
 
-    // part of the message after RangeProofSetup::m_message_1_max_size
-    Scalar msg2 = Scalar({message.size() > RangeProofSetup::message_1_max_size ?
-                              std::vector<uint8_t>(message.begin() + RangeProofSetup::message_1_max_size, message.end()) :
+    // part of the message after range_proof::Setup::m_message_1_max_size
+    Scalar msg2 = Scalar({message.size() > range_proof::Setup::message_1_max_size ?
+                              std::vector<uint8_t>(message.begin() + range_proof::Setup::message_1_max_size, message.end()) :
                               std::vector<uint8_t>()});
 
     Scalar tau1 = nonce.GetHashWithSalt(2);
@@ -285,7 +285,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     // only the first 64 bits of each Scalar<S> is picked up
     Scalars aL;                  // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v : vs.m_vec) { // for each input value
-        for (size_t i = 0; i < RangeProofSetup::num_input_value_bits; ++i) {
+        for (size_t i = 0; i < range_proof::Setup::num_input_value_bits; ++i) {
             aL.Add(v.GetSeriBit(i) ? 1 : 0);
         }
     }

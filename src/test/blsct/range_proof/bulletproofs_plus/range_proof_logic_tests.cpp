@@ -192,7 +192,7 @@ static std::vector<TestCase> BuildTestCases()
         Scalars values;
         values.Add(Scalar(1));
 
-        std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, RangeProofSetup::max_message_size };
+        std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, range_proof::Setup::max_message_size };
         for (auto msg_size: msg_sizes) {
             TestCase x;
             x.name = strprintf("with message of length %d", msg_size).c_str();
@@ -208,7 +208,7 @@ static std::vector<TestCase> BuildTestCases()
 
     // test # of input values from 1 to max
     {
-        for (size_t n=1; n<=RangeProofSetup::max_input_values; ++n) {
+        for (size_t n=1; n<=range_proof::Setup::max_input_values; ++n) {
             Scalars values;
             for (size_t i=0; i<n; ++i) {
                 values.Add(Scalar(i + 1));
@@ -245,7 +245,7 @@ static std::vector<TestCase> BuildTestCases()
     {
         // string of maximum message size 54
         const std::string s("Pneumonoultramicroscopicsilicovolcanoconiosis123456789");
-        assert(s.size() == RangeProofSetup::max_message_size);
+        assert(s.size() == range_proof::Setup::max_message_size);
         Scalars values;
         values.Add(one);
 
@@ -342,13 +342,13 @@ BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
     }
     {
         // msg of valid size
-        std::string s(RangeProofSetup::max_message_size, 'x');
+        std::string s(range_proof::Setup::max_message_size, 'x');
         std::vector<unsigned char> msg(s.begin(), s.end());
         BOOST_CHECK_NO_THROW(rpl.Prove(values, nonce, msg, token_id));
     }
     {
         // msg of exceeded size
-        std::string s(RangeProofSetup::max_message_size + 1, 'x');
+        std::string s(range_proof::Setup::max_message_size + 1, 'x');
         std::vector<unsigned char> msg(s.begin(), s.end());
         BOOST_CHECK_THROW(rpl.Prove(values, nonce, msg, token_id), std::runtime_error);
     }
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
     {
         // should throw if number of input values is outsize the valid range
         Scalars values;
-        for (size_t i=0; i<RangeProofSetup::max_input_values + 1; ++i) {
+        for (size_t i=0; i<range_proof::Setup::max_input_values + 1; ++i) {
             values.Add(Scalar(1));
         }
         BOOST_CHECK_THROW(rpl.Prove(values, nonce, msg, token_id), std::runtime_error);
@@ -417,13 +417,13 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
     }
     {
         // maximum number of value commitments
-        auto p = gen_valid_proof_wo_value_commitments(RangeProofSetup::max_input_values);
+        auto p = gen_valid_proof_wo_value_commitments(range_proof::Setup::max_input_values);
         std::vector<bulletproofs_plus::RangeProof<T>> proofs { p };
         BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
     }
     {
         // number of value commitments exceeding maximum
-        auto p = gen_valid_proof_wo_value_commitments(RangeProofSetup::max_input_values + 1);
+        auto p = gen_valid_proof_wo_value_commitments(range_proof::Setup::max_input_values + 1);
         std::vector<bulletproofs_plus::RangeProof<T>> proofs { p };
         BOOST_CHECK_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs), std::runtime_error);
     }

@@ -33,7 +33,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
 
     // this is power of 2 as well since m_input_value_bits is power of 2
     const size_t concat_input_values_in_bits =
-        num_input_values_power_of_2 * RangeProofSetup::num_input_value_bits;
+        num_input_values_power_of_2 * range_proof::Setup::num_input_value_bits;
 
     ////////////// Proving steps
     RangeProof<T> proof;
@@ -72,7 +72,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     // only the first 64 bits of each Scalar<S> is picked up
     Scalars aL;                  // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v : vs.m_vec) { // for each input value
-        for (size_t i = 0; i < RangeProofSetup::num_input_value_bits; ++i) {
+        for (size_t i = 0; i < range_proof::Setup::num_input_value_bits; ++i) {
             aL.Add(v.GetSeriBit(i) ? 1 : 0);
         }
     }
@@ -91,13 +91,13 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
 
-    // part of the message up to RangeProofSetup::m_message_1_max_size
+    // part of the message up to range_proof::Setup::m_message_1_max_size
     Scalar msg1(
-        message.size() > RangeProofSetup::message_1_max_size ?
-            std::vector<uint8_t>(message.begin(), message.begin() + RangeProofSetup::message_1_max_size) :
+        message.size() > range_proof::Setup::message_1_max_size ?
+            std::vector<uint8_t>(message.begin(), message.begin() + range_proof::Setup::message_1_max_size) :
             message);
     // message followed by 64-bit vs[0]
-    Scalar msg1_vs0 = (msg1 << RangeProofSetup::num_input_value_bits) | vs[0];
+    Scalar msg1_vs0 = (msg1 << range_proof::Setup::num_input_value_bits) | vs[0];
 
     Scalar alpha;
     {
@@ -142,7 +142,7 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto base_z_pow = z_pows_from_2[i]; // use different Scalar<S> for each input value
 
-        for (size_t bit_idx = 0; bit_idx < RangeProofSetup::num_input_value_bits; ++bit_idx) {
+        for (size_t bit_idx = 0; bit_idx < range_proof::Setup::num_input_value_bits; ++bit_idx) {
             z_pow_twos.Add(base_z_pow * m_common.TwoPows64()[bit_idx]);
         }
     }
@@ -159,9 +159,9 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     Scalar tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
-    // part of the message after RangeProofSetup::m_message_1_max_size
-    Scalar msg2 = Scalar({message.size() > RangeProofSetup::message_1_max_size ?
-                              std::vector<uint8_t>(message.begin() + RangeProofSetup::message_1_max_size, message.end()) :
+    // part of the message after range_proof::Setup::m_message_1_max_size
+    Scalar msg2 = Scalar({message.size() > range_proof::Setup::message_1_max_size ?
+                              std::vector<uint8_t>(message.begin() + range_proof::Setup::message_1_max_size, message.end()) :
                               std::vector<uint8_t>()});
     tau1 = tau1 + msg2;
 
@@ -299,8 +299,8 @@ bool RangeProofLogic<T>::VerifyProofs(
 
             // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             Scalar tmp =
-                z_pows_from_2[i / RangeProofSetup::num_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
-                m_common.TwoPows64()[i % RangeProofSetup::num_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
+                z_pows_from_2[i / range_proof::Setup::num_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
+                m_common.TwoPows64()[i % range_proof::Setup::num_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
 
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;

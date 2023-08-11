@@ -10,7 +10,7 @@
 #include <blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.h>
 #include <blsct/range_proof/bulletproofs_plus/util.h>
 #include <blsct/range_proof/common.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <blsct/common.h>
 #include <hash.h>
 #include <cmath>
@@ -26,7 +26,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
     Scalars es;
 
     size_t m = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
-    size_t n = RangeProofSetup::num_input_value_bits;
+    size_t n = range_proof::Setup::num_input_value_bits;
     size_t mn = m * n;
 
 retry:

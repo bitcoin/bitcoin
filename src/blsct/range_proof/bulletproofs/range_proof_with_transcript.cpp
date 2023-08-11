@@ -9,7 +9,7 @@
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/range_proof/bulletproofs/range_proof_with_transcript.h>
 #include <blsct/range_proof/common.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <blsct/common.h>
 #include <hash.h>
 #include <cmath>
@@ -55,7 +55,7 @@ retry:
     if (!maybe_xs.has_value()) goto retry;
 
     size_t num_input_values_power_2 = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
-    size_t concat_input_values_in_bits = num_input_values_power_2 * RangeProofSetup::num_input_value_bits;
+    size_t concat_input_values_in_bits = num_input_values_power_2 * range_proof::Setup::num_input_value_bits;
 
     return RangeProofWithTranscript<T>(
         proof,

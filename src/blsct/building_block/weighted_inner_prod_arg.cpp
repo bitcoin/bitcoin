@@ -3,7 +3,7 @@
 #include <blsct/building_block/weighted_inner_prod_arg.h>
 #include <blsct/building_block/lazy_points.h>
 #include <blsct/building_block/fiat_shamir.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <blsct/common.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof.h>
 #include <blsct/range_proof/bulletproofs_plus/util.h>

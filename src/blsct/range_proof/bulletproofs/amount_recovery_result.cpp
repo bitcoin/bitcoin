@@ -1,3 +1,7 @@
+// Copyright (c) 2022 The Navcoin developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <blsct/range_proof/bulletproofs/amount_recovery_result.h>
 #include <blsct/arith/mcl/mcl.h>
 
@@ -13,4 +17,3 @@ AmountRecoveryResult<T> AmountRecoveryResult<T>::failure()
 template AmountRecoveryResult<Mcl> AmountRecoveryResult<Mcl>::failure();
 
 } // namespace bulletproofs
-

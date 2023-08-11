@@ -4,7 +4,7 @@
 #include <blsct/building_block/lazy_points.h>
 #include <blsct/common.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 
 template <typename T>
 std::optional<ImpInnerProdArgResult<T>> ImpInnerProdArg::Run(

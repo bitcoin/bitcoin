@@ -7,7 +7,7 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <ctokens/tokenid.h>
 
 #include <mutex>

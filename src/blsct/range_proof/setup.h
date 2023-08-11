@@ -2,13 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_SETUP_H
-#define NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_SETUP_H
+#ifndef NAVCOIN_BLSCT_RANGE_PROOF_SETUP_H
+#define NAVCOIN_BLSCT_RANGE_PROOF_SETUP_H
 
 #include <cstddef>
 #include <cmath>
 
-class RangeProofSetup
+namespace range_proof {
+
+class Setup
 {
 public:
     // maximum # of retries allowed for RangeProofLogic::Prove function
@@ -30,4 +32,6 @@ public:
         max_input_values * num_input_value_bits;
 };
 
-#endif // NAVCOIN_BLSCT_RANGE_PROOF_RANGE_PROOF_SETUP_H
+} // namespace range_proof
+
+#endif // NAVCOIN_BLSCT_RANGE_PROOF_SETUP_H
