@@ -11,7 +11,8 @@
 namespace bulletproofs_plus {
 
 template <typename T>
-struct AmountRecoveryRequest {
+struct AmountRecoveryRequest
+{
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
     using Points = Elements<Point>;

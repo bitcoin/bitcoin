@@ -14,7 +14,7 @@
 #include <blsct/range_proof/bulletproofs_plus/amount_recovery_request.h>
 #include <blsct/range_proof/bulletproofs_plus/amount_recovery_result.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.h>
-#include <blsct/range_proof/bulletproofs_plus/recovered_amount.h>
+#include <blsct/range_proof/recovered_data.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 #include <hash.h>

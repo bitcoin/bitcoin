@@ -2,18 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_PLUS_RECOVERED_AMOUNT_H
-#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_PLUS_RECOVERED_AMOUNT_H
+#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RECOVERED_DATA_H
+#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RECOVERED_DATA_H
 
 #include <consensus/amount.h>
 
-namespace bulletproofs_plus {
+#include <cstddef>
+#include <string>
+
+namespace range_proof {
 
 template <typename T>
-struct RecoveredAmount {
+struct RecoveredData
+{
     using Scalar = typename T::Scalar;
 
-    RecoveredAmount(
+    RecoveredData(
         const size_t& id,
         const CAmount& amount,
         const Scalar& gamma,
@@ -26,6 +30,6 @@ struct RecoveredAmount {
     std::string message;
 };
 
-} // namespace bulletproofs_plus
+} // namespace range_proof
 
-#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_PLUS_RECOVERED_AMOUNT_H
+#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RECOVERED_DATA_H

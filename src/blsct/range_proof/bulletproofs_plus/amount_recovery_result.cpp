@@ -12,7 +12,8 @@ AmountRecoveryResult<T> AmountRecoveryResult<T>::failure()
 {
     return {
         false,
-        std::vector<RecoveredAmount<T>>()};
+        std::vector<range_proof::RecoveredData<T>>()
+    };
 }
 template AmountRecoveryResult<Mcl> AmountRecoveryResult<Mcl>::failure();
 

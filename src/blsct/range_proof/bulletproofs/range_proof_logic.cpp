@@ -12,7 +12,9 @@
 #include <blsct/common.h>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/range_proof/common.h>
+#include <blsct/range_proof/message.h>
 #include <tinyformat.h>
+#include <optional>
 
 namespace bulletproofs {
 
@@ -376,7 +378,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     using Point = typename T::Point;
 
     // will contain result of successful requests only
-    std::vector<RecoveredAmount<T>> recovered_amounts;
+    std::vector<range_proof::RecoveredData<T>> xs;
 
     for (const AmountRecoveryRequest<T>& req : reqs) {
         const range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
@@ -393,64 +395,45 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
             continue;
         }
 
-        // recover Scalar<S> values from nonce
-        const Scalar alpha = req.nonce.GetHashWithSalt(1);
-        const Scalar rho = req.nonce.GetHashWithSalt(2);
-        const Scalar tau1 = req.nonce.GetHashWithSalt(3);
-        const Scalar tau2 = req.nonce.GetHashWithSalt(4);
-        const Scalar gamma_vs0 = req.nonce.GetHashWithSalt(100); // gamma for vs[0]
+        // mu is defined to be: mu = alpha + rho * x
+        //
+        // where alpha = nonce-alpha + (msg1 << 64 | 64-bit vs[0]). so,
+        //
+        // mu - rho * x = nonce-alpha + (msg1 << 64 | 64-bit vs[0])
+        // mu - rho * x - nonce-alpha = (msg1 << 64 | 64-bit vs[0])
+        // mu - rho * x - nonce-alpha = msg1_vs0
+        //
+        Scalar alpha = req.nonce.GetHashWithSalt(1);
+        Scalar rho = req.nonce.GetHashWithSalt(2);
+        Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
 
-        // breakdown of mu is:
-        // mu = alpha + rho * x ... (62)
-        //
-        // and this alpha is the alpha from nonce + (msg1 << 64 | 64-bit vs[0])
-        // so, subtracting rho * x from mu is equal to:
-        //
-        // alpha from nonce + (msg1 << 64 | 64-bit vs[0])
-        //
-        // subtracting alpha from nonce from it then equals:
-        // (msg1 << 64 | 64-bit vs[0])
-        //
-        const Scalar msg1_vs0 = (req.mu - rho * req.x) - alpha;
-        const Scalar vs0 = msg1_vs0 & m_common.Uint64Max();
-
-        // failure if commitment created from recoverted amount doesn't match
-        Point commitment_vs0 = (H * gamma_vs0) + (G * vs0);
-        if (commitment_vs0 != req.Vs[0]) {
+        auto maybe_msg_with_amt = range_proof::Message<T>::Recover(
+            msg1_vs0,
+            req.tau_x,
+            req.x,
+            req.z,
+            m_common.Uint64Max(),
+            H,
+            G,
+            req.Vs[0],
+            req.nonce
+        );
+        if (maybe_msg_with_amt == std::nullopt) {
             continue;
         }
+        auto msg_with_amt = maybe_msg_with_amt.value();
 
-        // generate message and set to data
-        // extract the message part from (up-to-23-byte message || 64-bit vs[0])
-        // by 64-bit to the right
-        std::vector<uint8_t> msg1 = (msg1_vs0 >> 64).GetVch(true);
-        auto tau_x = req.tau_x;
-        auto x = req.x;
-        auto z = req.z;
-
-        // tau_x = tau2 * x^2 + tau1 * x + z^2 * gamma ... (61)
-        //
-        // solving this equation for tau1, we get:
-        //
-        // tau_x - tau2 * x^2 - z^2 * gamma = tau1 * x
-        // tau1 = (tau_x - tau2 * x^2 - z^2 * gamma) * x^-1 ... (D)
-        //
-        // since tau1 in (61) is tau1 (C) + msg2, msg2 can be extracted
-        // by subtracting tau1 (C) from RHS of (D)
-        //
-        Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * gamma_vs0)) * x.Invert()) - tau1;
-        std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
-
-        RecoveredAmount<T> recovered_amount(
+        auto x = range_proof::RecoveredData<T>(
             req.id,
-            (int64_t) vs0.GetUint64(), // valid values are of type int64_t
-            gamma_vs0,
-            std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end()));
-        recovered_amounts.push_back(recovered_amount);
+            msg_with_amt.amount,
+            req.nonce.GetHashWithSalt(100), // gamma for vs[0]
+            msg_with_amt.msg
+        );
+        xs.push_back(x);
     }
     return {
         true,
-        recovered_amounts
+        xs
     };
 }
 template AmountRecoveryResult<Mcl> RangeProofLogic<Mcl>::RecoverAmounts(

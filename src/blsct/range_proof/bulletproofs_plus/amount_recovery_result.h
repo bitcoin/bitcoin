@@ -8,14 +8,15 @@
 #include <vector>
 
 #include <blsct/range_proof/bulletproofs_plus/amount_recovery_result.h>
-#include <blsct/range_proof/bulletproofs_plus/recovered_amount.h>
+#include <blsct/range_proof/recovered_data.h>
 
 namespace bulletproofs_plus {
 
 template <typename T>
-struct AmountRecoveryResult {
+struct AmountRecoveryResult
+{
     bool is_completed; // does not mean recovery success
-    std::vector<RecoveredAmount<T>> amounts;
+    std::vector<range_proof::RecoveredData<T>> amounts;
 
     static AmountRecoveryResult<T> failure();
 };

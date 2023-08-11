@@ -538,7 +538,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     using Point = typename T::Point;
 
     // will contain result of successful requests only
-    std::vector<RecoveredAmount<T>> recovered_amounts;
+std::vector<range_proof::RecoveredData<T>> recovered_amounts;
 
     for (const AmountRecoveryRequest<T>& req : reqs) {
         range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
@@ -601,7 +601,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         Scalar msg2_scalar = ((req.tau_x - (tau2 * req.y.Square()) - (req.z.Square() * gamma_vs0)) * req.y.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
-        RecoveredAmount<T> recovered_amount(
+        range_proof::RecoveredData<T> recovered_amount(
             req.id,
             (int64_t) vs0.GetUint64(),
             gamma_vs0,
