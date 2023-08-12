@@ -1052,6 +1052,7 @@ libbitcoinkernel_la_SOURCES = \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
+  blsct/common.cpp \
   blsct/double_public_key.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
