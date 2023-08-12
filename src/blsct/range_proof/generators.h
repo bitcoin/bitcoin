@@ -50,7 +50,7 @@ public:
  * the H term remains.
  *
  * Since H is the base point to H, the remaining term
- * becomes the publickey ans is later used later for
+ * becomes the publickey and is later used later for
  * signature verification.
  */
 template <typename T>

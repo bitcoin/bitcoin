@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef BITCOIN_TEST_BLSCT_ARITH_SHARED_SCALAR_TESTS_H
+#define BITCOIN_TEST_BLSCT_ARITH_SHARED_SCALAR_TESTS_H
+
 #include <boost/test/unit_test.hpp>
 
 #define ONE_BE_32(var) std::vector<uint8_t> var { \
@@ -443,3 +446,5 @@ BOOST_AUTO_TEST_CASE(test_get_string_radix_16)
         BOOST_CHECK(act == exp);
     }
 }
+
+#endif // BITCOIN_TEST_BLSCT_ARITH_SHARED_SCALAR_TESTS_H

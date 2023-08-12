@@ -36,7 +36,7 @@ using Scalar = MclScalar;
 
 BOOST_FIXTURE_TEST_SUITE(mcl_scalar_tests, BasicTestingSetup)
 
-#include "../shared_scalar_tests.h"
+#include <test/blsct/arith/shared_scalar_tests.h>
 
 BOOST_AUTO_TEST_CASE(test_ctor_uint256_int64)
 {

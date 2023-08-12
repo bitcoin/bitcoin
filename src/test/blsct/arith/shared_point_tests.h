@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef BITCOIN_TEST_BLSCT_ARITH_SHARED_POINT_TESTS_H
+#define BITCOIN_TEST_BLSCT_ARITH_SHARED_POINT_TESTS_H
+
 #include <boost/test/unit_test.hpp>
 
 #define ONE uint256::ONE
@@ -210,3 +213,5 @@ BOOST_AUTO_TEST_CASE(test_serialize_unserialize)
     q.Unserialize(st);
     BOOST_CHECK(p == q);
 }
+
+#endif // BITCOIN_TEST_BLSCT_ARITH_SHARED_POINT_TESTS_H

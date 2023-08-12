@@ -29,7 +29,7 @@ using Scalar = MclScalar;
 
 BOOST_FIXTURE_TEST_SUITE(mcl_g1point_tests, BasicTestingSetup)
 
-#include "../shared_point_tests.h"
+#include <test/blsct/arith/shared_point_tests.h>
 
 BOOST_AUTO_TEST_SUITE_END()
 

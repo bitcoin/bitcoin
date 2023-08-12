@@ -186,7 +186,7 @@ std::optional<WeightedInnerProdArgResult<T>> WeightedInnerProdArg::Run(
         Scalar e_inv = e.Invert();
         Scalar e_inv_sq = e_inv.Square();
 
-        // reduce generators and inputs for the next interation
+        // reduce generators and inputs for the next iteration
         P = WeightedInnerProdArg::UpdateP<T>(P, L, R, e_sq, e_inv_sq);
         a = a1 * e + a2 * (y_to_n * e_inv);
         b = b1 * e_inv + b2 * e;

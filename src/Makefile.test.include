@@ -92,13 +92,13 @@ BITCOIN_TESTS =\
   test/blsct/common_tests.cpp \
   test/blsct/eip_2333/bls12_381_keygen_tests.cpp \
   test/blsct/keys_tests.cpp \
-  test/blsct/range_proof/common_tests.cpp \
+  test/blsct/range_proof/range_proof_common_tests.cpp \
   test/blsct/range_proof/generators_tests.cpp \
-  test/blsct/range_proof/bulletproofs/range_proof_logic_tests.cpp \
-  test/blsct/range_proof/bulletproofs/range_proof_tests.cpp \
-  test/blsct/range_proof/bulletproofs/range_proof_with_transcript_tests.cpp \
-  test/blsct/range_proof/bulletproofs_plus/range_proof_logic_tests.cpp \
-  test/blsct/range_proof/bulletproofs_plus/range_proof_tests.cpp \
+  test/blsct/range_proof/bulletproofs/bulletproofs_range_proof_logic_tests.cpp \
+  test/blsct/range_proof/bulletproofs/bulletproofs_range_proof_tests.cpp \
+  test/blsct/range_proof/bulletproofs/bulletproofs_range_proof_with_transcript_tests.cpp \
+  test/blsct/range_proof/bulletproofs_plus/bulletproofs_plus_range_proof_logic_tests.cpp \
+  test/blsct/range_proof/bulletproofs_plus/bulletproofs_plus_range_proof_tests.cpp \
   test/blsct/set_mem_proof/set_mem_proof_setup_tests.cpp \
   test/blsct/set_mem_proof/set_mem_proof_prover_tests.cpp \
   test/blsct/set_mem_proof/set_mem_proof_tests.cpp \

@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(test_trim_preceeding_zeros)
         std::vector<uint8_t> exp { 1 };
         BOOST_CHECK(exp == act);
     }
-    // preceeding zero should be removed
+    // preceding zero should be removed
     {
         std::vector<bool> vec { false, true };
         auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_trim_preceeding_zeros)
         std::vector<uint8_t> exp { 1 };
         BOOST_CHECK(exp == act);
     }
-    // multiple preceeding zeroes should be removed
+    // multiple preceding zeroes should be removed
     {
         std::vector<bool> vec { false, false, true };
         auto act = blsct::Common::TrimPreceedingZeros<bool>(vec);

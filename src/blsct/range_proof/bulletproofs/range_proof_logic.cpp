@@ -293,7 +293,7 @@ bool RangeProofLogic<T>::VerifyProofs(
 
             // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             Scalar tmp =
-                z_pows_from_2[i / range_proof::Setup::num_input_value_bits] *   // skipping the first 2 powers. differen z_pow is assigned to each number
+                z_pows_from_2[i / range_proof::Setup::num_input_value_bits] *   // skipping the first 2 powers. different z_pow is assigned to each number
                 m_common.TwoPows64()[i % range_proof::Setup::num_input_value_bits]; // power of 2 corresponding to i-th bit of the number being processed
 
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)

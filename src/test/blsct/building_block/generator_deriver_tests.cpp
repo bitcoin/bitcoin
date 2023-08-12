@@ -21,24 +21,24 @@ BOOST_AUTO_TEST_CASE(test_derive)
 
     std::vector<Point> xs;
 
-    GeneratorDeriver<Point> deriver("pro-micro");
+    GeneratorDeriver<Point> gd("pro-micro");
 
     for (size_t i=0; i<10; ++i) {
-        auto p = deriver.Derive(g, i, std::nullopt);
+        auto p = gd.Derive(g, i, std::nullopt);
         xs.push_back(p);
     }
 
     // use token id
     TokenId token_id(uint256(123));
     for (size_t i=0; i<10; ++i) {
-        auto p = deriver.Derive(g, i, token_id);
+        auto p = gd.Derive(g, i, token_id);
         xs.push_back(p);
     }
 
     // use different base point
     Point gg = g + g;
     for (size_t i=0; i<10; ++i) {
-        auto p = deriver.Derive(gg, i, token_id);
+        auto p = gd.Derive(gg, i, token_id);
         xs.push_back(p);
     }
 
