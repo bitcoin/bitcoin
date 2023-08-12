@@ -346,6 +346,8 @@ BITCOIN_CORE_H = \
   support/events.h \
   support/lockedpool.h \
   sync.h \
+  test/blsct/arith/shared_point_tests.h \
+  test/blsct/arith/shared_scalar_tests.h \
   threadsafety.h \
   timedata.h \
   torcontrol.h \
