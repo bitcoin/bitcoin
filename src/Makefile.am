@@ -190,7 +190,7 @@ BITCOIN_CORE_H = \
   blsct/range_proof/bulletproofs_plus/util.h \
   blsct/range_proof/common.h \
   blsct/range_proof/generators.h \
-  blsct/range_proof/msg_amt_ciphner.h \
+  blsct/range_proof/msg_amt_cipher.h \
   blsct/range_proof/proof_base.h \
   blsct/range_proof/recovered_data.h \
   blsct/range_proof/setup.h \
