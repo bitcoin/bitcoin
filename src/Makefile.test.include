@@ -82,6 +82,8 @@ BITCOIN_TESTS =\
   test/blockfilter_tests.cpp \
   test/blockmanager_tests.cpp \
   test/bloom_tests.cpp \
+  test/blsct/arith/shared_point_tests.h \
+  test/blsct/arith/shared_scalar_tests.h \
   test/blsct/arith/elements_tests.cpp \
   test/blsct/arith/mcl/mcl_g1point_tests.cpp \
   test/blsct/arith/mcl/mcl_integration_tests.cpp \

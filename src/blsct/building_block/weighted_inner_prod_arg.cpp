@@ -85,7 +85,6 @@ std::optional<WeightedInnerProdArgResult<T>> WeightedInnerProdArg::Run(
     Scalar alpha = alpha_src;
     const Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), N, 1);
     size_t n = N;
-    size_t rounds = 0;
     WeightedInnerProdArgResult<T> res;
 
     auto wip = [](
@@ -194,8 +193,6 @@ std::optional<WeightedInnerProdArgResult<T>> WeightedInnerProdArg::Run(
         hs = WeightedInnerProdArg::ReduceHs<T>(hs1, hs2, e, e_inv);
         alpha = dL * e_sq + alpha + dR * e_inv_sq;
         y_pows = y_pows_1;
-
-        ++rounds;
     }
 
 retry:
