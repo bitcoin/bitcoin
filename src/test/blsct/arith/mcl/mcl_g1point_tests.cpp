@@ -264,6 +264,7 @@ BOOST_AUTO_TEST_CASE(test_map_str_to_point)
         xs.insert(p.GetString());
     }
     BOOST_CHECK_EQUAL(xs.size(), num_xs);
+
     // Empty string should not be mapped to a point
     BOOST_CHECK_THROW(Point::MapToPoint(""), std::runtime_error);
 }
