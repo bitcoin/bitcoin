@@ -14,6 +14,8 @@ TEST_UTIL_H = \
   blsct/arith/mcl/mcl_init.h \
   blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/mcl/mcl_util.h \
+  blsct/arith/shared_point_tests.h \
+  blsct/arith/shared_scalar_tests.h \
   blsct/double_public_key.h \
   blsct/private_key.h \
   blsct/public_key.h \
