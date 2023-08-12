@@ -5,8 +5,6 @@
 #ifndef NAVCOIN_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
 #define NAVCOIN_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
 
-#include <blsct/arith/elements.h>
-
 template <typename T>
 struct LazyPoint {
     using Scalar = typename T::Scalar;

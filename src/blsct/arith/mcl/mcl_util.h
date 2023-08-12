@@ -9,7 +9,6 @@
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <blsct/arith/elements.h>
 #include <blsct/building_block/lazy_point.h>
 
 struct MclUtil {
