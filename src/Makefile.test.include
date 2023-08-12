@@ -33,6 +33,8 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 BITCOIN_TEST_SUITE = \
   test/main.cpp \
+  test/blsct/arith/shared_point_tests.h \
+  test/blsct/arith/shared_scalar_tests.h \
   $(TEST_UTIL_H)
 
 FUZZ_SUITE_LD_COMMON = \
@@ -82,8 +84,6 @@ BITCOIN_TESTS =\
   test/blockfilter_tests.cpp \
   test/blockmanager_tests.cpp \
   test/bloom_tests.cpp \
-  test/blsct/arith/shared_point_tests.h \
-  test/blsct/arith/shared_scalar_tests.h \
   test/blsct/arith/elements_tests.cpp \
   test/blsct/arith/mcl/mcl_g1point_tests.cpp \
   test/blsct/arith/mcl/mcl_integration_tests.cpp \
@@ -236,7 +236,7 @@ BITCOIN_TEST_SUITE += \
 endif # ENABLE_WALLET
 
 test_test_navcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_navcoin_CPPFLAGS = $(AM_CPPFLAGS) -DBLS_ETH=1 -I../$(srcdir) $(BITCOIN_INCLUDES) $(TESTDEFS) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
+test_test_navcoin_CPPFLAGS = $(AM_CPPFLAGS) -DBLS_ETH=1 $(BITCOIN_INCLUDES) $(TESTDEFS) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
 test_test_navcoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
 test_test_navcoin_LDADD += $(LIBBITCOIN_WALLET)
