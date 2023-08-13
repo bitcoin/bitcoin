@@ -150,7 +150,7 @@ std::tuple<
 template <typename T>
 size_t RangeProofLogic<T>::GetNumLeadingZeros(const uint32_t& n) {
     size_t count = 0;
-    uint32_t mask = 1 << 31;
+    uint32_t mask = 1U << 31;
 
     if (n == 0) return 0;
 
