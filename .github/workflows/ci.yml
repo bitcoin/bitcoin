@@ -1,0 +1,88 @@
+# Copyright (c) 2023 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+name: CI
+on:
+  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
+  pull_request:
+  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+env:
+  DANGER_RUN_CI_ON_HOST: 1
+  TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+jobs:
+  macos-cross:
+    name: "macOS 11.0 [gui, no tests] [jammy]"
+    runs-on: ubuntu-latest
+
+    # No need to run on the read-only mirror, unless it is a PR.
+    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+
+    timeout-minutes: 120
+
+    env:
+      MAKEJOBS: '-j4'
+      CI_IMAGE_NAME_TAG: 'ubuntu:jammy'
+      FILE_ENV: './ci/test/00_setup_env_mac.sh'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          # See: https://github.com/moby/buildkit/issues/3969.
+          driver-opts: |
+            network=host
+
+      - name: Build container
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./ci/test_imagefile
+          build-args: |
+            CI_IMAGE_NAME_TAG
+            FILE_ENV
+          tags: test_image
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+
+      - name: Depends hash
+        id: depends_hash
+        run: |
+          echo "hash=${{ hashFiles('./depends/**') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Depends built cache
+        uses: actions/cache@v3
+        with:
+          path: ./depends/built
+          key: ${{ github.job }}-depends-built-${{ steps.depends_hash.outputs.hash }}
+
+      - name: Set Ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Ccache cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-cache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-cache
+
+      - name: CI script
+        run: >
+          docker run --rm \
+            $(echo '${{ toJSON(env) }}' | jq -r 'keys[] | "--env \(.) "') \
+            --volume ${{ github.workspace }}:${{ github.workspace }} \
+            --volume ${{ env.CCACHE_DIR }}:${{ env.CCACHE_DIR }} \
+            --workdir ${{ github.workspace }} \
+            test_image \
+            bash -c "./ci/test_run_all.sh"
