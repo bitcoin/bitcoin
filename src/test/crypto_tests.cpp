@@ -300,11 +300,11 @@ static void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::stri
     for (int it = 0; it < 10; ++it) {
         // During it==0 we use the single-plain Encrypt/Decrypt; others use a split at prefix.
         size_t prefix = it ? InsecureRandRange(plain.size() + 1) : plain.size();
+        std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
 
         // Do msg_idx dummy encryptions to seek to the correct packet.
         FSChaCha20Poly1305 enc_aead{key, 224};
         for (uint64_t i = 0; i < msg_idx; ++i) {
-            std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
             enc_aead.Encrypt(Span{dummy_tag}.first(0), Span{dummy_tag}.first(0), dummy_tag);
         }
 
@@ -319,7 +319,6 @@ static void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::stri
         // Do msg_idx dummy decryptions to seek to the correct packet.
         FSChaCha20Poly1305 dec_aead{key, 224};
         for (uint64_t i = 0; i < msg_idx; ++i) {
-            std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
             dec_aead.Decrypt(dummy_tag, Span{dummy_tag}.first(0), Span{dummy_tag}.first(0));
         }
 
