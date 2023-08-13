@@ -16,6 +16,7 @@ Elements<typename T::Scalar> Util<T>::GetYPows(
     for (size_t i=0; i<y_pows.Size(); ++i) {
         fiat_shamir << y_pows[i];
     }
+
     Scalar y_pows_size(y_pows.Size());
     fiat_shamir << y_pows_size;
 
