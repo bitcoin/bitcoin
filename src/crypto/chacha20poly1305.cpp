@@ -95,7 +95,7 @@ bool AEADChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std:
     m_chacha20.Seek64(nonce, 0);
     std::byte expected_tag[EXPANSION];
     ComputeTag(m_chacha20, aad, cipher.first(cipher.size() - EXPANSION), expected_tag);
-    if (timingsafe_bcmp(UCharCast(expected_tag), UCharCast(cipher.data() + cipher.size() - EXPANSION), EXPANSION)) return false;
+    if (timingsafe_bcmp(UCharCast(expected_tag), UCharCast(cipher.last(EXPANSION).data()), EXPANSION)) return false;
 
     // Decrypt (starting at block 1).
     m_chacha20.Crypt(UCharCast(cipher.data()), UCharCast(plain1.data()), plain1.size());
