@@ -64,7 +64,9 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
     std::vector<CNode*> peers;
     const auto num_peers_to_add = fuzzed_data_provider.ConsumeIntegralInRange(1, 3);
     for (int i = 0; i < num_peers_to_add; ++i) {
-        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
+        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i, [&peerman](CNode& node) {
+                            peerman->FinalizeNode(node);
+                        }).release());
         connman.AddTestNode(*peers.back());
         peerman->InitializeNode(
             *peers.back(),
