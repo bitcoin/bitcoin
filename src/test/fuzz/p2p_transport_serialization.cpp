@@ -64,14 +64,14 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
     mutable_msg_bytes.insert(mutable_msg_bytes.end(), payload_bytes.begin(), payload_bytes.end());
     Span<const uint8_t> msg_bytes{mutable_msg_bytes};
     while (msg_bytes.size() > 0) {
-        const int handled = recv_transport.Read(msg_bytes);
+        const int handled = recv_transport.ReceivedBytes(msg_bytes);
         if (handled < 0) {
             break;
         }
-        if (recv_transport.Complete()) {
+        if (recv_transport.ReceivedMessageComplete()) {
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             bool reject_message{false};
-            CNetMessage msg = recv_transport.GetMessage(m_time, reject_message);
+            CNetMessage msg = recv_transport.GetReceivedMessage(m_time, reject_message);
             assert(msg.m_type.size() <= CMessageHeader::COMMAND_SIZE);
             assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
             assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);

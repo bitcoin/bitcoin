@@ -261,14 +261,14 @@ public:
     // 1. Receiver side functions, for decoding bytes received on the wire into transport protocol
     // agnostic CNetMessage (message type & payload) objects.
 
-    // returns true if the current deserialization is complete
-    virtual bool Complete() const = 0;
-    // set the deserialization context version
-    virtual void SetVersion(int version) = 0;
-    /** read and deserialize data, advances msg_bytes data pointer */
-    virtual int Read(Span<const uint8_t>& msg_bytes) = 0;
-    // decomposes a message from the context
-    virtual CNetMessage GetMessage(std::chrono::microseconds time, bool& reject_message) = 0;
+    /** Returns true if the current message is complete (so GetReceivedMessage can be called). */
+    virtual bool ReceivedMessageComplete() const = 0;
+    /** Set the deserialization context version for objects returned by GetReceivedMessage. */
+    virtual void SetReceiveVersion(int version) = 0;
+    /** Feed wire bytes to the transport; chops off consumed bytes off front of msg_bytes. */
+    virtual int ReceivedBytes(Span<const uint8_t>& msg_bytes) = 0;
+    /** Retrieve a completed message from transport (only when ReceivedMessageComplete). */
+    virtual CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) = 0;
 
     // 2. Sending side functions:
 
@@ -325,13 +325,13 @@ public:
         Reset();
     }
 
-    bool Complete() const override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
+    bool ReceivedMessageComplete() const override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
         AssertLockNotHeld(m_recv_mutex);
         return WITH_LOCK(m_recv_mutex, return CompleteInternal());
     }
 
-    void SetVersion(int nVersionIn) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
+    void SetReceiveVersion(int nVersionIn) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
         AssertLockNotHeld(m_recv_mutex);
         LOCK(m_recv_mutex);
@@ -339,7 +339,7 @@ public:
         vRecv.SetVersion(nVersionIn);
     }
 
-    int Read(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
+    int ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
         AssertLockNotHeld(m_recv_mutex);
         LOCK(m_recv_mutex);
@@ -351,7 +351,8 @@ public:
         }
         return ret;
     }
-    CNetMessage GetMessage(std::chrono::microseconds time, bool& reject_message) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+
+    CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
 
     void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const override;
 };
