@@ -101,7 +101,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc glibc-2.31)
+                                       (base-libc glibc-2.33)
                                        (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -451,11 +451,11 @@ inspecting signatures in Mach-O binaries.")
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
-(define-public glibc-2.31
-  (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
+(define-public glibc-2.33
+  (let ((commit "68cca6e1e8faac153c2f82dd3d1e2818d1b33f87"))
   (package
     (inherit glibc) ;; 2.39
-    (version "2.31")
+    (version "2.33")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -464,7 +464,7 @@ inspecting signatures in Mach-O binaries.")
               (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
+                "16s2d933pcfd7h4vh8mcwzv8w05jrrg4mpsbi0rwkv7fy4gr76f5"))
               (patches (search-our-patches "glibc-guix-prefix.patch"
                                            "glibc-riscv-jumptarget.patch"))))
     (arguments
@@ -475,23 +475,13 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-stack-protector=all",
                   "--enable-cet",
                   "--enable-bind-now",
-                  "--disable-werror",
-                  "--disable-timezone-tools",
+                  "--enable-static-pie",
+                  "--disable-nscd",
                   "--disable-profile",
-                  building-on)))
-    ((#:phases phases)
-        `(modify-phases ,phases
-           (add-before 'configure 'set-etc-rpc-installation-directory
-             (lambda* (#:key outputs #:allow-other-keys)
-               ;; Install the rpc data base file under `$out/etc/rpc'.
-               ;; Otherwise build will fail with "Permission denied."
-               ;; Can be removed when we are building 2.32 or later.
-               (let ((out (assoc-ref outputs "out")))
-                 (substitute* "sunrpc/Makefile"
-                   (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
-                    (string-append out "/etc/rpc" suffix "\n"))
-                   (("^install-others =.*$")
-                    (string-append "install-others = " out "/etc/rpc\n")))))))))))))
+                  "--disable-pt_chown",
+                  "--disable-timezone-tools",
+                  "--disable-werror",
+                  building-on))))))))
 
 ;; The sponge tool from moreutils.
 (define-public sponge
