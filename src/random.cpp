@@ -593,11 +593,8 @@ uint256 FastRandomContext::rand256() noexcept
 template <typename B>
 std::vector<B> FastRandomContext::randbytes(size_t len)
 {
-    if (requires_seed) RandomSeed();
     std::vector<B> ret(len);
-    if (len > 0) {
-        rng.Keystream(MakeWritableByteSpan(ret));
-    }
+    fillrand(MakeWritableByteSpan(ret));
     return ret;
 }
 template std::vector<unsigned char> FastRandomContext::randbytes(size_t);
