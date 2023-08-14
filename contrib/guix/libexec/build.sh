@@ -224,6 +224,10 @@ case "$HOST" in
     *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
 esac
 
+case "$HOST" in
+    aarch64-linux-gnu) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,-z,force-bti" ;;
+esac
+
 # Make $HOST-specific native binaries from depends available in $PATH
 export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
 mkdir -p "$DISTSRC"
