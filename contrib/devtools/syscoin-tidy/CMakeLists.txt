@@ -25,6 +25,12 @@ else()
     target_compile_options(syscoin-tidy PRIVATE -fno-exceptions)
 endif()
 
+if(CMAKE_HOST_APPLE)
+    # ld64 expects no undefined symbols by default
+    target_link_options(syscoin-tidy PRIVATE -Wl,-flat_namespace)
+    target_link_options(syscoin-tidy PRIVATE -Wl,-undefined -Wl,suppress)
+endif()
+
 # Add warnings
 if (MSVC)
     target_compile_options(syscoin-tidy PRIVATE /W4)
@@ -33,7 +39,12 @@ else()
     target_compile_options(syscoin-tidy PRIVATE -Wextra)
 endif()
 
-set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "--load=${CMAKE_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}syscoin-tidy${CMAKE_SHARED_LIBRARY_SUFFIX}" "-checks=-*,syscoin-*")
+if(CMAKE_VERSION VERSION_LESS 3.27)
+    set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "--load=${CMAKE_BINARY_DIR}/${CMAKE_SHARED_MODULE_PREFIX}syscoin-tidy${CMAKE_SHARED_MODULE_SUFFIX}" "-checks=-*,syscoin-*")
+else()
+    # CLANG_TIDY_COMMAND supports generator expressions as of 3.27
+    set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "--load=$<TARGET_FILE:syscoin-tidy>" "-checks=-*,syscoin-*")
+endif()
 
 # Create a dummy library that runs clang-tidy tests as a side-effect of building
 add_library(syscoin-tidy-tests OBJECT EXCLUDE_FROM_ALL example_logprintf.cpp)
