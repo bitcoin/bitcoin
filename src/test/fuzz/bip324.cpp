@@ -11,7 +11,6 @@
 #include <test/util/xoroshiro128plusplus.h>
 
 #include <cstdint>
-#include <tuple>
 #include <vector>
 
 namespace {

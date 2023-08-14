@@ -5,6 +5,7 @@
 #ifndef BITCOIN_BIP324_H
 #define BITCOIN_BIP324_H
 
+#include <array>
 #include <cstddef>
 #include <optional>
 

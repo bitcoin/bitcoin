@@ -11,9 +11,7 @@
 #include <support/cleanse.h>
 
 #include <assert.h>
-#include <cstdint>
 #include <cstddef>
-#include <iterator>
 
 AEADChaCha20Poly1305::AEADChaCha20Poly1305(Span<const std::byte> key) noexcept : m_chacha20(UCharCast(key.data()))
 {

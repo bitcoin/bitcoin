@@ -6,13 +6,15 @@
 #include <chainparams.h>
 #include <key.h>
 #include <pubkey.h>
+#include <span.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <array>
-#include <vector>
 #include <cstddef>
+#include <cstdint>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
