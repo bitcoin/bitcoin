@@ -627,6 +627,58 @@ std::unordered_set<CScript, SaltedSipHasher> SilentPaymentsSPKM::GetScriptPubKey
 
 isminetype SilentPaymentsSPKM::IsMineSilentPayments(const CTransaction& tx, const std::map<COutPoint, Coin>& coins)
 {
-    return ISMINE_NO;
+    // Coinbases cannot be silent payments
+    if (tx.IsCoinBase()) {
+        return ISMINE_NO;
+    }
+
+    // Extract the taproot output keys
+    std::vector<XOnlyPubKey> output_keys;
+    for (const CTxOut& txout : tx.vout) {
+        std::vector<std::vector<unsigned char>> solutions;
+        TxoutType type = Solver(txout.scriptPubKey, solutions);
+        if (type == TxoutType::WITNESS_V1_TAPROOT) {
+            output_keys.emplace_back(solutions[0]);
+        } else if (type == TxoutType::WITNESS_UNKNOWN) {
+            // Cannot have outputs with unknown witness versions
+            return ISMINE_NO;
+        }
+    }
+    // Must have at least one taproot output
+    if (output_keys.size() == 0) return ISMINE_NO;
+    // If we did not extract any pubkeys, not mine.
+    auto input_tweak_data = GetSilentPaymentsTweakDataFromTxInputs(tx.vin, coins);
+    if (!input_tweak_data) return ISMINE_NO;
+
+    LOCK(cs_sp_man);
+    auto [outpoints_hash, input_pubkeys_sum] = *input_tweak_data;
+    // Compute the shared secret
+    CPubKey ecdh_pubkey = ComputeECDHSharedSecret(m_scan_key, input_pubkeys_sum, outpoints_hash);
+
+    // Retrieve the output tweaks
+    std::vector<uint256> tweaks = GetTxOutputTweaks(m_address.m_spend_pubkey, ecdh_pubkey, output_keys, m_sp_labels);
+
+    // If no tweaks, not mine
+    if (tweaks.empty()) {
+        return ISMINE_NO;
+    }
+
+    // This tx is mine, store the tweaks and return ISMINE_SPENDABLE
+    WalletBatch batch(m_storage.GetDatabase());
+    for (const uint256& tweak : tweaks) {
+        if (!AddTweakWithDB(batch, tweak)) {
+            throw std::runtime_error(std::string(__func__) + ": writing tweak failed");
+        }
+    }
+    return ISMINE_SPENDABLE;
+}
+
+bool SilentPaymentsSPKM::AddTweakWithDB(WalletBatch& batch, const uint256& tweak)
+{
+    AssertLockHeld(cs_sp_man);
+    CPubKey tweaked_pub{m_address.m_spend_pubkey};
+    tweaked_pub.TweakAdd(tweak.data());
+    m_spk_tweaks.emplace(GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{tweaked_pub}}), tweak);
+    return batch.WriteSilentPaymentsTweak(GetID(), tweak);
 }
 }
