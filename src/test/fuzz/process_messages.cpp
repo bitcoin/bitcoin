@@ -55,7 +55,9 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     std::vector<CNode*> peers;
     const auto num_peers_to_add = fuzzed_data_provider.ConsumeIntegralInRange(1, 3);
     for (int i = 0; i < num_peers_to_add; ++i) {
-        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
+        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i, [&connman](CNode& node) {
+                            connman.MsgProc()->FinalizeNode(node);
+                        }).release());
         CNode& p2p_node = *peers.back();
 
         FillNode(fuzzed_data_provider, connman, p2p_node);
