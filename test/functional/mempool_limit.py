@@ -34,29 +34,27 @@ class MempoolLimitTest(BitcoinTestFramework):
         ]]
         self.supports_cli = False
 
-    def run_test(self):
+    def fill_mempool(self):
+        """Fill mempool until eviction."""
+        self.log.info("Fill the mempool until eviction is triggered and the mempoolminfee rises")
         txouts = gen_return_txouts()
         node = self.nodes[0]
-        miniwallet = MiniWallet(node)
+        miniwallet = self.wallet
         relayfee = node.getnetworkinfo()['relayfee']
-
-        self.log.info('Check that mempoolminfee is minrelaytxfee')
-        assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
-        assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
         tx_batch_size = 1
         num_of_batches = 75
         # Generate UTXOs to flood the mempool
         # 1 to create a tx initially that will be evicted from the mempool later
-        # 3 batches of multiple transactions with a fee rate much higher than the previous UTXO
+        # 75 transactions each with a fee rate higher than the previous one
         # And 1 more to verify that this tx does not get added to the mempool with a fee rate less than the mempoolminfee
         # And 2 more for the package cpfp test
-        self.generate(miniwallet, 1 + (num_of_batches * tx_batch_size) + 1 + 2)
+        self.generate(miniwallet, 1 + (num_of_batches * tx_batch_size))
 
         # Mine 99 blocks so that the UTXOs are allowed to be spent
         self.generate(node, COINBASE_MATURITY - 1)
 
-        self.log.info('Create a mempool tx that will be evicted')
+        self.log.debug("Create a mempool tx that will be evicted")
         tx_to_be_evicted_id = miniwallet.send_self_transfer(from_node=node, fee_rate=relayfee)["txid"]
 
         # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
@@ -64,20 +62,36 @@ class MempoolLimitTest(BitcoinTestFramework):
         # by 130 should result in a fee that corresponds to 2x of that fee rate
         base_fee = relayfee * 130
 
-        self.log.info("Fill up the mempool with txs with higher fee rate")
-        for batch_of_txid in range(num_of_batches):
-            fee = (batch_of_txid + 1) * base_fee
-            create_lots_of_big_transactions(miniwallet, node, fee, tx_batch_size, txouts)
+        self.log.debug("Fill up the mempool with txs with higher fee rate")
+        with node.assert_debug_log(["rolling minimum fee bumped"]):
+            for batch_of_txid in range(num_of_batches):
+                fee = (batch_of_txid + 1) * base_fee
+                create_lots_of_big_transactions(miniwallet, node, fee, tx_batch_size, txouts)
 
-        self.log.info('The tx should be evicted by now')
+        self.log.debug("The tx should be evicted by now")
         # The number of transactions created should be greater than the ones present in the mempool
         assert_greater_than(tx_batch_size * num_of_batches, len(node.getrawmempool()))
         # Initial tx created should not be present in the mempool anymore as it had a lower fee rate
         assert tx_to_be_evicted_id not in node.getrawmempool()
 
-        self.log.info('Check that mempoolminfee is larger than minrelaytxfee')
+        self.log.debug("Check that mempoolminfee is larger than minrelaytxfee")
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+
+    def run_test(self):
+        node = self.nodes[0]
+        self.wallet = MiniWallet(node)
+        miniwallet = self.wallet
+
+        # Generate coins needed to create transactions in the subtests (excluding coins used in fill_mempool).
+        self.generate(miniwallet, 10)
+
+        relayfee = node.getnetworkinfo()['relayfee']
+        self.log.info('Check that mempoolminfee is minrelaytxfee')
+        assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
+        assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+
+        self.fill_mempool()
 
         # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
         self.log.info('Create a mempool tx that will not pass mempoolminfee')
