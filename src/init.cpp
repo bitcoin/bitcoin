@@ -529,6 +529,9 @@ void SetupServerArgs(NodeContext& node)
 #endif
     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Automatic broadcast and rebroadcast of any transactions from inbound peers is disabled, unless the peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+#if HAVE_SYSTEM
+    argsman.AddArg("-chainlocknotify=<cmd>", "Execute command when the best chainlock changes (%s in cmd is replaced by chainlocked block hash)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+#endif
     argsman.AddArg("-coinstatsindex", strprintf("Maintain coinstats index used by the gettxoutset RPC (default: %u)", DEFAULT_COINSTATSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-conf=<file>", strprintf("Specify path to read-only configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -2367,6 +2370,18 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             }
         };
         uiInterface.NotifyBlockTip_connect(BlockNotifyCallback);
+    }
+    if (args.IsArgSet("-chainlocknotify")) {
+        const std::string chainlock_notify = args.GetArg("-chainlocknotify", "");
+        const auto ChainlockNotifyCallback = [chainlock_notify](const std::string& bestChainLockHash, int bestChainLockHeight) {
+            std::string strCmd = chainlock_notify;
+            if (!strCmd.empty()) {
+                ReplaceAll(strCmd, "%s", bestChainLockHash);
+                std::thread t(runCommand, strCmd);
+                t.detach(); // thread runs free
+            }
+        };
+        uiInterface.NotifyChainLock_connect(ChainlockNotifyCallback);
     }
 #endif
 

@@ -24,6 +24,9 @@ class InstantSendTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
         self.mine_quorum()
+        self.nodes[self.isolated_idx].createwallet(self.default_wallet_name)
+        self.nodes[self.receiver_idx].createwallet(self.default_wallet_name)
+        self.nodes[self.sender_idx].createwallet(self.default_wallet_name)
 
         self.test_mempool_doublespend()
         self.test_block_doublespend()

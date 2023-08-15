@@ -5056,6 +5056,14 @@ void CWallet::notifyTransactionLock(const CTransactionRef &tx, const std::shared
         std::string strCmd = gArgs.GetArg("-instantsendnotify", "");
         if (!strCmd.empty()) {
             ReplaceAll(strCmd, "%s", txHash.GetHex());
+#ifndef WIN32
+            // Substituting the wallet name isn't currently supported on windows
+            // because windows shell escaping has not been implemented yet:
+            // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
+            // A few ways it could be implemented in the future are described in:
+            // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
+            ReplaceAll(strCmd, "%w", ShellEscape(GetName()));
+#endif
             std::thread t(runCommand, strCmd);
             t.detach(); // thread runs free
         }

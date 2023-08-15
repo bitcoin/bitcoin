@@ -1106,7 +1106,6 @@ class DashTestFramework(BitcoinTestFramework):
         idx = len(self.nodes)
         self.add_nodes(1, extra_args=[self.extra_args[idx]])
         self.start_node(idx)
-        self.nodes[idx].createwallet(self.default_wallet_name)
         for i in range(0, idx):
             self.connect_nodes(i, idx)
 
