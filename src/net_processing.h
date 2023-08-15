@@ -148,7 +148,7 @@ public:
     virtual void CheckForStaleTipAndEvictPeers() = 0;
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
-    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, NodeSeconds time_in_seconds) = 0;
 
     /**
      * Gets the set of service flags which are "desirable" for a given peer.
