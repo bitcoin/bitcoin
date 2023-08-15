@@ -18,7 +18,7 @@ When a new block hasn't been seen for a longer-than-expected amount of
 time (currently 30 minutes, see TipMayBeStale()), the client, suspecting
 that there may be new blocks that its peers are not announcing, will
 add an extra outbound peer and disconnect (evict) the peer that has
-least recently been the first to announced a new block to us. (If there
+least recently been the first to announce a new block to us. (If there
 is a tie, it will disconnect the most recently-added of those peers.)
 
 This test verifies that this timestamp is being set correctly.
