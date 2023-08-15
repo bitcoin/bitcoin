@@ -11,9 +11,6 @@ env:  # Global defaults
 cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
 
-persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
-  RESTART_CI_DOCKER_BEFORE_RUN: "1"
-
 # https://cirrus-ci.org/guide/persistent-workers/
 #
 # It is possible to select a specific persistent worker by label. Refer to the
@@ -51,8 +48,6 @@ persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
 # - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
 # - lunar: For a machine running the Linux kernel shipped with Ubuntu Lunar 23.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
 # - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
-persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
-  persistent_worker: {}  # Only use this if the task does not care about the type at all
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
@@ -259,9 +254,10 @@ task:
   previous_releases_cache:
     folder: "releases"
   << : *GLOBAL_TASK_TEMPLATE
-  << : *PERSISTENT_WORKER_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
@@ -298,7 +294,6 @@ task:
     labels:
       type: lunar  # Must use the lunar-specific worker (needed for USDT functional tests)
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
