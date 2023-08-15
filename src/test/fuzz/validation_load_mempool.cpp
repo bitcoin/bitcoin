@@ -20,6 +20,7 @@
 #include <vector>
 
 using kernel::DumpMempool;
+using kernel::LoadMempool;
 
 using node::MempoolPath;
 
@@ -47,6 +48,10 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
     auto fuzzed_fopen = [&](const fs::path&, const char*) {
         return fuzzed_file_provider.open();
     };
-    (void)chainstate.LoadMempool(MempoolPath(g_setup->m_args), fuzzed_fopen);
+    (void)LoadMempool(pool, MempoolPath(g_setup->m_args), chainstate,
+                      {
+                          .mockable_fopen_function = fuzzed_fopen,
+                      });
+    pool.SetLoadTried(true);
     (void)DumpMempool(pool, MempoolPath(g_setup->m_args), fuzzed_fopen, true);
 }
