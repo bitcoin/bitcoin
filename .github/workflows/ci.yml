@@ -1,0 +1,59 @@
+# Copyright (c) 2023 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+name: CI
+on:
+  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
+  pull_request:
+  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+env:
+  DANGER_RUN_CI_ON_HOST: 1
+  TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+jobs:
+  macos-native-x86_64:
+    name: macOS 13 native, x86_64 [no depends, sqlite only, gui]
+    # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: macos-13
+
+    # No need to run on the read-only mirror, unless it is a PR.
+    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+
+    timeout-minutes: 120
+
+    env:
+      MAKEJOBS: '-j4'
+      CI_USE_APT_INSTALL: 'no'
+      PACKAGE_MANAGER_INSTALL: 'echo'  # Nothing to do
+      FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Clang version
+        run: clang --version
+
+      - name: Install Homebrew packages
+        run: brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
+
+      - name: Set Ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Ccache cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-cache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-cache
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
