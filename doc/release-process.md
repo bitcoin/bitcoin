@@ -144,7 +144,7 @@ git commit -m "Add attestations by ${SIGNER} for ${VERSION} non-codesigned"
 popd
 ```
 
-Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs).
+Then open a Pull Request to the [guix.sigs repository](https://github.com/syscoin-core/guix.sigs).
 
 ## Codesigning
 
@@ -203,7 +203,7 @@ git commit -m "Add attestations by ${SIGNER} for ${VERSION} codesigned"
 popd
 ```
 
-Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs).
+Then open a Pull Request to the [guix.sigs repository](https://github.com/syscoin-core/guix.sigs).
 
 ## After 3 or more people have guix-built and their results match
 
