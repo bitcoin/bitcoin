@@ -1714,6 +1714,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
             if (queue.pindex)
                 stats.vHeightInFlight.push_back(queue.pindex->nHeight);
         }
+        stats.m_last_block_announcement = state->m_last_block_announcement;
     }
 
     PeerRef peer = GetPeerRef(nodeid);
@@ -5224,7 +5225,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 CNodeState &state = *State(pnode->GetId());
                 if (now - pnode->m_connected > MINIMUM_CONNECT_TIME && state.vBlocksInFlight.empty()) {
                     LogDebug(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n",
-                             pnode->GetId(), (*oldest_block_announcement).time_since_epoch().count());
+                             pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(*oldest_block_announcement));
                     pnode->fDisconnect = true;
                     return true;
                 } else {
