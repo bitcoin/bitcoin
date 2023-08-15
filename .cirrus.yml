@@ -321,17 +321,12 @@ task:
 
 task:
   name: 'macOS 11.0 [gui, no tests] [jammy]'
-  << : *CONTAINER_DEPENDS_TEMPLATE
+  << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
       CI_IMAGE_NAME_TAG: ubuntu:jammy
       FILE_ENV: "./ci/test/00_setup_env_mac.sh"
-  macos_sdk_cache:
-    folder: "depends/SDKs/$MACOS_SDK"
-    fingerprint_key: "$MACOS_SDK"
-  << : *MAIN_TEMPLATE
   env:
-    MACOS_SDK: "Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers"
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
