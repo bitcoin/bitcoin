@@ -41,6 +41,7 @@ struct CNodeStateStats {
     bool m_addr_relay_enabled{false};
     ServiceFlags their_services;
     int64_t presync_height{-1};
+    NodeSeconds m_last_block_announcement;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
