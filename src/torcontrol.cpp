@@ -14,14 +14,26 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <random.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/fs.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/thread.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <functional>
+#include <map>
+#include <optional>
 #include <set>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include <event2/buffer.h>
@@ -79,15 +91,15 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (s.size() < 4) // Short line
             continue;
         // <status>(-|+| )<data><CRLF>
-        self->message.code = LocaleIndependentAtoi<int>(s.substr(0,3));
+        self->message.code = ToIntegral<int>(s.substr(0, 3)).value_or(0);
         self->message.lines.push_back(s.substr(4));
         char ch = s[3]; // '-','+' or ' '
         if (ch == ' ') {
             // Final line, dispatch reply and clean up
             if (self->message.code >= 600) {
+                // (currently unused)
                 // Dispatch async notifications to async handler
                 // Synchronous and asynchronous messages are never interleaved
-                self->async_handler(*self, self->message);
             } else {
                 if (!self->reply_handlers.empty()) {
                     // Invoke reply handler with message
