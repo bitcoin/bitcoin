@@ -51,6 +51,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <math.h>
 
@@ -3465,24 +3466,13 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
 bool CConnman::AddNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
-    for (const auto& it : m_added_node_params) {
-        if (params.m_added_node == it.m_added_node) return false;
-    }
-
-    m_added_node_params.push_back(params);
-    return true;
+    return m_added_node_params.insert(params).second;
 }
 
 bool CConnman::RemoveAddedNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
-    for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (params.m_added_node == it->m_added_node) {
-            m_added_node_params.erase(it);
-            return true;
-        }
-    }
-    return false;
+    return m_added_node_params.erase(params);
 }
 
 size_t CConnman::GetNodeCount(ConnectionDirection flags) const
