@@ -6,13 +6,15 @@
 #include <chainparams.h>
 #include <key.h>
 #include <pubkey.h>
+#include <span.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <array>
-#include <vector>
 #include <cstddef>
+#include <cstdint>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -131,10 +133,10 @@ void TestBIP324PacketVector(
         // Decrypt length
         auto to_decrypt = ciphertext;
         if (error >= 2 && error <= 9) {
-            to_decrypt[InsecureRandRange(to_decrypt.size())] ^= std::byte(1U << InsecureRandRange(8));
+            to_decrypt[InsecureRandRange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
         }
 
-        // Decrypt length and resize ciphertext to accomodate.
+        // Decrypt length and resize ciphertext to accommodate.
         uint32_t dec_len = dec_cipher.DecryptLength(MakeByteSpan(to_decrypt).first(cipher.LENGTH_LEN));
         to_decrypt.resize(dec_len + cipher.EXPANSION);
 

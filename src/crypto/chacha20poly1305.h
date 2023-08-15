@@ -6,7 +6,6 @@
 #define SYSCOIN_CRYPTO_CHACHA20POLY1305_H
 
 #include <cstddef>
-#include <cstdlib>
 #include <stdint.h>
 
 #include <crypto/chacha20.h>
