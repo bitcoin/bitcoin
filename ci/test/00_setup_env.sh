@@ -15,7 +15,7 @@ export BASE_READ_ONLY_DIR
 # The destination root dir inside the container.
 # This folder will also hold any SDKs.
 # This folder only exists on the ci guest and will be a copy of BASE_READ_ONLY_DIR
-export BASE_ROOT_DIR="/ci_container_base"
+export BASE_ROOT_DIR="${BASE_ROOT_DIR:-/ci_container_base}"
 # The depends dir.
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
