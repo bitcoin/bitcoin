@@ -5,6 +5,7 @@
 #ifndef BITCOIN_BIP324_H
 #define BITCOIN_BIP324_H
 
+#include <array>
 #include <cstddef>
 #include <optional>
 
@@ -54,6 +55,7 @@ public:
 
     /** Initialize when the other side's public key is received. Can only be called once.
      *
+     * initiator is set to true if we are the initiator establishing the v2 P2P connection.
      * self_decrypt is only for testing, and swaps encryption/decryption keys, so that encryption
      * and decryption can be tested without knowing the other side's private key.
      */

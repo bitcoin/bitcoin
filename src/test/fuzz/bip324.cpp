@@ -11,7 +11,6 @@
 #include <test/util/xoroshiro128plusplus.h>
 
 #include <cstdint>
-#include <tuple>
 #include <vector>
 
 namespace {
@@ -75,13 +74,13 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
         // - Bit 0: whether the ignore bit is set in message
         // - Bit 1: whether the responder (0) or initiator (1) sends
         // - Bit 2: whether this ciphertext will be corrupted (making it the last sent one)
-        // - Bit 3-4: controls the maximum aad length (max 511 bytes)
+        // - Bit 3-4: controls the maximum aad length (max 4095 bytes)
         // - Bit 5-7: controls the maximum content length (max 16383 bytes, for performance reasons)
         unsigned mode = provider.ConsumeIntegral<uint8_t>();
         bool ignore = mode & 1;
         bool from_init = mode & 2;
         bool damage = mode & 4;
-        unsigned aad_length_bits = 3 * ((mode >> 3) & 3);
+        unsigned aad_length_bits = 4 * ((mode >> 3) & 3);
         unsigned aad_length = provider.ConsumeIntegralInRange<unsigned>(0, (1 << aad_length_bits) - 1);
         unsigned length_bits = 2 * ((mode >> 5) & 7);
         unsigned length = provider.ConsumeIntegralInRange<unsigned>(0, (1 << length_bits) - 1);
