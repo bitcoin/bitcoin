@@ -24,7 +24,7 @@ env:
 
 jobs:
   macos-native-x86_64:
-    name: macOS 13 native, x86_64 [no depends, sqlite only, gui]
+    name: 'macOS 13 native, x86_64, no depends, sqlite only, gui'
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-13  # Use M1 once available https://github.com/github/roadmap/issues/528
