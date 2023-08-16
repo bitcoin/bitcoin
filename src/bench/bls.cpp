@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <random.h>
 #include <bls/bls_worker.h>
+#include <random.h>
 #include <util/time.h>
 
 #include <iostream>

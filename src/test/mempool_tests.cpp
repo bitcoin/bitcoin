@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <txmempool.h>
 #include <policy/policy.h>
+#include <txmempool.h>
 #include <util/system.h>
 #include <util/time.h>
 

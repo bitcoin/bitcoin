@@ -6,7 +6,7 @@
 
 #include <clientversion.h>
 #include <hash.h> // For Hash()
-#include <key.h> // For CKey
+#include <key.h>  // For CKey
 #include <sync.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>

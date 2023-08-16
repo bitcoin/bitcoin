@@ -1,17 +1,17 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockfilter.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <evo/evodb.h>
 #include <governance/governance.h>
 #include <index/blockfilterindex.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
-#include <evo/evodb.h>
 #include <miner.h>
 #include <pow.h>
 #include <script/standard.h>

@@ -1,25 +1,25 @@
-// Copyright (c) 2014-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/aes.h>
 #include <crypto/chacha20.h>
 #include <crypto/chacha_poly_aead.h>
-#include <crypto/poly1305.h>
 #include <crypto/hkdf_sha256_32.h>
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/muhash.h>
 #include <crypto/pkcs5_pbkdf2_hmac_sha512.h>
+#include <crypto/poly1305.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha3.h>
 #include <crypto/sha512.h>
-#include <crypto/muhash.h>
 #include <random.h>
 #include <streams.h>
-#include <util/strencodings.h>
 #include <test/util/setup_common.h>
+#include <util/strencodings.h>
 
 #include <vector>
 

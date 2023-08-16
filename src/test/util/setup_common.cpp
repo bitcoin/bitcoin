@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,17 +15,17 @@
 #include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <masternode/sync.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
-#include <llmq/signing_shares.h>
 #include <llmq/signing.h>
+#include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
 #include <llmq/utils.h>
+#include <masternode/sync.h>
 #include <miner.h>
 #include <net.h>
 #include <net_processing.h>
@@ -37,16 +37,16 @@
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
-#include <streams.h>
 #include <spork.h>
-#include <txdb.h>
+#include <streams.h>
 #include <test/util/index.h>
+#include <txdb.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <util/vector.h>
 #include <util/url.h>
+#include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>

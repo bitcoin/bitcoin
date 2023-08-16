@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,15 +6,15 @@
 
 #include <core_io.h>
 #include <key.h>
+#include <rpc/util.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <util/strencodings.h>
-#include <rpc/util.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
-#include <streams.h>
+#include <util/strencodings.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>

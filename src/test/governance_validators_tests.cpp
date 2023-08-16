@@ -3,8 +3,8 @@
 #include <governance/validators.h>
 #include <util/strencodings.h>
 
-#include <test/data/proposals_valid.json.h>
 #include <test/data/proposals_invalid.json.h>
+#include <test/data/proposals_valid.json.h>
 
 #include <test/util/setup_common.h>
 

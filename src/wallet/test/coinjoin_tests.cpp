@@ -5,14 +5,14 @@
 #include <test/util/setup_common.h>
 
 #include <amount.h>
-#include <coinjoin/util.h>
+#include <coinjoin/client.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/options.h>
+#include <coinjoin/util.h>
 #include <node/context.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
-#include <coinjoin/client.h>
 
 #include <boost/test/unit_test.hpp>
 
