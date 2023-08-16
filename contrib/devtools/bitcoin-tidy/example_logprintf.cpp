@@ -43,6 +43,20 @@ public:
     };
 };
 
+struct ScriptPubKeyMan
+{
+    std::string GetDisplayName() const
+    {
+        return "default wallet";
+    }
+
+    template <typename... Params>
+    void WalletLogPrintf(const char* fmt, Params... parameters) const
+    {
+        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
+    };
+};
+
 void good_func()
 {
     LogPrintf("hello world!\n");
@@ -51,6 +65,8 @@ void good_func2()
 {
     CWallet wallet;
     wallet.WalletLogPrintf("hi\n");
+    ScriptPubKeyMan spkm;
+    spkm.WalletLogPrintf("hi\n");
 
     const CWallet& walletref = wallet;
     walletref.WalletLogPrintf("hi\n");
@@ -80,6 +96,8 @@ void bad_func5()
 {
     CWallet wallet;
     wallet.WalletLogPrintf("hi");
+    ScriptPubKeyMan spkm;
+    spkm.WalletLogPrintf("hi");
 
     const CWallet& walletref = wallet;
     walletref.WalletLogPrintf("hi");
