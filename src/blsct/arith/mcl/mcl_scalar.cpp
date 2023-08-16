@@ -45,7 +45,7 @@ MclScalar::MclScalar(const std::string& s, int radix)
 {
     auto r = mclBnFr_setStr(&m_scalar, s.c_str(), s.length(), radix);
     if (r == -1) {
-        throw std::runtime_error(std::string("Failed to instantiate Scalar from '") + s);
+        throw std::runtime_error(std::string(__func__) + ": Failed to instantiate Scalar from " + s);
     }
 }
 
@@ -62,7 +62,7 @@ MclScalar::MclScalar(const std::vector<uint8_t>& msg, uint8_t index)
     hasher.Finalize(hash);
 
     if (mclBnFr_setLittleEndianMod(&m_scalar, hash, CSHA256::OUTPUT_SIZE) == -1) {
-        throw std::runtime_error("Hash size is greater than or equal to m_scalar size * 2. Check code");
+        throw std::runtime_error(std::string(__func__) + ": Hash size is greater than or equal to m_scalar size * 2. Check code");
     }
 }
 
@@ -230,7 +230,7 @@ bool MclScalar::IsZero() const
 MclScalar MclScalar::Invert() const
 {
     if (mclBnFr_isZero(&m_scalar) == 1) {
-        throw std::runtime_error("Inverse of zero is undefined");
+        throw std::runtime_error(std::string(__func__) + ": Inverse of zero is undefined");
     }
     MclScalar temp;
     mclBnFr_inv(&temp.m_scalar, &m_scalar);
@@ -282,7 +282,7 @@ MclScalar MclScalar::Rand(bool exclude_zero)
 
     while (true) {
         if (mclBnFr_setByCSPRNG(&temp.m_scalar) != 0) {
-            throw std::runtime_error(std::string("Failed to generate random number"));
+            throw std::runtime_error(std::string(__func__) + ": Failed to generate random number");
         }
         if (!exclude_zero || mclBnFr_isZero(&temp.m_scalar) != 1) break;
     }
@@ -356,7 +356,7 @@ std::string MclScalar::GetString(const int8_t& radix) const
     char str[1024];
 
     if (mclBnFr_getStr(str, sizeof(str), &m_scalar, radix) == 0) {
-        throw std::runtime_error(std::string("Failed to get string representation of mclBnFr"));
+        throw std::runtime_error(std::string(__func__) + ": Failed to get string representation of mclBnFr");
     }
     return std::string(str);
 }

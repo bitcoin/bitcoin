@@ -131,7 +131,7 @@ template <typename T>
 inline void Elements<T>::ConfirmSizesMatch(const size_t& other_size) const
 {
     if (m_vec.size() != other_size) {
-        throw std::runtime_error("sizes of elements are expected to be the same, but different");
+        throw std::runtime_error(std::string(__func__) + ": Sizes of elements are expected to be the same, but different");
     }
 }
 template void Elements<MclScalar>::ConfirmSizesMatch(const size_t&) const;
@@ -271,7 +271,7 @@ template <typename T>
 Elements<T> Elements<T>::From(const size_t from_index) const
 {
     if (from_index >= Size()) {
-        throw std::runtime_error("'From' index out of range");
+        throw std::runtime_error(std::string(__func__) + ": 'From' index out of range");
     }
 
     Elements<T> ret;
@@ -287,7 +287,7 @@ template <typename T>
 Elements<T> Elements<T>::To(const size_t to_index) const
 {
     if (to_index > Size()) {
-        throw std::runtime_error("'To' index out of range");
+        throw std::runtime_error(std::string(__func__) + ": 'To' index out of range");
     }
 
     Elements<T> ret;
@@ -360,7 +360,7 @@ template <typename T>
 T Elements<T>::Product() const
 {
     if (m_vec.size() == 0) {
-        throw std::runtime_error("Cannot compute the product of empty vector");
+        throw std::runtime_error(std::string(__func__) + ": Cannot compute the product of empty vector");
     }
     T ret = m_vec[0];
     for (size_t i=1; i<m_vec.size(); ++i) {

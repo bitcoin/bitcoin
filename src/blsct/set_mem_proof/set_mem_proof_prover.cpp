@@ -89,7 +89,7 @@ typename SetMemProofProver<T>::Points SetMemProofProver<T>::ExtendYs(
     const size_t& new_size
 ) {
     if (Ys_src.Size() > new_size) {
-        throw std::runtime_error("Not expecting new_size < current_size");
+        throw std::runtime_error(std::string(__func__) + ": Not expecting new_size < current_size");
     }
     std::string padding_prefix = "SET_MEMBERSHIP_DUMMY";
     std::vector<uint8_t> msg(padding_prefix.begin(), padding_prefix.end());
@@ -125,7 +125,7 @@ SetMemProof<T> SetMemProofProver<T>::Prove(
 ) {
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
-        throw std::runtime_error("# of commitments exceeds the setup maximum");
+        throw std::runtime_error(std::string(__func__) + ": # of commitments exceeds the setup maximum");
     }
     Points Ys = ExtendYs(setup, Ys_src, n);
 
@@ -260,7 +260,7 @@ bool SetMemProofProver<T>::Verify(
 
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
-        throw std::runtime_error("# of commitments exceeds the setup maximum");
+        throw std::runtime_error(std::string(__func__) + ": # of commitments exceeds the setup maximum");
     }
     Points Ys = ExtendYs(setup, Ys_src, n);
 

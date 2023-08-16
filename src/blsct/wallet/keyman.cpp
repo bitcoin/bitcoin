@@ -294,7 +294,7 @@ bool KeyMan::CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool 
         }
         if (keyPass && keyFail) {
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
-            throw std::runtime_error("Error unlocking wallet: some keys decrypt but not all. Your wallet file may be corrupt.");
+            throw std::runtime_error(std::string(__func__) + ": Error unlocking wallet: some keys decrypt but not all. Your wallet file may be corrupt.");
         }
         if (keyFail || (!keyPass && !accept_no_keys))
             return false;
@@ -479,13 +479,13 @@ SubAddress KeyMan::GenerateNewSubAddress(const uint64_t& account, SubAddressIden
 
             // update the chain model in the database
             if (!batch.WriteBLSCTHDChain(m_hd_chain))
-                throw std::runtime_error("blsct::KeyMan::GenerateNewSubAddress(): Writing HD chain model failed");
+                throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
 
         } while (HaveSubAddress(subAddress.GetKeys().GetID()));
     }
 
     if (!AddSubAddress(subAddress.GetKeys().GetID(), id))
-        throw std::runtime_error("CWallet::GenerateNewSubAddress(): AddSubAddress failed");
+        throw std::runtime_error(std::string(__func__) + ": AddSubAddress failed");
 
     return subAddress;
 }
@@ -585,9 +585,9 @@ void KeyMan::ReserveSubAddressFromPool(const uint64_t& account, int64_t& nIndex,
         setSubAddressPool[account].erase(setSubAddressPool[account].begin());
         setSubAddressReservePool[account].insert(nIndex);
         if (!batch.ReadSubAddressPool({account, (nIndex > -1 ? static_cast<uint64_t>(nIndex) : 0)}, keypool))
-            throw std::runtime_error("blsct::KeyMan::ReserveSubAddressFromPool(): read failed");
+            throw std::runtime_error(std::string(__func__) + ": Read failed");
         if (!HaveSubAddress(keypool.hashId))
-            throw std::runtime_error("blsct::KeyMan::ReserveSubAddressFromPool(): unknown key in key pool");
+            throw std::runtime_error(std::string(__func__) + ": Unknown key in key pool");
         WalletLogPrintf("KeyMan::ReserveSubAddressFromPool(): reserve %d\n", nIndex);
     }
     NotifyCanGetAddressesChanged();
@@ -665,7 +665,7 @@ int64_t KeyMan::GetOldestSubAddressPoolTime(const uint64_t& account)
     wallet::WalletBatch batch(m_storage.GetDatabase());
     uint64_t nIndex = *(setSubAddressPool[account].begin());
     if (!batch.ReadSubAddressPool({account, nIndex}, keypool))
-        throw std::runtime_error("blsct::KeyMan::GetOldestSubAddressPoolTime(): read oldest key in keypool failed");
+        throw std::runtime_error(std::string(__func__) + ": Read oldest key in keypool failed");
     return keypool.nTime;
 }
 

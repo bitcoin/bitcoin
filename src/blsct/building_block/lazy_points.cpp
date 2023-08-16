@@ -56,7 +56,7 @@ void LazyPoints<T>::Add(
 )
 {
     if (ps.Size() != ss.Size()) {
-        throw std::runtime_error("sizes of points and scalars don't match");
+        throw std::runtime_error(std::string(__func__) + ": Sizes of points and scalars don't match");
     }
     for (size_t i=0; i<ps.Size(); ++i) {
         LazyPoint<T> lp(ps[i], ss[i]);

@@ -28,10 +28,10 @@ MclG1Point::MclG1Point(const uint256& n)
     MclG1Point temp;
     mclBnFp v;
     if (mclBnFp_setBigEndianMod(&v, n.data(), n.size()) != 0) {
-        throw std::runtime_error("MclG1Point(uint256): mclBnFp_setLittleEndianMod failed");
+        throw std::runtime_error(std::string(__func__) + ": mclBnFp_setLittleEndianMod failed");
     }
     if (mclBnFp_mapToG1(&temp.m_point, &v) != 0) {
-        throw std::runtime_error("MclG1Point(uint256): mclBnFp_mapToG1 failed");
+        throw std::runtime_error(std::string(__func__) + ": mclBnFp_mapToG1 failed");
     }
     m_point = temp.m_point;
 }
@@ -71,7 +71,7 @@ MclG1Point MclG1Point::operator*(const MclG1Point::Scalar& rhs) const
 std::vector<MclG1Point> MclG1Point::operator*(const std::vector<MclG1Point::Scalar>& ss) const
 {
     if (ss.size() == 0) {
-        throw std::runtime_error("Cannot multiply MclG1Point by empty scalar vector");
+        throw std::runtime_error(std::string(__func__) + ": Cannot multiply MclG1Point by empty scalar vector");
     }
     std::vector<MclG1Point> ret;
 
@@ -98,7 +98,7 @@ MclG1Point MclG1Point::GetBasePoint()
         g = new Point();
         auto g_str = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"s;
         if (mclBnG1_setStr(g, g_str.c_str(), g_str.length(), 10) == -1) {
-            throw std::runtime_error("MclG1Point::GetBasePoint(): mclBnG1_setStr failed");
+            throw std::runtime_error(std::string(__func__) + ": mclBnG1_setStr failed");
         }
     }
     MclG1Point ret(*g);
@@ -108,24 +108,24 @@ MclG1Point MclG1Point::GetBasePoint()
 MclG1Point MclG1Point::MapToPoint(const std::vector<uint8_t>& vec, const Endianness e)
 {
     if (vec.size() == 0) {
-        throw std::runtime_error("Cannot map empty input vector to a point");
+        throw std::runtime_error(std::string(__func__) + ": Cannot map empty input vector to a point");
     }
     if (vec.size() > sizeof(mclBnFp) * 2) {
-        throw std::runtime_error("Size of vector must be smaller or equal to the size of mclBnFp * 2");
+        throw std::runtime_error(std::string(__func__) + ": Size of vector must be smaller or equal to the size of mclBnFp * 2");
     }
     MclG1Point temp;
     mclBnFp v;
     if (e == Endianness::Little) {
         if (mclBnFp_setLittleEndianMod(&v, &vec[0], vec.size()) != 0) {
-            throw std::runtime_error("MclG1Point::MapToPoint(): mclBnFp_setLittleEndianMod failed");
+            throw std::runtime_error(std::string(__func__) + ": mclBnFp_setLittleEndianMod failed");
         }
     } else {
         if (mclBnFp_setBigEndianMod(&v, &vec[0], vec.size()) != 0) {
-            throw std::runtime_error("MclG1Point::MapToPoint(): mclBnFp_setBigEndianMod failed");
+            throw std::runtime_error(std::string(__func__) + ": mclBnFp_setBigEndianMod failed");
         }
     }
     if (mclBnFp_mapToG1(&temp.m_point, &v) != 0) {
-        throw std::runtime_error("MclG1Point::MapToPoint(): mclBnFp_mapToG1 failed");
+        throw std::runtime_error(std::string(__func__) + ": mclBnFp_mapToG1 failed");
     }
     return temp;
 }
@@ -140,7 +140,7 @@ MclG1Point MclG1Point::HashAndMap(const std::vector<uint8_t>& vec)
 {
     mclBnG1 p;
     if (mclBnG1_hashAndMapTo(&p, &vec[0], vec.size()) != 0) {
-        throw std::runtime_error("MclG1Point::HashAndMap(): mclBnG1_hashAndMapTo failed");
+        throw std::runtime_error(std::string(__func__) + ": mclBnG1_hashAndMapTo failed");
     }
     MclG1Point temp(p);
     return temp;
@@ -197,7 +197,7 @@ std::string MclG1Point::GetString(const uint8_t& radix) const
 {
     char str[1024];
     if (mclBnG1_getStr(str, sizeof(str), &m_point, radix) == 0) {
-        throw std::runtime_error("MclG1Point::GetString(): mclBnG1_getStr failed");
+        throw std::runtime_error(std::string(__func__) + ": mclBnG1_getStr failed");
     }
     return std::string(str);
 }

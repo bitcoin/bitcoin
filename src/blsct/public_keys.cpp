@@ -72,7 +72,7 @@ bool PublicKeys::CoreAggregateVerify(const std::vector<PublicKey::Message>& msgs
 bool PublicKeys::VerifyBatch(const std::vector<PublicKey::Message>& msgs, const Signature& sig) const
 {
     if (m_pks.size() != msgs.size() || m_pks.size() == 0) {
-        throw std::runtime_error(strprintf(
+        throw std::runtime_error(std::string(__func__) + strprintf(
             "Expected the same positive numbers of public keys and messages, but got: %ld public keys and %ld messages", m_pks.size(), msgs.size()));
     }
     std::vector<std::vector<uint8_t>> aug_msgs;
