@@ -84,7 +84,8 @@ FUZZ_TARGET(coinselection)
 
     const CFeeRate long_term_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CFeeRate effective_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-    const CAmount cost_of_change{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    // Discard feerate must be at least dust relay feerate
+    const CFeeRate discard_fee_rate{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(DUST_RELAY_TX_FEE, COIN)};
     const CAmount min_viable_change{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
     const bool subtract_fee_outputs{fuzzed_data_provider.ConsumeBool()};
@@ -95,9 +96,11 @@ FUZZ_TARGET(coinselection)
     coin_params.m_long_term_feerate = long_term_fee_rate;
     coin_params.m_effective_feerate = effective_fee_rate;
     coin_params.min_viable_change = min_viable_change;
-    coin_params.m_cost_of_change = cost_of_change;
     coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
     coin_params.m_change_fee = effective_fee_rate.GetFee(coin_params.change_output_size);
+    coin_params.m_discard_feerate = discard_fee_rate;
+    coin_params.change_spend_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 1000);
+    coin_params.m_cost_of_change = coin_params.m_change_fee + coin_params.m_discard_feerate.GetFee(coin_params.change_spend_size);
 
     int next_locktime{0};
     CAmount total_balance{CreateCoins(fuzzed_data_provider, utxo_pool, coin_params, next_locktime)};
