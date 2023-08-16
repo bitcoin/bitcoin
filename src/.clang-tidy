@@ -1,6 +1,6 @@
 Checks: '
 -*,
-bitcoin-unterminated-logprintf,
+bitcoin-*,
 bugprone-argument-comment,
 bugprone-use-after-move,
 misc-unused-using-decls,
