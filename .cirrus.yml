@@ -64,8 +64,8 @@ container_depends_template: &CONTAINER_DEPENDS_TEMPLATE
     cpu: 2
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
     dockerfile: ci/test_imagefile  # https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
-  depends_built_cache:
-    folder: "depends/built"
+  base_depends_built_cache:
+    folder: "/ci_container_base/depends/built"
     fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
 
 global_task_template: &GLOBAL_TASK_TEMPLATE

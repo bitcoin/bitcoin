@@ -34,6 +34,7 @@ jobs:
       CI_USE_APT_INSTALL: 'no'
       PACKAGE_MANAGER_INSTALL: 'echo'  # Nothing to do
       FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
+      BASE_ROOT_DIR: ${{ github.workspace }}
 
     steps:
       - name: Checkout
