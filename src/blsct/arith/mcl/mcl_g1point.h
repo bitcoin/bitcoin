@@ -8,7 +8,6 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
