@@ -134,12 +134,21 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         bal = basic1.getbalance()
         txs = basic1.listtransactions()
+        addr_gps = basic1.listaddressgroupings()
 
-        basic1.migratewallet()
+        basic1_migrate = basic1.migratewallet()
         assert_equal(basic1.getwalletinfo()["descriptors"], True)
         self.assert_is_sqlite("basic1")
         assert_equal(basic1.getbalance(), bal)
         self.assert_list_txs_equal(basic1.listtransactions(), txs)
+
+        self.log.info("Test backup file can be successfully restored")
+        self.nodes[0].restorewallet("basic1_restored", basic1_migrate['backup_path'])
+        basic1_restored = self.nodes[0].get_wallet_rpc("basic1_restored")
+        basic1_restored_wi = basic1_restored.getwalletinfo()
+        assert_equal(basic1_restored_wi['balance'], bal)
+        assert_equal(basic1_restored.listaddressgroupings(), addr_gps)
+        self.assert_list_txs_equal(basic1_restored.listtransactions(), txs)
 
         # restart node and verify that everything is still there
         self.restart_node(0)
