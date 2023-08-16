@@ -436,13 +436,12 @@ public:
      */
     std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
 
-    /** Total memory usage of vSendMsg (counting the vectors and their dynamic usage, but not the
-     *  deque overhead). */
+    /** Sum of GetMemoryUsage of all vSendMsg entries. */
     size_t m_send_memusage GUARDED_BY(cs_vSend){0};
-    /** Offset inside the first vSendMsg already sent */
-    size_t nSendOffset GUARDED_BY(cs_vSend){0};
+    /** Total number of bytes sent on the wire to this peer. */
     uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
-    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    /** Messages still to be fed to m_transport->SetMessageToSend. */
+    std::deque<CSerializedNetMsg> vSendMsg GUARDED_BY(cs_vSend);
     Mutex cs_vSend;
     Mutex m_sock_mutex;
     Mutex cs_vRecv;

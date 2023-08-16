@@ -25,6 +25,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     const CNetMsgMaker mm{0};
 
     peerman.InitializeNode(node, local_services);
+    FlushSendBuffer(node); // Drop the version message added by InitializeNode.
 
     CSerializedNetMsg msg_version{
         mm.Make(NetMsgType::VERSION,
@@ -45,6 +46,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
     peerman.SendMessages(&node);
+    FlushSendBuffer(node); // Drop the verack message added by SendMessages.
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
@@ -67,6 +69,18 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
         node.MarkReceivedMsgsForProcessing();
+    }
+}
+
+void ConnmanTestMsg::FlushSendBuffer(CNode& node) const
+{
+    LOCK(node.cs_vSend);
+    node.vSendMsg.clear();
+    node.m_send_memusage = 0;
+    while (true) {
+        const auto& [to_send, _more, _msg_type] = node.m_transport->GetBytesToSend();
+        if (to_send.empty()) break;
+        node.m_transport->MarkBytesSent(to_send.size());
     }
 }
 
