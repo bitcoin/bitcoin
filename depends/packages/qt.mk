@@ -23,6 +23,7 @@ $(package)_patches += duplicate_lcqpafonts.patch
 $(package)_patches += fast_fixed_dtoa_no_optimize.patch
 $(package)_patches += guix_cross_lib_path.patch
 $(package)_patches += fix-macos-linker.patch
+$(package)_patches += memory_resource.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=c92af4171397a0ed272330b4fa0669790fcac8d050b07c8b8cc565ebeba6735e
@@ -241,6 +242,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/use_android_ndk23.patch && \
+  patch -p1 -i $($(package)_patch_dir)/memory_resource.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
   patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
   patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
