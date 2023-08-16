@@ -308,19 +308,40 @@ public:
         const std::string& /*m_type*/
     >;
 
-    /** Get bytes to send on the wire.
+    /** Get bytes to send on the wire, if any, along with other information about it.
      *
      * As a const function, it does not modify the transport's observable state, and is thus safe
      * to be called multiple times.
      *
-     * The bytes returned by this function act as a stream which can only be appended to. This
-     * means that with the exception of MarkBytesSent, operations on the transport can only append
-     * to what is being returned.
+     * @param[in] have_next_message If true, the "more" return value reports whether more will
+     *            be sendable after a SetMessageToSend call. It is set by the caller when they know
+     *            they have another message ready to send, and only care about what happens
+     *            after that. The have_next_message argument only affects this "more" return value
+     *            and nothing else.
      *
-     * Note that m_type and to_send refer to data that is internal to the transport, and calling
-     * any non-const function on this object may invalidate them.
+     *            Effectively, there are three possible outcomes about whether there are more bytes
+     *            to send:
+     *            - Yes:     the transport itself has more bytes to send later. For example, for
+     *                       V1Transport this happens during the sending of the header of a
+     *                       message, when there is a non-empty payload that follows.
+     *            - No:      the transport itself has no more bytes to send, but will have bytes to
+     *                       send if handed a message through SetMessageToSend. In V1Transport this
+     *                       happens when sending the payload of a message.
+     *            - Blocked: the transport itself has no more bytes to send, and is also incapable
+     *                       of sending anything more at all now, if it were handed another
+     *                       message to send.
+     *
+     *            The boolean 'more' is true for Yes, false for Blocked, and have_next_message
+     *            controls what is returned for No.
+     *
+     * @return a BytesToSend object. The to_send member returned acts as a stream which is only
+     *         ever appended to. This means that with the exception of MarkBytesSent (which pops
+     *         bytes off the front of later to_sends), operations on the transport can only append
+     *         to what is being returned. Also note that m_type and to_send refer to data that is
+     *         internal to the transport, and calling any non-const function on this object may
+     *         invalidate them.
      */
-    virtual BytesToSend GetBytesToSend() const noexcept = 0;
+    virtual BytesToSend GetBytesToSend(bool have_next_message) const noexcept = 0;
 
     /** Report how many bytes returned by the last GetBytesToSend() have been sent.
      *
@@ -416,7 +437,7 @@ public:
     CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
 
     bool SetMessageToSend(CSerializedNetMsg& msg) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
-    BytesToSend GetBytesToSend() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+    BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     void MarkBytesSent(size_t bytes_sent) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     size_t GetSendMemoryUsage() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
 };

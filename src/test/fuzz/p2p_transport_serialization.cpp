@@ -92,7 +92,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
             assert(queued);
             std::optional<bool> known_more;
             while (true) {
-                const auto& [to_send, more, _msg_type] = send_transport.GetBytesToSend();
+                const auto& [to_send, more, _msg_type] = send_transport.GetBytesToSend(false);
                 if (known_more) assert(!to_send.empty() == *known_more);
                 if (to_send.empty()) break;
                 send_transport.MarkBytesSent(to_send.size());
@@ -124,11 +124,13 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
     // Vectors with bytes last returned by GetBytesToSend() on transport[i].
     std::array<std::vector<uint8_t>, 2> to_send;
 
-    // Last returned 'more' values (if still relevant) by transport[i]->GetBytesToSend().
-    std::array<std::optional<bool>, 2> last_more;
+    // Last returned 'more' values (if still relevant) by transport[i]->GetBytesToSend(), for
+    // both have_next_message false and true.
+    std::array<std::optional<bool>, 2> last_more, last_more_next;
 
-    // Whether more bytes to be sent are expected on transport[i].
-    std::array<std::optional<bool>, 2> expect_more;
+    // Whether more bytes to be sent are expected on transport[i], before and after
+    // SetMessageToSend().
+    std::array<std::optional<bool>, 2> expect_more, expect_more_next;
 
     // Function to consume a message type.
     auto msg_type_fn = [&]() {
@@ -177,18 +179,27 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
 
     // Wrapper around transport[i]->GetBytesToSend() that performs sanity checks.
     auto bytes_to_send_fn = [&](int side) -> Transport::BytesToSend {
-        const auto& [bytes, more, msg_type] = transports[side]->GetBytesToSend();
+        // Invoke GetBytesToSend twice (for have_next_message = {false, true}). This function does
+        // not modify state (it's const), and only the "more" return value should differ between
+        // the calls.
+        const auto& [bytes, more_nonext, msg_type] = transports[side]->GetBytesToSend(false);
+        const auto& [bytes_next, more_next, msg_type_next] = transports[side]->GetBytesToSend(true);
         // Compare with expected more.
         if (expect_more[side].has_value()) assert(!bytes.empty() == *expect_more[side]);
+        // Verify consistency between the two results.
+        assert(bytes == bytes_next);
+        assert(msg_type == msg_type_next);
+        if (more_nonext) assert(more_next);
         // Compare with previously reported output.
         assert(to_send[side].size() <= bytes.size());
         assert(to_send[side] == Span{bytes}.first(to_send[side].size()));
         to_send[side].resize(bytes.size());
         std::copy(bytes.begin(), bytes.end(), to_send[side].begin());
-        // Remember 'more' result.
-        last_more[side] = {more};
+        // Remember 'more' results.
+        last_more[side] = {more_nonext};
+        last_more_next[side] = {more_next};
         // Return.
-        return {bytes, more, msg_type};
+        return {bytes, more_nonext, msg_type};
     };
 
     // Function to make side send a new message.
@@ -199,7 +210,8 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         CSerializedNetMsg msg = next_msg[side].Copy();
         bool queued = transports[side]->SetMessageToSend(msg);
         // Update expected more data.
-        expect_more[side] = std::nullopt;
+        expect_more[side] = expect_more_next[side];
+        expect_more_next[side] = std::nullopt;
         // Verify consistency of GetBytesToSend after SetMessageToSend
         bytes_to_send_fn(/*side=*/side);
         if (queued) {
@@ -223,6 +235,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // If all to-be-sent bytes were sent, move last_more data to expect_more data.
         if (send_now == bytes.size()) {
             expect_more[side] = last_more[side];
+            expect_more_next[side] = last_more_next[side];
         }
         // Remove the bytes from the last reported to-be-sent vector.
         assert(to_send[side].size() >= send_now);
@@ -251,6 +264,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
             // Clear cached expected 'more' information: if certainly no more data was to be sent
             // before, receiving bytes makes this uncertain.
             if (expect_more[!side] == false) expect_more[!side] = std::nullopt;
+            if (expect_more_next[!side] == false) expect_more_next[!side] = std::nullopt;
             // Verify consistency of GetBytesToSend after ReceivedBytes
             bytes_to_send_fn(/*side=*/!side);
             bool progress = to_recv.size() < old_len;
