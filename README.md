@@ -19,7 +19,7 @@ License
 -------
 
 Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
+information, or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
@@ -33,15 +33,15 @@ development of the GUI. Its master branch is identical in all monotree
 repositories. Release branches and tags do not exist, so please do not fork
 that repository unless it is for development reasons.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
+The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md),
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
 
 Testing
 -------
 
-Testing and code review is the bottleneck for development; we get more pull
+Testing and code review are the bottlenecks for development; we get more pull
 requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
+other people's pull requests, and remember that this is a security-critical project where any mistake might cost people
 lots of money.
 
 ### Automated Testing
@@ -53,14 +53,14 @@ and extending unit tests can be found in [/src/test/README.md](/src/test/README.
 
 There are also [regression and integration tests](/test), written
 in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
+These tests can be run (if the [test dependencies](/test) are installed) with `test/functional/test_runner.py`
 
 The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
 and that unit/sanity tests are run automatically.
 
 ### Manual Quality Assurance (QA) Testing
 
-Changes should be tested by somebody other than the developer who wrote the
+Changes should be tested by someone other than the developer who wrote the
 code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
