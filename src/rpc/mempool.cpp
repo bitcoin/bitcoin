@@ -768,7 +768,7 @@ static RPCHelpMan importmempool()
         },
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{HelpExampleCli("importmempool", "/path/to/mempool.dat") + HelpExampleRpc("importmempool", "/path/to/mempool.dat")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue {
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
 
             CTxMemPool& mempool{EnsureMemPool(node)};
