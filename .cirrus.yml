@@ -11,9 +11,6 @@ env:  # Global defaults
 cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
 
-persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
-  RESTART_CI_DOCKER_BEFORE_RUN: "1"
-
 # https://cirrus-ci.org/guide/persistent-workers/
 #
 # It is possible to select a specific persistent worker by label. Refer to the
@@ -24,15 +21,33 @@ persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
 # - apt-get is required due to PACKAGE_MANAGER_INSTALL
 # - podman-docker-4.1+ is required due to the use of `podman` when
 #   RESTART_CI_DOCKER_BEFORE_RUN is set and 4.1+ due to the bugfix in 4.1
-#   (https://github.com/bitcoin/bitcoin/pull/21652)
-# - The ./ci/ depedencies should be installed:
-#   apt update && apt install screen python3 bash podman-docker curl -y
+#   (https://github.com/bitcoin/bitcoin/pull/21652#issuecomment-1657098200)
+# - The ./ci/ depedencies (with cirrus-cli) should be installed:
+#
+#   ```
+#   apt update && apt install screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
+#   ```
+#
+# - There are no strict requirements on the hardware, because having less CPUs
+#   runs the same CI script (maybe slower). To avoid rare and intermittent OOM
+#   due to short memory usage spikes, it is recommended to add (and persist)
+#   swap:
+#
+#   ```
+#   fallocate -l 16G /swapfile_ci && chmod 600 /swapfile_ci && mkswap /swapfile_ci && swapon /swapfile_ci && ( echo '/swapfile_ci none swap sw 0 0' | sudo tee -a /etc/fstab )
+#   ```
+#
+# - To register the persistent worker, open a `screen` session and run:
+#
+#   ```
+#   RESTART_CI_DOCKER_BEFORE_RUN=1 screen cirrus worker run --labels type=todo_fill_in_type --token todo_fill_in_token
+#   ```
 #
 # The following specific types should exist, with the following requirements:
+# - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
+# - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
 # - lunar: For a machine running the Linux kernel shipped with Ubuntu Lunar 23.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
 # - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
-persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
-  persistent_worker: {}  # Only use this if the task does not care about the type at all
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
@@ -99,14 +114,11 @@ task:
 task:
   name: 'tidy [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    cpu: 4
-    memory: 5G
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
-      FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
+  persistent_worker:
+    labels:
+      type: medium
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
 
 task:
   name: "Win64 native [vs2022]"
@@ -242,9 +254,10 @@ task:
   previous_releases_cache:
     folder: "releases"
   << : *GLOBAL_TASK_TEMPLATE
-  << : *PERSISTENT_WORKER_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
@@ -281,7 +294,6 @@ task:
     labels:
       type: lunar  # Must use the lunar-specific worker (needed for USDT functional tests)
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
