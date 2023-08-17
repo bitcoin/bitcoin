@@ -95,11 +95,7 @@ public:
     ~ChaCha20();
 
     /** Set 32-byte key, and seek to nonce 0 and block position 0. */
-    void SetKey(Span<const std::byte> key) noexcept
-    {
-        m_aligned.SetKey(key);
-        m_bufleft = 0;
-    }
+    void SetKey(Span<const std::byte> key) noexcept;
 
     /** 96-bit nonce type. */
     using Nonce96 = ChaCha20Aligned::Nonce96;

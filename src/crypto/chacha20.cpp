@@ -335,6 +335,13 @@ ChaCha20::~ChaCha20()
     memory_cleanse(m_buffer.data(), m_buffer.size());
 }
 
+void ChaCha20::SetKey(Span<const std::byte> key) noexcept
+{
+    m_aligned.SetKey(key);
+    m_bufleft = 0;
+    memory_cleanse(m_buffer.data(), m_buffer.size());
+}
+
 FSChaCha20::FSChaCha20(Span<const std::byte> key, uint32_t rekey_interval) noexcept :
     m_chacha20(key), m_rekey_interval(rekey_interval)
 {
