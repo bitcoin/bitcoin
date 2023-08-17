@@ -617,7 +617,7 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     // GatherClusters stops at 500 transactions.
     const auto tx_501 = make_tx({COutPoint{lasttx->GetHash(), 0}}, /*num_outputs=*/1);
     pool.addUnchecked(entry.Fee(CENT).FromTx(tx_501));
-    const auto cluster_501 = pool.GatherClusters({tx_501->GetHash()});
+    const auto cluster_501{pool.GatherClusters({tx_501->GetHash()})};
     BOOST_CHECK_EQUAL(cluster_501.size(), 0);
 
     /* Zig Zag cluster:
