@@ -31,7 +31,7 @@ from test_framework.util import (
 class msg_unrecognized:
     """Nonsensical message. Modeled after similar types in test_framework.messages."""
 
-    command = b'badmsg'
+    msgtype = b'badmsg'
 
     def __init__(self, *, str_data):
         self.str_data = str_data.encode() if not isinstance(str_data, bytes) else str_data
@@ -40,7 +40,7 @@ class msg_unrecognized:
         return ser_string(self.str_data)
 
     def __repr__(self):
-        return "{}(data={})".format(self.command, self.str_data)
+        return "{}(data={})".format(self.msgtype, self.str_data)
 
 
 class InvalidMessagesTest(BitcoinTestFramework):
@@ -63,7 +63,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_magic_bytes()
         self.test_checksum()
         self.test_size()
-        self.test_command()
+        self.test_msgtype()
         self.test_large_inv()
 
         node = self.nodes[0]
@@ -206,7 +206,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             cut_len = (
                 4 +  # magic
-                12  # command
+                12  # msgtype
             )
             # modify len to MAX_SIZE + 1
             msg = msg[:cut_len] + struct.pack("<I", 0x02000000 + 1) + msg[cut_len + 4:]
@@ -214,12 +214,12 @@ class InvalidMessagesTest(BitcoinTestFramework):
             conn.wait_for_disconnect(timeout=5)
             self.nodes[0].disconnect_p2ps()
 
-    def test_command(self):
+    def test_msgtype(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['HEADER ERROR - COMMAND']):
             msg = msg_unrecognized(str_data="d")
             msg = conn.build_message(msg)
-            # Modify command
+            # Modify msgtype
             msg = msg[:7] + b'\x00' + msg[7 + 1:]
             self.nodes[0].p2p.send_raw_message(msg)
             conn.sync_with_ping(timeout=1)
