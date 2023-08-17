@@ -480,13 +480,13 @@ static void protx_register_submit_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static void protx_register_fund_hpmn_help(const JSONRPCRequest& request)
+static void protx_register_fund_evo_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{
-        "protx register_fund_hpmn",
+        "protx register_fund_evo",
         "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 4000 Dash\n"
         "to the address specified by collateralAddress and will then function as the collateral of your\n"
-        "HPMN.\n"
+        "EvoNode.\n"
         "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
         "is fully deployed.\n" +
             HELP_REQUIRING_PASSPHRASE,
@@ -511,15 +511,15 @@ static void protx_register_fund_hpmn_help(const JSONRPCRequest& request)
                       RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
-            HelpExampleCli("protx", "register_fund_hpmn \"" + EXAMPLE_ADDRESS[0] + "\" \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
+            HelpExampleCli("protx", "register_fund_evo \"" + EXAMPLE_ADDRESS[0] + "\" \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
     }.Check(request);
 }
 
-static void protx_register_hpmn_help(const JSONRPCRequest& request)
+static void protx_register_evo_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{
-        "protx register_hpmn",
-        "\nSame as \"protx register_fund_hpmn\", but with an externally referenced collateral.\n"
+        "protx register_evo",
+        "\nSame as \"protx register_fund_evo\", but with an externally referenced collateral.\n"
         "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
         "transaction output spendable by this wallet. It must also not be used by any other masternode.\n" +
             HELP_REQUIRING_PASSPHRASE,
@@ -545,14 +545,14 @@ static void protx_register_hpmn_help(const JSONRPCRequest& request)
                       RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
-            HelpExampleCli("protx", "register_hpmn \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
+            HelpExampleCli("protx", "register_evo \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
     }.Check(request);
 }
 
-static void protx_register_prepare_hpmn_help(const JSONRPCRequest& request)
+static void protx_register_prepare_evo_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{
-        "protx register_prepare_hpmn",
+        "protx register_prepare_evo",
         "\nCreates an unsigned ProTx and a message that must be signed externally\n"
         "with the private key that corresponds to collateralAddress to prove collateral ownership.\n"
         "The prepared transaction will also contain inputs and outputs to cover fees.\n",
@@ -576,7 +576,7 @@ static void protx_register_prepare_hpmn_help(const JSONRPCRequest& request)
                                               {RPCResult::Type::STR_HEX, "collateralAddress", "The collateral address"},
                                               {RPCResult::Type::STR_HEX, "signMessage", "The string message that needs to be signed with the collateral key"},
                                           }},
-        RPCExamples{HelpExampleCli("protx", "register_prepare_hpmn \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
+        RPCExamples{HelpExampleCli("protx", "register_prepare_evo \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
     }.Check(request);
 }
 
@@ -588,14 +588,14 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                                               const bool isPrepareRegister,
                                               const MnType mnType)
 {
-    const bool isHPMNrequested = mnType == MnType::HighPerformance;
-    if (isHPMNrequested) {
+    const bool isEvoRequested = mnType == MnType::Evo;
+    if (isEvoRequested) {
         if (isFundRegister && (request.fHelp || (request.params.size() < 10 || request.params.size() > 12))) {
-            protx_register_fund_hpmn_help(request);
+            protx_register_fund_evo_help(request);
         } else if (isExternalRegister && (request.fHelp || (request.params.size() < 11 || request.params.size() > 13))) {
-            protx_register_hpmn_help(request);
+            protx_register_evo_help(request);
         } else if (isPrepareRegister && (request.fHelp || (request.params.size() != 11 && request.params.size() != 12))) {
-            protx_register_prepare_hpmn_help(request);
+            protx_register_prepare_evo_help(request);
         }
     } else {
         if (isFundRegister && (request.fHelp || (request.params.size() < 7 || request.params.size() > 9))) {
@@ -615,8 +615,8 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     bool isV19active = llmq::utils::IsV19Active(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();));
-    if (isHPMNrequested && !isV19active) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "HPMN aren't allowed yet");
+    if (isEvoRequested && !isV19active) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "EvoNodes aren't allowed yet");
     }
 
     size_t paramIdx = 0;
@@ -688,7 +688,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    if (isHPMNrequested) {
+    if (isEvoRequested) {
         if (!IsHex(request.params[paramIdx + 6].get_str())) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "platformNodeID must be hexadecimal string");
         }
@@ -788,12 +788,20 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 }
 
-static UniValue protx_register_hpmn(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_register_evo(const JSONRPCRequest& request, const ChainstateManager& chainman)
 {
-    bool isExternalRegister = request.strMethod == "protxregister_hpmn";
-    bool isFundRegister = request.strMethod == "protxregister_fund_hpmn";
-    bool isPrepareRegister = request.strMethod == "protxregister_prepare_hpmn";
-    return protx_register_common_wrapper(request, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::HighPerformance);
+    bool isExternalRegister = request.strMethod == "protxregister_evo";
+    bool isFundRegister = request.strMethod == "protxregister_fund_evo";
+    bool isPrepareRegister = request.strMethod == "protxregister_prepare_evo";
+    if (request.strMethod.find("_hpmn") != std::string::npos) {
+        if (!IsDeprecatedRPCEnabled("hpmn")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
+        }
+        isExternalRegister = request.strMethod == "protxregister_hpmn";
+        isFundRegister = request.strMethod == "protxregister_fund_hpmn";
+        isPrepareRegister = request.strMethod == "protxregister_prepare_hpmn";
+    }
+    return protx_register_common_wrapper(request, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
 }
 
 static UniValue protx_register(const JSONRPCRequest& request, const ChainstateManager& chainman)
@@ -865,13 +873,13 @@ static void protx_update_service_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static void protx_update_service_hpmn_help(const JSONRPCRequest& request)
+static void protx_update_service_evo_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{
-        "protx update_service_hpmn",
+        "protx update_service_evo",
         "\nCreates and sends a ProUpServTx to the network. This will update the IP address and the Platform fields\n"
-        "of a HPMN.\n"
-        "If this is done for a HPMN that got PoSe-banned, the ProUpServTx will also revive this HPMN.\n" +
+        "of an EvoNode.\n"
+        "If this is done for an EvoNode that got PoSe-banned, the ProUpServTx will also revive this EvoNode.\n" +
             HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
@@ -886,15 +894,21 @@ static void protx_update_service_hpmn_help(const JSONRPCRequest& request)
         RPCResult{
             RPCResult::Type::STR_HEX, "txid", "The transaction id"},
         RPCExamples{
-            HelpExampleCli("protx", "update_service_hpmn \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" \"5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
+            HelpExampleCli("protx", "update_service_evo \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" \"5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
     }.Check(request);
 }
 
 static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, const ChainstateManager& chainman, const MnType mnType)
 {
-    const bool isHPMNrequested = mnType == MnType::HighPerformance;
-    if (isHPMNrequested) {
-        protx_update_service_hpmn_help(request);
+    if (request.strMethod.find("_hpmn") != std::string::npos) {
+        if (!IsDeprecatedRPCEnabled("hpmn")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
+        }
+    }
+
+    const bool isEvoRequested = mnType == MnType::Evo;
+    if (isEvoRequested) {
+        protx_update_service_evo_help(request);
     } else {
         protx_update_service_help(request);
     }
@@ -906,8 +920,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     const bool isV19active = llmq::utils::IsV19Active(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();));
     const bool is_bls_legacy = !isV19active;
-    if (isHPMNrequested && !isV19active) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "HPMN aren't allowed yet");
+    if (isEvoRequested && !isV19active) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "EvoNodes aren't allowed yet");
     }
 
     CProUpServTx ptx;
@@ -921,7 +935,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey", is_bls_legacy);
 
     size_t paramIdx = 3;
-    if (isHPMNrequested) {
+    if (isEvoRequested) {
         if (!IsHex(request.params[paramIdx].get_str())) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "platformNodeID must be hexadecimal string");
         }
@@ -1211,7 +1225,7 @@ static void protx_list_help(const JSONRPCRequest& request)
                 "  registered   - List all ProTx which are registered at the given chain height.\n"
                 "                 This will also include ProTx which failed PoSe verification.\n"
                 "  valid        - List only ProTx which are active/valid at the given chain height.\n"
-                "  hpmn         - List only ProTx corresponding to HPMNs at the given chain height.\n"
+                "  evo          - List only ProTx corresponding to EvoNodes at the given chain height.\n"
 #ifdef ENABLE_WALLET
                 "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
                 "                 This will also include ProTx which failed PoSe verification.\n"
@@ -1357,7 +1371,7 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
             }
         });
 #endif
-    } else if (type == "valid" || type == "registered" || type == "hpmn") {
+    } else if (type == "valid" || type == "registered" || type == "evo") {
         if (request.params.size() > 3) {
             protx_list_help(request);
         }
@@ -1373,9 +1387,9 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainman.ActiveChain()[height]);
         bool onlyValid = type == "valid";
-        bool onlyHPMN = type == "hpmn";
+        bool onlyEvoNodes = type == "evo";
         mnList.ForEachMN(onlyValid, [&](const auto& dmn) {
-            if (onlyHPMN && dmn.nType != MnType::HighPerformance) return;
+            if (onlyEvoNodes && dmn.nType != MnType::Evo) return;
             ret.push_back(BuildDMNListEntry(wallet.get(), dmn, detailed));
         });
     } else {
@@ -1579,9 +1593,9 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
         "  register                 - Create and send ProTx to network\n"
         "  register_fund            - Fund, create and send ProTx to network\n"
         "  register_prepare         - Create an unsigned ProTx\n"
-        "  register_hpmn            - Create and send ProTx to network for a HPMN\n"
-        "  register_fund_hpmn       - Fund, create and send ProTx to network for a HPMN\n"
-        "  register_prepare_hpmn    - Create an unsigned ProTx for a HPMN\n"
+        "  register_evo             - Create and send ProTx to network for an EvoNode\n"
+        "  register_fund_evo        - Fund, create and send ProTx to network for an EvoNode\n"
+        "  register_prepare_evo     - Create an unsigned ProTx for an EvoNode\n"
         "  register_legacy          - Create a ProTx by parsing BLS using the legacy scheme and send it to network\n"
         "  register_fund_legacy     - Fund and create a ProTx by parsing BLS using the legacy scheme, then send it to network\n"
         "  register_prepare_legacy  - Create an unsigned ProTx by parsing BLS using the legacy scheme\n"
@@ -1591,7 +1605,7 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
         "  info                     - Return information about a ProTx\n"
 #ifdef ENABLE_WALLET
         "  update_service           - Create and send ProUpServTx to network\n"
-        "  update_service_hpmn      - Create and send ProUpServTx to network for a HPMN\n"
+        "  update_service_evo       - Create and send ProUpServTx to network for an EvoNode\n"
         "  update_registrar         - Create and send ProUpRegTx to network\n"
         "  update_registrar_legacy  - Create ProUpRegTx by parsing BLS using the legacy scheme, then send it to network\n"
         "  revoke                   - Create and send ProUpRevTx to network\n"
@@ -1616,16 +1630,16 @@ static UniValue protx(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     if (command == "protxregister" || command == "protxregister_fund" || command == "protxregister_prepare") {
         return protx_register(new_request, chainman);
-    } else if (command == "protxregister_hpmn" || command == "protxregister_fund_hpmn" || command == "protxregister_prepare_hpmn") {
-        return protx_register_hpmn(new_request, chainman);
+    } else if (command == "protxregister_evo" || command == "protxregister_fund_evo" || command == "protxregister_prepare_evo" || command == "protxregister_hpmn" || command == "protxregister_fund_hpmn" || command == "protxregister_prepare_hpmn") {
+        return protx_register_evo(new_request, chainman);
     } else if (command == "protxregister_legacy" || command == "protxregister_fund_legacy" || command == "protxregister_prepare_legacy") {
         return protx_register_legacy(new_request, chainman);
     } else if (command == "protxregister_submit") {
         return protx_register_submit(new_request, chainman);
     } else if (command == "protxupdate_service") {
         return protx_update_service_common_wrapper(new_request, chainman, MnType::Regular);
-    } else if (command == "protxupdate_service_hpmn") {
-        return protx_update_service_common_wrapper(new_request, chainman, MnType::HighPerformance);
+    } else if (command == "protxupdate_service_evo" || command == "protxupdate_service_hpmn") {
+        return protx_update_service_common_wrapper(new_request, chainman, MnType::Evo);
     } else if (command == "protxupdate_registrar") {
         return protx_update_registrar(new_request, chainman);
     } else if (command == "protxupdate_registrar_legacy") {

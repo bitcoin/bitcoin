@@ -13,7 +13,7 @@
 
 enum class MnType : uint16_t {
     Regular = 0,
-    HighPerformance = 1,
+    Evo = 1,
     COUNT,
     Invalid = std::numeric_limits<uint16_t>::max(),
 };
@@ -34,10 +34,10 @@ constexpr auto Regular = mntype_struct{
     .collat_amount = 1000 * COIN,
     .description = "Regular",
 };
-constexpr auto HighPerformance = mntype_struct{
+constexpr auto Evo = mntype_struct{
     .voting_weight = 4,
     .collat_amount = 4000 * COIN,
-    .description = "HighPerformance",
+    .description = "Evo",
 };
 constexpr auto Invalid = mntype_struct{
     .voting_weight = 0,
@@ -48,7 +48,7 @@ constexpr auto Invalid = mntype_struct{
 [[nodiscard]] static constexpr bool IsCollateralAmount(CAmount amount)
 {
     return amount == Regular.collat_amount ||
-        amount == HighPerformance.collat_amount;
+        amount == Evo.collat_amount;
 }
 
 } // namespace dmn_types
@@ -57,7 +57,7 @@ constexpr auto Invalid = mntype_struct{
 {
     switch (type) {
         case MnType::Regular: return dmn_types::Regular;
-        case MnType::HighPerformance: return dmn_types::HighPerformance;
+        case MnType::Evo: return dmn_types::Evo;
         default: return dmn_types::Invalid;
     }
 }

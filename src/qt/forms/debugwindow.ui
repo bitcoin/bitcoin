@@ -317,14 +317,14 @@
         </widget>
        </item>
        <item row="10" column="0">
-        <widget class="QLabel" name="hpmnCountLabel">
+        <widget class="QLabel" name="evoCountLabel">
          <property name="text">
-          <string>Number of HPMNs</string>
+          <string>Number of EvoNodes</string>
          </property>
         </widget>
        </item>
        <item row="10" column="1">
-        <widget class="QLabel" name="hpmnCount">
+        <widget class="QLabel" name="evoCount">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>

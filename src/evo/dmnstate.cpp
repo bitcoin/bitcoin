@@ -46,7 +46,7 @@ void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
     obj.pushKV("revocationReason", nRevocationReason);
     obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
-    if (nType == MnType::HighPerformance) {
+    if (nType == MnType::Evo) {
         obj.pushKV("platformNodeID", platformNodeID.ToString());
         obj.pushKV("platformP2PPort", platformP2PPort);
         obj.pushKV("platformHTTPPort", platformHTTPPort);
@@ -114,7 +114,7 @@ void CDeterministicMNStateDiff::ToJson(UniValue& obj, MnType nType) const
     if (fields & Field_pubKeyOperator) {
         obj.pushKV("pubKeyOperator", state.pubKeyOperator.ToString());
     }
-    if (nType == MnType::HighPerformance) {
+    if (nType == MnType::Evo) {
         if (fields & Field_platformNodeID) {
             obj.pushKV("platformNodeID", state.platformNodeID.ToString());
         }

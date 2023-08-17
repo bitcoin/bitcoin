@@ -89,7 +89,7 @@ struct Params {
     int DIP0020Height;
     /** Block height at which DIP0024 (Quorum Rotation) and decreased governance proposal fee becomes active */
     int DIP0024Height;
-    /** Block height at which V19 (Basic BLS and HPMNs/EvoNodes) becomes active */
+    /** Block height at which V19 (Basic BLS and EvoNodes) becomes active */
     int V19Height;
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and DIP activations. */

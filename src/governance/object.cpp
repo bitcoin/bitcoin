@@ -629,8 +629,8 @@ int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote
         const vote_rec_t& recVote = votepair.second;
         auto it2 = recVote.mapInstances.find(eVoteSignalIn);
         if (it2 != recVote.mapInstances.end() && it2->second.eOutcome == eVoteOutcomeIn) {
-            // 4x times weight vote for HPMN owners.
-            // No need to check if v19 is active since no HPMN are allowed to register before v19s
+            // 4x times weight vote for EvoNode owners.
+            // No need to check if v19 is active since no EvoNode are allowed to register before v19s
             auto dmn = mnList.GetMNByCollateral(votepair.first);
             if (dmn != nullptr) nCount += GetMnType(dmn->nType).voting_weight;
         }

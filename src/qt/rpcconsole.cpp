@@ -973,16 +973,16 @@ void RPCConsole::updateMasternodeCount()
     auto mnList = clientModel->getMasternodeList();
     size_t total_mn_count = mnList.GetAllMNsCount();
     size_t total_enabled_mn_count = mnList.GetValidMNsCount();
-    size_t total_hpmn_count = mnList.GetAllHPMNsCount();
-    size_t total_enabled_hpmn_count = mnList.GetValidHPMNsCount();
+    size_t total_evo_count = mnList.GetAllEvoCount();
+    size_t total_enabled_evo_count = mnList.GetValidEvoCount();
     QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
-        .arg(QString::number(total_mn_count - total_hpmn_count))
-        .arg(QString::number(total_enabled_mn_count - total_enabled_hpmn_count));
+        .arg(QString::number(total_mn_count - total_evo_count))
+        .arg(QString::number(total_enabled_mn_count - total_enabled_evo_count));
     ui->masternodeCount->setText(strMasternodeCount);
-    QString strHPMNCount = tr("Total: %1 (Enabled: %2)")
-            .arg(QString::number(total_hpmn_count))
-            .arg(QString::number(total_enabled_hpmn_count));
-    ui->hpmnCount->setText(strHPMNCount);
+    QString strEvoCount = tr("Total: %1 (Enabled: %2)")
+            .arg(QString::number(total_evo_count))
+            .arg(QString::number(total_enabled_evo_count));
+    ui->evoCount->setText(strEvoCount);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)

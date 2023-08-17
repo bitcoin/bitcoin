@@ -71,7 +71,7 @@ public:
                 obj.scriptPayout,
                 obj.inputsHash
         );
-        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance) {
+        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::Evo) {
             READWRITE(
                 obj.platformNodeID,
                 obj.platformP2PPort,
@@ -106,7 +106,7 @@ public:
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
         obj.pushKV("operatorReward", (double)nOperatorReward / 100);
-        if (nType == MnType::HighPerformance) {
+        if (nType == MnType::Evo) {
             obj.pushKV("platformNodeID", platformNodeID.ToString());
             obj.pushKV("platformP2PPort", platformP2PPort);
             obj.pushKV("platformHTTPPort", platformHTTPPort);
@@ -159,7 +159,7 @@ public:
                 obj.scriptOperatorPayout,
                 obj.inputsHash
         );
-        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::HighPerformance) {
+        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::Evo) {
             READWRITE(
                 obj.platformNodeID,
                 obj.platformP2PPort,
@@ -186,7 +186,7 @@ public:
         if (ExtractDestination(scriptOperatorPayout, dest)) {
             obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
         }
-        if (nType == MnType::HighPerformance) {
+        if (nType == MnType::Evo) {
             obj.pushKV("platformNodeID", platformNodeID.ToString());
             obj.pushKV("platformP2PPort", platformP2PPort);
             obj.pushKV("platformHTTPPort", platformHTTPPort);

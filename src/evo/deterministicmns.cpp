@@ -183,14 +183,14 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(const CBlockIndex* pIndex)
 
     bool isv19Active = llmq::utils::IsV19Active(pIndex);
     bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pIndex);
-    // Starting from v19 and until MNRewardReallocation (Platform release), HPMN will be rewarded 4 blocks in a row
+    // Starting from v19 and until MNRewardReallocation (Platform release), EvoNodes will be rewarded 4 blocks in a row
     CDeterministicMNCPtr best = nullptr;
     if (isv19Active && !isMNRewardReallocation) {
         ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
-                // If the last payee is a HPMN, we need to check its consecutive payments and pay him again if needed
-                if (dmn->nType == MnType::HighPerformance && dmn->pdmnState->nConsecutivePayments < dmn_types::HighPerformance.voting_weight) {
+                // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
+                if (dmn->nType == MnType::Evo && dmn->pdmnState->nConsecutivePayments < dmn_types::Evo.voting_weight) {
                     best = dmn;
                 }
             }
@@ -198,7 +198,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(const CBlockIndex* pIndex)
 
         if (best != nullptr) return best;
 
-        // Note: If the last payee was a regular MN or if the payee is a HPMN that was removed from the mnList then that's fine.
+        // Note: If the last payee was a regular MN or if the payee is an EvoNode that was removed from the mnList then that's fine.
         // We can proceed with classic MN payee selection
     }
 
@@ -226,18 +226,18 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(con
     std::vector<CDeterministicMNCPtr> result;
     result.reserve(nCount);
 
-    auto remaining_hpmn_payments = 0;
-    CDeterministicMNCPtr hpmn_to_be_skipped = nullptr;
+    auto remaining_evo_payments = 0;
+    CDeterministicMNCPtr evo_to_be_skipped = nullptr;
     bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindex);
     ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
         if (dmn->pdmnState->nLastPaidHeight == nHeight) {
             // We found the last MN Payee.
-            // If the last payee is a HPMN, we need to check its consecutive payments and pay him again if needed
-            if (!isMNRewardReallocation && dmn->nType == MnType::HighPerformance && dmn->pdmnState->nConsecutivePayments < dmn_types::HighPerformance.voting_weight) {
-                remaining_hpmn_payments = dmn_types::HighPerformance.voting_weight - dmn->pdmnState->nConsecutivePayments;
-                for ([[maybe_unused]] auto _ : irange::range(remaining_hpmn_payments)) {
+            // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
+            if (!isMNRewardReallocation && dmn->nType == MnType::Evo && dmn->pdmnState->nConsecutivePayments < dmn_types::Evo.voting_weight) {
+                remaining_evo_payments = dmn_types::Evo.voting_weight - dmn->pdmnState->nConsecutivePayments;
+                for ([[maybe_unused]] auto _ : irange::range(remaining_evo_payments)) {
                     result.emplace_back(dmn);
-                    hpmn_to_be_skipped = dmn;
+                    evo_to_be_skipped = dmn;
                 }
             }
         }
@@ -245,20 +245,20 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(con
     });
 
     ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
-        if (dmn == hpmn_to_be_skipped) return;
+        if (dmn == evo_to_be_skipped) return;
         for ([[maybe_unused]] auto _ : irange::range(GetMnType(dmn->nType).voting_weight)) {
             result.emplace_back(dmn);
         }
     });
 
-    if (hpmn_to_be_skipped != nullptr) {
-        // if hpmn is in the middle of payments, add entries for already paid ones to the end of the list
-        for ([[maybe_unused]] auto _ : irange::range(hpmn_to_be_skipped->pdmnState->nConsecutivePayments)) {
-            result.emplace_back(hpmn_to_be_skipped);
+    if (evo_to_be_skipped != nullptr) {
+        // if EvoNode is in the middle of payments, add entries for already paid ones to the end of the list
+        for ([[maybe_unused]] auto _ : irange::range(evo_to_be_skipped->pdmnState->nConsecutivePayments)) {
+            result.emplace_back(evo_to_be_skipped);
         }
     }
 
-    std::sort(result.begin() + remaining_hpmn_payments, result.end(), [&](const CDeterministicMNCPtr& a, const CDeterministicMNCPtr& b) {
+    std::sort(result.begin() + remaining_evo_payments, result.end(), [&](const CDeterministicMNCPtr& a, const CDeterministicMNCPtr& b) {
         return CompareByLastPaid(a.get(), b.get());
     });
 
@@ -267,9 +267,9 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(con
     return result;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::CalculateQuorum(size_t maxSize, const uint256& modifier, const bool onlyHighPerformanceMasternodes) const
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::CalculateQuorum(size_t maxSize, const uint256& modifier, const bool onlyEvoNodes) const
 {
-    auto scores = CalculateScores(modifier, onlyHighPerformanceMasternodes);
+    auto scores = CalculateScores(modifier, onlyEvoNodes);
 
     // sort is descending order
     std::sort(scores.rbegin(), scores.rend(), [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a, const std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
@@ -289,7 +289,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::CalculateQuorum(size_t m
     return result;
 }
 
-std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList::CalculateScores(const uint256& modifier, const bool onlyHighPerformanceMasternodes) const
+std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList::CalculateScores(const uint256& modifier, const bool onlyEvoNodes) const
 {
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
     scores.reserve(GetAllMNsCount());
@@ -299,8 +299,8 @@ std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList
             // future quorums
             return;
         }
-        if (onlyHighPerformanceMasternodes) {
-            if (dmn->nType != MnType::HighPerformance)
+        if (onlyEvoNodes) {
+            if (dmn->nType != MnType::Evo)
                 return;
         }
         // calculate sha256(sha256(proTxHash, confirmedHash), modifier) per MN
@@ -467,7 +467,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
                 dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.ToString())));
     }
 
-    if (dmn->nType == MnType::HighPerformance) {
+    if (dmn->nType == MnType::Evo) {
         if (dmn->pdmnState->platformNodeID != uint160() && !AddUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate platformNodeID=%s", __func__,
@@ -507,7 +507,7 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
         throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate pubKeyOperator=%s", __func__,
                 oldDmn.proTxHash.ToString(), pdmnState->pubKeyOperator.ToString())));
     }
-    if (dmn->nType == MnType::HighPerformance) {
+    if (dmn->nType == MnType::Evo) {
         if (!UpdateUniqueProperty(*dmn, oldState->platformNodeID, pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate platformNodeID=%s", __func__,
@@ -568,7 +568,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
                 proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.ToString())));
     }
 
-    if (dmn->nType == MnType::HighPerformance) {
+    if (dmn->nType == MnType::Evo) {
         if (dmn->pdmnState->platformNodeID != uint160() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a duplicate platformNodeID=%s", __func__,
@@ -743,7 +743,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
-            if (proTx.nType == MnType::HighPerformance && !llmq::utils::IsV19Active(pindexPrev)) {
+            if (proTx.nType == MnType::Evo && !llmq::utils::IsV19Active(pindexPrev)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
@@ -806,7 +806,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
-            if (proTx.nType == MnType::HighPerformance && !llmq::utils::IsV19Active(pindexPrev)) {
+            if (proTx.nType == MnType::Evo && !llmq::utils::IsV19Active(pindexPrev)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
@@ -828,7 +828,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
             newState->addr = proTx.addr;
             newState->scriptOperatorPayout = proTx.scriptOperatorPayout;
-            if (proTx.nType == MnType::HighPerformance) {
+            if (proTx.nType == MnType::Evo) {
                 newState->platformNodeID = proTx.platformNodeID;
                 newState->platformP2PPort = proTx.platformP2PPort;
                 newState->platformHTTPPort = proTx.platformHTTPPort;
@@ -945,13 +945,13 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         auto dmn = newList.GetMN(payee->proTxHash);
         auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
         newState->nLastPaidHeight = nHeight;
-        // Starting from v19 and until MNRewardReallocation, HPMN will be paid 4 blocks in a row
-        // No need to check if v19 is active, since HPMN ProRegTx are allowed only after v19 activation
+        // Starting from v19 and until MNRewardReallocation, EvoNodes will be paid 4 blocks in a row
+        // No need to check if v19 is active, since EvoNode ProRegTxes are allowed only after v19 activation
         // Note: If the payee wasn't found in the current block that's fine
-        if (dmn->nType == MnType::HighPerformance && !isMNRewardReallocation) {
+        if (dmn->nType == MnType::Evo && !isMNRewardReallocation) {
             ++newState->nConsecutivePayments;
             if (debugLogs) {
-                LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s is a HPMN, bumping nConsecutivePayments to %d\n",
+                LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s is an EvoNode, bumping nConsecutivePayments to %d\n",
                           __func__, dmn->proTxHash.ToString(), newState->nConsecutivePayments);
             }
         }
@@ -963,10 +963,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     }
 
-    // reset nConsecutivePayments on non-paid HPMNs
+    // reset nConsecutivePayments on non-paid EvoNodes
     auto newList2 = newList;
     newList2.ForEachMN(false, [&](auto& dmn) {
-        if (dmn.nType != MnType::HighPerformance) return;
+        if (dmn.nType != MnType::Evo) return;
         if (payee != nullptr && dmn.proTxHash == payee->proTxHash && !isMNRewardReallocation) return;
         if (dmn.pdmnState->nConsecutivePayments == 0) return;
         if (debugLogs) {
@@ -1496,7 +1496,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         return false;
     }
 
-    if (ptx.nType == MnType::HighPerformance) {
+    if (ptx.nType == MnType::Evo) {
         if (!CheckPlatformFields(ptx, state)) {
             return false;
         }
@@ -1560,8 +1560,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-key");
         }
 
-        // never allow duplicate platformNodeIds for HPMNs
-        if (ptx.nType == MnType::HighPerformance) {
+        // never allow duplicate platformNodeIds for EvoNodes
+        if (ptx.nType == MnType::Evo) {
             if (mnList.HasUniqueProperty(ptx.platformNodeID)) {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-platformnodeid");
             }
@@ -1616,7 +1616,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
         return false;
     }
 
-    if (ptx.nType == MnType::HighPerformance) {
+    if (ptx.nType == MnType::Evo) {
         if (!CheckPlatformFields(ptx, state)) {
             return false;
         }
@@ -1634,8 +1634,8 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-addr");
         }
 
-        // don't allow updating to platformNodeIds already used by other HPMNs
-        if (ptx.nType == MnType::HighPerformance) {
+        // don't allow updating to platformNodeIds already used by other EvoNodes
+        if (ptx.nType == MnType::Evo) {
             if (mnList.HasUniqueProperty(ptx.platformNodeID)  && mnList.GetUniquePropertyMN(ptx.platformNodeID)->proTxHash != ptx.proTxHash) {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-platformnodeid");
             }

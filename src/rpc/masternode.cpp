@@ -38,7 +38,7 @@ static void masternode_list_help(const JSONRPCRequest& request)
         "Available modes:\n"
         "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
         "  recent         - Print info in JSON format for active and recently banned masternodes (can be additionally filtered, partial match)\n"
-        "  hpmn           - Print info in JSON format for HPMNs only\n"
+        "  evo            - Print info in JSON format for EvoNodes only\n"
         "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
         "                   (can be additionally filtered, partial match)\n"
         "  info           - Print info in format 'status payee IP'\n"
@@ -114,20 +114,20 @@ static UniValue masternode_count(const JSONRPCRequest& request)
     obj.pushKV("total", total);
     obj.pushKV("enabled", enabled);
 
-    int hpmn_total = mnList.GetAllHPMNsCount();
-    int hpmn_enabled = mnList.GetValidHPMNsCount();
+    int evo_total = mnList.GetAllEvoCount();
+    int evo_enabled = mnList.GetValidEvoCount();
 
-    UniValue hpmnObj(UniValue::VOBJ);
-    hpmnObj.pushKV("total", hpmn_total);
-    hpmnObj.pushKV("enabled", hpmn_enabled);
+    UniValue evoObj(UniValue::VOBJ);
+    evoObj.pushKV("total", evo_total);
+    evoObj.pushKV("enabled", evo_enabled);
 
     UniValue regularObj(UniValue::VOBJ);
-    regularObj.pushKV("total", total - hpmn_total);
-    regularObj.pushKV("enabled", enabled - hpmn_enabled);
+    regularObj.pushKV("total", total - evo_total);
+    regularObj.pushKV("enabled", enabled - evo_enabled);
 
     UniValue detailedObj(UniValue::VOBJ);
     detailedObj.pushKV("regular", regularObj);
-    detailedObj.pushKV("hpmn", hpmnObj);
+    detailedObj.pushKV("evo", evoObj);
     obj.pushKV("detailed", detailedObj);
 
     return obj;
@@ -585,7 +585,7 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
                 strMode != "owneraddress" && strMode != "votingaddress" &&
                 strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
                 strMode != "payee" && strMode != "pubkeyoperator" &&
-                strMode != "status" && strMode != "recent" && strMode != "hpmn"))
+                strMode != "status" && strMode != "recent" && strMode != "evo"))
     {
         masternode_list_help(request);
     }
@@ -613,7 +613,7 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
     };
 
     bool showRecentMnsOnly = strMode == "recent";
-    bool showHPMNsOnly = strMode == "hpmn";
+    bool showEvoOnly = strMode == "evo";
     int tipHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->nHeight);
     mnList.ForEachMN(false, [&](auto& dmn) {
         if (showRecentMnsOnly && mnList.IsMNPoSeBanned(dmn)) {
@@ -621,7 +621,7 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
                 return;
             }
         }
-        if (showHPMNsOnly && dmn.nType != MnType::HighPerformance) {
+        if (showEvoOnly && dmn.nType != MnType::Evo) {
             return;
         }
 
@@ -671,7 +671,7 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strInfo);
-        } else if (strMode == "json" || strMode == "recent" || strMode == "hpmn") {
+        } else if (strMode == "json" || strMode == "recent" || strMode == "evo") {
             std::ostringstream streamInfo;
             streamInfo <<  dmn.proTxHash.ToString() << " " <<
                            dmn.pdmnState->addr.ToString() << " " <<
@@ -693,7 +693,7 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));
-            if (dmn.nType == MnType::HighPerformance) {
+            if (dmn.nType == MnType::Evo) {
                 objMN.pushKV("platformNodeID", dmn.pdmnState->platformNodeID.ToString());
                 objMN.pushKV("platformP2PPort", dmn.pdmnState->platformP2PPort);
                 objMN.pushKV("platformHTTPPort", dmn.pdmnState->platformHTTPPort);
