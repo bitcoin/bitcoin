@@ -13,6 +13,10 @@ on:
     tags-ignore:
       - '**'
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   DANGER_RUN_CI_ON_HOST: 1
   TEST_RUNNER_TIMEOUT_FACTOR: 40
