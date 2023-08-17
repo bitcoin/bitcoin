@@ -41,7 +41,7 @@
 #include <netaddress.h>
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
-
+#include <pubkey.h>
 class CBlockIndex;
 class CChain;
 class CBLSPublicKey;
