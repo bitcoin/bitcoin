@@ -3,13 +3,16 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
-#include <script/script.h>
-#include <script/solver.h>
+
+#include <crypto/sha256.h>
 #include <hash.h>
 #include <pubkey.h>
+#include <script/script.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
+#include <cassert>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
