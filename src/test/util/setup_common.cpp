@@ -424,7 +424,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
             m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
-                                                         /*time=*/0, /*entry_height=*/1,
+                                                         /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
                                                          /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
         }
         --num_transactions;
@@ -454,7 +454,7 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     const auto tx_fee = target_feerate.GetFee(GetVirtualTransactionSize(*tx)) -
         m_node.mempool->m_incremental_relay_feerate.GetFee(GetVirtualTransactionSize(*tx));
     m_node.mempool->addUnchecked(CTxMemPoolEntry(tx, /*fee=*/tx_fee,
-                                                 /*time=*/0, /*entry_height=*/1,
+                                                 /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
                                                  /*spends_coinbase=*/true, /*sigops_cost=*/1, lp));
     m_node.mempool->TrimToSize(0);
     assert(m_node.mempool->GetMinFee() == target_feerate);

@@ -241,7 +241,8 @@ struct PackageMempoolAcceptResult
  * @param[in]  tx                 The transaction to submit for mempool acceptance.
  * @param[in]  accept_time        The timestamp for adding the transaction to the mempool.
  *                                It is also used to determine when the entry expires.
- * @param[in]  bypass_limits      When true, don't enforce mempool fee and capacity limits.
+ * @param[in]  bypass_limits      When true, don't enforce mempool fee and capacity limits,
+ *                                and set entry_sequence to zero.
  * @param[in]  test_accept        When true, run validation checks but don't submit to mempool.
  *
  * @returns a MempoolAcceptResult indicating whether the transaction was accepted/rejected with reason.
