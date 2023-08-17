@@ -14,12 +14,6 @@
 #include <optional>
 #include <stdint.h>
 
-#include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/indexed_by.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/tag.hpp>
-#include <boost/multi_index_container.hpp>
-
 class ArgsManager;
 class CBlockIndex;
 class CChainParams;
@@ -38,96 +32,6 @@ struct CBlockTemplate
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
-};
-
-// Container for tracking updates to ancestor feerate as we include (parent)
-// transactions in a block
-struct CTxMemPoolModifiedEntry {
-    explicit CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)
-    {
-        iter = entry;
-        nSizeWithAncestors = entry->GetSizeWithAncestors();
-        nModFeesWithAncestors = entry->GetModFeesWithAncestors();
-        nSigOpCostWithAncestors = entry->GetSigOpCostWithAncestors();
-    }
-
-    CAmount GetModifiedFee() const { return iter->GetModifiedFee(); }
-    uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
-    CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
-    size_t GetTxSize() const { return iter->GetTxSize(); }
-    const CTransaction& GetTx() const { return iter->GetTx(); }
-
-    CTxMemPool::txiter iter;
-    uint64_t nSizeWithAncestors;
-    CAmount nModFeesWithAncestors;
-    int64_t nSigOpCostWithAncestors;
-};
-
-/** Comparator for CTxMemPool::txiter objects.
- *  It simply compares the internal memory address of the CTxMemPoolEntry object
- *  pointed to. This means it has no meaning, and is only useful for using them
- *  as key in other indexes.
- */
-struct CompareCTxMemPoolIter {
-    bool operator()(const CTxMemPool::txiter& a, const CTxMemPool::txiter& b) const
-    {
-        return &(*a) < &(*b);
-    }
-};
-
-struct modifiedentry_iter {
-    typedef CTxMemPool::txiter result_type;
-    result_type operator() (const CTxMemPoolModifiedEntry &entry) const
-    {
-        return entry.iter;
-    }
-};
-
-// A comparator that sorts transactions based on number of ancestors.
-// This is sufficient to sort an ancestor package in an order that is valid
-// to appear in a block.
-struct CompareMemPoolEntryByAncestorCount {
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
-    {
-        if (a.GetCountWithAncestors() != b.GetCountWithAncestors()) {
-            return a.GetCountWithAncestors() < b.GetCountWithAncestors();
-        }
-        return a.GetTx().GetHash() < b.GetTx().GetHash();
-    }
-};
-
-typedef boost::multi_index_container<
-    CTxMemPoolModifiedEntry,
-    boost::multi_index::indexed_by<
-        boost::multi_index::ordered_unique<
-            modifiedentry_iter,
-            CompareCTxMemPoolIter
-        >,
-        // sorted by modified ancestor fee rate
-        boost::multi_index::ordered_non_unique<
-            // Reuse same tag from CTxMemPool's similar index
-            boost::multi_index::tag<MemPoolMultiIndex::ancestor_score>,
-            boost::multi_index::identity<CTxMemPoolModifiedEntry>,
-            MemPoolMultiIndex::CompareTxMemPoolEntryByAncestorFee
-        >
-    >
-> indexed_modified_transaction_set;
-
-typedef indexed_modified_transaction_set::nth_index<0>::type::iterator modtxiter;
-typedef indexed_modified_transaction_set::index<MemPoolMultiIndex::ancestor_score>::type::iterator modtxscoreiter;
-
-struct update_for_parent_inclusion
-{
-    explicit update_for_parent_inclusion(CTxMemPool::txiter it) : iter(it) {}
-
-    void operator() (CTxMemPoolModifiedEntry &e)
-    {
-        e.nModFeesWithAncestors -= iter->GetModifiedFee();
-        e.nSizeWithAncestors -= iter->GetTxSize();
-        e.nSigOpCostWithAncestors -= iter->GetSigOpCost();
-    }
-
-    CTxMemPool::txiter iter;
 };
 
 /** Generate a new block, without valid proof-of-work */
