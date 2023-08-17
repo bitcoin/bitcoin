@@ -744,7 +744,7 @@ static RPCHelpMan importmempool()
                   "Whether to apply the unbroadcast set metadata from the mempool file.\n"
                   "Warning: Importing untrusted metadata may lead to unexpected issues and undesirable behavior."},
              },
-             RPCArgOptions{.oneline_description = "\"options\""}},
+             RPCArgOptions{.oneline_description = "options"}},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{HelpExampleCli("importmempool", "/path/to/mempool.dat") + HelpExampleRpc("importmempool", "/path/to/mempool.dat")},
