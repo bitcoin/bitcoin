@@ -1138,7 +1138,16 @@ std::string RPCArg::ToStringObj(const bool oneline) const
 
 std::string RPCArg::ToString(const bool oneline) const
 {
-    if (oneline && !m_opts.oneline_description.empty()) return m_opts.oneline_description;
+    if (oneline && !m_opts.oneline_description.empty()) {
+        if (m_opts.oneline_description[0] == '\"' && m_type != Type::STR_HEX && m_type != Type::STR && gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
+            throw std::runtime_error{
+                strprintf("Internal bug detected: non-string RPC arg \"%s\" quotes oneline_description:\n%s\n%s %s\nPlease report this issue here: %s\n",
+                          m_names, m_opts.oneline_description,
+                          PACKAGE_NAME, FormatFullVersion(),
+                          PACKAGE_BUGREPORT)};
+        }
+        return m_opts.oneline_description;
+    }
 
     switch (m_type) {
     case Type::STR_HEX:

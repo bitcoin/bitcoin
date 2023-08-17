@@ -2312,7 +2312,7 @@ static RPCHelpMan scanblocks()
                 {
                     {"filter_false_positives", RPCArg::Type::BOOL, RPCArg::Default{false}, "Filter false positives (slower and may fail on pruned nodes). Otherwise they may occur at a rate of 1/M"},
                 },
-                RPCArgOptions{.oneline_description="\"options\""}},
+                RPCArgOptions{.oneline_description="options"}},
         },
         {
             scan_result_status_none,
