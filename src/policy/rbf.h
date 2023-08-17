@@ -45,8 +45,6 @@ enum class RBFTransactionState {
  * @return     The rbf state
  */
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
-// SYSCOIN
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, CTxMemPool::setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
 /** Get all descendants of iters_conflicting. Checks that there are no more than
@@ -81,10 +79,8 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTx
  * @param[in]   txid                Transaction ID, included in the error message if violation occurs.
  * @returns error message if the sets intersect, std::nullopt if they are disjoint.
  */
-// SYSCOIN
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
                                                    const std::set<uint256>& direct_conflicts,
-                                                   const std::set<uint256>& direct_conflicts_asset,
                                                    const uint256& txid);
 
 /** Check that the feerate of the replacement transaction(s) is higher than the feerate of each

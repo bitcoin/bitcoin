@@ -6,6 +6,7 @@
 #ifndef SYSCOIN_COINS_H
 #define SYSCOIN_COINS_H
 
+#include <compressor.h>
 #include <primitives/transaction.h>
 #include <core_memusage.h>
 #include <memusage.h>

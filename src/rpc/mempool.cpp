@@ -45,7 +45,8 @@ static RPCHelpMan sendrawtransaction()
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
              "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
                  "/kvB.\nSet to 0 to accept any fee rate."},
-            {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)},
+            // SYSCOIN
+            {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(5000000*COIN)},
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
              "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
@@ -88,8 +89,8 @@ static RPCHelpMan sendrawtransaction()
                     // clear memory allocated for vchNEVMData
                     nevmData.SetNull();
                 }
-            // SYSCOIN we actively burn to allocation here so we want to avoid checking for default burn exceeded
-            } else if(mtx.nVersion != SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION) {
+            // SYSCOIN
+            } else {
                 for (const auto& out : mtx.vout) {
                     if((out.scriptPubKey.IsUnspendable() || !out.scriptPubKey.HasValidOps()) && out.nValue > max_burn_amount) {
                         throw JSONRPCTransactionError(TransactionError::MAX_BURN_EXCEEDED);

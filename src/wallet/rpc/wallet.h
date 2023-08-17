@@ -12,7 +12,7 @@ class CRPCCommand;
 namespace wallet {
 Span<const CRPCCommand> GetWalletRPCCommands();
 // SYSCOIN
-Span<const CRPCCommand> GetAssetWalletRPCCommands();
+Span<const CRPCCommand> GetNEVMWalletRPCCommands();
 Span<const CRPCCommand> GetEvoWalletRPCCommands();
 Span<const CRPCCommand> GetGovernanceWalletRPCCommands();
 Span<const CRPCCommand> GetMasternodeWalletRPCCommands();

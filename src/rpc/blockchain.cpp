@@ -55,7 +55,6 @@
 #include <mutex>
 // SYSCOIN
 #include <wallet/context.h>
-#include <services/asset.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_utils.h>
 #include <llmq/quorums.h>
@@ -686,8 +685,6 @@ static RPCHelpMan getblockheader()
                             {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
                             {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
                             // SYSCOIN
-                            {RPCResult::Type::STR, "asset_guid", /*optional=*/true, "the transaction output asset guid if asset output"},
-                            {RPCResult::Type::STR_AMOUNT, "asset_amount", /*optional=*/true, "the transaction output asset amount in satoshis if asset output"},
                             {RPCResult::Type::BOOL, "chainlock", /*optional=*/true, "Is block chainlocked?"},
                         }},
                     RPCResult{"for verbose=false",
@@ -2412,12 +2409,6 @@ static RPCHelpMan scantxoutset()
             unspent.pushKV("amount", ValueFromAmount(txo.nValue));
             unspent.pushKV("coinbase", coin.IsCoinBase());
             unspent.pushKV("height", (int32_t)coin.nHeight);
-            // SYSCOIN
-            if(!coin.out.assetInfo.IsNull()) {
-                unspent.pushKV("asset_guid", UniValue(coin.out.assetInfo.nAsset).write());
-                unspent.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, GetBaseAssetID(coin.out.assetInfo.nAsset)));
-            }
-
             unspents.push_back(unspent);
         }
         result.pushKV("unspents", unspents);

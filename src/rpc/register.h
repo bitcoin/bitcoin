@@ -18,8 +18,8 @@ void RegisterNetRPCCommands(CRPCTable&);
 void RegisterOutputScriptRPCCommands(CRPCTable&);
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 // SYSCOIN
-/** Register Syscoin Asset RPC commands */
-void RegisterAssetRPCCommands(CRPCTable &tableRPC);
+/** Register Syscoin NEVM RPC commands */
+void RegisterNEVMRPCCommands(CRPCTable &tableRPC);
 /** Register masternode RPC commands */
 void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
 /** Register governance RPC commands */
@@ -44,7 +44,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterOutputScriptRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
     // SYSCOIN
-    RegisterAssetRPCCommands(t);
+    RegisterNEVMRPCCommands(t);
     RegisterMasternodeRPCCommands(t);
     RegisterGovernanceRPCCommands(t);
     RegisterEvoRPCCommands(t);

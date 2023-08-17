@@ -47,18 +47,6 @@ static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 // SYSCOIN
 static const int SERIALIZE_TRANSACTION_PODA = 0x04000000;
 static const float NEVM_DATA_SCALE_FACTOR = 0.01;
-enum {
-    ASSET_UPDATE_DATA=1, // can you update public data field?
-    ASSET_UPDATE_CONTRACT=2, // can you update smart contract?
-    ASSET_UPDATE_SUPPLY=4, // can you update supply?
-    ASSET_UPDATE_NOTARY_KEY=8, // can you update notary?
-    ASSET_UPDATE_NOTARY_DETAILS=16, // can you update notary details?
-    ASSET_UPDATE_AUXFEE=32, // can you update aux fees?
-    ASSET_UPDATE_CAPABILITYFLAGS=64, // can you update capability flags?
-    ASSET_CAPABILITY_ALL=127,
-    ASSET_INIT=128, // set when creating an asset
-};
-
 
 const int SYSCOIN_TX_VERSION_MN_REGISTER = 80;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE = 81;
@@ -66,18 +54,8 @@ const int SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR = 82;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE = 83;
 const int SYSCOIN_TX_VERSION_MN_COINBASE = 84;
 const int SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT = 85;
-
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
-const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129;
-const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 130;
-const int SYSCOIN_TX_VERSION_ASSET_UPDATE = 131;
-const int SYSCOIN_TX_VERSION_ASSET_SEND = 132;
-const int SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133;
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM = 134;
-const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135;
+const int SYSCOIN_TX_VERSION_MINT = 138;
 const int SYSCOIN_TX_VERSION_NEVM_DATA_SHA3 = 137;
-const int SYSCOIN_TX_MIN_ASSET_GUID = SYSCOIN_TX_VERSION_ALLOCATION_SEND * 10;
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
 const int MAX_MEMO = 256;
 const int MAX_NEVM_DATA_BLOB = 2097152; // 2MB
 const int MAX_DATA_BLOBS = 32;
@@ -85,14 +63,6 @@ const int MAX_NEVM_DATA_BLOCK = MAX_NEVM_DATA_BLOB * MAX_DATA_BLOBS; // 64MB
 const int NEVM_DATA_EXPIRE_TIME = 21600; // 6 hour
 const int NEVM_DATA_ENFORCE_TIME_HAVE_DATA = 7200; // 2 hour
 const int NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA = NEVM_DATA_ENFORCE_TIME_HAVE_DATA*4; // 8 hour
-enum {
-	ZDAG_NOT_FOUND = -1,
-	ZDAG_STATUS_OK = 0,
-	ZDAG_WARNING_RBF,
-    ZDAG_WARNING_NOT_ZDAG_TX,
-    ZDAG_WARNING_SIZE_OVER_POLICY,
-	ZDAG_MAJOR_CONFLICT
-};
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -272,8 +242,6 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
-    // SYSCOIN
-    tx.LoadAssets();
 }
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
@@ -304,136 +272,6 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.nLockTime;
 }
 // SYSCOIN
-
-bool CompressScript(const CScript& script, CompressedScript &out);
-unsigned int GetSpecialScriptSize(unsigned int nSize);
-bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript &out);
-
-/**
- * Compress amount.
- *
- * nAmount is of type uint64_t and thus cannot be negative. If you're passing in
- * a CAmount (int64_t), make sure to properly handle the case where the amount
- * is negative before calling CompressAmount(...).
- *
- * @pre Function defined only for 0 <= nAmount <= MAX_MONEY.
- */
-uint64_t CompressAmount(uint64_t nAmount);
-
-uint64_t DecompressAmount(uint64_t nAmount);
-
-/** Compact serializer for scripts.
- *
- *  It detects common cases and encodes them much more efficiently.
- *  3 special cases are defined:
- *  * Pay to pubkey hash (encoded as 21 bytes)
- *  * Pay to script hash (encoded as 21 bytes)
- *  * Pay to pubkey starting with 0x02, 0x03 or 0x04 (encoded as 33 bytes)
- *
- *  Other scripts up to 121 bytes require 1 byte + script length. Above
- *  that, scripts up to 16505 bytes require 2 bytes + script length.
- */
-struct ScriptCompression
-{
-    /**
-     * make this static for now (there are only 6 special scripts defined)
-     * this can potentially be extended together with a new nVersion for
-     * transactions, in which case this value becomes dependent on nVersion
-     * and nHeight of the enclosing transaction.
-     */
-    static const unsigned int nSpecialScripts = 6;
-
-    template<typename Stream>
-    void Ser(Stream &s, const CScript& script) {
-        CompressedScript compr;
-        if (CompressScript(script, compr)) {
-            s << Span{compr};
-            return;
-        }
-        unsigned int nSize = script.size() + nSpecialScripts;
-        s << VARINT(nSize);
-        s << Span{script};
-    }
-
-    template<typename Stream>
-    void Unser(Stream &s, CScript& script) {
-        unsigned int nSize = 0;
-        s >> VARINT(nSize);
-        if (nSize < nSpecialScripts) {
-            CompressedScript vch(GetSpecialScriptSize(nSize), 0x00);
-            s >> Span{vch};
-            DecompressScript(script, nSize, vch);
-            return;
-        }
-        nSize -= nSpecialScripts;
-        if (nSize > MAX_SCRIPT_SIZE) {
-            // Overly long script, replace with a short invalid one
-            script << OP_RETURN;
-            s.ignore(nSize);
-        } else {
-            script.resize(nSize);
-            s >> Span{script};
-        }
-    }
-};
-
-struct AmountCompression
-{
-    template<typename Stream, typename I> void Ser(Stream& s, I val)
-    {
-        s << VARINT(CompressAmount(val));
-    }
-    template<typename Stream, typename I> void Unser(Stream& s, I& val)
-    {
-        uint64_t v;
-        s >> VARINT(v);
-        val = DecompressAmount(v);
-    }
-};
-
-struct AssetCoinInfoCompression
-{
-    template<typename Stream, typename I> void Ser(Stream& s, I val)
-    {
-        s << VARINT(val.nAsset);
-        if(val.nAsset > 0) {
-            s << VARINT(CompressAmount(val.nValue));
-        }
-    }
-    template<typename Stream, typename I> void Unser(Stream& s, I& val)
-    {
-        s >> VARINT(val.nAsset);
-        if(val.nAsset > 0) {
-            uint64_t v;
-            s >> VARINT(v);
-            val.nValue = DecompressAmount(v);
-        }
-    }
-};
-
-class CAssetCoinInfo {
-public:
-	uint64_t nAsset;
-	CAmount nValue;
-	CAssetCoinInfo() {
-		SetNull();
-        nValue = 0;
-	}
-    CAssetCoinInfo(const uint64_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) {}
- 
-    friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
-    {
-        return (a.nAsset == b.nAsset &&
-                a.nValue == b.nValue);
-    }
-
-    SERIALIZE_METHODS(CAssetCoinInfo, obj) {
-        READWRITE(Using<AssetCoinInfoCompression>(obj));
-    }
-
-	inline void SetNull() { nAsset = 0;}
-    inline bool IsNull() const { return nAsset == 0;}
-};
 class CTransaction;
 bool IsSyscoinNEVMDataTx(const int &nVersion);
 class CNEVMData {
@@ -486,8 +324,6 @@ class CTxOut
 public:
     CAmount nValue;
     CScript scriptPubKey;
-    // SYSCOIN
-    CAssetCoinInfo assetInfo;
     std::vector<uint8_t> vchNEVMData;
     CTxOut()
     {
@@ -495,7 +331,6 @@ public:
     }
     // SYSCOIN
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
-    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const std::vector<uint8_t> &vchNEVMDataIn)  : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), vchNEVMData(vchNEVMDataIn) {}
     SERIALIZE_METHODS(CTxOut, obj)
     {
@@ -513,7 +348,6 @@ public:
 
     void SetNull()
     {
-        assetInfo.SetNull();
         nValue = -1;
         scriptPubKey.clear();
         vchNEVMData.clear();
@@ -528,7 +362,6 @@ public:
     {
         return (a.nValue       == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo    == b.assetInfo &&
                 a.vchNEVMData  == b.vchNEVMData);
     }
 
@@ -546,8 +379,6 @@ class CTxOutCoin
 public:
     CAmount nValue;
     CScript scriptPubKey;
-    // SYSCOIN
-    CAssetCoinInfo assetInfo;
     CTxOutCoin()
     {
         SetNull();
@@ -556,15 +387,12 @@ public:
     CTxOutCoin(const CTxOut& txOutIn) {
         nValue = txOutIn.nValue;
         scriptPubKey = txOutIn.scriptPubKey;
-        assetInfo = txOutIn.assetInfo;
     }
     CTxOutCoin(CTxOut&& txOutIn) {
         nValue = std::move(txOutIn.nValue);
         scriptPubKey = std::move(txOutIn.scriptPubKey);
-        assetInfo = std::move(txOutIn.assetInfo);
     }
     CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
-    CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
     SERIALIZE_METHODS(CTxOutCoin, obj)
     {
         READWRITE(obj.nValue, obj.scriptPubKey);
@@ -573,7 +401,6 @@ public:
 
     void SetNull()
     {
-        assetInfo.SetNull();
         nValue = -1;
         scriptPubKey.clear();
     }
@@ -586,8 +413,7 @@ public:
     friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo    == b.assetInfo);
+                a.scriptPubKey == b.scriptPubKey);
     }
 
     friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
@@ -597,61 +423,6 @@ public:
     std::string ToString() const;
 };
 
-
-/** wrapper for CTxOut that provides a more compact serialization */
-struct TxOutCompression
-{
-    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
-};
-
-class CAssetOutValue {
-public:
-    uint32_t n;
-    CAmount nValue;
-    SERIALIZE_METHODS(CAssetOutValue, obj) {
-        READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
-    }
-    CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
-    CAssetOutValue() {
-        SetNull();
-    }
-    inline void SetNull() {
-        nValue = 0;
-        n = 0;
-    }
-    inline friend bool operator==(const CAssetOutValue &a, const CAssetOutValue &b) {
-		return (a.n == b.n && a.nValue == b.nValue);
-	}
-    inline friend bool operator!=(const CAssetOutValue &a, const CAssetOutValue &b) {
-		return !(a == b);
-	}
-};
-class CAssetOut {
-public:
-    uint64_t key;
-    std::vector<CAssetOutValue> values;
-    std::vector<unsigned char> vchNotarySig;
-    SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(VARINT(obj.key), obj.values, obj.vchNotarySig);
-    }
-
-    CAssetOut(const uint64_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
-    CAssetOut(const uint64_t &keyIn, const std::vector<CAssetOutValue>& valuesIn, const std::vector<unsigned char> &vchNotarySigIn): key(keyIn), values(valuesIn), vchNotarySig(vchNotarySigIn) {}
-    CAssetOut() {
-		SetNull();
-	}
-    inline void SetNull() {
-        key = 0;
-        values.clear();
-        vchNotarySig.clear();
-    }
-    inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
-		return (a.key == b.key && a.values == b.values);
-	}
-    inline friend bool operator!=(const CAssetOut &a, const CAssetOut &b) {
-		return !(a == b);
-	}
-};
 
 template<typename TxType>
 inline CAmount CalculateOutputValue(const TxType& tx)
@@ -678,8 +449,6 @@ public:
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
-    // SYSCOIN
-    const std::vector<CAssetOut> voutAssets;
 
 private:
     /** Memory only. */
@@ -712,9 +481,6 @@ public:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
-    // SYSCOIN
-    CAmount GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
-    bool GetAssetValueOut(CAssetsMap &mapAssetOut, std::string& err) const;
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
@@ -749,9 +515,9 @@ public:
         return false;
     }
     // SYSCOIN
-    bool HasAssets() const;
     bool IsNEVMData() const;
     bool IsMnTx() const;
+    bool IsMintTx() const;
 };
 
 /** A mutable version of CTransaction. */
@@ -761,8 +527,6 @@ struct CMutableTransaction
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
-    // SYSCOIN
-    std::vector<CAssetOut> voutAssets;
 
     explicit CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
@@ -798,290 +562,15 @@ struct CMutableTransaction
         return false;
     }
     // SYSCOIN
-    bool HasAssets() const;
     bool IsNEVMData() const;
     bool IsMnTx() const;
-    void LoadAssets();
-    CAmount GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
+    bool IsMintTx() const;
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
-class CAuxFee {
-public:
-    CAmount nBound;
-    uint16_t nPercent;
-    CAuxFee() {
-        SetNull();
-    }
-    CAuxFee(const CAmount &nBoundIn, const uint16_t &nPercentIn):nBound(nBoundIn),nPercent(nPercentIn) {}
-    SERIALIZE_METHODS(CAuxFee, obj) {
-        READWRITE(Using<AmountCompression>(obj.nBound), obj.nPercent);
-    }
-    inline friend bool operator==(const CAuxFee &a, const CAuxFee &b) {
-        return (
-        a.nBound == b.nBound && a.nPercent == b.nPercent
-        );
-    }
-
-    inline friend bool operator!=(const CAuxFee &a, const CAuxFee &b) {
-        return !(a == b);
-    }
-    inline void SetNull() { nPercent = 0; nBound = 0;}
-    inline bool IsNull() const { return (nPercent == 0 && nBound == 0); }
-};
-class CAuxFeeDetails {
-public:
-    std::vector<unsigned char> vchAuxFeeKeyID;
-    std::vector<CAuxFee> vecAuxFees;
-    CAuxFeeDetails() {
-        SetNull();
-    }
-    CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision);
-    SERIALIZE_METHODS(CAuxFeeDetails, obj) {
-        READWRITE(obj.vchAuxFeeKeyID, obj.vecAuxFees);
-    }
-    inline friend bool operator==(const CAuxFeeDetails &a, const CAuxFeeDetails &b) {
-        return (
-        a.vecAuxFees == b.vecAuxFees && a.vchAuxFeeKeyID == b.vchAuxFeeKeyID
-        );
-    }
-
-    inline friend bool operator!=(const CAuxFeeDetails &a, const CAuxFeeDetails &b) {
-        return !(a == b);
-    }
-    inline void SetNull() { vecAuxFees.clear(); vchAuxFeeKeyID.clear();}
-    inline bool IsNull() const { return (vecAuxFees.empty() && vchAuxFeeKeyID.empty()); }
-    void ToJson(UniValue& json, const uint32_t& nBaseAsset) const;
-};
-class CNotaryDetails {
-public:
-    std::string strEndPoint;
-    uint8_t bEnableInstantTransfers;
-    uint8_t bRequireHD;
-    CNotaryDetails() {
-        SetNull();
-    }
-    CNotaryDetails(const UniValue& value);
-    SERIALIZE_METHODS(CNotaryDetails, obj) {
-        READWRITE(obj.strEndPoint, obj.bEnableInstantTransfers, obj.bRequireHD);
-    }
-    inline friend bool operator==(const CNotaryDetails &a, const CNotaryDetails &b) {
-        return (
-        a.strEndPoint == b.strEndPoint && a.bEnableInstantTransfers == b.bEnableInstantTransfers && a.bRequireHD == b.bRequireHD
-        );
-    }
-
-    inline friend bool operator!=(const CNotaryDetails &a, const CNotaryDetails &b) {
-        return !(a == b);
-    }
-    inline void SetNull() { strEndPoint.clear();  bEnableInstantTransfers = bRequireHD = 0;}
-    inline bool IsNull() const { return strEndPoint.empty(); }
-    void ToJson(UniValue &json) const;
-};
-class CAssetAllocation {
-public:
-    std::vector<CAssetOut> voutAssets;
-    SERIALIZE_METHODS(CAssetAllocation, obj) {
-        READWRITE(obj.voutAssets);
-    }
-
-	CAssetAllocation() {
-		SetNull();
-	}
-    explicit CAssetAllocation(const CTransaction &tx);
-    explicit CAssetAllocation(const CMutableTransaction &mtx);
-
-	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
-		return (a.voutAssets == b.voutAssets
-			);
-	}
-    CAssetAllocation(const CAssetAllocation&) = delete;
-    CAssetAllocation(CAssetAllocation && other) = default;
-    CAssetAllocation& operator=( CAssetAllocation& a ) = delete;
-	CAssetAllocation& operator=( CAssetAllocation&& a ) = default;
- 
-	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
-		return !(a == b);
-	}
-	inline void SetNull() { voutAssets.clear();}
-    inline bool IsNull() const { return voutAssets.empty();}
-    bool UnserializeFromTx(const CTransaction &tx);
-    bool UnserializeFromTx(const CMutableTransaction &mtx);
-	int UnserializeFromData(const std::vector<unsigned char> &vchData);
-	void SerializeData(std::vector<unsigned char>& vchData);
-};
-
-class CAsset: public CAssetAllocation {
-public:
-    std::vector<unsigned char> vchContract;
-    std::vector<unsigned char> vchPrevContract;
-    std::string strSymbol;
-    std::string strPubData;
-    std::string strPrevPubData;
-    CAmount nTotalSupply;
-    CAmount nMaxSupply;
-    uint8_t nPrecision;
-    uint8_t nUpdateCapabilityFlags;
-    uint8_t nPrevUpdateCapabilityFlags;
-    std::vector<unsigned char> vchNotaryKeyID;
-    std::vector<unsigned char> vchPrevNotaryKeyID;
-    CNotaryDetails notaryDetails;
-    CNotaryDetails prevNotaryDetails;
-    CAuxFeeDetails auxFeeDetails;
-    CAuxFeeDetails prevAuxFeeDetails;
-    uint8_t nUpdateMask;
-    CAsset() {
-        SetNull();
-    }
-    explicit CAsset(const CTransaction &tx);
-    explicit CAsset(const CMutableTransaction &mtx);
-    
-    inline void ClearAsset() {
-        strPubData.clear();
-        vchContract.clear();
-        voutAssets.clear();
-        strPrevPubData.clear();
-        vchPrevContract.clear();
-        strSymbol.clear();
-        nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags = 0;
-        nTotalSupply = 0;
-        nMaxSupply = 0;
-        vchNotaryKeyID.clear();
-        vchPrevNotaryKeyID.clear();
-        notaryDetails.SetNull();
-        prevNotaryDetails.SetNull();
-        auxFeeDetails.SetNull();
-        prevAuxFeeDetails.SetNull();
-        nUpdateMask = 0;
-    }
-    // these two functions will work with transactions which require previous fields for disconnect logic
-    template<typename Stream>
-    void SerializeTx(Stream& s) const
-    {
-        s << *(CAssetAllocation*)this;
-        s << nPrecision;
-        s << nUpdateMask;
-        if(nUpdateMask & ASSET_INIT) {
-            s << strSymbol;
-            s << Using<AmountCompression>(nMaxSupply);
-        }
-        if(nUpdateMask & ASSET_UPDATE_CONTRACT) {
-            s << vchContract;
-            s << vchPrevContract;
-        }
-        if(nUpdateMask & ASSET_UPDATE_DATA) {
-            s << strPubData;
-            s << strPrevPubData;
-        }
-        if(nUpdateMask & ASSET_UPDATE_SUPPLY) {
-            s << Using<AmountCompression>(nTotalSupply);
-        }
-        if(nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
-            s << vchNotaryKeyID;
-            s << vchPrevNotaryKeyID;
-        }
-        if(nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
-            s << notaryDetails;
-            s << prevNotaryDetails;
-        }
-        if(nUpdateMask & ASSET_UPDATE_AUXFEE) {
-            s << auxFeeDetails;
-            s << prevAuxFeeDetails;
-        }
-        if(nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
-            s << nUpdateCapabilityFlags;
-            s << nPrevUpdateCapabilityFlags;
-        }
-    }
-
-    template<typename Stream>
-    void UnserializeTx(Stream& s) {
-        s >> *(CAssetAllocation*)this;
-        s >> nPrecision;
-        s >> nUpdateMask;
-        if(nUpdateMask & ASSET_INIT) {
-            s >> strSymbol;
-            s >> Using<AmountCompression>(nMaxSupply);
-        }
-        if(nUpdateMask & ASSET_UPDATE_CONTRACT) {
-            s >> vchContract;
-            s >> vchPrevContract;
-        }
-        if(nUpdateMask & ASSET_UPDATE_DATA) {
-            s >> strPubData;
-            s >> strPrevPubData;
-        }
-        if(nUpdateMask & ASSET_UPDATE_SUPPLY) {
-            s >> Using<AmountCompression>(nTotalSupply);
-        }
-        if(nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
-            s >> vchNotaryKeyID;
-            s >> vchPrevNotaryKeyID;
-        }
-        if(nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
-            s >> notaryDetails;
-            s >> prevNotaryDetails;
-        }
-        if(nUpdateMask & ASSET_UPDATE_AUXFEE) {
-            s >> auxFeeDetails;
-            s >> prevAuxFeeDetails;
-        }
-        if(nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
-            s >> nUpdateCapabilityFlags;
-            s >> nPrevUpdateCapabilityFlags;
-        }
-    }
-    // this version is for everything else including database storage which does not require previous fields
-    SERIALIZE_METHODS(CAsset, obj) {
-        READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.nUpdateMask);
-        if(obj.nUpdateMask & ASSET_INIT) {
-            READWRITE(obj.strSymbol, Using<AmountCompression>(obj.nMaxSupply));
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_CONTRACT) {
-            READWRITE(obj.vchContract);
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_DATA) {
-            READWRITE(obj.strPubData);
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_SUPPLY) {
-            READWRITE(Using<AmountCompression>(obj.nTotalSupply));
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
-            READWRITE(obj.vchNotaryKeyID);
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
-            READWRITE(obj.notaryDetails);
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE) {
-            READWRITE(obj.auxFeeDetails);
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
-            READWRITE(obj.nUpdateCapabilityFlags);
-        }
-    }
-
-    inline friend bool operator==(const CAsset &a, const CAsset &b) {
-        return (
-        a.voutAssets == b.voutAssets
-        );
-    }
-
-
-    inline friend bool operator!=(const CAsset &a, const CAsset &b) {
-        return !(a == b);
-    }
-    // set precision to an invalid amount so isnull will identify this asset as invalid state
-    inline void SetNull() { ClearAsset(); nPrecision = 9; }
-    inline bool IsNull() const { return nPrecision == 9; }
-    bool UnserializeFromTx(const CTransaction &tx);
-    bool UnserializeFromTx(const CMutableTransaction &mtx);
-    int UnserializeFromData(const std::vector<unsigned char> &vchData);
-    void SerializeData(std::vector<unsigned char>& vchData);
-};
-class CMintSyscoin: public CAssetAllocation {
+class CMintSyscoin {
 public:
     // where in vchTxParentNodes the vchTxValue can be found as an offset
     uint16_t posTx;
@@ -1094,6 +583,7 @@ public:
     uint256 nReceiptRoot;
     uint256 nTxHash;
     uint256 nBlockHash;
+    CAmount nValue;
 
     CMintSyscoin() {
         SetNull();
@@ -1102,41 +592,19 @@ public:
     explicit CMintSyscoin(const CMutableTransaction &mtx);
 
     SERIALIZE_METHODS(CMintSyscoin, obj) {
-        READWRITEAS(CAssetAllocation, obj);
         READWRITE(obj.nTxHash, obj.nBlockHash, obj.posTx,
         obj.vchTxParentNodes, obj.vchTxPath, obj.posReceipt,
-        obj.vchReceiptParentNodes, obj.nTxRoot, obj.nReceiptRoot);
+        obj.vchReceiptParentNodes, obj.nTxRoot, obj.nReceiptRoot, obj.nValue);
     }
 
-    inline void SetNull() { voutAssets.clear(); posTx = 0; nTxRoot.SetNull(); nReceiptRoot.SetNull(); vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nTxHash.SetNull(); nBlockHash.SetNull();  }
-    inline bool IsNull() const { return (voutAssets.empty() && posTx == 0 && posReceipt == 0); }
+    inline void SetNull() {  nValue = 0; posTx = 0; nTxRoot.SetNull(); nReceiptRoot.SetNull(); vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nTxHash.SetNull(); nBlockHash.SetNull();  }
+    inline bool IsNull() const { return (posTx == 0 && posReceipt == 0); }
     int UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromTx(const CMutableTransaction &mtx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 
-class CBurnSyscoin: public CAssetAllocation {
-public:
-    std::vector<unsigned char> vchNEVMAddress;
-    CBurnSyscoin() {
-        SetNull();
-    }
-    explicit CBurnSyscoin(const CTransaction &tx);
-    explicit CBurnSyscoin(const CMutableTransaction &mtx);
-
-    SERIALIZE_METHODS(CBurnSyscoin, obj) {
-        READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.vchNEVMAddress);
-    }
-
-    inline void SetNull() { voutAssets.clear(); vchNEVMAddress.clear();  }
-    inline bool IsNull() const { return (vchNEVMAddress.empty() && voutAssets.empty()); }
-    int UnserializeFromData(const std::vector<unsigned char> &vchData);
-    bool UnserializeFromTx(const CTransaction &tx);
-    bool UnserializeFromTx(const CMutableTransaction &mtx);
-    void SerializeData(std::vector<unsigned char>& vchData);
-};
 class NEVMTxRoot {
     public:
     uint256 nTxRoot;
@@ -1178,10 +646,6 @@ class CNEVMBlock: public CNEVMHeader {
 
 bool IsSyscoinTx(const int &nVersion);
 bool IsMasternodeTx(const int &nVersion);
-bool IsAssetAllocationTx(const int &nVersion);
-bool IsZdagTx(const int &nVersion);
-bool IsSyscoinWithNoInputTx(const int &nVersion);
-bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 int GetSyscoinDataOutput(const CTransaction& tx);
 int GetSyscoinDataOutput(const CMutableTransaction& mtx);
@@ -1191,7 +655,6 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 typedef std::unordered_map<uint256, uint256> NEVMMintTxMap;
 typedef std::vector<std::vector<uint8_t> > NEVMDataVec;
 typedef std::unordered_map<uint256, NEVMTxRoot> NEVMTxRootMap;
-typedef std::unordered_map<uint32_t, std::pair<std::vector<uint64_t>, CAsset > > AssetMap;
 typedef std::map<std::vector<uint8_t>, std::pair<std::vector<uint8_t>, int64_t> > PoDAMAP;
 typedef std::map<std::vector<uint8_t>, const std::vector<uint8_t>* > PoDAMAPMemory;
 /** A generic txid reference (txid or wtxid). */

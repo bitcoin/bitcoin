@@ -127,9 +127,8 @@ endif
 # syscoin core #
 SYSCOIN_CORE_H = \
   addresstype.h \
-  services/asset.h \
-  services/assetconsensus.h \
-  services/rpc/assetrpc.h \
+  services/nevmconsensus.h \
+  services/rpc/nevmrpc.h \
   spork.h \
   dsnotificationinterface.h \
   governance/governance.h \
@@ -186,6 +185,7 @@ SYSCOIN_CORE_H = \
   compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
+  compressor.h \
   common/settings.h \
   common/system.h \
   node/connection_types.h \
@@ -464,9 +464,8 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libsyscoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_node_a_SOURCES = \
-  services/asset.cpp \
-  services/assetconsensus.cpp \
-  services/rpc/assetrpc.cpp \
+  services/nevmconsensus.cpp \
+  services/rpc/nevmrpc.cpp \
   core_write.cpp \
   dsnotificationinterface.cpp \
   governance/governance.cpp \
@@ -658,7 +657,7 @@ libsyscoin_wallet_a_SOURCES = \
   rpc/rpcevo.cpp \
   rpc/masternode.cpp \
   rpc/auxpow_miner.cpp \
-  services/rpc/wallet/assetwalletrpc.cpp \
+  services/rpc/wallet/nevmwalletrpc.cpp \
   wallet/rpcevo.cpp \
   wallet/rpcgovernance.cpp \
   wallet/rpcmasternode.cpp \
@@ -807,8 +806,7 @@ libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPF
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   addresstype.cpp \
-  services/asset.cpp \
-  services/assetconsensus.cpp \
+  services/nevmconsensus.cpp \
   auxpow.cpp \
   base58.cpp \
   bech32.cpp \
@@ -820,6 +818,7 @@ libsyscoin_common_a_SOURCES = \
   common/init.cpp \
   common/interfaces.cpp \
   common/run_command.cpp \
+  compressor.cpp \
   common/settings.cpp \
   common/system.cpp \
   core_read.cpp \
@@ -1079,6 +1078,9 @@ libsyscoinkernel_la_SOURCES = \
   chain.cpp \
   clientversion.cpp \
   coins.cpp \
+  common/args.cpp \
+  common/config.cpp \
+  compressor.cpp \
   consensus/merkle.cpp \
   consensus/tx_check.cpp \
   consensus/tx_verify.cpp \

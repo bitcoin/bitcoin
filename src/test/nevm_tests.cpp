@@ -10,7 +10,6 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <policy/policy.h>
-#include <services/asset.h>
 #include <univalue.h>
 #include <key_io.h>
 #include <test/util/setup_common.h>
@@ -80,14 +79,12 @@ BOOST_AUTO_TEST_CASE(nevm_parseabidata)
 {
     tfm::format(std::cout,"Running nevm_parseabidata...\n");
     CAmount outputAmount;
-    uint64_t nAsset = 0;
     const std::vector<unsigned char> &expectedMethodHash = ParseHex("54c988ff");
     const std::vector<unsigned char> &rlpBytes = ParseHex("54c988ff00000000000000000000000000000000000000000000000000000002540be400000000000000000000000000000000000000000000000000000000009be8894b0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000002c62637274317130667265323430737939326d716b386b6b377073616561366b74366d3537323570377964636a0000000000000000000000000000000000000000");
     std::string expectedAddress = "bcrt1q0fre240sy92mqk8kk7psaea6kt6m5725p7ydcj";
     std::string address;
-    BOOST_CHECK(parseNEVMMethodInputData(expectedMethodHash, 8, 8, rlpBytes, outputAmount, nAsset, address));
+    BOOST_CHECK(parseNEVMMethodInputData(expectedMethodHash, 8, 8, rlpBytes, outputAmount, address));
     BOOST_CHECK_EQUAL(outputAmount, 100*COIN);
-    BOOST_CHECK_EQUAL(nAsset, (uint64_t)2615707979);
     BOOST_CHECK(address == expectedAddress);
 
 }

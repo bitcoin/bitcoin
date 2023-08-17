@@ -517,8 +517,6 @@ public:
     void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeProTxConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     bool existsConflicts(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeZDAGConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     /** After reorg, filter the entries that would no longer be valid in the next block, and update
      * the entries' cached LockPoints if needed.  The mempool does not have any knowledge of
      * consensus rules. It just appplies the callable function and removes the ones for which it

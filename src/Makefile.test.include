@@ -26,7 +26,6 @@ JSON_TEST_FILES = \
   test/data/tx_invalid.json \
   test/data/tx_valid.json \
   test/data/utxo.json \
-  test/data/assetbalances.json \
   test/data/nevmspv_valid.json \
   test/data/nevmspv_invalid.json \
   test/data/tx_valid.json

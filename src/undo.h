@@ -7,6 +7,7 @@
 #define SYSCOIN_UNDO_H
 
 #include <coins.h>
+#include <compressor.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <serialize.h>

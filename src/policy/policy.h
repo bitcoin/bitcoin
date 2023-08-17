@@ -45,10 +45,6 @@ static constexpr unsigned int MAX_STANDARD_P2WSH_STACK_ITEM_SIZE{80};
 static constexpr unsigned int MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE{80};
 /** The maximum size in bytes of a standard witnessScript */
 static constexpr unsigned int MAX_STANDARD_P2WSH_SCRIPT_SIZE{3600};
-// SYSCOIN
-/** The maximum size of a standard ZDAG transaction. Dessimation has to happen in timely manner and it is an
- * interactive protocol so we ensure a transaction or its ancestors abide by the size restriction */
-static constexpr unsigned int MAX_STANDARD_ZDAG_TX_SIZE{1100};
 /** The maximum size of a standard ScriptSig */
 static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
 /** Min feerate for defining dust.

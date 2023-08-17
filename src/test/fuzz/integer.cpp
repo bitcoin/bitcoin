@@ -3,8 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
-// SYSCOIN
-#include <primitives/transaction.h>
+#include <compressor.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>

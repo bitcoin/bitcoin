@@ -302,8 +302,6 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool& mempool, const CTxMemPool::setEntries& package) const
 {
-    // SYSCOIN
-    AssertLockHeld(mempool.cs);
     int nCountAncestorNEVMDataTxs = 0;
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
@@ -317,12 +315,6 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool& mempool, const CT
                 return false;
             }
         }
-  
-        // If conflicting syscoin related dbl-spent input in this tx, skip it if its newer (prefer first tx based on time)
-        if(!mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
-            return false;
-        } 
-
     }
     return true;
 }

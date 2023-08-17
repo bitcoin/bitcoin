@@ -21,7 +21,7 @@
 #include <util/translation.h>
 #include <validation.h>
 // SYSCOIN
-#include <services/assetconsensus.h>
+#include <services/nevmconsensus.h>
 #include <evo/evodb.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
@@ -57,20 +57,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     governance.reset();
     governance.reset(new CGovernanceManager(chainman));
     llmq::InitLLMQSystem(*evoDb, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, options.fReindexGeth);
-    passetdb.reset();
-    passetdb = std::make_unique<CAssetDB>(DBParams{
-        .path = chainman.m_options.datadir / "asset",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db});
-    passetnftdb.reset();
-    passetnftdb = std::make_unique<CAssetNFTDB>(DBParams{
-        .path = chainman.m_options.datadir / "assetnft",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db});
     pnevmtxrootsdb.reset();
     pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
         .path = chainman.m_options.datadir / "nevmtxroots",
@@ -230,7 +216,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     }
     // if coinsview is empty we clear all SYS db's overriding anything we did before
     if(coinsViewEmpty && !options.fReindexGeth) {
-        LogPrintf("coinsViewEmpty recreating LLMQ and asset databases\n");
+        LogPrintf("coinsViewEmpty recreating LLMQ and NEVM databases\n");
         llmq::DestroyLLMQSystem();
         evoDb.reset();
         evoDb = std::make_unique<CEvoDB>(DBParams{
@@ -242,20 +228,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         deterministicMNManager.reset();
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
         llmq::InitLLMQSystem(*evoDb, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, coinsViewEmpty);
-        passetdb.reset();
-        passetdb = std::make_unique<CAssetDB>(DBParams{
-            .path = chainman.m_options.datadir / "asset",
-            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
-            .memory_only = options.block_tree_db_in_memory,
-            .wipe_data = coinsViewEmpty,
-            .options = chainman.m_options.block_tree_db});
-        passetnftdb.reset();
-        passetnftdb = std::make_unique<CAssetNFTDB>(DBParams{
-            .path = chainman.m_options.datadir / "assetnft",
-            .cache_bytes = static_cast<size_t>(cache_sizes.evo_db),
-            .memory_only = options.block_tree_db_in_memory,
-            .wipe_data = coinsViewEmpty,
-            .options = chainman.m_options.block_tree_db});
         pnevmtxrootsdb.reset();
         pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
             .path = chainman.m_options.datadir / "nevmtxroots",

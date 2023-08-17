@@ -1,9 +1,8 @@
 // Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-// SYSCOIN
-#include <primitives/transaction.h>
-#include <script/script.h>
+
+#include <compressor.h>
 #include <script/script.h>
 #include <test/util/setup_common.h>
 
@@ -18,10 +17,10 @@
 #define NUM_MULTIPLES_CENT 10000
 
 // amounts 1 .. 10000
-#define NUM_MULTIPLES_1SYS 10000
+#define NUM_MULTIPLES_1BTC 10000
 
 // amounts 50 .. 21000000
-#define NUM_MULTIPLES_50SYS 420000
+#define NUM_MULTIPLES_50BTC 420000
 
 BOOST_FIXTURE_TEST_SUITE(compress_tests, BasicTestingSetup)
 
@@ -46,22 +45,17 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
     BOOST_CHECK(TestPair(         COIN,       0x9));
     BOOST_CHECK(TestPair(      50*COIN,      0x32));
     BOOST_CHECK(TestPair(21000000*COIN, 0x1406f40));
-    // SYSCOIN
-    auto compressed = CompressAmount(MAX_MONEY);
-    BOOST_CHECK_EQUAL(MAX_MONEY, (int64_t)DecompressAmount(compressed));
-    // max amount that can be compressed without unsigned integer overflow its a bit above 2 quintillion range
-    compressed = CompressAmount((0x2^64)/9);
-    BOOST_CHECK_EQUAL((0x2^64)/9, (int64_t)DecompressAmount(compressed));
+
     for (uint64_t i = 1; i <= NUM_MULTIPLES_UNIT; i++)
         BOOST_CHECK(TestEncode(i));
 
     for (uint64_t i = 1; i <= NUM_MULTIPLES_CENT; i++)
         BOOST_CHECK(TestEncode(i * CENT));
 
-    for (uint64_t i = 1; i <= NUM_MULTIPLES_1SYS; i++)
+    for (uint64_t i = 1; i <= NUM_MULTIPLES_1BTC; i++)
         BOOST_CHECK(TestEncode(i * COIN));
 
-    for (uint64_t i = 1; i <= NUM_MULTIPLES_50SYS; i++)
+    for (uint64_t i = 1; i <= NUM_MULTIPLES_50BTC; i++)
         BOOST_CHECK(TestEncode(i * 50 * COIN));
 
     for (uint64_t i = 0; i < 100000; i++)
