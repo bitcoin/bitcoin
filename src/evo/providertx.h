@@ -13,7 +13,7 @@
 #include <netaddress.h>
 #include <pubkey.h>
 #include <univalue.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <key_io.h>
 #include <kernel/cs_main.h>
 class CBlockIndex;

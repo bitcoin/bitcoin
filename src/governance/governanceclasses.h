@@ -6,7 +6,7 @@
 #include <consensus/amount.h>
 #include <governance/governance.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <threadsafety.h>
 #include <uint256.h>
 

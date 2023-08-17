@@ -7,7 +7,7 @@
 
 #include <merkleblock.h>
 #include <pubkey.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <threadsafety.h>
 #include <bls/bls.h>
 #include <netaddress.h>

@@ -8,7 +8,7 @@
 #include <nevm/common.h>
 #include <nevm/rlp.h>
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <policy/policy.h>
 #include <services/asset.h>
 #include <univalue.h>

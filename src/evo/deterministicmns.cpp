@@ -9,7 +9,7 @@
 #include <base58.h>
 #include <chainparams.h>
 #include <core_io.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <node/interface_ui.h>
 #include <validation.h>
 #include <validationinterface.h>

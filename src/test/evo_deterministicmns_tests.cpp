@@ -4,7 +4,7 @@
 #include <test/util/setup_common.h>
 
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <validation.h>
 #include <base58.h>

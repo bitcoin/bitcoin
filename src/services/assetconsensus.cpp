@@ -9,7 +9,7 @@
 #include <nevm/address.h>
 #include <nevm/sha3.h>
 #include <services/asset.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <messagesigner.h>
 #include <util/rbf.h>
 #include <undo.h>

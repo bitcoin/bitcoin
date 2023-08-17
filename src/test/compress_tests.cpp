@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 // SYSCOIN
 #include <primitives/transaction.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <script/script.h>
 #include <test/util/setup_common.h>
 

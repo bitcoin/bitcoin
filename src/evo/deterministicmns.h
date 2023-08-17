@@ -18,7 +18,7 @@
 #include <numeric>
 #include <unordered_map>
 #include <unordered_set>
-#include <script/standard.h>
+#include <script/script.h>
 #include <interfaces/chain.h>
 #include <bls/bls.h>
 #include <kernel/cs_main.h>

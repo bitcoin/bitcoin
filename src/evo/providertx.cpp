@@ -14,7 +14,7 @@
 #include <coins.h>
 #include <hash.h>
 #include <messagesigner.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <validation.h>
 #include <common/args.h>
 bool CProRegTx::IsTriviallyValid(TxValidationState& state, bool is_basic_scheme_active) const
