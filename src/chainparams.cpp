@@ -111,7 +111,7 @@ bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePas
         if (consensus.vDeployments[index].bit == nBit) {
             auto& deployment = consensus.vDeployments[index];
             if (timePast > deployment.nTimeout) {
-                LogPrintf("%s: activation by bit=%d time-outed at height=%d\n", __func__, nBit, height);
+                LogPrintf("%s: activation by bit=%d for deployment %s timed out at height=%d\n", __func__, nBit, VersionBitsDeploymentInfo[Consensus::DeploymentPos(index)].name, height);
                 continue;
             }
             if (deployment.nMNActivationHeight < 0) {
