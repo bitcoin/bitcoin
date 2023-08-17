@@ -126,6 +126,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
+  addresstype.h \
   services/asset.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
@@ -324,7 +325,7 @@ SYSCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/signingprovider.h \
-  script/standard.h \
+  script/solver.h \
   shutdown.h \
   signet.h \
   streams.h \
@@ -805,6 +806,7 @@ libsyscoin_consensus_a_SOURCES = \
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS)  $(BOOST_CPPFLAGS)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
+  addresstype.cpp \
   services/asset.cpp \
   services/assetconsensus.cpp \
   auxpow.cpp \
@@ -850,7 +852,7 @@ libsyscoin_common_a_SOURCES = \
   script/miniscript.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
-  script/standard.cpp \
+  script/solver.cpp \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
 
@@ -1115,7 +1117,7 @@ libsyscoinkernel_la_SOURCES = \
   script/script.cpp \
   script/script_error.cpp \
   script/sigcache.cpp \
-  script/standard.cpp \
+  script/solver.cpp \
   signet.cpp \
   streams.cpp \
   support/cleanse.cpp \

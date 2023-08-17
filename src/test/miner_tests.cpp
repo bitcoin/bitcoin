@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <coins.h>
 #include <common/system.h>
 #include <consensus/consensus.h>
@@ -9,7 +10,6 @@
 #include <consensus/tx_verify.h>
 #include <node/miner.h>
 #include <policy/policy.h>
-#include <script/standard.h>
 #include <test/util/random.h>
 #include <test/util/txmempool.h>
 #include <timedata.h>

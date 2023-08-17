@@ -5,7 +5,6 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
-#include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 

@@ -12,6 +12,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/result.h>

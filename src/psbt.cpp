@@ -5,6 +5,7 @@
 #include <psbt.h>
 
 #include <policy/policy.h>
+#include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 

@@ -4,6 +4,7 @@
 // SYSCOIN
 #include <primitives/transaction.h>
 #include <script/standard.h>
+#include <script/script.h>
 #include <test/util/setup_common.h>
 
 #include <stdint.h>

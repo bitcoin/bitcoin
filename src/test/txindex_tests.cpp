@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
-#include <script/standard.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>

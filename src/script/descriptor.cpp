@@ -9,7 +9,8 @@
 #include <pubkey.h>
 #include <script/miniscript.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/signingprovider.h>
+#include <script/solver.h>
 #include <uint256.h>
 
 #include <common/args.h>

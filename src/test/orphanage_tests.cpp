@@ -6,7 +6,6 @@
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <txorphanage.h>

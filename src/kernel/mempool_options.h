@@ -8,7 +8,6 @@
 
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <script/standard.h>
 
 #include <chrono>
 #include <cstdint>

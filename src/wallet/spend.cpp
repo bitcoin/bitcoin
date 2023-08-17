@@ -11,7 +11,9 @@
 #include <numeric>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <util/check.h>
 #include <util/fees.h>
 #include <util/moneystr.h>

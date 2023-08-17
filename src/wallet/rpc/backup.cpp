@@ -12,7 +12,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <sync.h>
 #include <uint256.h>
 #include <util/bip32.h>
