@@ -178,7 +178,7 @@ class MiningTest(SyscoinTestFramework):
         block.vtx = [coinbase_tx]
 
         self.log.info("getblocktemplate: segwit rule must be set")
-        assert_raises_rpc_error(-8, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate)
+        assert_raises_rpc_error(-8, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate, {})
 
         self.log.info("getblocktemplate: Test valid block")
         assert_template(node, block, None)
