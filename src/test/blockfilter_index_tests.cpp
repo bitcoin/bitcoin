@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <blockfilter.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
@@ -10,7 +11,6 @@
 #include <interfaces/chain.h>
 #include <node/miner.h>
 #include <pow.h>
-#include <script/standard.h>
 #include <test/util/blockfilter.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>

@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <clientversion.h>
 #include <coins.h>
-#include <script/standard.h>
 #include <streams.h>
 #include <test/util/poolresourcetester.h>
 #include <test/util/random.h>

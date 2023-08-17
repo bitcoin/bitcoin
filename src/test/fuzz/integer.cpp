@@ -19,7 +19,7 @@
 #include <pow.h>
 #include <protocol.h>
 #include <pubkey.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>

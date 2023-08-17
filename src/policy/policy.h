@@ -10,7 +10,7 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/solver.h>
 
 #include <cstdint>
 #include <string>
@@ -63,16 +63,35 @@ static constexpr unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT_KVB{101};
 static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
 /** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
 static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
+/** Default for -datacarrier */
+static const bool DEFAULT_ACCEPT_DATACARRIER = true;
+/**
+ * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
+ * +2 for the pushdata opcodes.
+ */
+static const unsigned int MAX_OP_RETURN_RELAY = 83;
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
  * configurable as it doesn't materially change DoS parameters.
  */
 static constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10000};
+
+
+/**
+ * Mandatory script verification flags that all new transactions must comply with for
+ * them to be valid. Failing one of these tests may trigger a DoS ban;
+ * see CheckInputScripts() for details.
+ *
+ * Note that this does not affect consensus validity; see GetBlockScriptFlags()
+ * for that.
+ */
+static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
+
 /**
  * Standard script verification flags that standard transactions will comply
- * with. However scripts violating these flags may still be present in valid
- * blocks and we must accept those blocks.
+ * with. However we do not ban/disconnect nodes that forward txs violating
+ * these rules, for better forwards and backwards compatability.
  */
 static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS{MANDATORY_SCRIPT_VERIFY_FLAGS |
                                                              SCRIPT_VERIFY_DERSIG |

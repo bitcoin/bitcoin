@@ -26,6 +26,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <support/cleanse.h>
 #include <txmempool.h>
 #include <util/bip32.h>

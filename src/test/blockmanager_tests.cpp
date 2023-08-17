@@ -6,6 +6,7 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <script/solver.h>
 #include <util/chaintype.h>
 #include <validation.h>
 

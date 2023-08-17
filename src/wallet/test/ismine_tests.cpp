@@ -6,7 +6,8 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
+#include <script/signingprovider.h>
 #include <test/util/setup_common.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>

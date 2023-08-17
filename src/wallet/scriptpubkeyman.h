@@ -5,11 +5,12 @@
 #ifndef BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
+#include <addresstype.h>
 #include <logging.h>
 #include <psbt.h>
 #include <script/descriptor.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <util/error.h>
 #include <util/message.h>
 #include <util/result.h>

@@ -12,7 +12,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
-#include <script/standard.h>
+#include <script/signingprovider.h>
 #include <uint256.h>
 
 class CKey;
