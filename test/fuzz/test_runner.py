@@ -6,6 +6,7 @@
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 import argparse
 import configparser
 import logging
@@ -19,8 +20,7 @@ def get_fuzz_env(*, target, source_dir):
         'FUZZ': target,
         'UBSAN_OPTIONS':
         f'suppressions={source_dir}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1',
-        'ASAN_OPTIONS':  # symbolizer disabled due to https://github.com/google/sanitizers/issues/1364#issuecomment-761072085
-        'symbolize=0:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1',
+        "ASAN_OPTIONS": "detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1",
     }
 
 
@@ -40,6 +40,11 @@ def main():
         '--valgrind',
         action='store_true',
         help='If true, run fuzzing binaries under the valgrind memory error detector',
+    )
+    parser.add_argument(
+        "--empty_min_time",
+        type=int,
+        help="If set, run at least this long, if the existing fuzz inputs directory is empty.",
     )
     parser.add_argument(
         '-x',
@@ -76,6 +81,7 @@ def main():
     )
 
     args = parser.parse_args()
+    args.corpus_dir = Path(args.corpus_dir)
 
     # Set up logging
     logging.basicConfig(
@@ -88,8 +94,8 @@ def main():
     configfile = os.path.abspath(os.path.dirname(__file__)) + "/../config.ini"
     config.read_file(open(configfile, encoding="utf8"))
 
-    if not config["components"].getboolean("ENABLE_FUZZ"):
-        logging.error("Must have fuzz targets built")
+    if not config["components"].getboolean("ENABLE_FUZZ_BINARY"):
+        logging.error("Must have fuzz executable built")
         sys.exit(1)
 
     # Build list of tests
@@ -141,11 +147,12 @@ def main():
             ],
             env=get_fuzz_env(target=test_list_selection[0], source_dir=config['environment']['SRCDIR']),
             timeout=20,
-            check=True,
+            check=False,
             stderr=subprocess.PIPE,
             text=True,
         ).stderr
-        if "libFuzzer" not in help_output:
+        using_libfuzzer = "libFuzzer" in help_output
+        if (args.generate or args.m_dir) and not using_libfuzzer:
             logging.error("Must be built with libFuzzer")
             sys.exit(1)
     except subprocess.TimeoutExpired:
@@ -179,8 +186,46 @@ def main():
             test_list=test_list_selection,
             src_dir=config['environment']['SRCDIR'],
             build_dir=config["environment"]["BUILDDIR"],
+            using_libfuzzer=using_libfuzzer,
             use_valgrind=args.valgrind,
+            empty_min_time=args.empty_min_time,
         )
+
+
+def transform_process_message_target(targets, src_dir):
+    """Add a target per process message, and also keep ("process_message", {}) to allow for
+    cross-pollination, or unlimited search"""
+
+    p2p_msg_target = "process_message"
+    if (p2p_msg_target, {}) in targets:
+        lines = subprocess.run(
+            ["git", "grep", "--function-context", "g_all_net_message_types{", src_dir / "src" / "protocol.cpp"],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.splitlines()
+        lines = [l.split("::", 1)[1].split(",")[0].lower() for l in lines if l.startswith("src/protocol.cpp-    NetMsgType::")]
+        assert len(lines)
+        targets += [(p2p_msg_target, {"LIMIT_TO_MESSAGE_TYPE": m}) for m in lines]
+    return targets
+
+
+def transform_rpc_target(targets, src_dir):
+    """Add a target per RPC command, and also keep ("rpc", {}) to allow for cross-pollination,
+    or unlimited search"""
+
+    rpc_target = "rpc"
+    if (rpc_target, {}) in targets:
+        lines = subprocess.run(
+            ["git", "grep", "--function-context", "RPC_COMMANDS_SAFE_FOR_FUZZING{", src_dir / "src" / "test" / "fuzz" / "rpc.cpp"],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.splitlines()
+        lines = [l.split("\"", 1)[1].split("\"")[0] for l in lines if l.startswith("src/test/fuzz/rpc.cpp-    \"")]
+        assert len(lines)
+        targets += [(rpc_target, {"LIMIT_TO_RPC_COMMAND": r}) for r in lines]
+    return targets
 
 
 def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
@@ -190,29 +235,36 @@ def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
     {corpus_dir}.
     """
     logging.info("Generating corpus to {}".format(corpus_dir))
+    targets = [(t, {}) for t in targets]  # expand to add dictionary for target-specific env variables
+    targets = transform_process_message_target(targets, Path(src_dir))
+    targets = transform_rpc_target(targets, Path(src_dir))
 
-    def job(command, t):
-        logging.debug("Running '{}'\n".format(" ".join(command)))
+    def job(command, t, t_env):
+        logging.debug(f"Running '{command}'")
         logging.debug("Command '{}' output:\n'{}'\n".format(
-            ' '.join(command),
+            command,
             subprocess.run(
                 command,
-                env=get_fuzz_env(target=t, source_dir=src_dir),
+                env={
+                    **t_env,
+                    **get_fuzz_env(target=t, source_dir=src_dir),
+                },
                 check=True,
                 stderr=subprocess.PIPE,
                 text=True,
-            ).stderr))
+            ).stderr,
+        ))
 
     futures = []
-    for target in targets:
-        target_corpus_dir = os.path.join(corpus_dir, target)
+    for target, t_env in targets:
+        target_corpus_dir = corpus_dir / target
         os.makedirs(target_corpus_dir, exist_ok=True)
         command = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             "-runs=100000",
             target_corpus_dir,
         ]
-        futures.append(fuzz_pool.submit(job, command, target))
+        futures.append(fuzz_pool.submit(job, command, target, t_env))
 
     for future in as_completed(futures):
         future.result()
@@ -251,16 +303,25 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dir)
         future.result()
 
 
-def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, use_valgrind):
+def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, using_libfuzzer, use_valgrind, empty_min_time):
     jobs = []
     for t in test_list:
-        corpus_path = os.path.join(corpus, t)
+        corpus_path = corpus / t
         os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
-            '-runs=1',
-            corpus_path,
         ]
+        empty_dir = not any(corpus_path.iterdir())
+        if using_libfuzzer:
+            if empty_min_time and empty_dir:
+                args += [f"-max_total_time={empty_min_time}"]
+            else:
+                args += [
+                    "-runs=1",
+                    corpus_path,
+                ]
+        else:
+            args += [corpus_path]
         if use_valgrind:
             args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
 
@@ -287,7 +348,7 @@ def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, use_valgrind):
                 logging.info(e.stdout)
             if e.stderr:
                 logging.info(e.stderr)
-            logging.info("Target \"{}\" failed with exit code {}".format(" ".join(result.args), e.returncode))
+            logging.info(f"Target {result.args} failed with exit code {e.returncode}")
             sys.exit(1)
 
 

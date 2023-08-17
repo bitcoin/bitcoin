@@ -17,7 +17,7 @@ void initialize_chain()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(chain, initialize_chain)
+FUZZ_TARGET(chain, .init = initialize_chain)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     std::optional<CDiskBlockIndex> disk_block_index = ConsumeDeserializable<CDiskBlockIndex>(fuzzed_data_provider);

@@ -14,7 +14,8 @@ import sys
 
 FALSE_POSITIVES = [
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
-    ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
+    ("src/index/base.cpp", "FatalErrorf(const char* fmt, const Args&... args)"),
+    ("src/index/base.h", "FatalErrorf(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),

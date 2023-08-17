@@ -12,6 +12,7 @@
 #include <evo/deterministicmns.h>
 
 #include <chainparams.h>
+#include <common/system.h>
 #include <interfaces/node.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
@@ -23,7 +24,6 @@
 #include <rpc/server.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 
 #include <univalue.h>
@@ -798,6 +798,12 @@ void RPCConsole::removeWallet(WalletModel * const walletModel)
         ui->WalletSelector->setVisible(false);
         ui->WalletSelectorLabel->setVisible(false);
     }
+}
+
+void RPCConsole::setCurrentWallet(WalletModel* const wallet_model)
+{
+    QVariant data = QVariant::fromValue(wallet_model);
+    ui->WalletSelector->setCurrentIndex(ui->WalletSelector->findData(data));
 }
 #endif
 

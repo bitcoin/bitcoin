@@ -33,12 +33,15 @@
 #include <util/result.h>
 
 #include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 // SYSCOIN
 #include <netaddress.h>
+#include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
-
+#include <pubkey.h>
 class CBlockIndex;
 class CChain;
 class CBLSPublicKey;
@@ -222,7 +225,7 @@ struct TxMempoolInfo
     CAmount fee;
 
     /** Virtual size of the transaction. */
-    size_t vsize;
+    int32_t vsize;
 
     /** The fee delta. */
     int64_t nFeeDelta;
@@ -457,7 +460,7 @@ private:
      *
      * @return all in-mempool ancestors, or an error if any ancestor or descendant limits were hit
      */
-    util::Result<setEntries> CalculateAncestorsAndCheckLimits(size_t entry_size,
+    util::Result<setEntries> CalculateAncestorsAndCheckLimits(int64_t entry_size,
                                                               size_t entry_count,
                                                               CTxMemPoolEntry::Parents &staged_ancestors,
                                                               const Limits& limits
@@ -541,7 +544,20 @@ public:
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
     void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    
+
+    struct delta_info {
+        /** Whether this transaction is in the mempool. */
+        const bool in_mempool;
+        /** The fee delta added using PrioritiseTransaction(). */
+        const CAmount delta;
+        /** The modified fee (base fee + delta) of this entry. Only present if in_mempool=true. */
+        std::optional<CAmount> modified_fee;
+        /** The prioritised transaction's txid. */
+        const uint256 txid;
+    };
+    /** Return a vector of all entries in mapDeltas with their corresponding delta_info. */
+    std::vector<delta_info> GetPrioritisedTransactions() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
     /** Get the transaction in the pool that spends the same prevout */
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -673,13 +689,13 @@ public:
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) const;
 
     /**
-     * @returns true if we've made an attempt to load the mempool regardless of
+     * @returns true if an initial attempt to load the persisted mempool was made, regardless of
      *          whether the attempt was successful or not
      */
     bool GetLoadTried() const;
 
     /**
-     * Set whether or not we've made an attempt to load the mempool (regardless
+     * Set whether or not an initial attempt to load the persisted mempool was made (regardless
      * of whether the attempt was successful or not)
      */
     void SetLoadTried(bool load_tried);
@@ -718,6 +734,10 @@ public:
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
     TxMempoolInfo info(const GenTxid& gtxid) const;
+
+    /** Returns info for a transaction if its entry_sequence < last_sequence */
+    TxMempoolInfo info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const;
+
     std::vector<TxMempoolInfo> infoAll() const;
     // SYSCOIN
     bool existsProviderTxConflict(const CTransaction &tx) const EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);

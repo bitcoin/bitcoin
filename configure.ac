@@ -97,12 +97,6 @@ case $host in
   ;;
 esac
 
-AC_ARG_WITH([seccomp],
-  [AS_HELP_STRING([--with-seccomp],
-  [enable experimental syscall sandbox feature (-sandbox), default is yes if seccomp-bpf is detected under Linux x86_64])],
-  [seccomp_found=$withval],
-  [seccomp_found=auto])
-
 AC_ARG_ENABLE([c++20],
   [AS_HELP_STRING([--enable-c++20],
   [enable compilation in c++20 mode (disabled by default)])],
@@ -245,10 +239,10 @@ dnl May be useful if warnings from external headers clutter the build output
 dnl too much, so that it becomes difficult to spot Syscoin Core warnings
 dnl or if they cause a build failure with --enable-werror.
 AC_ARG_ENABLE([suppress-external-warnings],
-  [AS_HELP_STRING([--enable-suppress-external-warnings],
-                  [Suppress warnings from external headers (default is no)])],
+  [AS_HELP_STRING([--disable-suppress-external-warnings],
+                  [Do not suppress warnings from external headers (default is to suppress)])],
   [suppress_external_warnings=$enableval],
-  [suppress_external_warnings=no])
+  [suppress_external_warnings=yes])
 
 AC_ARG_ENABLE([lcov],
   [AS_HELP_STRING([--enable-lcov],
@@ -440,12 +434,6 @@ if test "$enable_werror" = "yes"; then
   AX_CHECK_COMPILE_FLAG([-Werror=range-loop-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=range-loop-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=unused-variable],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unused-variable"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=date-time],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=date-time"],,[[$CXXFLAG_WERROR]])
-
-  dnl -Wreturn-type is broken in GCC for MinGW-w64.
-  dnl https://sourceforge.net/p/mingw-w64/bugs/306/
-  AX_CHECK_COMPILE_FLAG([-Werror=return-type], [], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Wno-error=return-type"], [$CXXFLAG_WERROR],
-                        [AC_LANG_SOURCE([[#include <cassert>
-                                          int f(){ assert(false); }]])])
 
   AX_CHECK_COMPILE_FLAG([-Werror=conditional-uninitialized],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=conditional-uninitialized"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=sign-compare],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=sign-compare"],,[[$CXXFLAG_WERROR]])
@@ -743,6 +731,8 @@ case $host in
        AC_MSG_ERROR([windres not found])
      fi
 
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -DSECP256K1_STATIC"
+
      CORE_CPPFLAGS="$CORE_CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
      dnl Prevent the definition of min/max macros.
      dnl We always want to use the standard library.
@@ -970,8 +960,6 @@ if test "$ac_cv_sys_large_files" != "" &&
   CORE_CPPFLAGS="$CORE_CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
 fi
 
-AC_SEARCH_LIBS([clock_gettime],[rt])
-
 if test "$enable_gprof" = "yes"; then
     dnl -pg is incompatible with -pie. Since hardening and profiling together doesn't make sense,
     dnl we simply make them mutually exclusive here. Additionally, hardened toolchains may force
@@ -1009,7 +997,8 @@ if test "$use_hardening" != "no"; then
 
   case $host in
     *mingw*)
-      dnl stack-clash-protection doesn't currently work, and likely should just be skipped for Windows.
+      dnl stack-clash-protection doesn't compile with GCC 10 and earlier.
+      dnl In any case, it is a no-op for Windows.
       dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
       ;;
     *)
@@ -1053,6 +1042,7 @@ if test "$TARGET_OS" = "darwin"; then
   AX_CHECK_LINK_FLAG([-Wl,-dead_strip], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-bind_at_load], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-fixup_chains], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-fixup_chains"], [], [$LDFLAG_WERROR])
 fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
@@ -1536,10 +1526,6 @@ if test "$use_boost" = "yes"; then
   AX_CHECK_PREPROC_FLAG([-DBOOST_NO_CXX98_FUNCTION_BASE], [BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"], [], [$CXXFLAG_WERROR],
                         [AC_LANG_PROGRAM([[#include <boost/config.hpp>]])])
 
-  if test "$enable_debug" = "yes" || test "$enable_fuzz" = "yes"; then
-    BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE"
-  fi
-
   if test "$suppress_external_warnings" != "no"; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
@@ -1587,36 +1573,6 @@ if test "$use_external_signer" != "no"; then
   fi
 fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$use_external_signer" = "yes"])
-
-dnl Do not compile with syscall sandbox support when compiling under the sanitizers.
-dnl The sanitizers introduce use of syscalls that are not typically used in syscoind
-dnl (such as execve when the sanitizers execute llvm-symbolizer).
-if test "$use_sanitizers" != ""; then
-  AC_MSG_WARN([Specifying --with-sanitizers forces --without-seccomp since the sanitizers introduce use of syscalls not allowed by the syscoind syscall sandbox (-sandbox=<mode>).])
-  seccomp_found=no
-fi
-if test "$seccomp_found" != "no"; then
-  AC_MSG_CHECKING([for seccomp-bpf (Linux x86-64)])
-  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-      @%:@include <linux/seccomp.h>
-    ]], [[
-      #if !defined(__x86_64__)
-      #  error Syscall sandbox is an experimental feature currently available only under Linux x86-64.
-      #endif
-    ]])],[
-      AC_MSG_RESULT([yes])
-      seccomp_found="yes"
-      AC_DEFINE([USE_SYSCALL_SANDBOX], [1], [Define this symbol to build with syscall sandbox support.])
-    ],[
-      AC_MSG_RESULT([no])
-      seccomp_found="no"
-  ])
-fi
-dnl Currently only enable -sandbox=<mode> feature if seccomp is found.
-dnl In the future, sandboxing could be also be supported with other
-dnl sandboxing mechanisms besides seccomp.
-use_syscall_sandbox=$seccomp_found
-AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX], [test "$use_syscall_sandbox" != "no"])
 
 dnl Check for reduced exports
 if test "$use_reduce_exports" = "yes"; then
@@ -2074,7 +2030,6 @@ echo
 echo "Options used to compile and link:"
 echo "  external signer = $use_external_signer"
 echo "  multiprocess    = $build_multiprocess"
-echo "  with experimental syscall sandbox support = $use_syscall_sandbox"
 echo "  with libs       = $build_syscoin_libs"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then

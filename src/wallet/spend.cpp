@@ -4,18 +4,20 @@
 
 #include <algorithm>
 #include <common/args.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <numeric>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <util/check.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
-#include <util/system.h>
 #include <util/trace.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
@@ -583,7 +585,7 @@ util::Result<SelectionResult> ChooseSelectionResult(const CAmount& nTargetValue,
         results.push_back(*knapsack_result);
     } else append_error(knapsack_result);
 
-    if (auto srd_result{SelectCoinsSRD(groups.positive_group, nTargetValue, coin_selection_params.rng_fast, max_inputs_weight)}) {
+    if (auto srd_result{SelectCoinsSRD(groups.positive_group, nTargetValue, coin_selection_params.m_change_fee, coin_selection_params.rng_fast, max_inputs_weight)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*srd_result);
     } else append_error(srd_result);

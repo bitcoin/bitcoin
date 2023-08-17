@@ -15,11 +15,11 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
+#include <common/system.h>
 #include <interfaces/node.h>
-#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
-#include <txdb.h> // for -dbcache defaults
-#include <util/system.h>
+#include <txdb.h>
+#include <validation.h>
 
 #include <chrono>
 
@@ -409,9 +409,8 @@ void OptionsDialog::updateProxyValidationState()
 
 void OptionsDialog::updateDefaultProxyNets()
 {
-    CNetAddr ui_proxy_netaddr;
-    LookupHost(ui->proxyIp->text().toStdString(), ui_proxy_netaddr, /*fAllowLookup=*/false);
-    const CService ui_proxy{ui_proxy_netaddr, ui->proxyPort->text().toUShort()};
+    const std::optional<CNetAddr> ui_proxy_netaddr{LookupHost(ui->proxyIp->text().toStdString(), /*fAllowLookup=*/false)};
+    const CService ui_proxy{ui_proxy_netaddr.value_or(CNetAddr{}), ui->proxyPort->text().toUShort()};
 
     Proxy proxy;
     bool has_proxy;

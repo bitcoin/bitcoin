@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <vector>
 
+#include <common/system.h>
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
@@ -17,12 +18,10 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
-#include <script/standard.h>
 #include <span.h>
 #include <streams.h>
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 

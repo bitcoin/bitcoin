@@ -21,6 +21,7 @@
 #include <unordered_set>
 #include <common/args.h>
 #include <evo/deterministicmns.h>
+#include <logging.h>
 namespace llmq
 {
 
@@ -302,18 +303,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash) const
 bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const
 {
     auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
-
-    CDataStream ds(SER_DISK, CLIENT_VERSION);
-    if (!db->ReadDataStream(k, ds)) {
-        return false;
-    }
-
-    try {
-        ret.Unserialize(ds);
-        return true;
-    } catch (const std::exception&) {
-        return false;
-    }
+    return db->Read(k, ret);
 }
 
 bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const
@@ -392,11 +382,9 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, con
     batch.Erase(k4);
 
     if (deleteTimeKey) {
-        CDataStream writeTimeDs(SER_DISK, CLIENT_VERSION);
+        uint32_t writeTime;
         // TODO remove the size() == sizeof(uint32_t) in a future version (when we stop supporting upgrades from < 0.14.1)
-        if (db->ReadDataStream(k2, writeTimeDs) && writeTimeDs.size() == sizeof(uint32_t)) {
-            uint32_t writeTime;
-            writeTimeDs >> writeTime;
+        if (db->Read(k2, writeTime)) {
             auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t) htobe32(writeTime), recSig.llmqType, recSig.id);
             batch.Erase(k5);
         }

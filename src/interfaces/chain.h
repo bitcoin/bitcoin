@@ -6,8 +6,8 @@
 #define SYSCOIN_INTERFACES_CHAIN_H
 
 #include <blockfilter.h>
+#include <common/settings.h>
 #include <primitives/transaction.h> // For CTransactionRef
-#include <util/settings.h>          // For util::SettingsValue
 
 #include <functional>
 #include <memory>
@@ -89,6 +89,9 @@ struct BlockInfo {
     unsigned data_pos = 0;
     const CBlock* data = nullptr;
     const CBlockUndo* undo_data = nullptr;
+    // The maximum time in the chain up to and including this block.
+    // A timestamp that can only move forward.
+    unsigned int chain_time_max{0};
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
@@ -302,17 +305,17 @@ public:
     virtual int rpcSerializationFlags() = 0;
 
     //! Get settings value.
-    virtual util::SettingsValue getSetting(const std::string& arg) = 0;
+    virtual common::SettingsValue getSetting(const std::string& arg) = 0;
 
     //! Get list of settings values.
-    virtual std::vector<util::SettingsValue> getSettingsList(const std::string& arg) = 0;
+    virtual std::vector<common::SettingsValue> getSettingsList(const std::string& arg) = 0;
 
     //! Return <datadir>/settings.json setting value.
-    virtual util::SettingsValue getRwSetting(const std::string& name) = 0;
+    virtual common::SettingsValue getRwSetting(const std::string& name) = 0;
 
     //! Write a setting to <datadir>/settings.json. Optionally just update the
     //! setting in memory and do not write the file.
-    virtual bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write=true) = 0;
+    virtual bool updateRwSetting(const std::string& name, const common::SettingsValue& value, bool write=true) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after

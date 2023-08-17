@@ -24,7 +24,7 @@ check_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
+SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 SYSCOIN_INCLUDES+=-I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/mimalloc/include
 SYSCOIN_INCLUDES+=-I$(srcdir)/immer
 
@@ -126,6 +126,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
+  addresstype.h \
   services/nevmconsensus.h \
   services/rpc/nevmrpc.h \
   spork.h \
@@ -164,6 +165,7 @@ SYSCOIN_CORE_H = \
   base58.h \
   batchedlogger.h \
   bech32.h \
+  bip324.h \
   blockencodings.h \
   blockfilter.h \
   chain.h \
@@ -184,6 +186,8 @@ SYSCOIN_CORE_H = \
   compat/cpuid.h \
   compat/endian.h \
   compressor.h \
+  common/settings.h \
+  common/system.h \
   node/connection_types.h \
   consensus/consensus.h \
   consensus/tx_check.h \
@@ -229,6 +233,7 @@ SYSCOIN_CORE_H = \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
   kernel/mempool_persist.h \
+  kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
   key.h \
   key_io.h \
@@ -258,6 +263,7 @@ SYSCOIN_CORE_H = \
   netbase.h \
   netgroup.h \
   netmessagemaker.h \
+  node/abort.h \
   node/blockmanager_args.h \
   node/blockstorage.h \
   node/caches.h \
@@ -270,11 +276,13 @@ SYSCOIN_CORE_H = \
   node/database_args.h \
   node/eviction.h \
   node/interface_ui.h \
+  node/kernel_notifications.h \
   node/mempool_args.h \
   node/mempool_persist_args.h \
   node/miner.h \
   node/mini_miner.h \
   node/minisketchwrapper.h \
+  node/peerman_args.h \
   node/psbt.h \
   node/transaction.h \
   node/interface_ui.h \
@@ -317,7 +325,7 @@ SYSCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/signingprovider.h \
-  script/standard.h \
+  script/solver.h \
   shutdown.h \
   signet.h \
   streams.h \
@@ -339,7 +347,9 @@ SYSCOIN_CORE_H = \
   txrequest.h \
   undo.h \
   unordered_lru_cache.h \
+  util/any.h \
   util/asmap.h \
+  util/batchpriority.h \
   util/bip32.h \
   util/bitdeque.h \
   util/bytevectorhash.h \
@@ -356,6 +366,7 @@ SYSCOIN_CORE_H = \
   util/golombrice.h \
   util/hash_type.h \
   util/hasher.h \
+  util/insert.h \
   util/macros.h \
   util/message.h \
   util/moneystr.h \
@@ -366,13 +377,11 @@ SYSCOIN_CORE_H = \
   util/ranges.h \
   util/result.h \
   util/serfloat.h \
-  util/settings.h \
+  util/signalinterrupt.h \
   util/sock.h \
   util/spanparsing.h \
   util/string.h \
-  util/syscall_sandbox.h \
   util/syserror.h \
-  util/system.h \
   util/thread.h \
   util/threadinterrupt.h \
   util/threadnames.h \
@@ -452,7 +461,7 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 
 # node #
-libsyscoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libsyscoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_node_a_SOURCES = \
   services/nevmconsensus.cpp \
@@ -495,6 +504,7 @@ libsyscoin_node_a_SOURCES = \
   addrman.cpp \
   batchedlogger.cpp \
   banman.cpp \
+  bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
@@ -518,11 +528,11 @@ libsyscoin_node_a_SOURCES = \
   kernel/cs_main.cpp \
   kernel/mempool_persist.cpp \
   mapport.cpp \
-  node/mempool_args.cpp \
   net.cpp \
   netfulfilledman.cpp \
   netgroup.cpp \
   net_processing.cpp \
+  node/abort.cpp \
   node/blockmanager_args.cpp \
   node/blockstorage.cpp \
   node/caches.cpp \
@@ -535,10 +545,13 @@ libsyscoin_node_a_SOURCES = \
   node/database_args.cpp \
   node/eviction.cpp \
   node/interfaces.cpp \
+  node/kernel_notifications.cpp \
+  node/mempool_args.cpp \
   node/mempool_persist_args.cpp \
   node/miner.cpp \
   node/mini_miner.cpp \
   node/minisketchwrapper.cpp \
+  node/peerman_args.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/interface_ui.cpp \
@@ -678,10 +691,10 @@ crypto_libsyscoin_crypto_base_la_LDFLAGS = $(AM_LDFLAGS) -static
 crypto_libsyscoin_crypto_base_la_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/chacha_poly_aead.h \
-  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
+  crypto/chacha20poly1305.h \
+  crypto/chacha20poly1305.cpp \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
@@ -789,9 +802,10 @@ libsyscoin_consensus_a_SOURCES = \
 #
 
 # common #
-libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS)  $(BOOST_CPPFLAGS)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
+  addresstype.cpp \
   services/nevmconsensus.cpp \
   auxpow.cpp \
   base58.cpp \
@@ -805,6 +819,8 @@ libsyscoin_common_a_SOURCES = \
   common/interfaces.cpp \
   common/run_command.cpp \
   compressor.cpp \
+  common/settings.cpp \
+  common/system.cpp \
   core_read.cpp \
   core_write.cpp \
   dbwrapper.cpp \
@@ -835,7 +851,7 @@ libsyscoin_common_a_SOURCES = \
   script/miniscript.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
-  script/standard.cpp \
+  script/solver.cpp \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
 
@@ -860,9 +876,11 @@ libsyscoin_util_a_SOURCES = \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
+  streams.cpp \
   support/cleanse.cpp \
   sync.cpp \
   util/asmap.cpp \
+  util/batchpriority.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
   util/chaintype.cpp \
@@ -876,12 +894,11 @@ libsyscoin_util_a_SOURCES = \
   util/hasher.cpp \
   util/sock.cpp \
   util/syserror.cpp \
-  util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
-  util/settings.cpp \
+  util/signalinterrupt.cpp \
   util/thread.cpp \
   util/threadinterrupt.cpp \
   util/threadnames.cpp \
@@ -889,7 +906,6 @@ libsyscoin_util_a_SOURCES = \
   util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
-  util/syscall_sandbox.cpp \
   util/time.cpp \
   util/tokenpipe.cpp \
   $(SYSCOIN_CORE_H)
@@ -1060,8 +1076,6 @@ libsyscoinkernel_la_SOURCES = \
   kernel/syscoinkernel.cpp \
   arith_uint256.cpp \
   chain.cpp \
-  chainparamsbase.cpp \
-  chainparams.cpp \
   clientversion.cpp \
   coins.cpp \
   common/args.cpp \
@@ -1087,7 +1101,6 @@ libsyscoinkernel_la_SOURCES = \
   logging.cpp \
   node/blockstorage.cpp \
   node/chainstate.cpp \
-  node/interface_ui.cpp \
   node/utxo_snapshot.cpp \
   policy/feerate.cpp \
   policy/fees.cpp \
@@ -1106,15 +1119,16 @@ libsyscoinkernel_la_SOURCES = \
   script/script.cpp \
   script/script_error.cpp \
   script/sigcache.cpp \
-  script/standard.cpp \
-  shutdown.cpp \
+  script/solver.cpp \
   signet.cpp \
+  streams.cpp \
   support/cleanse.cpp \
   support/lockedpool.cpp \
   sync.cpp \
   txdb.cpp \
   txmempool.cpp \
   uint256.cpp \
+  util/batchpriority.cpp \
   util/chaintype.cpp \
   util/check.cpp \
   util/exception.cpp \
@@ -1125,12 +1139,10 @@ libsyscoinkernel_la_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/serfloat.cpp \
-  util/settings.cpp \
+  util/signalinterrupt.cpp \
   util/strencodings.cpp \
   util/string.cpp \
-  util/syscall_sandbox.cpp \
   util/syserror.cpp \
-  util/system.cpp \
   util/thread.cpp \
   util/threadnames.cpp \
   util/time.cpp \

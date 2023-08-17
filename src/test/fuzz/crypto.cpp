@@ -57,7 +57,7 @@ FUZZ_TARGET(crypto)
                 (void)sha256.Write(data.data(), data.size());
                 (void)sha3.Write(data);
                 (void)sha512.Write(data.data(), data.size());
-                (void)sip_hasher.Write(data.data(), data.size());
+                (void)sip_hasher.Write(data);
 
                 (void)Hash(data);
                 (void)Hash160(data);

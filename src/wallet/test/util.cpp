@@ -9,6 +9,7 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <wallet/context.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
@@ -45,6 +46,36 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     return wallet;
 }
 
+std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
+{
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto wallet = CWallet::Create(context, "", std::move(database), create_flags, error, warnings);
+    NotifyWalletLoaded(context, wallet);
+    if (context.chain) {
+        wallet->postInitProcess();
+    }
+    return wallet;
+}
+
+std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
+{
+    DatabaseOptions options;
+    options.create_flags = WALLET_FLAG_DESCRIPTORS;
+    DatabaseStatus status;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto database = MakeWalletDatabase("", options, status, error);
+    return TestLoadWallet(std::move(database), context, options.create_flags);
+}
+
+void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
+{
+    SyncWithValidationInterfaceQueue();
+    wallet->m_chain_notifications_handler.reset();
+    UnloadWallet(std::move(wallet));
+}
+
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
 {
     return std::make_unique<MockableDatabase>(dynamic_cast<MockableDatabase&>(database).m_records);
@@ -61,6 +92,17 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
+// BytePrefix compares equality with other byte spans that begin with the same prefix.
+struct BytePrefix { Span<const std::byte> prefix; };
+bool operator<(BytePrefix a, Span<const std::byte> b) { return a.prefix < b.subspan(0, std::min(a.prefix.size(), b.size())); }
+bool operator<(Span<const std::byte> a, BytePrefix b) { return a.subspan(0, std::min(a.size(), b.prefix.size())) < b.prefix; }
+
+MockableCursor::MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix)
+{
+    m_pass = pass;
+    std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
+}
+
 DatabaseCursor::Status MockableCursor::Next(DataStream& key, DataStream& value)
 {
     if (!m_pass) {
@@ -69,6 +111,8 @@ DatabaseCursor::Status MockableCursor::Next(DataStream& key, DataStream& value)
     if (m_cursor == m_cursor_end) {
         return Status::DONE;
     }
+    key.clear();
+    value.clear();
     const auto& [key_data, value_data] = *m_cursor;
     key.write(key_data);
     value.write(value_data);
@@ -86,6 +130,7 @@ bool MockableBatch::ReadKey(DataStream&& key, DataStream& value)
     if (it == m_records.end()) {
         return false;
     }
+    value.clear();
     value.write(it->second);
     return true;
 }
@@ -141,7 +186,7 @@ bool MockableBatch::ErasePrefix(Span<const std::byte> prefix)
     return true;
 }
 
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(std::map<SerializeData, SerializeData> records)
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records)
 {
     return std::make_unique<MockableDatabase>(records);
 }

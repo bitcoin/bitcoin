@@ -76,16 +76,15 @@ static RPCHelpMan masternode_connect()
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::string strAddress = request.params[0].get_str();
-
-    CService addr;
-    if (!Lookup(strAddress.c_str(), addr, 0, false))
+    std::optional<CService> addr = Lookup(strAddress.c_str(), 0, false).value();
+    if (!addr.has_value())
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
   node::NodeContext& node = EnsureAnyNodeContext(request.context);
   if(!node.connman)
       throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     // TODO: Pass CConnman instance somehow and don't use global variable.
-    node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    CNode* pnode = node.connman->FindNode(CAddress(addr, NODE_NETWORK));
+    node.connman->OpenMasternodeConnection(CAddress(addr.value(), NODE_NETWORK));
+    CNode* pnode = node.connman->FindNode(CAddress(addr.value(), NODE_NETWORK));
     if (!pnode || pnode->fDisconnect)
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 

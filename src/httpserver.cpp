@@ -18,7 +18,6 @@
 #include <shutdown.h>
 #include <sync.h>
 #include <util/strencodings.h>
-#include <util/syscall_sandbox.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
 
@@ -170,12 +169,8 @@ static bool ClientAllowed(const CNetAddr& netaddr)
 static bool InitHTTPAllowList()
 {
     rpc_allow_subnets.clear();
-    CNetAddr localv4;
-    CNetAddr localv6;
-    LookupHost("127.0.0.1", localv4, false);
-    LookupHost("::1", localv6, false);
-    rpc_allow_subnets.push_back(CSubNet(localv4, 8));      // always allow IPv4 local subnet
-    rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
+    rpc_allow_subnets.push_back(CSubNet{LookupHost("127.0.0.1", false).value(), 8});  // always allow IPv4 local subnet
+    rpc_allow_subnets.push_back(CSubNet{LookupHost("::1", false).value()});  // always allow IPv6 localhost
     for (const std::string& strAllow : gArgs.GetArgs("-rpcallowip")) {
         CSubNet subnet;
         LookupSubNet(strAllow, subnet);
@@ -226,8 +221,10 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         }, nullptr);
     }
 
-    // Disable reading to work around a libevent bug, fixed in 2.2.0.
-    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
+    // Disable reading to work around a libevent bug, fixed in 2.1.9
+    // See https://github.com/libevent/libevent/commit/5ff8eb26371c4dc56f384b2de35bea2d87814779
+    // and https://github.com/bitcoin/bitcoin/pull/11593.
+    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
         evhttp_connection* conn = evhttp_request_get_connection(req);
         if (conn) {
             bufferevent* bev = evhttp_connection_get_bufferevent(conn);
@@ -301,7 +298,6 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 static void ThreadHTTP(struct event_base* base)
 {
     util::ThreadRename("http");
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER);
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
@@ -338,8 +334,8 @@ static bool HTTPBindAddresses(struct evhttp* http)
         LogPrintf("Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
-            CNetAddr addr;
-            if (i->first.empty() || (LookupHost(i->first, addr, false) && addr.IsBindAny())) {
+            const std::optional<CNetAddr> addr{LookupHost(i->first, false)};
+            if (i->first.empty() || (addr.has_value() && addr->IsBindAny())) {
                 LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             boundSockets.push_back(bind_handle);
@@ -354,7 +350,6 @@ static bool HTTPBindAddresses(struct evhttp* http)
 static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 {
     util::ThreadRename(strprintf("httpworker.%i", worker_num));
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER_WORKER);
     queue->Run();
 }
 
@@ -608,7 +603,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
         evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
         // Re-enable reading from the socket. This is the second part of the libevent
         // workaround above.
-        if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
+        if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
             evhttp_connection* conn = evhttp_request_get_connection(req_copy);
             if (conn) {
                 bufferevent* bev = evhttp_connection_get_bufferevent(conn);

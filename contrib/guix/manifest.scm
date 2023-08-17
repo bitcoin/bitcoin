@@ -1,44 +1,37 @@
-(use-modules (gnu)
-             (gnu packages)
+(use-modules (gnu packages)
              (gnu packages autotools)
-             (gnu packages base)
-             (gnu packages bash)
+             ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
-             (gnu packages certs)
-             (gnu packages cdrom)
-             (gnu packages check)
-             (gnu packages cmake)
+             ((gnu packages certs) #:select (nss-certs))
+             ((gnu packages cdrom) #:select (xorriso))
+             ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
-             (gnu packages curl)
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
-             (gnu packages gnome)
-             (gnu packages installers)
-             (gnu packages linux)
+             ((gnu packages installers) #:select (nsis-x86_64))
+             ((gnu packages linux) #:select (linux-libre-headers-5.15 util-linux))
              (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages moreutils)
              (gnu packages pkg-config)
-             (gnu packages python)
-             (gnu packages python-crypto)
-             (gnu packages python-web)
-             (gnu packages shells)
-             (gnu packages tls)
-             (gnu packages version-control)
+             ((gnu packages python) #:select (python-minimal))
+             ((gnu packages python-build) #:select (python-tomli))
+             ((gnu packages python-crypto) #:select (python-asn1crypto))
+             ((gnu packages python-web) #:select (python-requests))
+             ((gnu packages tls) #:select (openssl))
+             ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
-             (guix download)
              (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
              (guix packages)
-             (guix profiles)
-             (guix utils))
+             ((guix utils) #:select (substitute-keyword-arguments)))
 
 (define-syntax-rule (search-our-patches file-name ...)
   "Return the list of absolute file names corresponding to each
@@ -204,38 +197,44 @@ chain for " target " development."))
     (search-our-patches "nsis-gcc-10-memmove.patch"
                         "nsis-disable-installer-reloc.patch")))
 
-(define (fix-ppc64-nx-default lief)
-  (package-with-extra-patches lief
-    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
-
-;; Our python-lief package can be removed once we are using
-;; guix 83bfdb409787cb2737e68b093a319b247b7858e6 or later.
-;; Note we currently use cmake-minimal.
+;; While LIEF is packaged in Guix, we maintain our own package,
+;; to simplify building, and more easily apply updates.
+;; Moreover, the Guix's package uses cmake, which caused build
+;; failure; see https://github.com/bitcoin/bitcoin/pull/27296.
 (define-public python-lief
   (package
     (name "python-lief")
-    (version "0.12.3")
+    (version "0.13.2")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://github.com/lief-project/LIEF")
                     (commit version)))
               (file-name (git-file-name name version))
+              (modules '((guix build utils)))
+              (snippet
+               '(begin
+                  ;; Configure build for Python bindings.
+                  (substitute* "api/python/config-default.toml"
+                    (("(ninja         = )true" all m)
+                     (string-append m "false"))
+                    (("(parallel-jobs = )0" all m)
+                     (string-append m (number->string (parallel-job-count)))))))
               (sha256
                (base32
-                "11i6hqmcjh56y554kqhl61698n9v66j2qk1c1g63mv2w07h2z661"))))
+                "0y48x358ppig5xp97ahcphfipx7cg9chldj2q5zrmn610fmi4zll"))))
     (build-system python-build-system)
-    (native-inputs (list cmake-minimal))
+    (native-inputs (list cmake-minimal python-tomli))
     (arguments
      (list
       #:tests? #f                  ;needs network
       #:phases #~(modify-phases %standard-phases
+                   (add-before 'build 'change-directory
+                     (lambda _
+                       (chdir "api/python")))
                    (replace 'build
                      (lambda _
-                       (invoke
-                        "python" "setup.py" "--sdk" "build"
-                        (string-append
-                         "-j" (number->string (parallel-job-count)))))))))
+                       (invoke "python" "setup.py" "build"))))))
     (home-page "https://github.com/lief-project/LIEF")
     (synopsis "Library to instrument executable formats")
     (description
@@ -248,18 +247,16 @@ and abstract ELF, PE and MachO formats.")
     (name "osslsigncode")
     (version "2.5")
     (source (origin
-              (method url-fetch)
-              (uri (string-append "https://github.com/mtrojnar/"
-                                  name "/archive/" version ".tar.gz"))
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/mtrojnar/osslsigncode")
+                    (commit version)))
               (sha256
                (base32
-                "03by9706gg0an6dn48pljx38vcb76ziv11bgm8ilwsf293x2k4hv"))))
+                "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
     (build-system cmake-build-system)
     (inputs
      `(("openssl", openssl)))
-    (arguments
-     '(#:configure-flags
-        (list "-DCMAKE_DISABLE_FIND_PACKAGE_CURL=TRUE")))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
@@ -561,7 +558,8 @@ inspecting signatures in Mach-O binaries.")
                 "0azpb9cvnbv25zg8019rqz48h8i2257ngyjg566dlnp74ivrs9vq"))
               (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
                                            "glibc-2.27-fcommon.patch"
-                                           "glibc-2.27-guix-prefix.patch"))))))
+                                           "glibc-2.27-guix-prefix.patch"
+                                           "glibc-2.27-no-librt.patch"))))))
 
 (packages->manifest
  (append
@@ -600,7 +598,7 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git-minimal
         ;; Tests
-        (fix-ppc64-nx-default python-lief))
+        python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
@@ -612,5 +610,5 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list (make-syscoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils cmake-minimal xorriso python-signapple))
+           (list clang-toolchain-11 binutils cmake-minimal xorriso python-signapple))
           (else '())))))

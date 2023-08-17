@@ -2,23 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/system.h>
 #include <compat/compat.h>
 #include <logging.h>
 #include <tinyformat.h>
 #include <util/sock.h>
 #include <util/syserror.h>
-#include <util/system.h>
 #include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <memory>
 #include <stdexcept>
 #include <string>
-
-#ifdef WIN32
-#include <codecvt>
-#include <locale>
-#endif
 
 #ifdef USE_POLL
 #include <poll.h>
@@ -416,26 +411,12 @@ void Sock::Close()
     m_socket = INVALID_SOCKET;
 }
 
-#ifdef WIN32
 std::string NetworkErrorString(int err)
 {
-    wchar_t buf[256];
-    buf[0] = 0;
-    if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-            nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            buf, ARRAYSIZE(buf), nullptr))
-    {
-        return strprintf("%s (%d)", std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().to_bytes(buf), err);
-    }
-    else
-    {
-        return strprintf("Unknown error (%d)", err);
-    }
-}
+#if defined(WIN32)
+    return Win32ErrorString(err);
 #else
-std::string NetworkErrorString(int err)
-{
     // On BSD sockets implementations, NetworkErrorString is the same as SysErrorString.
     return SysErrorString(err);
-}
 #endif
+}

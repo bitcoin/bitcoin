@@ -8,11 +8,10 @@
 #include <nevm/common.h>
 #include <nevm/rlp.h>
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <policy/policy.h>
 #include <univalue.h>
 #include <key_io.h>
-#include <util/system.h>
 #include <test/util/setup_common.h>
 #include <test/util/json.h>
 
@@ -97,7 +96,7 @@ BOOST_AUTO_TEST_CASE(nevmspv_valid)
     // Inner arrays are either [ "comment" ]
     // [[spv_root, spv_parent_node, spv_value, spv_path]]
 
-    UniValue tests = read_json(std::string(json_tests::nevmspv_valid, json_tests::nevmspv_valid + sizeof(json_tests::nevmspv_valid)));
+    UniValue tests = read_json(json_tests::nevmspv_valid);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue &test = tests[idx];
@@ -136,7 +135,7 @@ BOOST_AUTO_TEST_CASE(nevmspv_invalid)
     // Inner arrays are either [ "comment" ]
     // [[spv_root, spv_parent_node, spv_value, spv_path]]
 
-    UniValue tests = read_json(std::string(json_tests::nevmspv_invalid, json_tests::nevmspv_invalid + sizeof(json_tests::nevmspv_invalid)));
+    UniValue tests = read_json(json_tests::nevmspv_invalid);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue &test = tests[idx];

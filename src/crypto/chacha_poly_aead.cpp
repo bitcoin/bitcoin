@@ -50,43 +50,43 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
     // check buffer boundaries
     if (
         // if we encrypt, make sure the source contains at least the expected AAD and the destination has at least space for the source + MAC
-        (is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN || dest_len < src_len + POLY1305_TAGLEN)) ||
+        (is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN || dest_len < src_len + Poly1305::TAGLEN)) ||
         // if we decrypt, make sure the source contains at least the expected AAD+MAC and the destination has at least space for the source - MAC
-        (!is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN || dest_len < src_len - POLY1305_TAGLEN))) {
+        (!is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN + Poly1305::TAGLEN || dest_len < src_len - Poly1305::TAGLEN))) {
         return false;
     }
 
-    unsigned char expected_tag[POLY1305_TAGLEN], poly_key[POLY1305_KEYLEN];
+    unsigned char expected_tag[Poly1305::TAGLEN], poly_key[Poly1305::KEYLEN];
     memset(poly_key, 0, sizeof(poly_key));
-    m_chacha_main.SetIV(seqnr_payload);
 
     // block counter 0 for the poly1305 key
     // use lower 32bytes for the poly1305 key
     // (throws away 32 unused bytes (upper 32) from this ChaCha20 round)
-    m_chacha_main.Seek64(0);
+    m_chacha_main.Seek64({0, seqnr_payload}, 0);
     m_chacha_main.Crypt(poly_key, poly_key, sizeof(poly_key));
 
     // if decrypting, verify the tag prior to decryption
     if (!is_encrypt) {
-        const unsigned char* tag = src + src_len - POLY1305_TAGLEN;
-        poly1305_auth(expected_tag, src, src_len - POLY1305_TAGLEN, poly_key);
+        const unsigned char* tag = src + src_len - Poly1305::TAGLEN;
+        Poly1305{MakeByteSpan(poly_key)}
+            .Update(AsBytes(Span{src, src_len - Poly1305::TAGLEN}))
+            .Finalize(MakeWritableByteSpan(expected_tag));
 
         // constant time compare the calculated MAC with the provided MAC
-        if (timingsafe_bcmp(expected_tag, tag, POLY1305_TAGLEN) != 0) {
+        if (timingsafe_bcmp(expected_tag, tag, Poly1305::TAGLEN) != 0) {
             memory_cleanse(expected_tag, sizeof(expected_tag));
             memory_cleanse(poly_key, sizeof(poly_key));
             return false;
         }
         memory_cleanse(expected_tag, sizeof(expected_tag));
         // MAC has been successfully verified, make sure we don't convert it in decryption
-        src_len -= POLY1305_TAGLEN;
+        src_len -= Poly1305::TAGLEN;
     }
 
     // calculate and cache the next 64byte keystream block if requested sequence number is not yet the cache
     if (m_cached_aad_seqnr != seqnr_aad) {
         m_cached_aad_seqnr = seqnr_aad;
-        m_chacha_header.SetIV(seqnr_aad);
-        m_chacha_header.Seek64(0);
+        m_chacha_header.Seek64({0, seqnr_aad}, 0);
         m_chacha_header.Keystream(m_aad_keystream_buffer, CHACHA20_ROUND_OUTPUT);
     }
     // crypt the AAD (3 bytes message length) with given position in AAD cipher instance keystream
@@ -95,13 +95,15 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
     dest[2] = src[2] ^ m_aad_keystream_buffer[aad_pos + 2];
 
     // Set the playload ChaCha instance block counter to 1 and crypt the payload
-    m_chacha_main.Seek64(1);
+    m_chacha_main.Seek64({0, seqnr_payload}, 1);
     m_chacha_main.Crypt(src + CHACHA20_POLY1305_AEAD_AAD_LEN, dest + CHACHA20_POLY1305_AEAD_AAD_LEN, src_len - CHACHA20_POLY1305_AEAD_AAD_LEN);
 
     // If encrypting, calculate and append tag
     if (is_encrypt) {
         // the poly1305 tag expands over the AAD (3 bytes length) & encrypted payload
-        poly1305_auth(dest + src_len, dest, src_len, poly_key);
+        Poly1305{MakeByteSpan(poly_key)}
+            .Update(AsBytes(Span{dest, src_len}))
+            .Finalize(AsWritableBytes(Span{dest + src_len, Poly1305::TAGLEN}));
     }
 
     // cleanse no longer required MAC and polykey
@@ -117,8 +119,7 @@ bool ChaCha20Poly1305AEAD::GetLength(uint32_t* len24_out, uint64_t seqnr_aad, in
     if (m_cached_aad_seqnr != seqnr_aad) {
         // we need to calculate the 64 keystream bytes since we reached a new aad sequence number
         m_cached_aad_seqnr = seqnr_aad;
-        m_chacha_header.SetIV(seqnr_aad);                                         // use LE for the nonce
-        m_chacha_header.Seek64(0);                                               // block counter 0
+        m_chacha_header.Seek64({0, seqnr_aad}, 0);                                // use LE for the nonce
         m_chacha_header.Keystream(m_aad_keystream_buffer, CHACHA20_ROUND_OUTPUT); // write keystream to the cache
     }
 

@@ -4,6 +4,7 @@
 
 #include <key.h>
 
+#include <common/system.h>
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/random.h>
@@ -11,7 +12,6 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 
 #include <string>
 #include <vector>
@@ -341,6 +341,26 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
             BOOST_CHECK(ok);
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
         }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(key_ellswift)
+{
+    for (const auto& secret : {strSecret1, strSecret2, strSecret1C, strSecret2C}) {
+        CKey key = DecodeSecret(secret);
+        BOOST_CHECK(key.IsValid());
+
+        uint256 ent32 = InsecureRand256();
+        auto ellswift = key.EllSwiftCreate(AsBytes(Span{ent32}));
+
+        CPubKey decoded_pubkey = ellswift.Decode();
+        if (!key.IsCompressed()) {
+            // The decoding constructor returns a compressed pubkey. If the
+            // original was uncompressed, we must decompress the decoded one
+            // to compare.
+            decoded_pubkey.Decompress();
+        }
+        BOOST_CHECK(key.GetPubKey() == decoded_pubkey);
     }
 }
 

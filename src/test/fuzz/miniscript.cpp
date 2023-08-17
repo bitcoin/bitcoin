@@ -945,7 +945,8 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
     assert(decoded->ToScript(PARSER_CTX) == script);
     assert(decoded->GetType() == node->GetType());
 
-    if (provider.ConsumeBool() && node->GetOps() < MAX_OPS_PER_SCRIPT && node->ScriptSize() < MAX_STANDARD_P2WSH_SCRIPT_SIZE) {
+    const auto node_ops{node->GetOps()};
+    if (provider.ConsumeBool() && node_ops && *node_ops < MAX_OPS_PER_SCRIPT && node->ScriptSize() < MAX_STANDARD_P2WSH_SCRIPT_SIZE) {
         // Optionally pad the script with OP_NOPs to max op the ops limit of the constructed script.
         // This makes the script obviously not actually miniscript-compatible anymore, but the
         // signatures constructed in this test don't commit to the script anyway, so the same
@@ -956,7 +957,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
         // Do not pad more than what would cause MAX_STANDARD_P2WSH_SCRIPT_SIZE to be reached, however,
         // as that also invalidates scripts.
         int add = std::min<int>(
-            MAX_OPS_PER_SCRIPT - node->GetOps(),
+            MAX_OPS_PER_SCRIPT - *node_ops,
             MAX_STANDARD_P2WSH_SCRIPT_SIZE - node->ScriptSize());
         for (int i = 0; i < add; ++i) script.push_back(OP_NOP);
     }
@@ -974,7 +975,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
 
     if (nonmal_success) {
         // Non-malleable satisfactions are bounded by GetStackSize().
-        assert(witness_nonmal.stack.size() <= node->GetStackSize());
+        assert(witness_nonmal.stack.size() <= *node->GetStackSize());
         // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
         assert(mal_success);
         assert(witness_nonmal.stack == witness_mal.stack);
@@ -1060,7 +1061,7 @@ void FuzzInitSmart()
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeStable. */
-FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
+FUZZ_TARGET(miniscript_stable, .init = FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     TestNode(GenNode([&](Type needed_type) {
@@ -1069,7 +1070,7 @@ FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
 }
 
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeSmart. */
-FUZZ_TARGET_INIT(miniscript_smart, FuzzInitSmart)
+FUZZ_TARGET(miniscript_smart, .init = FuzzInitSmart)
 {
     /** The set of types we aim to construct nodes for. Together they cover all. */
     static constexpr std::array<Type, 4> BASE_TYPES{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
@@ -1081,7 +1082,7 @@ FUZZ_TARGET_INIT(miniscript_smart, FuzzInitSmart)
 }
 
 /* Fuzz tests that test parsing from a string, and roundtripping via string. */
-FUZZ_TARGET_INIT(miniscript_string, FuzzInit)
+FUZZ_TARGET(miniscript_string, .init = FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     auto str = provider.ConsumeRemainingBytesAsString();

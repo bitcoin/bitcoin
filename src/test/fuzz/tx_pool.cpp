@@ -131,7 +131,7 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     return CTxMemPool{mempool_opts};
 }
 
-FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
+FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
@@ -307,7 +307,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     Finish(fuzzed_data_provider, tx_pool, chainstate);
 }
 
-FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
+FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;

@@ -234,10 +234,12 @@ class WalletDescriptorTest(SyscoinTestFramework):
         self.log.info("Test that loading descriptor wallet containing legacy key types throws error")
         self.nodes[0].createwallet(wallet_name="crashme", descriptors=True)
         self.nodes[0].unloadwallet("crashme")
-        wallet_db = os.path.join(self.nodes[0].datadir, self.chain, "wallets", "crashme", self.wallet_data_filename)
-        with sqlite3.connect(wallet_db) as conn:
+        wallet_db = os.path.join(self.nodes[0].wallets_path, "crashme", self.wallet_data_filename)
+        conn = sqlite3.connect(wallet_db)
+        with conn:
             # add "cscript" entry: key type is uint160 (20 bytes), value type is CScript (zero-length here)
             conn.execute('INSERT INTO main VALUES(?, ?)', (b'\x07cscript' + b'\x00'*20, b'\x00'))
+        conn.close()
         assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
 
 

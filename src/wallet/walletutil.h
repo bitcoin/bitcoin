@@ -53,9 +53,17 @@ enum WalletFlags : uint64_t {
     //! Flag set when a wallet contains no HD seed and no private keys, scripts,
     //! addresses, and other watch only things, and is therefore "blank."
     //!
-    //! The only function this flag serves is to distinguish a blank wallet from
+    //! The main function this flag serves is to distinguish a blank wallet from
     //! a newly created wallet when the wallet database is loaded, to avoid
     //! initialization that should only happen on first run.
+    //!
+    //! A secondary function of this flag, which applies to descriptor wallets
+    //! only, is to serve as an ongoing indication that descriptors in the
+    //! wallet should be created manually, and that the wallet should not
+    //! generate automatically generate new descriptors if it is later
+    //! encrypted. To support this behavior, descriptor wallets unlike legacy
+    //! wallets do not automatically unset the BLANK flag when things are
+    //! imported.
     //!
     //! This flag is also a mandatory flag to prevent previous versions of
     //! syscoin from opening the wallet, thinking it was newly created, and
@@ -103,20 +111,6 @@ public:
 
     WalletDescriptor() {}
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) {}
-};
-
-class CWallet;
-class DescriptorScriptPubKeyMan;
-
-/** struct containing information needed for migrating legacy wallets to descriptor wallets */
-struct MigrationData
-{
-    CExtKey master_key;
-    std::vector<std::pair<std::string, int64_t>> watch_descs;
-    std::vector<std::pair<std::string, int64_t>> solvable_descs;
-    std::vector<std::unique_ptr<DescriptorScriptPubKeyMan>> desc_spkms;
-    std::shared_ptr<CWallet> watchonly_wallet{nullptr};
-    std::shared_ptr<CWallet> solvable_wallet{nullptr};
 };
 } // namespace wallet
 

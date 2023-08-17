@@ -22,7 +22,7 @@ void initialize_p2p_transport_serialization()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serialization)
+FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serialization)
 {
     // Construct deserializer, with a dummy NodeId
     V1TransportDeserializer deserializer{Params(), NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};
@@ -77,7 +77,7 @@ FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serializa
             assert(msg.m_time == m_time);
 
             std::vector<unsigned char> header;
-            auto msg2 = CNetMsgMaker{msg.m_recv.GetVersion()}.Make(msg.m_type, MakeUCharSpan(msg.m_recv));
+            auto msg2 = CNetMsgMaker{msg.m_recv.GetVersion()}.Make(msg.m_type, Span{msg.m_recv});
             serializer.prepareForTransport(msg2, header);
         }
     }

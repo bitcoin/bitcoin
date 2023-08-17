@@ -23,6 +23,7 @@
 #include <saltedhasher.h>
 #include <sync.h>
 #include <map>
+#include <logging.h>
 namespace llmq
 {
 
@@ -159,7 +160,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
     }
 }
 
-bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck)
+bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck, bool fBLSChecks)
 {
     AssertLockHeld(cs_main);
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
@@ -215,7 +216,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 
     for (const auto& p : qcs) {
         const auto& qc = p.second;
-        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck)) {
+        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, fBLSChecks)) {
             return false;
         }
     }
@@ -230,7 +231,7 @@ static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(uint8_t
     return std::make_tuple(DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT, llmqType, htobe32(std::numeric_limits<uint32_t>::max() - (uint32_t)nMinedHeight));
 }
 
-bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck)
+bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck, bool fBLSChecks)
 {
     AssertLockHeld(cs_main);
     if(!Params().GetConsensus().llmqs.count(qc.llmqType)) {
@@ -273,7 +274,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     if(!pQuorumBaseBlockIndex) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block-index");
     }
-    if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
+    if (!qc.Verify(pQuorumBaseBlockIndex, fBLSChecks)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
     }
 

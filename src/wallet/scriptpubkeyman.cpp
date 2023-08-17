@@ -7,7 +7,9 @@
 #include <logging.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
+#include <script/script.h>
 #include <script/sign.h>
+#include <script/solver.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -710,6 +712,8 @@ void LegacyScriptPubKeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
     } else if (!nTimeFirstKey || nCreateTime < nTimeFirstKey) {
         nTimeFirstKey = nCreateTime;
     }
+
+    NotifyFirstKeyTimeChanged(this, nTimeFirstKey);
 }
 
 bool LegacyScriptPubKeyMan::LoadKey(const CKey& key, const CPubKey &pubkey)
@@ -755,12 +759,12 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
         RemoveWatchOnly(script);
     }
 
+    m_storage.UnsetBlankWalletFlag(batch);
     if (!m_storage.HasEncryptionKeys()) {
         return batch.WriteKey(pubkey,
                                                  secret.GetPrivKey(),
                                                  mapKeyMetadata[pubkey.GetID()]);
     }
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
@@ -2582,10 +2586,7 @@ std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDe
 uint256 DescriptorScriptPubKeyMan::GetID() const
 {
     LOCK(cs_desc_man);
-    std::string desc_str = m_wallet_descriptor.descriptor->ToString();
-    uint256 id;
-    CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
-    return id;
+    return DescriptorID(*m_wallet_descriptor.descriptor);
 }
 
 void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
@@ -2736,6 +2737,8 @@ void DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescriptor& descrip
     m_map_script_pub_keys.clear();
     m_max_cached_index = -1;
     m_wallet_descriptor = descriptor;
+
+    NotifyFirstKeyTimeChanged(this, m_wallet_descriptor.creation_time);
 }
 
 bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error)

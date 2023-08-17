@@ -5,6 +5,7 @@
 #include <test/data/script_tests.json.h>
 #include <test/data/bip341_wallet_vectors.json.h>
 
+#include <common/system.h>
 #include <core_io.h>
 #include <key.h>
 #include <rpc/util.h>
@@ -13,6 +14,7 @@
 #include <script/sigcache.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <streams.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
@@ -20,7 +22,6 @@
 #include <test/util/transaction_utils.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/syscoinconsensus.h>
@@ -890,7 +891,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     std::set<std::string> tests_set;
 
     {
-        UniValue json_tests = read_json(std::string(json_tests::script_tests, json_tests::script_tests + sizeof(json_tests::script_tests)));
+        UniValue json_tests = read_json(json_tests::script_tests);
 
         for (unsigned int idx = 0; idx < json_tests.size(); idx++) {
             const UniValue& tv = json_tests[idx];
@@ -929,7 +930,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     // scripts.
     // If a witness is given, then the last value in the array should be the
     // amount (nValue) to use in the crediting tx
-    UniValue tests = read_json(std::string(json_tests::script_tests, json_tests::script_tests + sizeof(json_tests::script_tests)));
+    UniValue tests = read_json(json_tests::script_tests);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
@@ -1745,7 +1746,7 @@ BOOST_AUTO_TEST_CASE(script_assets_test)
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 {
     UniValue tests;
-    tests.read((const char*)json_tests::bip341_wallet_vectors, sizeof(json_tests::bip341_wallet_vectors));
+    tests.read(json_tests::bip341_wallet_vectors);
 
     const auto& vectors = tests["keyPathSpending"];
 

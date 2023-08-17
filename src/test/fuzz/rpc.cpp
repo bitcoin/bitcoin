@@ -73,10 +73,12 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "addpeeraddress", // avoid DNS lookups
     "dumptxoutset",   // avoid writing to disk
     "dumpwallet", // avoid writing to disk
+    "enumeratesigners",
     "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
     "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
+    "importmempool", // avoid reading from disk
     "importwallet", // avoid reading from disk
     "loadwallet",   // avoid reading from disk
     "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
@@ -189,6 +191,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getnetworkinfo",
     "getnodeaddresses",
     "getpeerinfo",
+    "getprioritisedtransactions",
     "getrawmempool",
     "getrawtransaction",
     "getrpcinfo",
@@ -420,7 +423,7 @@ void initialize_rpc()
     }
 }
 
-FUZZ_TARGET_INIT(rpc, initialize_rpc)
+FUZZ_TARGET(rpc, .init = initialize_rpc)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

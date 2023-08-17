@@ -174,7 +174,7 @@ public:
     inline void Serialize(Stream& s, const bool specificLegacyScheme) const
     {
         // SYSCOIN
-        s.write(MakeByteSpan(ToByteVector(specificLegacyScheme)));
+        s << Span{ToByteVector(specificLegacyScheme)};
     }
 
     template <typename Stream>
@@ -473,7 +473,7 @@ public:
             hash.SetNull();
         }
         // SYSCOIN
-        s.write(MakeByteSpan(vecBytes));
+        s << Span{vecBytes};
     }
 
     template<typename Stream>

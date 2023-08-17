@@ -30,9 +30,6 @@ static const int MNAUTH_NODE_VER_VERSION = 70016;
 //! BIP 0031, pong message, is enabled for all versions AFTER this one
 static const int BIP0031_VERSION = 60000;
 
-//! "filter*" commands are disabled without NODE_BLOOM after and including this version
-static const int NO_BLOOM_VERSION = 70011;
-
 //! "sendheaders" command and announcing blocks with headers starts with this version
 static const int SENDHEADERS_VERSION = 70012;
 

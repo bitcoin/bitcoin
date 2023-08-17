@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <node/mini_miner.h>
 #include <txmempool.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <test/util/setup_common.h>
@@ -138,7 +137,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
 
     std::vector<CTransactionRef> all_transactions{tx1, tx2, tx3, tx4, tx5, tx6, tx7, tx8};
     struct TxDimensions {
-        size_t vsize; CAmount mod_fee; CFeeRate feerate;
+        int32_t vsize; CAmount mod_fee; CFeeRate feerate;
     };
     std::map<uint256, TxDimensions> tx_dims;
     for (const auto& tx : all_transactions) {

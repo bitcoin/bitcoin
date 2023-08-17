@@ -10,6 +10,7 @@
 #include "checkmem.h"
 #include "int128.h"
 #include "modinv64_impl.h"
+#include "util.h"
 
 /* Limbs of the secp256k1 order. */
 #define SECP256K1_N_0 ((uint64_t)0xBFD25E8CD0364141ULL)
@@ -110,8 +111,9 @@ static int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, 
 
 static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int flag) {
     secp256k1_uint128 t;
+    volatile int vflag = flag;
     VERIFY_CHECK(bit < 256);
-    bit += ((uint32_t) flag - 1) & 0x100;  /* forcing (bit >> 6) > 3 makes this a noop */
+    bit += ((uint32_t) vflag - 1) & 0x100;  /* forcing (bit >> 6) > 3 makes this a noop */
     secp256k1_u128_from_u64(&t, r->d[0]);
     secp256k1_u128_accum_u64(&t, ((uint64_t)((bit >> 6) == 0)) << (bit & 0x3F));
     r->d[0] = secp256k1_u128_to_u64(&t); secp256k1_u128_rshift(&t, 64);
@@ -131,10 +133,10 @@ static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int
 
 static void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *b32, int *overflow) {
     int over;
-    r->d[0] = (uint64_t)b32[31] | (uint64_t)b32[30] << 8 | (uint64_t)b32[29] << 16 | (uint64_t)b32[28] << 24 | (uint64_t)b32[27] << 32 | (uint64_t)b32[26] << 40 | (uint64_t)b32[25] << 48 | (uint64_t)b32[24] << 56;
-    r->d[1] = (uint64_t)b32[23] | (uint64_t)b32[22] << 8 | (uint64_t)b32[21] << 16 | (uint64_t)b32[20] << 24 | (uint64_t)b32[19] << 32 | (uint64_t)b32[18] << 40 | (uint64_t)b32[17] << 48 | (uint64_t)b32[16] << 56;
-    r->d[2] = (uint64_t)b32[15] | (uint64_t)b32[14] << 8 | (uint64_t)b32[13] << 16 | (uint64_t)b32[12] << 24 | (uint64_t)b32[11] << 32 | (uint64_t)b32[10] << 40 | (uint64_t)b32[9] << 48 | (uint64_t)b32[8] << 56;
-    r->d[3] = (uint64_t)b32[7] | (uint64_t)b32[6] << 8 | (uint64_t)b32[5] << 16 | (uint64_t)b32[4] << 24 | (uint64_t)b32[3] << 32 | (uint64_t)b32[2] << 40 | (uint64_t)b32[1] << 48 | (uint64_t)b32[0] << 56;
+    r->d[0] = secp256k1_read_be64(&b32[24]);
+    r->d[1] = secp256k1_read_be64(&b32[16]);
+    r->d[2] = secp256k1_read_be64(&b32[8]);
+    r->d[3] = secp256k1_read_be64(&b32[0]);
     over = secp256k1_scalar_reduce(r, secp256k1_scalar_check_overflow(r));
     if (overflow) {
         *overflow = over;
@@ -142,10 +144,10 @@ static void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *b
 }
 
 static void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar* a) {
-    bin[0] = a->d[3] >> 56; bin[1] = a->d[3] >> 48; bin[2] = a->d[3] >> 40; bin[3] = a->d[3] >> 32; bin[4] = a->d[3] >> 24; bin[5] = a->d[3] >> 16; bin[6] = a->d[3] >> 8; bin[7] = a->d[3];
-    bin[8] = a->d[2] >> 56; bin[9] = a->d[2] >> 48; bin[10] = a->d[2] >> 40; bin[11] = a->d[2] >> 32; bin[12] = a->d[2] >> 24; bin[13] = a->d[2] >> 16; bin[14] = a->d[2] >> 8; bin[15] = a->d[2];
-    bin[16] = a->d[1] >> 56; bin[17] = a->d[1] >> 48; bin[18] = a->d[1] >> 40; bin[19] = a->d[1] >> 32; bin[20] = a->d[1] >> 24; bin[21] = a->d[1] >> 16; bin[22] = a->d[1] >> 8; bin[23] = a->d[1];
-    bin[24] = a->d[0] >> 56; bin[25] = a->d[0] >> 48; bin[26] = a->d[0] >> 40; bin[27] = a->d[0] >> 32; bin[28] = a->d[0] >> 24; bin[29] = a->d[0] >> 16; bin[30] = a->d[0] >> 8; bin[31] = a->d[0];
+    secp256k1_write_be64(&bin[0],  a->d[3]);
+    secp256k1_write_be64(&bin[8],  a->d[2]);
+    secp256k1_write_be64(&bin[16], a->d[1]);
+    secp256k1_write_be64(&bin[24], a->d[0]);
 }
 
 SECP256K1_INLINE static int secp256k1_scalar_is_zero(const secp256k1_scalar *a) {
@@ -188,7 +190,8 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar *a) {
 static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
     /* If we are flag = 0, mask = 00...00 and this is a no-op;
      * if we are flag = 1, mask = 11...11 and this is identical to secp256k1_scalar_negate */
-    uint64_t mask = !flag - 1;
+    volatile int vflag = flag;
+    uint64_t mask = -vflag;
     uint64_t nonzero = (secp256k1_scalar_is_zero(r) != 0) - 1;
     secp256k1_uint128 t;
     secp256k1_u128_from_u64(&t, r->d[0] ^ mask);
@@ -380,7 +383,7 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar *r, const uint64_t *l) 
     "movq %%r10, %q5\n"
     /* extract m6 */
     "movq %%r8, %q6\n"
-    : "=g"(m0), "=g"(m1), "=g"(m2), "=g"(m3), "=g"(m4), "=g"(m5), "=g"(m6)
+    : "=&g"(m0), "=&g"(m1), "=&g"(m2), "=g"(m3), "=g"(m4), "=g"(m5), "=g"(m6)
     : "S"(l), "i"(SECP256K1_N_C_0), "i"(SECP256K1_N_C_1)
     : "rax", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "cc");
 

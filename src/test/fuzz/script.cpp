@@ -16,7 +16,7 @@
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -36,7 +36,7 @@ void initialize_script()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(script, initialize_script)
+FUZZ_TARGET(script, .init = initialize_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const CScript script{ConsumeScript(fuzzed_data_provider)};

@@ -284,6 +284,8 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
 
     // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
     static const uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    ChaCha20::Nonce96 nonce{0, 0};
+    uint32_t counter{0};
     ECRYPT_ivsetup(&ctx, iv);
 
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 3000) {
@@ -292,45 +294,56 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
             [&] {
                 const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
                 chacha20.SetKey32(key.data());
+                nonce = {0, 0};
+                counter = 0;
                 ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
                 // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
                 uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
                 ECRYPT_ivsetup(&ctx, iv);
             },
             [&] {
+                uint32_t iv_prefix = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
                 uint64_t iv = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
-                chacha20.SetIV(iv);
+                nonce = {iv_prefix, iv};
+                counter = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+                chacha20.Seek64(nonce, counter);
+                ctx.input[12] = counter;
+                ctx.input[13] = iv_prefix;
                 ctx.input[14] = iv;
                 ctx.input[15] = iv >> 32;
             },
             [&] {
-                uint64_t counter = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
-                chacha20.Seek64(counter);
-                ctx.input[12] = counter;
-                ctx.input[13] = counter >> 32;
-            },
-            [&] {
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
-                // DJB's version seeks forward to a multiple of 64 bytes after every operation. Correct for that.
-                uint64_t pos = ctx.input[12] + (((uint64_t)ctx.input[13]) << 32) + ((integralInRange + 63) >> 6);
                 std::vector<uint8_t> output(integralInRange);
                 chacha20.Keystream(output.data(), output.size());
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_keystream_bytes(&ctx, djb_output.data(), djb_output.size());
                 assert(output == djb_output);
-                chacha20.Seek64(pos);
+                // DJB's version seeks forward to a multiple of 64 bytes after every operation. Correct for that.
+                uint32_t old_counter = counter;
+                counter += (integralInRange + 63) >> 6;
+                if (counter < old_counter) ++nonce.first;
+                if (integralInRange & 63) {
+                    chacha20.Seek64(nonce, counter);
+                }
+                assert(counter == ctx.input[12]);
             },
             [&] {
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
-                // DJB's version seeks forward to a multiple of 64 bytes after every operation. Correct for that.
-                uint64_t pos = ctx.input[12] + (((uint64_t)ctx.input[13]) << 32) + ((integralInRange + 63) >> 6);
                 std::vector<uint8_t> output(integralInRange);
                 const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
                 chacha20.Crypt(input.data(), output.data(), input.size());
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_encrypt_bytes(&ctx, input.data(), djb_output.data(), input.size());
                 assert(output == djb_output);
-                chacha20.Seek64(pos);
+                // DJB's version seeks forward to a multiple of 64 bytes after every operation. Correct for that.
+                uint32_t old_counter = counter;
+                counter += (integralInRange + 63) >> 6;
+                if (counter < old_counter) ++nonce.first;
+                if (integralInRange & 63) {
+                    chacha20.Seek64(nonce, counter);
+                }
+                assert(counter == ctx.input[12]);
             });
     }
 }

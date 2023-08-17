@@ -208,10 +208,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000b1034c953e1f1b011e47799"); // 1586970
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000ca1da9fe6fe9b655e7a9e94"); // 1632040
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x5c5a43bece78786ee261458dc300323cec0485b61d6b33a65d624aadf9a1d35b"); // 1586970
+        consensus.defaultAssumeValid = uint256S("0x12a436d9fa797ab570d01af510ee0f7ee1fb61361f0bb23e8418014a5f981f72"); // 1632040
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nNEVMChainID = 57;
@@ -303,6 +303,7 @@ public:
                 { 1400000, uint256S("ca0067113d48a87eaed88c1410cacfe07441e191487383b79bf7069a678ede4a")},
                 { 1576166, uint256S("4b8519c2193265fe269e88361787339504dda66b4efa85613c661a431ad1624c")},
                 { 1586970, uint256S("5c5a43bece78786ee261458dc300323cec0485b61d6b33a65d624aadf9a1d35b")},
+                { 1632040, uint256S("12a436d9fa797ab570d01af510ee0f7ee1fb61361f0bb23e8418014a5f981f72")},
             }
         };
 
@@ -311,10 +312,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats at block 1586971
-            /* nTime    */ 1679768715,
-            /* nTxCount */ 2739418,
-            /* dTxRate  */ 0.008392212155367569
+            // Data from rpc: getchaintxstats at block 1632040
+            /* nTime    */ 1686627799,
+            /* nTxCount */ 2799398,
+            /* dTxRate  */ 0.008854098030063829
         };
     }
 };
@@ -627,7 +628,7 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 0;
-        consensus.nNEVMStartBlock = 205;
+        consensus.nNEVMStartBlock = 2050;
         consensus.nPODAStartBlock = 0;
         consensus.nRolluxStartBlock = 0;
         consensus.nV19StartBlock = opts.v19startblock;

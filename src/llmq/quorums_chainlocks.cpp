@@ -18,6 +18,7 @@
 #include <util/thread.h>
 #include <services/nevmconsensus.h>
 #include <evo/deterministicmns.h>
+#include <logging.h>
 namespace llmq
 {
 

@@ -20,12 +20,6 @@ requires `bash`, `docker`, and `python3` to be installed. To install all require
 sudo apt install bash docker.io python3
 ```
 
-To run the default test stage,
-
-```
-./ci/test_run_all.sh
-```
-
 To run the test stage with a specific configuration,
 
 ```

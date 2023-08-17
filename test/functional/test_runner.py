@@ -74,12 +74,13 @@ TEST_EXIT_SKIPPED = 77
 TEST_FRAMEWORK_MODULES = [
     "address",
     "blocktools",
-    "muhash",
+    "ellswift",
     "key",
+    "messages",
+    "muhash",
     "ripemd160",
     "script",
     "segwit_addr",
-    "util",
 ]
 
 EXTENDED_SCRIPTS = [
@@ -176,6 +177,8 @@ BASE_SCRIPTS = [
     'feature_llmqsimplepose.py',
     'wallet_hd.py --legacy-wallet',
     'wallet_hd.py --descriptors',
+    'wallet_blank.py --legacy-wallet',
+    'wallet_blank.py --descriptors',
     'wallet_keypool_topup.py --legacy-wallet',
     'wallet_keypool_topup.py --descriptors',
     'wallet_fast_rescan.py --descriptors',
@@ -209,6 +212,8 @@ BASE_SCRIPTS = [
     'wallet_watchonly.py --legacy-wallet',
     'wallet_watchonly.py --usecli --legacy-wallet',
     'wallet_reorgsrestore.py',
+    'wallet_conflicts.py --legacy-wallet',
+    'wallet_conflicts.py --descriptors',
     'interface_http.py',
     'interface_rpc.py',
     'interface_usdt_coinselection.py',
@@ -219,7 +224,6 @@ BASE_SCRIPTS = [
     'rpc_users.py',
     'rpc_whitelist.py',
     'feature_proxy.py',
-    'feature_syscall_sandbox.py',
     'wallet_signrawtransactionwithwallet.py --legacy-wallet',
     'wallet_signrawtransactionwithwallet.py --descriptors',
     'rpc_signrawtransactionwithkey.py',
@@ -311,7 +315,7 @@ BASE_SCRIPTS = [
     'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'rpc_estimatefee.py',
-    # renable with SYS data
+    # re-enable with SYS data
     #'rpc_getblockstats.py',
     'feature_bind_port_externalip.py',
     'wallet_create_tx.py --legacy-wallet',
@@ -328,7 +332,7 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py --descriptors',
     'feature_filelock.py',
     'feature_loadblock.py',
-    # renable with SYS data
+    # re-enable with SYS data
     #'p2p_dos_header_tree.py',
     'p2p_add_connections.py',
     'feature_bind_port_discover.py',
@@ -804,8 +808,8 @@ def check_script_prefixes():
 def check_script_list(*, src_dir, fail_on_warn):
     """Check scripts directory.
 
-    Check that there are no scripts in the functional tests directory which are
-    not being run by pull-tester.py."""
+    Check that all python files in this directory are categorized
+    as a test script or meta script."""
     script_dir = src_dir + '/test/functional/'
     python_files = set([test_file for test_file in os.listdir(script_dir) if test_file.endswith(".py")])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS + SKIPPED)))

@@ -346,15 +346,20 @@ std::optional<CAmount> MiniMiner::CalculateTotalBumpFees(const CFeeRate& target_
         to_process.insert(iter);
         ancestors.insert(iter);
     }
+
+    std::set<uint256> has_been_processed;
     while (!to_process.empty()) {
         auto iter = to_process.begin();
         const CTransaction& tx = (*iter)->second.GetTx();
         for (const auto& input : tx.vin) {
             if (auto parent_it{m_entries_by_txid.find(input.prevout.hash)}; parent_it != m_entries_by_txid.end()) {
-                to_process.insert(parent_it);
+                if (!has_been_processed.count(input.prevout.hash)) {
+                    to_process.insert(parent_it);
+                }
                 ancestors.insert(parent_it);
             }
         }
+        has_been_processed.insert(tx.GetHash());
         to_process.erase(iter);
     }
     const auto ancestor_package_size = std::accumulate(ancestors.cbegin(), ancestors.cend(), int64_t{0},

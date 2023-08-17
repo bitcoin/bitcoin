@@ -31,8 +31,10 @@ Start three nodes:
 """
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.key import ECKey
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
 from test_framework.messages import (
     CBlockHeader,
     COutPoint,
@@ -43,9 +45,13 @@ from test_framework.messages import (
     msg_headers,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.script import (CScript, OP_TRUE)
+from test_framework.script import (
+    CScript,
+    OP_TRUE,
+)
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
+from test_framework.wallet_util import generate_keypair
 
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
@@ -107,9 +113,7 @@ class AssumeValidTest(SyscoinTestFramework):
         self.blocks = []
 
         # Get a pubkey for the coinbase TXO
-        coinbase_key = ECKey()
-        coinbase_key.generate()
-        coinbase_pubkey = coinbase_key.get_pubkey().get_bytes()
+        _, coinbase_pubkey = generate_keypair()
 
         # Create the first block with a coinbase output to our key
         height = 1

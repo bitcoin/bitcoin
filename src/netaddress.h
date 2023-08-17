@@ -203,7 +203,7 @@ public:
     bool HasLinkedIPv4() const;
 
     std::vector<unsigned char> GetAddrBytes() const;
-    int GetReachabilityFrom(const CNetAddr* paddrPartner = nullptr) const;
+    int GetReachabilityFrom(const CNetAddr& paddrPartner) const;
 
     explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
@@ -564,7 +564,7 @@ public:
         CSipHasher hasher(m_salt_k0, m_salt_k1);
         hasher.Write(a.m_net);
         hasher.Write(a.port);
-        hasher.Write(a.m_addr.data(), a.m_addr.size());
+        hasher.Write(a.m_addr);
         return static_cast<size_t>(hasher.Finalize());
     }
 

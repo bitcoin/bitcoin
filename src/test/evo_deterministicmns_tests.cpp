@@ -4,7 +4,7 @@
 #include <test/util/setup_common.h>
 
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <validation.h>
 #include <base58.h>
@@ -292,8 +292,8 @@ void FuncDIP3Protx(TestChain100Setup& setup)
             auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
             TxValidationState dummyState;
             // Technically, the payload is still valid...
-            assert(CheckProRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
-            assert(CheckProRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
+            assert(CheckProRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
+            assert(CheckProRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
             // But the signature should not verify anymore
             assert(CheckTransactionSignature(setup.m_node, tx));
             assert(!CheckTransactionSignature(setup.m_node, tx2));
@@ -427,8 +427,8 @@ void FuncDIP3Protx(TestChain100Setup& setup)
         // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
         auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
         TxValidationState dummyState;
-        assert(CheckProUpRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
-        assert(!CheckProUpRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false));
+        assert(CheckProUpRegTx(CTransaction(tx), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
+        assert(!CheckProUpRegTx(CTransaction(tx2), setup.m_node.chainman->ActiveTip(), dummyState, setup.m_node.chainman->ActiveChainstate().CoinsTip(), false, true));
         assert(CheckTransactionSignature(setup.m_node, tx));
         assert(!CheckTransactionSignature(setup.m_node, tx2));
     }
@@ -691,7 +691,7 @@ void FuncVerifyDB(TestChain100Setup& setup)
     LOCK(cs_main);
     Chainstate& active_chainstate = setup.m_node.chainman->ActiveChainstate();
     // Verify db consistency
-    assert(CVerifyDB().VerifyDB(active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), 4, 2) == VerifyDBResult::SUCCESS);
+    assert(CVerifyDB(setup.m_node.chainman->GetNotifications()).VerifyDB(active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), 4, 2) == VerifyDBResult::SUCCESS);
 }
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 

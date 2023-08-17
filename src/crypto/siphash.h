@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <span.h>
 #include <uint256.h>
 
 /** SipHash-2-4 */
@@ -26,7 +27,7 @@ public:
      */
     CSipHasher& Write(uint64_t data);
     /** Hash arbitrary bytes. */
-    CSipHasher& Write(const unsigned char* data, size_t size);
+    CSipHasher& Write(Span<const unsigned char> data);
     /** Compute the 64-bit SipHash-2-4 of the data written so far. The object remains untouched. */
     uint64_t Finalize() const;
 };

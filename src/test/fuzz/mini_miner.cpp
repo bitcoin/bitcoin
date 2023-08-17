@@ -30,7 +30,7 @@ void initialize_miner()
 }
 
 // Test that the MiniMiner can run with various outpoints and feerates.
-FUZZ_TARGET_INIT(mini_miner, initialize_miner)
+FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CTxMemPool pool{CTxMemPool::Options{}};
@@ -106,7 +106,7 @@ FUZZ_TARGET_INIT(mini_miner, initialize_miner)
 }
 
 // Test that MiniMiner and BlockAssembler build the same block given the same transactions and constraints.
-FUZZ_TARGET_INIT(mini_miner_selection, initialize_miner)
+FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CTxMemPool pool{CTxMemPool::Options{}};
@@ -118,10 +118,11 @@ FUZZ_TARGET_INIT(mini_miner_selection, initialize_miner)
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {
         CMutableTransaction mtx = CMutableTransaction();
-        const size_t num_inputs = 2;
+        assert(!available_coins.empty());
+        const size_t num_inputs = std::min(size_t{2}, available_coins.size());
         const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 5);
         for (size_t n{0}; n < num_inputs; ++n) {
-            auto prevout = available_coins.front();
+            auto prevout = available_coins.at(0);
             mtx.vin.push_back(CTxIn(prevout, CScript()));
             available_coins.pop_front();
         }

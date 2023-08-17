@@ -4,7 +4,8 @@ set -eux
 
 export LC_ALL=C
 
-# Print relevant CI environment to allow reproducing the job outside of CI.
+# Print commit and relevant CI environment to allow reproducing the job outside of CI.
+git show --no-patch
 print_environment() {
     # Turn off -x because it messes up the output
     set +x
@@ -36,8 +37,7 @@ case "$WRAPPER_CMD" in
     *wine*)
         # Make sure to shutdown wineserver whenever we exit.
         trap "wineserver -k || true" EXIT INT HUP
-        # This is apparently only reliable when we run a dummy command such as "hh.exe" afterwards.
-        wineserver -p && wine hh.exe
+        wineserver -p
         ;;
 esac
 
@@ -54,6 +54,22 @@ if [ -n "$WRAPPER_CMD" ]; then
     $WRAPPER_CMD --version
 fi
 
+# Workaround for https://bugs.kde.org/show_bug.cgi?id=452758 (fixed in valgrind 3.20.0).
+case "${CC:-undefined}" in
+    clang*)
+        if [ "$CTIMETESTS" = "yes" ] && [ "$WITH_VALGRIND" = "yes" ]
+        then
+            export CFLAGS="${CFLAGS:+$CFLAGS }-gdwarf-4"
+        else
+            case "$WRAPPER_CMD" in
+                valgrind*)
+                    export CFLAGS="${CFLAGS:+$CFLAGS }-gdwarf-4"
+                    ;;
+            esac
+        fi
+        ;;
+esac
+
 ./autogen.sh
 
 ./configure \
@@ -62,6 +78,7 @@ fi
     --with-ecmult-window="$ECMULTWINDOW" \
     --with-ecmult-gen-precision="$ECMULTGENPRECISION" \
     --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" \
+    --enable-module-ellswift="$ELLSWIFT" \
     --enable-module-schnorrsig="$SCHNORRSIG" \
     --enable-examples="$EXAMPLES" \
     --enable-ctime-tests="$CTIMETESTS" \

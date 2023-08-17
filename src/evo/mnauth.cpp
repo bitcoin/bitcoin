@@ -16,6 +16,7 @@
 #include <timedata.h>
 #include <unordered_set>
 #include <common/args.h>
+#include <logging.h>
 void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman, const int nHeight)
 {
     LOCK(activeMasternodeInfoCs);

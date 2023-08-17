@@ -9,17 +9,16 @@
 #include <logging.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
-#include <shutdown.h>
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
-#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
@@ -37,11 +36,11 @@ namespace kernel {
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, FopenFn mockable_fopen_function)
+bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {
     if (load_path.empty()) return false;
 
-    FILE* filestr{mockable_fopen_function(load_path, "rb")};
+    FILE* filestr{opts.mockable_fopen_function(load_path, "rb")};
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
@@ -53,7 +52,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     int64_t failed = 0;
     int64_t already_there = 0;
     int64_t unbroadcast = 0;
-    auto now = NodeClock::now();
+    const auto now{NodeClock::now()};
 
     try {
         uint64_t version;
@@ -72,8 +71,12 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             file >> nTime;
             file >> nFeeDelta;
 
+            if (opts.use_current_time) {
+                nTime = TicksSinceEpoch<std::chrono::seconds>(now);
+            }
+
             CAmount amountdelta = nFeeDelta;
-            if (amountdelta) {
+            if (amountdelta && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_expiry)) {
@@ -95,23 +98,27 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             } else {
                 ++expired;
             }
-            if (ShutdownRequested())
+            if (active_chainstate.m_chainman.m_interrupt)
                 return false;
         }
         std::map<uint256, CAmount> mapDeltas;
         file >> mapDeltas;
 
-        for (const auto& i : mapDeltas) {
-            pool.PrioritiseTransaction(i.first, i.second);
+        if (opts.apply_fee_delta_priority) {
+            for (const auto& i : mapDeltas) {
+                pool.PrioritiseTransaction(i.first, i.second);
+            }
         }
 
         std::set<uint256> unbroadcast_txids;
         file >> unbroadcast_txids;
-        unbroadcast = unbroadcast_txids.size();
-        for (const auto& txid : unbroadcast_txids) {
-            // Ensure transactions were accepted to mempool then add to
-            // unbroadcast set.
-            if (pool.get(txid) != nullptr) pool.AddUnbroadcastTx(txid);
+        if (opts.apply_unbroadcast_set) {
+            unbroadcast = unbroadcast_txids.size();
+            for (const auto& txid : unbroadcast_txids) {
+                // Ensure transactions were accepted to mempool then add to
+                // unbroadcast set.
+                if (pool.get(txid) != nullptr) pool.AddUnbroadcastTx(txid);
+            }
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());

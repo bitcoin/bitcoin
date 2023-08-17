@@ -6,6 +6,7 @@
 #include <hash.h>
 #include <key_io.h>
 #include <rpc/util.h>
+#include <script/script.h>
 #include <util/moneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/receive.h>
@@ -513,7 +514,7 @@ RPCHelpMan listunspent()
                     },
                     {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include outputs that are not safe to spend\n"
                               "See description of \"safe\" attribute below."},
-                    {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "JSON with query options",
+                    {"query_options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
@@ -672,7 +673,7 @@ RPCHelpMan listunspent()
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
             if (provider) {
                 if (scriptPubKey.IsPayToScriptHash()) {
-                    const CScriptID& hash = CScriptID(std::get<ScriptHash>(address));
+                    const CScriptID hash = ToScriptID(std::get<ScriptHash>(address));
                     CScript redeemScript;
                     if (provider->GetCScript(hash, redeemScript)) {
                         entry.pushKV("redeemScript", HexStr(redeemScript));

@@ -57,7 +57,7 @@ struct CompareIteratorByHash {
  * ("descendant" transactions).
  *
  * When a new entry is added to the mempool, we update the descendant state
- * (nCountWithDescendants, nSizeWithDescendants, and nModFeesWithDescendants) for
+ * (m_count_with_descendants, nSizeWithDescendants, and nModFeesWithDescendants) for
  * all ancestors of the newly added transaction.
  *
  */
@@ -75,9 +75,10 @@ private:
     mutable Parents m_parents;
     mutable Children m_children;
     const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
-    const size_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
+    const int32_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
+    const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
@@ -87,26 +88,29 @@ private:
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
     // descendants as well.
-    uint64_t nCountWithDescendants{1}; //!< number of descendant transactions
-    uint64_t nSizeWithDescendants;     //!< ... and size
+    int64_t m_count_with_descendants{1}; //!< number of descendant transactions
+    // Using int64_t instead of int32_t to avoid signed integer overflow issues.
+    int64_t nSizeWithDescendants;      //!< ... and size
     CAmount nModFeesWithDescendants;   //!< ... and total fees (all including us)
 
     // Analogous statistics for ancestor transactions
-    uint64_t nCountWithAncestors{1};
-    uint64_t nSizeWithAncestors;
+    int64_t m_count_with_ancestors{1};
+    // Using int64_t instead of int32_t to avoid signed integer overflow issues.
+    int64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
     int64_t nSigOpCostWithAncestors;
 
 public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
-                    int64_t time, unsigned int entry_height,
+                    int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
           nFee{fee},
-          nTxWeight(GetTransactionWeight(*tx)),
+          nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
+          entry_sequence{entry_sequence},
           entryHeight{entry_height},
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
@@ -121,22 +125,23 @@ public:
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     const CAmount& GetFee() const { return nFee; }
-    size_t GetTxSize() const
+    int32_t GetTxSize() const
     {
         return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
     }
-    size_t GetTxWeight() const { return nTxWeight; }
+    int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
+    uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }
     CAmount GetModifiedFee() const { return m_modified_fee; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
     // Adjusts the descendant state.
-    void UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
+    void UpdateDescendantState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount);
     // Adjusts the ancestor state
-    void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
+    void UpdateAncestorState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the modified fees with descendants/ancestors.
     void UpdateModifiedFee(CAmount fee_diff)
     {
@@ -151,14 +156,14 @@ public:
         lockPoints = lp;
     }
 
-    uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
-    uint64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
+    uint64_t GetCountWithDescendants() const { return m_count_with_descendants; }
+    int64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
     CAmount GetModFeesWithDescendants() const { return nModFeesWithDescendants; }
 
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
 
-    uint64_t GetCountWithAncestors() const { return nCountWithAncestors; }
-    uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
+    uint64_t GetCountWithAncestors() const { return m_count_with_ancestors; }
+    int64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
 

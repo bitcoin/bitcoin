@@ -12,6 +12,7 @@
 #include <evo/deterministicmns.h>
 #include <net_processing.h>
 #include <llmq/quorums_utils.h>
+#include <logging.h>
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {

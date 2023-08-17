@@ -30,7 +30,7 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/bip32.h>

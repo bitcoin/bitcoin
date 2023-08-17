@@ -8,6 +8,8 @@
 #include <test/fuzz/util.h>
 #include <test/util/xoroshiro128plusplus.h>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -28,10 +30,11 @@ FUZZ_TARGET(crypto_chacha20)
                 chacha20.SetKey32(key.data());
             },
             [&] {
-                chacha20.SetIV(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
-            },
-            [&] {
-                chacha20.Seek64(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+                chacha20.Seek64(
+                    {
+                        fuzzed_data_provider.ConsumeIntegral<uint32_t>(),
+                        fuzzed_data_provider.ConsumeIntegral<uint64_t>()
+                    }, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
             },
             [&] {
                 std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
@@ -63,17 +66,16 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
     auto key_bytes = provider.ConsumeBytes<unsigned char>(32);
     std::copy(key_bytes.begin(), key_bytes.end(), key);
     uint64_t iv = provider.ConsumeIntegral<uint64_t>();
+    uint32_t iv_prefix = provider.ConsumeIntegral<uint32_t>();
     uint64_t total_bytes = provider.ConsumeIntegralInRange<uint64_t>(0, 1000000);
-    /* ~x = 2^64 - 1 - x, so ~(total_bytes >> 6) is the maximal seek position. */
-    uint64_t seek = provider.ConsumeIntegralInRange<uint64_t>(0, ~(total_bytes >> 6));
+    /* ~x = 2^BITS - 1 - x, so ~(total_bytes >> 6) is the maximal seek position. */
+    uint32_t seek = provider.ConsumeIntegralInRange<uint32_t>(0, ~(uint32_t)(total_bytes >> 6));
 
     // Initialize two ChaCha20 ciphers, with the same key/iv/position.
     ChaCha20 crypt1(key);
     ChaCha20 crypt2(key);
-    crypt1.SetIV(iv);
-    crypt1.Seek64(seek);
-    crypt2.SetIV(iv);
-    crypt2.Seek64(seek);
+    crypt1.Seek64({iv_prefix, iv}, seek);
+    crypt2.Seek64({iv_prefix, iv}, seek);
 
     // Construct vectors with data.
     std::vector<unsigned char> data1, data2;
@@ -150,4 +152,22 @@ FUZZ_TARGET(chacha20_split_keystream)
 {
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
     ChaCha20SplitFuzz<false>(provider);
+}
+
+FUZZ_TARGET(crypto_fschacha20)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    auto key = fuzzed_data_provider.ConsumeBytes<std::byte>(FSChaCha20::KEYLEN);
+    key.resize(FSChaCha20::KEYLEN);
+
+    auto fsc20 = FSChaCha20{key, fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, 1024)};
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        auto input = fuzzed_data_provider.ConsumeBytes<std::byte>(fuzzed_data_provider.ConsumeIntegralInRange(0, 4096));
+        std::vector<std::byte> output;
+        output.resize(input.size());
+        fsc20.Crypt(input, output);
+    }
 }

@@ -18,6 +18,7 @@
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/mempool_entry.h>
+#include <logging.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
@@ -139,11 +140,12 @@ public:
     void initLogging() override { InitLogging(args()); }
     void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
+    int getExitStatus() override { return Assert(m_context)->exit_status.load(); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        if (!AppInitBasicSetup(args())) return false;
-        if (!AppInitParameterInteraction(args(), /*use_syscall_sandbox=*/false)) return false;
+        if (!AppInitBasicSetup(args(), Assert(context())->exit_status)) return false;
+        if (!AppInitParameterInteraction(args())) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
@@ -155,7 +157,10 @@ public:
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {
-        return AppInitMain(*m_context, tip_info);
+        if (AppInitMain(*m_context, tip_info)) return true;
+        // Error during initialization, set exit status before continue
+        m_context->exit_status.store(EXIT_FAILURE);
+        return false;
     }
     void appShutdown() override
     {
@@ -175,17 +180,17 @@ public:
     bool isSettingIgnored(const std::string& name) override
     {
         bool ignored = false;
-        args().LockSettings([&](util::Settings& settings) {
-            if (auto* options = util::FindKey(settings.command_line_options, name)) {
+        args().LockSettings([&](common::Settings& settings) {
+            if (auto* options = common::FindKey(settings.command_line_options, name)) {
                 ignored = !options->empty();
             }
         });
         return ignored;
     }
-    util::SettingsValue getPersistentSetting(const std::string& name) override { return args().GetPersistentSetting(name); }
-    void updateRwSetting(const std::string& name, const util::SettingsValue& value) override
+    common::SettingsValue getPersistentSetting(const std::string& name) override { return args().GetPersistentSetting(name); }
+    void updateRwSetting(const std::string& name, const common::SettingsValue& value) override
     {
-        args().LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](common::Settings& settings) {
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
@@ -194,9 +199,9 @@ public:
         });
         args().WriteSettingsFile();
     }
-    void forceSetting(const std::string& name, const util::SettingsValue& value) override
+    void forceSetting(const std::string& name, const common::SettingsValue& value) override
     {
-        args().LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](common::Settings& settings) {
             if (value.isNull()) {
                 settings.forced_settings.erase(name);
             } else {
@@ -207,7 +212,7 @@ public:
     void resetSettings() override
     {
         args().WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
-        args().LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](common::Settings& settings) {
             settings.rw_settings.clear();
         });
         args().WriteSettingsFile();
@@ -726,7 +731,7 @@ public:
     {
         if (!m_node.mempool) return true;
         LockPoints lp;
-        CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
+        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
         const CTxMemPool::Limits& limits{m_node.mempool->m_limits};
         LOCK(m_node.mempool->cs);
         return m_node.mempool->CalculateMemPoolAncestors(entry, limits).has_value();
@@ -798,27 +803,27 @@ public:
         RPCRunLater(name, std::move(fn), seconds);
     }
     int rpcSerializationFlags() override { return RPCSerializationFlags(); }
-    util::SettingsValue getSetting(const std::string& name) override
+    common::SettingsValue getSetting(const std::string& name) override
     {
         return args().GetSetting(name);
     }
-    std::vector<util::SettingsValue> getSettingsList(const std::string& name) override
+    std::vector<common::SettingsValue> getSettingsList(const std::string& name) override
     {
         return args().GetSettingsList(name);
     }
-    util::SettingsValue getRwSetting(const std::string& name) override
+    common::SettingsValue getRwSetting(const std::string& name) override
     {
-        util::SettingsValue result;
-        args().LockSettings([&](const util::Settings& settings) {
-            if (const util::SettingsValue* value = util::FindKey(settings.rw_settings, name)) {
+        common::SettingsValue result;
+        args().LockSettings([&](const common::Settings& settings) {
+            if (const common::SettingsValue* value = common::FindKey(settings.rw_settings, name)) {
                 result = *value;
             }
         });
         return result;
     }
-    bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write) override
+    bool updateRwSetting(const std::string& name, const common::SettingsValue& value, bool write) override
     {
-        args().LockSettings([&](util::Settings& settings) {
+        args().LockSettings([&](common::Settings& settings) {
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {

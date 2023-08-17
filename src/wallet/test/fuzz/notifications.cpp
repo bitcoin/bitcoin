@@ -79,7 +79,7 @@ struct FuzzedWallet {
     }
 };
 
-FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
+FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     // The total amount, to be distributed to the wallets a and b in txs
@@ -141,6 +141,10 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
                 info.prev_hash = &block.hashPrevBlock;
                 info.height = chain.size();
                 info.data = &block;
+                // Ensure that no blocks are skipped by the wallet by setting the chain's accumulated
+                // time to the maximum value. This ensures that the wallet's birth time is always
+                // earlier than this maximum time.
+                info.chain_time_max = std::numeric_limits<unsigned int>::max();
                 a.wallet->blockConnected(info);
                 b.wallet->blockConnected(info);
                 // Store the coins for the next block

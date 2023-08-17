@@ -142,14 +142,14 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s.write(AsBytes(Span{vch, len}));
+        s << Span{vch, len};
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
-            s.read(AsWritableBytes(Span{vch, len}));
+            s >> Span{vch, len};
             if (len != size()) {
                 Invalidate();
             }
@@ -289,6 +289,41 @@ public:
 
     //! Implement serialization without length prefixes since it is a fixed length
     SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
+};
+
+/** An ElligatorSwift-encoded public key. */
+struct EllSwiftPubKey
+{
+private:
+    static constexpr size_t SIZE = 64;
+    std::array<std::byte, SIZE> m_pubkey;
+
+public:
+    /** Default constructor creates all-zero pubkey (which is valid). */
+    EllSwiftPubKey() noexcept = default;
+
+    /** Construct a new ellswift public key from a given serialization. */
+    EllSwiftPubKey(const std::array<std::byte, SIZE>& ellswift) :
+        m_pubkey(ellswift) {}
+
+    /** Decode to normal compressed CPubKey (for debugging purposes). */
+    CPubKey Decode() const;
+
+    // Read-only access for serialization.
+    const std::byte* data() const { return m_pubkey.data(); }
+    static constexpr size_t size() { return SIZE; }
+    auto begin() const { return m_pubkey.cbegin(); }
+    auto end() const { return m_pubkey.cend(); }
+
+    bool friend operator==(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
+    {
+        return a.m_pubkey == b.m_pubkey;
+    }
+
+    bool friend operator!=(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
+    {
+        return a.m_pubkey != b.m_pubkey;
+    }
 };
 
 struct CExtPubKey {

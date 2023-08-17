@@ -6,6 +6,7 @@
 #ifndef SYSCOIN_WALLET_WALLET_H
 #define SYSCOIN_WALLET_WALLET_H
 
+#include <addresstype.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
@@ -301,6 +302,10 @@ private:
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
 
+    // First created key time. Used to skip blocks prior to this time.
+    // 'std::numeric_limits<int64_t>::max()' if wallet is blank.
+    std::atomic<int64_t> m_birth_time{std::numeric_limits<int64_t>::max()};
+
     /**
      * Used to keep track of spent outpoints, and
      * detect and report conflicts (double-spends or
@@ -331,6 +336,13 @@ private:
 
     /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx);
+
+    enum class TxUpdate { UNCHANGED, CHANGED, NOTIFY_CHANGED };
+
+    using TryUpdatingStateFn = std::function<TxUpdate(CWalletTx& wtx)>;
+
+    /** Mark a transaction (and its in-wallet descendants) as a particular tx state. */
+    void RecursiveUpdateTxState(const uint256& tx_hash, const TryUpdatingStateFn& try_updating_state) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Mark a transaction's inputs dirty, thus forcing the outputs to be recomputed */
     void MarkInputsDirty(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -381,6 +393,10 @@ private:
     // Indexed by a unique identifier produced by each ScriptPubKeyMan using
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
+
+    // Appends spk managers into the main 'm_spk_managers'.
+    // Must be the only method adding data to it.
+    void AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man);
 
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
@@ -644,6 +660,9 @@ public:
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /** Updates wallet birth time if 'new_birth_time' is below it */
+    void FirstKeyTimeChanged(const ScriptPubKeyMan* spkm, int64_t new_birth_time);
 
     CFeeRate m_pay_tx_fee{DEFAULT_PAY_TX_FEE};
     unsigned int m_confirm_target{DEFAULT_TX_CONFIRM_TARGET};
@@ -1067,7 +1086,7 @@ struct MigrationResult {
 };
 
 //! Do all steps to migrate a legacy wallet to a descriptor wallet
-util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context);
+[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context);
 } // namespace wallet
 
 #endif // SYSCOIN_WALLET_WALLET_H

@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <key.h>
+#include <logging.h>
 #include <qt/syscoin.h>
 #include <qt/syscoingui.h>
 #include <qt/networkstyle.h>
@@ -86,7 +87,6 @@ void AppTests::appTests()
 
     // Reset global state to avoid interfering with later tests.
     LogInstance().DisconnectTestLogger();
-    AbortShutdown();
 }
 
 //! Entry point for SyscoinGUI tests.

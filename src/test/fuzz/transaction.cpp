@@ -27,7 +27,7 @@ void initialize_transaction()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(transaction, initialize_transaction)
+FUZZ_TARGET(transaction, .init = initialize_transaction)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {
@@ -101,8 +101,16 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)AreInputsStandard(tx, coins_view_cache);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
-    UniValue u(UniValue::VOBJ);
-    // SYSCOIN
-    TxToUniv(tx, /*block_hash=*/uint256::ZEROV, /*entry=*/u);
-    TxToUniv(tx, /*block_hash=*/uint256::ONEV, /*entry=*/u);
+    if (tx.GetTotalSize() < 250'000) { // Avoid high memory usage (with msan) due to json encoding
+        {
+            UniValue u{UniValue::VOBJ};
+            // SYSCOIN
+            TxToUniv(tx, /*block_hash=*/uint256::ZEROV, /*entry=*/u);
+        }
+        {
+            UniValue u{UniValue::VOBJ};
+            // SYSCOIN
+            TxToUniv(tx, /*block_hash=*/uint256::ONEV, /*entry=*/u);
+        }
+    }
 }

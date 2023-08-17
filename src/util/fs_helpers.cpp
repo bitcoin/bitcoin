@@ -14,6 +14,7 @@
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/getuniquepath.h>
+#include <util/syserror.h>
 
 #include <cerrno>
 #include <filesystem>
@@ -120,28 +121,28 @@ std::streampos GetFileSize(const char* path, std::streamsize max)
 bool FileCommit(FILE* file)
 {
     if (fflush(file) != 0) { // harmless if redundantly called
-        LogPrintf("%s: fflush failed: %d\n", __func__, errno);
+        LogPrintf("fflush failed: %s\n", SysErrorString(errno));
         return false;
     }
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     if (FlushFileBuffers(hFile) == 0) {
-        LogPrintf("%s: FlushFileBuffers failed: %d\n", __func__, GetLastError());
+        LogPrintf("FlushFileBuffers failed: %s\n", Win32ErrorString(GetLastError()));
         return false;
     }
 #elif defined(MAC_OSX) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
-        LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
+        LogPrintf("fcntl F_FULLFSYNC failed: %s\n", SysErrorString(errno));
         return false;
     }
 #elif HAVE_FDATASYNC
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
-        LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
+        LogPrintf("fdatasync failed: %s\n", SysErrorString(errno));
         return false;
     }
 #else
     if (fsync(fileno(file)) != 0 && errno != EINVAL) {
-        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
+        LogPrintf("fsync failed: %s\n", SysErrorString(errno));
         return false;
     }
 #endif

@@ -4,19 +4,19 @@
 
 #include <core_io.h>
 
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>
 #include <script/descriptor.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <serialize.h>
 #include <streams.h>
 #include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 // SYSCOIN
 #include <evo/cbtx.h>

@@ -8,7 +8,7 @@ from decimal import Decimal
 from itertools import product
 
 from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey, H_POINT
+from test_framework.key import H_POINT
 from test_framework.messages import (
     COutPoint,
     CTransaction,
@@ -43,8 +43,8 @@ from test_framework.util import (
     random_bytes,
 )
 from test_framework.wallet_util import (
-    bytes_to_wif,
-    get_generate_key
+    generate_keypair,
+    get_generate_key,
 )
 
 import json
@@ -327,7 +327,7 @@ class PSBTTest(SyscoinTestFramework):
                 assert_raises_rpc_error(-3, "Invalid amount",
                     self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: invalid_value, "add_inputs": True})
         # Test fee_rate values that cannot be represented in sat/vB.
-        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999, "0.0001", "0.00000001", "0.00099999", "31.99999999"]:
+        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
             assert_raises_rpc_error(-3, "Invalid amount",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": invalid_value, "add_inputs": True})
 
@@ -376,7 +376,7 @@ class PSBTTest(SyscoinTestFramework):
 
         self.log.info("Test various PSBT operations")
         # partially sign multisig things with node 1
-        psbtx = wmulti.walletcreatefundedpsbt(inputs=[{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], outputs={self.nodes[1].getnewaddress():29.99}, options={'changeAddress': self.nodes[1].getrawchangeaddress()})['psbt']
+        psbtx = wmulti.walletcreatefundedpsbt(inputs=[{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], outputs={self.nodes[1].getnewaddress():29.99}, changeAddress=self.nodes[1].getrawchangeaddress())['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(psbtx)
         psbtx = walletprocesspsbt_out['psbt']
         assert_equal(walletprocesspsbt_out['complete'], False)
@@ -711,9 +711,7 @@ class PSBTTest(SyscoinTestFramework):
 
         self.log.info("Test that we can fund psbts with external inputs specified")
 
-        eckey = ECKey()
-        eckey.generate()
-        privkey = bytes_to_wif(eckey.get_bytes())
+        privkey, _ = generate_keypair(wif=True)
 
         self.nodes[1].createwallet("extfund")
         wallet = self.nodes[1].get_wallet_rpc("extfund")
@@ -780,7 +778,7 @@ class PSBTTest(SyscoinTestFramework):
         psbt = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}],
             outputs={self.nodes[0].getnewaddress(): 15},
-            options={"add_inputs": True}
+            add_inputs=True,
         )
         signed = wallet.walletprocesspsbt(psbt["psbt"])
         signed = self.nodes[0].walletprocesspsbt(signed["psbt"])
@@ -790,21 +788,21 @@ class PSBTTest(SyscoinTestFramework):
         psbt2 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}],
             outputs={self.nodes[0].getnewaddress(): 15},
-            options={"add_inputs": True}
+            add_inputs=True,
         )
         assert_greater_than(psbt["fee"], psbt2["fee"])
         # Increasing the weight should have a higher fee
         psbt2 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
             outputs={self.nodes[0].getnewaddress(): 15},
-            options={"add_inputs": True}
+            add_inputs=True,
         )
         assert_greater_than(psbt2["fee"], psbt["fee"])
         # The provided weight should override the calculated weight when solving data is provided
         psbt3 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
             outputs={self.nodes[0].getnewaddress(): 15},
-            options={'add_inputs': True, "solving_data":{"descriptors": [desc]}}
+            add_inputs=True, solving_data={"descriptors": [desc]},
         )
         assert_equal(psbt2["fee"], psbt3["fee"])
 
@@ -818,7 +816,7 @@ class PSBTTest(SyscoinTestFramework):
         psbt3 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
             outputs={self.nodes[0].getnewaddress(): 15},
-            options={"add_inputs": True}
+            add_inputs=True,
         )
         assert_equal(psbt2["fee"], psbt3["fee"])
 
@@ -826,11 +824,9 @@ class PSBTTest(SyscoinTestFramework):
         self.nodes[1].createwallet(wallet_name="scriptwatchonly", disable_private_keys=True)
         watchonly = self.nodes[1].get_wallet_rpc("scriptwatchonly")
 
-        eckey = ECKey()
-        eckey.generate()
-        privkey = bytes_to_wif(eckey.get_bytes())
+        privkey, pubkey = generate_keypair(wif=True)
 
-        desc = descsum_create("wsh(pkh({}))".format(eckey.get_pubkey().get_bytes().hex()))
+        desc = descsum_create("wsh(pkh({}))".format(pubkey.hex()))
         if self.options.descriptors:
             res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
@@ -847,11 +843,9 @@ class PSBTTest(SyscoinTestFramework):
 
         # Same test but for taproot
         if self.options.descriptors:
-            eckey = ECKey()
-            eckey.generate()
-            privkey = bytes_to_wif(eckey.get_bytes())
+            privkey, pubkey = generate_keypair(wif=True)
 
-            desc = descsum_create("tr({},pk({}))".format(H_POINT, eckey.get_pubkey().get_bytes().hex()))
+            desc = descsum_create("tr({},pk({}))".format(H_POINT, pubkey.hex()))
             res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
             assert res[0]["success"]
             addr = self.nodes[0].deriveaddresses(desc)[0]
@@ -889,6 +883,9 @@ class PSBTTest(SyscoinTestFramework):
             parsed_psbt.make_blank()
             comb_psbt = self.nodes[0].combinepsbt([psbt, parsed_psbt.to_base64()])
             assert_equal(comb_psbt, psbt)
+
+        self.log.info("Test walletprocesspsbt raises if an invalid sighashtype is passed")
+        assert_raises_rpc_error(-8, "all is not a valid sighash parameter.", self.nodes[0].walletprocesspsbt, psbt, sighashtype="all")
 
         self.log.info("Test decoding PSBT with per-input preimage types")
         # note that the decodepsbt RPC doesn't check whether preimages and hashes match
@@ -988,6 +985,10 @@ class PSBTTest(SyscoinTestFramework):
         # Broadcast transaction
         rawtx = self.nodes[2].finalizepsbt(psbt)["hex"]
         self.nodes[2].sendrawtransaction(rawtx)
+
+        self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
+        assert_raises_rpc_error(-8, "all is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], sighashtype="all")
+
 
 if __name__ == '__main__':
     PSBTTest().main()

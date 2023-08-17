@@ -9,12 +9,14 @@
 #include <pubkey.h>
 #include <script/miniscript.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/signingprovider.h>
+#include <script/solver.h>
 #include <uint256.h>
 
 #include <common/args.h>
 #include <span.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/vector.h>
@@ -191,8 +193,13 @@ public:
     /** Get the size of the generated public key(s) in bytes (33 or 65). */
     virtual size_t GetSize() const = 0;
 
+    enum class StringType {
+        PUBLIC,
+        COMPAT // string calculation that mustn't change over time to stay compatible with previous software versions
+    };
+
     /** Get the descriptor string form. */
-    virtual std::string ToString() const = 0;
+    virtual std::string ToString(StringType type=StringType::PUBLIC) const = 0;
 
     /** Get the descriptor string form including private data (if available in arg). */
     virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
@@ -212,9 +219,11 @@ class OriginPubkeyProvider final : public PubkeyProvider
     std::unique_ptr<PubkeyProvider> m_provider;
     bool m_apostrophe;
 
-    std::string OriginString(bool normalized=false) const
+    std::string OriginString(StringType type, bool normalized=false) const
     {
-        return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, /*apostrophe=*/!normalized && m_apostrophe);
+        // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
+        bool use_apostrophe = (!normalized && m_apostrophe) || type == StringType::COMPAT;
+        return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, use_apostrophe);
     }
 
 public:
@@ -228,12 +237,12 @@ public:
     }
     bool IsRange() const override { return m_provider->IsRange(); }
     size_t GetSize() const override { return m_provider->GetSize(); }
-    std::string ToString() const override { return "[" + OriginString() + "]" + m_provider->ToString(); }
+    std::string ToString(StringType type) const override { return "[" + OriginString(type) + "]" + m_provider->ToString(type); }
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         std::string sub;
         if (!m_provider->ToPrivateString(arg, sub)) return false;
-        ret = "[" + OriginString() + "]" + std::move(sub);
+        ret = "[" + OriginString(StringType::PUBLIC) + "]" + std::move(sub);
         return true;
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
@@ -245,9 +254,9 @@ public:
         // and append that to our own origin string.
         if (sub[0] == '[') {
             sub = sub.substr(9);
-            ret = "[" + OriginString(/*normalized=*/true) + std::move(sub);
+            ret = "[" + OriginString(StringType::PUBLIC, /*normalized=*/true) + std::move(sub);
         } else {
-            ret = "[" + OriginString(/*normalized=*/true) + "]" + std::move(sub);
+            ret = "[" + OriginString(StringType::PUBLIC, /*normalized=*/true) + "]" + std::move(sub);
         }
         return true;
     }
@@ -275,7 +284,7 @@ public:
     }
     bool IsRange() const override { return false; }
     size_t GetSize() const override { return m_pubkey.size(); }
-    std::string ToString() const override { return m_xonly ? HexStr(m_pubkey).substr(2) : HexStr(m_pubkey); }
+    std::string ToString(StringType type) const override { return m_xonly ? HexStr(m_pubkey).substr(2) : HexStr(m_pubkey); }
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         CKey key;
@@ -293,7 +302,7 @@ public:
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
-        ret = ToString();
+        ret = ToString(StringType::PUBLIC);
         return true;
     }
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
@@ -421,9 +430,10 @@ public:
 
         return true;
     }
-    std::string ToString(bool normalized) const
+    std::string ToString(StringType type, bool normalized) const
     {
-        const bool use_apostrophe = !normalized && m_apostrophe;
+        // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
+        const bool use_apostrophe = (!normalized && m_apostrophe) || type == StringType::COMPAT;
         std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, /*apostrophe=*/use_apostrophe);
         if (IsRange()) {
             ret += "/*";
@@ -431,9 +441,9 @@ public:
         }
         return ret;
     }
-    std::string ToString() const override
+    std::string ToString(StringType type=StringType::PUBLIC) const override
     {
-        return ToString(/*normalized=*/false);
+        return ToString(type, /*normalized=*/false);
     }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
@@ -449,7 +459,7 @@ public:
     bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override
     {
         if (m_derive == DeriveType::HARDENED) {
-            out = ToString(/*normalized=*/true);
+            out = ToString(StringType::PUBLIC, /*normalized=*/true);
 
             return true;
         }
@@ -556,6 +566,7 @@ public:
         PUBLIC,
         PRIVATE,
         NORMALIZED,
+        COMPAT, // string calculation that mustn't change over time to stay compatible with previous software versions
     };
 
     bool IsSolvable() const override
@@ -607,6 +618,9 @@ public:
                 case StringType::PUBLIC:
                     tmp = pubkey->ToString();
                     break;
+                case StringType::COMPAT:
+                    tmp = pubkey->ToString(PubkeyProvider::StringType::COMPAT);
+                    break;
             }
             ret += tmp;
         }
@@ -617,10 +631,10 @@ public:
         return true;
     }
 
-    std::string ToString() const final
+    std::string ToString(bool compat_format) const final
     {
         std::string ret;
-        ToStringHelper(nullptr, ret, StringType::PUBLIC);
+        ToStringHelper(nullptr, ret, compat_format ? StringType::COMPAT : StringType::PUBLIC);
         return AddChecksum(ret);
     }
 
@@ -1541,14 +1555,14 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
                 error = std::move(parser.m_key_parsing_error);
                 return nullptr;
             }
-            if (!node->IsSane()) {
+            if (!node->IsSane() || node->IsNotSatisfiable()) {
                 // Try to find the first insane sub for better error reporting.
                 auto insane_node = node.get();
                 if (const auto sub = node->FindInsaneSub()) insane_node = sub;
                 if (const auto str = insane_node->ToString(parser)) error = *str;
                 if (!insane_node->IsValid()) {
                     error += " is invalid";
-                } else {
+                } else if (!node->IsSane()) {
                     error += " is not sane";
                     if (!insane_node->IsNonMalleable()) {
                         error += ": malleable witnesses exist";
@@ -1561,9 +1575,14 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
                     } else if (!insane_node->ValidSatisfactions()) {
                         error += ": needs witnesses that may exceed resource limits";
                     }
+                } else {
+                    error += " is not satisfiable";
                 }
                 return nullptr;
             }
+            // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
+            // may have an empty list of public keys.
+            CHECK_NONFATAL(!parser.m_keys.empty());
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
         }
     }
@@ -1705,6 +1724,10 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
 
+    // The following descriptors are all top-level only descriptors.
+    // So if we are not at the top level, return early.
+    if (ctx != ParseScriptContext::TOP) return nullptr;
+
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
         if (GetScriptForDestination(dest) == script) {
@@ -1776,6 +1799,14 @@ std::string GetDescriptorChecksum(const std::string& descriptor)
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider)
 {
     return InferScript(script, ParseScriptContext::TOP, provider);
+}
+
+uint256 DescriptorID(const Descriptor& desc)
+{
+    std::string desc_str = desc.ToString(/*compat_format=*/true);
+    uint256 id;
+    CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
+    return id;
 }
 
 void DescriptorCache::CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub)

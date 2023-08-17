@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/settings.h>
 #include <cstdint>
 #include <hash.h>
 #include <logging.h>
@@ -21,7 +22,6 @@
 #include <univalue.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/settings.h>
 #include <util/translation.h>
 
 namespace {
@@ -132,7 +132,7 @@ CBanDB::CBanDB(fs::path ban_list_path)
 bool CBanDB::Write(const banmap_t& banSet)
 {
     std::vector<std::string> errors;
-    if (util::WriteSettings(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
+    if (common::WriteSettings(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
         return true;
     }
 
@@ -152,10 +152,10 @@ bool CBanDB::Read(banmap_t& banSet)
         return false;
     }
 
-    std::map<std::string, util::SettingsValue> settings;
+    std::map<std::string, common::SettingsValue> settings;
     std::vector<std::string> errors;
 
-    if (!util::ReadSettings(m_banlist_json, settings, errors)) {
+    if (!common::ReadSettings(m_banlist_json, settings, errors)) {
         for (const auto& err : errors) {
             LogPrintf("Cannot load banlist %s: %s\n", fs::PathToString(m_banlist_json), err);
         }
@@ -210,7 +210,8 @@ util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgro
         return util::Error{strprintf(_("Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start."),
                                      e.what(), PACKAGE_BUGREPORT, fs::quoted(fs::PathToString(path_addr)))};
     }
-    return std::move(addrman); // std::move should be unneccessary but is temporarily needed to work around clang bug (https://github.com/bitcoin/bitcoin/pull/25977#issuecomment-1561270092)
+    return {std::move(addrman)}; // std::move should be unnecessary but is temporarily needed to work around clang bug
+                                 // (https://github.com/bitcoin/bitcoin/pull/25977#issuecomment-1561270092)
 }
 
 void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)

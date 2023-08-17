@@ -18,10 +18,11 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/syscoind -daemonwait \
-                            -pid=/run/syscoind/syscoind.pid \
+ExecStart=/usr/bin/syscoind -pid=/run/syscoind/syscoind.pid \
                             -conf=/etc/syscoin/syscoin.conf \
-                            -datadir=/var/lib/syscoind
+                            -datadir=/var/lib/syscoind \
+                            -startupnotify='systemd-notify --ready' \
+                            -shutdownnotify='systemd-notify --stopping'
 
 # Make sure the config directory is readable by the service user
 PermissionsStartOnly=true
@@ -30,8 +31,10 @@ ExecStartPre=/bin/chgrp syscoin /etc/syscoin
 # Process management
 ####################
 
-Type=forking
+Type=notify
+NotifyAccess=all
 PIDFile=/run/syscoind/syscoind.pid
+
 Restart=on-failure
 TimeoutStartSec=infinity
 TimeoutStopSec=600

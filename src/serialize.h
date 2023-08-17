@@ -204,9 +204,11 @@ template<typename X> const X& ReadWriteAsHelper(const X& x) { return x; }
     }                                                                               \
     FORMATTER_METHODS(cls, obj)
 
+// clang-format off
 #ifndef CHAR_EQUALS_INT8
 template <typename Stream> void Serialize(Stream&, char) = delete; // char serialization forbidden. Use uint8_t or int8_t
 #endif
+template <typename Stream> void Serialize(Stream& s, std::byte a) { ser_writedata8(s, uint8_t(a)); }
 template<typename Stream> inline void Serialize(Stream& s, int8_t a  ) { ser_writedata8(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, uint8_t a ) { ser_writedata8(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, int16_t a ) { ser_writedata16(s, a); }
@@ -217,12 +219,12 @@ template<typename Stream> inline void Serialize(Stream& s, int64_t a ) { ser_wri
 template<typename Stream> inline void Serialize(Stream& s, uint64_t a) { ser_writedata64(s, a); }
 template<typename Stream, int N> inline void Serialize(Stream& s, const char (&a)[N]) { s.write(MakeByteSpan(a)); }
 template<typename Stream, int N> inline void Serialize(Stream& s, const unsigned char (&a)[N]) { s.write(MakeByteSpan(a)); }
-template<typename Stream> inline void Serialize(Stream& s, const Span<const unsigned char>& span) { s.write(AsBytes(span)); }
-template<typename Stream> inline void Serialize(Stream& s, const Span<unsigned char>& span) { s.write(AsBytes(span)); }
+template <typename Stream, typename B> void Serialize(Stream& s, Span<B> span) { (void)/* force byte-type */UCharCast(span.data()); s.write(AsBytes(span)); }
 
 #ifndef CHAR_EQUALS_INT8
 template <typename Stream> void Unserialize(Stream&, char) = delete; // char serialization forbidden. Use uint8_t or int8_t
 #endif
+template <typename Stream> void Unserialize(Stream& s, std::byte& a) { a = std::byte{ser_readdata8(s)}; }
 template<typename Stream> inline void Unserialize(Stream& s, int8_t& a  ) { a = ser_readdata8(s); }
 template<typename Stream> inline void Unserialize(Stream& s, uint8_t& a ) { a = ser_readdata8(s); }
 template<typename Stream> inline void Unserialize(Stream& s, int16_t& a ) { a = ser_readdata16(s); }
@@ -233,12 +235,14 @@ template<typename Stream> inline void Unserialize(Stream& s, int64_t& a ) { a = 
 template<typename Stream> inline void Unserialize(Stream& s, uint64_t& a) { a = ser_readdata64(s); }
 template<typename Stream, int N> inline void Unserialize(Stream& s, char (&a)[N]) { s.read(MakeWritableByteSpan(a)); }
 template<typename Stream, int N> inline void Unserialize(Stream& s, unsigned char (&a)[N]) { s.read(MakeWritableByteSpan(a)); }
-template<typename Stream> inline void Unserialize(Stream& s, Span<unsigned char>& span) { s.read(AsWritableBytes(span)); }
+template <typename Stream, typename B> void Unserialize(Stream& s, Span<B> span) { (void)/* force byte-type */UCharCast(span.data()); s.read(AsWritableBytes(span)); }
 
 template <typename Stream> inline void Serialize(Stream& s, bool a) { uint8_t f = a; ser_writedata8(s, f); }
 template <typename Stream> inline void Unserialize(Stream& s, bool& a) { uint8_t f = ser_readdata8(s); a = f; }
 // SYSCOIN
 template <typename S, typename T> size_t GetSerializeSize(const S& s, const T& t);
+// clang-format on
+
 
 /**
  * Compact Size
@@ -665,10 +669,10 @@ struct CustomUintFormatter
         if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
         if (BigEndian) {
             uint64_t raw = htobe64(v);
-            s.write({AsBytePtr(&raw) + 8 - Bytes, Bytes});
+            s.write(AsBytes(Span{&raw, 1}).last(Bytes));
         } else {
             uint64_t raw = htole64(v);
-            s.write({AsBytePtr(&raw), Bytes});
+            s.write(AsBytes(Span{&raw, 1}).first(Bytes));
         }
     }
 
@@ -678,10 +682,10 @@ struct CustomUintFormatter
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
-            s.read({AsBytePtr(&raw) + 8 - Bytes, Bytes});
+            s.read(AsWritableBytes(Span{&raw, 1}).last(Bytes));
             v = static_cast<I>(be64toh(raw));
         } else {
-            s.read({AsBytePtr(&raw), Bytes});
+            s.read(AsWritableBytes(Span{&raw, 1}).first(Bytes));
             v = static_cast<I>(le64toh(raw));
         }
     }
@@ -832,23 +836,14 @@ template<typename Stream, typename C> void Unserialize(Stream& is, std::basic_st
  * prevector
  * prevectors of unsigned char are a special case and are intended to be serialized as a single opaque blob.
  */
-template<typename Stream, unsigned int N, typename T> void Serialize_impl(Stream& os, const prevector<N, T>& v, const unsigned char&);
-template<typename Stream, unsigned int N, typename T, typename V> void Serialize_impl(Stream& os, const prevector<N, T>& v, const V&);
 template<typename Stream, unsigned int N, typename T> inline void Serialize(Stream& os, const prevector<N, T>& v);
-template<typename Stream, unsigned int N, typename T> void Unserialize_impl(Stream& is, prevector<N, T>& v, const unsigned char&);
-template<typename Stream, unsigned int N, typename T, typename V> void Unserialize_impl(Stream& is, prevector<N, T>& v, const V&);
 template<typename Stream, unsigned int N, typename T> inline void Unserialize(Stream& is, prevector<N, T>& v);
 
 /**
  * vector
  * vectors of unsigned char are a special case and are intended to be serialized as a single opaque blob.
  */
-template<typename Stream, typename T, typename A> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const unsigned char&);
-template<typename Stream, typename T, typename A> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const bool&);
-template<typename Stream, typename T, typename A, typename V> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const V&);
 template<typename Stream, typename T, typename A> inline void Serialize(Stream& os, const std::vector<T, A>& v);
-template<typename Stream, typename T, typename A> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&);
-template<typename Stream, typename T, typename A, typename V> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&);
 template<typename Stream, typename T, typename A> inline void Unserialize(Stream& is, std::vector<T, A>& v);
 
 /**
@@ -961,121 +956,81 @@ void Unserialize(Stream& is, std::basic_string<C>& str)
 /**
  * prevector
  */
-template<typename Stream, unsigned int N, typename T>
-void Serialize_impl(Stream& os, const prevector<N, T>& v, const unsigned char&)
+template <typename Stream, unsigned int N, typename T>
+void Serialize(Stream& os, const prevector<N, T>& v)
 {
-    WriteCompactSize(os, v.size());
-    if (!v.empty())
-        os.write(MakeByteSpan(v));
-}
-
-template<typename Stream, unsigned int N, typename T, typename V>
-void Serialize_impl(Stream& os, const prevector<N, T>& v, const V&)
-{
-    Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
-}
-
-template<typename Stream, unsigned int N, typename T>
-inline void Serialize(Stream& os, const prevector<N, T>& v)
-{
-    Serialize_impl(os, v, T());
-}
-
-
-template<typename Stream, unsigned int N, typename T>
-void Unserialize_impl(Stream& is, prevector<N, T>& v, const unsigned char&)
-{
-    // Limit size per read so bogus size value won't cause out of memory
-    v.clear();
-    unsigned int nSize = ReadCompactSize(is);
-    unsigned int i = 0;
-    while (i < nSize)
-    {
-        unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
-        v.resize_uninitialized(i + blk);
-        is.read(AsWritableBytes(Span{&v[i], blk}));
-        i += blk;
+    if constexpr (std::is_same_v<T, unsigned char>) {
+        WriteCompactSize(os, v.size());
+        if (!v.empty())
+            os.write(MakeByteSpan(v));
+    } else {
+        Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
     }
 }
 
-template<typename Stream, unsigned int N, typename T, typename V>
-void Unserialize_impl(Stream& is, prevector<N, T>& v, const V&)
-{
-    Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
-}
 
-template<typename Stream, unsigned int N, typename T>
-inline void Unserialize(Stream& is, prevector<N, T>& v)
+template <typename Stream, unsigned int N, typename T>
+void Unserialize(Stream& is, prevector<N, T>& v)
 {
-    Unserialize_impl(is, v, T());
+    if constexpr (std::is_same_v<T, unsigned char>) {
+        // Limit size per read so bogus size value won't cause out of memory
+        v.clear();
+        unsigned int nSize = ReadCompactSize(is);
+        unsigned int i = 0;
+        while (i < nSize) {
+            unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
+            v.resize_uninitialized(i + blk);
+            is.read(AsWritableBytes(Span{&v[i], blk}));
+            i += blk;
+        }
+    } else {
+        Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
+    }
 }
-
 
 
 /**
  * vector
  */
-template<typename Stream, typename T, typename A>
-void Serialize_impl(Stream& os, const std::vector<T, A>& v, const unsigned char&)
+template <typename Stream, typename T, typename A>
+void Serialize(Stream& os, const std::vector<T, A>& v)
 {
-    WriteCompactSize(os, v.size());
-    if (!v.empty())
-        os.write(MakeByteSpan(v));
-}
-
-template<typename Stream, typename T, typename A>
-void Serialize_impl(Stream& os, const std::vector<T, A>& v, const bool&)
-{
-    // A special case for std::vector<bool>, as dereferencing
-    // std::vector<bool>::const_iterator does not result in a const bool&
-    // due to std::vector's special casing for bool arguments.
-    WriteCompactSize(os, v.size());
-    for (bool elem : v) {
-        ::Serialize(os, elem);
+    if constexpr (std::is_same_v<T, unsigned char>) {
+        WriteCompactSize(os, v.size());
+        if (!v.empty())
+            os.write(MakeByteSpan(v));
+    } else if constexpr (std::is_same_v<T, bool>) {
+        // A special case for std::vector<bool>, as dereferencing
+        // std::vector<bool>::const_iterator does not result in a const bool&
+        // due to std::vector's special casing for bool arguments.
+        WriteCompactSize(os, v.size());
+        for (bool elem : v) {
+            ::Serialize(os, elem);
+        }
+    } else {
+        Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
     }
 }
 
-template<typename Stream, typename T, typename A, typename V>
-void Serialize_impl(Stream& os, const std::vector<T, A>& v, const V&)
-{
-    Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
-}
 
-template<typename Stream, typename T, typename A>
-inline void Serialize(Stream& os, const std::vector<T, A>& v)
+template <typename Stream, typename T, typename A>
+void Unserialize(Stream& is, std::vector<T, A>& v)
 {
-    Serialize_impl(os, v, T());
-}
-
-
-template<typename Stream, typename T, typename A>
-void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&)
-{
-    // Limit size per read so bogus size value won't cause out of memory
-    v.clear();
-    unsigned int nSize = ReadCompactSize(is);
-    unsigned int i = 0;
-    while (i < nSize)
-    {
-        unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
-        v.resize(i + blk);
-        is.read(AsWritableBytes(Span{&v[i], blk}));
-        i += blk;
+    if constexpr (std::is_same_v<T, unsigned char>) {
+        // Limit size per read so bogus size value won't cause out of memory
+        v.clear();
+        unsigned int nSize = ReadCompactSize(is);
+        unsigned int i = 0;
+        while (i < nSize) {
+            unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
+            v.resize(i + blk);
+            is.read(AsWritableBytes(Span{&v[i], blk}));
+            i += blk;
+        }
+    } else {
+        Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
     }
 }
-
-template<typename Stream, typename T, typename A, typename V>
-void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&)
-{
-    Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
-}
-
-template<typename Stream, typename T, typename A>
-inline void Unserialize(Stream& is, std::vector<T, A>& v)
-{
-    Unserialize_impl(is, v, T());
-}
-
 
 
 /**
@@ -1393,28 +1348,16 @@ public:
     int GetTxVersion() const { return nTxVersion; }
 };
 
-template<typename Stream>
-void SerializeMany(Stream& s)
+template <typename Stream, typename... Args>
+void SerializeMany(Stream& s, const Args&... args)
 {
+    (::Serialize(s, args), ...);
 }
 
-template<typename Stream, typename Arg, typename... Args>
-void SerializeMany(Stream& s, const Arg& arg, const Args&... args)
+template <typename Stream, typename... Args>
+inline void UnserializeMany(Stream& s, Args&&... args)
 {
-    ::Serialize(s, arg);
-    ::SerializeMany(s, args...);
-}
-
-template<typename Stream>
-inline void UnserializeMany(Stream& s)
-{
-}
-
-template<typename Stream, typename Arg, typename... Args>
-inline void UnserializeMany(Stream& s, Arg&& arg, Args&&... args)
-{
-    ::Unserialize(s, arg);
-    ::UnserializeMany(s, args...);
+    (::Unserialize(s, args), ...);
 }
 
 template<typename Stream, typename... Args>

@@ -24,8 +24,8 @@
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
+#include <util/any.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <validation.h>
 #include <version.h>
 
@@ -630,7 +630,7 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
                 return RESTERR(req, HTTP_BAD_REQUEST, "Block not found");
             }
 
-            jsonRequest.params.pushKV("blockhash", hash_str);
+            jsonRequest.params.push_back(hash_str);
         }
 
         req->WriteHeader("Content-Type", "application/json");

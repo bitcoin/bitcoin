@@ -25,8 +25,6 @@ JSON_TEST_FILES = \
   test/data/sighash.json \
   test/data/tx_invalid.json \
   test/data/tx_valid.json \
-  test/data/proposals_valid.json \
-  test/data/proposals_invalid.json \
   test/data/utxo.json \
   test/data/nevmspv_valid.json \
   test/data/nevmspv_invalid.json \
@@ -72,7 +70,6 @@ endif
 
 # test_syscoin binary #
 SYSCOIN_TESTS =\
-  test/governance_validators_tests.cpp \
   test/addrman_tests.cpp \
   test/allocator_tests.cpp \
   test/auxpow_tests.cpp \
@@ -85,6 +82,7 @@ SYSCOIN_TESTS =\
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
   test/bip32_tests.cpp \
+  test/bip324_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/blockfilter_index_tests.cpp \
@@ -209,7 +207,9 @@ SYSCOIN_TESTS += wallet/test/db_tests.cpp
 endif
 
 FUZZ_WALLET_SRC = \
+ wallet/test/fuzz/coincontrol.cpp \
  wallet/test/fuzz/coinselection.cpp \
+ wallet/test/fuzz/fees.cpp \
  wallet/test/fuzz/parse_iso8601.cpp
 
 if USE_SQLITE
@@ -259,6 +259,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/banman.cpp \
  test/fuzz/base_encode_decode.cpp \
  test/fuzz/bech32.cpp \
+ test/fuzz/bip324.cpp \
  test/fuzz/bitdeque.cpp \
  test/fuzz/block.cpp \
  test/fuzz/block_header.cpp \
@@ -274,7 +275,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/crypto_aes256.cpp \
  test/fuzz/crypto_aes256cbc.cpp \
  test/fuzz/crypto_chacha20.cpp \
- test/fuzz/crypto_chacha20_poly1305_aead.cpp \
  test/fuzz/crypto_common.cpp \
  test/fuzz/crypto_diff_fuzz_chacha20.cpp \
  test/fuzz/crypto_hkdf_hmac_sha256_l32.cpp \
@@ -439,8 +439,9 @@ endif
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
 	$(AM_V_GEN) { \
+	 echo "#include <string>" && \
 	 echo "namespace json_tests{" && \
-	 echo "static unsigned const char $(*F)[] = {" && \
+	 echo "static const std::string $(*F){" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
 	 echo "};};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"

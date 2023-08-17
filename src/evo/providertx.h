@@ -13,7 +13,7 @@
 #include <netaddress.h>
 #include <pubkey.h>
 #include <univalue.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <key_io.h>
 #include <kernel/cs_main.h>
 class CBlockIndex;
@@ -289,9 +289,9 @@ public:
 };
 
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck, bool check_sigs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck, bool check_sigs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 #endif // SYSCOIN_EVO_PROVIDERTX_H

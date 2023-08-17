@@ -6,6 +6,8 @@
 
 export LC_ALL=C.UTF-8
 
+set -ex
+
 CFG_DONE="ci.base-install-done"  # Use a global git setting to remember whether this script ran to avoid running it twice
 
 if [ "$(git config --global ${CFG_DONE})" == "true" ]; then
@@ -20,7 +22,7 @@ fi
 if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
   bash -c "dnf -y install epel-release"
   bash -c "dnf -y --allowerasing install $CI_BASE_PACKAGES $PACKAGES"
-elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
+elif [ "$CI_OS_NAME" != "macos" ]; then
   if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
     echo "${APPEND_APT_SOURCES_LIST}" >> /etc/apt/sources.list
   fi
@@ -40,17 +42,41 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  update-alternatives --install /usr/bin/clang++ clang++ "$(which clang++-16)" 100
-  update-alternatives --install /usr/bin/clang clang "$(which clang-16)" 100
-  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.1 "${BASE_SCRATCH_DIR}"/msan/llvm-project
-  cmake -B "${BASE_SCRATCH_DIR}"/msan/build/ -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF -DLIBCXX_ENABLE_DEBUG_MODE=ON -DLIBCXX_ENABLE_ASSERTIONS=ON -S "${BASE_SCRATCH_DIR}"/msan/llvm-project/runtimes
-  make -C "${BASE_SCRATCH_DIR}"/msan/build/ "$MAKEJOBS"
+  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.6 /msan/llvm-project
+
+  cmake -G Ninja -B /msan/clang_build/ \
+    -DLLVM_ENABLE_PROJECTS="clang" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_TARGETS_TO_BUILD=Native \
+    -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
+    -S /msan/llvm-project/llvm
+
+  ninja -C /msan/clang_build/ "$MAKEJOBS"
+  ninja -C /msan/clang_build/ install-runtimes
+
+  update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
+  update-alternatives --install /usr/bin/clang clang /msan/clang_build/bin/clang 100
+  update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /msan/clang_build/bin/llvm-symbolizer 100
+
+  cmake -G Ninja -B /msan/cxx_build/ \
+    -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_USE_SANITIZER=MemoryWithOrigins \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_TARGETS_TO_BUILD=Native \
+    -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
+    -DLIBCXX_ENABLE_DEBUG_MODE=ON \
+    -DLIBCXX_ENABLE_ASSERTIONS=ON \
+    -S /msan/llvm-project/runtimes
+
+  ninja -C /msan/cxx_build/ "$MAKEJOBS"
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 "${DIR_IWYU}"/include-what-you-use
-  cmake -B "${DIR_IWYU}"/build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 -S "${DIR_IWYU}"/include-what-you-use
-  make -C "${DIR_IWYU}"/build/ install "$MAKEJOBS"
+  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 /include-what-you-use
+  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 -S /include-what-you-use
+  make -C /iwyu-build/ install "$MAKEJOBS"
 fi
 
 mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"

@@ -27,7 +27,7 @@ void initialize_net()
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
 }
 
-FUZZ_TARGET_INIT(net, initialize_net)
+FUZZ_TARGET(net, .init = initialize_net)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));

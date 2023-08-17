@@ -113,6 +113,7 @@ public:
     virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;

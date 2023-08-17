@@ -11,7 +11,6 @@
 #include <policy/fees.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
-#include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <uint256.h>
@@ -35,6 +34,7 @@
 #include <vector>
 // SYSCOIN
 #include <node/context.h>
+#include <util/any.h>
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;

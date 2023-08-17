@@ -13,7 +13,6 @@
 #include <policy/policy.h>
 #include <index/txindex.h>
 #include <core_io.h>
-#include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <node/transaction.h>
@@ -22,6 +21,7 @@
 #include <llmq/quorums_chainlocks.h>
 #include <key_io.h>
 #include <common/args.h>
+#include <logging.h>
 using node::GetTransaction;
 extern RecursiveMutex cs_setethstatus;
 
@@ -123,7 +123,7 @@ static RPCHelpMan getnevmblockchaininfo()
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, state.ToString());
         }
     }
-    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    const std::vector<std::string> &cmdLine = chainman.GethCommandLine();
     std::vector<UniValue> vec;
     for(auto& cmd: cmdLine) {
         UniValue v;
@@ -131,17 +131,17 @@ static RPCHelpMan getnevmblockchaininfo()
         vec.push_back(v);
     }
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
-    oNEVM.__pushKV("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
-    oNEVM.__pushKV("txroot", "0x" + evmBlock.nTxRoot.GetHex());
-    oNEVM.__pushKV("receiptroot", "0x" + evmBlock.nReceiptRoot.GetHex());
-    oNEVM.__pushKV("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
-    oNEVM.__pushKV("blocksize", (int)block.vchNEVMBlockData.size());
+    oNEVM.pushKVEnd("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
+    oNEVM.pushKVEnd("txroot", "0x" + evmBlock.nTxRoot.GetHex());
+    oNEVM.pushKVEnd("receiptroot", "0x" + evmBlock.nReceiptRoot.GetHex());
+    oNEVM.pushKVEnd("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
+    oNEVM.pushKVEnd("blocksize", (int)block.vchNEVMBlockData.size());
     UniValue arrVec(UniValue::VARR);
     arrVec.push_backV(vec);
-    oNEVM.__pushKV("commandline", arrVec);
+    oNEVM.pushKVEnd("commandline", arrVec);
     bool bResponse = false;
     GetMainSignals().NotifyNEVMComms("status", bResponse);
-    oNEVM.__pushKV("status", bResponse? "online": "offline");
+    oNEVM.pushKVEnd("status", bResponse? "online": "offline");
     return oNEVM;
 },
     };
@@ -212,18 +212,18 @@ static RPCHelpMan getnevmblobdata()
     if(!pnevmdatadb->ReadDataSize(vchVH, nSize)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data size for versionhash %s", HexStr(vchVH)));
     }
-    oNEVM.__pushKV("versionhash", HexStr(vchVH));
-    oNEVM.__pushKV("mpt", mpt);
-    oNEVM.__pushKV("datasize", nSize);
+    oNEVM.pushKVEnd("versionhash", HexStr(vchVH));
+    oNEVM.pushKVEnd("mpt", mpt);
+    oNEVM.pushKVEnd("datasize", nSize);
     if(pblockindex != nullptr) {
-        oNEVM.__pushKV("blockhash", pblockindex->GetBlockHash().GetHex());
-        oNEVM.__pushKV("height", pblockindex->nHeight);
+        oNEVM.pushKVEnd("blockhash", pblockindex->GetBlockHash().GetHex());
+        oNEVM.pushKVEnd("height", pblockindex->nHeight);
     }
     if(bGetData) {
         if(!pnevmdatadb->ReadData(vchVH, vchData)) {
             throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find payload for versionhash %s", HexStr(vchVH)));
         }
-        oNEVM.__pushKV("data", HexStr(vchData));
+        oNEVM.pushKVEnd("data", HexStr(vchData));
     }
     return oNEVM;
 },
@@ -454,11 +454,11 @@ static RPCHelpMan syscoingetspvproof()
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(*node.chainman);
     const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
-    res.__pushKV("transaction",rawTx);
-    res.__pushKV("blockhash", hashBlock.GetHex());
+    res.pushKVEnd("transaction",rawTx);
+    res.pushKVEnd("blockhash", hashBlock.GetHex());
     const auto bytesVec = MakeUCharSpan(ssBlock);
     // get first 80 bytes of header (non auxpow part)
-    res.__pushKV("header", HexStr(std::vector<unsigned char>(bytesVec.begin(), bytesVec.begin()+80)));
+    res.pushKVEnd("header", HexStr(std::vector<unsigned char>(bytesVec.begin(), bytesVec.begin()+80)));
     UniValue siblings(UniValue::VARR);
     // store the index of the transaction we are looking for within the block
     int nIndex = 0;
@@ -468,18 +468,18 @@ static RPCHelpMan syscoingetspvproof()
             nIndex = i;
         siblings.push_back(txHashFromBlock.GetHex());
     }
-    res.__pushKV("siblings", siblings);
-    res.__pushKV("index", nIndex);  
+    res.pushKVEnd("siblings", siblings);
+    res.pushKVEnd("index", nIndex);  
     CNEVMHeader evmBlock;
     BlockValidationState state;
     if(!GetNEVMData(state, block, evmBlock)) {
         throw JSONRPCError(RPC_MISC_ERROR, state.ToString());
     }  
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
-    res.__pushKV("nevm_blockhash", evmBlock.nBlockHash.GetHex());
+    res.pushKVEnd("nevm_blockhash", evmBlock.nBlockHash.GetHex());
     // SYSCOIN
     if(llmq::chainLocksHandler)
-        res.__pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(pblockindex->nHeight, hashBlock));
+        res.pushKVEnd("chainlock", llmq::chainLocksHandler->HasChainLock(pblockindex->nHeight, hashBlock));
     return res;
 },
     };
@@ -501,10 +501,12 @@ static RPCHelpMan syscoinstopgeth()
     },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    if(!StopGethNode())
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if(!chainman.ActiveChainstate().StopGethNode()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
+    }
     UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", "success");
+    ret.pushKVEnd("status", "success");
     return ret;
 },
     };
@@ -537,7 +539,7 @@ static RPCHelpMan syscoinstartgeth()
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
     }
     UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", "success");
+    ret.pushKVEnd("status", "success");
     return ret;
 },
     };

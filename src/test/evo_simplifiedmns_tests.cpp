@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         smle.confirmedHash.SetHex(strprintf("%064x", i));
 
         std::string ip = strprintf("%d.%d.%d.%d", 0, 0, 0, i);
-        Lookup(ip.c_str(), smle.service, i, false);
+        smle.service = Lookup(ip.c_str(), i, false).value();
 
         CBLSSecretKey sk;
         std::vector<unsigned char> vecBytes{static_cast<unsigned char>(i)};

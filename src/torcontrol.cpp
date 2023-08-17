@@ -14,15 +14,26 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <random.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/fs.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
-#include <util/syscall_sandbox.h>
+#include <util/string.h>
 #include <util/thread.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <functional>
+#include <map>
+#include <optional>
 #include <set>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include <event2/buffer.h>
@@ -80,15 +91,15 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (s.size() < 4) // Short line
             continue;
         // <status>(-|+| )<data><CRLF>
-        self->message.code = LocaleIndependentAtoi<int>(s.substr(0,3));
+        self->message.code = ToIntegral<int>(s.substr(0, 3)).value_or(0);
         self->message.lines.push_back(s.substr(4));
         char ch = s[3]; // '-','+' or ' '
         if (ch == ' ') {
             // Final line, dispatch reply and clean up
             if (self->message.code >= 600) {
+                // (currently unused)
                 // Dispatch async notifications to async handler
                 // Synchronous and asynchronous messages are never interleaved
-                self->async_handler(*self, self->message);
             } else {
                 if (!self->reply_handlers.empty()) {
                     // Invoke reply handler with message
@@ -133,15 +144,15 @@ bool TorControlConnection::Connect(const std::string& tor_control_center, const 
         Disconnect();
     }
 
-    CService control_service;
-    if (!Lookup(tor_control_center, control_service, 9051, fNameLookup)) {
+    const std::optional<CService> control_service{Lookup(tor_control_center, 9051, fNameLookup)};
+    if (!control_service.has_value()) {
         LogPrintf("tor: Failed to look up control center %s\n", tor_control_center);
         return false;
     }
 
     struct sockaddr_storage control_address;
     socklen_t control_address_len = sizeof(control_address);
-    if (!control_service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&control_address), &control_address_len)) {
+    if (!control_service.value().GetSockAddr(reinterpret_cast<struct sockaddr*>(&control_address), &control_address_len)) {
         LogPrintf("tor: Error parsing socket address %s\n", tor_control_center);
         return false;
     }
@@ -653,7 +664,6 @@ static std::thread torControlThread;
 
 static void TorControlThread(CService onion_service_target)
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::TOR_CONTROL);
     TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
 
     event_base_dispatch(gBase);

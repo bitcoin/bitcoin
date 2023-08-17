@@ -7,7 +7,7 @@
 #include <governance/governance.h>
 #include <key_io.h>
 #include <primitives/transaction.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <validation.h>

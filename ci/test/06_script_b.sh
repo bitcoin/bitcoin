@@ -14,10 +14,15 @@ if [ "$CI_OS_NAME" == "macos" ]; then
 else
   free -m -h
   echo "Number of CPUs (nproc): $(nproc)"
-  lscpu | grep Endian
+  lscpu
 fi
 echo "Free disk space:"
 df -h
+
+# What host to compile for. See also ./depends/README.md
+# Tests that need cross-compilation export the appropriate HOST.
+# Tests that run natively guess the host
+export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
@@ -67,7 +72,7 @@ if [ "$DOWNLOAD_PREVIOUS_RELEASES" = "true" ]; then
   test/get_previous_releases.py -b -t "$PREVIOUS_RELEASES_DIR"
 fi
 
-SYSCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking"
+SYSCOIN_CONFIG_ALL="--disable-dependency-tracking"
 if [ -z "$NO_DEPENDS" ]; then
   SYSCOIN_CONFIG_ALL="${SYSCOIN_CONFIG_ALL} CONFIG_SITE=$DEPENDS_DIR/$HOST/share/config.site"
 fi
@@ -75,7 +80,7 @@ if [ -z "$NO_WERROR" ]; then
   SYSCOIN_CONFIG_ALL="${SYSCOIN_CONFIG_ALL} --enable-werror"
 fi
 
-ccache --zero-stats --max-size="${CCACHE_SIZE}"
+ccache --zero-stats
 PRINT_CCACHE_STATISTICS="ccache --version | head -n 1 && ccache --show-stats"
 
 if [ -n "$ANDROID_TOOLS_URL" ]; then
@@ -124,13 +129,6 @@ if [[ $HOST = *-mingw32 ]]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
 fi
 
-if [ -n "$QEMU_USER_CMD" ]; then
-  # Generate all binaries, so that they can be wrapped
-  make "$MAKEJOBS" -C src/secp256k1 VERBOSE=1
-  make "$MAKEJOBS" -C src minisketch/test VERBOSE=1
-  "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
-fi
-
 if [ -n "$USE_VALGRIND" ]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
@@ -148,28 +146,30 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
+  cmake -B /tidy-build -DLLVM_DIR=/usr/lib/llvm-16/cmake -DCMAKE_BUILD_TYPE=Release -S "${BASE_ROOT_DIR}"/contrib/devtools/syscoin-tidy
+  cmake --build /tidy-build "$MAKEJOBS"
+  cmake --build /tidy-build --target syscoin-tidy-tests "$MAKEJOBS"
+
   set -eo pipefail
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/src/"
-  ( run-clang-tidy-15 -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  ( run-clang-tidy-15 -quiet -load="/tidy-build/libsyscoin-tidy.so" "${MAKEJOBS}" ) | grep -C5 "error"
   # Filter out files by regex here, because regex may not be
   # accepted in src/.bear-tidy-config
   # Filter out:
   # * qt qrc and moc generated files
-  # * walletutil (temporarily)
-  # * secp256k1
-  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$|src/wallet/walletutil|src/secp256k1/src/|src/dashbls/") | not))' ../compile_commands.json > tmp.json
+  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$") | not))' ../compile_commands.json > tmp.json
   mv tmp.json ../compile_commands.json
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/"
-  python3 "${DIR_IWYU}/include-what-you-use/iwyu_tool.py" \
+  python3 "/include-what-you-use/iwyu_tool.py" \
            -p . "${MAKEJOBS}" \
            -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_BUILD_DIR}/syscoin-$HOST/contrib/devtools/iwyu/syscoin.core.imp" \
            -Xiwyu --max_line_length=160 \
            2>&1 | tee /tmp/iwyu_ci.out
   cd "${BASE_ROOT_DIR}/src"
-  python3 "${DIR_IWYU}/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+  python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
   git --no-pager diff
 fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
-  bash -c "LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN}"
+  bash -c "LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN} --empty_min_time=60"
 fi

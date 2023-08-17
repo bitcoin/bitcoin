@@ -10,6 +10,7 @@
 #include <net.h>
 #include <validation.h>
 #include <shutdown.h>
+#include <logging.h>
 struct CompareScoreMN
 {
     bool operator()(const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t1,

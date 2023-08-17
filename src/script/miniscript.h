@@ -1134,20 +1134,35 @@ public:
     size_t ScriptSize() const { return scriptlen; }
 
     //! Return the maximum number of ops needed to satisfy this script non-malleably.
-    uint32_t GetOps() const { return ops.count + ops.sat.value; }
+    std::optional<uint32_t> GetOps() const {
+        if (!ops.sat.valid) return {};
+        return ops.count + ops.sat.value;
+    }
 
     //! Return the number of ops in the script (not counting the dynamic ones that depend on execution).
     uint32_t GetStaticOps() const { return ops.count; }
 
     //! Check the ops limit of this script against the consensus limit.
-    bool CheckOpsLimit() const { return GetOps() <= MAX_OPS_PER_SCRIPT; }
+    bool CheckOpsLimit() const {
+        if (const auto ops = GetOps()) return *ops <= MAX_OPS_PER_SCRIPT;
+        return true;
+    }
 
     /** Return the maximum number of stack elements needed to satisfy this script non-malleably, including
      * the script push. */
-    uint32_t GetStackSize() const { return ss.sat.value + 1; }
+    std::optional<uint32_t> GetStackSize() const {
+        if (!ss.sat.valid) return {};
+        return ss.sat.value + 1;
+    }
 
     //! Check the maximum stack size for this script against the policy limit.
-    bool CheckStackSize() const { return GetStackSize() - 1 <= MAX_STANDARD_P2WSH_STACK_ITEMS; }
+    bool CheckStackSize() const {
+        if (const auto ss = GetStackSize()) return *ss - 1 <= MAX_STANDARD_P2WSH_STACK_ITEMS;
+        return true;
+    }
+
+    //! Whether no satisfaction exists for this node.
+    bool IsNotSatisfiable() const { return !GetStackSize(); }
 
     //! Return the expression type.
     Type GetType() const { return typ; }

@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <policy/fees.h>
+#include <script/solver.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>

@@ -3,19 +3,51 @@ env:  # Global defaults
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
-  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
-  CCACHE_SIZE: "200M"
+  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on error
+  CCACHE_MAXSIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
 cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
 
-persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
-  RESTART_CI_DOCKER_BEFORE_RUN: "1"
-
-persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
-  persistent_worker: {}  # https://cirrus-ci.org/guide/persistent-workers/
+# https://cirrus-ci.org/guide/persistent-workers/
+#
+# It is possible to select a specific persistent worker by label. Refer to the
+# Cirrus CI docs for more details.
+#
+# Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
+# Specifically,
+# - apt-get is required due to PACKAGE_MANAGER_INSTALL
+# - podman-docker-4.1+ is required due to the use of `podman` when
+#   RESTART_CI_DOCKER_BEFORE_RUN is set and 4.1+ due to the bugfix in 4.1
+#   (https://github.com/bitcoin/bitcoin/pull/21652#issuecomment-1657098200)
+# - The ./ci/ depedencies (with cirrus-cli) should be installed:
+#
+#   ```
+#   apt update && apt install screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
+#   ```
+#
+# - There are no strict requirements on the hardware, because having less CPUs
+#   runs the same CI script (maybe slower). To avoid rare and intermittent OOM
+#   due to short memory usage spikes, it is recommended to add (and persist)
+#   swap:
+#
+#   ```
+#   fallocate -l 16G /swapfile_ci && chmod 600 /swapfile_ci && mkswap /swapfile_ci && swapon /swapfile_ci && ( echo '/swapfile_ci none swap sw 0 0' | sudo tee -a /etc/fstab )
+#   ```
+#
+# - To register the persistent worker, open a `screen` session and run:
+#
+#   ```
+#   RESTART_CI_DOCKER_BEFORE_RUN=1 screen cirrus worker run --labels type=todo_fill_in_type --token todo_fill_in_token
+#   ```
+#
+# The following specific types should exist, with the following requirements:
+# - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
+# - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
+# - lunar: For a machine running the Linux kernel shipped with Ubuntu Lunar 23.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
+# - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
@@ -45,11 +77,10 @@ container_depends_template: &CONTAINER_DEPENDS_TEMPLATE
     # https://cirrus-ci.org/faq/#are-there-any-limits
     # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
     cpu: 2
-    greedy: true
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
     dockerfile: ci/test_imagefile  # https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
-  depends_built_cache:
-    folder: "depends/built"
+  base_depends_built_cache:
+    folder: "/ci_container_base/depends/built"
     fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
 
 global_task_template: &GLOBAL_TASK_TEMPLATE
@@ -71,7 +102,7 @@ task:
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   python_cache:
-    folder: "/tmp/python"
+    folder: "/python_build"
     fingerprint_script: cat .python-version /etc/os-release
   unshallow_script:
     - git fetch --unshallow --no-tags
@@ -83,16 +114,11 @@ task:
 task:
   name: 'tidy [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    cpu: 2
-    memory: 8G
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
-      FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
-  # For faster CI feedback, immediately schedule the linters
-  << : *CREDITS_TEMPLATE
+  persistent_worker:
+    labels:
+      type: medium
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
 
 # task:
 #   name: "Win64 native [vs2022]"
@@ -193,17 +219,11 @@ task:
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
-  arm_container:
-    cpu: 2
-    memory: 8G
-    dockerfile: ci/test_imagefile
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: debian:bullseye
-      FILE_ENV: "./ci/test/00_setup_env_arm.sh"
-  << : *CREDITS_TEMPLATE
+  persistent_worker:
+    labels:
+      type: arm64  # Use arm64 worker to sidestep qemu and avoid a slow CI: https://github.com/bitcoin/bitcoin/pull/28087#issuecomment-1649399453
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    QEMU_USER_CMD: ""  # Disable qemu and run the test natively
+    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
   name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [jammy]'
@@ -233,14 +253,11 @@ task:
   # For faster CI feedback, immediately schedule a task that compiles most modules
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
-  depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
-  container:
-    docker_arguments:
-        CI_IMAGE_NAME_TAG: debian:bullseye
-        FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
   name: '[TSan, depends, gui] [lunar]'
@@ -255,11 +272,11 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: '[MSan, depends] [lunar]'
+  name: '[MSan, depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
       FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
@@ -267,23 +284,16 @@ task:
 
 task:
   name: '[ASan + LSan + UBSan + integer, no depends, USDT] [lunar]'
+  enable_bpfcc_script:
+    # In the image build step, no external environment variables are available,
+    # so any settings will need to be written to the settings env file:
+    - sed -i "s|\${CIRRUS_CI}|true|g" ./ci/test/00_setup_env_native_asan.sh
   << : *GLOBAL_TASK_TEMPLATE
-  # We can't use a 'container' for the USDT interface tests as the CirrusCI
-  # containers don't have privileges to hook into syscoind. CirrusCI uses
-  # Google Compute Engine instances: https://cirrus-ci.org/guide/custom-vms/
-  # Images can be found here: https://cloud.google.com/compute/docs/images/os-details
-  compute_engine_instance:
-    image_project: ubuntu-os-cloud
-    image: family/ubuntu-2304-amd64 # https://cirrus-ci.org/guide/custom-vms/#custom-compute-engine-vms
-    cpu: 4
-    disk: 100
-    memory: 12G
-    disk: 200
+  persistent_worker:
+    labels:
+      type: lunar  # Must use the lunar-specific worker (needed for USDT functional tests)
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    HOME: /root/  # Only needed for compute_engine_instance
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
-    MAKEJOBS: "-j4"  # Avoid excessive memory use
 
 task:
   name: '[fuzzer,address,undefined,integer, no depends] [lunar]'
@@ -304,7 +314,7 @@ task:
     cpu: 6
     memory: 24G  # The default memory is sometimes just a bit too small, so double everything
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:focal
+      CI_IMAGE_NAME_TAG: "docker.io/amd64/ubuntu:focal"
       FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
@@ -319,50 +329,11 @@ task:
 #     FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libsyscoinkernel.sh"
 
 task:
-  name: 'macOS 10.15 [gui, no tests] [focal]'
-  << : *CONTAINER_DEPENDS_TEMPLATE
+  name: 'macOS 11.0 [gui, no tests] [jammy]'
+  << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:focal
+      CI_IMAGE_NAME_TAG: ubuntu:jammy
       FILE_ENV: "./ci/test/00_setup_env_mac.sh"
-  << : *CREDITS_TEMPLATE
-  macos_sdk_cache:
-    folder: "depends/SDKs/$MACOS_SDK"
-    fingerprint_key: "$MACOS_SDK"
-  << : *MAIN_TEMPLATE
-  env:
-    MACOS_SDK: "Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers"
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-
-task:
-  name: 'macOS 13 native arm64 [gui, sqlite only] [no depends]'
-  macos_instance:
-    # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.1  # https://cirrus-ci.org/guide/macOS
-  << : *BASE_TEMPLATE
-  check_clang_script:
-    - clang --version
-  brew_install_script:
-    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
-  << : *MAIN_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    CI_USE_APT_INSTALL: "no"
-    PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
-    FILE_ENV: "./ci/test/00_setup_env_mac_native_arm64.sh"
-
-# task:
-#   name: 'ARM64 Android APK [focal]'
-#   << : *BASE_TEMPLATE
-#   android_sdk_cache:
-#     folder: "depends/SDKs/android"
-#     fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.2.8568313"
-#   depends_sources_cache:
-#     folder: "depends/sources"
-#     fingerprint_script: git rev-list -1 HEAD ./depends
-#   << : *MAIN_TEMPLATE
-#   container:
-#     image: ubuntu:focal
-#   env:
-#     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-#     FILE_ENV: "./ci/test/00_setup_env_android.sh"

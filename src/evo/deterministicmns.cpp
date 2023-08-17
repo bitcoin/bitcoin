@@ -9,7 +9,7 @@
 #include <base58.h>
 #include <chainparams.h>
 #include <core_io.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <node/interface_ui.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -19,6 +19,7 @@
 #include <univalue.h>
 #include <shutdown.h>
 #include <common/args.h>
+#include <logging.h>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
@@ -610,11 +611,6 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
 }
 
-CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
-    evoDb(_evoDb)
-{
-}
-
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& _state, const CCoinsViewCache& view, bool fJustCheck)
 {
     const auto& consensusParams = Params().GetConsensus();
@@ -644,7 +640,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
             newList.SetHeight(nHeight);
         }
 
-        newList.SetBlockHash(block.GetHash());
+        newList.SetBlockHash(pindex->GetBlockHash());
 
         // If the fork is active for pindex block, then we need to repopulate property map
         // (Check documentation of CDeterministicMNList::RepopulateUniquePropertyMap()).
@@ -678,16 +674,13 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     // always update interface for payment detail changes
     uiInterface.NotifyMasternodeListChanged(newList);
     
-    {
-        LOCK(cs);
-        CleanupCache(nHeight);
-    }
+    if (nHeight > to_cleanup) to_cleanup = nHeight;
     return true;
 }
 
-bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
+bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
 {
-    uint256 blockHash = block.GetHash();
+    uint256 blockHash = pindex->GetBlockHash();
 
     CDeterministicMNList curList;
     CDeterministicMNList prevList;
@@ -998,7 +991,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)
 {
     std::vector<uint256> toDecrease;
-    toDecrease.reserve(mnList.GetValidMNsCount() / 10);
+    toDecrease.reserve(mnList.GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
     mnList.ForEachMN(true /* onlyValid */, [&toDecrease](auto& dmn) {
@@ -1136,7 +1129,12 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
     std::vector<uint256> toDeleteDiffs;
     for (const auto& p : mnListsCache) {
         if (p.second.GetHeight() + LIST_DIFFS_CACHE_SIZE < nHeight) {
+            // too old, drop it
             toDeleteLists.emplace_back(p.first);
+            continue;
+        }
+        if (tipIndex != nullptr && p.first == tipIndex->GetBlockHash()) {
+            // it's a snapshot for the tip, keep it
             continue;
         }
         bool fQuorumCache = ranges::any_of(Params().GetConsensus().llmqs, [&nHeight, &p](const auto& p_llmq){
@@ -1148,13 +1146,8 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
             // at least one quorum could be using it, keep it
             continue;
         }
-        // no alive quorums using it, see if it was a cache for the tip or for a now outdated quorum
-        if (tipIndex && tipIndex->pprev && p.first == tipIndex->pprev->GetBlockHash()) {
-            toDeleteLists.emplace_back(p.first);
-        } else if (ranges::any_of(Params().GetConsensus().llmqs,
-                                  [&p](const auto& p_llmq){ return p.second.GetHeight() % p_llmq.second.dkgInterval == 0; })) {
-            toDeleteLists.emplace_back(p.first);
-        }
+        // none of the above, drop it
+        toDeleteLists.emplace_back(p.first);
     }
     for (const auto& h : toDeleteLists) {
         mnListsCache.erase(h);
@@ -1167,4 +1160,12 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
     for (const auto& h : toDeleteDiffs) {
         mnListDiffsCache.erase(h);
     }
+}
+void CDeterministicMNManager::DoMaintenance() {
+    LOCK(cs_cleanup);
+    int loc_to_cleanup = to_cleanup.load();
+    if (loc_to_cleanup <= did_cleanup) return;
+    LOCK(cs);
+    CleanupCache(loc_to_cleanup);
+    did_cleanup = loc_to_cleanup;
 }
