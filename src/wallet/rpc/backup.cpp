@@ -4,6 +4,7 @@
 
 #include <chain.h>
 #include <clientversion.h>
+#include <codex32.h>
 #include <core_io.h>
 #include <hash.h>
 #include <interfaces/chain.h>
@@ -1449,7 +1450,7 @@ RPCHelpMan importmulti()
     };
 }
 
-static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp, const std::vector<CExtKey>& master_keys) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     UniValue warnings(UniValue::VARR);
     UniValue result(UniValue::VOBJ);
@@ -1466,6 +1467,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
         // Parse descriptor string
         FlatSigningProvider keys;
+        for (const auto& mk : master_keys) {
+            keys.AddMasterKey(mk);
+        }
+
         std::string error;
         auto parsed_desc = Parse(descriptor, keys, error, /* require_checksum = */ true);
         if (!parsed_desc) {
@@ -1618,6 +1623,15 @@ RPCHelpMan importdescriptors()
                             },
                         },
                         RPCArgOptions{.oneline_description="requests"}},
+                    {"seeds", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "BIP32 master seeds for the above descriptors",
+                        {
+                            {"shares", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "a codex32 (BIP 93) encoded seed, or list of codex32-encoded shares",
+                                {
+                                    {"share 1", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
+                                },
+                            },
+                        },
+                        RPCArgOptions{.oneline_description="seeds"}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -1670,6 +1684,48 @@ RPCHelpMan importdescriptors()
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
     bool rescan = false;
+
+    // Parse codex32 strings
+    std::vector<CExtKey> master_keys;
+    if (main_request.params[1].isArray()) {
+        const auto& req_seeds = main_request.params[1].get_array();
+        master_keys.reserve(req_seeds.size());
+        for (size_t i = 0; i < req_seeds.size(); ++i) {
+            const auto& req_shares = req_seeds[i].get_array();
+            std::vector<codex32::Result> shares;
+            shares.reserve(req_shares.size());
+            for (size_t j = 0; j < req_shares.size(); ++j) {
+                if (!req_shares[j].isStr()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "codex32 shares must be strings");
+                }
+                codex32::Result key_res{req_shares[j].get_str()};
+                if (!key_res.IsValid()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid codex32 share: " + codex32::ErrorString(key_res.error()));
+                }
+                shares.push_back(key_res);
+            }
+
+            // Recover seed
+            std::vector<unsigned char> seed;
+            if (shares.size() == 1) {
+                if (shares[0].GetShareIndex() != 's') {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid codex32: single share must be the S share");
+                }
+                seed = shares[0].GetPayload();
+            } else {
+                codex32::Result s{shares, 's'};
+                if (!s.IsValid()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Failed to derive codex32 seed: " + codex32::ErrorString(s.error()));
+                }
+                seed = s.GetPayload();
+            }
+
+            CExtKey master_key;
+            master_key.SetSeed(Span{(std::byte*) seed.data(), seed.size()});
+            master_keys.push_back(master_key);
+        }
+    }
+
     UniValue response(UniValue::VARR);
     {
         LOCK(pwallet->cs_wallet);
@@ -1681,7 +1737,7 @@ RPCHelpMan importdescriptors()
         for (const UniValue& request : requests.getValues()) {
             // This throws an error if "timestamp" doesn't exist
             const int64_t timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
-            const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
+            const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp, master_keys);
             response.push_back(result);
 
             if (lowest_timestamp > timestamp ) {
