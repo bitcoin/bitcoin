@@ -22,7 +22,7 @@
 
 namespace wallet {
 
-UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp)
+UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp, const std::vector<CExtKey>& master_keys = {})
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 namespace WalletTool {
