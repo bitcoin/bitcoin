@@ -200,6 +200,7 @@ BITCOIN_CORE_H = \
   logging.h \
   logging/timer.h \
   mapport.h \
+  mempool_set_definitions.h \
   memusage.h \
   merkleblock.h \
   net.h \

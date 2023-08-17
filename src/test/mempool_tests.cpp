@@ -13,6 +13,9 @@
 #include <boost/test/unit_test.hpp>
 #include <vector>
 
+using MemPoolMultiIndex::ancestor_score;
+using MemPoolMultiIndex::descendant_score;
+
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
 
 static constexpr auto REMOVAL_REASON_DUMMY = MemPoolRemovalReason::REPLACED;

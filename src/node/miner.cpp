@@ -27,6 +27,9 @@
 #include <algorithm>
 #include <utility>
 
+using MemPoolMultiIndex::ancestor_score;
+using MemPoolMultiIndex::CompareTxMemPoolEntryByAncestorFee;
+
 namespace node {
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
