@@ -79,6 +79,7 @@ BOOST_AUTO_TEST_CASE(run_command)
         const std::string command{"cmd.exe /c dir nosuchfile"};
         const std::string expected{wine_runtime ? "File not found." : "File Not Found"};
 #else
+        setenv("LC_ALL", "C", 1); // explicitly set locale env to get error message in English
         const std::string command{"ls nosuchfile"};
         const std::string expected{"No such file or directory"};
 #endif
