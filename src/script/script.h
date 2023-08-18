@@ -532,6 +532,8 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsPayToPublicKey() const;
+    bool IsPayToMultisig() const;
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
@@ -548,10 +550,7 @@ public:
      * regardless of the initial stack. This allows outputs to be pruned
      * instantly when entering the UTXO set.
      */
-    bool IsUnspendable() const
-    {
-        return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
-    }
+    bool IsUnspendable() const;
 
     void clear()
     {
@@ -588,6 +587,9 @@ public:
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
+
+bool IsOpN(const unsigned char op_code);
+bool IsOpN(const unsigned char op_code, unsigned char& value);
 
 bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
 

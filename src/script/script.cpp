@@ -6,6 +6,7 @@
 #include <script/script.h>
 
 #include <hash.h>
+#include <pubkey.h>
 #include <util/strencodings.h>
 
 #include <string>
@@ -201,6 +202,65 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToPublicKey() const
+{
+    // Valid sizes for OP_PUSHBYTES based P2PK scripts
+    const unsigned int size = this->size();
+    if (size < 3 || size > 77) {
+        return false;
+    }
+
+    // Last byte is equal to OP_CHECKSIG / OP_CHECKSIGVERIFY
+    if ((back() != OP_CHECKSIG && back() != OP_CHECKSIGVERIFY)) {
+        return false;
+    }
+
+    // The script contains 2 ops and is equal to the script length
+    if (front() + 2 == size){
+        return true;
+    }
+
+    return false;
+}
+
+bool CScript::IsPayToMultisig() const
+{
+    // Valid sizes for OP_N based multisig script
+    const unsigned int size = this->size();
+    if (size < 3 || size > 1062) {
+        return false;
+    }
+
+    // Last byte is OP_CHECKMULTISIG / OP_CHECKMULTISIGVERIFY
+    const unsigned char op_multisig_byte = *(this->end() - 1);
+    if (op_multisig_byte != OP_CHECKMULTISIG && op_multisig_byte != OP_CHECKMULTISIGVERIFY) {
+        return false;
+    }
+
+    // m and n bytes must be OP_0 - OP_16
+    const unsigned char m_byte = *(this->begin());
+    const unsigned char n_byte = *(this->end() - 2);
+    unsigned char n_pubkeys;
+    if (!IsOpN(m_byte) || !IsOpN(n_byte, n_pubkeys)){
+        return false;
+    }
+
+    unsigned int ops = 0;
+    const_iterator pc = begin();
+    opcodetype last_op = OP_INVALIDOPCODE;
+    while (pc < end())
+    {
+        if (!GetOp(pc, last_op))
+            break;
+        ++ops;
+    }
+
+    if (ops == n_pubkeys + 3 && pc == this->end())
+        return true;
+    else
+        return false;
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
@@ -256,6 +316,44 @@ bool CScript::IsPushOnly(const_iterator pc) const
 bool CScript::IsPushOnly() const
 {
     return this->IsPushOnly(begin());
+}
+
+
+bool CScript::IsUnspendable() const
+{
+    if (size() > MAX_SCRIPT_SIZE) {
+        return true;
+    } else if (this->IsPayToPublicKey()) {
+        std::vector<unsigned char> pubkey(this->begin() + 1, this->end() - 1);
+        if(!CPubKey(pubkey).IsFullyValid()){
+            return true;
+        }
+    } else if (this->IsPayToMultisig()) {
+        CScript::const_iterator pc = this->begin() + 1;
+        std::vector<unsigned char> pubkey;
+        unsigned char m = 0, n = 0, k = 0;
+
+        if(!IsOpN(*(this->begin()), m) || !IsOpN(*(this->end() - 2), n)) {
+            return false;
+        } else if (n == 0) {
+            return false;
+        }
+
+        for(unsigned char pk = 0; pk < n; ++pk) {
+            pubkey.clear();
+            opcodetype opcode;
+            if(GetScriptOp(pc, this->end() - 2, opcode, &pubkey)) {
+                if(!CPubKey(pubkey).IsFullyValid())
+                    if(n-++k < m) {
+                        return true;
+                    }
+            } else {
+                return false;
+            }
+        }
+    }
+
+    return (size() > 0 && *begin() == OP_RETURN);
 }
 
 std::string CScriptWitness::ToString() const
@@ -342,6 +440,40 @@ bool IsOpSuccess(const opcodetype& opcode)
            (opcode >= 141 && opcode <= 142) || (opcode >= 149 && opcode <= 153) ||
            (opcode >= 187 && opcode <= 254);
 }
+
+bool IsOpN(unsigned char op_code){
+    return OP_0 || (OP_1 <= op_code && op_code <= OP_16);
+}
+
+bool IsOpN(unsigned char op_code, unsigned char& value){
+    switch (op_code) {
+    case OP_1 :
+    case OP_2 :
+    case OP_3 :
+    case OP_4 :
+    case OP_5 :
+    case OP_6 :
+    case OP_7 :
+    case OP_8 :
+    case OP_9 :
+    case OP_10 :
+    case OP_11 :
+    case OP_12 :
+    case OP_13 :
+    case OP_14 :
+    case OP_15 :
+    case OP_16 : {
+        value = op_code - 0x50;
+        return true;
+    }
+    case OP_0 : {
+        value = 0;
+        return true;
+    }
+    default :
+        return false;
+    }
+};
 
 bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode) {
     // Excludes OP_1NEGATE, OP_1-16 since they are by definition minimal

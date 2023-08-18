@@ -944,7 +944,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "dust");
 
     // Check uncompressed P2PK outputs dust threshold (must have leading 04/06/07)
-    t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(65, 0x04) << OP_CHECKSIG;
+    t.vout[0].scriptPubKey = CScript() << ParseHex("044f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa385b6b1b8ead809ca67454d9683fcf2ba03456d6fe2c4abe2b07f0fbdbb2f1c1") << OP_CHECKSIG;
     t.vout[0].nValue = 672;
     CheckIsStandard(t);
     t.vout[0].nValue = 671;
