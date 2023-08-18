@@ -9,6 +9,7 @@
 
 namespace syscoin {
 
+// Warn about any use of LogPrintf that does not end with a newline.
 class LogPrintfCheck final : public clang::tidy::ClangTidyCheck
 {
 public:
