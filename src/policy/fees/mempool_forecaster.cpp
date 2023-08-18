@@ -47,6 +47,7 @@ ForecastResult MemPoolForecaster::ForecastFeeRate(int target, bool conservative)
         return result;
     }
 
+    result.returned_target = target;
     LogDebug(BCLog::MEMPOOL,
              "%s: Block height %s, Block template 25th percentile fee rate: %s %s/kvB, "
              "50th percentile fee rate: %s %s/kvB, 75th percentile fee rate: %s %s/kvB, "
