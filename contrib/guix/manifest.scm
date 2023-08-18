@@ -40,28 +40,7 @@ FILE-NAME found in ./patches relative to the current file."
       ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
     (list (search-patch file-name) ...)))
 
-(define (make-gcc-rpath-link xgcc)
-  "Given a XGCC package, return a modified package that replace each instance of
--rpath in the default system spec that's inserted by Guix with -rpath-link"
-  (package
-    (inherit xgcc)
-    (arguments
-     (substitute-keyword-arguments (package-arguments xgcc)
-       ((#:phases phases)
-        `(modify-phases ,phases
-           (add-after 'pre-configure 'replace-rpath-with-rpath-link
-             (lambda _
-               (substitute* (cons "gcc/config/rs6000/sysv4.h"
-                                  (find-files "gcc/config"
-                                              "^gnu-user.*\\.h$"))
-                 (("-rpath=") "-rpath-link="))
-               #t))))))))
-
 (define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
-
-(define (explicit-cross-configure package)
-  (define building-on (string-append (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
-  (package-with-extra-configure-variable package "--build" building-on))
 
 (define (make-cross-toolchain target
                               base-gcc-for-libc
@@ -72,9 +51,9 @@ FILE-NAME found in ./patches relative to the current file."
   (let* ((xbinutils (cross-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (explicit-cross-configure (cross-gcc target
-                                                              #:xgcc base-gcc-for-libc
-                                                              #:xbinutils xbinutils)))
+         (xgcc-sans-libc (cross-gcc target
+                                    #:xgcc base-gcc-for-libc
+                                    #:xbinutils xbinutils))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
@@ -90,10 +69,10 @@ FILE-NAME found in ./patches relative to the current file."
                             xkernel))
          ;; 4. Build a cross-compiling gcc targeting XLIBC, derived from
          ;; BASE-GCC
-         (xgcc (explicit-cross-configure (cross-gcc target
-                                                    #:xgcc base-gcc
-                                                    #:xbinutils xbinutils
-                                                    #:libc xlibc))))
+         (xgcc (cross-gcc target
+                          #:xgcc base-gcc
+                          #:xbinutils xbinutils
+                          #:libc xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
     ;; XGCC
     (package
@@ -117,21 +96,12 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
-;; https://gcc.gnu.org/install/configure.html
-(define (hardened-gcc gcc)
-  (package-with-extra-configure-variable (
-    package-with-extra-configure-variable (
-      package-with-extra-configure-variable gcc
-      "--enable-initfini-array" "yes")
-      "--enable-default-ssp" "yes")
-      "--enable-default-pie" "yes"))
-
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc base-gcc)
+                                       (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc glibc-2.27)
-                                       (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
+                                       (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
@@ -528,6 +498,30 @@ inspecting signatures in Mach-O binaries.")
           ;; Our 'symbol-check' script will complain if we link against libssp.so,
           ;; and thus will ensure that this works properly.
           `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
+
+(define-public linux-base-gcc
+  (package
+    (inherit base-gcc)
+    (arguments
+      (substitute-keyword-arguments (package-arguments base-gcc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://gcc.gnu.org/install/configure.html
+            (list "--enable-initfini-array=yes",
+                  "--enable-default-ssp=yes",
+                  "--enable-default-pie=yes",
+                  building-on)))
+        ((#:phases phases)
+          `(modify-phases ,phases
+            ;; Given a XGCC package, return a modified package that replace each instance of
+            ;; -rpath in the default system spec that's inserted by Guix with -rpath-link
+            (add-after 'pre-configure 'replace-rpath-with-rpath-link
+             (lambda _
+               (substitute* (cons "gcc/config/rs6000/sysv4.h"
+                                  (find-files "gcc/config"
+                                              "^gnu-user.*\\.h$"))
+                 (("-rpath=") "-rpath-link="))
+               #t))))))))
 
 (define-public glibc-2.27
   (package
