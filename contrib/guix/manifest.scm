@@ -83,11 +83,11 @@ FILE-NAME found in ./patches relative to the current file."
                                         xbinutils))
          ;; 3. Build a cross-compiled libc with XGCC-SANS-LIBC and XKERNEL,
          ;; derived from BASE-LIBC
-         (xlibc (explicit-cross-configure (cross-libc target
-                                                      base-libc
-                                                      xgcc-sans-libc
-                                                      xbinutils
-                                                      xkernel)))
+         (xlibc (cross-libc target
+                            base-libc
+                            xgcc-sans-libc
+                            xbinutils
+                            xkernel))
          ;; 4. Build a cross-compiling gcc targeting XLIBC, derived from
          ;; BASE-GCC
          (xgcc (explicit-cross-configure (cross-gcc target
@@ -130,7 +130,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (hardened-glibc glibc-2.27))
+                                       (base-libc glibc-2.27)
                                        (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -513,17 +513,6 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
-;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
-;; We don't use --disable-werror directly, as that would be passed through to bash,
-;; and cause it's build to fail.
-(define (hardened-glibc glibc)
-  (package-with-extra-configure-variable (
-    package-with-extra-configure-variable (
-      package-with-extra-configure-variable glibc
-      "enable_werror" "no")
-      "--enable-stack-protector" "all")
-      "--enable-bind-now" "yes"))
-
 (define-public mingw-w64-base-gcc
   (package
     (inherit base-gcc)
@@ -556,7 +545,28 @@ inspecting signatures in Mach-O binaries.")
               (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
                                            "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"
-                                           "glibc-2.27-no-librt.patch"))))))
+                                           "glibc-2.27-no-librt.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--disable-werror",
+                  building-on)))
+    ((#:phases phases)
+        `(modify-phases ,phases
+           (add-before 'configure 'set-etc-rpc-installation-directory
+             (lambda* (#:key outputs #:allow-other-keys)
+               ;; Install the rpc data base file under `$out/etc/rpc'.
+               ;; Otherwise build will fail with "Permission denied."
+               (let ((out (assoc-ref outputs "out")))
+                 (substitute* "sunrpc/Makefile"
+                   (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
+                    (string-append out "/etc/rpc" suffix "\n"))
+                   (("^install-others =.*$")
+                    (string-append "install-others = " out "/etc/rpc\n"))))))))))))
 
 (packages->manifest
  (append
