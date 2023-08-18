@@ -208,6 +208,10 @@ typedef boost::multi_index_container<
     >
 > indexed_transaction_set;
 
+struct MapTxImpl {
+    indexed_transaction_set impl;
+};
+
 typedef indexed_transaction_set::nth_index<0>::type::const_iterator raw_txiter;
 
 struct txiter {

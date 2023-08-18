@@ -371,13 +371,13 @@ static int UpdatePackagesForAdded(const CTxMemPool& mempool,
                 continue;
             }
             ++nDescendantsUpdated;
-            auto desc_it{mempool.mapTx.iterator_to(desc)};
+            auto desc_it{mempool.mapTx->impl.iterator_to(desc)};
             modtxiter mit = mapModifiedTx.find(desc_it);
             if (mit == mapModifiedTx.end()) {
                 CTxMemPoolModifiedEntry modEntry(desc_it);
                 mit = mapModifiedTx.insert(modEntry).first;
             }
-            mapModifiedTx.modify(mit, update_for_parent_inclusion(mempool.mapTx.iterator_to(entry)));
+            mapModifiedTx.modify(mit, update_for_parent_inclusion(mempool.mapTx->impl.iterator_to(entry)));
         }
     }
     return nDescendantsUpdated;
@@ -414,7 +414,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
     // Keep track of entries that failed inclusion, to avoid duplicate work
     std::set<Txid> failedTx;
 
-    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx.get<ancestor_score>().begin();
+    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx->impl.get<ancestor_score>().begin();
     raw_txiter iter;
 
     // Limit the number of attempts to add transactions to the block when it is
@@ -423,7 +423,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
     const int64_t MAX_CONSECUTIVE_FAILURES = 1000;
     int64_t nConsecutiveFailed = 0;
 
-    while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty()) {
+    while (mi != mempool.mapTx->impl.get<ancestor_score>().end() || !mapModifiedTx.empty()) {
         // First try to find a new transaction in mapTx to evaluate.
         //
         // Skip entries in mapTx that are already in a block or are present
@@ -431,15 +431,15 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
         // stale due to ancestor inclusion in the block)
         // Also skip transactions that we've already failed to add. This can happen if
         // we consider a transaction in mapModifiedTx and it fails: we can then
-        // potentially consider it again while walking mapTx.  It's currently
+        // potentially consider it again while walking mapTx->impl.  It's currently
         // guaranteed to fail again, but as a belt-and-suspenders check we put it in
         // failedTx and avoid re-evaluation, since the re-evaluation would be using
         // cached size/sigops/fee values that are not actually correct.
         /** Return true if given transaction from mapTx has already been evaluated,
          * or if the transaction's cached data in mapTx is incorrect. */
-        if (mi != mempool.mapTx.get<ancestor_score>().end()) {
-            auto it = mempool.mapTx.project<0>(mi);
-            assert(it != mempool.mapTx.end());
+        if (mi != mempool.mapTx->impl.get<ancestor_score>().end()) {
+            auto it = mempool.mapTx->impl.project<0>(mi);
+            assert(it != mempool.mapTx->impl.end());
             if (mapModifiedTx.count(it) || inBlock.count(it->GetSharedTx()->GetHash()) || failedTx.count(it->GetSharedTx()->GetHash())) {
                 ++mi;
                 continue;
@@ -451,22 +451,22 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
         bool fUsingModified = false;
 
         modtxscoreiter modit = mapModifiedTx.get<ancestor_score>().begin();
-        if (mi == mempool.mapTx.get<ancestor_score>().end()) {
+        if (mi == mempool.mapTx->impl.get<ancestor_score>().end()) {
             // We're out of entries in mapTx; use the entry from mapModifiedTx
             iter = modit->iter;
             fUsingModified = true;
         } else {
             // Try to compare the mapTx entry to the mapModifiedTx entry
-            iter = mempool.mapTx.project<0>(mi);
+            iter = mempool.mapTx->impl.project<0>(mi);
             if (modit != mapModifiedTx.get<ancestor_score>().end() &&
                     CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
                 // The best entry in mapModifiedTx has higher score
-                // than the one from mapTx.
+                // than the one from mapTx->impl.
                 // Switch which transaction (package) to consider
                 iter = modit->iter;
                 fUsingModified = true;
             } else {
-                // Either no entry in mapModifiedTx, or it's worse than mapTx.
+                // Either no entry in mapModifiedTx, or it's worse than mapTx->impl.
                 // Increment mi for the next loop iteration.
                 ++mi;
             }
@@ -533,7 +533,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
         for (const CTxMemPoolEntry& entry : sortedEntries) {
             AddToBlock(entry);
             // Erase from the modified set, if present
-            mapModifiedTx.erase(mempool.mapTx.iterator_to(entry));
+            mapModifiedTx.erase(mempool.mapTx->impl.iterator_to(entry));
         }
 
         ++nPackagesSelected;
