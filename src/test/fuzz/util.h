@@ -53,12 +53,16 @@ auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
     return *it;
 }
 
-[[nodiscard]] inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+template<typename B = uint8_t>
+[[nodiscard]] inline std::vector<B> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
+    static_assert(sizeof(B) == 1);
     const std::string s = max_length ?
                               fuzzed_data_provider.ConsumeRandomLengthString(*max_length) :
                               fuzzed_data_provider.ConsumeRandomLengthString();
-    return {s.begin(), s.end()};
+    std::vector<B> ret(s.size());
+    std::copy(s.begin(), s.end(), reinterpret_cast<char*>(ret.data()));
+    return ret;
 }
 
 [[nodiscard]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
@@ -209,14 +213,13 @@ inline void SetFuzzedErrNo(FuzzedDataProvider& fuzzed_data_provider) noexcept
  * Returns a byte vector of specified size regardless of the number of remaining bytes available
  * from the fuzzer. Pads with zero value bytes if needed to achieve the specified size.
  */
-[[nodiscard]] inline std::vector<uint8_t> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
+template<typename B = uint8_t>
+[[nodiscard]] inline std::vector<B> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
 {
-    std::vector<uint8_t> result(length);
-    const std::vector<uint8_t> random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(length);
-    if (!random_bytes.empty()) {
-        std::memcpy(result.data(), random_bytes.data(), random_bytes.size());
-    }
-    return result;
+    static_assert(sizeof(B) == 1);
+    auto random_bytes = fuzzed_data_provider.ConsumeBytes<B>(length);
+    random_bytes.resize(length);
+    return random_bytes;
 }
 
 class FuzzedFileProvider
