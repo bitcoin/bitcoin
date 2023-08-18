@@ -6,6 +6,7 @@
 #include <random.h>
 
 #include <compat/cpuid.h>
+#include <crypto/chacha20.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
 #include <logging.h>
@@ -16,6 +17,7 @@
 #include <sync.h>
 #include <util/time.h>
 
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <thread>
@@ -577,7 +579,7 @@ uint256 GetRandHash() noexcept
 void FastRandomContext::RandomSeed()
 {
     uint256 seed = GetRandHash();
-    rng.SetKey32(seed.begin());
+    rng.SetKey(MakeByteSpan(seed));
     requires_seed = false;
 }
 
@@ -585,18 +587,15 @@ uint256 FastRandomContext::rand256() noexcept
 {
     if (requires_seed) RandomSeed();
     uint256 ret;
-    rng.Keystream(ret.data(), ret.size());
+    rng.Keystream(MakeWritableByteSpan(ret));
     return ret;
 }
 
 template <typename B>
 std::vector<B> FastRandomContext::randbytes(size_t len)
 {
-    if (requires_seed) RandomSeed();
     std::vector<B> ret(len);
-    if (len > 0) {
-        rng.Keystream(UCharCast(ret.data()), len);
-    }
+    fillrand(MakeWritableByteSpan(ret));
     return ret;
 }
 template std::vector<unsigned char> FastRandomContext::randbytes(size_t);
@@ -605,13 +604,10 @@ template std::vector<std::byte> FastRandomContext::randbytes(size_t);
 void FastRandomContext::fillrand(Span<std::byte> output)
 {
     if (requires_seed) RandomSeed();
-    rng.Keystream(UCharCast(output.data()), output.size());
+    rng.Keystream(output);
 }
 
-FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), bitbuf_size(0)
-{
-    rng.SetKey32(seed.begin());
-}
+FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), rng(MakeByteSpan(seed)), bitbuf_size(0) {}
 
 bool Random_SanityCheck()
 {
@@ -659,13 +655,13 @@ bool Random_SanityCheck()
     return true;
 }
 
-FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), bitbuf_size(0)
+static constexpr std::array<std::byte, ChaCha20::KEYLEN> ZERO_KEY{};
+
+FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), rng(ZERO_KEY), bitbuf_size(0)
 {
-    if (!fDeterministic) {
-        return;
-    }
-    uint256 seed;
-    rng.SetKey32(seed.begin());
+    // Note that despite always initializing with ZERO_KEY, requires_seed is set to true if not
+    // fDeterministic. That means the rng will be reinitialized with a secure random key upon first
+    // use.
 }
 
 FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexcept

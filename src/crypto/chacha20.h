@@ -28,16 +28,23 @@ private:
     uint32_t input[12];
 
 public:
-    ChaCha20Aligned();
+    /** Expected key length in constructor and SetKey. */
+    static constexpr unsigned KEYLEN{32};
+
+    /** Block size (inputs/outputs to Keystream / Crypt should be multiples of this). */
+    static constexpr unsigned BLOCKLEN{64};
+
+    /** For safety, disallow initialization without key. */
+    ChaCha20Aligned() noexcept = delete;
 
     /** Initialize a cipher with specified 32-byte key. */
-    ChaCha20Aligned(const unsigned char* key32);
+    ChaCha20Aligned(Span<const std::byte> key) noexcept;
 
     /** Destructor to clean up private memory. */
     ~ChaCha20Aligned();
 
-    /** set 32-byte key. */
-    void SetKey32(const unsigned char* key32);
+    /** Set 32-byte key, and seek to nonce 0 and block position 0. */
+    void SetKey(Span<const std::byte> key) noexcept;
 
     /** Type for 96-bit nonces used by the Set function below.
      *
@@ -51,18 +58,19 @@ public:
 
     /** Set the 96-bit nonce and 32-bit block counter.
      *
-     * Block_counter selects a position to seek to (to byte 64*block_counter). After 256 GiB, the
-     * block counter overflows, and nonce.first is incremented.
+     * Block_counter selects a position to seek to (to byte BLOCKLEN*block_counter). After 256 GiB,
+     * the block counter overflows, and nonce.first is incremented.
      */
-    void Seek64(Nonce96 nonce, uint32_t block_counter);
+    void Seek(Nonce96 nonce, uint32_t block_counter) noexcept;
 
-    /** outputs the keystream of size <64*blocks> into <c> */
-    void Keystream64(unsigned char* c, size_t blocks);
+    /** outputs the keystream into out, whose length must be a multiple of BLOCKLEN. */
+    void Keystream(Span<std::byte> out) noexcept;
 
-    /** enciphers the message <input> of length <64*blocks> and write the enciphered representation into <output>
-     *  Used for encryption and decryption (XOR)
+    /** en/deciphers the message <input> and write the result into <output>
+     *
+     * The size of input and output must be equal, and be a multiple of BLOCKLEN.
      */
-    void Crypt64(const unsigned char* input, unsigned char* output, size_t blocks);
+    void Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept;
 };
 
 /** Unrestricted ChaCha20 cipher. */
@@ -70,42 +78,43 @@ class ChaCha20
 {
 private:
     ChaCha20Aligned m_aligned;
-    unsigned char m_buffer[64] = {0};
+    std::array<std::byte, ChaCha20Aligned::BLOCKLEN> m_buffer;
     unsigned m_bufleft{0};
 
 public:
-    ChaCha20() = default;
+    /** Expected key length in constructor and SetKey. */
+    static constexpr unsigned KEYLEN = ChaCha20Aligned::KEYLEN;
+
+    /** For safety, disallow initialization without key. */
+    ChaCha20() noexcept = delete;
 
     /** Initialize a cipher with specified 32-byte key. */
-    ChaCha20(const unsigned char* key32) : m_aligned(key32) {}
+    ChaCha20(Span<const std::byte> key) noexcept : m_aligned(key) {}
 
     /** Destructor to clean up private memory. */
     ~ChaCha20();
 
-    /** set 32-byte key. */
-    void SetKey32(const unsigned char* key32)
-    {
-        m_aligned.SetKey32(key32);
-        m_bufleft = 0;
-    }
+    /** Set 32-byte key, and seek to nonce 0 and block position 0. */
+    void SetKey(Span<const std::byte> key) noexcept;
 
     /** 96-bit nonce type. */
     using Nonce96 = ChaCha20Aligned::Nonce96;
 
-    /** Set the 96-bit nonce and 32-bit block counter. */
-    void Seek64(Nonce96 nonce, uint32_t block_counter)
+    /** Set the 96-bit nonce and 32-bit block counter. See ChaCha20Aligned::Seek. */
+    void Seek(Nonce96 nonce, uint32_t block_counter) noexcept
     {
-        m_aligned.Seek64(nonce, block_counter);
+        m_aligned.Seek(nonce, block_counter);
         m_bufleft = 0;
     }
 
-    /** outputs the keystream of size <bytes> into <c> */
-    void Keystream(unsigned char* c, size_t bytes);
-
-    /** enciphers the message <input> of length <bytes> and write the enciphered representation into <output>
-     *  Used for encryption and decryption (XOR)
+    /** en/deciphers the message <in_bytes> and write the result into <out_bytes>
+     *
+     * The size of in_bytes and out_bytes must be equal.
      */
-    void Crypt(const unsigned char* input, unsigned char* output, size_t bytes);
+    void Crypt(Span<const std::byte> in_bytes, Span<std::byte> out_bytes) noexcept;
+
+    /** outputs the keystream to out. */
+    void Keystream(Span<std::byte> out) noexcept;
 };
 
 /** Forward-secure ChaCha20
