@@ -218,8 +218,6 @@ private:
     void UpdateParent(const CTxMemPoolEntry& entry, const CTxMemPoolEntry& parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void UpdateChild(const CTxMemPoolEntry& entry, const CTxMemPoolEntry& child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<MemPoolMultiIndex::const_txiter> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     /**
      * Track locally submitted transactions to periodically retry initial broadcast.
      */
