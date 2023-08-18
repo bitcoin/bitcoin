@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/system.h>
+#include <mempool_set_definitions.h>
 #include <policy/policy.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
@@ -15,6 +16,7 @@
 
 using MemPoolMultiIndex::ancestor_score;
 using MemPoolMultiIndex::descendant_score;
+using MemPoolMultiIndex::indexed_transaction_set;
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
 
@@ -122,7 +124,7 @@ template <typename name>
 static void CheckSort(CTxMemPool& pool, std::vector<std::string>& sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     BOOST_CHECK_EQUAL(pool.size(), sortedOrder.size());
-    typename CTxMemPool::indexed_transaction_set::index<name>::type::iterator it = pool.mapTx->impl.get<name>().begin();
+    typename indexed_transaction_set::index<name>::type::iterator it = pool.mapTx->impl.get<name>().begin();
     int count = 0;
     for (; it != pool.mapTx->impl.get<name>().end(); ++it, ++count) {
         BOOST_CHECK_EQUAL(it->GetTx().GetHash().ToString(), sortedOrder[count]);

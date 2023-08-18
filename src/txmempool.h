@@ -14,7 +14,6 @@
 #include <kernel/mempool_limits.h>         // IWYU pragma: export
 #include <kernel/mempool_options.h>        // IWYU pragma: export
 #include <kernel/mempool_removal_reason.h> // IWYU pragma: export
-#include <mempool_set_definitions.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
@@ -33,6 +32,11 @@
 #include <vector>
 
 class CChain;
+
+namespace MemPoolMultiIndex {
+struct txiter;
+struct MapTxImpl;
+} // namespace MemPoolMultiIndex
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -197,7 +201,6 @@ public:
      * the mempool is consistent with the new chain tip and fully populated.
      */
 
-    using indexed_transaction_set = MemPoolMultiIndex::indexed_transaction_set;
     using MapTxImpl = MemPoolMultiIndex::MapTxImpl;
 
     mutable RecursiveMutex cs;
@@ -269,6 +272,8 @@ public:
      * in the pool.
      */
     explicit CTxMemPool(const Options& opts);
+
+    ~CTxMemPool();
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is

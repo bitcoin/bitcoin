@@ -221,8 +221,6 @@ struct txiter {
         : impl(inner_impl) {}
 };
 
-typedef std::set<raw_txiter, CompareIteratorByHash> setEntries;
-
 typedef indexed_transaction_set::const_iterator const_txiter;
 
 } // namespace MemPoolMultiIndex
