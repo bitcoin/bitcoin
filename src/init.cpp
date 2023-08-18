@@ -91,6 +91,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <cmath>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdio>
