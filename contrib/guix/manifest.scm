@@ -41,28 +41,7 @@ FILE-NAME found in ./patches relative to the current file."
       ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
     (list (search-patch file-name) ...)))
 
-(define (make-gcc-rpath-link xgcc)
-  "Given a XGCC package, return a modified package that replace each instance of
--rpath in the default system spec that's inserted by Guix with -rpath-link"
-  (package
-    (inherit xgcc)
-    (arguments
-     (substitute-keyword-arguments (package-arguments xgcc)
-       ((#:phases phases)
-        `(modify-phases ,phases
-           (add-after 'pre-configure 'replace-rpath-with-rpath-link
-             (lambda _
-               (substitute* (cons "gcc/config/rs6000/sysv4.h"
-                                  (find-files "gcc/config"
-                                              "^gnu-user.*\\.h$"))
-                 (("-rpath=") "-rpath-link="))
-               #t))))))))
-
 (define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
-
-(define (explicit-cross-configure package)
-  (define building-on (string-append (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
-  (package-with-extra-configure-variable package "--build" building-on))
 
 (define (make-cross-toolchain target
                               base-gcc-for-libc
@@ -73,9 +52,9 @@ FILE-NAME found in ./patches relative to the current file."
   (let* ((xbinutils (cross-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (explicit-cross-configure (cross-gcc target
-                                                              #:xgcc base-gcc-for-libc
-                                                              #:xbinutils xbinutils)))
+         (xgcc-sans-libc (cross-gcc target
+                                    #:xgcc base-gcc-for-libc
+                                    #:xbinutils xbinutils))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
@@ -84,17 +63,17 @@ FILE-NAME found in ./patches relative to the current file."
                                         xbinutils))
          ;; 3. Build a cross-compiled libc with XGCC-SANS-LIBC and XKERNEL,
          ;; derived from BASE-LIBC
-         (xlibc (explicit-cross-configure (cross-libc target
-                                                      base-libc
-                                                      xgcc-sans-libc
-                                                      xbinutils
-                                                      xkernel)))
+         (xlibc (cross-libc target
+                            base-libc
+                            xgcc-sans-libc
+                            xbinutils
+                            xkernel))
          ;; 4. Build a cross-compiling gcc targeting XLIBC, derived from
          ;; BASE-GCC
-         (xgcc (explicit-cross-configure (cross-gcc target
-                                                    #:xgcc base-gcc
-                                                    #:xbinutils xbinutils
-                                                    #:libc xlibc))))
+         (xgcc (cross-gcc target
+                          #:xgcc base-gcc
+                          #:xbinutils xbinutils
+                          #:libc xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
     ;; XGCC
     (package
@@ -118,21 +97,12 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
-;; https://gcc.gnu.org/install/configure.html
-(define (hardened-gcc gcc)
-  (package-with-extra-configure-variable (
-    package-with-extra-configure-variable (
-      package-with-extra-configure-variable gcc
-      "--enable-initfini-array" "yes")
-      "--enable-default-ssp" "yes")
-      "--enable-default-pie" "yes"))
-
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc base-gcc)
+                                       (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (hardened-glibc glibc-2.28))
-                                       (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
+                                       (base-libc glibc-2.28)
+                                       (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Dash Core release binaries."
   (make-cross-toolchain target
@@ -517,17 +487,6 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
-;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
-;; We don't use --disable-werror directly, as that would be passed through to bash,
-;; and cause it's build to fail.
-(define (hardened-glibc glibc)
-  (package-with-extra-configure-variable (
-    package-with-extra-configure-variable (
-      package-with-extra-configure-variable glibc
-      "enable_werror" "no")
-      "--enable-stack-protector" "strong")
-      "--enable-bind-now" "yes"))
-
 (define-public mingw-w64-base-gcc
   (package
     (inherit base-gcc)
@@ -544,6 +503,30 @@ inspecting signatures in Mach-O binaries.")
           ;; and thus will ensure that this works properly.
           `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
 
+(define-public linux-base-gcc
+  (package
+    (inherit base-gcc)
+    (arguments
+      (substitute-keyword-arguments (package-arguments base-gcc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://gcc.gnu.org/install/configure.html
+            (list "--enable-initfini-array=yes",
+                  "--enable-default-ssp=yes",
+                  "--enable-default-pie=yes",
+                  building-on)))
+        ((#:phases phases)
+          `(modify-phases ,phases
+            ;; Given a XGCC package, return a modified package that replace each instance of
+            ;; -rpath in the default system spec that's inserted by Guix with -rpath-link
+            (add-after 'pre-configure 'replace-rpath-with-rpath-link
+             (lambda _
+               (substitute* (cons "gcc/config/rs6000/sysv4.h"
+                                  (find-files "gcc/config"
+                                              "^gnu-user.*\\.h$"))
+                 (("-rpath=") "-rpath-link="))
+               #t))))))))
+
 (define-public glibc-2.28
   (package
     (inherit glibc-2.31)
@@ -559,7 +542,28 @@ inspecting signatures in Mach-O binaries.")
                 "0wm0if2n4z48kpn85va6yb4iac34crds2f55ddpz1hykx6jp1pb6"))
               (patches (search-our-patches "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"
-                                           "glibc-2.27-no-librt.patch"))))))
+                                           "glibc-2.27-no-librt.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--disable-werror",
+                  building-on)))
+    ((#:phases phases)
+        `(modify-phases ,phases
+           (add-before 'configure 'set-etc-rpc-installation-directory
+             (lambda* (#:key outputs #:allow-other-keys)
+               ;; Install the rpc data base file under `$out/etc/rpc'.
+               ;; Otherwise build will fail with "Permission denied."
+               (let ((out (assoc-ref outputs "out")))
+                 (substitute* "sunrpc/Makefile"
+                   (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
+                    (string-append out "/etc/rpc" suffix "\n"))
+                   (("^install-others =.*$")
+                    (string-append "install-others = " out "/etc/rpc\n"))))))))))))
 
 (packages->manifest
  (append
