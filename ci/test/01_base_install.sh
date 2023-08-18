@@ -87,7 +87,7 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
   OSX_SDK_FILENAME="${OSX_SDK_BASENAME}.tar.gz"
   OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_FILENAME}"
   if [ ! -f "$OSX_SDK_PATH" ]; then
-    curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
+    ${CI_RETRY_EXE} curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
   fi
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
@@ -95,7 +95,7 @@ fi
 if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
   ANDROID_TOOLS_PATH=${DEPENDS_DIR}/sdk-sources/android-tools.zip
   if [ ! -f "$ANDROID_TOOLS_PATH" ]; then
-    curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
+    ${CI_RETRY_EXE} curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
   fi
   mkdir -p "$ANDROID_HOME"
   unzip -o "$ANDROID_TOOLS_PATH" -d "$ANDROID_HOME"
