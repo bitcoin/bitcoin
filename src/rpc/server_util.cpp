@@ -94,6 +94,19 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
     return EnsureFeeEstimator(EnsureAnyNodeContext(context));
 }
 
+FeeEstimator& EnsureFeeForecasters(const NodeContext& node)
+{
+    if (!node.fee_estimator) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
+    }
+    return *node.fee_estimator;
+}
+
+FeeEstimator& EnsureAnyFeeForecasters(const std::any& context)
+{
+    return EnsureFeeForecasters(EnsureAnyNodeContext(context));
+}
+
 CConnman& EnsureConnman(const NodeContext& node)
 {
     if (!node.connman) {
