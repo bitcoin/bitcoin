@@ -1024,10 +1024,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             QString nv = value.toString();
             if (nv == "never") {
                 node().mempool().m_opts.rbf_policy = RBFPolicy::Never;
+                node().updateRwSetting("mempoolfullrbf", "0");
             } else if (nv == "fee,optin") {
                 node().mempool().m_opts.rbf_policy = RBFPolicy::OptIn;
+                node().updateRwSetting("mempoolfullrbf", "0");
             } else {  // "fee,-optin"
                 node().mempool().m_opts.rbf_policy = RBFPolicy::Always;
+                node().updateRwSetting("mempoolfullrbf", "1");
             }
             gArgs.ModifyRWConfigFile("mempoolreplacement", nv.toStdString());
         }
