@@ -61,45 +61,8 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             for nsigs in [2, 3]:
                 for output_type in ["bech32", "p2sh-segwit", "legacy"]:
                     self.do_multisig(nkeys, nsigs, output_type, wallet_multi)
-        if wallet_multi is not None:
-            wallet_multi.unloadwallet()
 
-        # Test mixed compressed and uncompressed pubkeys
-        self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
-        pk0, pk1, pk2 = [getnewdestination('bech32')[0].hex() for _ in range(3)]
-
-        # decompress pk2
-        pk_obj = ECPubKey()
-        pk_obj.set(bytes.fromhex(pk2))
-        pk_obj.compressed = False
-        pk2 = pk_obj.get_bytes().hex()
-
-        if self.is_bdb_compiled():
-            node0.createwallet(wallet_name='wmulti0', disable_private_keys=True)
-            wmulti0 = node0.get_wallet_rpc('wmulti0')
-
-        # Check all permutations of keys because order matters apparently
-        for keys in itertools.permutations([pk0, pk1, pk2]):
-            # Results should be the same as this legacy one
-            legacy_addr = node0.createmultisig(2, keys, 'legacy')['address']
-
-            if self.is_bdb_compiled():
-                result = wmulti0.addmultisigaddress(2, keys, '', 'legacy')
-                assert_equal(legacy_addr, result['address'])
-                assert 'warnings' not in result
-
-            # Generate addresses with the segwit types. These should all make legacy addresses
-            err_msg = ["Unable to make chosen address type, please ensure no uncompressed public keys are present."]
-
-            for addr_type in ['bech32', 'p2sh-segwit']:
-                result = self.nodes[0].createmultisig(nrequired=2, keys=keys, address_type=addr_type)
-                assert_equal(legacy_addr, result['address'])
-                assert_equal(result['warnings'], err_msg)
-
-                if self.is_bdb_compiled():
-                    result = wmulti0.addmultisigaddress(nrequired=2, keys=keys, address_type=addr_type)
-                    assert_equal(legacy_addr, result['address'])
-                    assert_equal(result['warnings'], err_msg)
+        self.test_mixing_uncompressed_and_compressed_keys(node0, wallet_multi)
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
@@ -216,6 +179,41 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         txinfo = node0.getrawtransaction(tx, True, blk)
         self.log.info("n/m=%d/%d %s size=%d vsize=%d weight=%d" % (nsigs, nkeys, output_type, txinfo["size"], txinfo["vsize"], txinfo["weight"]))
+
+    def test_mixing_uncompressed_and_compressed_keys(self, node, wallet_multi):
+        self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
+        pk0, pk1, pk2 = [getnewdestination('bech32')[0].hex() for _ in range(3)]
+
+        # decompress pk2
+        pk_obj = ECPubKey()
+        pk_obj.set(bytes.fromhex(pk2))
+        pk_obj.compressed = False
+        pk2 = pk_obj.get_bytes().hex()
+
+        # Check all permutations of keys because order matters apparently
+        for keys in itertools.permutations([pk0, pk1, pk2]):
+            # Results should be the same as this legacy one
+            legacy_addr = node.createmultisig(2, keys, 'legacy')['address']
+
+            if wallet_multi is not None:
+                # 'addmultisigaddress' should return the same address
+                result = wallet_multi.addmultisigaddress(2, keys, '', 'legacy')
+                assert_equal(legacy_addr, result['address'])
+                assert 'warnings' not in result
+
+            # Generate addresses with the segwit types. These should all make legacy addresses
+            err_msg = ["Unable to make chosen address type, please ensure no uncompressed public keys are present."]
+
+            for addr_type in ['bech32', 'p2sh-segwit']:
+                result = self.nodes[0].createmultisig(nrequired=2, keys=keys, address_type=addr_type)
+                assert_equal(legacy_addr, result['address'])
+                assert_equal(result['warnings'], err_msg)
+
+                if wallet_multi is not None:
+                    result = wallet_multi.addmultisigaddress(nrequired=2, keys=keys, address_type=addr_type)
+                    assert_equal(legacy_addr, result['address'])
+                    assert_equal(result['warnings'], err_msg)
+
 
 
 if __name__ == '__main__':
