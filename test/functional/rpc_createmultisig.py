@@ -63,18 +63,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                     self.do_multisig(nkeys, nsigs, output_type, wallet_multi)
 
         self.test_mixing_uncompressed_and_compressed_keys(node0, wallet_multi)
-
-        self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
-            vectors = json.load(f)
-
-        for t in vectors:
-            key_str = ','.join(t['keys'])
-            desc = descsum_create('sh(sortedmulti(2,{}))'.format(key_str))
-            assert_equal(self.nodes[0].deriveaddresses(desc)[0], t['address'])
-            sorted_key_str = ','.join(t['sorted_keys'])
-            sorted_key_desc = descsum_create('sh(multi(2,{}))'.format(sorted_key_str))
-            assert_equal(self.nodes[0].deriveaddresses(sorted_key_desc)[0], t['address'])
+        self.test_sortedmulti_descriptors_bip67()
 
         # Check that bech32m is currently not allowed
         assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
@@ -214,6 +203,18 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                     assert_equal(legacy_addr, result['address'])
                     assert_equal(result['warnings'], err_msg)
 
+    def test_sortedmulti_descriptors_bip67(self):
+        self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
+            vectors = json.load(f)
+
+        for t in vectors:
+            key_str = ','.join(t['keys'])
+            desc = descsum_create('sh(sortedmulti(2,{}))'.format(key_str))
+            assert_equal(self.nodes[0].deriveaddresses(desc)[0], t['address'])
+            sorted_key_str = ','.join(t['sorted_keys'])
+            sorted_key_desc = descsum_create('sh(multi(2,{}))'.format(sorted_key_str))
+            assert_equal(self.nodes[0].deriveaddresses(sorted_key_desc)[0], t['address'])
 
 
 if __name__ == '__main__':
