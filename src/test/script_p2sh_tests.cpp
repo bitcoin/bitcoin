@@ -18,9 +18,15 @@
 #include <boost/test/unit_test.hpp>
 
 // Helpers:
+static bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, std::string& reason)
+{
+    return IsStandardTx(tx, std::nullopt, permit_bare_multisig, CFeeRate{DUST_RELAY_TX_FEE}, reason);
+}
+
 static bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
-    return IsStandardTx(tx, std::nullopt, DEFAULT_PERMIT_BAREMULTISIG, CFeeRate{DUST_RELAY_TX_FEE}, reason);
+    return IsStandardTx(tx, std::nullopt, /*permit_bare_multisig=*/true, CFeeRate{DUST_RELAY_TX_FEE}, reason) &&
+           IsStandardTx(tx, std::nullopt, /*permit_bare_multisig=*/false, CFeeRate{DUST_RELAY_TX_FEE}, reason);
 }
 
 static std::vector<unsigned char> Serialize(const CScript& s)
@@ -201,7 +207,9 @@ BOOST_AUTO_TEST_CASE(set)
     {
         SignatureData empty;
         BOOST_CHECK_MESSAGE(SignSignature(keystore, CTransaction(txFrom), txTo[i], 0, SIGHASH_ALL, empty), strprintf("SignSignature %d", i));
-        BOOST_CHECK_MESSAGE(IsStandardTx(CTransaction(txTo[i]), reason), strprintf("txTo[%d].IsStandard", i));
+        BOOST_CHECK_MESSAGE(IsStandardTx(CTransaction(txTo[i]), /*permit_bare_multisig=*/true, reason), strprintf("txTo[%d].IsStandard", i));
+        bool no_pbms_is_std = IsStandardTx(CTransaction(txTo[i]), /*permit_bare_multisig=*/false, reason);
+        BOOST_CHECK_MESSAGE((i == 0 ? no_pbms_is_std : !no_pbms_is_std), strprintf("txTo[%d].IsStandard(permbaremulti=false)", i));
     }
 }
 
