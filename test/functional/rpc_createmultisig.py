@@ -9,7 +9,6 @@ import json
 import os
 
 from test_framework.address import address_to_scriptpubkey
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey
 from test_framework.messages import COIN
@@ -41,10 +40,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             privkey, pubkey = generate_keypair(wif=True)
             self.pub.append(pubkey.hex())
             self.priv.append(privkey)
-        if self.is_bdb_compiled():
-            self.final = self.nodes[2].getnewaddress()
-        else:
-            self.final = getnewdestination('bech32')[2]
 
     def create_wallet(self, node, wallet_name):
         node.createwallet(wallet_name=wallet_name, disable_private_keys=True)
@@ -54,14 +49,13 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         node0, node1, node2 = self.nodes
         self.wallet = MiniWallet(test_node=node0)
 
-        if self.is_bdb_compiled():
+        if self.is_wallet_compiled():
             self.check_addmultisigaddress_errors()
 
         self.log.info('Generating blocks ...')
         self.generate(self.wallet, 149)
 
         wallet_multi = self.create_wallet(node1, 'wmulti') if self._requires_wallet else None
-        self.moved = 0
         self.create_keys(5)
         for nkeys in [3, 5]:
             for nsigs in [2, 3]:
@@ -69,8 +63,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                     self.do_multisig(nkeys, nsigs, output_type, wallet_multi)
         if wallet_multi is not None:
             wallet_multi.unloadwallet()
-        if self.is_bdb_compiled():
-            self.checkbalances()
 
         # Test mixed compressed and uncompressed pubkeys
         self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
@@ -139,22 +131,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         pubs = [self.nodes[1].getaddressinfo(addr)["pubkey"] for addr in addresses]
         assert_raises_rpc_error(-5, "Bech32m multisig addresses cannot be created with legacy wallets", self.nodes[0].addmultisigaddress, 2, pubs, "", "bech32m")
 
-    def checkbalances(self):
-        node0, node1, node2 = self.nodes
-        self.generate(node0, COINBASE_MATURITY)
-
-        bal0 = node0.getbalance()
-        bal1 = node1.getbalance()
-        bal2 = node2.getbalance()
-        balw = self.wallet.get_balance()
-
-        height = node0.getblockchaininfo()["blocks"]
-        assert 150 < height < 350
-        total = 149 * 50 + (height - 149 - 100) * 25
-        assert bal1 == 0
-        assert bal2 == self.moved
-        assert_equal(bal0 + bal1 + bal2 + balw, total)
-
     def do_multisig(self, nkeys, nsigs, output_type, wallet_multi):
         node0, node1, node2 = self.nodes
         pub_keys = self.pub[0: nkeys]
@@ -196,7 +172,10 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.generate(node0, 1)
 
         outval = value - decimal.Decimal("0.00001000")
-        rawtx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{self.final: outval}])
+        # send coins to node2 when wallet is enabled
+        node2_balance = node2.getbalances()['mine']['trusted'] if self.is_wallet_compiled() else 0
+        out_addr = node2.getnewaddress() if self.is_wallet_compiled() else getnewdestination('bech32')[2]
+        rawtx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}])
 
         prevtx_err = dict(prevtxs[0])
         del prevtx_err["redeemScript"]
@@ -227,10 +206,13 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         rawtx2 = node2.signrawtransactionwithkey(rawtx, priv_keys[0:nsigs - 1], prevtxs)
         rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [priv_keys[-1]], prevtxs)
 
-        self.moved += outval
         tx = node0.sendrawtransaction(rawtx3["hex"], 0)
         blk = self.generate(node0, 1)[0]
         assert tx in node0.getblock(blk)["tx"]
+
+        # When the wallet is enabled, assert node2 sees the incoming amount
+        if self.is_wallet_compiled():
+            assert_equal(node2.getbalances()['mine']['trusted'], node2_balance + outval)
 
         txinfo = node0.getrawtransaction(tx, True, blk)
         self.log.info("n/m=%d/%d %s size=%d vsize=%d weight=%d" % (nsigs, nkeys, output_type, txinfo["size"], txinfo["vsize"], txinfo["weight"]))
