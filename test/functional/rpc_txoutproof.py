@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import CMerkleBlock, FromHex, ToHex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -30,7 +31,7 @@ class MerkleBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(105)
+        self.nodes[0].generate(COINBASE_MATURITY + 5)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()

@@ -753,7 +753,7 @@ private:
     std::string m_name;
 
     /** Internal database handle. */
-    std::unique_ptr<WalletDatabase> database;
+    std::unique_ptr<WalletDatabase> const m_database;
 
     // A helper function which loops through wallet UTXOs
     std::unordered_set<const CWalletTx*, WalletTxHasher> GetSpendableTXs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -799,14 +799,11 @@ public:
      */
     mutable RecursiveMutex cs_wallet;
 
-    /** Get database handle used by this wallet. Ideally this function would
-     * not be necessary.
-     */
-    WalletDatabase& GetDBHandle()
+    WalletDatabase& GetDatabase() const override
     {
-        return *database;
+        assert(static_cast<bool>(m_database));
+        return *m_database;
     }
-    WalletDatabase& GetDatabase() override { return *database; }
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -832,7 +829,7 @@ public:
         : fOnlyMixingAllowed(false),
           m_chain(chain),
           m_name(name),
-          database(std::move(database))
+          m_database(std::move(database))
     {
     }
 

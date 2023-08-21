@@ -31,7 +31,7 @@ Start three nodes:
 """
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.blocktools import (COINBASE_MATURITY,create_block, create_coinbase)
 from test_framework.key import ECKey
 from test_framework.messages import (
     CBlockHeader,
@@ -187,7 +187,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        self.assert_blockchain_height(self.nodes[0], 101)
+        self.assert_blockchain_height(self.nodes[0], COINBASE_MATURITY + 1)
 
         # Send 200 blocks to node1. All blocks, including block 102, will be accepted.
         for i in range(200):
@@ -198,7 +198,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
-        self.assert_blockchain_height(self.nodes[2], 101)
+        self.assert_blockchain_height(self.nodes[2], COINBASE_MATURITY + 1)
 
 
 if __name__ == '__main__':

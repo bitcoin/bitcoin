@@ -7,7 +7,7 @@
 
 import random
 
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import COINBASE_MATURITY, create_block, create_coinbase
 from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, HeaderAndShortIDs, msg_block, msg_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, MSG_BLOCK, MSG_CMPCT_BLOCK, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ToHex, NODE_HEADERS_COMPRESSED
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript, OP_TRUE, OP_DROP
@@ -115,7 +115,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.test_node.send_and_ping(msg_block(block))
         assert int(self.nodes[0].getbestblockhash(), 16) == block.sha256
-        self.nodes[0].generatetoaddress(100, self.nodes[0].getnewaddress())
+        self.nodes[0].generatetoaddress(COINBASE_MATURITY, self.nodes[0].getnewaddress())
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -227,7 +227,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     # This test actually causes dashd to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
-        self.nodes[0].generate(101)
+        self.nodes[0].generate(COINBASE_MATURITY + 1)
         block = self.build_block_on_tip(self.nodes[0])
 
         cmpct_block = P2PHeaderAndShortIDs()
@@ -245,7 +245,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         version = test_node.cmpct_version
         node = self.nodes[0]
         # Generate a bunch of transactions.
-        node.generate(101)
+        node.generate(COINBASE_MATURITY + 1)
         num_transactions = 25
         address = node.getnewaddress()
 

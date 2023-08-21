@@ -105,7 +105,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
     EnsureLegacyScriptPubKeyMan(*wallet, true);
 
-    WalletBatch batch(pwallet->GetDBHandle());
+    WalletBatch batch(pwallet->GetDatabase());
     WalletRescanReserver reserver(*pwallet);
     bool fRescan = true;
     {
@@ -488,7 +488,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when blocks are pruned");
     }
 
-    WalletBatch batch(pwallet->GetDBHandle());
+    WalletBatch batch(pwallet->GetDatabase());
     WalletRescanReserver reserver(*pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
@@ -668,7 +668,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     bool fGood = true;
 
-    WalletBatch batch(pwallet->GetDBHandle());
+    WalletBatch batch(pwallet->GetDatabase());
 
     int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);

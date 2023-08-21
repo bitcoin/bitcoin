@@ -12,6 +12,7 @@ contrib/devtools/previous_release.sh -b v0.15.2 v0.16.3
 import os
 import shutil
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     adjust_bitcoin_conf_for_pre_17,
@@ -70,11 +71,11 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(v16_3_node.getblockcount(), to_height)
 
     def run_test(self):
-        self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
+        self.nodes[0].generatetoaddress(COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
         self.dumb_sync_blocks()
         # # Sanity check the test framework:
         res = self.nodes[0].getblockchaininfo()
-        assert_equal(res['blocks'], 101)
+        assert_equal(res['blocks'], COINBASE_MATURITY + 1)
         node_master = self.nodes[0]
         v16_3_node  = self.nodes[1]
         v15_2_node  = self.nodes[2]
@@ -82,7 +83,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         # Send coins to old wallets for later conversion checks.
         v16_3_wallet  = v16_3_node.get_wallet_rpc('wallet.dat')
         v16_3_address = v16_3_wallet.getnewaddress()
-        node_master.generatetoaddress(101, v16_3_address)
+        node_master.generatetoaddress(COINBASE_MATURITY + 1, v16_3_address)
         self.dumb_sync_blocks()
         v16_3_balance = v16_3_wallet.getbalance()
 
