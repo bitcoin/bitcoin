@@ -51,12 +51,20 @@ jobs:
       - name: Set Ccache directory
         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
 
-      - name: Ccache cache
-        uses: actions/cache@v3
+      - name: Restore Ccache cache
+        uses: actions/cache/restore@v3
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-cache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-cache
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
 
       - name: CI script
         run: ./ci/test_run_all.sh
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
