@@ -187,6 +187,7 @@ public:
         nHeight(_height),
         nTotalRegisteredCount(_totalRegisteredCount)
     {
+        assert(nHeight >= 0);
     }
 
     template <typename Stream, typename Operation>
@@ -299,10 +300,12 @@ public:
     }
     [[nodiscard]] int GetHeight() const
     {
+        assert(nHeight >= 0);
         return nHeight;
     }
     void SetHeight(int _height)
     {
+        assert(_height >= 0);
         nHeight = _height;
     }
     [[nodiscard]] uint32_t GetTotalRegisteredCount() const
@@ -586,6 +589,7 @@ private:
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
     std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache GUARDED_BY(cs);
     const CBlockIndex* tipIndex GUARDED_BY(cs) {nullptr};
+    const CBlockIndex* m_initial_snapshot_index GUARDED_BY(cs) {nullptr};
 
 public:
     explicit CDeterministicMNManager(CEvoDB& evoDb, CConnman& _connman) :
