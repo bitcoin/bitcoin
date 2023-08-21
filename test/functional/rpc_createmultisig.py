@@ -56,12 +56,13 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.generate(self.wallet, 149)
 
         wallet_multi = self.create_wallet(node1, 'wmulti') if self._requires_wallet else None
-        self.create_keys(5)
-        for nkeys in [3, 5]:
-            for nsigs in [2, 3]:
-                for output_type in ["bech32", "p2sh-segwit", "legacy"]:
-                    self.do_multisig(nkeys, nsigs, output_type, wallet_multi)
+        self.create_keys(21)  # max number of allowed keys + 1
+        m_of_n = [(2, 3), (3, 3), (2, 5), (3, 5), (10, 15), (15, 15)]
+        for (sigs, keys) in m_of_n:
+            for output_type in ["bech32", "p2sh-segwit", "legacy"]:
+                self.do_multisig(keys, sigs, output_type, wallet_multi)
 
+        self.test_multisig_script_limit()
         self.test_mixing_uncompressed_and_compressed_keys(node0, wallet_multi)
         self.test_sortedmulti_descriptors_bip67()
 
@@ -82,6 +83,21 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         # Bech32m address type is disallowed for legacy wallets
         pubs = [self.nodes[1].getaddressinfo(addr)["pubkey"] for addr in addresses]
         assert_raises_rpc_error(-5, "Bech32m multisig addresses cannot be created with legacy wallets", self.nodes[0].addmultisigaddress, 2, pubs, "", "bech32m")
+
+    def test_multisig_script_limit(self):
+        node1 = self.nodes[1]
+        pubkeys = self.pub[0:20]
+
+        self.log.info('Test legacy redeem script max size limit')
+        assert_raises_rpc_error(-8, "redeemScript exceeds size limit: 684 > 520", node1.createmultisig, 16, pubkeys, 'legacy')
+
+        self.log.info('Test valid 16-20 multisig p2sh-legacy and bech32 (no wallet)')
+        self.do_multisig(nkeys=20, nsigs=16, output_type="p2sh-segwit", wallet_multi=None)
+        self.do_multisig(nkeys=20, nsigs=16, output_type="bech32", wallet_multi=None)
+
+        self.log.info('Test invalid 16-21 multisig p2sh-legacy and bech32 (no wallet)')
+        assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'p2sh-segwit')
+        assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'bech32')
 
     def do_multisig(self, nkeys, nsigs, output_type, wallet_multi):
         node0, node1, node2 = self.nodes
@@ -117,13 +133,13 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             assert mredeemw == mredeem
 
         spk = address_to_scriptpubkey(madd)
-        value = decimal.Decimal("0.00001300")
+        value = decimal.Decimal("0.00004000")
         tx = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=int(value * COIN))
         prevtxs = [{"txid": tx["txid"], "vout": tx["sent_vout"], "scriptPubKey": spk.hex(), "redeemScript": mredeem, "amount": value}]
 
         self.generate(node0, 1)
 
-        outval = value - decimal.Decimal("0.00001000")
+        outval = value - decimal.Decimal("0.00002000")  # deduce fee (must be higher than the min relay fee)
         # send coins to node2 when wallet is enabled
         node2_balance = node2.getbalances()['mine']['trusted'] if self.is_wallet_compiled() else 0
         out_addr = node2.getnewaddress() if self.is_wallet_compiled() else getnewdestination('bech32')[2]
@@ -157,6 +173,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         rawtx2 = node2.signrawtransactionwithkey(rawtx, priv_keys[0:nsigs - 1], prevtxs)
         rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [priv_keys[-1]], prevtxs)
+        assert rawtx3['complete']
 
         tx = node0.sendrawtransaction(rawtx3["hex"], 0)
         blk = self.generate(node0, 1)[0]
