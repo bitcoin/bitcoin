@@ -3074,6 +3074,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                                _("This is the transaction fee you may pay when fee estimates are not available."));
         }
         walletInstance->m_fallback_fee = CFeeRate{fallback_fee.value()};
+    } else if (Params().IsTestChain()) {
+        walletInstance->m_fallback_fee = walletInstance->m_min_fee;
     }
 
     // Disable fallback fee in case value was set to 0, enable if non-null value
