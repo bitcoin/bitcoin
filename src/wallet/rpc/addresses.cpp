@@ -289,9 +289,17 @@ RPCHelpMan addmultisigaddress()
         output_type = parsed.value();
     }
 
-    // Construct using pay-to-script-hash:
+    // Construct multisig scripts
+    FlatSigningProvider provider;
     CScript inner;
-    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, spk_man, inner);
+    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, provider, inner);
+
+    // Import scripts into the wallet
+    for (const auto& [id, script] : provider.scripts) {
+        spk_man.AddCScript(script);
+    }
+
+    // Store destination in the addressbook
     pwallet->SetAddressBook(dest, label, AddressPurpose::SEND);
 
     // Make the descriptor
