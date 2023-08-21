@@ -500,13 +500,8 @@ void SelectionResult::SetBumpFeeDiscount(const CAmount discount)
 
 void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee)
 {
-    const CAmount change = GetChange(min_viable_change, change_fee);
-
-    if (change > 0) {
-        m_waste = GetSelectionWaste(change_cost, m_target, m_use_effective);
-    } else {
-        m_waste = GetSelectionWaste(0, m_target, m_use_effective);
-    }
+    bool makes_change = (0 != GetChange(min_viable_change, change_fee));
+    m_waste = GetSelectionWaste(makes_change ? change_cost : 0, m_target, m_use_effective);
 }
 
 CAmount SelectionResult::GetWaste() const
