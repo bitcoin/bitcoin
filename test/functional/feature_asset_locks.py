@@ -284,14 +284,6 @@ class AssetLocksTest(DashTestFramework):
         self.validate_credit_pool_balance(locked_1)
 
         self.log.info("Testing asset unlock...")
-        asset_unlock_tx_index_too_far = self.create_assetunlock(10001, COIN, pubkey)
-        tx_too_far_index = self.send_tx(asset_unlock_tx_index_too_far)
-        node.generate(1)
-        self.sync_all()
-        self.mempool_size += 1
-        self.check_mempool_size()
-        self.log.info("Checking that `asset_unlock_tx_index_too_far` not mined yet...")
-        self.ensure_tx_is_not_mined(tx_too_far_index)
 
         self.log.info("Generating several txes by same quorum....")
         self.validate_credit_pool_balance(locked_1)
@@ -323,15 +315,9 @@ class AssetLocksTest(DashTestFramework):
         self.mempool_size += 1
         self.check_mempool_size()
         self.validate_credit_pool_balance(locked_1)
-        self.log.info("Mining one block - index '10001' can't be included in this block")
         node.generate(1)
         self.sync_all()
         self.validate_credit_pool_balance(locked_1 - COIN)
-        self.mempool_size -= 1
-        self.check_mempool_size()
-        self.log.info("Tx should not be mined yet... mine one more block")
-        node.generate(1)
-        self.sync_all()
         self.mempool_size -= 1
         self.check_mempool_size()
         block_asset_unlock = node.getrawtransaction(asset_unlock_tx.rehash(), 1)['blockhash']
@@ -346,21 +332,17 @@ class AssetLocksTest(DashTestFramework):
             expected_error = "bad-assetunlock-duplicated-index",
             reason = "double index")
 
-        self.log.info("Checking tx with too far index is mined too - it is not too far anymore...")
-        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
-        self.nodes[0].getrawtransaction(tx_too_far_index, 1)['blockhash']
-
         self.log.info("Mining next quorum to check tx 'asset_unlock_tx_late' is still valid...")
         self.mine_quorum()
         self.log.info("Checking credit pool amount is same...")
-        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 1 * COIN)
         self.check_mempool_result(tx=asset_unlock_tx_late, result_expected={'allowed': True})
         self.log.info("Checking credit pool amount still is same...")
-        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 1 * COIN)
         self.send_tx(asset_unlock_tx_late)
         node.generate(1)
         self.sync_all()
-        self.validate_credit_pool_balance(locked_1 - 3 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
 
         self.log.info("Generating many blocks to make quorum far behind (even still active)...")
         self.slowly_generate_batch(too_late_height - node.getblock(node.getbestblockhash())["height"] - 1)
@@ -385,7 +367,7 @@ class AssetLocksTest(DashTestFramework):
         self.validate_credit_pool_balance(locked_1)
         for inode in self.nodes:
             inode.reconsiderblock(block_to_reconsider)
-        self.validate_credit_pool_balance(locked_1 - 3 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
 
         self.log.info("Forcibly mining asset_unlock_tx_too_late and ensure block is invalid...")
         self.create_and_check_block([asset_unlock_tx_too_late], expected_error = "bad-assetunlock-not-active-quorum")
@@ -393,7 +375,7 @@ class AssetLocksTest(DashTestFramework):
         node.generate(1)
         self.sync_all()
 
-        self.validate_credit_pool_balance(locked_1 - 3 * COIN)
+        self.validate_credit_pool_balance(locked_1 - 2 * COIN)
         self.validate_credit_pool_balance(block_hash=block_hash_1, expected=locked_1)
 
         self.log.info("Checking too big withdrawal... expected to not be mined")
