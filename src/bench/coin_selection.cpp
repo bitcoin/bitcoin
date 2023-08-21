@@ -71,15 +71,15 @@ static void CoinSelection(benchmark::Bench& bench)
         /*change_output_size=*/ 34,
         /*change_spend_size=*/ 148,
         /*min_change_target=*/ CHANGE_LOWER,
-        /*effective_feerate=*/ CFeeRate(0),
-        /*long_term_feerate=*/ CFeeRate(0),
-        /*discard_feerate=*/ CFeeRate(0),
+        /*effective_feerate=*/ CFeeRate(20'000),
+        /*long_term_feerate=*/ CFeeRate(10'000),
+        /*discard_feerate=*/ CFeeRate(3000),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
     auto group = wallet::GroupOutputs(wallet, available_coins, coin_selection_params, {{filter_standard}})[filter_standard];
     bench.run([&] {
-        auto result = AttemptSelection(wallet.chain(), 1003 * COIN, group, coin_selection_params, /*allow_mixed_output_types=*/true);
+        auto result = AttemptSelection(wallet.chain(), 1002.99 * COIN, group, coin_selection_params, /*allow_mixed_output_types=*/true);
         assert(result);
         assert(result->GetSelectedValue() == 1003 * COIN);
         assert(result->GetInputSet().size() == 2);
