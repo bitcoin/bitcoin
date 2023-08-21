@@ -141,7 +141,6 @@ BITCOIN_CORE_H = \
   common/run_command.h \
   common/url.h \
   compat/assumptions.h \
-  compat/byteswap.h \
   compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
