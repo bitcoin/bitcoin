@@ -246,6 +246,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
     'p2p_invalid_tx.py',
+    'p2p_v2_transport.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
     'wallet_multisig_descriptor_psbt.py --descriptors',
