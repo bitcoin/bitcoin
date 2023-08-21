@@ -9,7 +9,7 @@
 
 class CValidationInterface;
 
-struct TestChainState : public Chainstate {
+struct TestChainstateManager : public ChainstateManager {
     /** Reset the ibd cache to its initial state */
     void ResetIbd();
     /** Toggle IsInitialBlockDownload from true to false */

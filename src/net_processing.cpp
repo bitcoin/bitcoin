@@ -1511,7 +1511,7 @@ bool PeerManagerImpl::IsBanned(NodeId nodeid, BanMan& banman) {
     CNodeState *state = State(nodeid);
     if (state == nullptr)
         return false;
-    
+
     return banman.IsBanned(state->address);
 }
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
@@ -1900,7 +1900,7 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
     //    the tip yet so we have no way to check this directly here. Instead we
     //    just check that there are currently no other blocks in flight.
     else if (state.IsValid() &&
-             !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
+             !m_chainman.IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
             MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
@@ -2448,7 +2448,7 @@ uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
     return nFetchFlags;
 }
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req)
-{   
+{
     BlockTransactions resp(req);
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
@@ -2830,7 +2830,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
 
     // If we're in IBD, we want outbound peers that will serve us a useful
     // chain. Disconnect peers that are on chains with insufficient work.
-    if (m_chainman.ActiveChainstate().IsInitialBlockDownload() && !may_have_more_headers) {
+    if (m_chainman.IsInitialBlockDownload() && !may_have_more_headers) {
         // If the peer has no more headers to give us, then we know we have
         // their tip.
         if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < m_chainman.MinimumChainWork()) {
@@ -3971,7 +3971,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 AddKnownTx(*peer, inv.hash);
-                if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+                if (!fAlreadyHave && !m_chainman.IsInitialBlockDownload()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 // SYSCOIN
                 } else if(!fAlreadyHave) {
@@ -4276,7 +4276,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Stop processing the transaction early if we are still in IBD since we don't
         // have enough information to validate it yet. Sending unsolicited transactions
         // is not considered a protocol violation, so don't punish the peer.
-        if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) return;
+        if (m_chainman.IsInitialBlockDownload()) return;
 
         CTransactionRef ptx;
         vRecv >> ptx;
@@ -4480,7 +4480,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const CBlockIndex* prev_block = m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock);
         if (!prev_block) {
             // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers
-            if (!m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+            if (!m_chainman.IsInitialBlockDownload()) {
                 MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), *peer);
             }
             return;
@@ -5088,8 +5088,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     } else if(msg_type == NetMsgType::SYNCSTATUSCOUNT) {
         masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
         return;
-    } else if(msg_type == NetMsgType::MNGOVERNANCESYNC || 
-        msg_type == NetMsgType::MNGOVERNANCEOBJECT || 
+    } else if(msg_type == NetMsgType::MNGOVERNANCESYNC ||
+        msg_type == NetMsgType::MNGOVERNANCEOBJECT ||
         msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
         governance->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
@@ -5105,24 +5105,24 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     } else if(msg_type == NetMsgType::CLSIG) {
         llmq::chainLocksHandler->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
-    } else if(msg_type == NetMsgType::QCONTRIB || 
+    } else if(msg_type == NetMsgType::QCONTRIB ||
             msg_type == NetMsgType::QCOMPLAINT ||
-            msg_type == NetMsgType::QJUSTIFICATION || 
+            msg_type == NetMsgType::QJUSTIFICATION ||
             msg_type == NetMsgType::QPCOMMITMENT ||
             msg_type == NetMsgType::QWATCH) {
         llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
-    } else if(msg_type == NetMsgType::QSIGSHARE || 
+    } else if(msg_type == NetMsgType::QSIGSHARE ||
             msg_type == NetMsgType::QSIGSESANN ||
-            msg_type == NetMsgType::QSIGSHARESINV || 
+            msg_type == NetMsgType::QSIGSHARESINV ||
             msg_type == NetMsgType::QGETSIGSHARES ||
             msg_type == NetMsgType::QBSIGSHARES) {
         llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
     }
-     
-    
-        
+
+
+
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;
@@ -5489,7 +5489,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 
     LOCK(peer.m_addr_send_times_mutex);
     // Periodically advertise our local address to the peer.
-    if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
+    if (fListen && !m_chainman.IsInitialBlockDownload() &&
         peer.m_next_local_addr_send < current_time) {
         // If we've sent before, clear the bloom filter for the peer, so that our
         // self-announcement will actually go out.
@@ -5584,7 +5584,7 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     CAmount currentFilter = m_mempool.GetMinFee().GetFeePerK();
     static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
 
-    if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+    if (m_chainman.IsInitialBlockDownload()) {
         // Received tx-inv messages are discarded when the active
         // chainstate is in IBD, so tell the peer to not send them.
         currentFilter = MAX_MONEY;
@@ -5891,7 +5891,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             }
             peer->m_blocks_for_headers_relay.clear();
         }
-        
+
         //
         // Message: inventory
         //
@@ -5968,7 +5968,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     // SYSCOIN Send an inv for the best ChainLock we have
                     const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
-                    if (!clsig.IsNull()) {            
+                    if (!clsig.IsNull()) {
                         CInv inv(MSG_CLSIG, ::SerializeHash(clsig));
                         vInv.push_back(inv);
                         tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
@@ -6133,7 +6133,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         std::vector<CInv> vGetData;
         // SYSCOIN
-        if (CanServeBlocks(*peer) && pto->CanRelay() && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (CanServeBlocks(*peer) && pto->CanRelay() && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(*peer, MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.vBlocksInFlight.size(), vToDownload, staller);
@@ -6189,7 +6189,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 m_txrequest.ForgetTxHash(gtxid.GetHash());
             }
         }
-        
+
         if (!vGetData.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
     } // release cs_main

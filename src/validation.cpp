@@ -310,8 +310,9 @@ static void LimitMempoolSize(CTxMemPool& pool, CCoinsViewCache& coins_cache)
 static bool IsCurrentForFeeEstimation(Chainstate& active_chainstate) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    if (active_chainstate.IsInitialBlockDownload())
+    if (active_chainstate.m_chainman.IsInitialBlockDownload()) {
         return false;
+    }
     if (active_chainstate.m_chain.Tip()->GetBlockTime() < count_seconds(GetTime<std::chrono::seconds>() - MAX_FEE_ESTIMATION_TIP_AGE))
         return false;
     if (active_chainstate.m_chain.Height() < active_chainstate.m_chainman.m_best_header->nHeight - 1) {
@@ -577,7 +578,7 @@ public:
         {
         }
     };
-    
+
     // Single transaction acceptance
     MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -762,7 +763,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // wtxid) already exists in the mempool.
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
     }
-    
+
     // Check for conflicts with in-memory transactions
     for (const CTxIn &txin : tx.vin)
     {
@@ -841,7 +842,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees, args.m_test_accept, mapMintKeysMempool)) {
         return false; // state filled in by CheckTxInputs
     }
-  
+
     // SYSCOIN
     if(!ProcessNEVMData(m_active_chainstate.m_blockman, tx, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_active_chainstate.m_chainman.m_options.adjusted_time_callback()), ws.mapPoDA)) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-poda-invalid");
@@ -1628,7 +1629,7 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
                         params.nAuxpowOldChainId, block.nVersion);
         }
     }
-        
+
 
     /* If there is no auxpow, just check the block hash.  */
     if (!block.auxpow)
@@ -1646,12 +1647,12 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
     /* We have auxpow.  Check it.  */
     if (!block.IsAuxpow())
         return error("%s : auxpow on block with non-auxpow version", __func__);
-  
+
     if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits, params))
         return error("%s : AUX proof of work failed", __func__);
     if (!block.auxpow->check(block.GetHash(), block.GetChainId(), params))
         return error("%s : AUX POW is not valid", __func__);
-    
+
 
     return true;
 }
@@ -1761,7 +1762,7 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
 // `const` so that `CValidationInterface` clients (which are given a `const Chainstate*`)
 // can call it.
 //
-bool Chainstate::IsInitialBlockDownload() const
+bool ChainstateManager::IsInitialBlockDownload() const
 {
     // Optimization: pre-test latch before taking the lock.
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
@@ -1770,15 +1771,17 @@ bool Chainstate::IsInitialBlockDownload() const
     LOCK(cs_main);
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
-    if (m_chainman.m_blockman.LoadingBlocks()) {
+    if (m_blockman.LoadingBlocks()) {
         return true;
     }
-    if (m_chain.Tip() == nullptr)
-        return true;
-    if (m_chain.Tip()->nChainWork < m_chainman.MinimumChainWork()) {
+    CChain& chain{ActiveChain()};
+    if (chain.Tip() == nullptr) {
         return true;
     }
-    if (m_chain.Tip()->Time() < Now<NodeSeconds>() - m_chainman.m_options.max_tip_age) {
+    if (chain.Tip()->nChainWork < MinimumChainWork()) {
+        return true;
+    }
+    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
         return true;
     }
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
@@ -1796,7 +1799,7 @@ void Chainstate::CheckForkWarningConditions()
 
     // Before we get past initial download, we cannot reliably alert about forks
     // (we assume we don't get stuck on a fork before finishing our initial sync)
-    if (IsInitialBlockDownload()) {
+    if (m_chainman.IsInitialBlockDownload()) {
         return;
     }
 
@@ -1851,7 +1854,7 @@ void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSta
     if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
         // if its any other error other than chainlock and we have a conflict then move back to previous known good chainlock
         if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-            llmq::chainLocksHandler->SetToPreviousChainLock(); 
+            llmq::chainLocksHandler->SetToPreviousChainLock();
         }
     }
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
@@ -2073,7 +2076,7 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &
 bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA) {
     CNEVMHeader nevmBlockHeader;
     if(!GetNEVMData(state, block, nevmBlockHeader)) {
-        return false; //state filled by GetNEVMData 
+        return false; //state filled by GetNEVMData
     }
     if(block.vchNEVMBlockData.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
@@ -2177,7 +2180,7 @@ bool FillNEVMData(const CTransactionRef &tx) {
     }
     // data doesn't have to exist but if it does fill it
     pnevmdatadb->ReadData(nevmData.vchVersionHash, vchNEVMData);
-    return true; 
+    return true;
 }
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     if(!NEVMDataVecOut.empty()) {
@@ -2199,7 +2202,7 @@ public:
     }
 };
 static CCheckQueue<CBlobCheck> blobcheckqueue(MAX_DATA_BLOBS);
-bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
+bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) {
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         // use previous chainlock because chain can technically rollback up to previous lock
@@ -2340,7 +2343,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
                 }
             }
         }
-        // SYSCOIN	
+        // SYSCOIN
 		vecTXIDPairs.emplace_back(std::make_pair(hash, pindex->nHeight));
         // restore inputs
         if (i > 0) { // not coinbases
@@ -2352,7 +2355,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
             // SYSCOIN
             if(!DisconnectSyscoinTransaction(tx, hash, txundo, view, mapMintKeys, NEVMDataVecOut))
                 fClean = false;
-                
+
             for (unsigned int j = tx.vin.size(); j > 0;) {
                 --j;
                 const COutPoint& out = tx.vin[j].prevout;
@@ -2362,13 +2365,13 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
-    } 
+    }
     BlockValidationState state;
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
     if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
         const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
-        return DISCONNECT_FAILED; 
+        return DISCONNECT_FAILED;
     }
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
@@ -2485,13 +2488,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     NEVMTxRootMap mapNEVMTxRoots;
     PoDAMAPMemory mapPoDA;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
-    return ConnectBlock(block, state, pindex, view, fJustCheck, mapMintKeys, mapNEVMTxRoots, mapPoDA, vecTXIDPairs, bReverify);       
+    return ConnectBlock(block, state, pindex, view, fJustCheck, mapMintKeys, mapNEVMTxRoots, mapPoDA, vecTXIDPairs, bReverify);
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, bool fJustCheck, 
+                  CCoinsViewCache& view, bool fJustCheck,
                   NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify)
 {
     AssertLockHeld(cs_main);
@@ -2724,7 +2727,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
         nInputs += tx.vin.size();
         // SYSCOIN
-        const uint256& txHash = tx.GetHash(); 
+        const uint256& txHash = tx.GetHash();
         const bool &isCoinBase = tx.IsCoinBase();
         vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
         if (!isCoinBase)
@@ -2958,7 +2961,7 @@ bool Chainstate::FlushStateToDisk(
             } else {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCHMARK);
 
-                m_blockman.FindFilesToPrune(setFilesToPrune, m_chainman.GetParams().PruneAfterHeight(), m_chain.Height(), last_prune, IsInitialBlockDownload());
+                m_blockman.FindFilesToPrune(setFilesToPrune, m_chainman.GetParams().PruneAfterHeight(), m_chain.Height(), last_prune, m_chainman.IsInitialBlockDownload());
                 m_blockman.m_check_for_pruning = false;
             }
             if (!setFilesToPrune.empty()) {
@@ -3144,7 +3147,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     }
 
     bilingual_str warning_messages;
-    if (!this->IsInitialBlockDownload()) {
+    if (!m_chainman.IsInitialBlockDownload()) {
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(m_chainman, bit);
@@ -3206,7 +3209,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         // SYSCOIN
         dbTx->Commit();
     }
-    // SYSCOIN 
+    // SYSCOIN
     if(pnevmtxmintdb != nullptr){
         if(!pnevmtxmintdb->FlushErase(mapMintKeys) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs) || !pnevmdatadb->FlushEraseMTPs(NEVMDataVecOut)){
             return error("DisconnectTip(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
@@ -3314,7 +3317,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     // Read block from disk.
     const auto time_1{SteadyClock::now()};
     std::shared_ptr<const CBlock> pthisBlock;
-    
+
     if (!pblock) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         if (!m_blockman.ReadBlockFromDisk(*pblockNew, *pindexNew)) {
@@ -3358,9 +3361,9 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
                  Ticks<SecondsDouble>(time_connect_total),
                  Ticks<MillisecondsDouble>(time_connect_total) / num_blocks_total);
         bool flushed = view.Flush();
-        assert(flushed); 
+        assert(flushed);
         // SYSCOIN
-        dbTx->Commit();      
+        dbTx->Commit();
     }
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, pindexNew->GetMedianTimePast());
@@ -3600,24 +3603,25 @@ static SynchronizationState GetSynchronizationState(bool init)
     return SynchronizationState::INIT_DOWNLOAD;
 }
 
-static bool NotifyHeaderTip(Chainstate& chainstate) LOCKS_EXCLUDED(cs_main) {
+static bool NotifyHeaderTip(ChainstateManager& chainman) LOCKS_EXCLUDED(cs_main)
+{
     bool fNotify = false;
     bool fInitialBlockDownload = false;
     static CBlockIndex* pindexHeaderOld = nullptr;
     CBlockIndex* pindexHeader = nullptr;
     {
         LOCK(cs_main);
-        pindexHeader = chainstate.m_chainman.m_best_header;
+        pindexHeader = chainman.m_best_header;
 
         if (pindexHeader != pindexHeaderOld) {
             fNotify = true;
-            fInitialBlockDownload = chainstate.IsInitialBlockDownload();
+            fInitialBlockDownload = chainman.IsInitialBlockDownload();
             pindexHeaderOld = pindexHeader;
         }
     }
     // Send block tip changed notifications without cs_main
     if (fNotify) {
-        chainstate.m_chainman.GetNotifications().headerTip(GetSynchronizationState(fInitialBlockDownload), pindexHeader->nHeight, pindexHeader->nTime, false);
+        chainman.GetNotifications().headerTip(GetSynchronizationState(fInitialBlockDownload), pindexHeader->nHeight, pindexHeader->nTime, false);
         // SYSCOIN
         GetMainSignals().NotifyHeaderTip(pindexHeader);
     }
@@ -3715,7 +3719,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;
             const CBlockIndex* pindexFork = m_chain.FindFork(starting_tip);
-            bool fInitialDownload = IsInitialBlockDownload();
+            bool fInitialDownload = m_chainman.IsInitialBlockDownload();
 
             // Notify external listeners about the new tip.
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
@@ -3987,9 +3991,13 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pinde
         // parameter indicating the source of the tip change so hooks can
         // distinguish user-initiated invalidateblock changes from other
         // changes.
+<<<<<<< HEAD
         (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(IsInitialBlockDownload()), *to_mark_failed->pprev);
         // SYSCOIN for MN list to update
         GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr);
+=======
+        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(m_chainman.IsInitialBlockDownload()), *to_mark_failed->pprev);
+>>>>>>> 723f1c669f (Merge bitcoin/bitcoin#28218: refactor: Make IsInitialBlockDownload & NotifyHeaderTip not require a Chainstate)
     }
     return true;
 }
@@ -4675,7 +4683,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
     const auto msg = strprintf(
         "Saw new header hash=%s height=%d", hash.ToString(), pindex->nHeight);
 
-    if (ActiveChainstate().IsInitialBlockDownload()) {
+    if (IsInitialBlockDownload()) {
         LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Debug, "%s\n", msg);
     } else {
         LogPrintf("%s\n", msg);
@@ -4704,8 +4712,8 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
             }
         }
     }
-    if (NotifyHeaderTip(ActiveChainstate())) {
-        if (ActiveChainstate().IsInitialBlockDownload() && ppindex && *ppindex) {
+    if (NotifyHeaderTip(*this)) {
+        if (IsInitialBlockDownload() && ppindex && *ppindex) {
             const CBlockIndex& last_accepted{**ppindex};
             const int64_t blocks_left{(GetTime() - last_accepted.GetBlockTime()) / GetConsensus().nPowTargetSpacing};
             const double progress{100.0 * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)};
@@ -4718,7 +4726,6 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
 void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t height, int64_t timestamp)
 {
     AssertLockNotHeld(cs_main);
-    const auto& chainstate = ActiveChainstate();
     {
         LOCK(cs_main);
         // Don't report headers presync progress if we already have a post-minchainwork header chain.
@@ -4731,7 +4738,7 @@ void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t 
         if (now < m_last_presync_update + std::chrono::milliseconds{250}) return;
         m_last_presync_update = now;
     }
-    bool initial_download = chainstate.IsInitialBlockDownload();
+    bool initial_download = IsInitialBlockDownload();
     GetNotifications().headerTip(GetSynchronizationState(initial_download), height, timestamp, /*presync=*/true);
     if (initial_download) {
         const int64_t blocks_left{(GetTime() - timestamp) / GetConsensus().nPowTargetSpacing};
@@ -4815,7 +4822,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
-    if (!ActiveChainstate().IsInitialBlockDownload() && ActiveTip() == pindex->pprev)
+    if (!IsInitialBlockDownload() && ActiveTip() == pindex->pprev)
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
 
     // Write block to history file
@@ -4873,7 +4880,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         }
     }
 
-    NotifyHeaderTip(ActiveChainstate());
+    NotifyHeaderTip(*this);
 
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActiveChainstate().ActivateBestChain(state, block)) {
@@ -4913,7 +4920,7 @@ bool TestBlockValidity(BlockValidationState& state,
     if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, block_hash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
     }
-    
+
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
@@ -5136,7 +5143,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
 {
     // TODO: merge with ConnectBlock
     CBlock block;
-    // SYSCOIN 
+    // SYSCOIN
     const auto& chainParams = m_chainman.GetParams().GetConsensus();
     if (!m_blockman.ReadBlockFromDisk(block, *pindex)) {
         return error("ReplayBlock(): ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -5324,7 +5331,7 @@ bool ChainstateManager::LoadBlockIndex()
             if (pindex == GetSnapshotBaseBlock() ||
                     (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                     // SYSCOIN
-                    !(pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK) && 
+                    !(pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK) &&
                      (pindex->HaveTxsDownloaded() || pindex->pprev == nullptr))) {
 
                 for (Chainstate* chainstate : GetAll()) {
@@ -5510,7 +5517,7 @@ void ChainstateManager::LoadExternalBlockFile(
                     }
                 }
 
-                NotifyHeaderTip(ActiveChainstate());
+                NotifyHeaderTip(*this);
 
                 if (!blocks_with_unknown_parent) continue;
 
@@ -5536,7 +5543,7 @@ void ChainstateManager::LoadExternalBlockFile(
                         }
                         range.first++;
                         blocks_with_unknown_parent->erase(it);
-                        NotifyHeaderTip(ActiveChainstate());
+                        NotifyHeaderTip(*this);
                     }
                 }
             } catch (const std::exception& e) {
@@ -6461,24 +6468,24 @@ bool CBlockIndexDB::ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
     }
     return false;
 }
-bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs) {	
-    if(vecTXIDPairs.empty())	
+bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs) {
+    if(vecTXIDPairs.empty())
         return true;
     CDBBatch batch(*this);
     FlushErase(vecTXIDPairs, batch);
     return WriteBatch(batch, true);
-}	
-bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, CDBBatch &batch) {	
-    if(vecTXIDPairs.empty())	
+}
+bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, CDBBatch &batch) {
+    if(vecTXIDPairs.empty())
         return true;
-    for (const auto &pair : vecTXIDPairs) {	
+    for (const auto &pair : vecTXIDPairs) {
         batch.Erase(pair.first);
         auto it = mapCache.find(pair.first);
         if(it != mapCache.end()){
             mapCache.erase(it);
         }
     }
-    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
+    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());
     return true;
 }
 void CBlockIndexDB::FlushDataToCache(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs) {
@@ -6490,17 +6497,17 @@ void CBlockIndexDB::FlushDataToCache(const std::vector<std::pair<uint256,uint32_
     }
     LogPrint(BCLog::SYS, "Flushing to cache, storing %d block indexes\n", vecTXIDPairs.size());
 }
-bool CBlockIndexDB::FlushCacheToDisk(const uint32_t &nHeight) {	
+bool CBlockIndexDB::FlushCacheToDisk(const uint32_t &nHeight) {
     if(mapCache.empty()) {
         return true;
     }
-    CDBBatch batch(*this);  
+    CDBBatch batch(*this);
     Prune(nHeight, batch);
     for (auto const& [key, val] : mapCache) {
         batch.Write(key, val);
     }
     batch.Write(LAST_KNOWN_HEIGHT_TAG, nHeight);
-    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", mapCache.size());	
+    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", mapCache.size());
     mapCache.clear();
     return WriteBatch(batch, true);
 }
@@ -6541,10 +6548,10 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     for (const auto &item : fs::directory_iterator(src)) {
       recursive_copy(item.path(), dst/fs::u8path(fs::PathToString(item.path().filename())));
     }
-  } 
+  }
   else if (fs::is_regular_file(src)) {
     fs::copy(src, dst);
-  } 
+  }
   else {
     throw std::runtime_error(dst.generic_string() + " not dir or file");
   }
@@ -6566,7 +6573,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
         ZeroMemory(&pi, sizeof(pi));
         ZeroMemory(&si, sizeof(si));
         GetStartupInfoW (&si);
-        si.cb = sizeof(si); 
+        si.cb = sizeof(si);
         //Prepare CreateProcess args
         std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
         std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
@@ -6581,7 +6588,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
         LogPrintf("CreateProcessW app %s %s\n",app,arg);
-        int result = CreateProcessW(app_const, arg_concat, nullptr, nullptr, FALSE, 
+        int result = CreateProcessW(app_const, arg_concat, nullptr, nullptr, FALSE,
               CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
         if(!result)
         {
@@ -6660,7 +6667,7 @@ bool Chainstate::RestartGethNode() {
     GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     if(!bResponse) {
         LogPrintf("RestartGethNode: Could not start network\n");
-        return false;  
+        return false;
     }
     return true;
 }
@@ -6683,7 +6690,7 @@ fs::path FindExecPath(std::string &binArchitectureTag) {
         fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
         fpathDefault = fpathDefault.parent_path();
         return fpathDefault;
-    #endif    
+    #endif
     #ifdef MAC_OSX
         binArchitectureTag = "darwin";
         char buf [PATH_MAX];
@@ -6711,7 +6718,7 @@ std::string GetGethFilename(){
     // For Windows:
     #ifdef WIN32
        return "sysgeth.exe";
-    #endif    
+    #endif
     #ifdef MAC_OSX
         // Mac
         return "sysgeth";
@@ -6792,35 +6799,35 @@ bool Chainstate::StartGethNode()
     struct sigaction sa;
     sa.sa_handler = SIG_DFL;
     sa.sa_flags = SA_NOCLDWAIT;
-        
+
     sigaction( SIGCHLD, &sa, nullptr ) ;
-        
+
     // Duplicate ("fork") the process. Will return zero in the child
     // process, and the child's PID in the parent (or negative on error).
     gethpid = fork() ;
     if( gethpid < 0 ) {
         LogPrintf("Could not start Geth, pid < 0 %d\n", gethpid);
         return false;
-    }  
+    }
     // TODO: sanitize environment variables as per
     // https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
-    if( gethpid == 0 ) {  
+    if( gethpid == 0 ) {
         std::vector<char*> commandVector;
         commandVector.reserve(vecCmdLineStr.size());
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
-        }  
-    
+        }
+
         // push NULL to the end of the vector (execvp expects NULL as last element)
         commandVector.push_back(nullptr);
-        char **command = commandVector.data();  
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
+        char **command = commandVector.data();
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);
         int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
         if (err == -1) {
             LogPrintf("Could not open sysgeth.log\n");
         }
-        if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
-        fflush(stderr); close(err);                            
+        if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }
+        fflush(stderr); close(err);
         execvp(command[0], &command[0]);
         if (errno != 0) {
             LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
@@ -6878,7 +6885,7 @@ bool Chainstate::StopGethNode(bool bOnStart)
             #endif
         }
     }
-    
+
     #ifndef USE_SYSCALL_SANDBOX
     #if HAVE_SYSTEM
     LogPrintf("Killing any sysgeth processes that may be already running...\n");
@@ -6891,7 +6898,7 @@ bool Chainstate::StopGethNode(bool bOnStart)
         t.join();
     #endif
     #endif
-    
+
     return true;
 }
 bool Chainstate::DoGethStartupProcedure() {
@@ -6900,16 +6907,16 @@ bool Chainstate::DoGethStartupProcedure() {
     }
     // hasn't started yet so start
     if(!fReindexGeth ) {
-        LogPrintf("%s: Stopping Geth\n", __func__); 
+        LogPrintf("%s: Stopping Geth\n", __func__);
         StopGethNode(true);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
         if(!StartGethNode()) {
-            LogPrintf("%s: Failed to start Geth\n", __func__); 
+            LogPrintf("%s: Failed to start Geth\n", __func__);
             return false;
         }
     } else {
         fReindexGeth = false;
-        LogPrintf("%s: Stopping Geth\n", __func__); 
+        LogPrintf("%s: Stopping Geth\n", __func__);
         StopGethNode(true);
         // copy wallet dir if exists
         const fs::path &dataDir = m_chainman.m_options.datadir;
@@ -6921,7 +6928,7 @@ bool Chainstate::DoGethStartupProcedure() {
         bool existedKeystore = fs::exists(gethKeyStoreDir);
         bool existedKeystoreTmp = fs::exists(keyStoreTmpDir);
         if(existedKeystore && !existedKeystoreTmp){
-            LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
+            LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__);
             try{
                 recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
             } catch(const  std::runtime_error& e) {
@@ -6932,7 +6939,7 @@ bool Chainstate::DoGethStartupProcedure() {
         bool existedNodekey = fs::exists(gethNodeKeyPath);
         bool existedNodekeyTmp = fs::exists(nodeKeyTmpDir);
         if(existedNodekey && !existedNodekeyTmp){
-            LogPrintf("%s: Copying temporary nodekey\n", __func__); 
+            LogPrintf("%s: Copying temporary nodekey\n", __func__);
             try{
                 recursive_copy(gethNodeKeyPath, nodeKeyTmpDir);
             } catch(const  std::runtime_error& e) {
@@ -6970,7 +6977,7 @@ bool Chainstate::DoGethStartupProcedure() {
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
         if(!StartGethNode()) {
-            LogPrintf("%s: Failed to start Geth\n", __func__); 
+            LogPrintf("%s: Failed to start Geth\n", __func__);
             return false;
         }
         LogPrintf("%s: Done, waiting for resync...\n", __func__);
@@ -7000,7 +7007,7 @@ void ChainstateManager::MaybeRebalanceCaches()
         // If both chainstates exist, determine who needs more cache based on IBD status.
         //
         // Note: shrink caches first so that we don't inadvertently overwhelm available memory.
-        if (m_snapshot_chainstate->IsInitialBlockDownload()) {
+        if (IsInitialBlockDownload()) {
             m_ibd_chainstate->ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
             m_snapshot_chainstate->ResizeCoinsCaches(
