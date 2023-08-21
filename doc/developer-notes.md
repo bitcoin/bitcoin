@@ -739,12 +739,6 @@ Common misconceptions are clarified in those sections:
 - Passing (non-)fundamental types in the [C++ Core
   Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
 
-- Assertions should not have side-effects.
-
-  - *Rationale*: Even though the source code is set to refuse to compile
-    with assertions disabled, having side-effects in assertions is unexpected and
-    makes the code harder to understand.
-
 - If you use the `.h`, you must link the `.cpp`.
 
   - *Rationale*: Include files define the interface for the code in implementation files. Including one but
