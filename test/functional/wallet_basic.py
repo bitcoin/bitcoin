@@ -310,8 +310,7 @@ class WalletTest(BitcoinTestFramework):
         node_0_bal += amount
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
-        for key in ["totalFee", "feeRate"]:
-            assert_raises_rpc_error(-8, "Unknown named parameter key", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, key=1)
+        assert_raises_rpc_error(-8, "Unknown named parameter feeRate", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, feeRate=1)
 
         # Test setting explicit fee rate just below the minimum.
         self.log.info("Test sendmany raises 'fee rate too low' if fee_rate of 0.99999999 is passed")
@@ -504,9 +503,6 @@ class WalletTest(BitcoinTestFramework):
             postbalance = self.nodes[2].getbalance()
             fee = prebalance - postbalance - amount
             assert_fee_amount(fee, tx_size, Decimal(fee_rate_btc_kvb))
-
-            for key in ["totalFee", "feeRate"]:
-                assert_raises_rpc_error(-8, "Unknown named parameter key", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, key=1)
 
             # Test setting explicit fee rate just below the minimum.
             self.log.info("Test sendtoaddress raises 'fee rate too low' if fee_rate of 0.99999999 is passed")
