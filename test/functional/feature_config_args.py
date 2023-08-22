@@ -371,6 +371,14 @@ class ConfArgsTest(BitcoinTestFramework):
             f'is being used instead.') + r"[\s\S]*", env=env, match=ErrorMatch.FULL_REGEX)
         node.args = node_args
 
+    def test_acceptstalefeeestimates_arg_support(self):
+        self.log.info("Test -acceptstalefeeestimates option support")
+        conf_file = self.nodes[0].datadir_path / "bitcoin.conf"
+        for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet")}:
+            util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
+            self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
+        util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
+
     def run_test(self):
         self.test_log_buffer()
         self.test_args_log()
@@ -383,6 +391,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_invalid_command_line_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()
+        self.test_acceptstalefeeestimates_arg_support()
 
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]

@@ -25,8 +25,9 @@
 // How often to flush fee estimates to fee_estimates.dat.
 static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
 
-/** fee_estimates.dat that are more than 60 hours (2.5 days) will not be read,
- * as the estimates in the file are stale.
+/** fee_estimates.dat that are more than 60 hours (2.5 days) old will not be read,
+ * as fee estimates are based on historical data and may be inaccurate if
+ * network activity has changed.
  */
 static constexpr std::chrono::hours MAX_FILE_AGE{60};
 
