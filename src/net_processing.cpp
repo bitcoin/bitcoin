@@ -303,9 +303,9 @@ private:
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
+    CAddrMan& m_addrman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
-    CAddrMan& m_addrman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;

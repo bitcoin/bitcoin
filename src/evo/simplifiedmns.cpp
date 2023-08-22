@@ -34,12 +34,12 @@ CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     pubKeyOperator(dmn.pdmnState->pubKeyOperator),
     keyIDVoting(dmn.pdmnState->keyIDVoting),
     isValid(!dmn.pdmnState->IsBanned()),
+    platformHTTPPort(dmn.pdmnState->platformHTTPPort),
+    platformNodeID(dmn.pdmnState->platformNodeID),
     scriptPayout(dmn.pdmnState->scriptPayout),
     scriptOperatorPayout(dmn.pdmnState->scriptOperatorPayout),
     nVersion(dmn.pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION ? LEGACY_BLS_VERSION : BASIC_BLS_VERSION),
-    nType(dmn.nType),
-    platformHTTPPort(dmn.pdmnState->platformHTTPPort),
-    platformNodeID(dmn.pdmnState->platformNodeID)
+    nType(dmn.nType)
 {
 }
 

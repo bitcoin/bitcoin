@@ -46,9 +46,9 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     transactionTableModel(nullptr),
     recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
+    timer(new QTimer(this)),
     cachedNumISLocks(0),
-    cachedCoinJoinRounds(0),
-    timer(new QTimer(this))
+    cachedCoinJoinRounds(0)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
