@@ -145,8 +145,7 @@ chain for " target " development."))
 
 (define (make-nsis-for-gcc-10 base-nsis)
   (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-gcc-10-memmove.patch"
-                        "nsis-disable-installer-reloc.patch")))
+    (search-our-patches "nsis-gcc-10-memmove.patch")))
 
 ;; While LIEF is packaged in Guix, we maintain our own package,
 ;; to simplify building, and more easily apply updates.
